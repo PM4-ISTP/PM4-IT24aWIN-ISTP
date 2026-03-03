@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<ruleset name="ISTP Custom Ruleset"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+        https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Custom PMD ruleset for ISTP backend.
+
+        The 'codestyle' category is intentionally omitted — Checkstyle and
+        google-java-format (via Spotless) are the authoritative style enforcers.
+
+        Overlap dedup strategy:
+          - UnusedImports     → owned by Checkstyle, excluded here
+          - Naming rules      → owned by Checkstyle (codestyle category omitted)
+          - Whitespace/indent → owned by Spotless (codestyle category omitted)
+    </description>
+
+    <!-- ── Best Practices ───────────────────────────────────────────────────── -->
+    <rule ref="category/java/bestpractices.xml">
+        <!-- Spring DI patterns (e.g. List<UserService> instead of ArrayList) are intentional -->
+        <exclude name="LooseCoupling"/>
+        <!-- SLF4J {} placeholders already provide lazy evaluation; guard checks are redundant -->
+        <exclude name="GuardLogStatement"/>
+    </rule>
+
+    <rule ref="category/java/codestyle.xml">
+        <exclude name="UnnecessaryImport" />
+    </rule>
+
+    <!-- ── Error Prone ──────────────────────────────────────────────────────── -->
+    <rule ref="category/java/errorprone.xml">
+        <!-- Lombok @Builder and @RequiredArgsConstructor use null for optional fields -->
+        <exclude name="NullAssignment"/>
+    </rule>
+
+    <!-- ── Design ───────────────────────────────────────────────────────────── -->
+    <rule ref="category/java/design.xml">
+        <!-- Spring service layers necessarily chain through repository/mapper calls -->
+        <exclude name="LawOfDemeter"/>
+        <exclude name="LoosePackageCoupling" />
+    </rule>
+
+    <!-- ── Performance ──────────────────────────────────────────────────────── -->
+    <rule ref="category/java/performance.xml"/>
+
+    <!-- ── Multithreading ───────────────────────────────────────────────────── -->
+    <rule ref="category/java/multithreading.xml"/>
+
+    <rule ref="category/java/design.xml/UseUtilityClass">
+        <properties>
+            <property name="violationSuppressXPath"
+                value="//ClassDeclaration[pmd-java:hasAnnotation('org.springframework.boot.autoconfigure.SpringBootApplication')]" />
+        </properties>
+    </rule>
+
+
+    <!--
+        'codestyle' category intentionally omitted.
+        It is fully covered by Checkstyle (naming, modifier order, imports)
+        and google-java-format via Spotless (indentation, whitespace, line length).
+    -->
+
+</ruleset>

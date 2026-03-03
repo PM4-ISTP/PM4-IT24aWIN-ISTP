@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  Custom Checkstyle config for the ISTP backend.
+
+  Scope: naming conventions, imports, modifier order, and coding rules.
+  Out of scope (handled by google-java-format via Spotless):
+    - Indentation, whitespace, line length, brace placement, import ordering.
+-->
+<module name="Checker">
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <module name="SuppressionFilter">
+        <property name="file" value="${checkstyle.suppression.file}"/>
+        <property name="optional" value="true"/>
+    </module>
+
+    <!-- Safety net: google-java-format always produces spaces; tabs mean something went wrong. -->
+    <module name="FileTabCharacter"/>
+
+    <module name="TreeWalker">
+
+        <!-- ── Imports ──────────────────────────────────────────────────────── -->
+        <!-- Import ordering is handled by google-java-format; only semantic checks here. -->
+        <module name="UnusedImports"/>
+        <module name="RedundantImport"/>
+        <module name="IllegalImport"/>
+
+        <!-- ── Naming ────────────────────────────────────────────────────────── -->
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+        </module>
+        <module name="TypeName"/>
+        <module name="MemberName"/>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="MethodName"/>
+        <module name="ConstantName"/>
+        <module name="StaticVariableName"/>
+        <module name="ClassTypeParameterName">
+            <!-- Allows: T, E, K, V, T1, RequestT, etc. -->
+            <property name="format" value="(^[A-Z][0-9]?)$|([A-Z][a-zA-Z0-9]*[T]$)"/>
+        </module>
+        <module name="MethodTypeParameterName">
+            <property name="format" value="(^[A-Z][0-9]?)$|([A-Z][a-zA-Z0-9]*[T]$)"/>
+        </module>
+
+        <!-- ── Modifiers ──────────────────────────────────────────────────────── -->
+        <!-- Enforce canonical modifier order: public protected private abstract ... -->
+        <module name="ModifierOrder"/>
+        <!-- Flag 'public' on interface methods, 'abstract' on abstract-class abstract methods, etc. -->
+        <module name="RedundantModifier"/>
+
+        <!-- ── Coding ─────────────────────────────────────────────────────────── -->
+        <module name="OneStatementPerLine"/>
+        <module name="MultipleVariableDeclarations"/>
+        <!-- Enforce C-style arrays: int[] args, not int args[] -->
+        <module name="ArrayTypeStyle"/>
+        <module name="MissingSwitchDefault"/>
+        <module name="FallThrough"/>
+        <!-- Use uppercase L for long literals: 100L not 100l -->
+        <module name="UpperEll"/>
+        <module name="MissingOverride"/>
+        <module name="EmptyCatchBlock">
+            <!-- Allow empty catch blocks only when the variable is named 'expected', 'ignored', or 'ignore' -->
+            <property name="exceptionVariableName" value="expected|ignored|ignore"/>
+        </module>
+
+        <!-- ── Blocks ─────────────────────────────────────────────────────────── -->
+        <!-- google-java-format does NOT add missing braces; Checkstyle enforces their presence. -->
+        <module name="NeedBraces"/>
+
+        <!-- ── Annotations ────────────────────────────────────────────────────── -->
+        <!-- Required for @SuppressWarnings("checkstyle:...") suppression to work below -->
+        <module name="SuppressWarningsHolder"/>
+
+    </module>
+
+    <module name="SuppressWarningsFilter"/>
+
+</module>
