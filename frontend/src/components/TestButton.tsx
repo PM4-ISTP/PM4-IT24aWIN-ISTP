@@ -29,15 +29,9 @@ export default function TestButton() {
         {loading ? "Loading..." : "POST /api/v1/tests"}
       </button>
 
-      {error && (
-        <pre style={{ color: "red", marginTop: "1rem" }}>Error: {error}</pre>
-      )}
+      {error && <pre style={{ color: "red", marginTop: "1rem" }}>Error: {error}</pre>}
 
-      {response && (
-        <pre style={{ marginTop: "1rem", whiteSpace: "pre-wrap" }}>
-          {response}
-        </pre>
-      )}
+      {response && <pre style={{ marginTop: "1rem", whiteSpace: "pre-wrap" }}>{response}</pre>}
     </div>
   );
 }

@@ -18,7 +18,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
           grant_type: "refresh_token",
           refresh_token: token.refreshToken as string,
         }),
-      },
+      }
     );
 
     const refreshedTokens = await response.json();
