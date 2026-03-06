@@ -2,6 +2,10 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.0.3'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'com.diffplug.spotless' version '6.25.0'
+	id 'checkstyle'
+	id 'pmd'
+	id 'com.github.spotbugs' version '6.0.27'
 }
 
 group = 'com.pm4'
@@ -48,4 +52,53 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+// ─── Spotless (google-java-format) ────────────────────────────────────────────
+spotless {
+	java {
+		googleJavaFormat('1.28.0')
+		target 'src/main/**/*.java'
+	}
+}
+
+// ─── Checkstyle ───────────────────────────────────────────────────────────────
+checkstyle {
+	toolVersion = '10.14.2'
+	configFile = file('config/checkstyle/checkstyle.xml')
+	configProperties = [
+		'checkstyle.suppression.file': file('config/checkstyle/suppressions.xml').absolutePath
+	]
+	ignoreFailures = false // Checkstyle violations break the build
+}
+
+tasks.named('checkstyleTest').configure { enabled = false }
+
+// ─── PMD ──────────────────────────────────────────────────────────────────────
+pmd {
+	toolVersion = '7.3.0'
+	ruleSetFiles = files('config/pmd/ruleset.xml')
+	ruleSets = []         // clear the default quickstart ruleset
+	ignoreFailures = true // violations are warnings, not build failures
+	consoleOutput = true  // print violations to the CI log
+}
+
+tasks.named('pmdTest').configure { enabled = false }
+
+// ─── SpotBugs ─────────────────────────────────────────────────────────────────
+spotbugs {
+	toolVersion = '4.8.6'
+	ignoreFailures = true  // violations are warnings, not build failures
+	effort = 'max'
+	reportLevel = 'medium'
+	excludeFilter = file('config/spotbugs/exclude.xml')
+}
+
+tasks.named('spotbugsTest').configure { enabled = false }
+
+tasks.named('spotbugsMain').configure {
+	reports {
+		html { required = true }
+		xml  { required = false }
+	}
 }
