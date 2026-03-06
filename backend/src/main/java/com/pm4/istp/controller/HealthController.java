@@ -11,13 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HealthController {
 
-    @Operation(
-            summary = "Check API status",
-            description = "Returns a simple status response to verify that the API is running."
-    )
-    @ApiResponse(responseCode = "200", description = "API is running successfully")
-    @GetMapping("/health")
-    public HealthResponse health() {
-        return new HealthResponse("ok");
-    }
+  @Operation(
+      summary = "Check API status",
+      description = "Returns a simple status response to verify that the API is running.")
+  @ApiResponse(responseCode = "200", description = "API is running successfully")
+  @GetMapping("/health")
+  public HealthResponse health() {
+    return new HealthResponse("ok");
+  }
 }

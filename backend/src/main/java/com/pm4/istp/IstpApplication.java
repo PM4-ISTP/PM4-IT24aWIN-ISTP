@@ -7,12 +7,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @OpenAPIDefinition(
-        info = @Info(
-                title = "ISTP API",
-                version = "v1",
-                description = "Interactive Security Training Platform"
-        )
-)
+    info =
+        @Info(
+            title = "ISTP API",
+            version = "v1",
+            description = "Interactive Security Training Platform"))
 public class IstpApplication {
 
   public static void main(String[] args) {
