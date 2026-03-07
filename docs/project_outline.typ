@@ -16,7 +16,7 @@
     #set text(size: 10pt, font: "New Computer Modern")
     #grid(
       columns: (1fr, 1fr),
-      [HackThePod – Project Outline],
+      [ISTP – Project Outline],
       align(right)[Software-Project 4 – IT.PM4, FS2026]
     )
     #line(length: 100%, stroke: 0.4pt)
@@ -53,7 +53,7 @@
 #page(header: none, footer: none)[
   #align(center)[
     #v(2cm)
-    #text(size: 28pt, weight: "bold", fill: zhawblue)[HackThePod]
+    #text(size: 28pt, weight: "bold", fill: zhawblue)[Interactive Security Training Platform]
     #v(0.4cm)
     #text(size: 16pt)[Project Outline – Software-Projekt 4]
     #v(0.2cm)
@@ -105,13 +105,13 @@ to recognise or fix them in real code.
 Platforms like _TryHackMe_ or _HackTheBox_ exist, but run on external cloud infrastructure and
 give universities no control over content, data privacy, or grade integration.
 
-== Solution Idea: HackThePod
+== Solution Idea: ISTP
 
-*HackThePod* is a self-hosted, Kubernetes-based Capture-the-Flag learning platform that
-universities can operate on-premises. Students receive isolated, ephemeral container
-environments in which they actively exploit real vulnerabilities instead of just reading about them.
-Instructors prepare challenges in advance so students can apply what they learned in class
-directly in practice.
+The *Interactive Security Training Platform* (abbreviated as ISTP) is a self-hosted, Kubernetes-based
+Capture-the-Flag learning platform that universities can operate on-premises. Students receive
+isolated, ephemeral container environments in which they actively exploit real vulnerabilities instead
+of just reading about them. Instructors prepare challenges in advance so students can apply what they
+learned in class directly in practice.
 
 == Stakeholder Analysis
 
@@ -123,7 +123,7 @@ directly in practice.
     stroke: 0.5pt + gray,
     text(fill: white, weight: "bold")[Stakeholder],
     text(fill: white, weight: "bold")[Need],
-    text(fill: white, weight: "bold")[Benefit from HackThePod],
+    text(fill: white, weight: "bold")[Benefit from ISTP],
 
     [Students],
     [Hands-on exercises in application security],
@@ -172,7 +172,7 @@ the most relevant alternatives.
     [Web vulnerabilities],
     [Partially],
 
-    text(weight: "bold")[HackThePod],
+    text(weight: "bold")[ISTP],
     text(weight: "bold")[On-Premises],
     text(weight: "bold")[Application security (customisable)],
     text(weight: "bold")[Yes, built for academia],
@@ -180,7 +180,7 @@ the most relevant alternatives.
   caption: [Competitive comparison],
 ) <tab-konkurrenz>
 
-HackThePod is the only solution that runs fully on-premises, offers instructor-controlled
+ISTP is the only solution that runs fully on-premises, offers instructor-controlled
 application security challenges, and integrates with academic workflows including role management,
 challenge lifecycle, and grade integration.
 
@@ -192,7 +192,7 @@ The following scenario describes the typical use case from both student and inst
 #v(0.5em)
 *Scenario: «Solving a first CTF challenge»*
 
-A student enrolled in an application security module registers on the HackThePod platform using
+A student enrolled in an application security module registers on the ISTP platform using
 her university email address. After logging in she sees a dashboard listing all published
 challenges, sorted by difficulty and category (e.g. SQL injection, XSS, IDOR).
 
@@ -310,11 +310,11 @@ Each sprint closes with a demo and retrospective. Unfinished work is carried ove
 // ══════════════════════════════════════════════════════════════════════════════
 = Economic Viability
 
-HackThePod is not a commissioned project from an industry partner. It grew out of a concrete
+ISTP is not a commissioned project from an industry partner. It grew out of a concrete
 experience during our own studies: we worked with external platforms where instructors had to
 manually check each student's laptop to verify progress. Integrated grading was not possible.
 
-Since the code is hosted on GitHub anyway, HackThePod will be released as an open-source
+Since the code is hosted on GitHub anyway, ISTP will be released as an open-source
 solution. Universities save on licensing costs, keep full control over content and data privacy,
 and can tailor challenges to their own learning objectives. Grading runs automatically through
 the platform, significantly reducing the workload for instructors.
