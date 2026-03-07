@@ -207,31 +207,33 @@ hour has passed, many features get locked behind a paywall.
 // ══════════════════════════════════════════════════════════════════════════════
 = Context Scenario (Main Flow)
 
-The following scenario describes the typical use case from both student and instructor perspective.
+The following scenario describes the typical use case from both the student and instructor perspectives.
+The perspective of the IT administrator is not important for the typical use cases of this
+application. Administrators have additional permissions and can, for example, ban a user.
 
 #v(0.5em)
 *Scenario: «Solving a first CTF challenge»*
 
-A student enrolled in an application security module registers on the ISTP platform using
-her university email address. After logging in she sees a dashboard listing all published
-challenges, sorted by difficulty and category (e.g. SQL injection, XSS, IDOR).
+A student at the university registers on the ISTP platform using
+her university email address. After logging, in she is able to see all published
+challenges (e.g., SQL injection, XSS, IDOR).
 
-She selects a beginner challenge and launches a dedicated pod with one click. Within seconds the
-system provisions an isolated Kubernetes pod hosting the vulnerable application. The student
-receives a link and opens the application directly in her browser.
+She selects a challenge and launches a dedicated pod with one click. The
+system provisions an isolated Kubernetes pod hosting the vulnerable application. The application
+then gets automatically opened directly in her browser.
 
-She analyses the application, identifies the vulnerability and exploits it to extract a hidden flag
-(e.g. `FLAG{sql_injection_mastered}`). She submits the flag via the UI. The system validates the
-input, updates her score and marks the challenge as solved.
+She reads the task description and analyses the application, identifies the vulnerability and
+exploits it to extract a hidden flag (e.g., `FLAG{sql_injection_mastered}`). She submits the
+flag via the UI. The system validates the input, updates her score and marks the challenge as
+solved.
 
-After 60 minutes of inactivity a keep-alive prompt appears. If the student does not confirm it, the
+After 60 minutes of inactivity, a keep-alive prompt appears. If the student does not confirm it, the
 pod terminates automatically to free cluster resources.
 
 #v(0.5em)
 *Instructor perspective:* An instructor creates a new challenge by entering a container image, a
-task description and the expected flags in the admin panel. After configuring ports and environment
-variables she publishes the challenge, which immediately becomes visible and launchable for all
-students.
+task description and the expected flags in the admin panel. After making some configurations, she
+publishes the challenge, which immediately becomes visible and launchable for all students.
 
 // ══════════════════════════════════════════════════════════════════════════════
 = Further Requirements
