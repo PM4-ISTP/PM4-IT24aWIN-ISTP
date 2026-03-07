@@ -160,7 +160,7 @@ the most relevant alternatives.
     [TryHackMe @tryhackme],
     [Cloud (external)],
     [Broad spectrum],
-    [Limited (paid tiers)],
+    [Limited (paid tiers @tryhackme-pricing)],
 
     [HackTheBox @hackthebox],
     [Cloud (external)],
@@ -170,7 +170,7 @@ the most relevant alternatives.
     [PentesterLab @pentesterlab],
     [Cloud (external)],
     [Web vulnerabilities],
-    [Partially],
+    [Partially (many exercises are locked behind a paywall @pentesterlab-exercises)],
 
     text(weight: "bold")[ISTP],
     text(weight: "bold")[On-Premises],
@@ -181,8 +181,15 @@ the most relevant alternatives.
 ) <tab-konkurrenz>
 
 ISTP is the only solution that runs fully on-premises, offers instructor-controlled
-application security challenges, and integrates with academic workflows including role management,
-challenge lifecycle, and grade integration.
+application security challenges, and integrates with academic workflows including role management and
+challenge lifecycle.
+
+The fact that ISTP can run fully on-premises means that neither instructors nor students need to
+pay for using ISTP. This makes ISTP from a financial point of view, in addition to the already
+stated advantages, more suited for educational usage. Currently the ZHAW uses TryHackMe in the
+module "IT Security". But as stated in @tab-konkurrenz, TryHackMe has paid tiers. When visiting
+"IT Security" we have noticed that we can only use TryHackMe for one hour per day. Once that
+hour has passed, many features get locked behind a paywall.
 
 // ══════════════════════════════════════════════════════════════════════════════
 = Context Scenario (Main Flow)
