@@ -332,7 +332,29 @@ Each sprint closes with a demo and retrospective. Unfinished work is carried ove
 // ══════════════════════════════════════════════════════════════════════════════
 = Risks
 
-#todo("Fill in risks based on Vision Doc — see R-1 to R-7")
+The following seven risks in @tab-risiken have been identified. The risks are not ordered.
+
+#figure(
+  table(
+    columns: (1fr, 1fr, 1.5fr),
+    inset: 8pt,
+    fill: (_, row) => if row == 0 { zhawblue } else if calc.odd(row) { lightgray } else { white },
+    stroke: 0.5pt + gray,
+    text(fill: white, weight: "bold")[Risk],
+    text(fill: white, weight: "bold")[Category],
+    text(fill: white, weight: "bold")[Description],
+
+    [Authentication integration], [Technical], [Keycloak needs to be set up for single sign-on and JSON web tokens need to be propagated between the frontend and backend. This might be complicated.],
+    [Connecting to pods], [Technical / Security], [To connect the students to their pods, a secure reverse-proxy or WebSocket tunnel is needed. This is complicated and might also be a security risk.],
+    [Security of ISTP], [Security], [Students may try to escape their container. This is a security risk.],
+    [Resource exhaustion], [Infrastructure], [Due to the fact that many pods need to run in parallel, the resources of the server may get exhausted.],
+    [Kubernetes manifest validation], [Security / Stability], [Instructors or TAs might upload malicious or malformed container images for the exercises.],
+    [Knowledge gaps], [Team], [Members of the team might lack experience with parts of the technology stack.],
+    [Role management complexity], [Product], [#todo("write down description")]
+,
+  ),
+  caption: [Roadmap with milestones]
+) <tab-risiken>
 
 // ══════════════════════════════════════════════════════════════════════════════
 = Economic Viability
