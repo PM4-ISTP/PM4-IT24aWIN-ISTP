@@ -339,7 +339,7 @@ experience during our own studies: we worked with external platforms where instr
 manually check each student's laptop to verify progress. Integrated grading was not possible.
 
 Since the code is hosted on GitHub, ISTP will be released as an open-source
-solution. Universities save on licensing costs, keep full control over content and data privacy,
+solution. Universities save on licensing costs, keep full control over content and data privacy
 and can tailor challenges to their own learning objectives. Integrated grading is planned as a
 future extension.
 
