@@ -241,6 +241,8 @@ publishes the challenge, which immediately becomes visible and launchable for al
 == Planned Extensions after PM4
 
 - *SSO integration:* Connection to the university LDAP/SAML infrastructure for single sign-on.
+- *Assigments:* Instructors can assign exercises to students and set a deadline.
+- *Grade integration:* The application can automatically grade students based on their assigned exercises. Instructors can export the grades of their students.
 - *Extended scoring:* Time bonuses and hint penalties for competitive use.
 - *Leaderboard:* Public ranking per course or semester.
 - *Challenge marketplace:* Sharing challenges between universities.
@@ -336,10 +338,10 @@ ISTP is not a commissioned project from an industry partner. It grew out of a co
 experience during our own studies: we worked with external platforms where instructors had to
 manually check each student's laptop to verify progress. Integrated grading was not possible.
 
-Since the code is hosted on GitHub anyway, ISTP will be released as an open-source
+Since the code is hosted on GitHub, ISTP will be released as an open-source
 solution. Universities save on licensing costs, keep full control over content and data privacy,
-and can tailor challenges to their own learning objectives. Grading runs automatically through
-the platform, significantly reducing the workload for instructors.
+and can tailor challenges to their own learning objectives. Integrated grading is planned as a
+future extension.
 
 A single instance is sufficient for multiple courses and semesters. In the medium term, adoption
 at other Swiss universities is realistic since the problem is not unique to ZHAW.
