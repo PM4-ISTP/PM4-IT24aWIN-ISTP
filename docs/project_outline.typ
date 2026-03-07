@@ -105,7 +105,7 @@ to recognise or fix them in real code.
 Platforms like _TryHackMe_ or _HackTheBox_ exist, but run on external cloud infrastructure and
 give universities no control over content, data privacy, or grade integration.
 
-== Solution Idea: ISTP
+== Solution Idea: Interactive Security Training Platform
 
 The *Interactive Security Training Platform* (abbreviated as ISTP) is a self-hosted, Kubernetes-based
 Capture-the-Flag learning platform that universities can operate on-premises. Students receive
@@ -115,6 +115,16 @@ learned in class directly in practice.
 
 == Stakeholder Analysis
 
+@tab-stakeholder-analyse discusses how exactly ISTP is going to benefit the stakeholders of this project.
+
+The column "Need / Problem" discusses what needs the specific stakeholder has in regard to ISTP and what
+problems they face when using currently established tools on the market. Those tools meet their needs
+only partially. This leads to their needs and problems overlapping. Due to this overlap, the needs and
+problems of the stakeholders have been placed into the same column.
+
+The column "Benefits from ISTP" describes which benefits the stakeholders receive by using ISTP and how
+their problems get solved.
+
 #figure(
   table(
     columns: (auto, 1fr, 1fr),
@@ -122,23 +132,26 @@ learned in class directly in practice.
     fill: (_, row) => if row == 0 { zhawblue } else if calc.odd(row) { lightgray } else { white },
     stroke: 0.5pt + gray,
     text(fill: white, weight: "bold")[Stakeholder],
-    text(fill: white, weight: "bold")[Need],
-    text(fill: white, weight: "bold")[Benefit from ISTP],
+    text(fill: white, weight: "bold")[Need / Problem],
+    text(fill: white, weight: "bold")[Benefits from ISTP],
 
     [Students],
-    [Hands-on exercises in application security],
-    [Active exploit training in a safe sandbox],
+    [They need hands-on exercises in application security. The exercises need to match the lectures they attended. They do not want to spend money on the exercises.],
+    [They receive active exploit training in a safe sandbox. The exercises are created by the instructors or TAs. Therefor they are specifically designed for the lectures. Because ISTP is hosted by the university, these exercises cost the students no money.],
 
     [Instructors / TAs],
-    [Simple management of exercises],
-    [Admin panel for challenge creation and lifecycle management],
+    [They require a simple management of the exercises. They do not want to spend money on this task.],
+    [Using an instructor panel, they can create challenges and manage their lifecycle. Because ISTP is hosted by the university, the management of the exercises cost the instructors and TAs no money.],
 
     [IT Administration],
-    [Privacy-compliant, maintainable infrastructure],
-    [On-premises operation on the university's own Kubernetes cluster],
+    [They need privacy-compliant and maintainable infrastructure.],
+    [They receive an application that they can deploy on-premises on the university's own Kubernetes cluster. Now they have full control over the privacy policy and maintenance of the training platform.],
   ),
   caption: [Stakeholders and their benefits]
-)
+) <tab-stakeholder-analyse>
+
+As seen in @tab-stakeholder-analyse, ISTP meets the needs of the stakeholders and solves their problems
+with established tools.
 
 // ══════════════════════════════════════════════════════════════════════════════
 = State of the Art / Competitive Analysis
