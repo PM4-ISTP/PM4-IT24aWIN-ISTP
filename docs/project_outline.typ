@@ -267,9 +267,9 @@ of ongoing operations.
     text(fill: white, weight: "bold")[Technology],
     text(fill: white, weight: "bold")[Justification],
 
-    [Frontend],       [Next.js 14+ / Shadcn/UI], [#todo("add justification")],
-    [Backend],        [Spring Boot 3.x],          [Robust REST framework with Keycloak integration],
-    [Auth],           [Keycloak 24+],             [Role and token management out of the box],
+    [Frontend],       [Next.js 16+ / #todo("maybe not Shadcn")],  [#todo("add justification")],
+    [Backend],        [Spring Boot 4.x],          [Robust REST framework with Keycloak integration],
+    [Authentication], [Keycloak 26+],             [Role and token management out of the box],
     [Orchestration],  [Kubernetes],               [#todo("add justification")],
     [Database],       [PostgreSQL],               [Reliable relational DB with full JPA support],
     [CI/CD],          [GitHub Actions],           [Automated lint, test and build checks],
