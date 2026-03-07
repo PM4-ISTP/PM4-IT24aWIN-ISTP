@@ -281,6 +281,9 @@ of ongoing operations.
 
 == Technology Stack
 
+@tab-technologie-stack lists the technologies that will be used for each layer and why they have
+been chosen.
+
 #figure(
   table(
     columns: (auto, auto, 1fr),
@@ -294,12 +297,12 @@ of ongoing operations.
     [Frontend],       [Next.js 16+ / #todo("maybe not Shadcn")],  [#todo("add justification")],
     [Backend],        [Spring Boot 4.x],          [Robust REST framework with Keycloak integration],
     [Authentication], [Keycloak 26+],             [Role and token management out of the box],
-    [Orchestration],  [Kubernetes],               [#todo("add justification")],
+    [Orchestration],  [Kubernetes],               [Can run isolated pods for each exercise and enforces resource quotas],
     [Database],       [PostgreSQL],               [Reliable relational DB with full JPA support],
     [CI/CD],          [GitHub Actions],           [Automated lint, test and build checks],
   ),
   caption: [Technology stack]
-)
+) <tab-technologie-stack>
 
 == Timeline / Roadmap
 
