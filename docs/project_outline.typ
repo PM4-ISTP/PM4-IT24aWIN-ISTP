@@ -143,7 +143,7 @@ directly in practice.
 // ══════════════════════════════════════════════════════════════════════════════
 = State of the Art / Competitive Analysis
 
-Several platforms exist for hacking exercises @tryhackme,@hackthebox. @tab-konkurrenz summarises
+Several platforms exist for hacking exercises @tryhackme, @hackthebox, @pentesterlab. @tab-konkurrenz summarises
 the most relevant alternatives.
 
 #figure(
