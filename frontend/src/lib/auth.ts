@@ -1,5 +1,5 @@
-import { AuthOptions } from "next-auth";
-import { JWT } from "next-auth/jwt";
+import type { AuthOptions } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import KeycloakProvider from "next-auth/providers/keycloak";
 
 /**
@@ -21,10 +21,14 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
       }
     );
 
-    const refreshedTokens = await response.json();
+    const refreshedTokens = (await response.json()) as {
+      access_token: string;
+      expires_in: number;
+      refresh_token?: string;
+    };
 
     if (!response.ok) {
-      throw refreshedTokens;
+      throw new Error("Failed to refresh access token");
     }
 
     return {
@@ -67,10 +71,10 @@ export const authOptions: AuthOptions = {
       // Token has expired — refresh it
       return refreshAccessToken(token);
     },
-    async session({ session, token }) {
+    session({ session, token }) {
       // Access token is intentionally NOT exposed to the client.
       // Use getServerSession() + fetchBackend() for backend calls.
-      session.error = token.error as string | undefined;
+      session.error = token.error;
       return session;
     },
   },

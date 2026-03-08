@@ -25,7 +25,7 @@ export default function TestButton() {
 
   return (
     <div>
-      <button onClick={handleClick} disabled={loading}>
+      <button onClick={() => void handleClick()} disabled={loading}>
         {loading ? "Loading..." : "POST /api/v1/tests"}
       </button>
 

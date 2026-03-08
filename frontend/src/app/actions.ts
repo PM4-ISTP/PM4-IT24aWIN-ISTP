@@ -9,5 +9,5 @@ export async function postTest() {
     throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
   }
 
-  return res.json();
+  return (await res.json()) as unknown;
 }

@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
-import { authOptions } from "@/src/lib/auth";
 import { cookies, headers } from "next/headers";
+import type { GetTokenParams } from "next-auth/jwt";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8080";
 
@@ -13,11 +12,13 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8080";
  * and is never exposed to the client browser.
  */
 export async function fetchBackend(path: string, options: RequestInit = {}): Promise<Response> {
+  const req = {
+    headers: Object.fromEntries((await headers()).entries()),
+    cookies: Object.fromEntries((await cookies()).getAll().map((c) => [c.name, c.value])),
+  };
+
   const token = await getToken({
-    req: {
-      headers: Object.fromEntries((await headers()).entries()),
-      cookies: Object.fromEntries((await cookies()).getAll().map((c) => [c.name, c.value])),
-    } as any,
+    req: req as GetTokenParams["req"],
     secret: process.env.NEXTAUTH_SECRET,
   });
 
