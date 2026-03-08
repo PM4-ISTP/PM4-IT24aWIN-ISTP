@@ -129,6 +129,7 @@ their problems get solved.
   table(
     columns: (auto, 1fr, 1fr),
     inset: 8pt,
+    align: left,
     fill: (_, row) => if row == 0 { zhawblue } else if calc.odd(row) { lightgray } else { white },
     stroke: 0.5pt + gray,
     text(fill: white, weight: "bold")[Stakeholder],
@@ -159,6 +160,7 @@ with established tools.
 Several platforms exist for hacking exercises @tryhackme, @hackthebox, @pentesterlab. @tab-konkurrenz summarises
 the most relevant alternatives.
 
+#show table: set par(justify: false)
 #figure(
   table(
     columns: (1fr, 1fr, 1fr, 1fr),
@@ -173,17 +175,17 @@ the most relevant alternatives.
     [TryHackMe @tryhackme],
     [Cloud (external)],
     [Broad spectrum],
-    [Limited (paid tiers @tryhackme-pricing)],
+    [Limited (paid tiers, no custom challenges @tryhackme-pricing)],
 
     [HackTheBox @hackthebox],
     [Cloud (external)],
     [Advanced CTFs],
-    [No (no LMS integration)],
+    [No (advanced level only, no custom challenges, paid features)],
 
     [PentesterLab @pentesterlab],
     [Cloud (external)],
     [Web vulnerabilities],
-    [Partially (many exercises are locked behind a paywall @pentesterlab-exercises)],
+    [Partially (many exercises locked behind paywall @pentesterlab-exercises)],
 
     text(weight: "bold")[ISTP],
     text(weight: "bold")[On-Premises],
