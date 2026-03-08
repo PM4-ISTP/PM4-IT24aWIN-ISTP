@@ -12,22 +12,19 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            UserProvisioningFilter userProvisioningFilter) throws Exception {
-        http
-                .authorizeHttpRequests(authorize ->
-                        // catch-all rule to require authentication for all requests
-                        authorize.anyRequest().authenticated())
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(
-                        Customizer.withDefaults()
-                ))
-                .addFilterAfter(userProvisioningFilter, BearerTokenAuthenticationFilter.class);
+  @Bean
+  public SecurityFilterChain securityFilterChain(
+      HttpSecurity http, UserProvisioningFilter userProvisioningFilter) throws Exception {
+    http.authorizeHttpRequests(
+            authorize ->
+                // catch-all rule to require authentication for all requests
+                authorize.anyRequest().authenticated())
+        .csrf(csrf -> csrf.disable())
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+        .addFilterAfter(userProvisioningFilter, BearerTokenAuthenticationFilter.class);
 
-        return http.build();
-    }
+    return http.build();
+  }
 }
