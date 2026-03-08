@@ -1,9 +1,9 @@
 // src/app/page.tsx
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
-import Login from "../components/Login";
-import Logout from "../components/Logout";
-import TestButton from "../components/TestButton";
+import Login from "@/src/components/Login";
+import Logout from "@/src/components/Logout";
+import TestButton from "@/src/components/TestButton";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);

@@ -1,5 +1,7 @@
 package com.pm4.istp.controller;
 
+import static com.pm4.istp.util.JwtUtil.parseUserId;
+
 import com.pm4.istp.domain.User;
 import com.pm4.istp.repositories.UserRepository;
 import java.util.UUID;
@@ -20,7 +22,7 @@ public class TestController {
 
   @PostMapping
   public ResponseEntity<User> test(@AuthenticationPrincipal Jwt jwt) {
-    UUID userId = UUID.fromString(jwt.getSubject());
+    UUID userId = parseUserId(jwt);
 
     return userRepository
         .findById(userId)

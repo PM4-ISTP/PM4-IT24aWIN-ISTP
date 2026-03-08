@@ -1,4 +1,4 @@
-package util;
+package com.pm4.istp.util;
 
 import java.util.UUID;
 import org.springframework.security.oauth2.jwt.Jwt;
