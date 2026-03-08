@@ -41,7 +41,9 @@ public class User {
 
   @Override
   public boolean equals(Object o) {
-    if (o == null || getClass() != o.getClass()) return false;
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     User user = (User) o;
     return Objects.equals(id, user.id)
         && Objects.equals(name, user.name)
