@@ -3,7 +3,6 @@ package com.pm4.istp.config;
 import com.pm4.istp.filters.UserProvisioningFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
@@ -14,15 +13,23 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(
-      HttpSecurity http, UserProvisioningFilter userProvisioningFilter) throws Exception {
+      HttpSecurity http,
+      UserProvisioningFilter userProvisioningFilter,
+      JwtAuthenticationConverter jwtAuthenticationConverter)
+      throws Exception {
     http.authorizeHttpRequests(
             authorize ->
+                // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
+                // unauthenticated access to certain endpoints
+                // requestMatchers("api/v1/ROUTE-NAME).hasRole("NAME") --> if you want to restrict
+                // access to certain endpoints based on roles
                 // catch-all rule to require authentication for all requests
                 authorize.anyRequest().authenticated())
         .csrf(csrf -> csrf.disable())
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+        .oauth2ResourceServer(
+            oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
         .addFilterAfter(userProvisioningFilter, BearerTokenAuthenticationFilter.class);
 
     return http.build();
