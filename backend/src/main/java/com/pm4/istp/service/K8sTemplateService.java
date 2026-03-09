@@ -1,6 +1,7 @@
 package com.pm4.istp.service;
 
 import com.pm4.istp.dto.PodCreationRequest;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -18,7 +19,7 @@ public class K8sTemplateService {
     this.resourceLoader = resourceLoader;
   }
 
-  public String processPodTemplate(PodCreationRequest request) throws IOException {
+  public ByteArrayInputStream processPodTemplate(PodCreationRequest request) throws IOException {
     Resource resource = resourceLoader.getResource("classpath:k8s-templates/pod-template.yaml");
     String templateContent =
         new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
@@ -26,7 +27,7 @@ public class K8sTemplateService {
     Map<String, String> replacements = createReplacementMap(request);
     String processedTemplate = replacePlaceholders(templateContent, replacements);
 
-    return processedTemplate;
+    return new ByteArrayInputStream(processedTemplate.getBytes(StandardCharsets.UTF_8));
   }
 
   private Map<String, String> createReplacementMap(PodCreationRequest request) {

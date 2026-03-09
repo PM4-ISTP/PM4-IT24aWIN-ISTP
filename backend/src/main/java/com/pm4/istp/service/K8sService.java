@@ -8,7 +8,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,9 +40,7 @@ public class K8sService {
       String kubeconfigContent = Files.readString(kubeconfigFile.toPath());
 
       KubernetesClient client = new KubernetesClientBuilder().withConfig(kubeconfigContent).build();
-      String podYaml = templateService.processPodTemplate(request);
-      ByteArrayInputStream yamlStream =
-          new ByteArrayInputStream(podYaml.getBytes(StandardCharsets.UTF_8));
+      ByteArrayInputStream yamlStream = templateService.processPodTemplate(request);
       Pod pod = client.pods().inNamespace(defaultNamespace).load(yamlStream).create();
 
       String podName = pod.getMetadata().getName();
