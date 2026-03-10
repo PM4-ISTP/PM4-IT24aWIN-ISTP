@@ -5,6 +5,7 @@ on:
     branches: ["**"]
   pull_request:
     branches: ["**"]
+  workflow_dispatch:
 
 jobs:
   lint-and-format:
@@ -82,7 +83,7 @@ jobs:
     name: Build & Push Backend Image
     runs-on: ubuntu-latest
     needs: backend-lint-and-format
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
@@ -123,7 +124,7 @@ jobs:
     name: Build & Push Frontend Image
     runs-on: ubuntu-latest
     needs: lint-and-format
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
