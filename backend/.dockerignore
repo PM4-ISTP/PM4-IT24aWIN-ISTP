@@ -1,0 +1,7 @@
+build/
+bin/
+.gradle/
+.git/
+*.md
+src/test/
+config/
