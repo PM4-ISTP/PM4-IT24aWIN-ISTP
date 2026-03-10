@@ -1,0 +1,13 @@
+# Creates the keycloak database on first PostgreSQL init.
+# The primary "istp" database is created via POSTGRES_DB env var.
+# This script only runs when the data directory is empty (first boot).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: istp
+data:
+  init-keycloak-db.sql: |
+    CREATE DATABASE keycloak;

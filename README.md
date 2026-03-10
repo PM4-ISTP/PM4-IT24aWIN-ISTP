@@ -9,8 +9,8 @@ Interactive Security Training Platform
 
 Ensure you have the following installed:
 - **Docker** — for PostgreSQL, Keycloak, and Adminer
-- **Java 17+** — for the Spring Boot backend
-- **Node.js 18+** — for the Next.js frontend
+- **Java 21+** — for the Spring Boot backend
+- **Node.js 22+** — for the Next.js frontend
 - **k3d** — for local Kubernetes cluster 
 - **kubectl** — for interacting with Kubernetes (optional)
 

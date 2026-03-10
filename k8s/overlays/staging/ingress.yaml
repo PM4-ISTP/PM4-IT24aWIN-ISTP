@@ -1,0 +1,40 @@
+# Ingress for staging environment
+# Wildcard cert *.pm4.init-lab.ch is configured at the cluster level — no TLS section needed.
+# Uses the default IngressClass (NGINX).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: istp-ingress
+  labels:
+    app.kubernetes.io/part-of: istp
+spec:
+  rules:
+    # Main app: frontend + backend API on same host (avoids CORS issues)
+    - host: istp-staging.pm4.init-lab.ch
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+    # Keycloak on separate subdomain (avoids path-prefix complexity)
+    - host: istp-staging-auth.pm4.init-lab.ch
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: keycloak
+                port:
+                  number: 8080
