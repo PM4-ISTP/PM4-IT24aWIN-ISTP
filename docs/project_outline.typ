@@ -377,7 +377,32 @@ at other Swiss universities is realistic since the problem is not unique to ZHAW
 // ══════════════════════════════════════════════════════════════════════════════
 = Outlook
 
+ISTP is an open-source project that originated from a concrete gap we experienced during our own
+studies. There is no commercial roadmap, no crowdfunding campaign, and no plan to found a start-up.
+Our goal at the end of PM4 is to deliver a working, well-documented platform that any university
+can pick up, deploy, and use without friction.
 
+== Potential Adoption at ZHAW
+
+If the product meets the quality bar we have set ourselves — stable, secure, and genuinely
+useful in a classroom context — we intend to approach the instructors responsible for the
+ZHAW module _IT Security_ to discuss a potential pilot. Any such conversation would be informal and
+exploratory; adoption would be entirely at ZHAW's discretion and subject to their own technical
+and compliance standards.
+
+== NoTech Deliverable: Promotional Video
+
+The primary non-technical deliverable at the end of PM4 is a short promotional video. The format
+is a founder-style talking-head piece — intimate, direct, and deliberately simple — in the
+tradition of the early pitch videos produced by companies like Dropbox and Airbnb when they
+first presented their ideas.
+
+The video will cover three things: the problem (security education that stays theoretical), the
+solution (hands-on, self-hosted CTF challenges that mirror real vulnerabilities), and the value
+proposition for universities (free, on-premises, privacy-compliant, and built for academic
+workflows). It is aimed at instructors and IT administrators who might encounter ISTP — either
+at ZHAW or elsewhere — and need a fast, human way to understand what the platform is and whether
+it is worth a closer look.
 
 // ══════════════════════════════════════════════════════════════════════════════
 #pagebreak()
