@@ -189,11 +189,9 @@ jobs:
 
       - name: Set image tags and apply
         run: |
-          cd k8s/overlays/staging
-          kustomize edit set image \
-            istp-backend=ghcr.io/pm4-istp/istp-backend:${{ needs.build-push-backend.outputs.sha_short }} \
-            istp-frontend=ghcr.io/pm4-istp/istp-frontend:${{ needs.build-push-backend.outputs.sha_short }}
-          kubectl apply -k .
+          SHA="${{ needs.build-push-backend.outputs.sha_short }}"
+          sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/staging/kustomization.yaml
+          kubectl apply -k k8s/overlays/staging/
 
       - name: Wait for rollout
         run: |
