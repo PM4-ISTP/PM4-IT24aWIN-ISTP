@@ -405,5 +405,36 @@ at ZHAW or elsewhere — and need a fast, human way to understand what the platf
 it is worth a closer look.
 
 // ══════════════════════════════════════════════════════════════════════════════
+
+#pagebreak()
+= Glossary
+
+#set heading(numbering: none)
+
+#let gloss(term, definition) = {
+  grid(
+    columns: (3cm, 1fr),
+    gutter: 8pt,
+    [*#term*],
+    [#definition],
+  )
+  v(0.3em)
+}
+
+#gloss("CTF", "Capture-the-Flag — a competition format in which participants solve security challenges to retrieve hidden strings called flags.")
+#gloss("IDOR", "Insecure Direct Object Reference — an access-control vulnerability in which an attacker can access resources belonging to another user by manipulating object identifiers in requests.")
+#gloss("ISTP", "Interactive Security Training Platform — the self-hosted, Kubernetes-based learning platform developed in this project.")
+#gloss("JWT", "JSON Web Token — a compact, URL-safe token format used to transmit authentication and authorisation claims between frontend and backend.")
+#gloss("Keycloak", "An open-source identity and access-management solution that provides single sign-on, OAuth 2.0 and OpenID Connect support.")
+#gloss("Kubernetes", "An open-source container-orchestration system that automates deployment, scaling and resource management of containerised workloads.")
+#gloss("LDAP", "Lightweight Directory Access Protocol — a protocol for accessing and maintaining distributed directory information, commonly used for university identity management.")
+#gloss("OWASP", "Open Web Application Security Project — a non-profit foundation that publishes the OWASP Top 10, a widely referenced list of critical web-application security risks.")
+#gloss("Pod", "The smallest deployable unit in Kubernetes; in ISTP each student receives an ephemeral pod containing the vulnerable application for a challenge.")
+#gloss("SAML", "Security Assertion Markup Language — an XML-based standard for exchanging authentication and authorisation data, used for federated single sign-on.")
+#gloss("SQL Injection", "A code-injection attack in which malicious SQL statements are inserted into an input field, allowing an attacker to manipulate or read a database.")
+#gloss("SSO", "Single Sign-On — an authentication scheme that allows a user to log in once and gain access to multiple applications without re-entering credentials.")
+#gloss("XSS", "Cross-Site Scripting — a vulnerability in which an attacker injects malicious client-side scripts into a web page viewed by other users.")
+
+// ══════════════════════════════════════════════════════════════════════════════
 #pagebreak()
 #bibliography("refs.bib", style: "ieee", title: "References")
