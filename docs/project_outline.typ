@@ -252,7 +252,7 @@ publishes the challenge, which immediately becomes visible and launchable for al
 
 == Security and Maintenance
 
-Since students actively exploit vulnerabilities, namespace isolation, resource limits per pod and
+Since students actively exploit vulnerabilities, resource limits per pod and
 network policies are mandatory. Regular updates of all components are planned as a fixed part
 of ongoing operations.
 
