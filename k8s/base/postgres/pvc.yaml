@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: postgres
     app.kubernetes.io/part-of: istp
 spec:
-  storageClassName: cinder-csi # if this fails, try "cinder-csi-ssd" or "local-path"
+  storageClassName: cinder-csi
   accessModes:
     - ReadWriteOnce
   resources:
