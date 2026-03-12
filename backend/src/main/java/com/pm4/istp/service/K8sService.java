@@ -4,6 +4,7 @@ import com.pm4.istp.dto.PodCreationRequest;
 import com.pm4.istp.dto.PodCreationResponse;
 import com.pm4.istp.exception.K8sException;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import java.io.ByteArrayInputStream;
@@ -39,7 +40,8 @@ public class K8sService {
       }
       String kubeconfigContent = Files.readString(kubeconfigFile.toPath());
 
-      KubernetesClient client = new KubernetesClientBuilder().withConfig(kubeconfigContent).build();
+      Config config = Config.fromKubeconfig(kubeconfigContent);
+      KubernetesClient client = new KubernetesClientBuilder().withConfig(config).build();
       ByteArrayInputStream yamlStream = templateService.processPodTemplate(request);
       Pod pod = client.pods().inNamespace(defaultNamespace).load(yamlStream).create();
 
