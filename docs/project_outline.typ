@@ -263,20 +263,21 @@ of ongoing operations.
 
 #figure(
   table(
-    columns: (1fr, 1fr, 1.5fr),
+    columns: (1fr, 1.5fr, 1fr),
     inset: 8pt,
     fill: (_, row) => if row == 0 { zhawblue } else if calc.odd(row) { lightgray } else { white },
     stroke: 0.5pt + gray,
     text(fill: white, weight: "bold")[Person],
+    text(fill: white, weight: "bold")[Skills],
     text(fill: white, weight: "bold")[Focus],
-    text(fill: white, weight: "bold")[Main Responsibilities],
 
-    [Biedermann Linus],   [#todo("add focus")], [#todo("add responsibilities")],
-    [Calabrese Davide],   [#todo("add focus")], [#todo("add responsibilities")],
-    [Hoffmann Lorenz],    [#todo("add focus")], [#todo("add responsibilities")],
-    [Kaiser Jan],         [#todo("add focus")], [#todo("add responsibilities")],
-    [Schaub Alex],        [#todo("add focus")], [#todo("add responsibilities")],
-    [Seeberger Alessio],  [#todo("add focus")], [#todo("add responsibilities")],
+    [Biedermann Linus],   [Documentation, Infrastructure, Java, React], [Documentation, Fullstack Dev],
+    [Calabrese Davide],   [Java, REST, React, Database], [Fullstack Dev],
+    [Hoffmann Lorenz],    [Java, React, SpringBoot, Keycloak], [Security,\
+    Fullstack Dev],
+    [Kaiser Jan],         [Java, React, Cypress, Database], [Scrum Master, Fullstack Dev, QA],
+    [Schaub Alex],        [Java, React, SpringBoot, Database], [Fullstack Dev, Documentation],
+    [Seeberger Alessio],  [Infrastructure, Kubernetes, React, CI/CD], [Product Owner, Fullstack Dev, DevOps],
   ),
   caption: [Team competencies and responsibilities]
 )
@@ -296,8 +297,8 @@ been chosen.
     text(fill: white, weight: "bold")[Technology],
     text(fill: white, weight: "bold")[Justification],
 
-    [Frontend],       [Next.js 16+ / #todo("maybe not Shadcn")],  [#todo("add justification")],
-    [Backend],        [Spring Boot 4.x],          [Robust REST framework with Keycloak integration],
+    [Frontend],       [Next.js 16+],  [Server-side rendering framework],
+    [Backend],        [Spring Boot 4.0.3],          [Robust REST framework with Keycloak integration],
     [Authentication], [Keycloak 26+],             [Role and token management out of the box],
     [Orchestration],  [Kubernetes],               [Can run isolated pods for each exercise and enforces resource quotas],
     [Database],       [PostgreSQL],               [Reliable relational DB with full JPA support],
@@ -318,12 +319,12 @@ been chosen.
     text(fill: white, weight: "bold")[Period (CW)],
     text(fill: white, weight: "bold")[Milestone],
 
-    [Sprint 1], [CW 10-12], [#todo("add milestone")],
-    [Sprint 2], [CW 12-14], [#todo("add milestone")],
-    [Sprint 3], [CW 14-16], [#todo("add milestone")],
-    [Sprint 4], [CW 16-18], [#todo("add milestone")],
-    [Sprint 5], [CW 18-20], [#todo("add milestone")],
-    [*Project deadline*], [*idk yet*], [*Project submission*]
+    [Sprint 1], [CW 10-12], [Authentication],
+    [Sprint 2], [CW 12-14], [Course management],
+    [Sprint 3], [CW 14-16], [Challenge creation],
+    [Sprint 4], [CW 16-18], [Playable Challenges],
+    [Sprint 5], [CW 18-20], [Statistics],
+    [*Project deadline*], [*24.05.2026*], [*Project submission*]
 ,
   ),
   caption: [Roadmap with milestones]
@@ -352,7 +353,7 @@ The following seven risks in @tab-risiken have been identified. The risks are no
     [Resource exhaustion], [Infrastructure], [Due to the fact that many pods need to run in parallel, the resources of the server may get exhausted.],
     [Kubernetes manifest validation], [Security / Stability], [Instructors or TAs might upload malicious or malformed container images for the exercises.],
     [Knowledge gaps], [Team], [Members of the team might lack experience with parts of the technology stack.],
-    [Role management complexity], [Product], [#todo("write down description")]
+    [Role management complexity], [Product], [Managing multiple roles such as students, instructors, and admins with different permissions can become complex and may lead to misconfigurations or unintended access rights.]
 ,
   ),
   caption: [Roadmap with milestones]
@@ -376,7 +377,7 @@ at other Swiss universities is realistic since the problem is not unique to ZHAW
 // ══════════════════════════════════════════════════════════════════════════════
 = Outlook
 
-#todo("Describe what will be delivered at the end of PM4 — working prototype, documentation, etc.")
+
 
 // ══════════════════════════════════════════════════════════════════════════════
 #pagebreak()
