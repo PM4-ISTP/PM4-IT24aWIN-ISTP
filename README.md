@@ -3,6 +3,27 @@ Interactive Security Training Platform
 
 ---
 
+## Branch Naming
+
+All branches must use one of the following prefixes:
+
+| Prefix | Use for |
+|---|---|
+| `feature/` | New features or enhancements |
+| `bugfix/` | Bug fixes |
+| `docs/` | Documentation changes |
+| `refactor/` | Code refactoring without behavior changes |
+
+**Examples:**
+```
+feature/user-authentication
+bugfix/login-redirect-loop
+docs/add-branch-naming-section
+refactor/extract-auth-service
+```
+
+---
+
 ## Backend Code Quality
 
 The backend uses four tools to enforce consistent formatting, style, and code quality. All tools are integrated into Gradle and run automatically in CI on every push and pull request.
