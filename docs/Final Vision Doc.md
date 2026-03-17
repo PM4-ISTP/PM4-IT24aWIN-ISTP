@@ -160,4 +160,5 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 These are critical points that need clarification before or during Sprint 1:
 
 1. **Authentication flow with the university** — Will students use an existing university SSO (e.g., LDAP/SAML), or will Keycloak manage its own user database? This impacts registration flow significantly.
+    - We have decided not to use LDAP/SAML. For the registration, we will only allow email addresses whose domain matches that of the university.
 2. **Pod connectivity method** — How exactly do students interact with their running pod? Via HTTP (challenge exposes a web app), SSH, or a browser-based terminal? This is the core UX decision and affects backend architecture. *(Flagged: clarify with Alessio)*
