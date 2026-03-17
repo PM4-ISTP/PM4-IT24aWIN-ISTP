@@ -122,9 +122,9 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 ### 8.2 Pull Requests
 - **Minimum 2 approving reviews** before merge
 - PR must include:
-- Reference to the related issue (`Closes #<id>`)
-- Brief description of what changed and why
-- Notes on how to test the change manually (if applicable)
+    - Reference to the related issue (`Closes #<id>`)
+    - Brief description of what changed and why
+    - Notes on how to test the change manually (if applicable)
 - **CI/CD pipeline must pass** (lint, format check, tests) before merge is allowed
 
 ### 8.3 Frontend (Next.js)
