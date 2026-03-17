@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { ColorSchemeScript, MantineProvider } from '@mantine/core';
+import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from "@mantine/core";
 import { Geist, Geist_Mono } from "next/font/google";
 import NextAuthSessionProvider from "@/src/components/SessionProvider";
-import '@mantine/core/styles.css';
+import "@mantine/core/styles.css";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" {...mantineHtmlProps}>
       <head>
         <ColorSchemeScript />
       </head>
