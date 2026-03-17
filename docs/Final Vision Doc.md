@@ -76,6 +76,8 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 | R-6 | **Knowledge gaps** — Team unfamiliar with parts of the stack (Keycloak, Springboot) | Team | Accept as a learning objective; allocate spike tasks per unknown area in early sprints |
 | R-7 | **Role Management complexity** — Fine-grained permissions may be under-specified | Product | Use Keycloak realm roles (student / instructor / admin) as the single source of truth; keep permission model simple |
 
+**Note:** R-1 is not a risk anymore, because we have decided to not use LDAP/SAML for the authentication (see point 1 of [section 9](#9-open-questions)).
+
 ---
 
 ## 6. Base Architecture
