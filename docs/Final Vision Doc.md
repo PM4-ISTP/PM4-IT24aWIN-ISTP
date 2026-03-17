@@ -97,7 +97,7 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 | Layer | Technology | Justification |
 |---|---|---|
 | **Frontend** | Next.js 16+ (App Router) | SSR/SSG flexibility, strong ecosystem, team familiarity |
-| **UI Components** | Mantine | Accessible, unstyled-by-default components; fast to customize |
+| **UI Components** | Mantine | Accessible, lightweight components; fast to customize |
 | **Backend** | Spring Boot 4.0.3 | Robust REST framework; excellent Keycloak integration |
 | **Auth** | Keycloak 26+ | Industry-standard OIDC; handles SSO, roles, and token management out of the box |
 | **K8s Client** | fabric8 Kubernetes Client | Programmatic pod lifecycle management from Spring Boot |
