@@ -85,7 +85,7 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 
 | Component | Role |
 |---|---|
-| **Next.js + Shadcn/UI** | Student & instructor UI; communicates with Spring Boot REST API |
+| **Next.js + Mantine** | Student & instructor UI; communicates with Spring Boot REST API |
 | **Spring Boot** | Business logic, K8s pod lifecycle management (via `fabric8`), flag validation, scoring |
 | **Keycloak** | OIDC/OAuth2 provider; issues JWTs; manages roles (student, instructor, admin) |
 | **Kubernetes** | Runs isolated challenge pods per student in dedicated namespace; enforces resource quotas |
@@ -97,10 +97,10 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 
 | Layer | Technology | Justification |
 |---|---|---|
-| **Frontend** | Next.js 14+ (App Router) | SSR/SSG flexibility, strong ecosystem, team familiarity |
-| **UI Components** | Shadcn/UI | Accessible, unstyled-by-default components; fast to customize |
-| **Backend** | Spring Boot 3.x | Robust REST framework; excellent Keycloak integration |
-| **Auth** | Keycloak 24+ | Industry-standard OIDC; handles SSO, roles, and token management out of the box |
+| **Frontend** | Next.js 16+ (App Router) | SSR/SSG flexibility, strong ecosystem, team familiarity |
+| **UI Components** | Mantine | Accessible, unstyled-by-default components; fast to customize |
+| **Backend** | Spring Boot 4.0.3 | Robust REST framework; excellent Keycloak integration |
+| **Auth** | Keycloak 26+ | Industry-standard OIDC; handles SSO, roles, and token management out of the box |
 | **K8s Client** | fabric8 Kubernetes Client | Programmatic pod lifecycle management from Spring Boot |
 | **Database** | PostgreSQL | Reliable relational DB; full JPA/Hibernate support |
 | **ORM** | Spring Data JPA (Hibernate) — Code First | Entities define schema; simplifies development iteration |
