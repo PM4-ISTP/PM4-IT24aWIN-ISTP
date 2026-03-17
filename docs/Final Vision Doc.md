@@ -68,15 +68,12 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 
 | ID | Risk | Category | Mitigation Strategy |
 |---|---|---|---|
-| R-1 | **Authentication integration** — Keycloak SSO setup and JWT propagation between Next.js and Spring Boot may be complex | Technical | Clarify requirements with lecturer early; prototype Keycloak integration in sprint 1 |
-| R-2 | **Student → Pod connectivity** — Connecting students to running pods (SSH / browser terminal) requires a secure reverse-proxy or WebSocket tunnel | Technical / Security | Investigate `kubectl exec` via backend proxy or a lightweight terminal-in-browser solution (e.g., ttyd, Wetty) |
-| R-3 | **Security of the platform itself** — Students are actively exploiting vulnerabilities; lateral movement or container escape is possible | Security | Namespace isolation, resource quotas, NetworkPolicies, read-only root filesystems where possible; accept residual risk for on-prem academic use |
-| R-4 | **Resource exhaustion** — Many concurrent pods may overwhelm cluster resources | Infrastructure | Define resource requests/limits per pod manifest; set max-pods-per-student quota |
-| R-5 | **Kubernetes Manifest Validation** — Malicious or malformed manifests submitted by instructors | Security / Stability | Validate manifests against a whitelist of allowed fields/resources; reject privileged containers |
-| R-6 | **Knowledge gaps** — Team unfamiliar with parts of the stack (Keycloak, Springboot) | Team | Accept as a learning objective; allocate spike tasks per unknown area in early sprints |
-| R-7 | **Role Management complexity** — Fine-grained permissions may be under-specified | Product | Use Keycloak realm roles (student / instructor / admin) as the single source of truth; keep permission model simple |
-
-**Note:** R-1 is not a risk anymore, because we have decided to not use LDAP/SAML for the authentication (see point 1 of [section 9](#9-open-questions)).
+| R-1 | **Student → Pod connectivity** — Connecting students to running pods (SSH / browser terminal) requires a secure reverse-proxy or WebSocket tunnel | Technical / Security | Investigate `kubectl exec` via backend proxy or a lightweight terminal-in-browser solution (e.g., ttyd, Wetty) |
+| R-2 | **Security of the platform itself** — Students are actively exploiting vulnerabilities; lateral movement or container escape is possible | Security | Namespace isolation, resource quotas, NetworkPolicies, read-only root filesystems where possible; accept residual risk for on-prem academic use |
+| R-3 | **Resource exhaustion** — Many concurrent pods may overwhelm cluster resources | Infrastructure | Define resource requests/limits per pod manifest; set max-pods-per-student quota |
+| R-4 | **Kubernetes Manifest Validation** — Malicious or malformed manifests submitted by instructors | Security / Stability | Validate manifests against a whitelist of allowed fields/resources; reject privileged containers |
+| R-5 | **Knowledge gaps** — Team unfamiliar with parts of the stack (Keycloak, Springboot) | Team | Accept as a learning objective; allocate spike tasks per unknown area in early sprints |
+| R-6 | **Role Management complexity** — Fine-grained permissions may be under-specified | Product | Use Keycloak realm roles (student / instructor / admin) as the single source of truth; keep permission model simple |
 
 ---
 
