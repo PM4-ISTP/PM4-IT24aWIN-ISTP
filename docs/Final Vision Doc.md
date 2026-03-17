@@ -114,9 +114,9 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 ## 8. Coding Standards
 
 ### 8.1 Git Workflow
-- **One branch per issue/user story** — branch name format: `feature/<issue-id>-short-description`, `fix/<issue-id>-short-description`, `chore/<issue-id>-short-description`
+- **One branch per issue/user story** — branch name format: `feature/short-description`, `bugfix/short-description`, `docs/short-description`, `refactor/short-description`
 - **One developer per branch** — no shared feature branches
-- **Commit messages follow Conventional Commits:**
+- **Commit messages follow conventional commits**
 - **No direct pushes to `main`** — all changes go through PRs
 
 ### 8.2 Pull Requests
