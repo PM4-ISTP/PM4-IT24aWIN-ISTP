@@ -45,7 +45,7 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 
 ## 3.3 Admin-Facing
 
-- **User & Role Management** — Promote students to instructor role, demote or suspend accounts.
+- **User & Role Management** — Promote students to instructor role, demote or delete accounts.
     
 ---
 
@@ -53,10 +53,10 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 
 | # | Objective | Acceptance Criteria |
 |---|---|---|
-| O-1 | User authentication & role management working | Students and instructors can register, log in, and access role-appropriate views; invite codes to prevent randos from joining |
+| O-1 | User authentication & role management working | Students and instructors can register, log in, and access role-appropriate views |
 | O-2 | Challenge delivery pipeline functional | Instructor can publish a challenge; student can launch it as an isolated pod and connect to it |
 | O-3 | Minimum viable challenge set | 3–5 challenges are playable end-to-end |
-| O-4 | Student Dashboard | Students can see all the challenges on a dashboard; use passwords (optional) to sign up for a challenge |
+| O-4 | Student Dashboard | Students can see all the challenges on a dashboard |
 | O-5 | Pod isolation & cleanup | Each pod runs a single challenge; auto-terminates after inactivity timeout |
 | O-6 | Flag submission & scoring | Students submit flags via UI; correct submissions update score |
 | O-7 | Instructor workflow complete | Instructors can create, publish, and manage challenges |
