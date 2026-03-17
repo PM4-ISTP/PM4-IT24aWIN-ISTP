@@ -27,7 +27,7 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 ## 3. Main Features
 
 ### 3.1 Student-Facing
-- **Registration & Login** — Authentication with student / teacher role assignment
+- **Registration & Login** — Authentication with student / instructor role assignment (Clarification: all users start out as students. Instructor role is assigned by admin (see [section 3.3](#33-admin-facing)).)
 - **Challenge Browser** — List of published challenges with title, description, difficulty, and category 
 - **Pod Launcher** — One-click spin-up of a dedicated, namespaced Kubernetes pod per challenge per student
 - **Keep-Alive Mechanism** — Prompt shown ~every 60 minutes of inactivity; pod auto-terminates if not acknowledged
@@ -56,7 +56,7 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 | O-1 | User authentication & role management working | Students and instructors can register, log in, and access role-appropriate views |
 | O-2 | Challenge delivery pipeline functional | Instructor can publish a challenge; student can launch it as an isolated pod and connect to it |
 | O-3 | Minimum viable challenge set | 3–5 challenges are playable end-to-end |
-| O-4 | Student Dashboard | Students can see all the challenges on a dashboard |
+| O-4 | Challenge Browser | Students can see all the challenges in the challenge browser |
 | O-5 | Pod isolation & cleanup | Each pod runs a single challenge; auto-terminates after inactivity timeout |
 | O-6 | Flag submission & scoring | Students submit flags via UI; correct submissions update score |
 | O-7 | Instructor workflow complete | Instructors can create, publish, and manage challenges |
@@ -162,5 +162,5 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 These are critical points that need clarification before or during Sprint 1:
 
 1. **Authentication flow with the university** — Will students use an existing university SSO (e.g., LDAP/SAML), or will Keycloak manage its own user database? This impacts registration flow significantly.
-    - We have decided not to use LDAP/SAML. For the registration, we will only allow email addresses whose domain matches that of the university.
+    - We have decided not to use an existing university SSO. For the registration, we will only allow email addresses whose domain matches that of the university.
 2. **Pod connectivity method** — How exactly do students interact with their running pod? Via HTTP (challenge exposes a web app), SSH, or a browser-based terminal? This is the core UX decision and affects backend architecture. *(Flagged: clarify with Alessio)*
