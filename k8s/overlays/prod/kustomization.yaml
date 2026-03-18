@@ -1,0 +1,49 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: istp-prod
+
+resources:
+  - ../../base
+  - ingress.yaml
+
+images:
+  - name: istp-backend
+    newName: ghcr.io/pm4-istp/istp-backend
+    newTag: latest
+  - name: istp-frontend
+    newName: ghcr.io/pm4-istp/istp-frontend
+    newTag: latest
+
+configMapGenerator:
+  - name: istp-config
+    literals:
+      - keycloak-hostname=istp-auth.pm4.init-lab.ch
+      - keycloak-issuer-uri=https://istp-auth.pm4.init-lab.ch/realms/interactive-security-training-platform
+      - app-namespace=istp-prod
+
+secretGenerator:
+  - name: postgres-credentials
+    literals:
+      - username=postgres
+      - password=changeme-prod # TODO: use a real password
+  - name: keycloak-credentials
+    literals:
+      - admin-username=admin
+      - admin-password=changeme-prod # TODO: use a real password
+
+# ┌─────────────────────────────────────────────────────────────────────┐
+# │ Manual secrets (create once per namespace, not managed by Kustomize)│
+# │                                                                     │
+# │ 1. ghcr-pull-secret — pull images from ghcr.io                     │
+# │    kubectl create secret docker-registry ghcr-pull-secret \         │
+# │      --docker-server=ghcr.io \                                     │
+# │      --docker-username=<github-user> \                              │
+# │      --docker-password=<PAT-with-read:packages> \                  │
+# │      -n istp-prod                                                   │
+# │                                                                     │
+# │ 2. kubeconfig — K8s auth for challenge pod creation                │
+# │    kubectl create secret generic kubeconfig \                       │
+# │      --from-file=kubeconfig=<path-to-kubeconfig> \                 │
+# │      -n istp-prod                                                   │
+# └─────────────────────────────────────────────────────────────────────┘

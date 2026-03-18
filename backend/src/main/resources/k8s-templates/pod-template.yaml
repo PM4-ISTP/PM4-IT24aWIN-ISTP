@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${podName}
+  namespace: ${namespace}
+spec:
+  containers:
+  - name: ${containerName}
+    image: ${image}
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+  restartPolicy: Never
