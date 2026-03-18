@@ -16,11 +16,15 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 
 ## 2. Target Audience
 
-| Persona | Description |
+The following table describes the three user groups of ISTP:
+
+| User Group | Description |
 |---|---|
 | **Student** | University student in an application security course; exploits vulnerabilities, submits flags, tracks progress |
 | **Instructor** | Lecturer or teaching assistant; creates and publishes challenges via admin panel |
 | **Platform Admin** | Technical staff |
+
+A person can only register themselves as a user on ISTP if the domain of the email address they use to register themselves with matches the predefined domain of the university. This solution is both effective and simple to implement, due to ISTP being hosted on-premises by the universities themselves. Other registration barriers, like an invitation code, were discussed by the group. However, they were discarded in favor of the previously mentioned solution for the reasons stated above.
 
 ---
 
@@ -53,7 +57,7 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 
 | # | Objective | Acceptance Criteria |
 |---|---|---|
-| O-1 | User authentication & role management working | Students and instructors can register, log in, and access role-appropriate views |
+| O-1 | User authentication & role management working | Students and instructors can register with their university email address (validation of the email address domain), log in, and access role-appropriate views |
 | O-2 | Challenge delivery pipeline functional | Instructor can publish a challenge; student can launch it as an isolated pod and connect to it |
 | O-3 | Minimum viable challenge set | 3–5 challenges are playable end-to-end |
 | O-4 | Challenge Browser | Students can see all the challenges in the challenge browser |
