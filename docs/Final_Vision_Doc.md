@@ -109,8 +109,6 @@ A person can only register themselves as a user on ISTP if the domain of the ema
 | **ORM** | Spring Data JPA (Hibernate) — Code First | Entities define schema; simplifies development iteration |
 | **Infrastructure** | Kubernetes (single cluster) | Namespace-level isolation; native resource management |
 | **CI/CD** | GitHub Actions | Automated lint, test, and build checks before merge |
-| **Formatter (FE)** | Prettier | Enforced via pre-commit hook and CI |
-| **Formatter (BE)** | Checkstyle (Feisthammel PM2) | Consistent Java style; integrated in Gradle build |
 
 ---
 
@@ -131,14 +129,13 @@ A person can only register themselves as a user on ISTP if the domain of the ema
 - **CI/CD pipeline must pass** (lint, format check, tests) before merge is allowed
 
 ### 8.3 Frontend (Next.js)
-- **Formatter:** Prettier — enforced via `.prettierrc` and `eslint-config-prettier`; run automatically on save and in CI
-- **Linter:** ESLint with Next.js recommended rules
+- **Automatic checks and fixes of coding style:** use formatter and linter
 - **Component structure:** One component per file; file name matches component name (PascalCase)
 - **No `any` types** in TypeScript — use explicit types or `unknown` with narrowing
 - **API calls** centralized in a `/lib/api/` directory; no raw `fetch` inside components
 
 ### 8.4 Backend (Spring Boot)
-- **Style guide:** Feisthammel Coding Style PM2 (as defined by course); enforced via Checkstyle Gradle plugin — build fails on violations
+- **Automatic checks and fixes of coding style:** use formatter and linter (configuration based on clean code handbook from Mr. Feisthammel from the module PM2)
 - **No business logic in controllers** — controllers delegate to services only
 
 ### 8.5 Testing
@@ -148,7 +145,7 @@ A person can only register themselves as a user on ISTP if the domain of the ema
 - **CI blocks merge** if any test fails
 
 ### 8.6 CI/CD Pipeline (runs before merge)
-1. Lint & format check (Prettier / ESLint / Checkstyle)
+1. Lint & format check
 2. Unit test suite
 3. Build (Next.js build + Gradle package)
 
