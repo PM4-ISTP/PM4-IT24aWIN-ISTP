@@ -7,6 +7,10 @@ import { jwtDecode } from "jwt-decode";
  * Refreshes an expired access token using the refresh token.
  */
 async function refreshAccessToken(token: JWT): Promise<JWT> {
+  if (!token.refreshToken) {
+    console.error("Missing refresh token");
+    return { ...token, error: "RefreshAccessTokenError" };
+  }
   try {
     const response = await fetch(
       `${process.env.AUTH_KEYCLOAK_ISSUER}/protocol/openid-connect/token`,
@@ -17,7 +21,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
           client_id: process.env.AUTH_KEYCLOAK_ID!,
           client_secret: process.env.AUTH_KEYCLOAK_SECRET!,
           grant_type: "refresh_token",
-          refresh_token: token.refreshToken as string,
+          refresh_token: token.refreshToken,
         }),
       }
     );
@@ -58,7 +62,12 @@ export const authOptions: AuthOptions = {
     async jwt({ token, account }) {
       // On initial sign-in, persist the tokens from Keycloak
       if (account) {
-        const decoded = jwtDecode<KeycloakJwt>(account.access_token!);
+        if (!account.access_token) {
+          console.error("Missing access_token on account");
+          return { ...token, error: "RefreshAccessTokenError" };
+        }
+
+        const decoded = jwtDecode<KeycloakJwt>(account.access_token);
         return {
           ...token,
           accessToken: account.access_token,

@@ -1,6 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import { ROLE_GROUPS } from "./lib/roles";
+import { isStringArray } from "./lib/utils";
 
 const ROUTE_ROLES: Record<string, readonly string[]> = {
   "/dashboard/admin": ROLE_GROUPS.ADMIN_ONLY,
@@ -30,7 +31,11 @@ export default withAuth(
     const requiredRoles = getRequiredRoles(pathname);
     if (!requiredRoles) return NextResponse.next();
 
-    const userRoles = (token?.roles as string[]) ?? [];
+    const rawRoles = token?.roles;
+    if (rawRoles !== undefined && !isStringArray(rawRoles)) {
+      console.error("Unexpected token.roles shape:", rawRoles);
+    }
+    const userRoles = isStringArray(rawRoles) ? rawRoles : [];
     const hasRole = requiredRoles.some((role) => userRoles.includes(role));
 
     if (!hasRole) {
