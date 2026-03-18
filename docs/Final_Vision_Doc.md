@@ -18,11 +18,11 @@ Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **
 
 The following table describes the three user groups of ISTP:
 
-| User Group | Description |
-|---|---|
-| **Student** | University student in an application security course; exploits vulnerabilities, submits flags, tracks progress |
-| **Instructor** | Lecturer or teaching assistant; creates and publishes challenges via admin panel |
-| **Platform Admin** | Technical staff |
+| User Group | Description                                                                                                                      |
+|---|----------------------------------------------------------------------------------------------------------------------------------|
+| **Student** | University student in an application security course; exploits vulnerabilities, submits flags, tracks progress                   |
+| **Instructor** | Lecturer or teaching assistant; creates and publishes challenges via admin panel                                                 |
+| **Platform Admin** | Technical staff; manages user accounts and roles: promotes students to the instructor role, demotes or deletes accounts|
 
 A person can only register themselves as a user on ISTP if the domain of the email address they use to register themselves with matches the predefined domain of the university. This solution is both effective and simple to implement, due to ISTP being hosted on-premises by the universities themselves. Other registration barriers, like an invitation code, were discussed by the group. However, they were discarded in favor of the previously mentioned solution for the reasons stated above.
 
@@ -37,9 +37,9 @@ A person can only register themselves as a user on ISTP if the domain of the ema
 - **Keep-Alive Mechanism** — Prompt shown ~every 60 minutes of inactivity; pod auto-terminates if not acknowledged
 - **Flag Submission** — Discovered flags are submitted online and validated against stored solution; points are awarded accordingly.
 - **Progress Dashboard** — View solved challenges and current score
-- **Courses** — Join courses and play challenges from course
+- **Courses** — Browse courses and play their challenges
 
-## 3.2 Instructor-Facing
+### 3.2 Instructor-Facing
 
 - **Challenge Creation** — Submit a container image (registry + image name), an  exercise description, and the expected flag(s) to be discovered
     
@@ -49,7 +49,7 @@ A person can only register themselves as a user on ISTP if the domain of the ema
     
 - **Course Management** — Create courses; add challenges to course (both own challenges and from other instructors)
 
-## 3.3 Admin-Facing
+### 3.3 Admin-Facing
 
 - **User & Role Management** — Promote students to instructor role, demote or delete accounts.
     
@@ -61,9 +61,9 @@ A person can only register themselves as a user on ISTP if the domain of the ema
 |---|---|---|
 | O-1 | User authentication & role management working | Students and instructors can register with their university email address (validation of the email address domain), log in, and access role-appropriate views |
 | O-2 | Challenge delivery pipeline functional | Instructor can publish a challenge; student can launch it as an isolated pod and connect to it |
-| O-3 | Minimum viable challenge set | 3–5 challenges are playable end-to-end |
-| O-4 | Challenge Browser | Students can see all published challenges in the challenge browser. They can search challenges by name (lower or upper cases are ignored). The challenges can be filtered by their difficulty and category. |
-| O-5 | Courses | Instructors can create courses and add challenges (both own challenges and from other instructors) to those courses. Students can join courses and play the challenges from the courses.<br/><br/>**Note:** The challenges inside a course are simply published challenges. A student can play the challenges from a course even if they do not join it. A course can be seen as a simple collection of published challenges. |
+| O-3 | Minimum viable challenge set | Student can launch a challenge, discover the flag, submit it via the UI, and receive the corresponding points |
+| O-4 | Challenge Browser | Students can see all published challenges in the challenge browser. They can search challenges by name (search is case-insensitive). The challenges can be filtered by their difficulty and category. |
+| O-5 | Courses | Instructors can create courses and add challenges (both own challenges and from other instructors) to those courses. Students can browse courses and play their challenges.|
 | O-6 | Pod isolation & cleanup | Each pod runs a single challenge; auto-terminates after inactivity timeout |
 | O-7 | Flag submission & scoring | Students submit flags via UI; correct submissions update score |
 | O-8 | Instructor workflow complete | Instructors can create, publish, and manage challenges |
@@ -73,14 +73,14 @@ A person can only register themselves as a user on ISTP if the domain of the ema
 
 ## 5. Key Risks
 
-| ID | Risk | Category | Mitigation Strategy |
-|---|---|---|---|
-| R-1 | **Student → Pod connectivity** — Connecting students to running pods (SSH / browser terminal) requires a secure reverse-proxy or WebSocket tunnel | Technical / Security | Investigate `kubectl exec` via backend proxy or a lightweight terminal-in-browser solution (e.g., ttyd, Wetty) |
-| R-2 | **Security of the platform itself** — Students are actively exploiting vulnerabilities; lateral movement or container escape is possible | Security | Namespace isolation, resource quotas, NetworkPolicies, read-only root filesystems where possible; accept residual risk for on-prem academic use |
-| R-3 | **Resource exhaustion** — Many concurrent pods may overwhelm cluster resources | Infrastructure | Define resource requests/limits per pod manifest; set max-pods-per-student quota |
-| R-4 | **Kubernetes Manifest Validation** — Malicious or malformed manifests submitted by instructors | Security / Stability | Validate manifests against a whitelist of allowed fields/resources; reject privileged containers |
-| R-5 | **Knowledge gaps** — Team unfamiliar with parts of the stack (Keycloak, Springboot) | Team | Accept as a learning objective; allocate spike tasks per unknown area in early sprints |
-| R-6 | **Role Management complexity** — Fine-grained permissions may be under-specified | Product | Use Keycloak realm roles (student / instructor / admin) as the single source of truth; keep permission model simple |
+| ID | Risk                                                                                                                                                                                           | Category | Mitigation Strategy |
+|---|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---|---|
+| R-1 | **Student → Pod connectivity** — Connecting students to running pods (SSH / browser terminal) requires a secure reverse-proxy or WebSocket tunnel                                              | Technical / Security | Investigate `kubectl exec` via backend proxy or a lightweight terminal-in-browser solution (e.g., ttyd, Wetty) |
+| R-2 | **Security of the platform itself** — Students are actively exploiting vulnerabilities; lateral movement or container escape is possible                                                       | Security | Namespace isolation, resource quotas, NetworkPolicies, read-only root filesystems where possible; accept residual risk for on-prem academic use |
+| R-3 | **Resource exhaustion** — Many concurrent pods may overwhelm cluster resources                                                                                                                 | Infrastructure | Define resource requests/limits per pod manifest; set max-pods-per-student quota |
+| R-4 | **Instructor-Submitted Configuration Validation** - Malicious container images or dangerous runtime parameters (env vars, exposed ports) submitted by instructors could compromise the cluster | Security / Stability | Validate submitted image names and runtime parameters against a whitelist; reject privileged configurations |
+| R-5 | **Knowledge gaps** — Team unfamiliar with parts of the stack (Keycloak, Springboot)                                                                                                            | Team | Accept as a learning objective; allocate spike tasks per unknown area in early sprints |
+| R-6 | **Role Management complexity** — Fine-grained permissions may be under-specified                                                                                                               | Product | Use Keycloak realm roles (student / instructor / admin) as the single source of truth; keep permission model simple |
 
 ---
 
@@ -138,7 +138,7 @@ A person can only register themselves as a user on ISTP if the domain of the ema
 - **API calls** centralized in a `/lib/api/` directory; no raw `fetch` inside components
 
 ### 8.4 Backend (Spring Boot)
-- **Automatic checks and fixes of coding style:** use formatter and linter (configuration based on clean code handbook from Mr. Feisthammel from the module PM2)
+- **Automatic checks and fixes of coding style:** use formatter and linter 
 - **No business logic in controllers** — controllers delegate to services only
 
 ### 8.5 Testing
@@ -156,12 +156,4 @@ A person can only register themselves as a user on ISTP if the domain of the ema
 - **No secrets in code or repository** — use environment variables; `.env.example` documents required keys
 - **All environment-specific config** (DB URLs, Keycloak realm, K8s namespace prefix) goes into `application.yml` profiles or `.env` files, never hardcoded
 
----
 
-## 9. Open Questions 
-
-These are critical points that need clarification before or during Sprint 1. The numbered items are the open questions, while the unnumbered sub-items are our answers/decisions about the respective question.
-
-1. **Authentication flow with the university** — Will students use an existing university SSO (e.g., LDAP/SAML), or will Keycloak manage its own user database? This impacts registration flow significantly.
-    - We have decided not to use an existing university SSO. For the registration, we will only allow email addresses whose domain matches that of the university.
-2. **Pod connectivity method** — How exactly do students interact with their running pod? Via HTTP (challenge exposes a web app), SSH, or a browser-based terminal? This is the core UX decision and affects backend architecture. *(Flagged: clarify with Alessio)*
