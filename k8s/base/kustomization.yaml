@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - postgres/pvc.yaml
+  - postgres/configmap.yaml
+  - postgres/deployment.yaml
+  - postgres/service.yaml
+  - keycloak/deployment.yaml
+  - keycloak/service.yaml
+  - backend/deployment.yaml
+  - backend/service.yaml
+  - frontend/deployment.yaml
+  - frontend/service.yaml

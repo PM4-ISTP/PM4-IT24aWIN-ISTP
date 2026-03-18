@@ -3,6 +3,122 @@ Interactive Security Training Platform
 
 ---
 
+## Development Environment Setup
+
+### Prerequisites
+
+Ensure you have the following installed:
+- **Docker** — for PostgreSQL, Keycloak, and Adminer
+- **Java 21+** — for the Spring Boot backend
+- **Node.js 22+** — for the Next.js frontend
+- **k3d** — for local Kubernetes cluster 
+- **kubectl** — for interacting with Kubernetes (optional)
+
+### Quick Start
+
+#### 1. Start Docker Compose Services
+
+From the project root, start PostgreSQL, Keycloak, and Adminer:
+
+```bash
+cd infra
+docker compose up -d
+```
+
+To stop services:
+```bash
+docker compose down
+```
+---
+
+#### 2. Start the Backend
+
+From the `backend/` directory:
+
+```bash
+cd backend
+./gradlew bootRun
+```
+
+The Spring Boot application starts on `http://localhost:8080`.
+
+**Before committing**, always run code formatting:
+```bash
+./gradlew spotlessApply
+```
+
+---
+
+#### 3. Start the Frontend
+
+From the `frontend/` directory:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The Next.js application starts on `http://localhost:3000`.
+
+---
+
+### Kubernetes Setup (K3d)
+
+#### Create a K3d Cluster
+
+k3d is a lightweight Kubernetes distribution perfect for local development.
+
+```bash
+k3d cluster create istp
+```
+
+**Verify the cluster is running:**
+```bash
+k3d cluster list
+kubectl cluster-info
+```
+
+#### Download and Configure Kubeconfig
+
+Once the cluster is created, export the kubeconfig to the backend:
+
+```bash
+# From the project root (pm4/)
+mkdir -p backend/src/main/resources
+k3d kubeconfig get istp > backend/src/main/resources/Kubeconfig
+```
+
+**Key points:**
+- The Kubeconfig file is required by the backend to communicate with the Kubernetes cluster
+- The file is already `.gitignored` (contains sensitive cluster credentials)
+
+**Verify the kubeconfig was created:**
+```bash
+ls -la backend/src/main/resources/Kubeconfig
+```
+
+## Branch Naming
+
+All branches must use one of the following prefixes:
+
+| Prefix | Use for |
+|---|---|
+| `feature/` | New features or enhancements |
+| `bugfix/` | Bug fixes |
+| `docs/` | Documentation changes |
+| `refactor/` | Code refactoring without behavior changes |
+
+**Examples:**
+```
+feature/user-authentication
+bugfix/login-redirect-loop
+docs/add-branch-naming-section
+refactor/extract-auth-service
+```
+
+---
+
 ## Backend Code Quality
 
 The backend uses four tools to enforce consistent formatting, style, and code quality. All tools are integrated into Gradle and run automatically in CI on every push and pull request.
