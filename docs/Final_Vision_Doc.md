@@ -10,7 +10,7 @@
 
 The **Interactive Security Training Platform** (abbreviated as ISTP) is a self-hosted, Kubernetes-powered Capture-the-Flag (CTF) learning platform designed for university students studying application security. It provides isolated, ephemeral container environments where students actively exploit real-world vulnerabilities — rather than passively consuming theory.
 
-Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **on-premises at educational institutions**, focuses exclusively on **application security (OWASP Top 10 and beyond)**, and is tailored to academic workflows with instructor-driven challenge management.
+Unlike commercial platforms such as TryHackMe or HackTheBox, ISTP is deployed **on-premises at educational institutions** and is tailored to academic workflows with instructor-driven challenge management.
 
 ---
 
