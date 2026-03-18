@@ -37,6 +37,7 @@ A person can only register themselves as a user on ISTP if the domain of the ema
 - **Keep-Alive Mechanism** — Prompt shown ~every 60 minutes of inactivity; pod auto-terminates if not acknowledged
 - **Flag Submission** — Discovered flags are submitted online and validated against stored solution; points are awarded accordingly.
 - **Progress Dashboard** — View solved challenges and current score
+- **Courses** — Join courses and play challenges from course
 
 ## 3.2 Instructor-Facing
 
@@ -46,6 +47,7 @@ A person can only register themselves as a user on ISTP if the domain of the ema
     
 - **Challenge Lifecycle Management** — Publish and archive challenges; only published challenges are visible to students
     
+- **Course Management** — Create courses; add challenges to course (both own challenges and from other instructors)
 
 ## 3.3 Admin-Facing
 
@@ -60,11 +62,12 @@ A person can only register themselves as a user on ISTP if the domain of the ema
 | O-1 | User authentication & role management working | Students and instructors can register with their university email address (validation of the email address domain), log in, and access role-appropriate views |
 | O-2 | Challenge delivery pipeline functional | Instructor can publish a challenge; student can launch it as an isolated pod and connect to it |
 | O-3 | Minimum viable challenge set | 3–5 challenges are playable end-to-end |
-| O-4 | Challenge Browser | Students can see all the challenges in the challenge browser |
-| O-5 | Pod isolation & cleanup | Each pod runs a single challenge; auto-terminates after inactivity timeout |
-| O-6 | Flag submission & scoring | Students submit flags via UI; correct submissions update score |
-| O-7 | Instructor workflow complete | Instructors can create, publish, and manage challenges |
-| O-8 | On-premises deployment | Platform is fully deployable on a university-operated single Kubernetes cluster with documented setup steps |
+| O-4 | Challenge Browser | Students can see all published challenges in the challenge browser. They can search challenges by name (lower or upper cases are ignored). The challenges can be filtered by their difficulty and category. |
+| O-5 | Courses | Instructors can create courses and add challenges (both own challenges and from other instructors) to those courses. Students can join courses and play the challenges from the courses.<br/><br/>**Note:** The challenges inside a course are simply published challenges. A student can play the challenges from a course even if they do not join it. A course can be seen as a simple collection of published challenges. |
+| O-6 | Pod isolation & cleanup | Each pod runs a single challenge; auto-terminates after inactivity timeout |
+| O-7 | Flag submission & scoring | Students submit flags via UI; correct submissions update score |
+| O-8 | Instructor workflow complete | Instructors can create, publish, and manage challenges |
+| O-9 | On-premises deployment | Platform is fully deployable on a university-operated single Kubernetes cluster with documented setup steps |
 
 ---
 
