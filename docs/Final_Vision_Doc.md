@@ -1,7 +1,7 @@
 # Product Vision — Interactive Security Training Platform
 
 > **Version:** 1.0
-> **Date:** 2026-03-17
+> **Date:** 17.03.2026
 > **Status:** Final
 
 ---
