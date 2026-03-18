@@ -160,7 +160,7 @@ A person can only register themselves as a user on ISTP if the domain of the ema
 
 ## 9. Open Questions 
 
-These are critical points that need clarification before or during Sprint 1:
+These are critical points that need clarification before or during Sprint 1. The numbered items are the open questions, while the unnumbered sub-items are our answers/decisions about the respective question.
 
 1. **Authentication flow with the university** — Will students use an existing university SSO (e.g., LDAP/SAML), or will Keycloak manage its own user database? This impacts registration flow significantly.
     - We have decided not to use an existing university SSO. For the registration, we will only allow email addresses whose domain matches that of the university.
