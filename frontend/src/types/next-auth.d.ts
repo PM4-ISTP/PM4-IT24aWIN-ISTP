@@ -4,6 +4,7 @@ import "next-auth/jwt";
 declare module "next-auth" {
   interface Session {
     accessToken?: string;
+    roles?: string[];
     error?: string;
   }
 }
@@ -13,6 +14,12 @@ declare module "next-auth/jwt" {
     accessToken?: string;
     accessTokenExpires?: number;
     refreshToken?: string;
+    roles?: string[];
     error?: string;
   }
 }
+
+export type KeycloakJwt = {
+  realm_access?: { roles?: string[] };
+  resource_access?: Record<string, { roles?: string[] }>;
+};
