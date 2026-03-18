@@ -97,6 +97,26 @@ k3d kubeconfig get istp > backend/src/main/resources/Kubeconfig
 ```bash
 ls -la backend/src/main/resources/Kubeconfig
 ```
+
+## Branch Naming
+
+All branches must use one of the following prefixes:
+
+| Prefix | Use for |
+|---|---|
+| `feature/` | New features or enhancements |
+| `bugfix/` | Bug fixes |
+| `docs/` | Documentation changes |
+| `refactor/` | Code refactoring without behavior changes |
+
+**Examples:**
+```
+feature/user-authentication
+bugfix/login-redirect-loop
+docs/add-branch-naming-section
+refactor/extract-auth-service
+```
+
 ---
 
 ## Backend Code Quality
