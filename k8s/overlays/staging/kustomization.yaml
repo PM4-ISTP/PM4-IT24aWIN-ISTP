@@ -22,19 +22,6 @@ configMapGenerator:
       - keycloak-issuer-uri=https://istp-staging-auth.pm4.init-lab.ch/realms/interactive-security-training-platform
       - app-namespace=istp-staging
 
-secretGenerator:
-  - name: postgres-credentials
-    literals:
-      - username=postgres
-      - password=changeme-staging # TODO: use a real password
-  - name: keycloak-credentials
-    literals:
-      - admin-username=admin
-      - admin-password=changeme-staging # TODO: use a real password
-  - name: nextauth-secret
-    literals:
-      - NEXTAUTH_SECRET=changeme-staging # TODO: generate a real secret (e.g. openssl rand -base64 32)
-
 # ┌─────────────────────────────────────────────────────────────────────┐
 # │ Manual secrets (create once per namespace, not managed by Kustomize)│
 # │                                                                     │
@@ -48,5 +35,22 @@ secretGenerator:
 # │ 2. kubeconfig — K8s auth for challenge pod creation                │
 # │    kubectl create secret generic kubeconfig \                       │
 # │      --from-file=kubeconfig=<path-to-kubeconfig> \                 │
+# │      -n istp-staging                                                │
+# │                                                                     │
+# │ 3. postgres-credentials — Database credentials                      │
+# │    kubectl create secret generic postgres-credentials \             │
+# │      --from-literal=username=postgres \                             │
+# │      --from-literal=password=<db-password> \                        │
+# │      -n istp-staging                                                │
+# │                                                                     │
+# │ 4. keycloak-credentials — Keycloak admin credentials                │
+# │    kubectl create secret generic keycloak-credentials \             │
+# │      --from-literal=admin-username=admin \                          │
+# │      --from-literal=admin-password=<keycloak-password> \            │
+# │      -n istp-staging                                                │
+# │                                                                     │
+# │ 5. nextauth-secret — NextAuth signing secret                        │
+# │    kubectl create secret generic nextauth-secret \                  │
+# │      --from-literal=NEXTAUTH_SECRET=<nextauth-secret> \             │
 # │      -n istp-staging                                                │
 # └─────────────────────────────────────────────────────────────────────┘
