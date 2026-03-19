@@ -13,20 +13,18 @@ export default async function AdminDashboard() {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+      <h1 className="mb-6 text-2xl font-bold">Admin Dashboard</h1>
 
       <div className="grid gap-4">
         <a
           href="http://localhost:9090/admin"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition"
+          className="flex items-center gap-3 rounded-lg border p-4 transition hover:bg-gray-50"
         >
           <div>
             <h2 className="font-semibold">Manage Users</h2>
-            <p className="text-sm text-gray-500">
-              Edit or delete users via Keycloak Admin Console
-            </p>
+            <p className="text-sm text-gray-500">Edit or delete users via Keycloak Admin Console</p>
           </div>
           <span className="ml-auto">→</span>
         </a>
@@ -35,7 +33,7 @@ export default async function AdminDashboard() {
           href="http://localhost:9090/admin"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition"
+          className="flex items-center gap-3 rounded-lg border p-4 transition hover:bg-gray-50"
         >
           <div>
             <h2 className="font-semibold">Manage Roles</h2>
