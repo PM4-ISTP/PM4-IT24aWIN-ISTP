@@ -31,6 +31,9 @@ secretGenerator:
     literals:
       - admin-username=admin
       - admin-password=changeme-staging # TODO: use a real password
+  - name: nextauth-secret
+    literals:
+      - NEXTAUTH_SECRET=changeme-staging # TODO: generate a real secret (e.g. openssl rand -base64 32)
 
 # ┌─────────────────────────────────────────────────────────────────────┐
 # │ Manual secrets (create once per namespace, not managed by Kustomize)│

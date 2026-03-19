@@ -23,6 +23,12 @@ spec:
           image: istp-frontend # replaced by overlay kustomization
           ports:
             - containerPort: 3000
+          env:
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nextauth-secret
+                  key: NEXTAUTH_SECRET
           resources:
             requests:
               cpu: 100m
