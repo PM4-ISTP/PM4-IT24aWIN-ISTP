@@ -24,7 +24,7 @@ export default function AdminDashboard() {
           </div>
           <Button
             component="a"
-            href="http://localhost:9090/admin"
+            href={process.env.KEYCLOAK_ADMIN_URL}
             target="_blank"
             rel="noopener noreferrer"
             variant="filled"
