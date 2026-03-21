@@ -1,7 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
-import { AppShell, AppShellHeader, AppShellMain, Group } from "@mantine/core";
+import { AppShell, AppShellHeader, AppShellNavbar, AppShellMain, Group } from "@mantine/core";
 import UserMenu from "@/src/components/UserMenu";
+import DashboardNav from "@/src/components/DashboardNav";
 import { Anaheim } from "next/font/google";
 
 const anaheim = Anaheim({ weight: "400", subsets: ["latin"] });
@@ -12,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const roles = (session?.roles as string[]) ?? [];
 
   return (
-    <AppShell header={{ height: 60 }} padding="md">
+    <AppShell header={{ height: 60 }} navbar={{ width: 220, breakpoint: "sm" }} padding="md">
       <AppShellHeader>
         <Group h="100%" px="xl" justify="space-between">
           <span
@@ -31,6 +32,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <UserMenu name={name} roles={roles} />
         </Group>
       </AppShellHeader>
+
+      <AppShellNavbar>
+        <DashboardNav roles={roles} />
+      </AppShellNavbar>
 
       <AppShellMain>{children}</AppShellMain>
     </AppShell>
