@@ -1,49 +1,39 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/src/lib/auth";
-import { redirect } from "next/navigation";
+import { Stack, Title, Text, Button, Paper } from "@mantine/core";
 
-export default async function AdminDashboard() {
-  const session = await getServerSession(authOptions);
+// Role guard is handled by middleware (proxy.ts) — no manual check needed here.
 
-  // Role guard — only ROLE_ADMIN can access this page
-  const roles: string[] = (session?.roles as string[]) ?? [];
-  if (!roles.includes("ROLE_ADMINISTRATOR")) {
-    redirect("/dashboard");
-  }
-
+export default function AdminDashboard() {
   return (
-    <div className="p-8">
-      <h1 className="mb-6 text-2xl font-bold">Admin Dashboard</h1>
-
-      <div className="grid gap-4">
-        <a
-          href="http://localhost:9090/admin"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-3 rounded-lg border p-4 transition hover:bg-gray-50"
-        >
-          <div>
-            <h2 className="font-semibold">Manage Users</h2>
-            <p className="text-sm text-gray-500">Edit or delete users via Keycloak Admin Console</p>
-          </div>
-          <span className="ml-auto">→</span>
-        </a>
-
-        <a
-          href="http://localhost:9090/admin"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-3 rounded-lg border p-4 transition hover:bg-gray-50"
-        >
-          <div>
-            <h2 className="font-semibold">Manage Roles</h2>
-            <p className="text-sm text-gray-500">
-              Assign or remove roles via Keycloak Admin Console
-            </p>
-          </div>
-          <span className="ml-auto">→</span>
-        </a>
+    <Stack p="xl" gap="xl" maw={600}>
+      <div>
+        <Title order={1}>Admin Dashboard</Title>
+        <Text c="dimmed" mt={4}>
+          Manage your platform settings and users.
+        </Text>
       </div>
-    </div>
+
+      <Paper withBorder radius="md" p="xl">
+        <Stack gap="md">
+          <div>
+            <Text fw={600} size="lg">
+              Keycloak Admin Console
+            </Text>
+            <Text c="dimmed" size="sm" mt={4}>
+              Manage users and roles directly via the Keycloak Admin Console.
+            </Text>
+          </div>
+          <Button
+            component="a"
+            href="http://localhost:9090/admin"
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="filled"
+            radius="md"
+          >
+            Manage Users &amp; Roles with Keycloak
+          </Button>
+        </Stack>
+      </Paper>
+    </Stack>
   );
 }
