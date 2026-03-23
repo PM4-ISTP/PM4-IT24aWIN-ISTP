@@ -21,8 +21,6 @@ configMapGenerator:
       - keycloak-hostname=istp-staging-auth.pm4.init-lab.ch
       - keycloak-issuer-uri=https://istp-staging-auth.pm4.init-lab.ch/realms/interactive-security-training-platform
       - app-namespace=istp-staging
-      - keycloak-client-id=interactive-security-training-platform-app
-      - nextauth-url=https://istp-staging.pm4.init-lab.ch
 
 # ┌─────────────────────────────────────────────────────────────────────┐
 # │ Manual secrets (create once per namespace, not managed by Kustomize)│
@@ -51,9 +49,8 @@ configMapGenerator:
 # │      --from-literal=admin-password=<keycloak-password> \            │
 # │      -n istp-staging                                                │
 # │                                                                     │
-# │ 5. nextauth-secret — NextAuth signing secret + Keycloak client      │
+# │ 5. nextauth-secret — NextAuth signing secret                        │
 # │    kubectl create secret generic nextauth-secret \                  │
 # │      --from-literal=NEXTAUTH_SECRET=<nextauth-secret> \             │
-# │      --from-literal=AUTH_KEYCLOAK_SECRET=<keycloak-client-secret> \ │
 # │      -n istp-staging                                                │
 # └─────────────────────────────────────────────────────────────────────┘
