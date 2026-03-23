@@ -40,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" {...mantineHtmlProps}>
       <head>
-        <ColorSchemeScript />
+        <ColorSchemeScript forceColorScheme="light" />
         {/* Material Symbols are used by the existing dashboard navigation. */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
@@ -51,7 +51,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${spaceGrotesk.variable} antialiased`}
       >
-        <MantineProvider>
+        <MantineProvider forceColorScheme="light">
           <NextAuthSessionProvider>{children}</NextAuthSessionProvider>
         </MantineProvider>
       </body>
