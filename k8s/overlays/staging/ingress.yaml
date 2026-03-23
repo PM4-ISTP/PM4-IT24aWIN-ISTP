@@ -13,6 +13,14 @@ spec:
     - host: istp-staging.pm4.init-lab.ch
       http:
         paths:
+          # NextAuth routes must be handled by the frontend — must come before /api
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
           - path: /api
             pathType: Prefix
             backend:
