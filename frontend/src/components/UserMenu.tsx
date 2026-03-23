@@ -67,7 +67,18 @@ export default function UserMenu({ name, roles }: UserMenuProps) {
 
         <Menu.Divider />
 
-        <Menu.Item color="red" leftSection={<span>â†©</span>} onClick={() => void signOut()}>
+        <Menu.Item
+          color="red"
+          leftSection={
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: "1rem", lineHeight: 1 }}
+            >
+              logout
+            </span>
+          }
+          onClick={() => void signOut()}
+        >
           Log out
         </Menu.Item>
       </Menu.Dropdown>
