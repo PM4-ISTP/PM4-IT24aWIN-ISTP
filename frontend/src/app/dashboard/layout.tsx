@@ -3,9 +3,6 @@ import { authOptions } from "@/src/lib/auth";
 import { AppShell, AppShellHeader, AppShellNavbar, AppShellMain, Group } from "@mantine/core";
 import UserMenu from "@/src/components/UserMenu";
 import DashboardNav from "@/src/components/DashboardNav";
-import { Anaheim } from "next/font/google";
-
-const anaheim = Anaheim({ weight: "400", subsets: ["latin"] });
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
@@ -14,30 +11,44 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <AppShell header={{ height: 60 }} navbar={{ width: 220, breakpoint: "sm" }} padding="md">
-      <AppShellHeader>
+      <AppShellHeader style={{ background: "#F8F9FF", borderBottom: "1px solid #E5EEFF" }}>
         <Group h="100%" px="xl" justify="space-between">
-          <span
-            className={anaheim.className}
-            style={{
-              letterSpacing: "0.25em",
-              fontSize: "1.4rem",
-              background: "linear-gradient(135deg, #c8960c 0%, #ffd700 50%, #c8960c 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            ISTP
-          </span>
+          <div>
+            <span
+              style={{
+                fontFamily: "var(--font-manrope), 'Manrope', sans-serif",
+                fontWeight: 900,
+                letterSpacing: "-0.03em",
+                fontSize: "1.4rem",
+                color: "#001E41",
+              }}
+            >
+              ISTP
+            </span>
+            <p
+              style={{
+                fontFamily: "var(--font-space-grotesk), 'Space Grotesk', sans-serif",
+                textTransform: "uppercase",
+                letterSpacing: "0.18em",
+                fontSize: "0.55rem",
+                fontWeight: 700,
+                color: "#5B606B",
+                margin: 0,
+                lineHeight: 1,
+              }}
+            >
+              ZHAW
+            </p>
+          </div>
           <UserMenu name={name} roles={roles} />
         </Group>
       </AppShellHeader>
 
-      <AppShellNavbar>
+      <AppShellNavbar style={{ background: "#EFF4FF", borderRight: "none" }}>
         <DashboardNav roles={roles} />
       </AppShellNavbar>
 
-      <AppShellMain>{children}</AppShellMain>
+      <AppShellMain style={{ background: "#FFFFFF" }}>{children}</AppShellMain>
     </AppShell>
   );
 }

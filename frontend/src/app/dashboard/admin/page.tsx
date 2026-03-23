@@ -1,6 +1,6 @@
 import { Stack, Title, Text, Button, Paper } from "@mantine/core";
 
-// Role guard is handled by middleware (proxy.ts) — no manual check needed here.
+// Role guard is handled by middleware (proxy.ts) - no manual check needed here.
 
 export default function AdminDashboard() {
   return (
