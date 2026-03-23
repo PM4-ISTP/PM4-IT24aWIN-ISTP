@@ -129,7 +129,6 @@ export default async function Home() {
               Level up your cybersecurity skills through real-world labs, sharper challenges and a
               focused training space built for offensive and defensive practice.
             </Text>
-
           </Stack>
 
           <div
@@ -162,7 +161,8 @@ export default async function Home() {
                   padding: "0.75rem",
                   borderRadius: 30,
                   border: "1px solid rgba(255,255,255,0.08)",
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
                   boxShadow: "0 32px 80px rgba(0, 0, 0, 0.42)",
                 }}
               >
