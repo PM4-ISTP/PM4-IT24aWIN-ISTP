@@ -12,3 +12,8 @@ resources:
   - backend/service.yaml
   - frontend/deployment.yaml
   - frontend/service.yaml
+
+configMapGenerator:
+  - name: keycloak-realm
+    files:
+      - realm.json=../../infra/keycloak-export/interactive-security-training-platform-realm.json

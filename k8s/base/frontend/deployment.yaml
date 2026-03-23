@@ -49,6 +49,8 @@ spec:
                 configMapKeyRef:
                   name: istp-config
                   key: keycloak-client-id
+            - name: BACKEND_URL
+              value: http://backend:8080
           resources:
             requests:
               cpu: 100m
