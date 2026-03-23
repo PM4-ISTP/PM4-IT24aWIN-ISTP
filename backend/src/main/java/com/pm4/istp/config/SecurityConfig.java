@@ -19,20 +19,12 @@ public class SecurityConfig {
       throws Exception {
     http.authorizeHttpRequests(
             authorize ->
-                // NextAuth routes (/api/auth/**) are served by the frontend and must never
-                // reach the backend. Permit them here as a defense-in-depth safeguard in
-                // case Ingress routing changes in the future.
-                authorize
-                    .requestMatchers("/api/auth/**")
-                    .permitAll()
-                    // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
-                    // unauthenticated access to certain endpoints
-                    // requestMatchers("api/v1/ROUTE-NAME).hasRole("NAME") --> if you want to
-                    // restrict
-                    // access to certain endpoints based on roles
-                    // catch-all rule to require authentication for all requests
-                    .anyRequest()
-                    .authenticated())
+                // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
+                // unauthenticated access to certain endpoints
+                // requestMatchers("api/v1/ROUTE-NAME).hasRole("NAME") --> if you want to restrict
+                // access to certain endpoints based on roles
+                // catch-all rule to require authentication for all requests
+                authorize.anyRequest().authenticated())
         .csrf(csrf -> csrf.disable())
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
