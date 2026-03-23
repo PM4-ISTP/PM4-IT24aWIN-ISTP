@@ -90,12 +90,7 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
 
   return (
     <nav style={{ display: "flex", flexDirection: "column", gap: 0, paddingTop: "0.5rem" }}>
-      <NavItem
-        href="/dashboard"
-        label="Home"
-        icon="home"
-        active={pathname === "/dashboard"}
-      />
+      <NavItem href="/dashboard" label="Home" icon="home" active={pathname === "/dashboard"} />
       <NavItem
         href="/dashboard/courses"
         label="My Courses"
