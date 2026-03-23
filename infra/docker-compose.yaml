@@ -20,7 +20,7 @@ services:
 
   # Keycloak
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    image: quay.io/keycloak/keycloak:26.5
     ports:
       - "9090:8080"
     environment:
