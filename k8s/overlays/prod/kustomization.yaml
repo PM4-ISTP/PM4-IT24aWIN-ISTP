@@ -21,6 +21,8 @@ configMapGenerator:
       - keycloak-hostname=istp-auth.pm4.init-lab.ch
       - keycloak-issuer-uri=https://istp-auth.pm4.init-lab.ch/realms/interactive-security-training-platform
       - app-namespace=istp-prod
+      - keycloak-client-id=interactive-security-training-platform-app
+      - nextauth-url=https://istp.pm4.init-lab.ch
 
 # ┌─────────────────────────────────────────────────────────────────────┐
 # │ Manual secrets (create once per namespace, not managed by Kustomize)│
