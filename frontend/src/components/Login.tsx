@@ -1,5 +1,11 @@
 "use client";
 import { signIn } from "next-auth/react";
+import { Button } from "@mantine/core";
+
 export default function Login() {
-  return <button onClick={() => void signIn("keycloak")}>Signin with keycloak</button>;
+  return (
+    <Button fullWidth onClick={() => void signIn("keycloak")}>
+      Sign in with Keycloak
+    </Button>
+  );
 }
