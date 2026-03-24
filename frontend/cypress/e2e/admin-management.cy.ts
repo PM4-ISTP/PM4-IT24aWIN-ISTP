@@ -69,7 +69,7 @@ describe("Admin User Management", () => {
         .invoke("attr", "href")
         .then((href) => {
           // Confirm a valid URL is present so an admin can open it and manage users
-          expect(href).to.be.a("string").and.not.be.empty;
+          expect(href).to.not.be.empty;
           // Navigate to the Keycloak Admin Console URL (cross-origin, requires chromeWebSecurity: false)
           cy.visit(href as string);
           // Keycloak Admin Console should load — verify by presence of the page title or body

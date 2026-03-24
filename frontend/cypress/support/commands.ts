@@ -25,7 +25,11 @@ Cypress.Commands.add("loginViaKeycloak", (username: string, password: string) =>
       cy.visit("/");
       cy.contains("Sign in with Keycloak").click();
 
-      // Keycloak runs on a different origin — use cy.origin() to interact with its login form
+      // Keycloak runs on a different origin — use cy.origin() to interact with its login form.
+      // KEYCLOAK_ORIGIN is the *base origin* (scheme + host) of the Keycloak server, e.g.
+      //   https://istp-staging-auth.pm4.init-lab.ch
+      // Both the OIDC login redirect (/realms/.../protocol/openid-connect/auth) and
+      // the Admin Console (/admin/...) share this same origin — it is NOT the admin URL.
       const keycloakOrigin = Cypress.env("KEYCLOAK_ORIGIN") as string;
       cy.origin(keycloakOrigin, { args: { username, password } }, ({ username, password }) => {
         cy.get("input[name='username']", { timeout: 10000 }).type(username);

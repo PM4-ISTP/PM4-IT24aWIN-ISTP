@@ -38,19 +38,31 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" {...mantineHtmlProps}>
+    // suppressHydrationWarning: Mantine's ColorSchemeScript changes data-mantine-color-scheme
+    // before React hydrates ("auto" on server → "light" on client). This attribute is intentional
+    // and safe to suppress. See https://mantine.dev/guides/next/
+    <html lang="en" {...mantineHtmlProps} suppressHydrationWarning>
       <head>
         <ColorSchemeScript forceColorScheme="light" />
-        {/* Material Symbols are used by the existing dashboard navigation. */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${spaceGrotesk.variable} antialiased`}
       >
+        {/*
+         * Material Symbols used by dashboard navigation.
+         * Placed here in <body> with precedence="default" to use React 19's stylesheet hoisting.
+         * React 19 automatically moves this to <head> in the SSR HTML output, so there is no
+         * flash of unstyled content. The precedence attribute enables proper deduplication during
+         * client hydration and avoids the mismatch that occurs when a bare <link> is placed inside
+         * an explicit <head> element in the component tree.
+         * See: https://react.dev/reference/react-dom/components/link
+         */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+          precedence="default"
+        />
         <MantineProvider forceColorScheme="light">
           <NextAuthSessionProvider>{children}</NextAuthSessionProvider>
         </MantineProvider>

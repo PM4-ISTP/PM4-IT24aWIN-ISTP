@@ -6,7 +6,11 @@ export default defineConfig({
     // Allow Cypress to follow cross-origin redirects during the Keycloak OAuth flow
     chromeWebSecurity: false,
     env: {
-      // Origin of your Keycloak server, used in cy.origin() to interact with the Keycloak login form.
+      // Base origin (scheme + host) of the Keycloak server — used in cy.origin() to
+      // interact with the Keycloak login form during the OIDC OAuth redirect.
+      // Both the OIDC login redirect (/realms/.../protocol/openid-connect/auth) and
+      // the Admin Console (/admin/...) share the same Keycloak server origin.
+      // This value is the BASE ORIGIN, not the full admin console or login URL.
       // Local Docker Compose (infra/docker-compose.yaml):  http://localhost:9090
       // Staging:                                           https://istp-staging-auth.pm4.init-lab.ch
       // Override via cypress.env.json (gitignored) or CYPRESS_KEYCLOAK_ORIGIN env var.
