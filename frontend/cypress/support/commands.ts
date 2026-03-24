@@ -25,9 +25,6 @@ Cypress.Commands.add("loginViaKeycloak", (username: string, password: string) =>
   cy.session(
     ["keycloak", username],
     () => {
-      cy.visit("/");
-      cy.contains("Sign in with Keycloak").click();
-
       // Keycloak runs on a different origin — use cy.origin() to interact with its login form.
       // KEYCLOAK_ORIGIN is the *base origin* (scheme + host) of the Keycloak server, e.g.
       //   https://istp-staging-auth.pm4.init-lab.ch
@@ -39,6 +36,15 @@ Cypress.Commands.add("loginViaKeycloak", (username: string, password: string) =>
           "KEYCLOAK_ORIGIN must be set in cypress.env.json (e.g. http://localhost:9090)"
         );
       }
+
+      // Visit next-auth's built-in sign-in page instead of the app's home page.
+      // The built-in page renders a native HTML form (no React hydration required),
+      // so the "Sign in with Keycloak" submit button is always immediately clickable —
+      // even on slower staging environments where client-side JS may not yet be loaded.
+      // Passing callbackUrl ensures a predictable redirect to /dashboard after login.
+      cy.visit(`/api/auth/signin?callbackUrl=${encodeURIComponent("/dashboard")}`);
+      cy.contains("Sign in with Keycloak").click();
+
       cy.origin(keycloakOrigin, { args: { username, password } }, ({ username, password }) => {
         cy.get("input[name='username']", { timeout: 10000 }).type(username);
         cy.get("input[name='password']").type(password);
@@ -48,7 +54,9 @@ Cypress.Commands.add("loginViaKeycloak", (username: string, password: string) =>
       cy.url({ timeout: OIDC_REDIRECT_TIMEOUT }).should("include", "/dashboard");
     },
     {
-      cacheAcrossSpecs: true,
+      // Do NOT cache across specs so sessions are always fresh when tests are re-run
+      // via the Cypress UI. cacheAcrossSpecs: true would restore a potentially stale
+      // session on re-run, causing unexpected redirects back to the sign-in page.
       validate() {
         // Re-establish the session if the next-auth session has expired or been revoked.
         cy.request({ url: "/api/auth/session", failOnStatusCode: false })
