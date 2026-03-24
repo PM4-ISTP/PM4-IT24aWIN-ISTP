@@ -69,6 +69,16 @@ The Next.js application starts on `http://localhost:3000`.
 
 You can skip running Keycloak (and optionally the backend) locally by pointing your local frontend at the staging environment.
 
+#### Staging URLs
+
+| Service | URL |
+|---|---|
+| **App** (Next.js frontend + backend) | https://istp-staging.pm4.init-lab.ch |
+| **Keycloak Admin Console** (manage users & roles) | https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/ |
+
+When users sign in to the app they are redirected to the Keycloak OIDC login page at:
+`https://istp-staging-auth.pm4.init-lab.ch/realms/interactive-security-training-platform/protocol/openid-connect/auth`
+
 #### Set Up Environment Variables
 
 Copy the example file and fill in the missing secrets:
@@ -83,7 +93,7 @@ Open `frontend/.env.local` and set:
 | Variable | Where to get it |
 |---|---|
 | `NEXTAUTH_SECRET` | Generate with `openssl rand -base64 32` |
-| `AUTH_KEYCLOAK_SECRET` | Keycloak admin console → **Clients** → `interactive-security-training-platform-app` → **Credentials** |
+| `AUTH_KEYCLOAK_SECRET` | [Keycloak Admin Console](https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/) → **Clients** → `interactive-security-training-platform-app` → **Credentials** |
 
 #### Connect to Staging Keycloak (skip local Docker Compose)
 
@@ -371,14 +381,7 @@ frontend-lint
 
 End-to-end tests live in `frontend/cypress/e2e/` and run against a live Next.js app + Keycloak.
 
-### Staging URLs
-
-The project has **two** staging URLs:
-
-| Service | URL |
-|---|---|
-| **App** (Next.js frontend + backend) | `https://istp-staging.pm4.init-lab.ch` |
-| **Keycloak** (authentication server) | `https://istp-staging-auth.pm4.init-lab.ch` |
+See [Staging URLs](#staging-urls) for the list of staging service URLs.
 
 ### KEYCLOAK_ORIGIN
 
