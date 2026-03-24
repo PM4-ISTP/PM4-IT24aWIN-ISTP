@@ -42,7 +42,7 @@ Cypress.Commands.add("loginViaKeycloak", (username: string, password: string) =>
       cy.origin(keycloakOrigin, { args: { username, password } }, ({ username, password }) => {
         cy.get("input[name='username']", { timeout: 10000 }).type(username);
         cy.get("input[name='password']").type(password);
-        cy.get("input[type='submit']").click();
+        cy.get("input[type='submit'], button[type='submit']").click();
       });
 
       cy.url({ timeout: OIDC_REDIRECT_TIMEOUT }).should("include", "/dashboard");
