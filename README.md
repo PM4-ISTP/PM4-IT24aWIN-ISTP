@@ -63,6 +63,55 @@ The Next.js application starts on `http://localhost:3000`.
 
 ---
 
+### Using Staging Services for Local Development
+
+You can skip running Keycloak (and optionally the backend) locally by pointing your local frontend at the staging environment.
+
+#### Set Up Environment Variables
+
+Copy the example file and fill in the missing secrets:
+
+```bash
+cd frontend
+cp .env.local.example .env.local
+```
+
+Open `frontend/.env.local` and set:
+
+| Variable | Where to get it |
+|---|---|
+| `NEXTAUTH_SECRET` | Generate with `openssl rand -base64 32` |
+| `AUTH_KEYCLOAK_SECRET` | Keycloak admin console → **Clients** → `interactive-security-training-platform-app` → **Credentials** |
+
+#### Connect to Staging Keycloak (skip local Docker Compose)
+
+The example file already points `AUTH_KEYCLOAK_ISSUER` to staging.  
+Start only the database and skip Keycloak:
+
+```bash
+cd infra
+docker compose up -d postgres adminer
+```
+
+Then start the backend and frontend as usual.
+
+#### Connect to Staging Backend (frontend-only development)
+
+To use the deployed staging backend instead of a local one, change `BACKEND_URL` in `frontend/.env.local`:
+
+```
+BACKEND_URL=https://istp-staging.pm4.init-lab.ch
+```
+
+With this setting you don't need to run the backend or database locally at all — just start the frontend:
+
+```bash
+cd frontend
+npm run dev
+```
+
+---
+
 ### Kubernetes Setup (K3d)
 
 #### Create a K3d Cluster
