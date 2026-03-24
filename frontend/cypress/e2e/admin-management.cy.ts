@@ -89,7 +89,7 @@ describe("Admin User Management", () => {
     /**
      * Log in as regular USER → Admin Panel is not accessible
      *
-     * The middleware (proxy.ts) redirects non-admin users to /unauthorized.
+     * The middleware (middleware.ts) redirects non-admin users to /unauthorized.
      */
     it("is redirected away from the Admin Dashboard", () => {
       cy.visit("/dashboard/admin");
