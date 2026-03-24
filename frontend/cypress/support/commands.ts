@@ -2,6 +2,9 @@
 
 export {};
 
+/** Timeout for the full OIDC redirect chain: Keycloak login → next-auth callback → /dashboard. */
+const OIDC_REDIRECT_TIMEOUT = 15_000;
+
 declare global {
   namespace Cypress {
     interface Chainable {
@@ -42,9 +45,17 @@ Cypress.Commands.add("loginViaKeycloak", (username: string, password: string) =>
         cy.get("input[type='submit']").click();
       });
 
-      cy.url().should("include", "/dashboard");
+      cy.url({ timeout: OIDC_REDIRECT_TIMEOUT }).should("include", "/dashboard");
     },
-    { cacheAcrossSpecs: true }
+    {
+      cacheAcrossSpecs: true,
+      validate() {
+        // Re-establish the session if the next-auth session has expired or been revoked.
+        cy.request({ url: "/api/auth/session", failOnStatusCode: false })
+          .its("body.user")
+          .should("not.be.undefined");
+      },
+    }
   );
 });
 
