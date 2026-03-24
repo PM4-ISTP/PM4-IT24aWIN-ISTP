@@ -31,6 +31,11 @@ Cypress.Commands.add("loginViaKeycloak", (username: string, password: string) =>
       // Both the OIDC login redirect (/realms/.../protocol/openid-connect/auth) and
       // the Admin Console (/admin/...) share this same origin — it is NOT the admin URL.
       const keycloakOrigin = Cypress.env("KEYCLOAK_ORIGIN") as string;
+      if (!keycloakOrigin) {
+        throw new Error(
+          "KEYCLOAK_ORIGIN must be set in cypress.env.json (e.g. http://localhost:9090)"
+        );
+      }
       cy.origin(keycloakOrigin, { args: { username, password } }, ({ username, password }) => {
         cy.get("input[name='username']", { timeout: 10000 }).type(username);
         cy.get("input[name='password']").type(password);
