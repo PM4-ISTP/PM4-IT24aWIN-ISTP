@@ -14,6 +14,8 @@ Ensure you have the following installed:
 - **k3d** — for local Kubernetes cluster 
 - **kubectl** — for interacting with Kubernetes (optional)
 
+> **Windows users:** Docker Desktop must be **started and running** before you execute any `docker compose` command. Look for the Docker whale icon in the system tray — if it isn't there (or shows "Docker Desktop is starting"), wait for it to finish starting before continuing. Make sure Docker Desktop is set to use **Linux containers** (right-click the tray icon → *Switch to Linux containers* if the option appears).
+
 ### Quick Start
 
 #### 1. Start Docker Compose Services
