@@ -14,6 +14,8 @@ Ensure you have the following installed:
 - **k3d** — for local Kubernetes cluster 
 - **kubectl** — for interacting with Kubernetes (optional)
 
+> **Windows users:** Docker Desktop must be **started and running** before you execute any `docker compose` command. Look for the Docker whale icon in the system tray — if it isn't there (or shows "Docker Desktop is starting"), wait for it to finish starting before continuing. Make sure Docker Desktop is set to use **Linux containers** (right-click the tray icon → *Switch to Linux containers* if the option appears).
+
 ### Quick Start
 
 #### 1. Start Docker Compose Services
@@ -60,6 +62,55 @@ npm run dev
 ```
 
 The Next.js application starts on `http://localhost:3000`.
+
+---
+
+### Using Staging Services for Local Development
+
+You can skip running Keycloak (and optionally the backend) locally by pointing your local frontend at the staging environment.
+
+#### Set Up Environment Variables
+
+Copy the example file and fill in the missing secrets:
+
+```bash
+cd frontend
+cp .env.local.example .env.local
+```
+
+Open `frontend/.env.local` and set:
+
+| Variable | Where to get it |
+|---|---|
+| `NEXTAUTH_SECRET` | Generate with `openssl rand -base64 32` |
+| `AUTH_KEYCLOAK_SECRET` | Keycloak admin console → **Clients** → `interactive-security-training-platform-app` → **Credentials** |
+
+#### Connect to Staging Keycloak (skip local Docker Compose)
+
+The example file already points `AUTH_KEYCLOAK_ISSUER` to staging.  
+Start only the database and skip Keycloak:
+
+```bash
+cd infra
+docker compose up -d db adminer
+```
+
+Then start the backend and frontend as usual.
+
+#### Connect to Staging Backend (frontend-only development)
+
+To use the deployed staging backend instead of a local one, change `BACKEND_URL` in `frontend/.env.local`:
+
+```
+BACKEND_URL=https://istp-staging.pm4.init-lab.ch
+```
+
+With this setting you don't need to run the backend or database locally at all — just start the frontend:
+
+```bash
+cd frontend
+npm run dev
+```
 
 ---
 
