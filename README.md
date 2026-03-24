@@ -90,7 +90,7 @@ Start only the database and skip Keycloak:
 
 ```bash
 cd infra
-docker compose up -d postgres adminer
+docker compose up -d db adminer
 ```
 
 Then start the backend and frontend as usual.
