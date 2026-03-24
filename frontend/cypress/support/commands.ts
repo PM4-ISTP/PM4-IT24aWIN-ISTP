@@ -9,8 +9,9 @@ declare global {
   namespace Cypress {
     interface Chainable {
       /**
-       * Log in via the Keycloak OAuth flow.
-       * Clears all cookies first so every call goes through a full credential-based login.
+       * Log in via the Keycloak OAuth flow and cache the session for the current spec.
+       * Every test in the same spec that calls this command will restore cached cookies
+       * instead of performing a full OIDC round-trip.
        * Requires chromeWebSecurity: false in cypress.config.ts.
        */
       loginViaKeycloak(username: string, password: string): Chainable;
@@ -33,31 +34,41 @@ Cypress.Commands.add("loginViaKeycloak", (username: string, password: string) =>
     throw new Error("KEYCLOAK_ORIGIN must be set in cypress.env.json (e.g. http://localhost:9090)");
   }
 
-  // Clear ALL browser cookies before every login — including both the next-auth session
-  // cookie and the Keycloak SSO cookie (at the Keycloak origin).
-  // Cypress uses the Chrome DevTools Protocol which can clear cookies for all domains,
-  // so this removes the Keycloak single-sign-on cookie that would otherwise auto-login
-  // the user without showing the credentials form.
-  // Intentionally NOT using cy.session: its in-memory cache persists across "Run All"
-  // button clicks in the Cypress UI (the process never restarts), and the validate()
-  // check keeps passing while tokens are valid, silently skipping the login setup.
-  // A direct login on every call guarantees a clean, isolated state per test.
-  cy.clearAllCookies();
+  // Cache the authenticated browser state for the lifetime of the current spec so
+  // that each test that calls loginViaKeycloak restores cookies instead of performing
+  // a full OIDC round-trip.  Running a complete OAuth flow before every test causes
+  // Chrome to exhaust memory and crash (code 2147483651).
+  // cacheAcrossSpecs defaults to false, so the cache is automatically discarded at
+  // the end of each spec.  Specs that need a completely fresh session on re-runs
+  // should call Cypress.session.clearAllSavedSessions() in a before() hook.
+  cy.session(
+    ["keycloak", username],
+    () => {
+      // Clear ALL browser cookies before logging in — including the Keycloak SSO
+      // cookie at the Keycloak origin.  Cypress uses the Chrome DevTools Protocol
+      // which clears cookies across all domains, so this prevents Keycloak from
+      // silently re-authenticating via SSO and bypassing the credentials form.
+      cy.clearAllCookies();
 
-  // Use next-auth's built-in sign-in page instead of the app's home page.
-  // The built-in page renders a native HTML form (no React hydration required),
-  // so the "Sign in with Keycloak" submit button is always immediately clickable —
-  // even on slower environments where client-side JS may not yet be loaded.
-  cy.visit(`/api/auth/signin?callbackUrl=${encodeURIComponent("/dashboard")}`);
-  cy.contains("Sign in with Keycloak").click();
+      // Use next-auth's built-in sign-in page instead of the app's home page.
+      // The built-in page renders a native HTML form (no React hydration required),
+      // so the "Sign in with Keycloak" button is immediately clickable even on
+      // slower environments where client-side JS may not yet be loaded.
+      cy.visit(`/api/auth/signin?callbackUrl=${encodeURIComponent("/dashboard")}`);
+      cy.contains("Sign in with Keycloak").click();
 
-  cy.origin(keycloakOrigin, { args: { username, password } }, ({ username, password }) => {
-    cy.get("input[name='username']", { timeout: 10000 }).type(username);
-    cy.get("input[name='password']").type(password);
-    cy.get("input[type='submit'], button[type='submit']").click();
-  });
+      cy.origin(keycloakOrigin, { args: { username, password } }, ({ username, password }) => {
+        cy.get("input[name='username']", { timeout: 10000 }).type(username);
+        cy.get("input[name='password']").type(password);
+        cy.get("input[type='submit'], button[type='submit']").click();
+      });
 
-  cy.url({ timeout: OIDC_REDIRECT_TIMEOUT }).should("include", "/dashboard");
+      cy.url({ timeout: OIDC_REDIRECT_TIMEOUT }).should("include", "/dashboard");
+    }
+    // No validate() here. validate() was causing stale sessions to be silently
+    // reused across "Run All" re-runs in the Cypress UI: while tokens were still
+    // alive the check passed, setup was skipped, and tests started already logged in.
+  );
 });
 
 Cypress.Commands.add("loginAsAdmin", () => {

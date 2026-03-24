@@ -9,6 +9,13 @@
  *  - Regular (non-admin) user is blocked from accessing the Admin Dashboard
  */
 describe("Admin User Management", () => {
+  // Clear the cy.session in-memory registry at the start of every spec execution so
+  // that "Run All" in the Cypress UI always starts with a genuine login instead of
+  // restoring a cached session left over from a previous run.
+  before(() => {
+    Cypress.session.clearAllSavedSessions();
+  });
+
   // ─── Admin scenarios ────────────────────────────────────────────────────────
 
   describe("as ADMIN user", () => {
