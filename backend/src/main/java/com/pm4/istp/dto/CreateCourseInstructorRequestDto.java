@@ -1,0 +1,19 @@
+package com.pm4.istp.dto;
+
+import com.pm4.istp.domain.entites.InstructorRoleEnum;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class CreateCourseInstructorRequestDto {
+    @NotBlank(message = "Instructor role must be provided")
+    private InstructorRoleEnum instructorRole;
+    @NotBlank(message = "Instructor ID is required")
+    private UUID instructorId;
+}
