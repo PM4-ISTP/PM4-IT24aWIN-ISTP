@@ -2,7 +2,7 @@ package com.pm4.istp.controller;
 
 import static com.pm4.istp.util.JwtUtil.parseUserId;
 
-import com.pm4.istp.domain.User;
+import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.repositories.UserRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
