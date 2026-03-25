@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FileStorageService {
-  public void store(final MultipartFile file, final Path storeInFile) throws StorageException {
+  public void store(final MultipartFile file, final Path storeInFile) {
     Objects.requireNonNull(file, "file must not be null");
     Objects.requireNonNull(storeInFile, "storeAt must not be null");
 
