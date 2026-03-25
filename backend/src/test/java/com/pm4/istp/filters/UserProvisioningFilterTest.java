@@ -3,7 +3,7 @@ package com.pm4.istp.filters;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.pm4.istp.domain.User;
+import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.repositories.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
