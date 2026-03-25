@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public class FileStorageHandler implements StorageHandler {
   @Override
-  public void store(final MultipartFile file, final Path storeInFile) {
+  public void store(final MultipartFile file, final Path storeInFile) throws StorageException {
     Objects.requireNonNull(file, "file must not be null");
     Objects.requireNonNull(storeInFile, "storeAt must not be null");
 
