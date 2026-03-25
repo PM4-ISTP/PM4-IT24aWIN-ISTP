@@ -3,6 +3,7 @@ import { defineConfig } from "cypress";
 export default defineConfig({
   e2e: {
     baseUrl: "http://localhost:3000",
+    video: true,
     // Allow Cypress to follow cross-origin redirects during the Keycloak OAuth flow
     chromeWebSecurity: false,
     env: {
