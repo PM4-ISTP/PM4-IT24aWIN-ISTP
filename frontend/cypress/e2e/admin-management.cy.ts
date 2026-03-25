@@ -10,7 +10,7 @@
  */
 describe("Admin User Management", () => {
   before(() => {
-    Cypress.session.clearAllSavedSessions();
+    void Cypress.session.clearAllSavedSessions();
   });
 
   describe("as ADMIN user", () => {
