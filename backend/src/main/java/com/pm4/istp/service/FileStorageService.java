@@ -1,4 +1,4 @@
-package com.pm4.istp.util;
+package com.pm4.istp.service;
 
 import com.pm4.istp.exception.StorageException;
 import java.io.IOException;
@@ -7,10 +7,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-public class FileStorageHandler implements StorageHandler {
-  @Override
+@Service
+public class FileStorageService {
   public void store(final MultipartFile file, final Path storeInFile) throws StorageException {
     Objects.requireNonNull(file, "file must not be null");
     Objects.requireNonNull(storeInFile, "storeAt must not be null");

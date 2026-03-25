@@ -1,8 +1,6 @@
 package com.pm4.istp.service;
 
 import com.pm4.istp.exception.StorageException;
-import com.pm4.istp.util.FileStorageHandler;
-import com.pm4.istp.util.StorageHandler;
 import jakarta.annotation.PostConstruct;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -12,12 +10,17 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class KubeconfigStorageService {
-  private final StorageHandler storageHandler = new FileStorageHandler();
+  private final FileStorageService fileStorageService;
 
   @Value("${k8s.kubeconfig.path}")
   private String kubeconfigPathString;
 
   private Path kubeconfigPath;
+
+  public KubeconfigStorageService(FileStorageService fileStorageService) {
+    Objects.requireNonNull(fileStorageService, "fileStorageHandler must not be null");
+    this.fileStorageService = fileStorageService;
+  }
 
   @PostConstruct
   public void init() {
@@ -27,7 +30,7 @@ public class KubeconfigStorageService {
   public void storeKubeconfig(MultipartFile kubeconfig) throws StorageException {
     Objects.requireNonNull(kubeconfig, "kubeconfig must not be null");
     try {
-      storageHandler.store(kubeconfig, kubeconfigPath);
+      fileStorageService.store(kubeconfig, kubeconfigPath);
     } catch (StorageException e) {
       throw new StorageException(e.getMessage(), e);
     }
