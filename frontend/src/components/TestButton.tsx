@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { postTest } from "@/src/app/actions";
+import { postCourse } from "@/src/app/actions";
 
 export default function TestButton() {
   const [response, setResponse] = useState<string | null>(null);
@@ -14,7 +14,7 @@ export default function TestButton() {
     setResponse(null);
 
     try {
-      const result = await postTest();
+      const result = await postCourse();
       setResponse(JSON.stringify(result, null, 2));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
@@ -26,7 +26,7 @@ export default function TestButton() {
   return (
     <div>
       <button onClick={() => void handleClick()} disabled={loading}>
-        {loading ? "Loading..." : "POST /api/v1/tests"}
+        {loading ? "Loading..." : "POST /api/v1/courses"}
       </button>
 
       {error && <pre style={{ color: "red", marginTop: "1rem" }}>Error: {error}</pre>}
