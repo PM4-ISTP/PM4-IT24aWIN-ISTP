@@ -1,13 +1,14 @@
 "use server";
 
-import { fetchBackend } from "@/src/lib/api";
+import { getApiClient } from "@/src/lib/api/server";
 
 export async function postTest() {
-  const res = await fetchBackend("/api/v1/tests", { method: "POST" });
+  const client = await getApiClient();
+  const { data, error } = await client.POST("/api/v1/tests", {});
 
-  if (!res.ok) {
-    throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
+  if (error) {
+    throw new Error(`Backend error: ${JSON.stringify(error)}`);
   }
 
-  return (await res.json()) as unknown;
+  return data;
 }

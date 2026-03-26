@@ -27,6 +27,8 @@ public class SecurityConfig {
                 authorize
                     .requestMatchers("/api/auth/**")
                     .permitAll()
+                    .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml")
+                    .permitAll()
                     // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
                     // unauthenticated access to certain endpoints
                     // requestMatchers("api/v1/ROUTE-NAME).hasRole("NAME") --> if you want to
