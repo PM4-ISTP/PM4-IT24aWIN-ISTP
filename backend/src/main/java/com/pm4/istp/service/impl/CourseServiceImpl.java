@@ -11,6 +11,8 @@ import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
 import com.pm4.istp.service.CourseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,5 +55,10 @@ public class CourseServiceImpl implements CourseService {
 
         // Single save — cascade handles CourseInstructor
         return courseRepository.save(courseToCreate);
+    }
+
+    @Override
+    public Page<Course> listCoursesForInstructors(UUID instructorId, Pageable pageable) {
+        return courseRepository.findByCourseInstructors_Instructor_Id(instructorId, pageable);
     }
 }
