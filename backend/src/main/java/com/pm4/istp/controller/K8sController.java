@@ -5,8 +5,7 @@ import com.pm4.istp.dto.PodCreationResponse;
 import com.pm4.istp.exception.K8sException;
 import com.pm4.istp.service.K8sService;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,11 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/k8s")
 public class K8sController {
-
-  private static final Logger LOG = LoggerFactory.getLogger(K8sController.class);
 
   private final K8sService k8sService;
 
@@ -36,7 +34,7 @@ public class K8sController {
 
   @ExceptionHandler(K8sException.class)
   public ResponseEntity<String> handleK8sException(K8sException ex) {
-    LOG.error("Handling K8sException: {}", ex.getMessage(), ex);
+    log.error("Handling K8sException: {}", ex.getMessage(), ex);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body("Kubernetes operation failed: " + ex.getMessage());
   }

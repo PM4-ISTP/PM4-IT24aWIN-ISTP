@@ -10,15 +10,13 @@ import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.file.Files;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class K8sService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(K8sService.class);
 
   @Value("${k8s.kubeconfig.path}")
   private String kubeconfigPath;
@@ -47,14 +45,14 @@ public class K8sService {
 
       String podName = pod.getMetadata().getName();
 
-      LOG.info("Pod created successfully: {}", podName);
+      log.info("Pod created successfully: {}", podName);
       return new PodCreationResponse(
           "CREATED", podName, defaultNamespace, "Pod created successfully");
     } catch (K8sException e) {
-      LOG.error("K8s operation failed: {}", e.getMessage());
+      log.error("K8s operation failed: {}", e.getMessage());
       throw e;
     } catch (Exception e) {
-      LOG.error("Unexpected error while creating pod", e);
+      log.error("Unexpected error while creating pod", e);
       throw new K8sException("Failed to create pod: " + e.getMessage(), e);
     }
   }
