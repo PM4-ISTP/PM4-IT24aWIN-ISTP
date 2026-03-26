@@ -4,7 +4,7 @@ import { Button } from "@mantine/core";
 
 export default function Login() {
   return (
-    <Button fullWidth onClick={() => void signIn("keycloak")}>
+    <Button fullWidth onClick={() => void signIn("keycloak", { callbackUrl: "/dashboard" })}>
       Sign in with Keycloak
     </Button>
   );

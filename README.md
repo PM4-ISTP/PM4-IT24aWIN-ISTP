@@ -69,6 +69,16 @@ The Next.js application starts on `http://localhost:3000`.
 
 You can skip running Keycloak (and optionally the backend) locally by pointing your local frontend at the staging environment.
 
+#### Staging URLs
+
+| Service | URL |
+|---|---|
+| **App** (Next.js frontend + backend) | https://istp-staging.pm4.init-lab.ch |
+| **Keycloak Admin Console** (manage users & roles) | https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/ |
+
+When users sign in to the app they are redirected to the Keycloak OIDC login page at:
+`https://istp-staging-auth.pm4.init-lab.ch/realms/interactive-security-training-platform/protocol/openid-connect/auth`
+
 #### Set Up Environment Variables
 
 Copy the example file and fill in the missing secrets:
@@ -83,7 +93,7 @@ Open `frontend/.env.local` and set:
 | Variable | Where to get it |
 |---|---|
 | `NEXTAUTH_SECRET` | Generate with `openssl rand -base64 32` |
-| `AUTH_KEYCLOAK_SECRET` | Keycloak admin console → **Clients** → `interactive-security-training-platform-app` → **Credentials** |
+| `AUTH_KEYCLOAK_SECRET` | [Keycloak Admin Console](https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/) → **Clients** → `interactive-security-training-platform-app` → **Credentials** |
 
 #### Connect to Staging Keycloak (skip local Docker Compose)
 
@@ -364,3 +374,64 @@ frontend-lint
 ├── 1. Prettier check   → fails PR if any file is not formatted
 └── 2. ESLint          → fails PR on any code quality / style violation
 ```
+
+---
+
+## Cypress E2E Tests
+
+End-to-end tests live in `frontend/cypress/e2e/` and run against a live Next.js app + Keycloak.
+
+See [Staging URLs](#staging-urls) for the list of staging service URLs.
+
+### KEYCLOAK_ORIGIN
+
+`KEYCLOAK_ORIGIN` is the **origin (scheme + host + port) of the Keycloak server**. Cypress uses it in `cy.origin()` to fill in the Keycloak login form during the OAuth redirect.
+
+| Environment | `KEYCLOAK_ORIGIN` value |
+|---|---|
+| **Local** (Docker Compose `infra/docker-compose.yaml`) | `http://localhost:9090` |
+| **Staging** | `https://istp-staging-auth.pm4.init-lab.ch` |
+
+### Running the tests locally
+
+#### 1. Create `cypress.env.json`
+
+```bash
+cd frontend
+cp cypress.env.json.example cypress.env.json
+```
+
+Open `frontend/cypress.env.json` and fill in the values:
+
+| Variable | Value |
+|---|---|
+| `KEYCLOAK_ORIGIN` | `http://localhost:9090` (local) or `https://istp-staging-auth.pm4.init-lab.ch` (staging) |
+| `ADMIN_USERNAME` | Username of a Keycloak user with the `admin` role |
+| `ADMIN_PASSWORD` | Password for that user |
+| `USER_USERNAME` | Username of a Keycloak user without the `admin` role |
+| `USER_PASSWORD` | Password for that user |
+
+#### 2. Start the app
+
+Make sure the Next.js app is running on `http://localhost:3000` (see [Quick Start](#quick-start)).
+
+#### 3. Open / run Cypress
+
+```bash
+# Interactive mode (recommended during development)
+cd frontend
+npx cypress open
+
+# Headless mode (CI-style)
+npx cypress run
+```
+
+#### Running against staging
+
+Set `KEYCLOAK_ORIGIN` to `https://istp-staging-auth.pm4.init-lab.ch` in `cypress.env.json` and pass the staging base URL:
+
+```bash
+npx cypress run --config baseUrl=https://istp-staging.pm4.init-lab.ch
+```
+
+> `cypress.env.json` is gitignored and must never be committed.

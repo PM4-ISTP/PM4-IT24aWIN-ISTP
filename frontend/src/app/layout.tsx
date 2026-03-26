@@ -38,7 +38,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" {...mantineHtmlProps}>
+    // suppressHydrationWarning: Mantine's ColorSchemeScript changes data-mantine-color-scheme
+    // before React hydrates ("auto" on server → "light" on client). This attribute is intentional
+    // and safe to suppress. See https://mantine.dev/guides/next/
+    <html lang="en" {...mantineHtmlProps} suppressHydrationWarning>
       <head>
         <ColorSchemeScript forceColorScheme="light" />
         {/* Material Symbols are used by the existing dashboard navigation. */}
