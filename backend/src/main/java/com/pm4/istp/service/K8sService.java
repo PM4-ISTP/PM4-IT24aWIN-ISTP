@@ -4,7 +4,6 @@ import com.pm4.istp.dto.PodCreationRequest;
 import com.pm4.istp.dto.PodCreationResponse;
 import com.pm4.istp.exception.K8sException;
 import io.fabric8.kubernetes.api.model.IntOrString;
-import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -19,9 +18,10 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Slf4j
-@org.springframework.stereotype.Service
+@Service
 public class K8sService {
 
   @Value("${k8s.kubeconfig.path}")
@@ -96,7 +96,7 @@ public class K8sService {
         client.apps().deployments().inNamespace(defaultNamespace).resource(deployment).create();
 
         // 2. Create Service
-        Service service =
+        io.fabric8.kubernetes.api.model.Service service =
             new ServiceBuilder()
                 .withNewMetadata()
                 .withName(instanceName + "-svc")
