@@ -7,7 +7,10 @@ import DashboardNav from "@/src/components/DashboardNav";
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   const name = session?.user?.name ?? "Unknown";
+  const image = session?.user?.image ?? null;
   const roles = (session?.roles as string[]) ?? [];
+  const keycloakIssuer = process.env.AUTH_KEYCLOAK_ISSUER;
+  const accountUrl = keycloakIssuer ? `${keycloakIssuer.replace(/\/$/, "")}/account` : undefined;
 
   return (
     <AppShell header={{ height: 60 }} navbar={{ width: 220, breakpoint: "sm" }} padding="md">
@@ -40,7 +43,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               ZHAW
             </p>
           </div>
-          <UserMenu name={name} roles={roles} />
+          <UserMenu name={name} roles={roles} image={image} accountUrl={accountUrl} />
         </Group>
       </AppShellHeader>
 

@@ -16,14 +16,28 @@ declare global {
       loginViaKeycloak(username: string, password: string): Chainable;
       /** Log in as the configured admin user (ADMIN_USERNAME / ADMIN_PASSWORD env vars). */
       loginAsAdmin(): Chainable;
+      /** Log in as the configured instructor user (INSTRUCTOR_USERNAME / INSTRUCTOR_PASSWORD env vars). */
+      loginAsInstructor(): Chainable;
       /** Log in as the configured regular user (USER_USERNAME / USER_PASSWORD env vars). */
       loginAsUser(): Chainable;
     }
   }
 }
 
+const PLACEHOLDER_VALUE = /^<.*>$/;
+
+function getRequiredEnvValue(name: string): string {
+  const value = Cypress.env(name) as string | undefined;
+
+  if (!value || PLACEHOLDER_VALUE.test(value)) {
+    throw new Error(`${name} must be set in cypress.env.json before running this test`);
+  }
+
+  return value;
+}
+
 Cypress.Commands.add("loginViaKeycloak", (username: string, password: string) => {
-  const keycloakOrigin = Cypress.env("KEYCLOAK_ORIGIN") as string;
+  const keycloakOrigin = getRequiredEnvValue("KEYCLOAK_ORIGIN");
   if (!keycloakOrigin) {
     throw new Error("KEYCLOAK_ORIGIN must be set in cypress.env.json (e.g. http://localhost:9090)");
   }
@@ -49,15 +63,16 @@ Cypress.Commands.add("loginViaKeycloak", (username: string, password: string) =>
 });
 
 Cypress.Commands.add("loginAsAdmin", () => {
+  cy.loginViaKeycloak(getRequiredEnvValue("ADMIN_USERNAME"), getRequiredEnvValue("ADMIN_PASSWORD"));
+});
+
+Cypress.Commands.add("loginAsInstructor", () => {
   cy.loginViaKeycloak(
-    Cypress.env("ADMIN_USERNAME") as string,
-    Cypress.env("ADMIN_PASSWORD") as string
+    getRequiredEnvValue("INSTRUCTOR_USERNAME"),
+    getRequiredEnvValue("INSTRUCTOR_PASSWORD")
   );
 });
 
 Cypress.Commands.add("loginAsUser", () => {
-  cy.loginViaKeycloak(
-    Cypress.env("USER_USERNAME") as string,
-    Cypress.env("USER_PASSWORD") as string
-  );
+  cy.loginViaKeycloak(getRequiredEnvValue("USER_USERNAME"), getRequiredEnvValue("USER_PASSWORD"));
 });

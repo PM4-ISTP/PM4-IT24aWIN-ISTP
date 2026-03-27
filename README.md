@@ -406,8 +406,11 @@ Open `frontend/cypress.env.json` and fill in the values:
 | Variable | Value |
 |---|---|
 | `KEYCLOAK_ORIGIN` | `http://localhost:9090` (local) or `https://istp-staging-auth.pm4.init-lab.ch` (staging) |
+| `KEYCLOAK_REALM` | `interactive-security-training-platform` |
 | `ADMIN_USERNAME` | Username of a Keycloak user with the `admin` role |
 | `ADMIN_PASSWORD` | Password for that user |
+| `INSTRUCTOR_USERNAME` | Username of a Keycloak user with the `instructor` role |
+| `INSTRUCTOR_PASSWORD` | Password for that user |
 | `USER_USERNAME` | Username of a Keycloak user without the `admin` role |
 | `USER_PASSWORD` | Password for that user |
 

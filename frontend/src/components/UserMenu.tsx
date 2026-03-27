@@ -29,18 +29,20 @@ function getInitials(name: string): string {
 interface UserMenuProps {
   name: string;
   roles: string[];
+  image?: string | null;
+  accountUrl?: string;
 }
 
-export default function UserMenu({ name, roles }: UserMenuProps) {
+export default function UserMenu({ name, roles, image, accountUrl }: UserMenuProps) {
   const { label: roleLabel, color: roleColor } = getRoleConfig(roles);
   const initials = getInitials(name);
 
   return (
     <Menu shadow="md" width={220} position="bottom-end">
       <Menu.Target>
-        <UnstyledButton>
+        <UnstyledButton aria-label="Open user menu" data-testid="user-menu-trigger">
           <Group gap="sm">
-            <Avatar radius="xl" color={roleColor}>
+            <Avatar radius="xl" color={roleColor} src={image ?? undefined}>
               {initials}
             </Avatar>
             <div style={{ lineHeight: 1.2 }}>
@@ -57,13 +59,40 @@ export default function UserMenu({ name, roles }: UserMenuProps) {
 
       <Menu.Dropdown>
         <Menu.Label>
-          <Text size="sm" fw={600}>
+          <Text size="sm" fw={600} truncate>
             {name}
           </Text>
           <Text size="xs" c={roleColor}>
             {roleLabel}
           </Text>
         </Menu.Label>
+
+        {accountUrl ? (
+          <>
+            <Menu.Divider />
+            <Menu.Item
+              component="a"
+              href={accountUrl}
+              target="_blank"
+              rel="noreferrer"
+              data-testid="edit-profile-link"
+              leftSection={
+                <span
+                  className="material-symbols-outlined"
+                  style={{
+                    fontSize: "1.1rem",
+                    lineHeight: 1,
+                    fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
+                  }}
+                >
+                  manage_accounts
+                </span>
+              }
+            >
+              Edit profile
+            </Menu.Item>
+          </>
+        ) : null}
 
         <Menu.Divider />
 
