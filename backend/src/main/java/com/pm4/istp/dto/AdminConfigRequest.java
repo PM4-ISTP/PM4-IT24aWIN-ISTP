@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class AdminConfigRequest {
-    private String cpuLimit;
-    private String memoryLimit;
-    private String kubeconfig;
+  private String cpuLimit;
+  private String memoryLimit;
+  private String kubeconfig;
 }

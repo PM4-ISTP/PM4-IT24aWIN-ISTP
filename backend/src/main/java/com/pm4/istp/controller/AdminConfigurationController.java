@@ -21,61 +21,60 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping(path = "/api/admin/config")
 public class AdminConfigurationController {
 
-    private final AdminConfigurationService adminConfigurationService;
+  private final AdminConfigurationService adminConfigurationService;
 
-    public AdminConfigurationController(AdminConfigurationService adminConfigurationService) {
-        Objects.requireNonNull(adminConfigurationService, "adminConfigurationService must not be null");
-        this.adminConfigurationService = adminConfigurationService;
-    }
+  public AdminConfigurationController(AdminConfigurationService adminConfigurationService) {
+    Objects.requireNonNull(adminConfigurationService, "adminConfigurationService must not be null");
+    this.adminConfigurationService = adminConfigurationService;
+  }
 
-    /**
-     * Uploads a kubeconfig file and stores admin configuration in the database.
-     *
-     * @param kubeconfig  the kubeconfig
-     * @param cpuLimit    the CPU limit for each pod
-     * @param memoryLimit the memory limit for each pod
-     * @return ResponseEntity containing the stored AdminConfig
-     */
-    @PostMapping
-    public ResponseEntity<AdminConfig> uploadAndStoreAdminConfig(
-            @RequestParam("kubeconfig") MultipartFile kubeconfig,
-            @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
-            @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
-        AdminConfig adminConfig = adminConfigurationService.saveConfiguration(
-                kubeconfig, cpuLimit, memoryLimit);
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminConfig);
-    }
+  /**
+   * Uploads a kubeconfig file and stores admin configuration in the database.
+   *
+   * @param kubeconfig the kubeconfig
+   * @param cpuLimit the CPU limit for each pod
+   * @param memoryLimit the memory limit for each pod
+   * @return ResponseEntity containing the stored AdminConfig
+   */
+  @PostMapping
+  public ResponseEntity<AdminConfig> uploadAndStoreAdminConfig(
+      @RequestParam("kubeconfig") MultipartFile kubeconfig,
+      @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
+      @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
+    AdminConfig adminConfig =
+        adminConfigurationService.saveConfiguration(kubeconfig, cpuLimit, memoryLimit);
+    return ResponseEntity.status(HttpStatus.CREATED).body(adminConfig);
+  }
 
-    @GetMapping
-    public ResponseEntity<?> getAdminConfig() {
-        Optional<AdminConfig> config = adminConfigurationService.getAdminConfiguration();
-        if (config.isPresent()) {
-            return ResponseEntity.ok(config.get());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("No admin configuration found");
-        }
+  @GetMapping
+  public ResponseEntity<?> getAdminConfig() {
+    Optional<AdminConfig> config = adminConfigurationService.getAdminConfiguration();
+    if (config.isPresent()) {
+      return ResponseEntity.ok(config.get());
+    } else {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No admin configuration found");
     }
+  }
 
-    @PutMapping
-    public ResponseEntity<AdminConfig> updateAdminConfig(
-            @RequestParam(value = "kubeconfig", required = false) MultipartFile kubeconfig,
-            @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
-            @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
-        AdminConfig adminConfig = adminConfigurationService.saveConfiguration(
-                kubeconfig, cpuLimit, memoryLimit);
-        return ResponseEntity.ok(adminConfig);
-    }
+  @PutMapping
+  public ResponseEntity<AdminConfig> updateAdminConfig(
+      @RequestParam(value = "kubeconfig", required = false) MultipartFile kubeconfig,
+      @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
+      @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
+    AdminConfig adminConfig =
+        adminConfigurationService.saveConfiguration(kubeconfig, cpuLimit, memoryLimit);
+    return ResponseEntity.ok(adminConfig);
+  }
 
-    @DeleteMapping
-    public ResponseEntity<String> deleteAdminConfig() {
-        adminConfigurationService.deleteAdminConfiguration();
-        return ResponseEntity.ok("Admin configuration deleted successfully");
-    }
+  @DeleteMapping
+  public ResponseEntity<String> deleteAdminConfig() {
+    adminConfigurationService.deleteAdminConfiguration();
+    return ResponseEntity.ok("Admin configuration deleted successfully");
+  }
 
-    @ExceptionHandler(StorageException.class)
-    public ResponseEntity<String> handleStorageException(StorageException storageException) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Storage error: " + storageException.getMessage());
-    }
+  @ExceptionHandler(StorageException.class)
+  public ResponseEntity<String> handleStorageException(StorageException storageException) {
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body("Storage error: " + storageException.getMessage());
+  }
 }
