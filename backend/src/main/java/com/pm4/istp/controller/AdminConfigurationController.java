@@ -4,7 +4,6 @@ import com.pm4.istp.domain.AdminConfig;
 import com.pm4.istp.exception.StorageException;
 import com.pm4.istp.service.AdminConfigurationService;
 import java.util.Optional;
-
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,8 @@ public class AdminConfigurationController {
 
   private final AdminConfigurationService adminConfigurationService;
 
-  public AdminConfigurationController(@NonNull AdminConfigurationService adminConfigurationService) {
+  public AdminConfigurationController(
+      @NonNull AdminConfigurationService adminConfigurationService) {
     this.adminConfigurationService = adminConfigurationService;
   }
 
