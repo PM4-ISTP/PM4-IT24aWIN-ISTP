@@ -41,6 +41,26 @@ spec:
                 configMapKeyRef:
                   name: istp-config
                   key: keycloak-issuer-uri
+            - name: KEYCLOAK_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-url
+            - name: KEYCLOAK_REALM
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-realm
+            - name: KEYCLOAK_ADMIN_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-client-id
+            - name: KEYCLOAK_ADMIN_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nextauth-secret
+                  key: AUTH_KEYCLOAK_SECRET
             - name: K8S_KUBECONFIG_PATH
               value: /etc/kubeconfig/kubeconfig
             - name: K8S_DEFAULT_NAMESPACE

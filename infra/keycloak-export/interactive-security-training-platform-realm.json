@@ -574,6 +574,10 @@
       "clientRoles": {
         "interactive-security-training-platform-app": [
           "uma_protection"
+        ],
+        "realm-management": [
+          "view-users",
+          "view-clients"
         ]
       },
       "notBefore": 0,

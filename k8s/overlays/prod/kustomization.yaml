@@ -19,8 +19,11 @@ configMapGenerator:
   - name: istp-config
     literals:
       - keycloak-hostname=istp-auth.pm4.init-lab.ch
+      - keycloak-url=https://istp-auth.pm4.init-lab.ch
       - keycloak-issuer-uri=https://istp-auth.pm4.init-lab.ch/realms/interactive-security-training-platform
+      - keycloak-realm=interactive-security-training-platform
       - app-namespace=istp-prod
+      - keycloak-client-id=interactive-security-training-platform-app
       - keycloak-admin-url=https://istp-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/
 
 # ┌─────────────────────────────────────────────────────────────────────┐
@@ -50,8 +53,9 @@ configMapGenerator:
 # │      --from-literal=admin-password=<keycloak-password> \            │
 # │      -n istp-prod                                                   │
 # │                                                                     │
-# │ 5. nextauth-secret — NextAuth signing secret                        │
+# │ 5. nextauth-secret — NextAuth signing secret + Keycloak client      │
 # │    kubectl create secret generic nextauth-secret \                  │
 # │      --from-literal=NEXTAUTH_SECRET=<nextauth-secret> \             │
+# │      --from-literal=AUTH_KEYCLOAK_SECRET=<keycloak-client-secret> \ │
 # │      -n istp-prod                                                   │
 # └─────────────────────────────────────────────────────────────────────┘
