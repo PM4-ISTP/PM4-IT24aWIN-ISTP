@@ -1,4 +1,5 @@
 # PM4-IT24aWIN-ISTP
+
 Interactive Security Training Platform
 
 ---
@@ -8,13 +9,14 @@ Interactive Security Training Platform
 ### Prerequisites
 
 Ensure you have the following installed:
+
 - **Docker** — for PostgreSQL, Keycloak, and Adminer
 - **Java 21+** — for the Spring Boot backend
 - **Node.js 22+** — for the Next.js frontend
-- **k3d** — for local Kubernetes cluster 
+- **k3d** — for local Kubernetes cluster
 - **kubectl** — for interacting with Kubernetes (optional)
 
-> **Windows users:** Docker Desktop must be **started and running** before you execute any `docker compose` command. Look for the Docker whale icon in the system tray — if it isn't there (or shows "Docker Desktop is starting"), wait for it to finish starting before continuing. Make sure Docker Desktop is set to use **Linux containers** (right-click the tray icon → *Switch to Linux containers* if the option appears).
+> **Windows users:** Docker Desktop must be **started and running** before you execute any `docker compose` command. Look for the Docker whale icon in the system tray — if it isn't there (or shows "Docker Desktop is starting"), wait for it to finish starting before continuing. Make sure Docker Desktop is set to use **Linux containers** (right-click the tray icon → _Switch to Linux containers_ if the option appears).
 
 ### Quick Start
 
@@ -28,9 +30,11 @@ docker compose up -d
 ```
 
 To stop services:
+
 ```bash
 docker compose down
 ```
+
 ---
 
 #### 2. Start the Backend
@@ -45,6 +49,7 @@ cd backend
 The Spring Boot application starts on `http://localhost:8080`.
 
 **Before committing**, always run code formatting:
+
 ```bash
 ./gradlew spotlessApply
 ```
@@ -71,9 +76,9 @@ You can skip running Keycloak (and optionally the backend) locally by pointing y
 
 #### Staging URLs
 
-| Service | URL |
-|---|---|
-| **App** (Next.js frontend + backend) | https://istp-staging.pm4.init-lab.ch |
+| Service                                           | URL                                                                                             |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **App** (Next.js frontend + backend)              | https://istp-staging.pm4.init-lab.ch                                                            |
 | **Keycloak Admin Console** (manage users & roles) | https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/ |
 
 When users sign in to the app they are redirected to the Keycloak OIDC login page at:
@@ -90,9 +95,9 @@ cp .env.local.example .env.local
 
 Open `frontend/.env.local` and set:
 
-| Variable | Where to get it |
-|---|---|
-| `NEXTAUTH_SECRET` | Generate with `openssl rand -base64 32` |
+| Variable               | Where to get it                                                                                                                                                                                          |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXTAUTH_SECRET`      | Generate with `openssl rand -base64 32`                                                                                                                                                                  |
 | `AUTH_KEYCLOAK_SECRET` | [Keycloak Admin Console](https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/) → **Clients** → `interactive-security-training-platform-app` → **Credentials** |
 
 #### Connect to Staging Keycloak (skip local Docker Compose)
@@ -135,6 +140,7 @@ k3d cluster create istp
 ```
 
 **Verify the cluster is running:**
+
 ```bash
 k3d cluster list
 kubectl cluster-info
@@ -151,10 +157,12 @@ k3d kubeconfig get istp > backend/src/main/resources/Kubeconfig
 ```
 
 **Key points:**
+
 - The Kubeconfig file is required by the backend to communicate with the Kubernetes cluster
 - The file is already `.gitignored` (contains sensitive cluster credentials)
 
 **Verify the kubeconfig was created:**
+
 ```bash
 ls -la backend/src/main/resources/Kubeconfig
 ```
@@ -163,14 +171,15 @@ ls -la backend/src/main/resources/Kubeconfig
 
 All branches must use one of the following prefixes:
 
-| Prefix | Use for |
-|---|---|
-| `feature/` | New features or enhancements |
-| `bugfix/` | Bug fixes |
-| `docs/` | Documentation changes |
+| Prefix      | Use for                                   |
+| ----------- | ----------------------------------------- |
+| `feature/`  | New features or enhancements              |
+| `bugfix/`   | Bug fixes                                 |
+| `docs/`     | Documentation changes                     |
 | `refactor/` | Code refactoring without behavior changes |
 
 **Examples:**
+
 ```
 feature/user-authentication
 bugfix/login-redirect-loop
@@ -183,7 +192,6 @@ refactor/extract-auth-service
 ## Backend Code Quality
 
 The backend uses four tools to enforce consistent formatting, style, and code quality. All tools are integrated into Gradle and run automatically in CI on every push and pull request.
-
 
 ### Daily Workflow
 
@@ -209,35 +217,45 @@ To check everything is clean without modifying files (e.g. in a pre-push hook):
 All commands must be run from the `backend/` directory.
 
 **Format code (rewrites files):**
+
 ```bash
 ./gradlew spotlessApply
 ```
 
 **Check formatting without changing files:**
+
 ```bash
 ./gradlew spotlessCheck
 ```
+
 Fails if any file is not formatted. This is what CI runs.
 
 **Checkstyle (style & naming):**
+
 ```bash
 ./gradlew checkstyleMain
 ```
+
 Fails on violations. Human-readable report: `build/reports/checkstyle/main.html`.
 
 **PMD (code smells):**
+
 ```bash
 ./gradlew pmdMain
 ```
+
 Warns only — does not fail the build. Violations print to the terminal. Report: `build/reports/pmd/main.html`.
 
 **SpotBugs (bug patterns):**
+
 ```bash
 ./gradlew spotbugsMain
 ```
+
 Warns only — does not fail the build. Report: `build/reports/spotbugs/main.html`.
 
 **Run all tools at once:**
+
 ```bash
 ./gradlew spotlessCheck checkstyleMain pmdMain spotbugsMain
 ```
@@ -269,6 +287,7 @@ If the same false positive appears across **many files** (e.g. a framework-speci
 - Checkstyle → `backend/config/checkstyle/suppressions.xml` (add a `<suppress>` entry)
 
 ---
+
 ### CI Pipeline
 
 The `backend-lint-and-format` GitHub Actions job runs in parallel with the frontend lint job on every push and pull request.
@@ -282,7 +301,6 @@ backend-lint-and-format
 ```
 
 HTML reports for all four tools are uploaded as a GitHub Actions artifact named **`backend-analysis-reports`** and retained for 7 days. Download them from the "Artifacts" section of any workflow run to investigate PMD or SpotBugs findings.
-
 
 ---
 
@@ -314,29 +332,37 @@ npm run format:check && npm run lint
 All commands must be run from the `frontend/` directory.
 
 **Format code (rewrites files):**
+
 ```bash
 npm run format
 ```
 
 **Check formatting without changing files:**
+
 ```bash
 npm run format:check
 ```
+
 Fails if any file is not formatted. This is what CI runs.
 
 **ESLint (code quality & style):**
+
 ```bash
 npm run lint
 ```
+
 Fails on violations. Errors print to the terminal.
 
 **Fix ESLint issues automatically:**
+
 ```bash
 npm run lint:fix
 ```
+
 Automatically fixes auto-fixable violations. Some violations require manual intervention.
 
 **Run all tools at once:**
+
 ```bash
 npm run format:check && npm run lint
 ```
@@ -387,10 +413,10 @@ See [Staging URLs](#staging-urls) for the list of staging service URLs.
 
 `KEYCLOAK_ORIGIN` is the **origin (scheme + host + port) of the Keycloak server**. Cypress uses it in `cy.origin()` to fill in the Keycloak login form during the OAuth redirect.
 
-| Environment | `KEYCLOAK_ORIGIN` value |
-|---|---|
-| **Local** (Docker Compose `infra/docker-compose.yaml`) | `http://localhost:9090` |
-| **Staging** | `https://istp-staging-auth.pm4.init-lab.ch` |
+| Environment                                            | `KEYCLOAK_ORIGIN` value                     |
+| ------------------------------------------------------ | ------------------------------------------- |
+| **Local** (Docker Compose `infra/docker-compose.yaml`) | `http://localhost:9090`                     |
+| **Staging**                                            | `https://istp-staging-auth.pm4.init-lab.ch` |
 
 ### Running the tests locally
 
@@ -403,16 +429,16 @@ cp cypress.env.json.example cypress.env.json
 
 Open `frontend/cypress.env.json` and fill in the values:
 
-| Variable | Value |
-|---|---|
-| `KEYCLOAK_ORIGIN` | `http://localhost:9090` (local) or `https://istp-staging-auth.pm4.init-lab.ch` (staging) |
-| `KEYCLOAK_REALM` | `interactive-security-training-platform` |
-| `ADMIN_USERNAME` | Username of a Keycloak user with the `admin` role |
-| `ADMIN_PASSWORD` | Password for that user |
-| `INSTRUCTOR_USERNAME` | Username of a Keycloak user with the `instructor` role |
-| `INSTRUCTOR_PASSWORD` | Password for that user |
-| `USER_USERNAME` | Username of a Keycloak user without the `admin` role |
-| `USER_PASSWORD` | Password for that user |
+| Variable              | Value                                                                                    |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| `KEYCLOAK_ORIGIN`     | `http://localhost:9090` (local) or `https://istp-staging-auth.pm4.init-lab.ch` (staging) |
+| `KEYCLOAK_REALM`      | `interactive-security-training-platform`                                                 |
+| `ADMIN_USERNAME`      | Username of a Keycloak user with the `admin` role                                        |
+| `ADMIN_PASSWORD`      | Password for that user                                                                   |
+| `INSTRUCTOR_USERNAME` | Username of a Keycloak user with the `instructor` role                                   |
+| `INSTRUCTOR_PASSWORD` | Password for that user                                                                   |
+| `USER_USERNAME`       | Username of a Keycloak user without the `admin` role                                     |
+| `USER_PASSWORD`       | Password for that user                                                                   |
 
 #### 2. Start the app
 
