@@ -2,7 +2,8 @@ package com.pm4.istp.service;
 
 import jakarta.annotation.PostConstruct;
 import java.nio.file.Path;
-import java.util.Objects;
+
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,9 +18,8 @@ public class KubeconfigStorageService {
 
   private Path kubeconfigPath;
 
-  public KubeconfigStorageService(FileStorageService fileStorageService) {
-    this.fileStorageService =
-        Objects.requireNonNull(fileStorageService, "fileStorageService must not be null");
+  public KubeconfigStorageService(@NonNull FileStorageService fileStorageService) {
+    this.fileStorageService = fileStorageService;
   }
 
   @PostConstruct
@@ -27,8 +27,7 @@ public class KubeconfigStorageService {
     kubeconfigPath = Path.of(kubeconfigPathString);
   }
 
-  public String storeKubeconfig(MultipartFile kubeconfig) {
-    Objects.requireNonNull(kubeconfig, "kubeconfig must not be null");
+  public String storeKubeconfig(@NonNull MultipartFile kubeconfig) {
     fileStorageService.store(kubeconfig, kubeconfigPath);
     return kubeconfigPath.toString();
   }

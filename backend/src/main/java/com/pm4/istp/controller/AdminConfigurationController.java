@@ -3,8 +3,9 @@ package com.pm4.istp.controller;
 import com.pm4.istp.domain.AdminConfig;
 import com.pm4.istp.exception.StorageException;
 import com.pm4.istp.service.AdminConfigurationService;
-import java.util.Objects;
 import java.util.Optional;
+
+import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,8 +24,7 @@ public class AdminConfigurationController {
 
   private final AdminConfigurationService adminConfigurationService;
 
-  public AdminConfigurationController(AdminConfigurationService adminConfigurationService) {
-    Objects.requireNonNull(adminConfigurationService, "adminConfigurationService must not be null");
+  public AdminConfigurationController(@NonNull AdminConfigurationService adminConfigurationService) {
     this.adminConfigurationService = adminConfigurationService;
   }
 
