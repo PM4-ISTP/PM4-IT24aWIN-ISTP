@@ -12,17 +12,21 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FileStorageService {
-  public void store(final MultipartFile file, final Path storeInFile) {
+
+  public void store(final MultipartFile file, final Path targetPath) {
     Objects.requireNonNull(file, "file must not be null");
-    Objects.requireNonNull(storeInFile, "storeAt must not be null");
+    Objects.requireNonNull(targetPath, "targetPath must not be null");
 
     try (InputStream content = file.getInputStream()) {
-      Files.createDirectories(storeInFile.getParent());
-      Files.copy(content, storeInFile, StandardCopyOption.REPLACE_EXISTING);
+      Path parent = targetPath.getParent();
+      if (parent != null) {
+        Files.createDirectories(parent);
+      }
+
+      Files.copy(content, targetPath, StandardCopyOption.REPLACE_EXISTING);
     } catch (IOException e) {
-      final StringBuilder exceptionMessage = new StringBuilder("Could not store file\"");
-      exceptionMessage.append(storeInFile.getFileName()).append("\": ").append(e.getMessage());
-      throw new StorageException(exceptionMessage.toString(), e);
+      throw new StorageException(
+          "Could not store file at path \"" + targetPath + "\": " + e.getMessage(), e);
     }
   }
 }
