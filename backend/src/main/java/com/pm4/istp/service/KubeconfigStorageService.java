@@ -1,6 +1,5 @@
 package com.pm4.istp.service;
 
-import com.pm4.istp.exception.StorageException;
 import jakarta.annotation.PostConstruct;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -19,8 +18,8 @@ public class KubeconfigStorageService {
   private Path kubeconfigPath;
 
   public KubeconfigStorageService(FileStorageService fileStorageService) {
-    this.fileStorageService = Objects.requireNonNull(
-        fileStorageService, "fileStorageService must not be null");
+    this.fileStorageService =
+        Objects.requireNonNull(fileStorageService, "fileStorageService must not be null");
   }
 
   @PostConstruct
