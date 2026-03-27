@@ -4,9 +4,10 @@ import com.pm4.istp.domain.AdminConfig;
 import com.pm4.istp.exception.StorageException;
 import com.pm4.istp.repositories.AdminConfigRepository;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+
+import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,13 +26,10 @@ public class AdminConfigurationService {
   private final KubeconfigStorageService kubeconfigStorageService;
 
   public AdminConfigurationService(
-      AdminConfigRepository adminConfigRepository,
-      KubeconfigStorageService kubeconfigStorageService) {
-    this.adminConfigRepository =
-        Objects.requireNonNull(adminConfigRepository, "adminConfigRepository must not be null");
-    this.kubeconfigStorageService =
-        Objects.requireNonNull(
-            kubeconfigStorageService, "kubeconfigStorageService must not be null");
+      @NonNull AdminConfigRepository adminConfigRepository,
+      @NonNull KubeconfigStorageService kubeconfigStorageService) {
+    this.adminConfigRepository = adminConfigRepository;
+    this.kubeconfigStorageService = kubeconfigStorageService;
   }
 
   @Transactional(readOnly = true)
