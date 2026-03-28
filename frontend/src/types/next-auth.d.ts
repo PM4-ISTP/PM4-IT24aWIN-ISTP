@@ -22,4 +22,8 @@ declare module "next-auth/jwt" {
 export type KeycloakJwt = {
   realm_access?: { roles?: string[] };
   resource_access?: Record<string, { roles?: string[] }>;
+  name?: string;
+  preferred_username?: string;
+  email?: string;
+  picture?: string;
 };

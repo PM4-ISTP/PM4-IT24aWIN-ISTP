@@ -254,8 +254,11 @@ jobs:
         run: npm run test:e2e
         env:
           CYPRESS_KEYCLOAK_ORIGIN: https://istp-staging-auth.pm4.init-lab.ch
+          CYPRESS_KEYCLOAK_REALM: interactive-security-training-platform
           CYPRESS_ADMIN_USERNAME: ${{ secrets.CYPRESS_ADMIN_USERNAME }}
           CYPRESS_ADMIN_PASSWORD: ${{ secrets.CYPRESS_ADMIN_PASSWORD }}
+          CYPRESS_INSTRUCTOR_USERNAME: ${{ secrets.CYPRESS_INSTRUCTOR_USERNAME }}
+          CYPRESS_INSTRUCTOR_PASSWORD: ${{ secrets.CYPRESS_INSTRUCTOR_PASSWORD }}
           CYPRESS_USER_USERNAME: ${{ secrets.CYPRESS_USER_USERNAME }}
           CYPRESS_USER_PASSWORD: ${{ secrets.CYPRESS_USER_PASSWORD }}
 

@@ -3,6 +3,81 @@ import type { JWT } from "next-auth/jwt";
 import KeycloakProvider from "next-auth/providers/keycloak";
 import type { KeycloakJwt } from "../types/next-auth";
 import { jwtDecode } from "jwt-decode";
+
+type KeycloakProfileClaims = {
+  roles: string[];
+  name?: string;
+  email?: string;
+  picture?: string;
+};
+
+type KeycloakBasicProfile = Pick<KeycloakProfileClaims, "name" | "email" | "picture">;
+
+function extractBasicProfile(
+  claims: Pick<KeycloakJwt, "name" | "preferred_username" | "email" | "picture">
+): KeycloakBasicProfile {
+  return {
+    name:
+      typeof claims.name === "string"
+        ? claims.name
+        : typeof claims.preferred_username === "string"
+          ? claims.preferred_username
+          : undefined,
+    email: typeof claims.email === "string" ? claims.email : undefined,
+    picture: typeof claims.picture === "string" ? claims.picture : undefined,
+  };
+}
+
+function extractProfileClaims(accessToken: string): KeycloakProfileClaims {
+  const decoded = jwtDecode<KeycloakJwt>(accessToken);
+
+  return {
+    roles: decoded.realm_access?.roles ?? [],
+    ...extractBasicProfile(decoded),
+  };
+}
+
+function mergeProfileClaims(token: JWT, claims: KeycloakProfileClaims): JWT {
+  return {
+    ...token,
+    roles: claims.roles,
+    name: claims.name ?? token.name,
+    email: claims.email ?? token.email,
+    picture: claims.picture ?? token.picture,
+  };
+}
+
+async function fetchUserInfo(accessToken: string): Promise<KeycloakBasicProfile> {
+  if (!process.env.AUTH_KEYCLOAK_ISSUER) {
+    return {};
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.AUTH_KEYCLOAK_ISSUER}/protocol/openid-connect/userinfo`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        cache: "no-store",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch user info");
+    }
+
+    const userInfo = (await response.json()) as Pick<
+      KeycloakJwt,
+      "name" | "preferred_username" | "email" | "picture"
+    >;
+
+    return extractBasicProfile(userInfo);
+  } catch (error) {
+    console.error("Error fetching user info:", error);
+    return {};
+  }
+}
 /**
  * Refreshes an expired access token using the refresh token.
  */
@@ -36,14 +111,17 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
       throw new Error("Failed to refresh access token");
     }
 
-    return {
-      ...token,
-      accessToken: refreshedTokens.access_token,
-      accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
-      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
-      // Decode the new access token to extract updated roles
-      roles: jwtDecode<KeycloakJwt>(refreshedTokens.access_token).realm_access?.roles ?? [],
-    };
+    const refreshedClaims = extractProfileClaims(refreshedTokens.access_token);
+
+    return mergeProfileClaims(
+      {
+        ...token,
+        accessToken: refreshedTokens.access_token,
+        accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
+        refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+      },
+      refreshedClaims
+    );
   } catch (error) {
     console.error("Error refreshing access token:", error);
     return { ...token, error: "RefreshAccessTokenError" };
@@ -67,14 +145,17 @@ export const authOptions: AuthOptions = {
           return { ...token, error: "RefreshAccessTokenError" };
         }
 
-        const decoded = jwtDecode<KeycloakJwt>(account.access_token);
-        return {
-          ...token,
-          accessToken: account.access_token,
-          accessTokenExpires: (account.expires_at ?? 0) * 1000,
-          refreshToken: account.refresh_token,
-          roles: decoded.realm_access?.roles ?? [],
-        };
+        const initialClaims = extractProfileClaims(account.access_token);
+
+        return mergeProfileClaims(
+          {
+            ...token,
+            accessToken: account.access_token,
+            accessTokenExpires: (account.expires_at ?? 0) * 1000,
+            refreshToken: account.refresh_token,
+          },
+          initialClaims
+        );
       }
 
       // Return token if it hasn't expired yet
@@ -85,12 +166,25 @@ export const authOptions: AuthOptions = {
       // Token has expired — refresh it
       return refreshAccessToken(token);
     },
-    session({ session, token }) {
+    async session({ session, token }) {
       // Access token is intentionally NOT exposed to the client.
       // Use getServerSession() + fetchBackend() for backend calls.
       // Roles used for server-side authorization checks.
       session.roles = token.roles as string[];
       session.error = token.error;
+      const liveProfile =
+        typeof token.accessToken === "string" ? await fetchUserInfo(token.accessToken) : {};
+
+      if (session.user) {
+        session.user.name =
+          liveProfile.name ?? (typeof token.name === "string" ? token.name : session.user.name);
+        session.user.email =
+          liveProfile.email ?? (typeof token.email === "string" ? token.email : session.user.email);
+        session.user.image =
+          liveProfile.picture ??
+          (typeof token.picture === "string" ? token.picture : session.user.image);
+      }
+
       return session;
     },
   },
