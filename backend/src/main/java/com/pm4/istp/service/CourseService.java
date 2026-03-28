@@ -8,6 +8,6 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface CourseService {
-    Course createCourse(CreateCourseRequest course);
+    Course createCourse(UUID userId, CreateCourseRequest course);
     Page<Course> listCoursesForInstructors(UUID instructorId, Pageable pageable);
 }

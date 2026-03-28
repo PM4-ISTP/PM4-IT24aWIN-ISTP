@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,5 +17,5 @@ public class CreateCourseRequestDto {
     private String description;
     private boolean isPublished;
     @NotNull(message = "Instructor information is required")
-    private CreateCourseInstructorRequestDto instructor;
+    private List<CreateCourseInstructorRequestDto> instructors;
 }

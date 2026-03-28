@@ -12,8 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateCourseInstructorRequestDto {
-    @NotBlank(message = "Instructor role must be provided")
-    private InstructorRoleEnum instructorRole;
     @NotBlank(message = "Instructor ID is required")
     private UUID instructorId;
+    private InstructorRoleEnum instructorRole = InstructorRoleEnum.COLLABORATOR;
 }
