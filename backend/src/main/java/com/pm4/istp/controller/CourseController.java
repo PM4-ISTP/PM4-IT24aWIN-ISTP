@@ -55,12 +55,13 @@ public class CourseController {
     })
     @PostMapping
     public ResponseEntity<CreateCourseResponseDto> createCourse(
-            @AuthenticationPrincipal
+            @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateCourseRequestDto createCourseRequestDto
             )
     {
+        UUID userId = parseUserId(jwt);
         CreateCourseRequest createCourseRequest = courseMapper.fromDto(createCourseRequestDto);
-        Course createdCourse = courseService.createCourse(createCourseRequest);
+        Course createdCourse = courseService.createCourse(userId, createCourseRequest);
         CreateCourseResponseDto createCourseResponseDto = courseMapper.toDto(createdCourse);
         return new ResponseEntity<>(createCourseResponseDto, HttpStatus.CREATED);
     }

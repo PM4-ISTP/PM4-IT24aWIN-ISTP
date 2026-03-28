@@ -4,9 +4,9 @@ import com.pm4.istp.domain.CreateCourseInstructorRequest;
 import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.domain.entites.CourseInstructor;
+import com.pm4.istp.domain.entites.InstructorRoleEnum;
 import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.exception.UserNotFoundException;
-import com.pm4.istp.repositories.CourseInstructorRepository;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
 import com.pm4.istp.service.CourseService;
@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,34 +27,50 @@ public class CourseServiceImpl implements CourseService {
 
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
-    private final CourseInstructorRepository courseInstructorRepository;
 
     @Override
     @Transactional
-    public Course createCourse(CreateCourseRequest course) {
-        CreateCourseInstructorRequest instructor = course.getInstructor();
-        UUID instructorId = instructor.getInstructorId();
-        User instructorUser = userRepository.findById(instructorId)
+    public Course createCourse(UUID userId, CreateCourseRequest course) {
+        User instructorUser = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(
-                        String.format("User with ID '%s' not found", instructorId))
+                        String.format("User with ID '%s' not found", userId))
                 );
-
-        CourseInstructor courseInstructor = new CourseInstructor();
-        courseInstructor.setInstructorRole(instructor.getInstructorRole());
-        courseInstructor.setAccepted(true);
-        courseInstructor.setInstructor(instructorUser);
-        courseInstructor.setAcceptedAt(LocalDateTime.now());
 
         Course courseToCreate = new Course();
         courseToCreate.setTitle(course.getTitle());
         courseToCreate.setDescription(course.getDescription());
         courseToCreate.setPublished(course.isPublished());
 
-        // Wire both sides of the relationship
-        courseInstructor.setCourse(courseToCreate);
-        courseToCreate.setCourseInstructors(List.of(courseInstructor));
+        List<CourseInstructor> courseInstructors = new ArrayList<>();
 
-        // Single save — cascade handles CourseInstructor
+        // Owner = the user making the request
+        CourseInstructor owner = new CourseInstructor();
+        owner.setInstructorRole(InstructorRoleEnum.OWNER);
+        owner.setAccepted(true);
+        owner.setInstructor(instructorUser);
+        owner.setAcceptedAt(LocalDateTime.now());
+        owner.setCourse(courseToCreate);
+        courseInstructors.add(owner);
+
+        // Collaborators from the request payload
+        if (!course.getInstructors().isEmpty()) {
+            for (CreateCourseInstructorRequest req : course.getInstructors()) {
+                User collaboratorUser = userRepository.findById(req.getInstructorId())
+                        .orElseThrow(() -> new UserNotFoundException(
+                                String.format("User with ID '%s' not found", req.getInstructorId()))
+                        );
+
+                CourseInstructor collaborator = new CourseInstructor();
+                collaborator.setInstructorRole(req.getInstructorRole());
+                collaborator.setAccepted(false);
+                collaborator.setInstructor(collaboratorUser);
+                collaborator.setCourse(courseToCreate);
+                courseInstructors.add(collaborator);
+            }
+        }
+
+        courseToCreate.setCourseInstructors(courseInstructors);
+
         return courseRepository.save(courseToCreate);
     }
 

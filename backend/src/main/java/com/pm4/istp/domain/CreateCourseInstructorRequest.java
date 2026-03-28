@@ -11,6 +11,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateCourseInstructorRequest {
-    private InstructorRoleEnum instructorRole;
     private UUID instructorId;
+    private InstructorRoleEnum instructorRole;
 }

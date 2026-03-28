@@ -28,7 +28,7 @@ public class CourseInstructor {
     private InstructorRoleEnum instructorRole;
 
     @Column(name = "is_accepted", nullable = false)
-    private boolean isAccepted;
+    private boolean isAccepted = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "instructor_id", nullable = false)
