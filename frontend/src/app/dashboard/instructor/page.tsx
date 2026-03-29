@@ -23,9 +23,7 @@ export default async function InstructorDashboard(props: {
                     </Text>
                 </Stack>
                 <Link href="/dashboard/instructor/create">
-                    <Button leftSection={<IconPlus size={16}/>}>
-                        New course
-                    </Button>
+                    <Button leftSection={<IconPlus size={16}/>}>New course</Button>
                 </Link>
             </Group>
 

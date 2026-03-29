@@ -40,7 +40,10 @@ export function CourseCard({
 
                 <Text size="xs" c="dimmed" lineClamp={2} style={{flex: 1}}>
                     {description
-                        ? description.replace(/<\/(p|h[1-6]|li|br|div)>/gi, " ").replace(/<[^>]*>/g, "").trim()
+                        ? description
+                            .replace(/<\/(p|h[1-6]|li|br|div)>/gi, " ")
+                            .replace(/<[^>]*>/g, "")
+                            .trim()
                         : "No description provided."}
                 </Text>
 

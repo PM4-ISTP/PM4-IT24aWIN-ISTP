@@ -1,11 +1,11 @@
-import {Link, RichTextEditor} from '@mantine/tiptap';
-import {useEditor} from '@tiptap/react';
-import Highlight from '@tiptap/extension-highlight';
-import StarterKit from '@tiptap/starter-kit';
-import TextAlign from '@tiptap/extension-text-align';
-import Superscript from '@tiptap/extension-superscript';
-import Subscript from '@tiptap/extension-subscript';
-import {useEffect} from 'react';
+import {Link, RichTextEditor} from "@mantine/tiptap";
+import {useEditor} from "@tiptap/react";
+import Highlight from "@tiptap/extension-highlight";
+import StarterKit from "@tiptap/starter-kit";
+import TextAlign from "@tiptap/extension-text-align";
+import Superscript from "@tiptap/extension-superscript";
+import Subscript from "@tiptap/extension-subscript";
+import {useEffect} from "react";
 
 type MyEditorProps = {
     description: string;
@@ -21,7 +21,7 @@ function MyEditor({description, setDescription}: MyEditorProps) {
             Superscript,
             Subscript,
             Highlight,
-            TextAlign.configure({types: ['heading', 'paragraph']}),
+            TextAlign.configure({types: ["heading", "paragraph"]}),
         ],
         content: description,
         onUpdate: ({editor}) => {
@@ -76,7 +76,7 @@ function MyEditor({description, setDescription}: MyEditorProps) {
                 </RichTextEditor.ControlsGroup>
             </RichTextEditor.Toolbar>
 
-            <RichTextEditor.Content style={{minHeight: '200px'}}/>
+            <RichTextEditor.Content style={{minHeight: "200px"}}/>
         </RichTextEditor>
     );
 }
