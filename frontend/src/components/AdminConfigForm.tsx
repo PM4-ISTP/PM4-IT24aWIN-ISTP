@@ -142,6 +142,7 @@ export default function AdminConfigForm() {
         <Grid>
           <Grid.Col span={12}>
             <NumberInput
+              id="cpu-limit-input"
               label="CPU limit"
               description="How much CPU one single pod can at maximum use. Leave this field empty, if you do not want to specify a CPU limit."
               key={form.key(cpuLimitFormKey)}
@@ -156,6 +157,7 @@ export default function AdminConfigForm() {
           </Grid.Col>
           <Grid.Col span={8}>
             <NumberInput
+              id="memory-limit-input"
               label="Memory limit"
               description="How much memory one single pod can at maximum use. Leave this field empty, if you do not want to specify a memory limit."
               key={form.key(memoryLimitFormKey)}
@@ -170,6 +172,7 @@ export default function AdminConfigForm() {
           </Grid.Col>
           <Grid.Col span={4}>
             <Select
+              id="memory-unit-input"
               label="Memory unit"
               description="Please select a unit for the desired memory limit."
               key={form.key("memoryLimitUnit")}
@@ -182,6 +185,7 @@ export default function AdminConfigForm() {
           </Grid.Col>
           <Grid.Col span={12}>
             <FileInput
+              id="kubeconfig-input"
               withAsterisk={!adminConfigResponse.kubeconfigUploaded}
               label="Kubeconfig"
               description="Please upload your Kubeconfig file for the K3d cluster that manages the challenge pods."
@@ -193,10 +197,10 @@ export default function AdminConfigForm() {
         </Grid>
 
         <Group justify="flex-end" mt="md">
-          <Button type="submit" loading={form.submitting}>
+          <Button id="admin-config-form-submit-button" type="submit" loading={form.submitting}>
             {!adminConfigResponse.kubeconfigUploaded ? "Create K3d configuration" : "Update K3d configuration"}
           </Button>
-          <Button type="button" onClick={() => handleDelete()} loading={form.submitting}>
+          <Button id="admin-config-form-delete-button" type="button" onClick={() => handleDelete()} loading={form.submitting}>
             Delete K3d configuration
           </Button>
         </Group>
