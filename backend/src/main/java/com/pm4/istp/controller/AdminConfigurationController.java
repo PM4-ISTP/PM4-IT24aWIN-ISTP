@@ -48,13 +48,9 @@ public class AdminConfigurationController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAdminConfig() {
+    public ResponseEntity<Boolean> getAdminConfig() {
         Optional<AdminConfig> config = adminConfigurationService.getAdminConfiguration();
-        if (config.isPresent()) {
-            return ResponseEntity.ok(config.get());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No admin configuration found");
-        }
+        return ResponseEntity.ok(config.isPresent());
     }
 
     @PutMapping
