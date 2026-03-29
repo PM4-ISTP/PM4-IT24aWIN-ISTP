@@ -22,76 +22,79 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping(path = "/api/admin/config")
 public class AdminConfigurationController {
 
-    private final AdminConfigurationService adminConfigurationService;
+  private final AdminConfigurationService adminConfigurationService;
 
-    private final long MAX_FILE_SIZE = 1_048_576; // 1 MB
+  private final long MAX_FILE_SIZE = 1_048_576; // 1 MB
 
-    public AdminConfigurationController(
-            @NonNull AdminConfigurationService adminConfigurationService) {
-        this.adminConfigurationService = adminConfigurationService;
+  public AdminConfigurationController(
+      @NonNull AdminConfigurationService adminConfigurationService) {
+    this.adminConfigurationService = adminConfigurationService;
+  }
+
+  /**
+   * Uploads a kubeconfig file and stores admin configuration in the database.
+   *
+   * @param kubeconfig the kubeconfig
+   * @param cpuLimit the CPU limit for each pod
+   * @param memoryLimit the memory limit for each pod
+   * @return ResponseEntity containing the stored AdminConfig
+   */
+  @PostMapping
+  public ResponseEntity<?> uploadAndStoreAdminConfig(
+      @RequestParam("kubeconfig") MultipartFile kubeconfig,
+      @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
+      @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
+
+    if (kubeconfig.getSize() > MAX_FILE_SIZE) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body("Kubeconfig file size exceeds 1 MB limit.");
     }
 
-    /**
-     * Uploads a kubeconfig file and stores admin configuration in the database.
-     *
-     * @param kubeconfig  the kubeconfig
-     * @param cpuLimit    the CPU limit for each pod
-     * @param memoryLimit the memory limit for each pod
-     * @return ResponseEntity containing the stored AdminConfig
-     */
-    @PostMapping
-    public ResponseEntity<?> uploadAndStoreAdminConfig(
-            @RequestParam("kubeconfig") MultipartFile kubeconfig,
-            @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
-            @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
+    AdminConfig adminConfig =
+        adminConfigurationService.createConfiguration(kubeconfig, cpuLimit, memoryLimit);
 
-        if (kubeconfig.getSize() > MAX_FILE_SIZE) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Kubeconfig file size exceeds 1 MB limit.");
-        }
+    return ResponseEntity.status(HttpStatus.CREATED).body(adminConfig);
+  }
 
-        AdminConfig adminConfig = adminConfigurationService.createConfiguration(kubeconfig, cpuLimit, memoryLimit);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminConfig);
+  @GetMapping
+  public ResponseEntity<?> getAdminConfig() {
+    Optional<AdminConfig> config = adminConfigurationService.getAdminConfiguration();
+    if (config.isPresent()) {
+      AdminConfig adminConfig = config.get();
+      AdminConfigResponse response =
+          new AdminConfigResponse(
+              true,
+              adminConfig.getCpuLimit(),
+              adminConfig.getMemoryLimit(),
+              adminConfig.getUpdatedAt());
+      return ResponseEntity.ok(response);
+    } else {
+      AdminConfigResponse response = new AdminConfigResponse(false, null, null, null);
+      return ResponseEntity.ok(response);
     }
+  }
 
-    @GetMapping
-    public ResponseEntity<?> getAdminConfig() {
-        Optional<AdminConfig> config = adminConfigurationService.getAdminConfiguration();
-        if (config.isPresent()) {
-            AdminConfig adminConfig = config.get();
-            AdminConfigResponse response = new AdminConfigResponse(
-                    true,
-                    adminConfig.getCpuLimit(),
-                    adminConfig.getMemoryLimit(),
-                    adminConfig.getUpdatedAt());
-            return ResponseEntity.ok(response);
-        } else {
-            AdminConfigResponse response = new AdminConfigResponse(false, null, null, null);
-            return ResponseEntity.ok(response);
-        }
-    }
+  @PutMapping
+  public ResponseEntity<AdminConfig> updateAdminConfig(
+      @RequestParam(value = "kubeconfig", required = false) MultipartFile kubeconfig,
+      @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
+      @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
 
-    @PutMapping
-    public ResponseEntity<AdminConfig> updateAdminConfig(
-            @RequestParam(value = "kubeconfig", required = false) MultipartFile kubeconfig,
-            @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
-            @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
+    AdminConfig adminConfig =
+        adminConfigurationService.updateConfiguration(kubeconfig, cpuLimit, memoryLimit);
 
-        AdminConfig adminConfig = adminConfigurationService.updateConfiguration(kubeconfig, cpuLimit, memoryLimit);
+    return ResponseEntity.ok(adminConfig);
+  }
 
-        return ResponseEntity.ok(adminConfig);
-    }
+  @DeleteMapping
+  public ResponseEntity<String> deleteAdminConfig() {
+    adminConfigurationService.deleteAdminConfiguration();
+    return ResponseEntity.ok("Admin configuration deleted successfully");
+  }
 
-    @DeleteMapping
-    public ResponseEntity<String> deleteAdminConfig() {
-        adminConfigurationService.deleteAdminConfiguration();
-        return ResponseEntity.ok("Admin configuration deleted successfully");
-    }
-
-    @ExceptionHandler(StorageException.class)
-    public ResponseEntity<String> handleStorageException(StorageException storageException) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Storage error: " + storageException.getMessage());
-    }
+  @ExceptionHandler(StorageException.class)
+  public ResponseEntity<String> handleStorageException(StorageException storageException) {
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body("Storage error: " + storageException.getMessage());
+  }
 }
