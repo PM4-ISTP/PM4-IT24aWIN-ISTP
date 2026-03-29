@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CourseRepository extends JpaRepository<Course, UUID> {
-  Page<Course> findByCourseInstructors_Instructor_Id(UUID instructorId, Pageable pageable);
+  Page<Course> findByCourseInstructorsInstructorId(UUID instructorId, Pageable pageable);
 }
