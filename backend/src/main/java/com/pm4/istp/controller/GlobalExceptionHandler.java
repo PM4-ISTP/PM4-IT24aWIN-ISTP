@@ -1,6 +1,8 @@
 package com.pm4.istp.controller;
 
 import com.pm4.istp.dto.ErrorDto;
+import com.pm4.istp.exception.CourseAccessDeniedException;
+import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.exception.UserNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,22 @@ import java.util.List;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(CourseAccessDeniedException.class)
+    public ResponseEntity<ErrorDto> handleCourseAccessDeniedException(CourseAccessDeniedException ex) {
+        log.error("Caught CourseAccessDeniedException", ex);
+        ErrorDto errorDto = new ErrorDto();
+        errorDto.setError("Access denied");
+        return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(CourseNotFoundException.class)
+    public ResponseEntity<ErrorDto> handleCourseNotFoundException(CourseNotFoundException ex) {
+        log.error("Caught CourseNotFoundException", ex);
+        ErrorDto errorDto = new ErrorDto();
+        errorDto.setError("Course not found");
+        return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
+    }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorDto> handleUserNotFoundException(UserNotFoundException ex) {

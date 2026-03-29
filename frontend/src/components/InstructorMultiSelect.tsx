@@ -12,11 +12,12 @@ interface Instructor {
 interface InstructorMultiSelectProps {
     value: string[];
     onChange: (value: string[]) => void;
+    initialOptions?: { value: string; label: string }[];
 }
 
-export function InstructorMultiSelect({value, onChange}: InstructorMultiSelectProps) {
+export function InstructorMultiSelect({value, onChange, initialOptions}: InstructorMultiSelectProps) {
     const [searchValue, setSearchValue] = useState('');
-    const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
+    const [options, setOptions] = useState<{ value: string; label: string }[]>(initialOptions ?? []);
     const [loading, setLoading] = useState(false);
 
     const fetchInstructors = useCallback(async (name: string) => {

@@ -25,11 +25,8 @@ public class SecurityConfig {
                 authorize
                     .requestMatchers("/api/auth/**")
                     .permitAll()
+                        .requestMatchers("/api/v1/courses/**").hasAnyRole("INSTRUCTOR", "ADMIN")
                     // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
-                    // unauthenticated access to certain endpoints
-                    // requestMatchers("api/v1/ROUTE-NAME).hasRole("NAME") --> if you want to
-                    // restrict
-                    // access to certain endpoints based on roles
                     // catch-all rule to require authentication for all requests
                     .anyRequest()
                     .authenticated())

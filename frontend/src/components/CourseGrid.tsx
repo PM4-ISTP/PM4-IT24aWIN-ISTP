@@ -18,8 +18,8 @@ export function CourseGrid({courses, totalPages, currentPage}: CourseGridProps) 
         router.push(`?page=${page}`);
     }
 
-    function openEdit(_id: string) {
-        // TODO: navigate to /dashboard/courses/:id when edit route is implemented
+    function openEdit(id: string) {
+        router.push(`/dashboard/instructor/${id}`);
     }
 
     if (courses.length === 0) {

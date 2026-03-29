@@ -31,6 +31,38 @@ export interface ListCourseResponseDto {
     updatedAt: string;
 }
 
+export interface UpdateCourseDto {
+    title: string;
+    description: string;
+    isPublished: boolean;
+    instructors: InstructorAssignment[];
+}
+
+export interface CourseInstructorResponseDto {
+    id: string;
+    instructorRole: InstructorRoleEnum;
+    isAccepted: boolean;
+    instructor: {
+        id: string;
+        name: string;
+        email: string;
+    };
+    invitedAt: string;
+    acceptedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CourseDetailResponseDto {
+    id: string;
+    title: string;
+    description: string;
+    isPublished: boolean;
+    courseInstructors: CourseInstructorResponseDto[];
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface Page<T> {
     content: T[];
     totalElements: number;
