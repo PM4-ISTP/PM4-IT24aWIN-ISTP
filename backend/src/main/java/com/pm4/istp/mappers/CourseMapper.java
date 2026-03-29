@@ -7,33 +7,35 @@ import com.pm4.istp.domain.UpdateCourseRequest;
 import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.dto.*;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
-import java.util.List;
-
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CourseMapper {
 
-    CreateCourseInstructorRequest fromDto(CreateCourseInstructorRequestDto dto);
+  CreateCourseInstructorRequest fromDto(CreateCourseInstructorRequestDto dto);
 
-    CreateCourseRequest fromDto(CreateCourseRequestDto dto);
+  CreateCourseRequest fromDto(CreateCourseRequestDto dto);
 
-    CreateCourseResponseDto toDto(Course course);
+  CreateCourseResponseDto toDto(Course course);
 
-    UpdateCourseInstructorRequest fromDto(UpdateCourseInstructorRequestDto dto);
+  UpdateCourseInstructorRequest fromDto(UpdateCourseInstructorRequestDto dto);
 
-    UpdateCourseRequest fromDto(UpdateCourseRequestDto dto);
+  UpdateCourseRequest fromDto(UpdateCourseRequestDto dto);
 
-    CourseDetailResponseDto toCourseDetailDto(Course course);
+  CourseDetailResponseDto toCourseDetailDto(Course course);
 
-    @Mapping(target = "instructorCount", source = "courseInstructors", qualifiedByName = "countInstructors")
-    ListCourseResponseDto toListCourseResponseDto(Course course);
+  @Mapping(
+      target = "instructorCount",
+      source = "courseInstructors",
+      qualifiedByName = "countInstructors")
+  ListCourseResponseDto toListCourseResponseDto(Course course);
 
-    @Named("countInstructors")
-    default int mapInstructorCount(List<CourseInstructor> instructors) {
-        return instructors == null ? 0 : instructors.size();
-    }
+  @Named("countInstructors")
+  default int mapInstructorCount(List<CourseInstructor> instructors) {
+    return instructors == null ? 0 : instructors.size();
+  }
 }

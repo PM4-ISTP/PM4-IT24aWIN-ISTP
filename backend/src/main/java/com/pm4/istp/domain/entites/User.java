@@ -2,15 +2,14 @@ package com.pm4.istp.domain.entites;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
-
-import java.time.LocalDateTime;
-import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -19,49 +18,49 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    @Id
-    @Column(name = "id", updatable = false, nullable = false, unique = true)
-    private UUID id;
+  @Id
+  @Column(name = "id", updatable = false, nullable = false, unique = true)
+  private UUID id;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+  @Column(name = "name", nullable = false)
+  private String name;
 
-    @Column(name = "email", nullable = false, unique = true)
-    private String email;
+  @Column(name = "email", nullable = false, unique = true)
+  private String email;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL)
-    private List<CourseInstructor> coursesInstructors = new ArrayList<>();
+  @JsonIgnore
+  @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL)
+  private List<CourseInstructor> coursesInstructors = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private Set<UserRoleEnum> roles = new HashSet<>();
+  @ElementCollection(fetch = FetchType.EAGER)
+  @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+  @Enumerated(EnumType.STRING)
+  @Column(name = "role", nullable = false)
+  private Set<UserRoleEnum> roles = new HashSet<>();
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+  @CreatedDate
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private LocalDateTime createdAt;
 
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+  @LastModifiedDate
+  @Column(name = "updated_at", nullable = false)
+  private LocalDateTime updatedAt;
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        User user = (User) o;
-        return Objects.equals(id, user.id)
-                && Objects.equals(name, user.name)
-                && Objects.equals(email, user.email)
-                && Objects.equals(createdAt, user.createdAt)
-                && Objects.equals(updatedAt, user.updatedAt);
+  @Override
+  public boolean equals(Object o) {
+    if (o == null || getClass() != o.getClass()) {
+      return false;
     }
+    User user = (User) o;
+    return Objects.equals(id, user.id)
+        && Objects.equals(name, user.name)
+        && Objects.equals(email, user.email)
+        && Objects.equals(createdAt, user.createdAt)
+        && Objects.equals(updatedAt, user.updatedAt);
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, email, createdAt, updatedAt);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, name, email, createdAt, updatedAt);
+  }
 }

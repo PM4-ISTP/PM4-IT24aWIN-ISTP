@@ -25,7 +25,8 @@ public class SecurityConfig {
                 authorize
                     .requestMatchers("/api/auth/**")
                     .permitAll()
-                        .requestMatchers("/api/v1/courses/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+                    .requestMatchers("/api/v1/courses/**")
+                    .hasAnyRole("INSTRUCTOR", "ADMIN")
                     // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
                     // catch-all rule to require authentication for all requests
                     .anyRequest()
