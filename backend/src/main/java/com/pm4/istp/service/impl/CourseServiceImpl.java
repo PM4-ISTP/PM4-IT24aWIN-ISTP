@@ -154,7 +154,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   public Page<Course> listCoursesForInstructors(UUID instructorId, Pageable pageable) {
-    return courseRepository.findByCourseInstructors_Instructor_Id(instructorId, pageable);
+    return courseRepository.findByCourseInstructorsInstructorId(instructorId, pageable);
   }
 
   private void verifyInstructor(Course course, UUID userId) {
