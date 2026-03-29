@@ -185,7 +185,6 @@ export default function AdminConfigForm() {
               withAsterisk={!adminConfigResponse.kubeconfigUploaded}
               label="Kubeconfig"
               description="Please upload your Kubeconfig file for the K3d cluster that manages the challenge pods."
-              placeholder="Please upload your Kubeconfig here"
               key={form.key(kubeconfigFormKey)}
               disabled={form.submitting}
               {...form.getInputProps(kubeconfigFormKey)}
