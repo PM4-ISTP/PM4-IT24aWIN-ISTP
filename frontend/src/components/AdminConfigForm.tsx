@@ -9,9 +9,9 @@ import { MemorySpecification, memorySpecificationToString, MemoryUnit, memoryUni
 export default function AdminConfigForm() {
   type AdminConfigResponse = {
     kubeconfigUploaded: boolean,
-    cpuLimit: string,
-    memoryLimit: string,
-    updatedAt: string
+    cpuLimit: string | null,
+    memoryLimit: string | null,
+    updatedAt: string | null
   }
 
   const formId = "admin-config-form";
@@ -33,8 +33,22 @@ export default function AdminConfigForm() {
     },
     validate: {
       kubeconfig: (value) => {
-        if (isCreateMode && value == null) {
+        if (!adminConfigResponse.kubeconfigUploaded && value === null) {
           return "You need to upload a Kubeconfig file.";
+        } else {
+          return null;
+        }
+      },
+      cpuLimit: (value) => {
+        if (adminConfigResponse.kubeconfigUploaded && value === null) {
+          return "You need to define a CPU limit or create a new configuration by deleting the current configuration.";
+        } else {
+          return null;
+        }
+      },
+      memoryLimit: (value) => {
+        if (adminConfigResponse.kubeconfigUploaded && value === null) {
+          return "You need to define a memory limit or create a new configuration by deleting the current configuration.";
         } else {
           return null;
         }
@@ -42,55 +56,72 @@ export default function AdminConfigForm() {
     }
   });
 
-  const [isCreateMode, setIsCreateMode] = useState(true);
+  // const [isCreateMode, setIsCreateMode] = useState(true);
+  const [adminConfigResponse, setAdminConfigResponse] = useState<AdminConfigResponse>({
+    kubeconfigUploaded: false,
+    cpuLimit: null,
+    memoryLimit: null,
+    updatedAt: null
+  });
   const [completed, setCompleted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     loadConfiguration();
-  }, [completed]);
+  }, []);
+
+  useEffect(() => {
+    initializeForm();
+  }, [adminConfigResponse])
 
   const loadConfiguration = async () => {
     document.getElementById(formId)?.setAttribute("disabled", "");
+    const response: AdminConfigResponse = await getAdminConfig();
+    setAdminConfigResponse(response);
+  }
+
+  const initializeForm = () => {
     try {
-      const response: AdminConfigResponse = await getAdminConfig();
-      let memorySpecification = response.memoryLimit == null ? null : stringToMemorySpecification(response.memoryLimit);
-      initializeForm(response, memorySpecification);
+      const memorySpecification = adminConfigResponse.memoryLimit === null ? null : stringToMemorySpecification(adminConfigResponse.memoryLimit);
+      const hasMemorySpecification = memorySpecification !== null;
+      form.setValues({
+        cpuLimit: adminConfigResponse.cpuLimit === null ? "" : adminConfigResponse.cpuLimit,
+        memoryLimit: hasMemorySpecification ? String(memorySpecification!.value) : "",
+        memoryLimitUnit: hasMemorySpecification ? memorySpecification!.unit : defaultMemoryUnit,
+        kubeconfig: null
+      });
+      if (adminConfigResponse.kubeconfigUploaded) {
+        // setIsCreateMode(false);
+      }
     } catch (e) {
+      console.log(e);
       setErrorMessage("It was not possible to load the K3d configuration. Please check the server log. It is possible, that the configuration is corrupted. In this case, please create a new configuration.");
     }
     document.getElementById(formId)?.removeAttribute("disabled");
   }
 
-  const initializeForm = (response: AdminConfigResponse, memorySpecification: MemorySpecification | null) => {
-      form.initialize({
-        cpuLimit: response.cpuLimit == null ? "" : response.cpuLimit,
-        memoryLimit: memorySpecification == null ? "" : String(memorySpecification.value),
-        memoryLimitUnit: memorySpecification == null ? defaultMemoryUnit : memorySpecification.unit,
-        kubeconfig: null
-      });
-      if (response.kubeconfigUploaded) {
-        setIsCreateMode(false);
-      }
+  const reloadForm = () => {
+    loadConfiguration();
+    setCompleted(false);
   }
 
   const handleSubmit = async (values: typeof form.values) => {
     const formData: FormData = new FormData();
     const file: File | null = values.kubeconfig;
-    if (file == null) {
+    if (file === null) {
       console.log("Kubeconfig file is null");
     } else {
       formData.set(kubeconfigFormKey, file);
       setCpuLimit(formData, values.cpuLimit);
       setMemoryLimit(formData, values.memoryLimit, values.memoryLimitUnit);
-      isCreateMode ? await postAdminConfig(formData) : await putAdminConfig(formData);
+      !adminConfigResponse.kubeconfigUploaded ? await postAdminConfig(formData) : await putAdminConfig(formData);
       setCompleted(true);
     }
   }
 
   const handleDelete = async () => {
-      await deleteAdminConfig();
-      setCompleted(true);
+    await deleteAdminConfig();
+    setCompleted(true);
   }
 
   const setCpuLimit = (setInFormData: FormData, cpuLimit: number | string) => {
@@ -109,7 +140,7 @@ export default function AdminConfigForm() {
     return (
       <Stack>
         <Text>Form submitted!</Text>
-        <Button onClick={() => setCompleted(false)}>Reset to initial state</Button>
+        <Button onClick={() => reloadForm()}>Reset to initial state</Button>
       </Stack>
     );
   }
@@ -134,6 +165,8 @@ export default function AdminConfigForm() {
               allowNegative={false}
               allowDecimal={false}
               clampBehavior="strict"
+              required={adminConfigResponse.cpuLimit !== null}
+              withAsterisk={adminConfigResponse.cpuLimit !== null}
             />
           </Grid.Col>
           <Grid.Col span={8}>
@@ -146,21 +179,25 @@ export default function AdminConfigForm() {
               allowNegative={false}
               allowDecimal={false}
               clampBehavior="strict"
+              required={adminConfigResponse.memoryLimit !== null}
+              withAsterisk={adminConfigResponse.memoryLimit !== null}
             />
           </Grid.Col>
           <Grid.Col span={4}>
             <Select
-              label="Memory limit"
+              label="Memory unit"
               description="Please select a unit for the desired memory limit."
               key={form.key("memoryLimitUnit")}
               {...form.getInputProps("memoryLimitUnit")}
               data={memoryUnits}
               defaultValue={defaultMemoryUnit}
+              required={adminConfigResponse.memoryLimit !== null}
+              withAsterisk={adminConfigResponse.memoryLimit !== null}
             />
           </Grid.Col>
           <Grid.Col span={12}>
             <FileInput
-              withAsterisk={isCreateMode}
+              withAsterisk={!adminConfigResponse.kubeconfigUploaded}
               label="Kubeconfig"
               description="Please upload your Kubeconfig file for the K3d cluster that manages the challenge pods."
               placeholder="Please upload your Kubeconfig here"
@@ -173,7 +210,7 @@ export default function AdminConfigForm() {
 
         <Group justify="flex-end" mt="md">
           <Button type="submit" loading={form.submitting}>
-            {isCreateMode ? "Create K3d configuration" : "Update K3d configuration"}
+            {!adminConfigResponse.kubeconfigUploaded ? "Create K3d configuration" : "Update K3d configuration"}
           </Button>
           <Button type="button" onClick={() => handleDelete()} loading={form.submitting}>
             Delete K3d configuration
