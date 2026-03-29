@@ -1,9 +1,9 @@
 "use server";
 
-import {fetchBackend} from "@/src/lib/api";
-import type {GetTokenParams} from "next-auth/jwt";
-import {getToken} from "next-auth/jwt";
-import {cookies, headers} from "next/headers";
+import { fetchBackend } from "@/src/lib/api";
+import type { GetTokenParams } from "next-auth/jwt";
+import { getToken } from "next-auth/jwt";
+import { cookies, headers } from "next/headers";
 
 export async function postTest() {
   const res = await fetchBackend("/api/v1/tests", { method: "POST" });
@@ -12,14 +12,14 @@ export async function postTest() {
     throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
   }
 
-    return (await res.json()) as unknown;
+  return (await res.json()) as unknown;
 }
 
 export async function fetchCoursesTests() {
-    const res = await fetchBackend("/api/v1/courses", {method: "GET"});
+  const res = await fetchBackend("/api/v1/courses", { method: "GET" });
 
-    if (!res.ok) {
-        throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
+  if (!res.ok) {
+    throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
   }
 
   return (await res.json()) as unknown;
