@@ -1,4 +1,4 @@
-import {Stack, Text, Title} from "@mantine/core";
+import { Stack, Text, Title } from "@mantine/core";
 
 export default function CoursesPage() {
   return (
