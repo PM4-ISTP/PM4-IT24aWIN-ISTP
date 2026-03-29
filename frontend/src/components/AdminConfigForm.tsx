@@ -1,12 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { Button, FileInput, Grid, Group, NumberInput, Select, Stack, Text } from "@mantine/core";
+import { useEffect, useState } from "react";
+import { Button, Fieldset, FileInput, Grid, Group, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { deleteAdminConfig, postAdminConfig } from "@/src/app/actions";
-import { memorySpecificationToString, MemoryUnit, memoryUnits } from "@/src/lib/memoryUnit";
+import { deleteAdminConfig, getAdminConfig, postAdminConfig, putAdminConfig } from "@/src/app/actions";
+import { memorySpecificationToString, MemoryUnit, memoryUnits, stringToMemorySpecification } from "@/src/lib/memoryUnit";
 
 export default function AdminConfigForm() {
+  type AdminConfigResponse = {
+    kubeconfigUploaded: boolean,
+    cpuLimit: string,
+    memoryLimit: string,
+    updatedAt: string
+  }
+
+  const formId = "admin-config-form";
+  const infoFieldId = "admin-config-form-info-field";
+
   const kubeconfigFormKey = "kubeconfig";
   const cpuLimitFormKey = "cpuLimit";
   const memoryLimitFormKey = "memoryLimit";
@@ -26,7 +36,33 @@ export default function AdminConfigForm() {
     }
   });
 
+  const [isCreateMode, setIsCreateMode] = useState(true);
   const [completed, setCompleted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    loadConfiguration();
+  }, [completed]);
+
+  const loadConfiguration = async () => {
+    document.getElementById(formId)?.setAttribute("disabled", "");
+    try {
+      const response: AdminConfigResponse = await getAdminConfig();
+      let memorySpecification = response.memoryLimit == null ? null : stringToMemorySpecification(response.memoryLimit);
+      form.initialize({
+        cpuLimit: response.cpuLimit == null ? "" : response.cpuLimit,
+        memoryLimit: memorySpecification == null ? "" : String(memorySpecification.value),
+        memoryLimitUnit: memorySpecification == null ? defaultMemoryUnit : memorySpecification.unit,
+        kubeconfig: null
+      });
+      if (response.kubeconfigUploaded) {
+        setIsCreateMode(false);
+      }
+    } catch (e) {
+      setErrorMessage("It was not possible to load the K3d configuration. Please check the server log. It is possible, that the configuration is corrupted. In this case, please create a new configuration.");
+    }
+    document.getElementById(formId)?.removeAttribute("disabled");
+  }
 
   const handleSubmit = async (values: typeof form.values) => {
     const formData: FormData = new FormData();
@@ -36,8 +72,8 @@ export default function AdminConfigForm() {
     } else {
       formData.set(kubeconfigFormKey, file);
       setCpuLimit(formData, values.cpuLimit);
-      setMemoryLimit(formData, values.memoryLimit, values.memoryLimitUnit)
-      await postAdminConfig(formData);
+      setMemoryLimit(formData, values.memoryLimit, values.memoryLimitUnit);
+      isCreateMode ? await postAdminConfig(formData) : await putAdminConfig(formData);
       setCompleted(true);
     }
   }
@@ -73,64 +109,67 @@ export default function AdminConfigForm() {
       <Text fw={600} size="lg">
         K3d Configuration
       </Text>
+      <Text id={infoFieldId} c="red" size="sm" mt={4}>{errorMessage}</Text>
       <Text c="dimmed" size="sm" mt={4}>Required fields are marked with *</Text>
 
-      <Grid>
-        <Grid.Col span={12}>
-          <NumberInput
-            label="CPU limit"
-            description="How much CPU one single pod can at maximum use. Leave this field empty, if you do not want to specify a CPU limit."
-            key={form.key(cpuLimitFormKey)}
-            {...form.getInputProps(cpuLimitFormKey)}
-            min={1}
-            allowNegative={false}
-            allowDecimal={false}
-            clampBehavior="strict"
-          />
-        </Grid.Col>
-        <Grid.Col span={8}>
-          <NumberInput
-            label="Memory limit"
-            description="How much memory one single pod can at maximum use. Leave this field empty, if you do not want to specify a memory limit."
-            key={form.key(memoryLimitFormKey)}
-            {...form.getInputProps(memoryLimitFormKey)}
-            min={1}
-            allowNegative={false}
-            allowDecimal={false}
-            clampBehavior="strict"
-          />
-        </Grid.Col>
-        <Grid.Col span={4}>
-          <Select
-            label="Memory limit"
-            description="Please select a unit for the desired memory limit."
-            key={form.key("memoryLimitUnit")}
-            {...form.getInputProps("memoryLimitUnit")}
-            data={memoryUnits}
-            defaultValue={defaultMemoryUnit}
-          />
-        </Grid.Col>
-        <Grid.Col span={12}>
-          <FileInput
-            withAsterisk
-            label="Kubeconfig"
-            description="Please upload your Kubeconfig file for the K3d cluster that manages the challenge pods."
-            placeholder="Please upload your Kubeconfig here"
-            key={form.key(kubeconfigFormKey)}
-            disabled={form.submitting}
-            {...form.getInputProps(kubeconfigFormKey)}
-          />
-        </Grid.Col>
-      </Grid>
+      <Fieldset id={formId} disabled>
+        <Grid>
+          <Grid.Col span={12}>
+            <NumberInput
+              label="CPU limit"
+              description="How much CPU one single pod can at maximum use. Leave this field empty, if you do not want to specify a CPU limit."
+              key={form.key(cpuLimitFormKey)}
+              {...form.getInputProps(cpuLimitFormKey)}
+              min={1}
+              allowNegative={false}
+              allowDecimal={false}
+              clampBehavior="strict"
+            />
+          </Grid.Col>
+          <Grid.Col span={8}>
+            <NumberInput
+              label="Memory limit"
+              description="How much memory one single pod can at maximum use. Leave this field empty, if you do not want to specify a memory limit."
+              key={form.key(memoryLimitFormKey)}
+              {...form.getInputProps(memoryLimitFormKey)}
+              min={1}
+              allowNegative={false}
+              allowDecimal={false}
+              clampBehavior="strict"
+            />
+          </Grid.Col>
+          <Grid.Col span={4}>
+            <Select
+              label="Memory limit"
+              description="Please select a unit for the desired memory limit."
+              key={form.key("memoryLimitUnit")}
+              {...form.getInputProps("memoryLimitUnit")}
+              data={memoryUnits}
+              defaultValue={defaultMemoryUnit}
+            />
+          </Grid.Col>
+          <Grid.Col span={12}>
+            <FileInput
+              withAsterisk={isCreateMode}
+              label="Kubeconfig"
+              description="Please upload your Kubeconfig file for the K3d cluster that manages the challenge pods."
+              placeholder="Please upload your Kubeconfig here"
+              key={form.key(kubeconfigFormKey)}
+              disabled={form.submitting}
+              {...form.getInputProps(kubeconfigFormKey)}
+            />
+          </Grid.Col>
+        </Grid>
 
-      <Group justify="flex-end" mt="md">
-        <Button type="submit" loading={form.submitting}>
-          Submit
-        </Button>
-        <Button type="button" onClick={() => handleDelete()} loading={form.submitting}>
-          Delete K3d configuration
-        </Button>
-      </Group>
+        <Group justify="flex-end" mt="md">
+          <Button type="submit" loading={form.submitting}>
+            {isCreateMode ? "Create K3d configuration" : "Update K3d configuration"}
+          </Button>
+          <Button type="button" onClick={() => handleDelete()} loading={form.submitting}>
+            Delete K3d configuration
+          </Button>
+        </Group>
+      </Fieldset>
     </form>
   );
 }
