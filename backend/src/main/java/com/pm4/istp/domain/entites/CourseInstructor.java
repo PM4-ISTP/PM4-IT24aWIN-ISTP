@@ -34,12 +34,10 @@ public class CourseInstructor {
     @JoinColumn(name = "instructor_id", nullable = false)
     private User instructor;
 
-    //TODO: nullable check
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "courses_id", nullable = true)
     private Course course;
 
-    //TODO: check if this is necessary lol
     @CreatedDate
     @Column(name = "invited_at", nullable = false)
     private LocalDateTime invitedAt;
