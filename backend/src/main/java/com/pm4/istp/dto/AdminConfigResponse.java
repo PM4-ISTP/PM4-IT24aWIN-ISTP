@@ -7,8 +7,8 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class AdminConfigResponse {
-    private boolean kubeconfigUploaded;
-    private String cpuLimit;
-    private String memoryLimit;
-    private LocalDateTime updatedAt;
+  private boolean kubeconfigUploaded;
+  private String cpuLimit;
+  private String memoryLimit;
+  private LocalDateTime updatedAt;
 }
