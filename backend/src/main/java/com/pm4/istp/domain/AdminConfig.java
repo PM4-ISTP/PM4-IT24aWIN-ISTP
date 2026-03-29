@@ -20,35 +20,35 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AdminConfig {
 
-  @Id
-  @Column(name = "id", updatable = false, nullable = false, unique = true)
-  private UUID id;
+    @Id
+    @Column(name = "id", updatable = false, nullable = false, unique = true)
+    private UUID id;
 
-  @Column(name = "cpu_limit")
-  private String cpuLimit;
+    @Column(name = "cpu_limit")
+    private String cpuLimit;
 
-  @Column(name = "memory_limit")
-  private String memoryLimit;
+    @Column(name = "memory_limit")
+    private String memoryLimit;
 
-  @Column(name = "kubeconfig")
-  private String kubeconfig;
+    @Column(name = "kubeconfig", nullable = false)
+    private String kubeconfig;
 
-  @Column(name = "updated_at", nullable = false)
-  private LocalDateTime updatedAt;
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof AdminConfig other)) {
+            return false;
+        }
+        return Objects.equals(id, other.id);
     }
-    if (!(o instanceof AdminConfig other)) {
-      return false;
-    }
-    return Objects.equals(id, other.id);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(id);
-  }
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
