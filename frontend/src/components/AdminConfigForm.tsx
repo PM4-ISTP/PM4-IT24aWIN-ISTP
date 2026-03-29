@@ -89,21 +89,22 @@ export default function AdminConfigForm() {
 
   const handleSubmit = async (values: typeof form.values) => {
     const formData: FormData = new FormData();
-    const file: File | null = values.kubeconfig;
-    if (file === null) {
-      console.log("Kubeconfig file is null");
-    } else {
-      formData.set(kubeconfigFormKey, file);
-      setCpuLimit(formData, values.cpuLimit);
-      setMemoryLimit(formData, values.memoryLimit, values.memoryLimitUnit);
-      !adminConfigResponse.kubeconfigUploaded ? await postAdminConfig(formData) : await putAdminConfig(formData);
-      setCompleted(true);
-    }
+    setKubeconfig(formData, values.kubeconfig);
+    setCpuLimit(formData, values.cpuLimit);
+    setMemoryLimit(formData, values.memoryLimit, values.memoryLimitUnit);
+    !adminConfigResponse.kubeconfigUploaded ? await postAdminConfig(formData) : await putAdminConfig(formData);
+    setCompleted(true);
   }
 
   const handleDelete = async () => {
     await deleteAdminConfig();
     setCompleted(true);
+  }
+
+  const setKubeconfig = (setInFormData: FormData, kubeconfig: File | null) => {
+    if (kubeconfig !== null) {
+      setInFormData.set(kubeconfigFormKey, kubeconfig);
+    }
   }
 
   const setCpuLimit = (setInFormData: FormData, cpuLimit: number | string) => {
