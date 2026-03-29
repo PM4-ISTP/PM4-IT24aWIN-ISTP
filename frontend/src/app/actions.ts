@@ -1,6 +1,6 @@
 "use server";
 
-import { getApiClient } from "@/src/lib/api/server";
+import { getApiClient, fetchBackendMultipartFormData } from "@/src/lib/api/server";
 
 export async function postTest() {
   const client = await getApiClient();
@@ -11,4 +11,15 @@ export async function postTest() {
   }
 
   return data;
+}
+
+// TODO: replace this function with functions from pull request #54
+export async function postAdminConfig(formData: FormData) {
+  const res = await fetchBackendMultipartFormData("/api/kubeconfig", { method: "POST", body: formData });
+
+  if (!res.ok) {
+    throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
+  }
+
+  return res.body;
 }

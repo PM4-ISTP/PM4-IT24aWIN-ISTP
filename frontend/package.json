@@ -27,6 +27,7 @@
   "dependencies": {
     "@mantine/core": "^8.3.18",
     "@mantine/hooks": "^8.3.18",
+    "@mantine/form": "^8.3.18",
     "@mantine/tiptap": "^8.3.18",
     "@tabler/icons-react": "^3.40.0",
     "@tiptap/extension-highlight": "^3.20.5",
