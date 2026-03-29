@@ -32,6 +32,7 @@ export default function AdminConfigForm() {
       kubeconfig: null
     },
     validate: {
+      // In Firefox, the required attribute on FileInput does nothing. Therefor, custom validation is needed.
       kubeconfig: (value) => {
         if (!adminConfigResponse.kubeconfigUploaded && value === null) {
           return "You need to upload a Kubeconfig file.";
@@ -119,11 +120,12 @@ export default function AdminConfigForm() {
     }
   }
 
+  // confirmation, that form was submitted
   if (completed) {
     return (
       <Stack>
-        <Text>Form submitted!</Text>
-        <Button onClick={() => reloadForm()}>Reset to initial state</Button>
+        <Text>The changes were saved.</Text>
+        <Button onClick={() => reloadForm()}>Back</Button>
       </Stack>
     );
   }
