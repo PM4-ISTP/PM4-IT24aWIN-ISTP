@@ -62,7 +62,10 @@ export default function AdminConfigForm() {
 
   return (
     <form onSubmit={form.onSubmit(handleSubmit)} encType="multipart/form-data">
-      <Text>Required fields are marked with *</Text>
+      <Text fw={600} size="lg">
+        K3d Configuration
+      </Text>
+      <Text c="dimmed" size="sm" mt={4}>Required fields are marked with *</Text>
 
       <Grid>
         <Grid.Col span={12}>
