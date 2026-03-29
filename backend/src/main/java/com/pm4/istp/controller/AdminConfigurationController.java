@@ -1,6 +1,7 @@
 package com.pm4.istp.controller;
 
 import com.pm4.istp.domain.AdminConfig;
+import com.pm4.istp.dto.AdminConfigResponse;
 import com.pm4.istp.exception.StorageException;
 import com.pm4.istp.service.AdminConfigurationService;
 import java.util.Optional;
@@ -23,6 +24,8 @@ public class AdminConfigurationController {
 
     private final AdminConfigurationService adminConfigurationService;
 
+    private final long MAX_FILE_SIZE = 1_048_576; // 1 MB
+
     public AdminConfigurationController(
             @NonNull AdminConfigurationService adminConfigurationService) {
         this.adminConfigurationService = adminConfigurationService;
@@ -37,10 +40,15 @@ public class AdminConfigurationController {
      * @return ResponseEntity containing the stored AdminConfig
      */
     @PostMapping
-    public ResponseEntity<AdminConfig> uploadAndStoreAdminConfig(
+    public ResponseEntity<?> uploadAndStoreAdminConfig(
             @RequestParam("kubeconfig") MultipartFile kubeconfig,
             @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
             @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
+
+        if (kubeconfig.getSize() > MAX_FILE_SIZE) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Kubeconfig file size exceeds 1 MB limit.");
+        }
 
         AdminConfig adminConfig = adminConfigurationService.createConfiguration(kubeconfig, cpuLimit, memoryLimit);
 
@@ -48,9 +56,20 @@ public class AdminConfigurationController {
     }
 
     @GetMapping
-    public ResponseEntity<Boolean> getAdminConfig() {
+    public ResponseEntity<?> getAdminConfig() {
         Optional<AdminConfig> config = adminConfigurationService.getAdminConfiguration();
-        return ResponseEntity.ok(config.isPresent());
+        if (config.isPresent()) {
+            AdminConfig adminConfig = config.get();
+            AdminConfigResponse response = new AdminConfigResponse(
+                    true,
+                    adminConfig.getCpuLimit(),
+                    adminConfig.getMemoryLimit(),
+                    adminConfig.getUpdatedAt());
+            return ResponseEntity.ok(response);
+        } else {
+            AdminConfigResponse response = new AdminConfigResponse(false, null, null, null);
+            return ResponseEntity.ok(response);
+        }
     }
 
     @PutMapping
