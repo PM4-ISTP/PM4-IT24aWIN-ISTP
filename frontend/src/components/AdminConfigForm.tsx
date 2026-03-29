@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button, Fieldset, FileInput, Grid, Group, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { deleteAdminConfig, getAdminConfig, postAdminConfig, putAdminConfig } from "@/src/app/actions";
-import { memorySpecificationToString, MemoryUnit, memoryUnits, stringToMemorySpecification } from "@/src/lib/memoryUnit";
+import { MemorySpecification, memorySpecificationToString, MemoryUnit, memoryUnits, stringToMemorySpecification } from "@/src/lib/memoryUnit";
 
 export default function AdminConfigForm() {
   type AdminConfigResponse = {
@@ -32,7 +32,13 @@ export default function AdminConfigForm() {
       kubeconfig: null
     },
     validate: {
-      kubeconfig: (value) => value == null ? "You need to upload a Kubeconfig file." : null
+      kubeconfig: (value) => {
+        if (isCreateMode && value == null) {
+          return "You need to upload a Kubeconfig file.";
+        } else {
+          return null;
+        }
+      }
     }
   });
 
@@ -49,6 +55,14 @@ export default function AdminConfigForm() {
     try {
       const response: AdminConfigResponse = await getAdminConfig();
       let memorySpecification = response.memoryLimit == null ? null : stringToMemorySpecification(response.memoryLimit);
+      initializeForm(response, memorySpecification);
+    } catch (e) {
+      setErrorMessage("It was not possible to load the K3d configuration. Please check the server log. It is possible, that the configuration is corrupted. In this case, please create a new configuration.");
+    }
+    document.getElementById(formId)?.removeAttribute("disabled");
+  }
+
+  const initializeForm = (response: AdminConfigResponse, memorySpecification: MemorySpecification | null) => {
       form.initialize({
         cpuLimit: response.cpuLimit == null ? "" : response.cpuLimit,
         memoryLimit: memorySpecification == null ? "" : String(memorySpecification.value),
@@ -58,10 +72,6 @@ export default function AdminConfigForm() {
       if (response.kubeconfigUploaded) {
         setIsCreateMode(false);
       }
-    } catch (e) {
-      setErrorMessage("It was not possible to load the K3d configuration. Please check the server log. It is possible, that the configuration is corrupted. In this case, please create a new configuration.");
-    }
-    document.getElementById(formId)?.removeAttribute("disabled");
   }
 
   const handleSubmit = async (values: typeof form.values) => {
