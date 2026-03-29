@@ -15,7 +15,7 @@ export async function postTest() {
 
 // TODO: replace this function with functions from pull request #54
 export async function postAdminConfig(formData: FormData) {
-  const res = await fetchBackendMultipartFormData("/api/kubeconfig", { method: "POST", body: formData });
+  const res = await fetchBackendMultipartFormData("/api/admin/config", { method: "POST", body: formData });
 
   if (!res.ok) {
     throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
