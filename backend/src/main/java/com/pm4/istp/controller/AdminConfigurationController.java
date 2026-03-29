@@ -31,6 +31,10 @@ public class AdminConfigurationController {
     this.adminConfigurationService = adminConfigurationService;
   }
 
+  private boolean isFileSizeExceeded(MultipartFile file) {
+    return file != null && file.getSize() > MAX_FILE_SIZE;
+  }
+
   /**
    * Uploads a kubeconfig file and stores admin configuration in the database.
    *
@@ -45,7 +49,7 @@ public class AdminConfigurationController {
       @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
       @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
 
-    if (kubeconfig.getSize() > MAX_FILE_SIZE) {
+    if (isFileSizeExceeded(kubeconfig)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body("Kubeconfig file size exceeds 1 MB limit.");
     }
@@ -75,10 +79,15 @@ public class AdminConfigurationController {
   }
 
   @PutMapping
-  public ResponseEntity<AdminConfig> updateAdminConfig(
+  public ResponseEntity<?> updateAdminConfig(
       @RequestParam(value = "kubeconfig", required = false) MultipartFile kubeconfig,
       @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
       @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
+
+    if (isFileSizeExceeded(kubeconfig)) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body("Kubeconfig file size exceeds 1 MB limit.");
+    }
 
     AdminConfig adminConfig =
         adminConfigurationService.updateConfiguration(kubeconfig, cpuLimit, memoryLimit);
