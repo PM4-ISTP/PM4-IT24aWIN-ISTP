@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button, FileInput, Grid, Group, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { postAdminConfig } from "@/src/app/actions";
+import { deleteAdminConfig, postAdminConfig } from "@/src/app/actions";
 import { memorySpecificationToString, MemoryUnit, memoryUnits } from "@/src/lib/memoryUnit";
 
 export default function AdminConfigForm() {
@@ -40,7 +40,12 @@ export default function AdminConfigForm() {
       await postAdminConfig(formData);
       setCompleted(true);
     }
-  };
+  }
+
+  const handleDelete = async () => {
+      await deleteAdminConfig();
+      setCompleted(true);
+  }
 
   const setCpuLimit = (setInFormData: FormData, cpuLimit: number | string) => {
     if (cpuLimit !== "") {
@@ -121,6 +126,9 @@ export default function AdminConfigForm() {
       <Group justify="flex-end" mt="md">
         <Button type="submit" loading={form.submitting}>
           Submit
+        </Button>
+        <Button type="button" onClick={() => handleDelete()} loading={form.submitting}>
+          Delete K3d configuration
         </Button>
       </Group>
     </form>
