@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button, Fieldset, FileInput, Grid, Group, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { deleteAdminConfig, getAdminConfig, postAdminConfig, putAdminConfig } from "@/src/app/actions";
-import { MemorySpecification, memorySpecificationToString, MemoryUnit, memoryUnits, stringToMemorySpecification } from "@/src/lib/memoryUnit";
+import { memorySpecificationToString, MemoryUnit, memoryUnits, stringToMemorySpecification } from "@/src/lib/memoryUnit";
 
 export default function AdminConfigForm() {
   type AdminConfigResponse = {
@@ -38,25 +38,10 @@ export default function AdminConfigForm() {
         } else {
           return null;
         }
-      },
-      cpuLimit: (value) => {
-        if (adminConfigResponse.kubeconfigUploaded && value === null) {
-          return "You need to define a CPU limit or create a new configuration by deleting the current configuration.";
-        } else {
-          return null;
-        }
-      },
-      memoryLimit: (value) => {
-        if (adminConfigResponse.kubeconfigUploaded && value === null) {
-          return "You need to define a memory limit or create a new configuration by deleting the current configuration.";
-        } else {
-          return null;
-        }
       }
     }
   });
 
-  // const [isCreateMode, setIsCreateMode] = useState(true);
   const [adminConfigResponse, setAdminConfigResponse] = useState<AdminConfigResponse>({
     kubeconfigUploaded: false,
     cpuLimit: null,
@@ -90,9 +75,6 @@ export default function AdminConfigForm() {
         memoryLimitUnit: hasMemorySpecification ? memorySpecification!.unit : defaultMemoryUnit,
         kubeconfig: null
       });
-      if (adminConfigResponse.kubeconfigUploaded) {
-        // setIsCreateMode(false);
-      }
     } catch (e) {
       console.log(e);
       setErrorMessage("It was not possible to load the K3d configuration. Please check the server log. It is possible, that the configuration is corrupted. In this case, please create a new configuration.");
