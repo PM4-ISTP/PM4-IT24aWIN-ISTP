@@ -12,12 +12,12 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateCourseRequestDto {
+public class UpdateCourseRequestDto {
     @NotBlank(message = "Course title is required")
     private String title;
     private String description;
     @JsonProperty("isPublished")
     private boolean isPublished;
     @NotNull(message = "Instructor information is required")
-    private List<CreateCourseInstructorRequestDto> instructors;
+    private List<UpdateCourseInstructorRequestDto> instructors;
 }

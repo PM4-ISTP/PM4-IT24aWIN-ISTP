@@ -2,7 +2,15 @@
 
 import {fetchBackend} from "@/src/lib/api";
 
-import type {ActionResult, CourseResponseDto, CreateCourseDto, ListCourseResponseDto, Page,} from "@/src/types/course";
+import type {
+    ActionResult,
+    CourseDetailResponseDto,
+    CourseResponseDto,
+    CreateCourseDto,
+    ListCourseResponseDto,
+    Page,
+    UpdateCourseDto,
+} from "@/src/types/course";
 
 export async function createCourse(
     dto: Omit<CreateCourseDto, "instructors"> & { collaboratorIds: string[] }
@@ -25,10 +33,89 @@ export async function createCourse(
 
         if (!res.ok) {
             const text = await res.text();
-            return {success: false, error: `${res.status}: ${text || res.statusText}`};
+            let message = res.statusText;
+            try {
+                const json = JSON.parse(text);
+                if (json.error) message = json.error;
+            } catch {
+                message = text || res.statusText;
+            }
+            return {success: false, error: `${res.status}: ${message}`};
         }
 
         const data = (await res.json()) as CourseResponseDto;
+        return {success: true, data};
+    } catch (err) {
+        return {
+            success: false,
+            error: err instanceof Error ? err.message : "Unknown error",
+        };
+    }
+}
+
+export async function fetchCourse(
+    id: string
+): Promise<ActionResult<CourseDetailResponseDto>> {
+    try {
+        const res = await fetchBackend(`/api/v1/courses/${id}`, {
+            cache: "no-store",
+        });
+
+        if (!res.ok) {
+            const text = await res.text();
+            let message = res.statusText;
+            try {
+                const json = JSON.parse(text);
+                if (json.error) message = json.error;
+            } catch {
+                message = text || res.statusText;
+            }
+            return {success: false, error: `${res.status}: ${message}`};
+        }
+
+        const data = (await res.json()) as CourseDetailResponseDto;
+        return {success: true, data};
+    } catch (err) {
+        return {
+            success: false,
+            error: err instanceof Error ? err.message : "Unknown error",
+        };
+    }
+}
+
+export async function updateCourse(
+    id: string,
+    dto: Omit<UpdateCourseDto, "instructors"> & { collaboratorIds: string[] }
+): Promise<ActionResult<CourseDetailResponseDto>> {
+    try {
+        const payload: UpdateCourseDto = {
+            title: dto.title,
+            description: dto.description,
+            isPublished: dto.isPublished,
+            instructors: dto.collaboratorIds.map((cid) => ({
+                instructorId: cid,
+                instructorRole: "COLLABORATOR" as const,
+            })),
+        };
+
+        const res = await fetchBackend(`/api/v1/courses/${id}`, {
+            method: "PUT",
+            body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+            const text = await res.text();
+            let message = res.statusText;
+            try {
+                const json = JSON.parse(text);
+                if (json.error) message = json.error;
+            } catch {
+                message = text || res.statusText;
+            }
+            return {success: false, error: `${res.status}: ${message}`};
+        }
+
+        const data = (await res.json()) as CourseDetailResponseDto;
         return {success: true, data};
     } catch (err) {
         return {
