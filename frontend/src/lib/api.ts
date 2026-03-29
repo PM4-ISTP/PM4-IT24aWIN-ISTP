@@ -36,3 +36,29 @@ export async function fetchBackend(path: string, options: RequestInit = {}): Pro
     headers: reqHeaders,
   });
 }
+
+// TODO: replace this function with functions from pull request #54
+export async function fetchBackendMultipartFormData(path: string, options: RequestInit = {}): Promise<Response> {
+  const req = {
+    headers: Object.fromEntries((await headers()).entries()),
+    cookies: Object.fromEntries((await cookies()).getAll().map((c) => [c.name, c.value])),
+  };
+
+  const token = await getToken({
+    req: req as GetTokenParams["req"],
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  if (!token?.accessToken) {
+    throw new Error("Not authenticated");
+  }
+
+  const url = `${BACKEND_URL}${path}`;
+  const reqHeaders = new Headers(options.headers);
+  reqHeaders.set("Authorization", `Bearer ${token.accessToken}`);
+
+  return fetch(url, {
+    ...options,
+    headers: reqHeaders,
+  });
+}

@@ -1,3 +1,4 @@
+import AdminConfigForm from "@/src/components/AdminConfigForm";
 import { Stack, Title, Text, Button, Paper } from "@mantine/core";
 
 // Role guard is handled by middleware (proxy.ts) - no manual check needed here.
@@ -32,6 +33,11 @@ export default function AdminDashboard() {
           >
             Manage Users &amp; Roles with Keycloak
           </Button>
+        </Stack>
+      </Paper>
+      <Paper withBorder radius="md" p="xl">
+        <Stack gap="md">
+          <AdminConfigForm />
         </Stack>
       </Paper>
     </Stack>
