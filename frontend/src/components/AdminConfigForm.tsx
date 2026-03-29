@@ -20,6 +20,9 @@ export default function AdminConfigForm() {
       memoryLimit: "",
       memoryLimitUnit: defaultMemoryUnit,
       kubeconfig: null
+    },
+    validate: {
+      kubeconfig: (value) => value == null ? "You need to upload a Kubeconfig file." : null
     }
   });
 
@@ -75,7 +78,9 @@ export default function AdminConfigForm() {
             key={form.key(cpuLimitFormKey)}
             {...form.getInputProps(cpuLimitFormKey)}
             min={1}
+            allowNegative={false}
             allowDecimal={false}
+            clampBehavior="strict"
           />
         </Grid.Col>
         <Grid.Col span={8}>
@@ -85,7 +90,9 @@ export default function AdminConfigForm() {
             key={form.key(memoryLimitFormKey)}
             {...form.getInputProps(memoryLimitFormKey)}
             min={1}
+            allowNegative={false}
             allowDecimal={false}
+            clampBehavior="strict"
           />
         </Grid.Col>
         <Grid.Col span={4}>
@@ -106,7 +113,6 @@ export default function AdminConfigForm() {
             placeholder="Please upload your Kubeconfig here"
             key={form.key(kubeconfigFormKey)}
             disabled={form.submitting}
-            required={true}
             {...form.getInputProps(kubeconfigFormKey)}
           />
         </Grid.Col>
