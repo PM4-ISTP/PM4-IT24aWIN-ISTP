@@ -2,8 +2,7 @@ package com.pm4.istp.exception;
 
 public class UserNotFoundException extends IstpException {
 
-  public UserNotFoundException() {
-  }
+  public UserNotFoundException() {}
 
   public UserNotFoundException(String message) {
     super(message);
@@ -17,8 +16,8 @@ public class UserNotFoundException extends IstpException {
     super(cause);
   }
 
-  public UserNotFoundException(String message, Throwable cause, boolean enableSuppression,
-                               boolean writableStackTrace) {
+  public UserNotFoundException(
+      String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
   }
 }

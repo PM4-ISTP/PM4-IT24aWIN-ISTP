@@ -7,6 +7,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -16,64 +22,59 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class UserProvisioningFilter extends OncePerRequestFilter {
 
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
-    @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+  @Override
+  protected void doFilterInternal(
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication != null
-                && authentication.isAuthenticated()
-                && authentication.getPrincipal() instanceof Jwt jwt) {
+    if (authentication != null
+        && authentication.isAuthenticated()
+        && authentication.getPrincipal() instanceof Jwt jwt) {
 
-            UUID keycloakId = UUID.fromString(jwt.getSubject());
-            String username = jwt.getClaimAsString("preferred_username");
-            String email = jwt.getClaimAsString("email");
+      UUID keycloakId = UUID.fromString(jwt.getSubject());
+      String username = jwt.getClaimAsString("preferred_username");
+      String email = jwt.getClaimAsString("email");
 
-            Set<UserRoleEnum> roles = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .map(UserRoleEnum::fromString)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .collect(Collectors.toSet());
+      Set<UserRoleEnum> roles =
+          authentication.getAuthorities().stream()
+              .map(GrantedAuthority::getAuthority)
+              .map(UserRoleEnum::fromString)
+              .filter(Optional::isPresent)
+              .map(Optional::get)
+              .collect(Collectors.toSet());
 
-            userRepository.findById(keycloakId).ifPresentOrElse(
-                    user -> {
-                        if (!Objects.equals(user.getName(), username)
-                                || !Objects.equals(user.getEmail(), email)
-                                || !Objects.equals(user.getRoles(), roles)) {
-                            user.setName(username);
-                            user.setEmail(email);
-                            user.setRoles(roles);
-                            userRepository.save(user);
-                        }
-                    },
-                    () -> {
-                        User newUser = new User();
-                        newUser.setId(keycloakId);
-                        newUser.setName(username);
-                        newUser.setEmail(email);
-                        newUser.setRoles(roles);
-                        userRepository.save(newUser);
-                    }
-            );
-        }
-
-        filterChain.doFilter(request, response);
+      userRepository
+          .findById(keycloakId)
+          .ifPresentOrElse(
+              user -> {
+                if (!Objects.equals(user.getName(), username)
+                    || !Objects.equals(user.getEmail(), email)
+                    || !Objects.equals(user.getRoles(), roles)) {
+                  user.setName(username);
+                  user.setEmail(email);
+                  user.setRoles(roles);
+                  userRepository.save(user);
+                }
+              },
+              () -> {
+                User newUser = new User();
+                newUser.setId(keycloakId);
+                newUser.setName(username);
+                newUser.setEmail(email);
+                newUser.setRoles(roles);
+                userRepository.save(newUser);
+              });
     }
+
+    filterChain.doFilter(request, response);
+  }
 }

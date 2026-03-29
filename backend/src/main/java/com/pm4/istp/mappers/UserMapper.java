@@ -8,5 +8,5 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 
-    ListInstructorUserResponseDto toListInstructorUserResponseDto(User user);
+  ListInstructorUserResponseDto toListInstructorUserResponseDto(User user);
 }
