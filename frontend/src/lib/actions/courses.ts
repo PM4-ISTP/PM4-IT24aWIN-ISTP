@@ -12,6 +12,26 @@ import type {
     UpdateCourseDto,
 } from "@/src/types/course";
 
+function extractErrorMessage(text: string, fallback: string): string {
+    if (!text) {
+        return fallback;
+    }
+
+    try {
+        const parsed: unknown = JSON.parse(text);
+        if (typeof parsed === "object" && parsed !== null && "error" in parsed) {
+            const errorValue = (parsed as { error?: unknown }).error;
+            if (typeof errorValue === "string" && errorValue.trim()) {
+                return errorValue;
+            }
+        }
+    } catch {
+        return text || fallback;
+    }
+
+    return text || fallback;
+}
+
 export async function createCourse(
     dto: Omit<CreateCourseDto, "instructors"> & { collaboratorIds: string[] }
 ): Promise<ActionResult<CourseResponseDto>> {
@@ -33,13 +53,7 @@ export async function createCourse(
 
         if (!res.ok) {
             const text = await res.text();
-            let message = res.statusText;
-            try {
-                const json = JSON.parse(text);
-                if (json.error) message = json.error;
-            } catch {
-                message = text || res.statusText;
-            }
+            const message = extractErrorMessage(text, res.statusText);
             return {success: false, error: `${res.status}: ${message}`};
         }
 
@@ -53,9 +67,7 @@ export async function createCourse(
     }
 }
 
-export async function fetchCourse(
-    id: string
-): Promise<ActionResult<CourseDetailResponseDto>> {
+export async function fetchCourse(id: string): Promise<ActionResult<CourseDetailResponseDto>> {
     try {
         const res = await fetchBackend(`/api/v1/courses/${id}`, {
             cache: "no-store",
@@ -63,13 +75,7 @@ export async function fetchCourse(
 
         if (!res.ok) {
             const text = await res.text();
-            let message = res.statusText;
-            try {
-                const json = JSON.parse(text);
-                if (json.error) message = json.error;
-            } catch {
-                message = text || res.statusText;
-            }
+            const message = extractErrorMessage(text, res.statusText);
             return {success: false, error: `${res.status}: ${message}`};
         }
 
@@ -105,13 +111,7 @@ export async function updateCourse(
 
         if (!res.ok) {
             const text = await res.text();
-            let message = res.statusText;
-            try {
-                const json = JSON.parse(text);
-                if (json.error) message = json.error;
-            } catch {
-                message = text || res.statusText;
-            }
+            const message = extractErrorMessage(text, res.statusText);
             return {success: false, error: `${res.status}: ${message}`};
         }
 

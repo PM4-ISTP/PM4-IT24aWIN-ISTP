@@ -1,7 +1,8 @@
 "use server";
 
 import {fetchBackend} from "@/src/lib/api";
-import {getToken, GetTokenParams} from "next-auth/jwt";
+import type {GetTokenParams} from "next-auth/jwt";
+import {getToken} from "next-auth/jwt";
 import {cookies, headers} from "next/headers";
 
 export async function postTest() {

@@ -13,7 +13,7 @@ import {
     Switch,
     Text,
     TextInput,
-    Title
+    Title,
 } from "@mantine/core";
 import {IconArrowLeft} from "@tabler/icons-react";
 import MyEditor from "@/src/components/MyEditor";
@@ -67,7 +67,7 @@ export default function EditCourse() {
             setLoading(false);
         }
 
-        load();
+        void load();
     }, [courseId]);
 
     async function handleSubmit() {
@@ -187,7 +187,9 @@ export default function EditCourse() {
                         radius="md"
                         loading={isSubmitting}
                         disabled={isSubmitting}
-                        onClick={handleSubmit}
+                        onClick={() => {
+                            void handleSubmit();
+                        }}
                     >
                         Save Changes
                     </Button>

@@ -2,7 +2,7 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {ActionIcon, Alert, Button, Container, Group, Stack, Switch, Text, TextInput, Title} from "@mantine/core";
+import {ActionIcon, Alert, Button, Container, Group, Stack, Switch, Text, TextInput, Title,} from "@mantine/core";
 import {IconArrowLeft} from "@tabler/icons-react";
 import MyEditor from "@/src/components/MyEditor";
 import {InstructorMultiSelect} from "@/src/components/InstructorMultiSelect";
@@ -100,7 +100,9 @@ export default function CreateCourse() {
                         radius="md"
                         loading={isSubmitting}
                         disabled={isSubmitting}
-                        onClick={handleSubmit}
+                        onClick={() => {
+                            void handleSubmit();
+                        }}
                     >
                         Create Course
                     </Button>
