@@ -21,7 +21,15 @@ describe("Admin configuration", () => {
   it("Kubeconfig is required, when admin configuration was not created", () => {
     cy.wait(waitTimeInMiliseconds);
     validateKubeconfigIsRequired();
-  })
+  });
+
+  it("CPU limit gets capped at 1", () => {
+    validateNumberInputCappedAtOne(cpuLimitInputId);
+  });
+
+  it("Memory limit gets capped at 1", () => {
+    validateNumberInputCappedAtOne(memoryLimitInputId);
+  });
 
   it("Create admin configuration", () => {
     createAdminConfig(
@@ -237,4 +245,21 @@ const validateInputHasNoStar = (labelId: string) => {
 const validateKubeconfigIsRequired = () => {
   cy.get(`#${adminConfigFormSubmitButtonId}`).click();
   cy.get(`#${kubeconfigInputErrorId}`).should("have.text", "You need to upload a Kubeconfig file.");
+}
+
+const validateNumberInputCappedAtOne = (inputId: string) => {
+    cy.wait(waitTimeInMiliseconds);
+    cy.get(`#${adminConfigFormId}`).should("exist").should("not.have.attr", "disabled");
+    cy.get(`#${inputId}`).should("not.have.attr", "disabled");
+    cy.get(`#${inputId}`).clear();
+    cy.get(`#${inputId}`).should("not.have.attr", "disabled");
+    cy.get(`#${inputId}`).type("0");
+    cy.wait(waitTimeInMiliseconds);
+    cy.get(`#${inputId}`).should("have.text", "1");
+    cy.get(`#${adminConfigFormId}`).should("exist").should("not.have.attr", "disabled");
+    cy.get(`#${inputId}`).should("not.have.attr", "disabled");
+    cy.get(`#${inputId}`).clear();
+    cy.get(`#${inputId}`).should("not.have.attr", "disabled");
+    cy.get(`#${inputId}`).type("-1");
+    cy.get(`#${inputId}`).should("have.text", "1");
 }
