@@ -72,19 +72,23 @@ export default function AdminConfigForm() {
   const [completed, setCompleted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const loadConfiguration = async () => {
+    document.getElementById(formId)?.setAttribute("disabled", "");
+    try {
+      const response: AdminConfigResponse = await getAdminConfig();
+      setAdminConfigResponse(response);
+    } catch (e) {
+      setErrorMessage("It was not possible to load the admin configuration. Maybe the backend server is not reachable.")
+    }
+  };
+
   useEffect(() => {
-    loadConfiguration();
+    void loadConfiguration();
   }, []);
 
   useEffect(() => {
     initializeForm();
   }, [adminConfigResponse]);
-
-  const loadConfiguration = async () => {
-    document.getElementById(formId)?.setAttribute("disabled", "");
-    const response: AdminConfigResponse = await getAdminConfig();
-    setAdminConfigResponse(response);
-  };
 
   const initializeForm = () => {
     try {
@@ -118,15 +122,23 @@ export default function AdminConfigForm() {
     setKubeconfig(formData, values.kubeconfig);
     setCpuLimit(formData, values.cpuLimit);
     setMemoryLimit(formData, values.memoryLimit, values.memoryLimitUnit);
-    !adminConfigResponse.kubeconfigUploaded
-      ? await postAdminConfig(formData)
-      : await putAdminConfig(formData);
-    setCompleted(true);
+    try {
+      !adminConfigResponse.kubeconfigUploaded
+        ? await postAdminConfig(formData)
+        : await putAdminConfig(formData);
+      setCompleted(true);
+    } catch (e) {
+      setErrorMessage("It was not possible to submit the admin configuration. Maybe the backend server is not reachable.");
+    }
   };
 
   const handleDelete = async () => {
-    await deleteAdminConfig();
-    setCompleted(true);
+    try {
+      await deleteAdminConfig();
+      setCompleted(true);
+    } catch (e) {
+      setErrorMessage("It was not possible to delete the admin configuration. Maybe the backend server is not reachable.");
+    }
   };
 
   const setKubeconfig = (setInFormData: FormData, kubeconfig: File | null) => {

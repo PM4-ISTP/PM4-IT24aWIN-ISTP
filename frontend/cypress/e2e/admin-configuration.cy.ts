@@ -3,7 +3,7 @@ import { MemoryUnit } from "./../../src/lib/memoryUnit";
 
 describe("Admin configuration", () => {
   before(() => {
-    Cypress.session.clearAllSavedSessions();
+    void Cypress.session.clearAllSavedSessions();
   });
 
   beforeEach(() => {
