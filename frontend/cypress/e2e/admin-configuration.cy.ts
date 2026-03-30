@@ -81,7 +81,7 @@ const kubeconfigVariantOneContent = "Kubeconfig variant 1";
 const kubeconfigVariantTwo = "Kubeconfig_Variant_2";
 const kubeconfigVariantTwoContent = "Kubeconfig variant 2";
 
-const waitTimeInMiliseconds = 2000;
+const waitTimeInMiliseconds = 100;
 
 type FormContent = {
   kubeconfig: string,
