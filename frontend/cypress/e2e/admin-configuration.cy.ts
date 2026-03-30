@@ -17,6 +17,11 @@ describe("Admin configuration", () => {
     validateNoAdminCofigCreated();
   });
 
+  it("Kubeconfig is required, when admin configuration was not created", () => {
+    cy.wait(waitTimeInMiliseconds);
+    validateKubeconfigIsRequired();
+  })
+
   it("Create and update admin configuration", () => {
     createAdminConfig(
       {
@@ -66,6 +71,7 @@ const memoryLimitInputLabelId = "memory-limit-input-label";
 const memoryUnitInputId = "memory-unit-input";
 const kubeconfigInputId = "kubeconfig-input";
 const kubeconfigInputLabelId = "kubeconfig-input-label";
+const kubeconfigInputErrorId = "kubeconfig-input-error";
 const adminConfigFormSubmitButtonId = "admin-config-form-submit-button";
 const adminConfigFormDeleteButtonId = "admin-config-form-delete-button";
 const backButtonId = "admin-config-form-back-button"
@@ -160,4 +166,9 @@ const validateInputHasStar = (labelId: string) => {
 
 const validateInputHasNoStar = (labelId: string) => {
   cy.get(`#${labelId} > span`).should("not.exist");
+}
+
+const validateKubeconfigIsRequired = () => {
+  cy.get(`#${adminConfigFormSubmitButtonId}`).click();
+  cy.get(`#${kubeconfigInputErrorId}`).should("have.text", "You need to upload a Kubeconfig file.");
 }
