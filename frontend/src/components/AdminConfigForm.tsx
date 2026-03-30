@@ -144,7 +144,7 @@ export default function AdminConfigForm() {
             <NumberInput
               id="cpu-limit-input"
               label="CPU limit"
-              description="How much CPU one single pod can at maximum use. Leave this field empty, if you do not want to specify a CPU limit."
+              description="How much CPU one single pod can at maximum use."
               key={form.key(cpuLimitFormKey)}
               {...form.getInputProps(cpuLimitFormKey)}
               min={1}
@@ -159,7 +159,7 @@ export default function AdminConfigForm() {
             <NumberInput
               id="memory-limit-input"
               label="Memory limit"
-              description="How much memory one single pod can at maximum use. Leave this field empty, if you do not want to specify a memory limit."
+              description="How much memory one single pod can at maximum use."
               key={form.key(memoryLimitFormKey)}
               {...form.getInputProps(memoryLimitFormKey)}
               min={1}
