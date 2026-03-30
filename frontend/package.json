@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "prepare": "husky",
     "test": "cypress open",
-    "test:e2e": "cypress run"
+    "test:e2e": "cypress run",
+    "generate:api": "openapi-typescript http://localhost:8080/v3/api-docs -o src/lib/api/schema.d.ts"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
@@ -29,6 +30,7 @@
     "jwt-decode": "^4.0.0",
     "next": "16.1.6",
     "next-auth": "^4.24.13",
+    "openapi-fetch": "^0.17.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
@@ -43,6 +45,7 @@
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "lint-staged": "^16.3.1",
+    "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.8",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
