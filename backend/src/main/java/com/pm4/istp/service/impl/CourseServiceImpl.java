@@ -8,6 +8,7 @@ import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
 import com.pm4.istp.domain.entites.User;
+import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.exception.UserNotFoundException;
@@ -68,7 +69,7 @@ public class CourseServiceImpl implements CourseService {
                             String.format("User with ID '%s' not found", req.getInstructorId())));
 
         CourseInstructor collaborator = new CourseInstructor();
-        collaborator.setInstructorRole(req.getInstructorRole());
+        collaborator.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
         collaborator.setAccepted(false);
         collaborator.setInstructor(collaboratorUser);
         courseToCreate.addCourseInstructor(collaborator);
@@ -142,7 +143,7 @@ public class CourseServiceImpl implements CourseService {
                             String.format("User with ID '%s' not found", req.getInstructorId())));
 
         CourseInstructor collaborator = new CourseInstructor();
-        collaborator.setInstructorRole(req.getInstructorRole());
+        collaborator.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
         collaborator.setAccepted(false);
         collaborator.setInstructor(collaboratorUser);
         course.addCourseInstructor(collaborator);
@@ -153,8 +154,8 @@ public class CourseServiceImpl implements CourseService {
   }
 
   @Override
-  public Page<Course> listCoursesForInstructors(UUID instructorId, Pageable pageable) {
-    return courseRepository.findByCourseInstructorsInstructorId(instructorId, pageable);
+  public Page<ListCourseResponseDto> listCoursesForInstructors(UUID instructorId, Pageable pageable) {
+    return courseRepository.findListCoursesForInstructor(instructorId, pageable);
   }
 
   private void verifyInstructor(Course course, UUID userId) {

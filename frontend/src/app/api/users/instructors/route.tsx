@@ -16,9 +16,18 @@ export async function GET(req: NextRequest) {
 
   try {
     const res = await fetchBackend(`/api/v1/users/instructors?${params}`);
-    const data: unknown = await res.json();
-    return NextResponse.json(data);
-  } catch {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    const body = await res.text();
+    const contentType = res.headers.get("content-type");
+
+    return new NextResponse(body, {
+      status: res.status,
+      headers: contentType ? { "content-type": contentType } : undefined,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    return NextResponse.json({ error: "Failed to fetch instructors" }, { status: 500 });
   }
 }

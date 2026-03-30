@@ -15,7 +15,7 @@ export interface CreateCourseDto {
 export interface CourseResponseDto {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   isPublished: boolean;
   instructors: InstructorAssignment[];
   createdAt: string;
@@ -25,7 +25,7 @@ export interface CourseResponseDto {
 export interface ListCourseResponseDto {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   published: boolean;
   instructorCount: number;
   updatedAt: string;
@@ -56,7 +56,7 @@ export interface CourseInstructorResponseDto {
 export interface CourseDetailResponseDto {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   isPublished: boolean;
   courseInstructors: CourseInstructorResponseDto[];
   createdAt: string;

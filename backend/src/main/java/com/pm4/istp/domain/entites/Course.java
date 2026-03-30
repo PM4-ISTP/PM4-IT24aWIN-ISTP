@@ -43,6 +43,7 @@ public class Course {
 
   public void removeCourseInstructor(CourseInstructor courseInstructor) {
     courseInstructors.remove(courseInstructor);
+    courseInstructor.setCourse(null);
   }
 
   @CreatedDate
