@@ -178,7 +178,7 @@ export default function AdminConfigForm() {
               key={form.key("memoryLimitUnit")}
               {...form.getInputProps("memoryLimitUnit")}
               data={memoryUnits}
-              defaultValue={defaultMemoryUnit}
+              allowDeselect={false}
               required={adminConfigResponse.memoryLimit !== null}
               withAsterisk={adminConfigResponse.memoryLimit !== null}
             />
