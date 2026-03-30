@@ -147,7 +147,9 @@ const validateAdminConfigAfterCreationOrUpdate = (formContent: FormContent, kube
     memoryUnit: formContent.memoryUnit
   });
   validateInputHasStar(cpuLimitInputLabelId);
+  cy.get(`#${cpuLimitInputId}`).should("have.attr", "required");
   validateInputHasStar(memoryLimitInputLabelId);
+  cy.get(`#${memoryLimitInputId}`).should("have.attr", "required");
   validateInputHasNoStar(kubeconfigInputLabelId);
   cy.get(`#${adminConfigFormSubmitButtonId}`).should("have.text", "Update K3d configuration");
   cy.readFile(kubeconfigPath).should("eq", kubeconfigContent);
