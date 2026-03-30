@@ -72,23 +72,23 @@ export default function AdminConfigForm() {
   const [completed, setCompleted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const loadConfiguration = async () => {
+  async function loadConfiguration() {
     document.getElementById(formId)?.setAttribute("disabled", "");
     try {
       const response: AdminConfigResponse = await getAdminConfig();
       setAdminConfigResponse(response);
     } catch (e) {
-      setErrorMessage("It was not possible to load the admin configuration. Maybe the backend server is not reachable.")
+      setErrorMessage(
+        "It was not possible to load the admin configuration: " + (e as Error).message
+      );
     }
-  };
+  }
 
+  /* eslint-disable react-hooks/exhaustive-deps -- The dependencies array must be empty, because this effect should only get executed on mount. */
   useEffect(() => {
     void loadConfiguration();
   }, []);
-
-  useEffect(() => {
-    initializeForm();
-  }, [adminConfigResponse]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const initializeForm = () => {
     try {
@@ -99,45 +99,56 @@ export default function AdminConfigForm() {
       const hasMemorySpecification = memorySpecification !== null;
       form.setValues({
         cpuLimit: adminConfigResponse.cpuLimit === null ? "" : adminConfigResponse.cpuLimit,
-        memoryLimit: hasMemorySpecification ? String(memorySpecification!.value) : "",
-        memoryLimitUnit: hasMemorySpecification ? memorySpecification!.unit : defaultMemoryUnit,
+        memoryLimit: hasMemorySpecification ? String(memorySpecification.value) : "",
+        memoryLimitUnit: hasMemorySpecification ? memorySpecification.unit : defaultMemoryUnit,
         kubeconfig: null,
       });
     } catch (e) {
-      console.log(e);
-      setErrorMessage(
-        "It was not possible to load the K3d configuration. Please check the server log. It is possible, that the configuration is corrupted. In this case, please create a new configuration."
-      );
+      setErrorMessage("It was not possible to load the K3d configuration: " + (e as Error).message);
     }
     document.getElementById(formId)?.removeAttribute("disabled");
   };
 
-  const reloadForm = () => {
-    loadConfiguration();
+  /* eslint-disable react-hooks/exhaustive-deps -- The function initializeForm() will never change, therefor it is not a dependency. */
+  useEffect(() => {
+    initializeForm();
+  }, [adminConfigResponse]);
+  /* eslint-enable react-hooks/exhaustive-deps */
+
+  const reloadForm = async () => {
+    await loadConfiguration();
     setCompleted(false);
   };
 
   const handleSubmit = async (values: typeof form.values) => {
+    setErrorMessage("");
     const formData: FormData = new FormData();
     setKubeconfig(formData, values.kubeconfig);
     setCpuLimit(formData, values.cpuLimit);
     setMemoryLimit(formData, values.memoryLimit, values.memoryLimitUnit);
     try {
-      !adminConfigResponse.kubeconfigUploaded
-        ? await postAdminConfig(formData)
-        : await putAdminConfig(formData);
+      if (!adminConfigResponse.kubeconfigUploaded) {
+        await postAdminConfig(formData);
+      } else {
+        await putAdminConfig(formData);
+      }
       setCompleted(true);
     } catch (e) {
-      setErrorMessage("It was not possible to submit the admin configuration. Maybe the backend server is not reachable.");
+      setErrorMessage(
+        "It was not possible to submit the admin configuration: " + (e as Error).message
+      );
     }
   };
 
   const handleDelete = async () => {
+    setErrorMessage("");
     try {
       await deleteAdminConfig();
       setCompleted(true);
     } catch (e) {
-      setErrorMessage("It was not possible to delete the admin configuration. Maybe the backend server is not reachable.");
+      setErrorMessage(
+        "It was not possible to delete the admin configuration: " + (e as Error).message
+      );
     }
   };
 
@@ -171,7 +182,7 @@ export default function AdminConfigForm() {
     return (
       <Stack>
         <Text>The changes were saved.</Text>
-        <Button id="admin-config-form-back-button" onClick={() => reloadForm()}>
+        <Button id="admin-config-form-back-button" onClick={() => void reloadForm()}>
           Back
         </Button>
       </Stack>
@@ -257,7 +268,7 @@ export default function AdminConfigForm() {
           <Button
             id="admin-config-form-delete-button"
             type="button"
-            onClick={() => handleDelete()}
+            onClick={() => void handleDelete()}
             loading={form.submitting}
           >
             Delete K3d configuration
