@@ -154,7 +154,8 @@ public class CourseServiceImpl implements CourseService {
   }
 
   @Override
-  public Page<ListCourseResponseDto> listCoursesForInstructors(UUID instructorId, Pageable pageable) {
+  public Page<ListCourseResponseDto> listCoursesForInstructors(
+      UUID instructorId, Pageable pageable) {
     return courseRepository.findListCoursesForInstructor(instructorId, pageable);
   }
 
