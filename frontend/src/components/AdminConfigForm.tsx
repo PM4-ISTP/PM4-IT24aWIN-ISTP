@@ -155,13 +155,13 @@ export default function AdminConfigForm() {
 
   const setMemoryLimit = (
     setInFormData: FormData,
-    memoryLimit: number | string,
+    memoryLimit: string,
     memoryLimitUnit: MemoryUnit
   ) => {
-    if (typeof memoryLimit === "number") {
+    if (memoryLimit !== "number") {
       setInFormData.set(
         memoryLimitFormKey,
-        memorySpecificationToString({ value: memoryLimit, unit: memoryLimitUnit })
+        memorySpecificationToString({ value: Number.parseInt(memoryLimit), unit: memoryLimitUnit })
       );
     }
   };
