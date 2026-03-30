@@ -12,6 +12,7 @@ describe("Admin configuration", () => {
   });
 
   it("Clean up admin configuration before actual testing", () => {
+    cy.wait(waitTimeInMiliseconds);
     cy.get(`#${adminConfigFormDeleteButtonId}`).click();
     cy.reload();
     validateNoAdminCofigCreated();
@@ -22,7 +23,69 @@ describe("Admin configuration", () => {
     validateKubeconfigIsRequired();
   })
 
-  it("Create and update admin configuration", () => {
+  it("Create admin configuration", () => {
+    createAdminConfig(
+        {
+          kubeconfig: kubeconfigVariantOne,
+          cpuLimit: "5",
+          memoryLimit: "20",
+          memoryUnit: MemoryUnit.GibiByte
+        },
+        kubeconfigVariantOneContent
+      );
+      cy.reload();
+      validateAdminConfigAfterCreationOrUpdate(
+        {
+          kubeconfig: kubeconfigVariantTwo,
+          cpuLimit: "5",
+          memoryLimit: "20",
+          memoryUnit: MemoryUnit.GibiByte
+        },
+        kubeconfigVariantOneContent
+      );
+  });
+
+  it("Update admin configuration", () => {
+    updateAdminConfig(
+      {
+        kubeconfig: kubeconfigVariantOne,
+        cpuLimit: "5",
+        memoryLimit: "20",
+        memoryUnit: MemoryUnit.GibiByte
+      },
+      {
+        kubeconfig: kubeconfigVariantTwo,
+        cpuLimit: "10",
+        memoryLimit: "50",
+        memoryUnit: MemoryUnit.MebiByte
+      },
+      kubeconfigVariantOneContent,
+      kubeconfigVariantTwoContent
+    );
+    cy.reload();
+    validateAdminConfigAfterCreationOrUpdate(
+      {
+        kubeconfig: kubeconfigVariantTwo,
+        cpuLimit: "10",
+        memoryLimit: "50",
+        memoryUnit: MemoryUnit.MebiByte
+      },
+      kubeconfigVariantTwoContent
+    );
+  });
+
+  it("Delete admin configuration", () => {
+    cy.wait(waitTimeInMiliseconds);
+    cy.get(`#${adminConfigFormDeleteButtonId}`).click();
+    cy.wait(waitTimeInMiliseconds);
+    cy.get(`#${adminConfigFormId}`).should("not.exist");
+    cy.get(`#${backButtonId}`).click();
+    validateNoAdminCofigCreated();
+    cy.reload();
+    validateNoAdminCofigCreated();
+  });
+
+  it("Create and update admin configuration without reloading site", () => {
     createAdminConfig(
       {
         kubeconfig: kubeconfigVariantOne,
@@ -57,7 +120,7 @@ describe("Admin configuration", () => {
         memoryUnit: MemoryUnit.MebiByte
       },
       kubeconfigVariantTwoContent
-    )
+    );
   });
 });
 
@@ -119,6 +182,7 @@ const createOrUpdateAdminConfig = (formContent: FormContent, kubeconfigContent: 
   cy.contains('div[role="option"]', formContent.memoryUnit).click();
   cy.get('input[type="file"]').selectFile(getPathToFixtureFile(formContent.kubeconfig), { force: true });
   cy.get(`#${adminConfigFormSubmitButtonId}`).click();
+  cy.wait(waitTimeInMiliseconds);
   cy.get(`#${adminConfigFormId}`).should("not.exist");
   cy.get(`#${backButtonId}`).click();
   validateAdminConfigAfterCreationOrUpdate(formContent, kubeconfigContent);
