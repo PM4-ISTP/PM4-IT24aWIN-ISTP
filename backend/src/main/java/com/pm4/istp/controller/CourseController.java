@@ -120,7 +120,7 @@ public class CourseController {
   public ResponseEntity<Page<ListCourseResponseDto>> listCourses(
       @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
     UUID userId = parseUserId(jwt);
-    Page<Course> courses = courseService.listCoursesForInstructors(userId, pageable);
-    return ResponseEntity.ok(courses.map(courseMapper::toListCourseResponseDto));
+        Page<ListCourseResponseDto> courses = courseService.listCoursesForInstructors(userId, pageable);
+        return ResponseEntity.ok(courses);
   }
 }

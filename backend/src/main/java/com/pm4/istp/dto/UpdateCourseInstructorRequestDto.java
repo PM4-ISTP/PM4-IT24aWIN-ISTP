@@ -1,8 +1,9 @@
 package com.pm4.istp.dto;
 
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
-import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
+
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,8 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdateCourseInstructorRequestDto {
-  @NotBlank(message = "Instructor ID is required")
-  private UUID instructorId;
+    @NotNull(message = "Instructor ID is required")
+    private UUID instructorId;
 
   private InstructorRoleEnum instructorRole = InstructorRoleEnum.COLLABORATOR;
 }

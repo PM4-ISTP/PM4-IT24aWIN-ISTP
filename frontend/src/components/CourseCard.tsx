@@ -5,7 +5,7 @@ import classes from "./CourseCard.module.css";
 export interface CourseCardProps {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   published: boolean;
   instructorCount: number;
   updatedAt: string;

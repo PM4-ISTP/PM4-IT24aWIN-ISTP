@@ -46,7 +46,7 @@ class GlobalExceptionHandlerTest {
 
   @Test
   void handleException_returnsInternalServerError() {
-    ResponseEntity<ErrorDto> response = handler.handleExcception(new RuntimeException("boom"));
+    ResponseEntity<ErrorDto> response = handler.handleException(new RuntimeException("boom"));
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).isNotNull();
