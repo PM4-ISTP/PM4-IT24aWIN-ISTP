@@ -24,7 +24,7 @@ public class AdminConfigurationController {
 
   private final AdminConfigurationService adminConfigurationService;
 
-  private final long MAX_FILE_SIZE = 1_048_576; // 1 MB
+  private static final long MAX_FILE_SIZE = 1_048_576;
 
   public AdminConfigurationController(
       @NonNull AdminConfigurationService adminConfigurationService) {
