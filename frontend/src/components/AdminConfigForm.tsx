@@ -125,7 +125,7 @@ export default function AdminConfigForm() {
     return (
       <Stack>
         <Text>The changes were saved.</Text>
-        <Button onClick={() => reloadForm()}>Back</Button>
+        <Button id="admin-config-form-back-button" onClick={() => reloadForm()}>Back</Button>
       </Stack>
     );
   }

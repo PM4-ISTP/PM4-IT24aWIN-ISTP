@@ -16,10 +16,49 @@ describe("Admin configuration", () => {
     cy.reload();
     validateNoAdminCofigCreated();
   });
+
+  it("Create and update admin configuration", () => {
+    createAdminConfig(
+      {
+        kubeconfig: kubeconfigVariantOne,
+        cpuLimit: "5",
+        memoryLimit: "20",
+        memoryUnit: MemoryUnit.GibiByte
+      },
+      kubeconfigVariantOneContent
+    );
+    updateAdminConfig(
+      {
+        kubeconfig: kubeconfigVariantOne,
+        cpuLimit: "5",
+        memoryLimit: "20",
+        memoryUnit: MemoryUnit.GibiByte
+      },
+      {
+        kubeconfig: kubeconfigVariantTwo,
+        cpuLimit: "10",
+        memoryLimit: "50",
+        memoryUnit: MemoryUnit.MebiByte
+      },
+      kubeconfigVariantOneContent,
+      kubeconfigVariantTwoContent
+    );
+    cy.reload();
+    validateAdminConfigAfterCreationOrUpdate(
+      {
+        kubeconfig: kubeconfigVariantTwo,
+        cpuLimit: "10",
+        memoryLimit: "50",
+        memoryUnit: MemoryUnit.MebiByte
+      },
+      kubeconfigVariantTwoContent
+    )
+  });
 });
 
 // === helpers ===
 // IDs used in AdminConfigForm
+const adminConfigFormId = "admin-config-form";
 const cpuLimitInputId = "cpu-limit-input";
 const cpuLimitInputLabelId = "cpu-limit-input-label";
 const memoryLimitInputId = "memory-limit-input";
@@ -29,6 +68,14 @@ const kubeconfigInputId = "kubeconfig-input";
 const kubeconfigInputLabelId = "kubeconfig-input-label";
 const adminConfigFormSubmitButtonId = "admin-config-form-submit-button";
 const adminConfigFormDeleteButtonId = "admin-config-form-delete-button";
+const backButtonId = "admin-config-form-back-button"
+
+const kubeconfigVariantOne = "Kubeconfig_Variant_1";
+const kubeconfigVariantOneContent = "Kubeconfig variant 1";
+const kubeconfigVariantTwo = "Kubeconfig_Variant_2";
+const kubeconfigVariantTwoContent = "Kubeconfig variant 2";
+
+const waitTimeInMiliseconds = 2000;
 
 type FormContent = {
   kubeconfig: string,
@@ -39,7 +86,40 @@ type FormContent = {
 
 const kubeconfigPath = getRequiredEnvValue("KUBECONFIG_PATH");
 
+const getPathToFixtureFile = (filename: string) => {
+  return `cypress/fixtures/${filename}`;
+}
+
+const createAdminConfig = (formContent: FormContent, kubeconfigContent: string) => {
+  validateNoAdminCofigCreated();
+  createOrUpdateAdminConfig(formContent, kubeconfigContent);
+}
+
+const updateAdminConfig = (oldFormContent: FormContent, newFormContent: FormContent, oldKubeconfigContent: string, newKubeconfigContent: string) => {
+  validateAdminConfigAfterCreationOrUpdate(oldFormContent, oldKubeconfigContent);
+  createOrUpdateAdminConfig(newFormContent, newKubeconfigContent);
+}
+
+const createOrUpdateAdminConfig = (formContent: FormContent, kubeconfigContent: string) => {
+  cy.wait(waitTimeInMiliseconds);
+  cy.get(`#${adminConfigFormId}`).should("exist").should("not.have.attr", "disabled");
+  cy.get(`#${cpuLimitInputId}`).should("not.have.attr", "disabled");
+  cy.get(`#${cpuLimitInputId}`).clear();
+  cy.get(`#${cpuLimitInputId}`).should("not.have.attr", "disabled");
+  cy.get(`#${cpuLimitInputId}`).type(formContent.cpuLimit);
+  cy.get(`#${memoryLimitInputId}`).clear();
+  cy.get(`#${memoryLimitInputId}`).type(formContent.memoryLimit);
+  cy.get(`#${memoryUnitInputId}`).click();
+  cy.contains('div[role="option"]', formContent.memoryUnit).click();
+  cy.get('input[type="file"]').selectFile(getPathToFixtureFile(formContent.kubeconfig), { force: true });
+  cy.get(`#${adminConfigFormSubmitButtonId}`).click();
+  cy.get(`#${adminConfigFormId}`).should("not.exist");
+  cy.get(`#${backButtonId}`).click();
+  validateAdminConfigAfterCreationOrUpdate(formContent, kubeconfigContent);
+}
+
 const validateNoAdminCofigCreated = () => {
+  cy.wait(waitTimeInMiliseconds);
   validateFormContent({
     kubeconfig: "",
     cpuLimit: "",
@@ -50,6 +130,21 @@ const validateNoAdminCofigCreated = () => {
   validateInputHasNoStar(cpuLimitInputLabelId);
   validateInputHasNoStar(memoryLimitInputLabelId);
   validateInputHasStar(kubeconfigInputLabelId);
+}
+
+const validateAdminConfigAfterCreationOrUpdate = (formContent: FormContent, kubeconfigContent: string) => {
+  cy.wait(waitTimeInMiliseconds);
+  validateFormContent({
+    kubeconfig: "",
+    cpuLimit: formContent.cpuLimit,
+    memoryLimit: formContent.memoryLimit,
+    memoryUnit: formContent.memoryUnit
+  });
+  validateInputHasStar(cpuLimitInputLabelId);
+  validateInputHasStar(memoryLimitInputLabelId);
+  validateInputHasNoStar(kubeconfigInputLabelId);
+  cy.get(`#${adminConfigFormSubmitButtonId}`).should("have.text", "Update K3d configuration");
+  cy.readFile(kubeconfigPath).should("eq", kubeconfigContent);
 }
 
 const validateFormContent = (expected: FormContent) => {
