@@ -1,18 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, Fieldset, FileInput, Grid, Group, NumberInput, Select, Stack, Text } from "@mantine/core";
+import {
+  Button,
+  Fieldset,
+  FileInput,
+  Grid,
+  Group,
+  NumberInput,
+  Select,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { deleteAdminConfig, getAdminConfig, postAdminConfig, putAdminConfig } from "@/src/app/actions";
-import { memorySpecificationToString, MemoryUnit, memoryUnits, stringToMemorySpecification } from "@/src/lib/memoryUnit";
+import {
+  deleteAdminConfig,
+  getAdminConfig,
+  postAdminConfig,
+  putAdminConfig,
+} from "@/src/app/actions";
+import {
+  memorySpecificationToString,
+  MemoryUnit,
+  memoryUnits,
+  stringToMemorySpecification,
+} from "@/src/lib/memoryUnit";
 
 export default function AdminConfigForm() {
   type AdminConfigResponse = {
-    kubeconfigUploaded: boolean,
-    cpuLimit: string | null,
-    memoryLimit: string | null,
-    updatedAt: string | null
-  }
+    kubeconfigUploaded: boolean;
+    cpuLimit: string | null;
+    memoryLimit: string | null;
+    updatedAt: string | null;
+  };
 
   const formId = "admin-config-form";
   const infoFieldId = "admin-config-form-info-field";
@@ -29,7 +49,7 @@ export default function AdminConfigForm() {
       cpuLimit: "",
       memoryLimit: "",
       memoryLimitUnit: defaultMemoryUnit,
-      kubeconfig: null
+      kubeconfig: null,
     },
     validate: {
       // In Firefox, the required attribute on FileInput does nothing. Therefor, custom validation is needed.
@@ -39,15 +59,15 @@ export default function AdminConfigForm() {
         } else {
           return null;
         }
-      }
-    }
+      },
+    },
   });
 
   const [adminConfigResponse, setAdminConfigResponse] = useState<AdminConfigResponse>({
     kubeconfigUploaded: false,
     cpuLimit: null,
     memoryLimit: null,
-    updatedAt: null
+    updatedAt: null,
   });
   const [completed, setCompleted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -58,74 +78,90 @@ export default function AdminConfigForm() {
 
   useEffect(() => {
     initializeForm();
-  }, [adminConfigResponse])
+  }, [adminConfigResponse]);
 
   const loadConfiguration = async () => {
     document.getElementById(formId)?.setAttribute("disabled", "");
     const response: AdminConfigResponse = await getAdminConfig();
     setAdminConfigResponse(response);
-  }
+  };
 
   const initializeForm = () => {
     try {
-      const memorySpecification = adminConfigResponse.memoryLimit === null ? null : stringToMemorySpecification(adminConfigResponse.memoryLimit);
+      const memorySpecification =
+        adminConfigResponse.memoryLimit === null
+          ? null
+          : stringToMemorySpecification(adminConfigResponse.memoryLimit);
       const hasMemorySpecification = memorySpecification !== null;
       form.setValues({
         cpuLimit: adminConfigResponse.cpuLimit === null ? "" : adminConfigResponse.cpuLimit,
         memoryLimit: hasMemorySpecification ? String(memorySpecification!.value) : "",
         memoryLimitUnit: hasMemorySpecification ? memorySpecification!.unit : defaultMemoryUnit,
-        kubeconfig: null
+        kubeconfig: null,
       });
     } catch (e) {
       console.log(e);
-      setErrorMessage("It was not possible to load the K3d configuration. Please check the server log. It is possible, that the configuration is corrupted. In this case, please create a new configuration.");
+      setErrorMessage(
+        "It was not possible to load the K3d configuration. Please check the server log. It is possible, that the configuration is corrupted. In this case, please create a new configuration."
+      );
     }
     document.getElementById(formId)?.removeAttribute("disabled");
-  }
+  };
 
   const reloadForm = () => {
     loadConfiguration();
     setCompleted(false);
-  }
+  };
 
   const handleSubmit = async (values: typeof form.values) => {
     const formData: FormData = new FormData();
     setKubeconfig(formData, values.kubeconfig);
     setCpuLimit(formData, values.cpuLimit);
     setMemoryLimit(formData, values.memoryLimit, values.memoryLimitUnit);
-    !adminConfigResponse.kubeconfigUploaded ? await postAdminConfig(formData) : await putAdminConfig(formData);
+    !adminConfigResponse.kubeconfigUploaded
+      ? await postAdminConfig(formData)
+      : await putAdminConfig(formData);
     setCompleted(true);
-  }
+  };
 
   const handleDelete = async () => {
     await deleteAdminConfig();
     setCompleted(true);
-  }
+  };
 
   const setKubeconfig = (setInFormData: FormData, kubeconfig: File | null) => {
     if (kubeconfig !== null) {
       setInFormData.set(kubeconfigFormKey, kubeconfig);
     }
-  }
+  };
 
   const setCpuLimit = (setInFormData: FormData, cpuLimit: number | string) => {
     if (cpuLimit !== "") {
       setInFormData.set(cpuLimitFormKey, String(cpuLimit));
     }
-  }
+  };
 
-  const setMemoryLimit = (setInFormData: FormData, memoryLimit: number | string, memoryLimitUnit: MemoryUnit) => {
+  const setMemoryLimit = (
+    setInFormData: FormData,
+    memoryLimit: number | string,
+    memoryLimitUnit: MemoryUnit
+  ) => {
     if (typeof memoryLimit === "number") {
-      setInFormData.set(memoryLimitFormKey, memorySpecificationToString({ value: memoryLimit, unit: memoryLimitUnit }))
+      setInFormData.set(
+        memoryLimitFormKey,
+        memorySpecificationToString({ value: memoryLimit, unit: memoryLimitUnit })
+      );
     }
-  }
+  };
 
   // confirmation, that form was submitted
   if (completed) {
     return (
       <Stack>
         <Text>The changes were saved.</Text>
-        <Button id="admin-config-form-back-button" onClick={() => reloadForm()}>Back</Button>
+        <Button id="admin-config-form-back-button" onClick={() => reloadForm()}>
+          Back
+        </Button>
       </Stack>
     );
   }
@@ -135,8 +171,12 @@ export default function AdminConfigForm() {
       <Text fw={600} size="lg">
         K3d Configuration
       </Text>
-      <Text id={infoFieldId} c="red" size="sm" mt={4}>{errorMessage}</Text>
-      <Text c="dimmed" size="sm" mt={4}>Required fields are marked with *</Text>
+      <Text id={infoFieldId} c="red" size="sm" mt={4}>
+        {errorMessage}
+      </Text>
+      <Text c="dimmed" size="sm" mt={4}>
+        Required fields are marked with *
+      </Text>
 
       <Fieldset id={formId} disabled>
         <Grid>
@@ -198,9 +238,16 @@ export default function AdminConfigForm() {
 
         <Group justify="flex-end" mt="md">
           <Button id="admin-config-form-submit-button" type="submit" loading={form.submitting}>
-            {!adminConfigResponse.kubeconfigUploaded ? "Create K3d configuration" : "Update K3d configuration"}
+            {!adminConfigResponse.kubeconfigUploaded
+              ? "Create K3d configuration"
+              : "Update K3d configuration"}
           </Button>
-          <Button id="admin-config-form-delete-button" type="button" onClick={() => handleDelete()} loading={form.submitting}>
+          <Button
+            id="admin-config-form-delete-button"
+            type="button"
+            onClick={() => handleDelete()}
+            loading={form.submitting}
+          >
             Delete K3d configuration
           </Button>
         </Group>

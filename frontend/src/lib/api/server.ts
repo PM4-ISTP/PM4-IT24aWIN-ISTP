@@ -23,7 +23,10 @@ export async function getApiClient() {
   return createApiClient(BACKEND_URL, token.accessToken);
 }
 
-export async function fetchBackendMultipartFormData(path: string, options: RequestInit = {}): Promise<Response> {
+export async function fetchBackendMultipartFormData(
+  path: string,
+  options: RequestInit = {}
+): Promise<Response> {
   const req = {
     headers: Object.fromEntries((await headers()).entries()),
     cookies: Object.fromEntries((await cookies()).getAll().map((c) => [c.name, c.value])),

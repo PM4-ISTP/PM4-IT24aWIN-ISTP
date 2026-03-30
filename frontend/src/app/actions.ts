@@ -22,11 +22,14 @@ export async function getAdminConfig() {
     throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
   }
 
-  return (await res.json());
+  return await res.json();
 }
 
 export async function postAdminConfig(formData: FormData) {
-  const res = await fetchBackendMultipartFormData("/api/admin/config", { method: "POST", body: formData });
+  const res = await fetchBackendMultipartFormData("/api/admin/config", {
+    method: "POST",
+    body: formData,
+  });
 
   if (!res.ok) {
     throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
@@ -36,7 +39,10 @@ export async function postAdminConfig(formData: FormData) {
 }
 
 export async function putAdminConfig(formData: FormData) {
-  const res = await fetchBackendMultipartFormData("/api/admin/config", { method: "PUT", body: formData });
+  const res = await fetchBackendMultipartFormData("/api/admin/config", {
+    method: "PUT",
+    body: formData,
+  });
 
   if (!res.ok) {
     throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
