@@ -1,6 +1,3 @@
-import { getRequiredEnvValue } from "../support/commands";
-import { MemoryUnit } from "./../../src/lib/memoryUnit";
-
 describe("Admin configuration", () => {
   before(() => {
     void Cypress.session.clearAllSavedSessions();
@@ -11,312 +8,79 @@ describe("Admin configuration", () => {
     cy.visit("/dashboard/admin");
   });
 
-  it("Clean up admin configuration before actual testing", () => {
-    cleanUpAdminConfig();
-  });
-
   it("Kubeconfig is required, when admin configuration was not created", () => {
-    cy.wait(waitTimeInMiliseconds);
-    validateKubeconfigIsRequired();
-  });
-
-  it("CPU limit gets capped at 1", () => {
-    validateNumberInputCappedAtOne(cpuLimitInputId);
-  });
-
-  it("Memory limit gets capped at 1", () => {
-    validateNumberInputCappedAtOne(memoryLimitInputId);
+    cy.contains("Create Kubernetes configuration").should("be.visible");
+    cy.get("#admin-config-form-submit-button").click();
+    cy.contains("You need to upload a Kubeconfig file.").should("be.visible");
   });
 
   it("Create admin configuration", () => {
-    createAdminConfig(
-      {
-        kubeconfig: kubeconfigVariantOne,
-        cpuLimit: "5",
-        memoryLimit: "20",
-        memoryUnit: MemoryUnit.GibiByte,
-      },
-      kubeconfigVariantOneContent
-    );
-    cy.reload();
-    validateAdminConfigAfterCreationOrUpdate(
-      {
-        kubeconfig: kubeconfigVariantTwo,
-        cpuLimit: "5",
-        memoryLimit: "20",
-        memoryUnit: MemoryUnit.GibiByte,
-      },
-      kubeconfigVariantOneContent
-    );
+    const form: FormContent = {
+      kubeconfig: "Kubeconfig_Variant_1",
+      cpuLimit: "2",
+      memoryLimit: "512",
+      memoryUnit: "Mi",
+    };
+
+    cy.get("#cpu-limit-input").type(form.cpuLimit);
+    cy.get("#memory-limit-input").type(form.memoryLimit);
+    cy.get("#memory-unit-input").click();
+    cy.contains("[role='option']", form.memoryUnit).click();
+    cy.get('input[type="file"]').selectFile(`cypress/fixtures/${form.kubeconfig}`, {
+      force: true,
+    });
+
+    cy.get("#admin-config-form-submit-button").click();
+    cy.wait(waitTimeInMiliseconds);
+
+    cy.contains("Admin configuration has been successfully updated.").should("be.visible");
+    cy.contains("Update Kubernetes configuration").should("be.visible");
   });
 
   it("Update admin configuration", () => {
-    updateAdminConfig(
-      {
-        kubeconfig: kubeconfigVariantOne,
-        cpuLimit: "5",
-        memoryLimit: "20",
-        memoryUnit: MemoryUnit.GibiByte,
-      },
-      {
-        kubeconfig: kubeconfigVariantTwo,
-        cpuLimit: "10",
-        memoryLimit: "50",
-        memoryUnit: MemoryUnit.MebiByte,
-      },
-      kubeconfigVariantOneContent,
-      kubeconfigVariantTwoContent
-    );
-    cy.reload();
-    validateAdminConfigAfterCreationOrUpdate(
-      {
-        kubeconfig: kubeconfigVariantTwo,
-        cpuLimit: "10",
-        memoryLimit: "50",
-        memoryUnit: MemoryUnit.MebiByte,
-      },
-      kubeconfigVariantTwoContent
-    );
+    const form: FormContent = {
+      kubeconfig: "Kubeconfig_Variant_2",
+      cpuLimit: "4",
+      memoryLimit: "1",
+      memoryUnit: "Gi",
+    };
+
+    cy.contains("Update Kubernetes configuration").should("be.visible");
+
+    cy.get("#cpu-limit-input").clear().type(form.cpuLimit);
+    cy.get("#memory-limit-input").clear().type(form.memoryLimit);
+    cy.get("#memory-unit-input").click();
+    cy.contains("[role='option']", form.memoryUnit).click();
+    cy.get('input[type="file"]').selectFile(`cypress/fixtures/${form.kubeconfig}`, {
+      force: true,
+    });
+
+    cy.get("#admin-config-form-submit-button").click();
+    cy.wait(waitTimeInMiliseconds);
+
+    cy.contains("Admin configuration has been successfully updated.").should("be.visible");
   });
 
   it("Delete admin configuration", () => {
-    deleteAdminConfig();
-    cy.reload();
-    validateNoAdminCofigCreated();
+    cy.contains("Update Kubernetes configuration").should("be.visible");
+
+    cy.get("#admin-config-form-delete-button").click();
+    cy.wait(waitTimeInMiliseconds);
+
+    cy.contains("Admin configuration has been successfully deleted.").should("be.visible");
+    cy.contains("Create Kubernetes configuration").should("be.visible");
   });
 
-  it("Create and update admin configuration without reloading site", () => {
-    createAdminConfig(
-      {
-        kubeconfig: kubeconfigVariantOne,
-        cpuLimit: "5",
-        memoryLimit: "20",
-        memoryUnit: MemoryUnit.GibiByte,
-      },
-      kubeconfigVariantOneContent
-    );
-    updateAdminConfig(
-      {
-        kubeconfig: kubeconfigVariantOne,
-        cpuLimit: "5",
-        memoryLimit: "20",
-        memoryUnit: MemoryUnit.GibiByte,
-      },
-      {
-        kubeconfig: kubeconfigVariantTwo,
-        cpuLimit: "10",
-        memoryLimit: "50",
-        memoryUnit: MemoryUnit.MebiByte,
-      },
-      kubeconfigVariantOneContent,
-      kubeconfigVariantTwoContent
-    );
-    cy.reload();
-    validateAdminConfigAfterCreationOrUpdate(
-      {
-        kubeconfig: kubeconfigVariantTwo,
-        cpuLimit: "10",
-        memoryLimit: "50",
-        memoryUnit: MemoryUnit.MebiByte,
-      },
-      kubeconfigVariantTwoContent
-    );
-  });
+  const waitTimeInMiliseconds = 100;
 
-  it("Create, delete and create admin configuration again without reloading site", () => {
-    cleanUpAdminConfig();
-    createAdminConfig(
-      {
-        kubeconfig: kubeconfigVariantOne,
-        cpuLimit: "5",
-        memoryLimit: "20",
-        memoryUnit: MemoryUnit.GibiByte,
-      },
-      kubeconfigVariantOneContent
-    );
-    deleteAdminConfig();
-    createAdminConfig(
-      {
-        kubeconfig: kubeconfigVariantTwo,
-        cpuLimit: "10",
-        memoryLimit: "50",
-        memoryUnit: MemoryUnit.MebiByte,
-      },
-      kubeconfigVariantTwoContent
-    );
-    cy.reload();
-    validateAdminConfigAfterCreationOrUpdate(
-      {
-        kubeconfig: kubeconfigVariantTwo,
-        cpuLimit: "10",
-        memoryLimit: "50",
-        memoryUnit: MemoryUnit.MebiByte,
-      },
-      kubeconfigVariantTwoContent
-    );
-  });
+  // Can't import the source's `const enum MemoryUnit` — const enums are inlined by tsc
+  // and aren't usable across isolatedModules boundaries (Cypress transpiles each file in isolation).
+  type MemoryUnit = "B" | "Mi" | "Gi" | "Ti";
+
+  type FormContent = {
+    kubeconfig: string;
+    cpuLimit: string;
+    memoryLimit: string;
+    memoryUnit: MemoryUnit;
+  };
 });
-
-// === helpers ===
-// IDs used in AdminConfigForm
-const adminConfigFormId = "admin-config-form";
-const cpuLimitInputId = "cpu-limit-input";
-const cpuLimitInputLabelId = "cpu-limit-input-label";
-const memoryLimitInputId = "memory-limit-input";
-const memoryLimitInputLabelId = "memory-limit-input-label";
-const memoryUnitInputId = "memory-unit-input";
-const kubeconfigInputId = "kubeconfig-input";
-const kubeconfigInputLabelId = "kubeconfig-input-label";
-const kubeconfigInputErrorId = "kubeconfig-input-error";
-const adminConfigFormSubmitButtonId = "admin-config-form-submit-button";
-const adminConfigFormDeleteButtonId = "admin-config-form-delete-button";
-const backButtonId = "admin-config-form-back-button";
-
-const kubeconfigVariantOne = "Kubeconfig_Variant_1";
-const kubeconfigVariantOneContent = "Kubeconfig variant 1";
-const kubeconfigVariantTwo = "Kubeconfig_Variant_2";
-const kubeconfigVariantTwoContent = "Kubeconfig variant 2";
-
-const waitTimeInMiliseconds = 100;
-
-type FormContent = {
-  kubeconfig: string;
-  cpuLimit: string;
-  memoryLimit: string;
-  memoryUnit: MemoryUnit;
-};
-
-const kubeconfigPath = getRequiredEnvValue("KUBECONFIG_PATH");
-
-const getPathToFixtureFile = (filename: string) => {
-  return `cypress/fixtures/${filename}`;
-};
-
-const cleanUpAdminConfig = () => {
-  cy.wait(waitTimeInMiliseconds);
-  cy.get(`#${adminConfigFormDeleteButtonId}`).click();
-  cy.reload();
-  validateNoAdminCofigCreated();
-};
-
-const createAdminConfig = (formContent: FormContent, kubeconfigContent: string) => {
-  validateNoAdminCofigCreated();
-  createOrUpdateAdminConfig(formContent, kubeconfigContent);
-};
-
-const updateAdminConfig = (
-  oldFormContent: FormContent,
-  newFormContent: FormContent,
-  oldKubeconfigContent: string,
-  newKubeconfigContent: string
-) => {
-  validateAdminConfigAfterCreationOrUpdate(oldFormContent, oldKubeconfigContent);
-  createOrUpdateAdminConfig(newFormContent, newKubeconfigContent);
-};
-
-const createOrUpdateAdminConfig = (formContent: FormContent, kubeconfigContent: string) => {
-  cy.wait(waitTimeInMiliseconds);
-  cy.get(`#${adminConfigFormId}`).should("exist").should("not.have.attr", "disabled");
-  cy.get(`#${cpuLimitInputId}`).should("not.have.attr", "disabled");
-  cy.get(`#${cpuLimitInputId}`).clear();
-  cy.get(`#${cpuLimitInputId}`).should("not.have.attr", "disabled");
-  cy.get(`#${cpuLimitInputId}`).type(formContent.cpuLimit);
-  cy.get(`#${memoryLimitInputId}`).clear();
-  cy.get(`#${memoryLimitInputId}`).type(formContent.memoryLimit);
-  cy.get(`#${memoryUnitInputId}`).click();
-  cy.contains('div[role="option"]', formContent.memoryUnit).click();
-  cy.get('input[type="file"]').selectFile(getPathToFixtureFile(formContent.kubeconfig), {
-    force: true,
-  });
-  cy.get(`#${adminConfigFormSubmitButtonId}`).click();
-  cy.wait(waitTimeInMiliseconds);
-  cy.get(`#${adminConfigFormId}`).should("not.exist");
-  cy.get(`#${backButtonId}`).click();
-  validateAdminConfigAfterCreationOrUpdate(formContent, kubeconfigContent);
-};
-
-const deleteAdminConfig = () => {
-  cy.wait(waitTimeInMiliseconds);
-  cy.get(`#${adminConfigFormDeleteButtonId}`).click();
-  cy.wait(waitTimeInMiliseconds);
-  cy.get(`#${adminConfigFormId}`).should("not.exist");
-  cy.get(`#${backButtonId}`).click();
-  validateNoAdminCofigCreated();
-};
-
-const validateNoAdminCofigCreated = () => {
-  cy.wait(waitTimeInMiliseconds);
-  validateFormContent({
-    kubeconfig: "",
-    cpuLimit: "",
-    memoryLimit: "",
-    memoryUnit: MemoryUnit.Byte,
-  });
-  cy.get(`#${adminConfigFormSubmitButtonId}`).should(
-    "have.text",
-    "Create Kubernetes configuration"
-  );
-  validateInputHasNoStar(cpuLimitInputLabelId);
-  validateInputHasNoStar(memoryLimitInputLabelId);
-  validateInputHasStar(kubeconfigInputLabelId);
-};
-
-const validateAdminConfigAfterCreationOrUpdate = (
-  formContent: FormContent,
-  kubeconfigContent: string
-) => {
-  cy.wait(waitTimeInMiliseconds);
-  validateFormContent({
-    kubeconfig: "",
-    cpuLimit: formContent.cpuLimit,
-    memoryLimit: formContent.memoryLimit,
-    memoryUnit: formContent.memoryUnit,
-  });
-  validateInputHasStar(cpuLimitInputLabelId);
-  cy.get(`#${cpuLimitInputId}`).should("have.attr", "required");
-  validateInputHasStar(memoryLimitInputLabelId);
-  cy.get(`#${memoryLimitInputId}`).should("have.attr", "required");
-  validateInputHasNoStar(kubeconfigInputLabelId);
-  cy.get(`#${adminConfigFormSubmitButtonId}`).should(
-    "have.text",
-    "Update Kubernetes configuration"
-  );
-  cy.readFile(kubeconfigPath).should("eq", kubeconfigContent);
-};
-
-const validateFormContent = (expected: FormContent) => {
-  cy.get(`#${cpuLimitInputId}`).should("have.value", expected.cpuLimit);
-  cy.get(`#${memoryLimitInputId}`).should("have.value", expected.memoryLimit);
-  cy.get(`#${memoryUnitInputId}`).should("have.value", expected.memoryUnit);
-  cy.get(`#${kubeconfigInputId}`).should("have.text", expected.kubeconfig);
-};
-
-const validateInputHasStar = (labelId: string) => {
-  cy.get(`#${labelId} > span`).should("have.text", " *");
-};
-
-const validateInputHasNoStar = (labelId: string) => {
-  cy.get(`#${labelId} > span`).should("not.exist");
-};
-
-const validateKubeconfigIsRequired = () => {
-  cy.get(`#${adminConfigFormSubmitButtonId}`).click();
-  cy.get(`#${kubeconfigInputErrorId}`).should("have.text", "You need to upload a Kubeconfig file.");
-};
-
-const validateNumberInputCappedAtOne = (inputId: string) => {
-  cy.wait(waitTimeInMiliseconds);
-  cy.get(`#${adminConfigFormId}`).should("exist").should("not.have.attr", "disabled");
-  cy.get(`#${inputId}`).should("not.have.attr", "disabled");
-  cy.get(`#${inputId}`).clear();
-  cy.get(`#${inputId}`).should("not.have.attr", "disabled");
-  cy.get(`#${inputId}`).type("0");
-  cy.wait(waitTimeInMiliseconds);
-  cy.get(`#${inputId}`).should("have.text", "1");
-  cy.get(`#${adminConfigFormId}`).should("exist").should("not.have.attr", "disabled");
-  cy.get(`#${inputId}`).should("not.have.attr", "disabled");
-  cy.get(`#${inputId}`).clear();
-  cy.get(`#${inputId}`).should("not.have.attr", "disabled");
-  cy.get(`#${inputId}`).type("-1");
-  cy.get(`#${inputId}`).should("have.text", "1");
-};

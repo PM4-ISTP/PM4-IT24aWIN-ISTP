@@ -36,7 +36,8 @@ public class AdminConfigurationController {
   /**
    * Uploads a kubeconfig file (base64-encoded) and stores admin configuration in the database.
    *
-   * @param request the admin config request containing base64-encoded kubeconfig and optional limits
+   * @param request the admin config request containing base64-encoded kubeconfig and optional
+   *     limits
    * @return ResponseEntity containing the stored AdminConfigResponse
    */
   @PostMapping
@@ -65,7 +66,10 @@ public class AdminConfigurationController {
 
     AdminConfigResponse response =
         new AdminConfigResponse(
-            true, adminConfig.getCpuLimit(), adminConfig.getMemoryLimit(), adminConfig.getUpdatedAt());
+            true,
+            adminConfig.getCpuLimit(),
+            adminConfig.getMemoryLimit(),
+            adminConfig.getUpdatedAt());
 
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
@@ -113,7 +117,10 @@ public class AdminConfigurationController {
 
     AdminConfigResponse response =
         new AdminConfigResponse(
-            true, adminConfig.getCpuLimit(), adminConfig.getMemoryLimit(), adminConfig.getUpdatedAt());
+            true,
+            adminConfig.getCpuLimit(),
+            adminConfig.getMemoryLimit(),
+            adminConfig.getUpdatedAt());
 
     return ResponseEntity.ok(response);
   }
