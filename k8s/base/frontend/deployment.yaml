@@ -34,6 +34,11 @@ spec:
                 configMapKeyRef:
                   name: istp-config
                   key: keycloak-admin-url
+            - name: BACKEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: backend-url
           resources:
             requests:
               cpu: 100m
