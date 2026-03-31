@@ -14,4 +14,3 @@ export async function getApiClient() {
 
   return createApiClient(BACKEND_URL, session.accessToken);
 }
-

@@ -6,6 +6,7 @@ import com.pm4.istp.exception.StorageException;
 import com.pm4.istp.service.AdminConfigurationService;
 import jakarta.validation.Valid;
 import java.util.Base64;
+import java.util.Map;
 import java.util.Optional;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
@@ -118,9 +119,9 @@ public class AdminConfigurationController {
   }
 
   @DeleteMapping
-  public ResponseEntity<String> deleteAdminConfig() {
+  public ResponseEntity<?> deleteAdminConfig() {
     adminConfigurationService.deleteAdminConfiguration();
-    return ResponseEntity.ok("Admin configuration deleted successfully");
+    return ResponseEntity.ok(Map.of("message", "Admin configuration deleted successfully"));
   }
 
   @ExceptionHandler(StorageException.class)

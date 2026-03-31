@@ -1,16 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  Button,
-  Fieldset,
-  FileInput,
-  Grid,
-  Group,
-  NumberInput,
-  Select,
-  Text,
-} from "@mantine/core";
+import { Button, Fieldset, FileInput, Grid, Group, NumberInput, Select, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useApiClient } from "@/src/lib/api/client";
 import type { components } from "@/src/lib/api/schema";
@@ -138,7 +129,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
   return (
     <form onSubmit={form.onSubmit((values) => void handleSubmit(values))}>
       <Text fw={600} size="lg">
-        K3d Configuration
+        Kubernetes Configuration
       </Text>
       <Text c="dimmed" size="sm" mt={4}>
         Required fields are marked with *
@@ -194,7 +185,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
               id="kubeconfig-input"
               withAsterisk={!config.kubeconfigUploaded}
               label="Kubeconfig"
-              description="Please upload your Kubeconfig file for the K3d cluster that manages the challenge pods."
+              description="Please upload your Kubeconfig file for the Kubernetes cluster that manages the challenge pods."
               key={form.key("kubeconfig")}
               disabled={form.submitting}
               {...form.getInputProps("kubeconfig")}
@@ -204,7 +195,9 @@ export default function AdminConfigForm({ initialConfig }: Props) {
 
         <Group justify="flex-end" mt="md">
           <Button id="admin-config-form-submit-button" type="submit" loading={form.submitting}>
-            {!config.kubeconfigUploaded ? "Create K3d configuration" : "Update K3d configuration"}
+            {!config.kubeconfigUploaded
+              ? "Create Kubernetes configuration"
+              : "Update Kubernetes configuration"}
           </Button>
           <Button
             id="admin-config-form-delete-button"
@@ -212,7 +205,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
             onClick={() => void handleDelete()}
             loading={form.submitting}
           >
-            Delete K3d configuration
+            Delete Kubernetes configuration
           </Button>
         </Group>
       </Fieldset>

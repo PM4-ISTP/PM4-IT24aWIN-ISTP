@@ -252,7 +252,10 @@ const validateNoAdminCofigCreated = () => {
     memoryLimit: "",
     memoryUnit: MemoryUnit.Byte,
   });
-  cy.get(`#${adminConfigFormSubmitButtonId}`).should("have.text", "Create K3d configuration");
+  cy.get(`#${adminConfigFormSubmitButtonId}`).should(
+    "have.text",
+    "Create Kubernetes configuration"
+  );
   validateInputHasNoStar(cpuLimitInputLabelId);
   validateInputHasNoStar(memoryLimitInputLabelId);
   validateInputHasStar(kubeconfigInputLabelId);
@@ -274,7 +277,10 @@ const validateAdminConfigAfterCreationOrUpdate = (
   validateInputHasStar(memoryLimitInputLabelId);
   cy.get(`#${memoryLimitInputId}`).should("have.attr", "required");
   validateInputHasNoStar(kubeconfigInputLabelId);
-  cy.get(`#${adminConfigFormSubmitButtonId}`).should("have.text", "Update K3d configuration");
+  cy.get(`#${adminConfigFormSubmitButtonId}`).should(
+    "have.text",
+    "Update Kubernetes configuration"
+  );
   cy.readFile(kubeconfigPath).should("eq", kubeconfigContent);
 };
 
