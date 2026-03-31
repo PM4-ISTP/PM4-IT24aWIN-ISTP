@@ -25,6 +25,7 @@ configMapGenerator:
       - nextauth-url=https://istp-staging.pm4.init-lab.ch
       - keycloak-admin-url=https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/
       - backend-url=http://backend:8080
+      - cors-allowed-origin=https://istp-staging.pm4.init-lab.ch
 
 # ┌─────────────────────────────────────────────────────────────────────┐
 # │ Manual secrets (create once per namespace, not managed by Kustomize)│
