@@ -22,6 +22,7 @@ configMapGenerator:
       - keycloak-issuer-uri=https://istp-auth.pm4.init-lab.ch/realms/interactive-security-training-platform
       - app-namespace=istp-prod
       - keycloak-admin-url=https://istp-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/
+      - backend-url=http://backend:8080
 
 # ┌─────────────────────────────────────────────────────────────────────┐
 # │ Manual secrets (create once per namespace, not managed by Kustomize)│
