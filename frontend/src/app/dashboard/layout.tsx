@@ -1,11 +1,17 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
+import { fetchBackend } from "@/src/lib/api";
 import { AppShell, AppShellHeader, AppShellNavbar, AppShellMain, Group } from "@mantine/core";
 import UserMenu from "@/src/components/UserMenu";
 import DashboardNav from "@/src/components/DashboardNav";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
+
+  if (session) {
+    await fetchBackend("/api/v1/users/me", { cache: "no-store" });
+  }
+
   const name = session?.user?.name ?? "Unknown";
   const image = session?.user?.image ?? null;
   const roles = (session?.roles as string[]) ?? [];

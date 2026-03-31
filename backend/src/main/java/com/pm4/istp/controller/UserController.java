@@ -3,6 +3,7 @@ package com.pm4.istp.controller;
 import static com.pm4.istp.util.JwtUtil.parseUserId;
 
 import com.pm4.istp.domain.entites.User;
+import com.pm4.istp.dto.CurrentUserResponseDto;
 import com.pm4.istp.dto.ListInstructorUserResponseDto;
 import com.pm4.istp.mappers.UserMapper;
 import com.pm4.istp.service.UserService;
@@ -27,6 +28,13 @@ public class UserController {
 
   private final UserMapper userMapper;
   private final UserService userService;
+
+  @GetMapping(path = "/me")
+  public ResponseEntity<CurrentUserResponseDto> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+    UUID userId = parseUserId(jwt);
+    User user = userService.getUserById(userId);
+    return ResponseEntity.ok(userMapper.toCurrentUserResponseDto(user));
+  }
 
   @GetMapping(path = "/instructors")
   public ResponseEntity<Page<ListInstructorUserResponseDto>> listInstructorUsers(

@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface UserService {
+  User getUserById(UUID userId);
+
   Page<User> listInstructorUsers(UUID userId, Pageable pageable);
 
   Page<User> searchInstructorUsersByName(UUID userId, String name, Pageable pageable);
