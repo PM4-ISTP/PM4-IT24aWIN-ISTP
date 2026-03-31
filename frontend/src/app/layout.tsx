@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from "@mantine/core";
+import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
 import { Geist, Geist_Mono, Manrope, Space_Grotesk } from "next/font/google";
 import NextAuthSessionProvider from "@/src/components/SessionProvider";
 import "@mantine/core/styles.css";
+import "@mantine/tiptap/styles.css";
 import "./globals.css";
 
 const geistSans = Geist({

@@ -1,15 +1,10 @@
 package com.pm4.istp.filters;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-import com.pm4.istp.domain.User;
+import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.repositories.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.UUID;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +18,13 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserProvisioningFilterTest {
@@ -61,7 +62,9 @@ class UserProvisioningFilterTest {
         when(jwt.getSubject()).thenReturn(USER_ID.toString());
         when(jwt.getClaimAsString("preferred_username")).thenReturn(USERNAME);
         when(jwt.getClaimAsString("email")).thenReturn(EMAIL);
-        when(userRepository.existsById(USER_ID)).thenReturn(false);
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -78,10 +81,12 @@ class UserProvisioningFilterTest {
 
     @Test
     void doFilterInternal_existingUser_doesNotSaveAndContinuesChain() throws Exception {
+        User existingUser = new User();
+        existingUser.setId(USER_ID);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
         when(jwt.getSubject()).thenReturn(USER_ID.toString());
-        when(userRepository.existsById(USER_ID)).thenReturn(true);
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -121,5 +126,27 @@ class UserProvisioningFilterTest {
         verify(userRepository, never()).existsById(any());
         verify(userRepository, never()).save(any());
         verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_existingUser_updatedData_savesUser() throws Exception {
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        when(jwt.getClaimAsString("preferred_username")).thenReturn(USERNAME);
+        when(jwt.getClaimAsString("email")).thenReturn(EMAIL);
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+
+        User existingUser = new User();
+        existingUser.setId(USER_ID);
+        existingUser.setName("oldName");
+        existingUser.setEmail("old@email.com");
+        existingUser.setRoles(Set.of());
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(userRepository).save(existingUser);
     }
 }

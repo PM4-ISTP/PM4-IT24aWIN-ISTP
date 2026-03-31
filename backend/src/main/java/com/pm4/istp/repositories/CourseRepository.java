@@ -1,0 +1,50 @@
+package com.pm4.istp.repositories;
+
+import com.pm4.istp.domain.entites.Course;
+import com.pm4.istp.dto.ListCourseResponseDto;
+import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface CourseRepository extends JpaRepository<Course, UUID> {
+  Page<Course> findByCourseInstructorsInstructorId(UUID instructorId, Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select new com.pm4.istp.dto.ListCourseResponseDto(
+            c.id,
+            c.title,
+            c.description,
+            c.isPublished,
+            count(ciAll.id),
+            c.createdAt,
+            c.updatedAt
+          )
+          from Course c
+          left join c.courseInstructors ciAll
+          where exists (
+            select 1
+            from CourseInstructor ciFilter
+            where ciFilter.course = c and ciFilter.instructor.id = :instructorId
+          )
+          group by c.id, c.title, c.description, c.isPublished, c.createdAt, c.updatedAt
+          """,
+      countQuery =
+          """
+          select count(c)
+          from Course c
+          where exists (
+            select 1
+            from CourseInstructor ciFilter
+            where ciFilter.course = c and ciFilter.instructor.id = :instructorId
+          )
+          """)
+  Page<ListCourseResponseDto> findListCoursesForInstructor(
+      @Param("instructorId") UUID instructorId, Pageable pageable);
+}

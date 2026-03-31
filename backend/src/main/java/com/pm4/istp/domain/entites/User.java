@@ -1,12 +1,9 @@
-package com.pm4.istp.domain;
+package com.pm4.istp.domain.entites;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +27,16 @@ public class User {
 
   @Column(name = "email", nullable = false, unique = true)
   private String email;
+
+  @JsonIgnore
+  @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL)
+  private List<CourseInstructor> coursesInstructors = new ArrayList<>();
+
+  @ElementCollection(fetch = FetchType.EAGER)
+  @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+  @Enumerated(EnumType.STRING)
+  @Column(name = "role", nullable = false)
+  private Set<UserRoleEnum> roles = new HashSet<>();
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)

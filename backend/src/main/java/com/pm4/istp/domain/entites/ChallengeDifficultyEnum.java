@@ -1,0 +1,9 @@
+package com.pm4.istp.domain.entites;
+
+public enum ChallengeDifficultyEnum {
+  BEGINNER,
+  EASY,
+  MEDIUM,
+  HARD,
+  EXPERT
+}
