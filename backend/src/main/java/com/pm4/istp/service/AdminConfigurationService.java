@@ -10,7 +10,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -34,8 +33,7 @@ public class AdminConfigurationService {
     return adminConfigRepository.findById(SINGLETON_ID);
   }
 
-  public AdminConfig createConfiguration(
-      MultipartFile kubeconfig, String cpuLimit, String memoryLimit) {
+  public AdminConfig createConfiguration(byte[] kubeconfig, String cpuLimit, String memoryLimit) {
 
     if (adminConfigRepository.existsById(SINGLETON_ID)) {
       throw new IllegalStateException("Admin configuration already exists");
@@ -51,8 +49,7 @@ public class AdminConfigurationService {
     return savedConfig;
   }
 
-  public AdminConfig updateConfiguration(
-      MultipartFile kubeconfig, String cpuLimit, String memoryLimit) {
+  public AdminConfig updateConfiguration(byte[] kubeconfig, String cpuLimit, String memoryLimit) {
 
     AdminConfig adminConfig =
         adminConfigRepository
@@ -79,9 +76,9 @@ public class AdminConfigurationService {
   }
 
   private void applyUpdates(
-      AdminConfig adminConfig, MultipartFile kubeconfig, String cpuLimit, String memoryLimit) {
+      AdminConfig adminConfig, byte[] kubeconfig, String cpuLimit, String memoryLimit) {
     try {
-      if (kubeconfig != null && !kubeconfig.isEmpty()) {
+      if (kubeconfig != null && kubeconfig.length > 0) {
         String storedPath = kubeconfigStorageService.storeKubeconfig(kubeconfig);
         adminConfig.setKubeconfig(storedPath);
         log.info("Kubeconfig stored at {}", storedPath);

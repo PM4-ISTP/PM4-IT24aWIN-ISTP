@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class KubeconfigStorageService {
@@ -26,7 +25,7 @@ public class KubeconfigStorageService {
     kubeconfigPath = Path.of(kubeconfigPathString);
   }
 
-  public String storeKubeconfig(@NonNull MultipartFile kubeconfig) {
+  public String storeKubeconfig(@NonNull byte[] kubeconfig) {
     fileStorageService.store(kubeconfig, kubeconfigPath);
     return kubeconfigPath.toString();
   }

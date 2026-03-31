@@ -24,7 +24,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 class AdminConfigurationServiceTest {
@@ -40,15 +39,11 @@ class AdminConfigurationServiceTest {
     @InjectMocks
     private AdminConfigurationService adminConfigurationService;
 
-    private MockMultipartFile kubeconfig;
+    private byte[] kubeconfig;
 
     @BeforeEach
     void setUp() {
-        kubeconfig = new MockMultipartFile(
-                "kubeconfig",
-                "config.yml",
-                "text/plain",
-                "kube-content".getBytes());
+        kubeconfig = "kube-content".getBytes();
     }
 
     @Test
@@ -130,7 +125,7 @@ class AdminConfigurationServiceTest {
 
     @Test
     void testCreateConfiguration_WithEmptyKubeconfig_DoesNotStoreFile() {
-        MockMultipartFile emptyFile = new MockMultipartFile("kubeconfig", "config.yml", "text/plain", new byte[0]);
+        byte[] emptyFile = new byte[0];
 
         when(adminConfigRepository.existsById(SINGLETON_ID)).thenReturn(false);
         when(adminConfigRepository.save(any(AdminConfig.class)))

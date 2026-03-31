@@ -1,9 +1,19 @@
 import AdminConfigForm from "@/src/components/AdminConfigForm";
+import { getApiClient } from "@/src/lib/api/server";
 import { Stack, Title, Text, Button, Paper } from "@mantine/core";
-
 // Role guard is handled by middleware (proxy.ts) - no manual check needed here.
+export const dynamic = "force-dynamic";
 
-export default function AdminDashboard() {
+export default async function AdminDashboard() {
+  const client = await getApiClient();
+  const { data } = await client.GET("/api/admin/config");
+  const config = data ?? {
+    kubeconfigUploaded: false,
+    cpuLimit: "",
+    memoryLimit: "",
+    updatedAt: "",
+  };
+
   return (
     <Stack p="xl" gap="xl" maw={600}>
       <div>
@@ -37,7 +47,7 @@ export default function AdminDashboard() {
       </Paper>
       <Paper withBorder radius="md" p="xl">
         <Stack gap="md">
-          <AdminConfigForm />
+          <AdminConfigForm key={config.updatedAt ?? ""} initialConfig={config} />
         </Stack>
       </Paper>
     </Stack>

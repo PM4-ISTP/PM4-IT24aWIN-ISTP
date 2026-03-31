@@ -1,9 +1,11 @@
 package com.pm4.istp.controller;
 
-import com.pm4.istp.domain.AdminConfig;
+import com.pm4.istp.dto.AdminConfigRequest;
 import com.pm4.istp.dto.AdminConfigResponse;
 import com.pm4.istp.exception.StorageException;
 import com.pm4.istp.service.AdminConfigurationService;
+import jakarta.validation.Valid;
+import java.util.Base64;
 import java.util.Optional;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
@@ -13,10 +15,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping(path = "/api/admin/config")
@@ -31,40 +32,49 @@ public class AdminConfigurationController {
     this.adminConfigurationService = adminConfigurationService;
   }
 
-  private boolean isFileSizeExceeded(MultipartFile file) {
-    return file != null && file.getSize() > MAX_FILE_SIZE;
-  }
-
   /**
-   * Uploads a kubeconfig file and stores admin configuration in the database.
+   * Uploads a kubeconfig file (base64-encoded) and stores admin configuration in the database.
    *
-   * @param kubeconfig the kubeconfig
-   * @param cpuLimit the CPU limit for each pod
-   * @param memoryLimit the memory limit for each pod
-   * @return ResponseEntity containing the stored AdminConfig
+   * @param request the admin config request containing base64-encoded kubeconfig and optional limits
+   * @return ResponseEntity containing the stored AdminConfigResponse
    */
   @PostMapping
   public ResponseEntity<?> uploadAndStoreAdminConfig(
-      @RequestParam("kubeconfig") MultipartFile kubeconfig,
-      @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
-      @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
+      @Valid @RequestBody AdminConfigRequest request) {
 
-    if (isFileSizeExceeded(kubeconfig)) {
+    if (request.getKubeconfig() == null) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Kubeconfig is required.");
+    }
+
+    byte[] kubeconfigBytes;
+    try {
+      kubeconfigBytes = Base64.getDecoder().decode(request.getKubeconfig());
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Kubeconfig is not valid base64.");
+    }
+
+    if (kubeconfigBytes.length > MAX_FILE_SIZE) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body("Kubeconfig file size exceeds 1 MB limit.");
     }
 
-    AdminConfig adminConfig =
-        adminConfigurationService.createConfiguration(kubeconfig, cpuLimit, memoryLimit);
+    com.pm4.istp.domain.AdminConfig adminConfig =
+        adminConfigurationService.createConfiguration(
+            kubeconfigBytes, request.getCpuLimit(), request.getMemoryLimit());
 
-    return ResponseEntity.status(HttpStatus.CREATED).body(adminConfig);
+    AdminConfigResponse response =
+        new AdminConfigResponse(
+            true, adminConfig.getCpuLimit(), adminConfig.getMemoryLimit(), adminConfig.getUpdatedAt());
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   @GetMapping
-  public ResponseEntity<?> getAdminConfig() {
-    Optional<AdminConfig> config = adminConfigurationService.getAdminConfiguration();
+  public ResponseEntity<AdminConfigResponse> getAdminConfig() {
+    Optional<com.pm4.istp.domain.AdminConfig> config =
+        adminConfigurationService.getAdminConfiguration();
     if (config.isPresent()) {
-      AdminConfig adminConfig = config.get();
+      com.pm4.istp.domain.AdminConfig adminConfig = config.get();
       AdminConfigResponse response =
           new AdminConfigResponse(
               true,
@@ -79,20 +89,32 @@ public class AdminConfigurationController {
   }
 
   @PutMapping
-  public ResponseEntity<?> updateAdminConfig(
-      @RequestParam(value = "kubeconfig", required = false) MultipartFile kubeconfig,
-      @RequestParam(value = "cpuLimit", required = false) String cpuLimit,
-      @RequestParam(value = "memoryLimit", required = false) String memoryLimit) {
+  public ResponseEntity<?> updateAdminConfig(@Valid @RequestBody AdminConfigRequest request) {
 
-    if (isFileSizeExceeded(kubeconfig)) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Kubeconfig file size exceeds 1 MB limit.");
+    byte[] kubeconfigBytes = null;
+    if (request.getKubeconfig() != null) {
+      try {
+        kubeconfigBytes = Base64.getDecoder().decode(request.getKubeconfig());
+      } catch (IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body("Kubeconfig is not valid base64.");
+      }
+
+      if (kubeconfigBytes.length > MAX_FILE_SIZE) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body("Kubeconfig file size exceeds 1 MB limit.");
+      }
     }
 
-    AdminConfig adminConfig =
-        adminConfigurationService.updateConfiguration(kubeconfig, cpuLimit, memoryLimit);
+    com.pm4.istp.domain.AdminConfig adminConfig =
+        adminConfigurationService.updateConfiguration(
+            kubeconfigBytes, request.getCpuLimit(), request.getMemoryLimit());
 
-    return ResponseEntity.ok(adminConfig);
+    AdminConfigResponse response =
+        new AdminConfigResponse(
+            true, adminConfig.getCpuLimit(), adminConfig.getMemoryLimit(), adminConfig.getUpdatedAt());
+
+    return ResponseEntity.ok(response);
   }
 
   @DeleteMapping
