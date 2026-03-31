@@ -1,4 +1,11 @@
 .idea
 backend/src/main/resources/Kubeconfig
 .gradle
-backend/src/main/resources/application.properties
+
+### VS Code ###
+.vscode/
+*.code-workspace
+
+### Claude ###
+.claude/
+CLAUDE.md
