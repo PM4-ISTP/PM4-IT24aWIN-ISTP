@@ -4,7 +4,9 @@ import { Geist, Geist_Mono, Manrope, Space_Grotesk } from "next/font/google";
 import NextAuthSessionProvider from "@/src/components/SessionProvider";
 import "@mantine/core/styles.css";
 import "@mantine/tiptap/styles.css";
+import "@mantine/notifications/styles.css";
 import "./globals.css";
+import { Notifications } from "@mantine/notifications";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,6 +58,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${spaceGrotesk.variable} antialiased`}
       >
         <MantineProvider forceColorScheme="light">
+          <Notifications />
           <NextAuthSessionProvider>{children}</NextAuthSessionProvider>
         </MantineProvider>
       </body>

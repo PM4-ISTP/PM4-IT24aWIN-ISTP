@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -21,6 +20,7 @@ import {
   memoryUnits,
   stringToMemorySpecification,
 } from "@/src/lib/memoryUnit";
+import { notifications } from "@mantine/notifications";
 
 type AdminConfigResponse = components["schemas"]["AdminConfigResponse"];
 
@@ -31,7 +31,6 @@ type Props = {
 export default function AdminConfigForm({ initialConfig }: Props) {
   const router = useRouter();
   const apiClient = useApiClient();
-  const [errorMessage, setErrorMessage] = useState("");
 
   const config: AdminConfigResponse = initialConfig;
 
@@ -75,8 +74,6 @@ export default function AdminConfigForm({ initialConfig }: Props) {
   });
 
   const handleSubmit = async (values: typeof form.values) => {
-    setErrorMessage("");
-
     let kubeconfigBase64: string | undefined;
     if (values.kubeconfig !== null) {
       const buffer = await values.kubeconfig.arrayBuffer();
@@ -104,24 +101,37 @@ export default function AdminConfigForm({ initialConfig }: Props) {
         });
         if (error) throw new Error(JSON.stringify(error));
       }
+      notifications.show({
+        title: "Success",
+        message: "Admin configuration has been successfully updated.",
+        color: "green",
+      });
       router.refresh();
     } catch (e) {
-      setErrorMessage(
-        "It was not possible to submit the admin configuration: " + (e as Error).message
-      );
+      notifications.show({
+        title: "Error",
+        message: "It was not possible to submit the admin configuration: " + (e as Error).message,
+        color: "red",
+      });
     }
   };
 
   const handleDelete = async () => {
-    setErrorMessage("");
     try {
       const { error } = await apiClient.DELETE("/api/admin/config");
       if (error) throw new Error(JSON.stringify(error));
+      notifications.show({
+        title: "Success",
+        message: "Admin configuration has been successfully deleted.",
+        color: "green",
+      });
       router.refresh();
     } catch (e) {
-      setErrorMessage(
-        "It was not possible to delete the admin configuration: " + (e as Error).message
-      );
+      notifications.show({
+        title: "Error",
+        message: "It was not possible to delete the admin configuration: " + (e as Error).message,
+        color: "red",
+      });
     }
   };
 
@@ -129,9 +139,6 @@ export default function AdminConfigForm({ initialConfig }: Props) {
     <form onSubmit={form.onSubmit((values) => void handleSubmit(values))}>
       <Text fw={600} size="lg">
         K3d Configuration
-      </Text>
-      <Text id="admin-config-form-info-field" c="red" size="sm" mt={4}>
-        {errorMessage}
       </Text>
       <Text c="dimmed" size="sm" mt={4}>
         Required fields are marked with *
