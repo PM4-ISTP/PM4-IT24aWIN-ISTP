@@ -76,7 +76,7 @@ public class K8sService {
                 .withName(request.getContainerName())
                 .withImage(request.getImage())
                 .addNewPort()
-                .withContainerPort(8080)
+                .withContainerPort(request.getContainerPort())
                 .endPort()
                 .endContainer()
                 // Terminal Sidecar Container
@@ -108,7 +108,7 @@ public class K8sService {
                 .withName("app-port")
                 .withProtocol("TCP")
                 .withPort(80)
-                .withTargetPort(new IntOrString(8080))
+                .withTargetPort(new IntOrString(request.getContainerPort()))
                 .endPort()
                 .addNewPort()
                 .withName("term-port")

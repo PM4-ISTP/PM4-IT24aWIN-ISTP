@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PodCreationResponse {
   private String status;
-  private String podName; // Or rather deploymentId
+  private String podName;
   private String namespace;
   private String message;
 
