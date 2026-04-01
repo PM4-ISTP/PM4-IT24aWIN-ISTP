@@ -6,6 +6,8 @@ plugins {
 	id 'checkstyle'
 	id 'pmd'
 	id 'com.github.spotbugs' version '6.0.27'
+	id 'jacoco'
+	id 'org.sonarqube' version '6.0.0.4771'
 }
 
 group = 'com.pm4'
@@ -56,6 +58,24 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		xml.outputLocation = layout.buildDirectory.file('reports/jacoco/test/jacocoTestReport.xml')
+	}
+}
+
+// ─── SonarQube ────────────────────────────────────────────────────────────────
+sonar {
+	properties {
+		property 'sonar.projectKey', 'pm4-it24awin-istp'
+		property 'sonar.host.url', 'https://sonarqube.pm4.init-lab.ch'
+		property 'sonar.coverage.jacoco.xmlReportPaths', 'build/reports/jacoco/test/jacocoTestReport.xml'
+	}
 }
 
 // ─── Spotless (google-java-format) ────────────────────────────────────────────
