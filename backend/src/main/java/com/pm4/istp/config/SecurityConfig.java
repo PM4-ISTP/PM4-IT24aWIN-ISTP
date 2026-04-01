@@ -24,8 +24,7 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http,
       UserProvisioningFilter userProvisioningFilter,
-      JwtAuthenticationConverter jwtAuthenticationConverter)
-      throws Exception {
+      JwtAuthenticationConverter jwtAuthenticationConverter) {
     http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(
             authorize ->
