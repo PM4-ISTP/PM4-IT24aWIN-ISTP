@@ -21,6 +21,21 @@ spec:
                 name: frontend
                 port:
                   number: 3000
+          # Next.js API proxy routes must be handled by the frontend — must come before /api
+          - path: /api/backend
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+          - path: /api/users
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
           - path: /api
             pathType: Prefix
             backend:
