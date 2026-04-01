@@ -117,8 +117,9 @@ export default function EditCourse() {
   }
 
   const owner =
-    course?.courseInstructors.find((courseInstructor) => courseInstructor.instructorRole === "OWNER")
-      ?.instructor ?? null;
+    course?.courseInstructors.find(
+      (courseInstructor) => courseInstructor.instructorRole === "OWNER"
+    )?.instructor ?? null;
   const collaborators = selectedInstructors
     .map((id) => knownUsers[id])
     .filter((user): user is CollaboratorUserResponseDto => Boolean(user));

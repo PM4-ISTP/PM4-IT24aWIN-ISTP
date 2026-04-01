@@ -11,8 +11,9 @@ import java.util.Set;
 import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -53,6 +55,8 @@ class UserProvisioningFilterTest {
     void setUp() {
         SecurityContextHolder.setContext(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
+        lenient().doReturn(null).when(jwt).getClaimAsString(anyString());
+        lenient().doReturn(null).when(jwt).getTokenValue();
     }
 
     @AfterEach
@@ -65,10 +69,10 @@ class UserProvisioningFilterTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
         when(jwt.getSubject()).thenReturn(USER_ID.toString());
-        when(jwt.getClaimAsString("preferred_username")).thenReturn(USERNAME);
-        when(jwt.getClaimAsString("name")).thenReturn(FULL_NAME);
-        when(jwt.getClaimAsString("email")).thenReturn(EMAIL);
-        when(jwt.getClaimAsString("picture")).thenReturn(PICTURE);
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
         when(authentication.getAuthorities()).thenReturn(Set.of());
 
         when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
@@ -92,12 +96,11 @@ class UserProvisioningFilterTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
         when(jwt.getSubject()).thenReturn(USER_ID.toString());
-        when(jwt.getClaimAsString("name")).thenReturn(null);
-        when(jwt.getClaimAsString("given_name")).thenReturn("Test");
-        when(jwt.getClaimAsString("family_name")).thenReturn("User");
-        when(jwt.getClaimAsString("preferred_username")).thenReturn(USERNAME);
-        when(jwt.getClaimAsString("email")).thenReturn(EMAIL);
-        when(jwt.getClaimAsString("picture")).thenReturn(PICTURE);
+        doReturn("Test").when(jwt).getClaimAsString("given_name");
+        doReturn("User").when(jwt).getClaimAsString("family_name");
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
         when(authentication.getAuthorities()).thenReturn(Set.of());
         when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
 
@@ -113,10 +116,9 @@ class UserProvisioningFilterTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
         when(jwt.getSubject()).thenReturn(USER_ID.toString());
-        doReturn(null).when(jwt).getClaimAsString(anyString());
-        when(jwt.getClaimAsString("preferred_username")).thenReturn(USERNAME);
-        when(jwt.getClaimAsString("email")).thenReturn(EMAIL);
-        when(jwt.getClaimAsString("picture")).thenReturn(PICTURE);
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
         when(authentication.getAuthorities()).thenReturn(Set.of());
         when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
 
@@ -138,11 +140,12 @@ class UserProvisioningFilterTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
         when(jwt.getSubject()).thenReturn(USER_ID.toString());
-        when(jwt.getClaimAsString("name")).thenReturn(FULL_NAME);
-        when(jwt.getClaimAsString("email")).thenReturn(EMAIL);
-        when(jwt.getClaimAsString("picture")).thenReturn(PICTURE);
-        when(authentication.getAuthorities()).thenReturn(
-                Set.of(() -> UserRoleEnum.ROLE_INSTRUCTOR.name()));
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
+        doReturn(Set.of((GrantedAuthority) () -> UserRoleEnum.ROLE_INSTRUCTOR.name()))
+                .when(authentication)
+                .getAuthorities();
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
 
         filter.doFilterInternal(request, response, filterChain);
@@ -190,10 +193,10 @@ class UserProvisioningFilterTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
         when(jwt.getSubject()).thenReturn(USER_ID.toString());
-        when(jwt.getClaimAsString("preferred_username")).thenReturn(USERNAME);
-        when(jwt.getClaimAsString("name")).thenReturn(FULL_NAME);
-        when(jwt.getClaimAsString("email")).thenReturn(EMAIL);
-        when(jwt.getClaimAsString("picture")).thenReturn(PICTURE);
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
         when(authentication.getAuthorities()).thenReturn(Set.of());
 
         User existingUser = new User();

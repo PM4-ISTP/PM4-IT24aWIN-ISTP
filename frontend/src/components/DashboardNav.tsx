@@ -106,9 +106,7 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
 
       {isInstructor && (
         <>
-          <p style={{ ...sectionLabelStyle, padding: "1.5rem 2rem 0.5rem" }}>
-            Course Management
-          </p>
+          <p style={{ ...sectionLabelStyle, padding: "1.5rem 2rem 0.5rem" }}>Course Management</p>
           <NavItem
             href="/dashboard/instructor"
             label="Dashboard"

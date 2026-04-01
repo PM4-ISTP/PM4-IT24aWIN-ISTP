@@ -132,11 +132,7 @@ export function InstructorMultiSelect({
       searchValue={searchValue}
       onSearchChange={handleSearchChange}
       onDropdownOpen={handleDropdownOpen}
-      nothingFoundMessage={
-        loading
-          ? "Loading..."
-          : errorMessage ?? "No collaborators found"
-      }
+      nothingFoundMessage={loading ? "Loading..." : (errorMessage ?? "No collaborators found")}
       clearable
       hidePickedOptions
     />

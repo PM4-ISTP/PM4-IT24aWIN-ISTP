@@ -34,13 +34,7 @@ function getRoleBadge(role: PlatformRole): { label: string; color: string } {
   }
 }
 
-function PersonCard({
-  user,
-  courseBadge,
-}: {
-  user: CourseUserSummary;
-  courseBadge?: string;
-}) {
+function PersonCard({ user, courseBadge }: { user: CourseUserSummary; courseBadge?: string }) {
   return (
     <Group align="flex-start" gap="sm" wrap="nowrap">
       <Avatar radius="xl" color="blue" src={user.picture ?? undefined}>
