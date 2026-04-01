@@ -209,25 +209,24 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout deploy branch
+      - name: Checkout deploy-staging
         uses: actions/checkout@v4
         with:
-          ref: deploy
+          ref: deploy-staging
 
-      - name: Update image tags in staging and prod
+      - name: Update image tags in staging
         run: |
           SHA="${{ needs.build-push-backend.outputs.sha_short }}"
           sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/staging/kustomization.yaml
-          sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/prod/kustomization.yaml
 
       - name: Commit and push manifest changes
         run: |
           SHA="${{ needs.build-push-backend.outputs.sha_short }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add k8s/overlays/staging/kustomization.yaml k8s/overlays/prod/kustomization.yaml
-          git diff --staged --quiet || git commit -m "chore: update image tags to $SHA [skip ci]"
-          git push origin deploy
+          git add k8s/overlays/staging/kustomization.yaml
+          git diff --staged --quiet || git commit -m "ci(deploy): update staging to $SHA [skip ci]"
+          git push origin deploy-staging
 
   cypress-e2e:
     name: Cypress E2E Tests (Staging)
@@ -308,3 +307,41 @@ jobs:
           name: cypress-videos
           path: frontend/cypress/videos
           retention-days: 7
+
+  promote-to-prod:
+    name: Promote to Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout staging
+        uses: actions/checkout@v4
+        with:
+          ref: deploy-staging
+
+      - name: Get current image tag
+        id: tag
+        run: |
+          TAG=$(grep newTag k8s/overlays/staging/kustomization.yaml | awk '{print $2}')
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Checkout prod
+        uses: actions/checkout@v4
+        with:
+          ref: deploy-prod
+
+      - name: Update prod to staging version
+        run: |
+          sed -i "s/newTag: .*/newTag: ${{ steps.tag.outputs.tag }}/" k8s/overlays/prod/kustomization.yaml
+
+      - name: Commit & push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "ci(deploy): promote to prod ${{ steps.tag.outputs.tag }}" || echo "no changes"
+          git push origin deploy-prod
+  
