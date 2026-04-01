@@ -1,4 +1,15 @@
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
+export type PlatformRole = "ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT";
+
+export interface CourseUserSummary {
+  id: string;
+  name: string;
+  email: string;
+  picture?: string | null;
+  roles: PlatformRole[];
+}
+
+export type CollaboratorUserResponseDto = CourseUserSummary;
 
 export interface InstructorAssignment {
   instructorId: string;
@@ -26,8 +37,9 @@ export interface ListCourseResponseDto {
   id: string;
   title: string;
   description: string | null;
-  published: boolean;
+  isPublished: boolean;
   instructorCount: number;
+  createdAt: string;
   updatedAt: string;
 }
 
@@ -42,11 +54,7 @@ export interface CourseInstructorResponseDto {
   id: string;
   instructorRole: InstructorRoleEnum;
   isAccepted: boolean;
-  instructor: {
-    id: string;
-    name: string;
-    email: string;
-  };
+  instructor: CourseUserSummary;
   invitedAt: string;
   acceptedAt: string | null;
   createdAt: string;

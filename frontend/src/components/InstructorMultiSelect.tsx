@@ -3,39 +3,58 @@
 import { useCallback, useState } from "react";
 import { MultiSelect } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
+import type { CollaboratorUserResponseDto } from "@/src/types/course";
 
-interface Instructor {
-  id: string;
-  name: string;
+interface ApiErrorResponse {
+  error?: string;
 }
 
-function isInstructor(value: unknown): value is Instructor {
+function isCollaboratorUser(value: unknown): value is CollaboratorUserResponseDto {
   if (typeof value !== "object" || value === null) {
     return false;
   }
 
-  const candidate = value as { id?: unknown; name?: unknown };
-  return typeof candidate.id === "string" && typeof candidate.name === "string";
+  const candidate = value as {
+    id?: unknown;
+    name?: unknown;
+    email?: unknown;
+    picture?: unknown;
+    roles?: unknown;
+  };
+  return (
+    typeof candidate.id === "string" &&
+    typeof candidate.name === "string" &&
+    typeof candidate.email === "string" &&
+    (candidate.picture === undefined ||
+      candidate.picture === null ||
+      typeof candidate.picture === "string") &&
+    Array.isArray(candidate.roles) &&
+    candidate.roles.every((role) => typeof role === "string")
+  );
 }
 
 interface InstructorMultiSelectProps {
   value: string[];
   onChange: (value: string[]) => void;
-  initialOptions?: { value: string; label: string }[];
+  initialUsers?: CollaboratorUserResponseDto[];
+  onUsersLoaded?: (users: CollaboratorUserResponseDto[]) => void;
 }
 
 export function InstructorMultiSelect({
   value,
   onChange,
-  initialOptions,
+  initialUsers,
+  onUsersLoaded,
 }: InstructorMultiSelectProps) {
   const [searchValue, setSearchValue] = useState("");
-  const [options, setOptions] = useState<{ value: string; label: string }[]>(initialOptions ?? []);
+  const [options, setOptions] = useState<CollaboratorUserResponseDto[]>(initialUsers ?? []);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchInstructors = useCallback(
     async (name: string) => {
       setLoading(true);
+      setErrorMessage(null);
       try {
         const params = new URLSearchParams({
           ...(name ? { name } : {}),
@@ -46,30 +65,43 @@ export function InstructorMultiSelect({
         const res = await fetch(`/api/users/instructors?${params}`);
         const data: unknown = await res.json();
 
-        const fetchedInstructors: Instructor[] =
+        if (!res.ok) {
+          const message =
+            typeof data === "object" &&
+            data !== null &&
+            "error" in data &&
+            typeof (data as ApiErrorResponse).error === "string"
+              ? (data as ApiErrorResponse).error
+              : "Failed to load collaborators";
+          setErrorMessage(message);
+          return;
+        }
+
+        const fetchedInstructors: CollaboratorUserResponseDto[] =
           typeof data === "object" &&
           data !== null &&
           "content" in data &&
           Array.isArray((data as { content?: unknown }).content)
-            ? (data as { content: unknown[] }).content.filter(isInstructor)
+            ? (data as { content: unknown[] }).content.filter(isCollaboratorUser)
             : [];
+        onUsersLoaded?.(fetchedInstructors);
 
         setOptions((prev) => {
-          const selected = prev.filter((o) => value.includes(o.value));
-          const newOpts = fetchedInstructors.map((u) => ({
-            value: u.id,
-            label: u.name,
-          }));
-          return [
-            ...selected,
-            ...newOpts.filter((o: { value: string }) => !value.includes(o.value)),
-          ];
+          const merged = new Map(prev.map((user) => [user.id, user]));
+
+          fetchedInstructors.forEach((user) => {
+            merged.set(user.id, user);
+          });
+
+          return Array.from(merged.values());
         });
+      } catch {
+        setErrorMessage("Failed to load collaborators");
       } finally {
         setLoading(false);
       }
     },
-    [value]
+    [onUsersLoaded]
   );
 
   const debouncedFetch = useDebouncedCallback(fetchInstructors, 300);
@@ -87,16 +119,20 @@ export function InstructorMultiSelect({
 
   return (
     <MultiSelect
-      label="Instructors"
-      placeholder="Search instructors..."
-      data={options}
+      label="Collaborators"
+      description="You are added automatically as the owner. Only admins or instructors who have already signed in can be selected."
+      placeholder="Search collaborators..."
+      data={options.map((user) => ({
+        value: user.id,
+        label: user.name,
+      }))}
       value={value}
       onChange={onChange}
       searchable
       searchValue={searchValue}
       onSearchChange={handleSearchChange}
       onDropdownOpen={handleDropdownOpen}
-      nothingFoundMessage={loading ? "Loading..." : "No instructors found"}
+      nothingFoundMessage={loading ? "Loading..." : (errorMessage ?? "No collaborators found")}
       clearable
       hidePickedOptions
     />

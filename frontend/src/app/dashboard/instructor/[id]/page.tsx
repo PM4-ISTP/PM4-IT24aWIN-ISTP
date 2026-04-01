@@ -7,6 +7,7 @@ import {
   Alert,
   Button,
   Container,
+  Grid,
   Group,
   Loader,
   Stack,
@@ -16,10 +17,22 @@ import {
   Title,
 } from "@mantine/core";
 import { IconArrowLeft } from "@tabler/icons-react";
+import { CoursePeoplePanel } from "@/src/components/CoursePeoplePanel";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
 import { fetchCourse, updateCourse } from "@/src/lib/actions/courses";
-import type { CourseDetailResponseDto } from "@/src/types/course";
+import type { CollaboratorUserResponseDto, CourseDetailResponseDto } from "@/src/types/course";
+
+function mergeUsersById(
+  current: Record<string, CollaboratorUserResponseDto>,
+  users: CollaboratorUserResponseDto[]
+): Record<string, CollaboratorUserResponseDto> {
+  const next = { ...current };
+  users.forEach((user) => {
+    next[user.id] = user;
+  });
+  return next;
+}
 
 export default function EditCourse() {
   const router = useRouter();
@@ -32,8 +45,10 @@ export default function EditCourse() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isPublished, setIsPublished] = useState(false);
+  const [course, setCourse] = useState<CourseDetailResponseDto | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
-  const [initialOptions, setInitialOptions] = useState<{ value: string; label: string }[]>([]);
+  const [knownUsers, setKnownUsers] = useState<Record<string, CollaboratorUserResponseDto>>({});
+  const [initialUsers, setInitialUsers] = useState<CollaboratorUserResponseDto[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -48,6 +63,7 @@ export default function EditCourse() {
       }
 
       const course: CourseDetailResponseDto = result.data;
+      setCourse(course);
       setTitle(course.title);
       setDescription(course.description ?? "");
       setIsPublished(course.isPublished);
@@ -57,11 +73,12 @@ export default function EditCourse() {
         (ci) => ci.instructorRole === "COLLABORATOR"
       );
       setSelectedInstructors(collaborators.map((ci) => ci.instructor.id));
-      setInitialOptions(
-        collaborators.map((ci) => ({
-          value: ci.instructor.id,
-          label: ci.instructor.name,
-        }))
+      setInitialUsers(collaborators.map((ci) => ci.instructor));
+      setKnownUsers(
+        mergeUsersById(
+          {},
+          course.courseInstructors.map((courseInstructor) => courseInstructor.instructor)
+        )
       );
 
       setLoading(false);
@@ -98,6 +115,14 @@ export default function EditCourse() {
     router.refresh();
     router.push("/dashboard/instructor");
   }
+
+  const owner =
+    course?.courseInstructors.find(
+      (courseInstructor) => courseInstructor.instructorRole === "OWNER"
+    )?.instructor ?? null;
+  const collaborators = selectedInstructors
+    .map((id) => knownUsers[id])
+    .filter((user): user is CollaboratorUserResponseDto => Boolean(user));
 
   if (loading) {
     return (
@@ -155,45 +180,56 @@ export default function EditCourse() {
           </Group>
         </Group>
 
-        <Stack gap="lg">
-          <TextInput
-            label="Course Title"
-            placeholder="Enter course title"
-            value={title}
-            onChange={(e) => setTitle(e.currentTarget.value)}
-            error={titleError}
-            required
-          />
-          <MyEditor description={description} setDescription={setDescription} />
-          <InstructorMultiSelect
-            value={selectedInstructors}
-            onChange={setSelectedInstructors}
-            initialOptions={initialOptions}
-          />
-          <Switch
-            label="Publish Course"
-            checked={isPublished}
-            onChange={(e) => setIsPublished(e.currentTarget.checked)}
-          />
+        <Grid gutter="xl" align="start">
+          <Grid.Col span={{ base: 12, lg: 8 }}>
+            <Stack gap="lg">
+              <TextInput
+                label="Course Title"
+                placeholder="Enter course title"
+                value={title}
+                onChange={(e) => setTitle(e.currentTarget.value)}
+                error={titleError}
+                required
+              />
+              <MyEditor description={description} setDescription={setDescription} />
+              <InstructorMultiSelect
+                value={selectedInstructors}
+                onChange={setSelectedInstructors}
+                initialUsers={initialUsers}
+                onUsersLoaded={(users) => {
+                  setKnownUsers((current) => mergeUsersById(current, users));
+                }}
+              />
+              <Switch
+                label="Publish Course"
+                checked={isPublished}
+                onChange={(e) => setIsPublished(e.currentTarget.checked)}
+              />
 
-          {formError && (
-            <Alert color="red" title="Failed to update course">
-              {formError}
-            </Alert>
-          )}
+              {formError && (
+                <Alert color="red" title="Failed to update course">
+                  {formError}
+                </Alert>
+              )}
 
-          <Button
-            variant="filled"
-            radius="md"
-            loading={isSubmitting}
-            disabled={isSubmitting}
-            onClick={() => {
-              void handleSubmit();
-            }}
-          >
-            Save Changes
-          </Button>
-        </Stack>
+              <Button
+                variant="filled"
+                radius="md"
+                loading={isSubmitting}
+                disabled={isSubmitting}
+                onClick={() => {
+                  void handleSubmit();
+                }}
+              >
+                Save Changes
+              </Button>
+            </Stack>
+          </Grid.Col>
+
+          <Grid.Col span={{ base: 12, lg: 4 }}>
+            <CoursePeoplePanel owner={owner} collaborators={collaborators} />
+          </Grid.Col>
+        </Grid>
       </Stack>
     </Container>
   );

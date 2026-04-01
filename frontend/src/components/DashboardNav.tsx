@@ -97,10 +97,16 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
         icon="menu_book"
         active={pathname.startsWith("/dashboard/courses")}
       />
+      <NavItem
+        href="/dashboard/catalog"
+        label="Browse / Catalog"
+        icon="travel_explore"
+        active={pathname.startsWith("/dashboard/catalog")}
+      />
 
       {isInstructor && (
         <>
-          <p style={{ ...sectionLabelStyle, padding: "1.5rem 2rem 0.5rem" }}>Instructor</p>
+          <p style={{ ...sectionLabelStyle, padding: "1.5rem 2rem 0.5rem" }}>Course Management</p>
           <NavItem
             href="/dashboard/instructor"
             label="Dashboard"

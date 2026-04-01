@@ -147,3 +147,35 @@ export async function fetchInstructorCourses(
     };
   }
 }
+
+export async function fetchPublishedCourses(
+  query = "",
+  page = 0,
+  size = 12
+): Promise<ActionResult<Page<ListCourseResponseDto>>> {
+  try {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      size: size.toString(),
+      ...(query.trim() ? { query: query.trim() } : {}),
+    });
+
+    const res = await fetchBackend(`/api/v1/courses/catalog?${params}`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      const message = extractErrorMessage(text, res.statusText);
+      return { success: false, error: `${res.status}: ${message}` };
+    }
+
+    const data = (await res.json()) as Page<ListCourseResponseDto>;
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}

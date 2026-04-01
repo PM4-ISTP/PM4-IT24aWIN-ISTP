@@ -123,4 +123,11 @@ public class CourseController {
     Page<ListCourseResponseDto> courses = courseService.listCoursesForInstructors(userId, pageable);
     return ResponseEntity.ok(courses);
   }
+
+  @GetMapping("/catalog")
+  public ResponseEntity<Page<ListCourseResponseDto>> listPublishedCourses(
+      @RequestParam(required = false) String query, Pageable pageable) {
+    Page<ListCourseResponseDto> courses = courseService.listPublishedCourses(query, pageable);
+    return ResponseEntity.ok(courses);
+  }
 }

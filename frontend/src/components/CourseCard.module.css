@@ -20,6 +20,15 @@
   box-shadow: var(--mantine-shadow-xs);
 }
 
+.staticCard {
+  cursor: default;
+}
+
+.staticCard:hover {
+  border-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
+  box-shadow: none;
+}
+
 .footer {
   display: flex;
   align-items: center;

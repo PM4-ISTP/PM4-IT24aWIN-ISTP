@@ -8,6 +8,7 @@ import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.domain.entites.UserRoleEnum;
 import com.pm4.istp.repositories.UserRepository;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,38 +28,42 @@ class UserServiceImplTest {
   @InjectMocks private UserServiceImpl userService;
 
   @Test
-  void listInstructorUsers_delegatesToRepository() {
+  void listCollaboratorUsers_delegatesToRepository() {
     UUID currentUserId = UUID.randomUUID();
     Pageable pageable = PageRequest.of(0, 20);
     Page<User> expected = new PageImpl<>(List.of(new User()));
+    Set<UserRoleEnum> collaboratorRoles =
+        Set.of(UserRoleEnum.ROLE_ADMINISTRATOR, UserRoleEnum.ROLE_INSTRUCTOR);
 
-    when(userRepository.findUserByRolesContainingAndIdNot(
-            UserRoleEnum.ROLE_INSTRUCTOR, currentUserId, pageable))
+    when(userRepository.findDistinctByAnyRoleAndIdNot(
+            collaboratorRoles, currentUserId, pageable))
         .thenReturn(expected);
 
-    Page<User> result = userService.listInstructorUsers(currentUserId, pageable);
+    Page<User> result = userService.listCollaboratorUsers(currentUserId, pageable);
 
     assertThat(result).isSameAs(expected);
     verify(userRepository)
-        .findUserByRolesContainingAndIdNot(UserRoleEnum.ROLE_INSTRUCTOR, currentUserId, pageable);
+        .findDistinctByAnyRoleAndIdNot(collaboratorRoles, currentUserId, pageable);
   }
 
   @Test
-  void searchInstructorUsersByName_delegatesToRepository() {
+  void searchCollaboratorUsersByName_delegatesToRepository() {
     UUID currentUserId = UUID.randomUUID();
     Pageable pageable = PageRequest.of(1, 10);
     String name = "ali";
     Page<User> expected = new PageImpl<>(List.of(new User(), new User()));
+    Set<UserRoleEnum> collaboratorRoles =
+        Set.of(UserRoleEnum.ROLE_ADMINISTRATOR, UserRoleEnum.ROLE_INSTRUCTOR);
 
-    when(userRepository.findByRolesContainingAndNameContainingIgnoreCaseAndIdNot(
-            UserRoleEnum.ROLE_INSTRUCTOR, name, currentUserId, pageable))
+    when(userRepository.findDistinctByAnyRoleAndNameContainingIgnoreCaseAndIdNot(
+            collaboratorRoles, name, currentUserId, pageable))
         .thenReturn(expected);
 
-    Page<User> result = userService.searchInstructorUsersByName(currentUserId, name, pageable);
+    Page<User> result = userService.searchCollaboratorUsersByName(currentUserId, name, pageable);
 
     assertThat(result).isSameAs(expected);
     verify(userRepository)
-        .findByRolesContainingAndNameContainingIgnoreCaseAndIdNot(
-            UserRoleEnum.ROLE_INSTRUCTOR, name, currentUserId, pageable);
+        .findDistinctByAnyRoleAndNameContainingIgnoreCaseAndIdNot(
+            collaboratorRoles, name, currentUserId, pageable);
   }
 }
