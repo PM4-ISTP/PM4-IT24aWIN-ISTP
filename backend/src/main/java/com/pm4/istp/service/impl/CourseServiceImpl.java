@@ -34,6 +34,8 @@ public class CourseServiceImpl implements CourseService {
   private static final Set<UserRoleEnum> COURSE_COLLABORATOR_ROLES =
       Set.of(UserRoleEnum.ROLE_ADMINISTRATOR, UserRoleEnum.ROLE_INSTRUCTOR);
 
+  private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
+
   private final UserRepository userRepository;
   private final CourseRepository courseRepository;
 
@@ -44,9 +46,7 @@ public class CourseServiceImpl implements CourseService {
         userRepository
             .findById(userId)
             .orElseThrow(
-                () ->
-                    new UserNotFoundException(
-                        String.format("User with ID '%s' not found", userId)));
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
     Course courseToCreate = new Course();
     courseToCreate.setTitle(course.getTitle());
@@ -70,8 +70,7 @@ public class CourseServiceImpl implements CourseService {
                 .orElseThrow(
                     () ->
                         new UserNotFoundException(
-                            String.format("User with ID '%s' not found", req.getInstructorId())));
-        validateCollaboratorUser(collaboratorUser);
+                            String.format(USER_NOT_FOUND_MSG, req.getInstructorId())));
 
         CourseInstructor collaborator = new CourseInstructor();
         collaborator.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
@@ -145,8 +144,7 @@ public class CourseServiceImpl implements CourseService {
                 .orElseThrow(
                     () ->
                         new UserNotFoundException(
-                            String.format("User with ID '%s' not found", req.getInstructorId())));
-        validateCollaboratorUser(collaboratorUser);
+                            String.format(USER_NOT_FOUND_MSG, req.getInstructorId())));
 
         CourseInstructor collaborator = new CourseInstructor();
         collaborator.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
