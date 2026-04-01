@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(InvalidCourseCollaboratorException.class)
   public ResponseEntity<ErrorDto> handleInvalidCourseCollaboratorException(
       InvalidCourseCollaboratorException ex) {
-    log.error("Caught InvalidCourseCollaboratorException", ex);
+    log.warn("Caught InvalidCourseCollaboratorException: {}", ex.getMessage());
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError(ex.getMessage());
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
