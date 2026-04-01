@@ -1,3 +1,4 @@
 .idea
 backend/src/main/resources/Kubeconfig
 .gradle
+backend/src/main/resources/application.properties
