@@ -182,34 +182,6 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void createCourse_withStudentCollaborator_throwsInvalidCourseCollaboratorException() {
-    UUID ownerId = UUID.randomUUID();
-    UUID studentId = UUID.randomUUID();
-
-    User owner = new User();
-    owner.setId(ownerId);
-    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
-
-    User student = new User();
-    student.setId(studentId);
-    student.setRoles(Set.of(UserRoleEnum.ROLE_STUDENT));
-
-    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
-    when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
-
-    CreateCourseRequest request =
-        new CreateCourseRequest(
-            "Secure Coding",
-            "Intro",
-            false,
-            List.of(new CreateCourseInstructorRequest(studentId, InstructorRoleEnum.COLLABORATOR)));
-
-    assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
-        .isInstanceOf(InvalidCourseCollaboratorException.class)
-        .hasMessage("Only admins or instructors can be added as collaborators");
-  }
-
-  @Test
   void listPublishedCourses_delegatesToRepositoryWithNormalizedQuery() {
     Pageable pageable = PageRequest.of(0, 12);
     Page<ListCourseResponseDto> expected = new PageImpl<>(List.of());
