@@ -66,13 +66,14 @@ export function InstructorMultiSelect({
         const data: unknown = await res.json();
 
         if (!res.ok) {
-          const message =
+          const apiError =
             typeof data === "object" &&
             data !== null &&
             "error" in data &&
             typeof (data as ApiErrorResponse).error === "string"
               ? (data as ApiErrorResponse).error
-              : "Failed to load collaborators";
+              : undefined;
+          const message = apiError ?? "Failed to load collaborators";
           setErrorMessage(message);
           return;
         }
