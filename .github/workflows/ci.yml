@@ -201,41 +201,38 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy-staging:
-    name: Deploy to Staging
+  update-manifests:
+    name: Update K8s Manifests
     runs-on: ubuntu-latest
     needs: [build-push-backend, build-push-frontend]
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Write kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.STAGING_KUBECONFIG }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-
-      - name: Set image tags and apply
+      - name: Update image tags in staging and prod
         run: |
           SHA="${{ needs.build-push-backend.outputs.sha_short }}"
           sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/staging/kustomization.yaml
-          kubectl apply -k k8s/overlays/staging/
+          sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/prod/kustomization.yaml
 
-      - name: Wait for rollout
+      - name: Commit and push manifest changes
         run: |
-          kubectl -n istp-staging rollout status deployment/backend --timeout=120s
-          kubectl -n istp-staging rollout status deployment/frontend --timeout=120s
+          SHA="${{ needs.build-push-backend.outputs.sha_short }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add k8s/overlays/staging/kustomization.yaml k8s/overlays/prod/kustomization.yaml
+          git diff --staged --quiet || git commit -m "chore: update image tags to $SHA [skip ci]"
+          git push
 
   cypress-e2e:
     name: Cypress E2E Tests (Staging)
     runs-on: ubuntu-latest
-    needs: deploy-staging
+    needs: update-manifests
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
