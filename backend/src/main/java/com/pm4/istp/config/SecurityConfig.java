@@ -37,6 +37,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml")
                     .permitAll()
+                    .requestMatchers("/api/v1/courses/catalog")
+                    .authenticated()
                     .requestMatchers("/api/v1/courses/**")
                     .hasAnyRole("INSTRUCTOR", "ADMINISTRATOR")
                     // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow

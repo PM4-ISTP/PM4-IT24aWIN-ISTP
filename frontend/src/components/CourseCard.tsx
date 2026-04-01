@@ -6,23 +6,22 @@ export interface CourseCardProps {
   id: string;
   title: string;
   description: string | null;
-  published: boolean;
+  isPublished: boolean;
   instructorCount: number;
   updatedAt: string;
-  onClick: (id: string) => void;
+  onClick?: (id: string) => void;
 }
 
 export function CourseCard({
   id,
   title,
   description,
-  published,
+  isPublished,
   instructorCount,
   updatedAt,
   onClick,
 }: CourseCardProps) {
-  return (
-    <UnstyledButton className={classes.card} onClick={() => onClick(id)}>
+  const content = (
       <Stack gap="sm" h="100%">
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <Text fw={500} size="sm" lineClamp={2} style={{ flex: 1 }}>
@@ -31,10 +30,10 @@ export function CourseCard({
           <Badge
             size="xs"
             variant="light"
-            color={published ? "teal" : "gray"}
+            color={isPublished ? "teal" : "gray"}
             style={{ flexShrink: 0 }}
           >
-            {published ? "Published" : "Draft"}
+            {isPublished ? "Published" : "Draft"}
           </Badge>
         </Group>
 
@@ -62,6 +61,15 @@ export function CourseCard({
           </Group>
         </Box>
       </Stack>
+  );
+
+  if (!onClick) {
+    return <Box className={`${classes.card} ${classes.staticCard}`}>{content}</Box>;
+  }
+
+  return (
+    <UnstyledButton className={classes.card} onClick={() => onClick(id)}>
+      {content}
     </UnstyledButton>
   );
 }

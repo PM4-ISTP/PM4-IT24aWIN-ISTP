@@ -97,6 +97,12 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
         icon="menu_book"
         active={pathname.startsWith("/dashboard/courses")}
       />
+      <NavItem
+        href="/dashboard/catalog"
+        label="Browse / Catalog"
+        icon="travel_explore"
+        active={pathname.startsWith("/dashboard/catalog")}
+      />
 
       {isInstructor && (
         <>

@@ -28,6 +28,9 @@ public class User {
   @Column(name = "email", nullable = false, unique = true)
   private String email;
 
+  @Column(name = "picture")
+  private String picture;
+
   @JsonIgnore
   @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL)
   private List<CourseInstructor> coursesInstructors = new ArrayList<>();
@@ -55,12 +58,13 @@ public class User {
     return Objects.equals(id, user.id)
         && Objects.equals(name, user.name)
         && Objects.equals(email, user.email)
+        && Objects.equals(picture, user.picture)
         && Objects.equals(createdAt, user.createdAt)
         && Objects.equals(updatedAt, user.updatedAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, email, createdAt, updatedAt);
+    return Objects.hash(id, name, email, picture, createdAt, updatedAt);
   }
 }

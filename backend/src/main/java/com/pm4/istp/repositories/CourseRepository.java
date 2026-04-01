@@ -47,4 +47,63 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           """)
   Page<ListCourseResponseDto> findListCoursesForInstructor(
       @Param("instructorId") UUID instructorId, Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select new com.pm4.istp.dto.ListCourseResponseDto(
+            c.id,
+            c.title,
+            c.description,
+            c.isPublished,
+            count(ciAll.id),
+            c.createdAt,
+            c.updatedAt
+          )
+          from Course c
+          left join c.courseInstructors ciAll
+          where c.isPublished = true
+          group by c.id, c.title, c.description, c.isPublished, c.createdAt, c.updatedAt
+          """,
+      countQuery =
+          """
+          select count(c)
+          from Course c
+          where c.isPublished = true
+          """)
+  Page<ListCourseResponseDto> findPublishedCourses(Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select new com.pm4.istp.dto.ListCourseResponseDto(
+            c.id,
+            c.title,
+            c.description,
+            c.isPublished,
+            count(ciAll.id),
+            c.createdAt,
+            c.updatedAt
+          )
+          from Course c
+          left join c.courseInstructors ciAll
+          where c.isPublished = true
+            and (
+              lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+            )
+          group by c.id, c.title, c.description, c.isPublished, c.createdAt, c.updatedAt
+          """,
+      countQuery =
+          """
+          select count(c)
+          from Course c
+          where c.isPublished = true
+            and (
+              lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+            )
+          """)
+  Page<ListCourseResponseDto> findPublishedCoursesByQuery(
+      @Param("query") String query, Pageable pageable);
 }

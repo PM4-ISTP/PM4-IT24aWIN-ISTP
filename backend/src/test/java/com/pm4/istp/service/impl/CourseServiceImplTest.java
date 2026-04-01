@@ -15,6 +15,7 @@ import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
 import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.domain.entites.UserRoleEnum;
+import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.InvalidCourseCollaboratorException;
 import com.pm4.istp.repositories.CourseRepository;
@@ -28,6 +29,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class CourseServiceImplTest {
@@ -202,5 +207,31 @@ class CourseServiceImplTest {
     assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
         .isInstanceOf(InvalidCourseCollaboratorException.class)
         .hasMessage("Only admins or instructors can be added as collaborators");
+  }
+
+  @Test
+  void listPublishedCourses_delegatesToRepositoryWithNormalizedQuery() {
+    Pageable pageable = PageRequest.of(0, 12);
+    Page<ListCourseResponseDto> expected = new PageImpl<>(List.of());
+
+    when(courseRepository.findPublishedCoursesByQuery("secure", pageable)).thenReturn(expected);
+
+    Page<ListCourseResponseDto> result = courseService.listPublishedCourses("  secure  ", pageable);
+
+    assertThat(result).isSameAs(expected);
+    verify(courseRepository).findPublishedCoursesByQuery("secure", pageable);
+  }
+
+  @Test
+  void listPublishedCourses_withBlankQuery_usesNullFilter() {
+    Pageable pageable = PageRequest.of(0, 12);
+    Page<ListCourseResponseDto> expected = new PageImpl<>(List.of());
+
+    when(courseRepository.findPublishedCourses(pageable)).thenReturn(expected);
+
+    Page<ListCourseResponseDto> result = courseService.listPublishedCourses("   ", pageable);
+
+    assertThat(result).isSameAs(expected);
+    verify(courseRepository).findPublishedCourses(pageable);
   }
 }

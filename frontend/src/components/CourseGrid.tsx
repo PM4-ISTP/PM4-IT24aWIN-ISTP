@@ -1,7 +1,7 @@
 "use client";
 
 import { Group, Pagination, SimpleGrid, Stack, Text } from "@mantine/core";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CourseCard } from "@/src/components/CourseCard";
 import type { ListCourseResponseDto } from "@/src/types/course";
 
@@ -9,17 +9,30 @@ interface CourseGridProps {
   courses: ListCourseResponseDto[];
   totalPages: number;
   currentPage: number;
+  coursePathPrefix?: string;
 }
 
-export function CourseGrid({ courses, totalPages, currentPage }: CourseGridProps) {
+export function CourseGrid({
+  courses,
+  totalPages,
+  currentPage,
+  coursePathPrefix,
+}: CourseGridProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   function handlePageChange(page: number) {
-    router.push(`?page=${page}`);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", page.toString());
+    router.push(`?${params.toString()}`);
   }
 
-  function openEdit(id: string) {
-    router.push(`/dashboard/instructor/${id}`);
+  function handleCourseOpen(id: string) {
+    if (!coursePathPrefix) {
+      return;
+    }
+
+    router.push(`${coursePathPrefix}/${id}`);
   }
 
   if (courses.length === 0) {
@@ -38,7 +51,7 @@ export function CourseGrid({ courses, totalPages, currentPage }: CourseGridProps
               month: "short",
               year: "numeric",
             })}
-            onClick={openEdit}
+            onClick={coursePathPrefix ? handleCourseOpen : undefined}
           />
         ))}
       </SimpleGrid>
