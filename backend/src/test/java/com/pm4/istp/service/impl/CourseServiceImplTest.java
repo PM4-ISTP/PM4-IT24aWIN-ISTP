@@ -14,11 +14,14 @@ import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
 import com.pm4.istp.domain.entites.User;
+import com.pm4.istp.domain.entites.UserRoleEnum;
 import com.pm4.istp.exception.CourseAccessDeniedException;
+import com.pm4.istp.exception.InvalidCourseCollaboratorException;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,10 +45,12 @@ class CourseServiceImplTest {
     User owner = new User();
     owner.setId(ownerId);
     owner.setName("Owner");
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
 
     User collaborator = new User();
     collaborator.setId(collaboratorId);
     collaborator.setName("Collaborator");
+    collaborator.setRoles(Set.of(UserRoleEnum.ROLE_ADMINISTRATOR));
 
     when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
     when(userRepository.findById(collaboratorId)).thenReturn(Optional.of(collaborator));
@@ -94,6 +99,7 @@ class CourseServiceImplTest {
 
     User instructor = new User();
     instructor.setId(instructorId);
+    instructor.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
 
     Course course = new Course();
     course.setId(courseId);
@@ -118,12 +124,15 @@ class CourseServiceImplTest {
 
     User owner = new User();
     owner.setId(ownerId);
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_ADMINISTRATOR));
 
     User oldCollaborator = new User();
     oldCollaborator.setId(oldCollaboratorId);
+    oldCollaborator.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
 
     User newCollaborator = new User();
     newCollaborator.setId(newCollaboratorId);
+    newCollaborator.setRoles(Set.of(UserRoleEnum.ROLE_ADMINISTRATOR));
 
     Course course = new Course();
     course.setId(courseId);
@@ -165,5 +174,33 @@ class CourseServiceImplTest {
     assertThat(updated.getCourseInstructors())
         .filteredOn(ci -> ci.getInstructorRole() == InstructorRoleEnum.OWNER)
         .hasSize(1);
+  }
+
+  @Test
+  void createCourse_withStudentCollaborator_throwsInvalidCourseCollaboratorException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID studentId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
+
+    User student = new User();
+    student.setId(studentId);
+    student.setRoles(Set.of(UserRoleEnum.ROLE_STUDENT));
+
+    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
+    when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
+
+    CreateCourseRequest request =
+        new CreateCourseRequest(
+            "Secure Coding",
+            "Intro",
+            false,
+            List.of(new CreateCourseInstructorRequest(studentId, InstructorRoleEnum.COLLABORATOR)));
+
+    assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
+        .isInstanceOf(InvalidCourseCollaboratorException.class)
+        .hasMessage("Only admins or instructors can be added as collaborators");
   }
 }

@@ -3,6 +3,7 @@ package com.pm4.istp.controller;
 import com.pm4.istp.dto.ErrorDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.InvalidCourseCollaboratorException;
 import com.pm4.istp.exception.UserNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
@@ -41,6 +42,15 @@ public class GlobalExceptionHandler {
     log.error("Caught UserNotFoundException", ex);
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError("User not found");
+    return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(InvalidCourseCollaboratorException.class)
+  public ResponseEntity<ErrorDto> handleInvalidCourseCollaboratorException(
+      InvalidCourseCollaboratorException ex) {
+    log.error("Caught InvalidCourseCollaboratorException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError(ex.getMessage());
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
   }
 

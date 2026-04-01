@@ -28,17 +28,17 @@ public class UserController {
   private final UserMapper userMapper;
   private final UserService userService;
 
-  @GetMapping(path = "/instructors")
-  public ResponseEntity<Page<ListInstructorUserResponseDto>> listInstructorUsers(
+  @GetMapping(path = {"/collaborators", "/instructors"})
+  public ResponseEntity<Page<ListInstructorUserResponseDto>> listCollaboratorUsers(
       @AuthenticationPrincipal Jwt jwt,
       @RequestParam(required = false) String name,
       Pageable pageable) {
     UUID userId = parseUserId(jwt);
     Page<User> users;
     if (null != name && !name.trim().isEmpty()) {
-      users = userService.searchInstructorUsersByName(userId, name, pageable);
+      users = userService.searchCollaboratorUsersByName(userId, name, pageable);
     } else {
-      users = userService.listInstructorUsers(userId, pageable);
+      users = userService.listCollaboratorUsers(userId, pageable);
     }
 
     return ResponseEntity.ok(users.map(userMapper::toListInstructorUserResponseDto));

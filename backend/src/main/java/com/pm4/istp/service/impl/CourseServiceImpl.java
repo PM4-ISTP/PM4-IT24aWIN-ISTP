@@ -8,9 +8,11 @@ import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
 import com.pm4.istp.domain.entites.User;
+import com.pm4.istp.domain.entites.UserRoleEnum;
 import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.InvalidCourseCollaboratorException;
 import com.pm4.istp.exception.UserNotFoundException;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
@@ -29,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class CourseServiceImpl implements CourseService {
+  private static final Set<UserRoleEnum> COURSE_COLLABORATOR_ROLES =
+      Set.of(UserRoleEnum.ROLE_ADMINISTRATOR, UserRoleEnum.ROLE_INSTRUCTOR);
 
   private final UserRepository userRepository;
   private final CourseRepository courseRepository;
@@ -67,6 +71,7 @@ public class CourseServiceImpl implements CourseService {
                     () ->
                         new UserNotFoundException(
                             String.format("User with ID '%s' not found", req.getInstructorId())));
+        validateCollaboratorUser(collaboratorUser);
 
         CourseInstructor collaborator = new CourseInstructor();
         collaborator.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
@@ -141,6 +146,7 @@ public class CourseServiceImpl implements CourseService {
                     () ->
                         new UserNotFoundException(
                             String.format("User with ID '%s' not found", req.getInstructorId())));
+        validateCollaboratorUser(collaboratorUser);
 
         CourseInstructor collaborator = new CourseInstructor();
         collaborator.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
@@ -167,6 +173,15 @@ public class CourseServiceImpl implements CourseService {
       throw new CourseAccessDeniedException(
           String.format(
               "User with ID '%s' is not an instructor of course '%s'", userId, course.getId()));
+    }
+  }
+
+  private void validateCollaboratorUser(User collaboratorUser) {
+    boolean isEligibleCollaborator =
+        collaboratorUser.getRoles().stream().anyMatch(COURSE_COLLABORATOR_ROLES::contains);
+    if (!isEligibleCollaborator) {
+      throw new InvalidCourseCollaboratorException(
+          "Only admins or instructors can be added as collaborators");
     }
   }
 }

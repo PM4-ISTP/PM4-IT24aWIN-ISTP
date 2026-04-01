@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   params.set("page", page);
 
   try {
-    const res = await fetchBackend(`/api/v1/users/instructors?${params}`);
+    const res = await fetchBackend(`/api/v1/users/collaborators?${params}`);
     const body = await res.text();
     const contentType = res.headers.get("content-type");
 
@@ -28,6 +28,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    return NextResponse.json({ error: "Failed to fetch instructors" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch collaborators" }, { status: 500 });
   }
 }

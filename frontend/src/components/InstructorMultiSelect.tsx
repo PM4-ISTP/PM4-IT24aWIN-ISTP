@@ -9,6 +9,10 @@ interface Instructor {
   name: string;
 }
 
+interface ApiErrorResponse {
+  error?: string;
+}
+
 function isInstructor(value: unknown): value is Instructor {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -32,10 +36,12 @@ export function InstructorMultiSelect({
   const [searchValue, setSearchValue] = useState("");
   const [options, setOptions] = useState<{ value: string; label: string }[]>(initialOptions ?? []);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchInstructors = useCallback(
     async (name: string) => {
       setLoading(true);
+      setErrorMessage(null);
       try {
         const params = new URLSearchParams({
           ...(name ? { name } : {}),
@@ -45,6 +51,18 @@ export function InstructorMultiSelect({
 
         const res = await fetch(`/api/users/instructors?${params}`);
         const data: unknown = await res.json();
+
+        if (!res.ok) {
+          const message =
+            typeof data === "object" &&
+            data !== null &&
+            "error" in data &&
+            typeof (data as ApiErrorResponse).error === "string"
+              ? (data as ApiErrorResponse).error
+              : "Failed to load collaborators";
+          setErrorMessage(message);
+          return;
+        }
 
         const fetchedInstructors: Instructor[] =
           typeof data === "object" &&
@@ -65,6 +83,8 @@ export function InstructorMultiSelect({
             ...newOpts.filter((o: { value: string }) => !value.includes(o.value)),
           ];
         });
+      } catch {
+        setErrorMessage("Failed to load collaborators");
       } finally {
         setLoading(false);
       }
@@ -87,8 +107,9 @@ export function InstructorMultiSelect({
 
   return (
     <MultiSelect
-      label="Instructors"
-      placeholder="Search instructors..."
+      label="Collaborators"
+      description="You are added automatically as the owner. Only admins or instructors who have already signed in can be selected."
+      placeholder="Search collaborators..."
       data={options}
       value={value}
       onChange={onChange}
@@ -96,7 +117,11 @@ export function InstructorMultiSelect({
       searchValue={searchValue}
       onSearchChange={handleSearchChange}
       onDropdownOpen={handleDropdownOpen}
-      nothingFoundMessage={loading ? "Loading..." : "No instructors found"}
+      nothingFoundMessage={
+        loading
+          ? "Loading..."
+          : errorMessage ?? "No collaborators found"
+      }
       clearable
       hidePickedOptions
     />
