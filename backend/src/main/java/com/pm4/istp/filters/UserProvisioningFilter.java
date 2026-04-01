@@ -76,6 +76,13 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               emailClaim,
               userInfoProfile.map(UserInfoProfile::email).orElse(null),
               existingUser.map(User::getEmail).map(this::normalize).orElse(null));
+
+      if (email == null) {
+        log.error("Cannot provision user {}: email is missing", keycloakId);
+        response.sendError(
+            HttpServletResponse.SC_BAD_REQUEST, "Unable to provision user: email is required");
+        return;
+      }
       String displayName =
           resolveDisplayName(
               fullName,
