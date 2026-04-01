@@ -42,9 +42,7 @@ public class CourseServiceImpl implements CourseService {
         userRepository
             .findById(userId)
             .orElseThrow(
-                () ->
-                    new UserNotFoundException(
-                        String.format(USER_NOT_FOUND_MSG, userId)));
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
     Course courseToCreate = new Course();
     courseToCreate.setTitle(course.getTitle());
