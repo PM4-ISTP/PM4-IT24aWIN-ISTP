@@ -181,12 +181,7 @@ export default function EditCourse() {
 
   return (
     <Container>
-      <Modal
-        opened={deleteOpened}
-        onClose={closeDelete}
-        title="Delete Course"
-        centered
-      >
+      <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Course" centered>
         <Stack gap="md">
           <Text size="sm">
             Are you sure you want to delete <strong>{title}</strong>? This action cannot be undone.
