@@ -147,11 +147,6 @@ export default function EditCourse() {
       (courseInstructor) => courseInstructor.instructorRole === "OWNER"
     )?.instructor ?? null;
   const isOwner = owner?.id === currentUserId;
-
-  console.log("owner.id:", owner?.id);
-  console.log("currentUserId:", currentUserId);
-  console.log("isOwner:", owner?.id === currentUserId);
-
   const collaborators = selectedInstructors
     .map((id) => knownUsers[id])
     .filter((user): user is CollaboratorUserResponseDto => Boolean(user));
