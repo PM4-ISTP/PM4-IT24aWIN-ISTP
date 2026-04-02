@@ -172,6 +172,7 @@ export const authOptions: AuthOptions = {
       // Roles used for server-side authorization checks.
       session.roles = token.roles as string[];
       session.error = token.error;
+      session.userId = token.sub;
       const liveProfile =
         typeof token.accessToken === "string" ? await fetchUserInfo(token.accessToken) : {};
 

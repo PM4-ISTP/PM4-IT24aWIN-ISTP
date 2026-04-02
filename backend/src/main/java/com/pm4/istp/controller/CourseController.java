@@ -118,7 +118,7 @@ public class CourseController {
 
   @Operation(
       summary = "Delete a course",
-      description = "Deletes a course by ID. Only accessible to instructors of that course.")
+      description = "Deletes a course by ID. Only accessible to the owner of that course.")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "204", description = "Course deleted successfully"),
