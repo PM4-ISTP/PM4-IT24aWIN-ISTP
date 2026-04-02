@@ -9,8 +9,7 @@ public class PodCreationRequest {
   @NotBlank(message = "Pod name is required")
   private String podName;
 
-  @NotBlank(message = "Container name is required")
-  private String containerName;
+  private String containerName = "app";
 
   @NotBlank(message = "Image is required")
   private String image;

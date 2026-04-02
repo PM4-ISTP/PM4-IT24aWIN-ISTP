@@ -31,13 +31,13 @@ public class K8sController {
   public ResponseEntity<PodCreationResponse> createPod(
       @Valid @RequestBody PodCreationRequest request) {
     PodCreationResponse response = k8sService.createPod(request);
-    return ResponseEntity.ok(response);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   @DeleteMapping("/pods/{instanceName}")
-  public ResponseEntity<String> deletePod(@PathVariable String instanceName) {
+  public ResponseEntity<Void> deletePod(@PathVariable String instanceName) {
     k8sService.deletePod(instanceName);
-    return ResponseEntity.ok("Pod " + instanceName + " deleted successfully");
+    return ResponseEntity.noContent().build();
   }
 
   @ExceptionHandler(K8sException.class)
