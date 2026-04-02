@@ -125,6 +125,27 @@ export async function updateCourse(
   }
 }
 
+export async function deleteCourse(id: string): Promise<ActionResult<void>> {
+  try {
+    const res = await fetchBackend(`/api/v1/courses/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      const message = extractErrorMessage(text, res.statusText);
+      return { success: false, error: `${res.status}: ${message}` };
+    }
+
+    return { success: true, data: undefined };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
 export async function fetchInstructorCourses(
   page = 0,
   size = 20

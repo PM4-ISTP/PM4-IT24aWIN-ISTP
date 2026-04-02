@@ -15,6 +15,8 @@ public interface CourseService {
 
   Course updateCourse(UUID userId, UUID courseId, UpdateCourseRequest request);
 
+  void deleteCourse(UUID userId, UUID courseId);
+
   Page<ListCourseResponseDto> listCoursesForInstructors(UUID instructorId, Pageable pageable);
 
   Page<ListCourseResponseDto> listPublishedCourses(String query, Pageable pageable);
