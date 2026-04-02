@@ -5,7 +5,6 @@ import type { KeycloakJwt } from "../types/next-auth";
 import { jwtDecode } from "jwt-decode";
 
 type KeycloakProfileClaims = {
-  sub?: string;
   roles: string[];
   name?: string;
   email?: string;
@@ -33,7 +32,6 @@ function extractProfileClaims(accessToken: string): KeycloakProfileClaims {
   const decoded = jwtDecode<KeycloakJwt>(accessToken);
 
   return {
-    sub: decoded.sub,
     roles: decoded.realm_access?.roles ?? [],
     ...extractBasicProfile(decoded),
   };
@@ -42,7 +40,6 @@ function extractProfileClaims(accessToken: string): KeycloakProfileClaims {
 function mergeProfileClaims(token: JWT, claims: KeycloakProfileClaims): JWT {
   return {
     ...token,
-    ...(claims.sub !== undefined && { sub: claims.sub }),
     roles: claims.roles,
     name: claims.name ?? token.name,
     email: claims.email ?? token.email,
