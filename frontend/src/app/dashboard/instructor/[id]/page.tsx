@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   ActionIcon,
   Alert,
@@ -40,6 +41,8 @@ export default function EditCourse() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const courseId = params.id;
+  const { data: session } = useSession();
+  const currentUserId = session?.userId;
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -143,6 +146,7 @@ export default function EditCourse() {
     course?.courseInstructors.find(
       (courseInstructor) => courseInstructor.instructorRole === "OWNER"
     )?.instructor ?? null;
+  const isOwner = owner?.id === currentUserId;
   const collaborators = selectedInstructors
     .map((id) => knownUsers[id])
     .filter((user): user is CollaboratorUserResponseDto => Boolean(user));
@@ -229,14 +233,16 @@ export default function EditCourse() {
               </Text>
             </Stack>
           </Group>
-          <Button
-            color="red"
-            variant="light"
-            leftSection={<IconTrash size={16} />}
-            onClick={openDelete}
-          >
-            Delete Course
-          </Button>
+          {isOwner && (
+            <Button
+              color="red"
+              variant="light"
+              leftSection={<IconTrash size={16} />}
+              onClick={openDelete}
+            >
+              Delete Course
+            </Button>
+          )}
         </Group>
 
         <Grid gutter="xl" align="start">
