@@ -48,6 +48,16 @@ spec:
                 configMapKeyRef:
                   name: istp-config
                   key: app-namespace
+            - name: ISTP_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: istp-domain
+            - name: ISTP_TLS
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: istp-tls
           volumeMounts:
             - name: kubeconfig
               mountPath: /etc/kubeconfig
