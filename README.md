@@ -153,13 +153,16 @@ Once the cluster is created, export the kubeconfig to the backend:
 ```bash
 # From the project root (pm4/)
 mkdir -p backend/src/main/resources
-k3d kubeconfig get istp > backend/src/main/resources/Kubeconfig
+k3d kubeconfig get istp | sed 's/0\.0\.0\.0/127.0.0.1/g' > backend/src/main/resources/Kubeconfig
 ```
+
+> **Note:** The `sed` command replaces `0.0.0.0` with `127.0.0.1` in the server address. k3d generates kubeconfigs with `0.0.0.0` as the host, which is a valid bind address for a server but not a valid destination for client connections — the Java Kubernetes client will fail with "Host is down" without this substitution.
 
 **Key points:**
 
 - The Kubeconfig file is required by the backend to communicate with the Kubernetes cluster
 - The file is already `.gitignored` (contains sensitive cluster credentials)
+- Re-run this command after every cluster restart — k3d assigns a new random port each time
 
 **Verify the kubeconfig was created:**
 
