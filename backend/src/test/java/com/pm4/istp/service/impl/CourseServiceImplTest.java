@@ -3,6 +3,7 @@ package com.pm4.istp.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +18,7 @@ import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.domain.entites.UserRoleEnum;
 import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
+import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.exception.InvalidCourseCollaboratorException;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
@@ -205,5 +207,68 @@ class CourseServiceImplTest {
 
     assertThat(result).isSameAs(expected);
     verify(courseRepository).findPublishedCourses(pageable);
+  }
+
+  @Test
+  void deleteCourse_whenOwner_deletesCourse() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
+
+    Course course = new Course();
+    course.setId(courseId);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    courseService.deleteCourse(ownerId, courseId);
+
+    verify(courseRepository).delete(course);
+  }
+
+  @Test
+  void deleteCourse_whenNotOwner_throwsCourseAccessDeniedException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID nonOwnerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
+
+    Course course = new Course();
+    course.setId(courseId);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.deleteCourse(nonOwnerId, courseId))
+        .isInstanceOf(CourseAccessDeniedException.class);
+
+    verify(courseRepository, never()).delete(any(Course.class));
+  }
+
+  @Test
+  void deleteCourse_whenCourseNotFound_throwsCourseNotFoundException() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> courseService.deleteCourse(userId, courseId))
+        .isInstanceOf(CourseNotFoundException.class);
+
+    verify(courseRepository, never()).delete(any(Course.class));
   }
 }

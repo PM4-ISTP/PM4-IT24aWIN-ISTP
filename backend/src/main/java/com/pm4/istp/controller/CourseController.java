@@ -116,6 +116,29 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
+  @Operation(
+      summary = "Delete a course",
+      description = "Deletes a course by ID. Only accessible to the owner of that course.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "204", description = "Course deleted successfully"),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deleteCourse(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    courseService.deleteCourse(userId, id);
+    return ResponseEntity.noContent().build();
+  }
+
   @GetMapping
   public ResponseEntity<Page<ListCourseResponseDto>> listCourses(
       @AuthenticationPrincipal Jwt jwt, Pageable pageable) {

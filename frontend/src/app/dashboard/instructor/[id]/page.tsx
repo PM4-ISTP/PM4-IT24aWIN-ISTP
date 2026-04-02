@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   ActionIcon,
   Alert,
@@ -10,17 +11,19 @@ import {
   Grid,
   Group,
   Loader,
+  Modal,
   Stack,
   Switch,
   Text,
   TextInput,
   Title,
 } from "@mantine/core";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
+import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
 import { CoursePeoplePanel } from "@/src/components/CoursePeoplePanel";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
-import { fetchCourse, updateCourse } from "@/src/lib/actions/courses";
+import { deleteCourse, fetchCourse, updateCourse } from "@/src/lib/actions/courses";
 import type { CollaboratorUserResponseDto, CourseDetailResponseDto } from "@/src/types/course";
 
 function mergeUsersById(
@@ -38,6 +41,8 @@ export default function EditCourse() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const courseId = params.id;
+  const { data: session } = useSession();
+  const currentUserId = session?.userId;
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -50,8 +55,11 @@ export default function EditCourse() {
   const [knownUsers, setKnownUsers] = useState<Record<string, CollaboratorUserResponseDto>>({});
   const [initialUsers, setInitialUsers] = useState<CollaboratorUserResponseDto[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
 
   useEffect(() => {
     async function load() {
@@ -116,10 +124,29 @@ export default function EditCourse() {
     router.push("/dashboard/instructor");
   }
 
+  async function handleDelete() {
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    const result = await deleteCourse(courseId);
+
+    setIsDeleting(false);
+
+    if (!result.success) {
+      setDeleteError(result.error);
+      return;
+    }
+
+    closeDelete();
+    router.refresh();
+    router.push("/dashboard/instructor");
+  }
+
   const owner =
     course?.courseInstructors.find(
       (courseInstructor) => courseInstructor.instructorRole === "OWNER"
     )?.instructor ?? null;
+  const isOwner = owner?.id === currentUserId;
   const collaborators = selectedInstructors
     .map((id) => knownUsers[id])
     .filter((user): user is CollaboratorUserResponseDto => Boolean(user));
@@ -158,6 +185,34 @@ export default function EditCourse() {
 
   return (
     <Container>
+      <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Course" centered>
+        <Stack gap="md">
+          <Text size="sm">
+            Are you sure you want to delete <strong>{title}</strong>? This action cannot be undone.
+          </Text>
+          {deleteError && (
+            <Alert color="red" title="Failed to delete course">
+              {deleteError}
+            </Alert>
+          )}
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={closeDelete} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              loading={isDeleting}
+              disabled={isDeleting}
+              onClick={() => {
+                void handleDelete();
+              }}
+            >
+              Delete Course
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       <Stack p="xl" gap="lg">
         <Group justify="space-between" align="flex-end">
           <Group gap="md" align="center">
@@ -178,6 +233,16 @@ export default function EditCourse() {
               </Text>
             </Stack>
           </Group>
+          {isOwner && (
+            <Button
+              color="red"
+              variant="light"
+              leftSection={<IconTrash size={16} />}
+              onClick={openDelete}
+            >
+              Delete Course
+            </Button>
+          )}
         </Group>
 
         <Grid gutter="xl" align="start">

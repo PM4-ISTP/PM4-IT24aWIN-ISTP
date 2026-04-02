@@ -158,6 +158,20 @@ public class CourseServiceImpl implements CourseService {
   }
 
   @Override
+  @Transactional
+  public void deleteCourse(UUID userId, UUID courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () ->
+                    new CourseNotFoundException(
+                        String.format("Course with ID '%s' not found", courseId)));
+    verifyOwner(course, userId);
+    courseRepository.delete(course);
+  }
+
+  @Override
   public Page<ListCourseResponseDto> listCoursesForInstructors(
       UUID instructorId, Pageable pageable) {
     return courseRepository.findListCoursesForInstructor(instructorId, pageable);
@@ -171,6 +185,20 @@ public class CourseServiceImpl implements CourseService {
     }
 
     return courseRepository.findPublishedCoursesByQuery(normalizedQuery, pageable);
+  }
+
+  private void verifyOwner(Course course, UUID userId) {
+    boolean isOwner =
+        course.getCourseInstructors().stream()
+            .anyMatch(
+                ci ->
+                    ci.getInstructor().getId().equals(userId)
+                        && ci.getInstructorRole() == InstructorRoleEnum.OWNER);
+    if (!isOwner) {
+      throw new CourseAccessDeniedException(
+          String.format(
+              "User with ID '%s' is not the owner of course '%s'", userId, course.getId()));
+    }
   }
 
   private void verifyInstructor(Course course, UUID userId) {
