@@ -1,7 +1,5 @@
 "use client";
 
-console.log("COMPONENT RENDERE");
-
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
