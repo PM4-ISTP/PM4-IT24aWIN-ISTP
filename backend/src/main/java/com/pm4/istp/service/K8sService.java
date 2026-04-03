@@ -73,7 +73,10 @@ public class K8sService {
                 .withNewSpec()
                 // App Container
                 .addNewContainer()
-                .withName(request.getContainerName())
+                .withName(
+                    (request.getContainerName() != null && !request.getContainerName().isBlank())
+                        ? request.getContainerName()
+                        : "app")
                 .withImage(request.getImage())
                 .addNewPort()
                 .withContainerPort(request.getContainerPort())
