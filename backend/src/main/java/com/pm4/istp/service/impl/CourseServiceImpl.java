@@ -212,13 +212,4 @@ public class CourseServiceImpl implements CourseService {
               "User with ID '%s' is not an instructor of course '%s'", userId, course.getId()));
     }
   }
-
-  private void validateCollaboratorUser(User collaboratorUser) {
-    boolean isEligibleCollaborator =
-        collaboratorUser.getRoles().stream().anyMatch(COURSE_COLLABORATOR_ROLES::contains);
-    if (!isEligibleCollaborator) {
-      throw new InvalidCourseCollaboratorException(
-          "Only admins or instructors can be added as collaborators");
-    }
-  }
 }
