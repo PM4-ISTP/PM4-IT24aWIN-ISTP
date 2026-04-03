@@ -35,6 +35,7 @@ public class CourseServiceImpl implements CourseService {
       Set.of(UserRoleEnum.ROLE_ADMINISTRATOR, UserRoleEnum.ROLE_INSTRUCTOR);
 
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
+  private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
 
   private final UserRepository userRepository;
   private final CourseRepository courseRepository;
@@ -92,7 +93,7 @@ public class CourseServiceImpl implements CourseService {
             .orElseThrow(
                 () ->
                     new CourseNotFoundException(
-                        String.format("Course with ID '%s' not found", courseId)));
+                        String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
     return course;
   }
@@ -106,7 +107,7 @@ public class CourseServiceImpl implements CourseService {
             .orElseThrow(
                 () ->
                     new CourseNotFoundException(
-                        String.format("Course with ID '%s' not found", courseId)));
+                        String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
     // Update scalar fields
@@ -166,7 +167,7 @@ public class CourseServiceImpl implements CourseService {
             .orElseThrow(
                 () ->
                     new CourseNotFoundException(
-                        String.format("Course with ID '%s' not found", courseId)));
+                        String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
     courseRepository.delete(course);
   }
