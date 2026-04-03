@@ -19,7 +19,6 @@ import com.pm4.istp.domain.entites.UserRoleEnum;
 import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
-import com.pm4.istp.exception.InvalidCourseCollaboratorException;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
 import java.util.List;

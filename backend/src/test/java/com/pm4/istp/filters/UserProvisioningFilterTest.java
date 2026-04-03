@@ -143,7 +143,7 @@ class UserProvisioningFilterTest {
         doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
         doReturn(EMAIL).when(jwt).getClaimAsString("email");
         doReturn(PICTURE).when(jwt).getClaimAsString("picture");
-        doReturn(Set.of((GrantedAuthority) () -> UserRoleEnum.ROLE_INSTRUCTOR.name()))
+        doReturn(Set.of((GrantedAuthority) UserRoleEnum.ROLE_INSTRUCTOR::name))
                 .when(authentication)
                 .getAuthorities();
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));

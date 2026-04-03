@@ -12,7 +12,6 @@ import com.pm4.istp.domain.entites.UserRoleEnum;
 import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
-import com.pm4.istp.exception.InvalidCourseCollaboratorException;
 import com.pm4.istp.exception.UserNotFoundException;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
@@ -35,6 +34,7 @@ public class CourseServiceImpl implements CourseService {
       Set.of(UserRoleEnum.ROLE_ADMINISTRATOR, UserRoleEnum.ROLE_INSTRUCTOR);
 
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
+  private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
 
   private final UserRepository userRepository;
   private final CourseRepository courseRepository;
@@ -90,9 +90,7 @@ public class CourseServiceImpl implements CourseService {
         courseRepository
             .findById(courseId)
             .orElseThrow(
-                () ->
-                    new CourseNotFoundException(
-                        String.format("Course with ID '%s' not found", courseId)));
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
     return course;
   }
@@ -104,9 +102,7 @@ public class CourseServiceImpl implements CourseService {
         courseRepository
             .findById(courseId)
             .orElseThrow(
-                () ->
-                    new CourseNotFoundException(
-                        String.format("Course with ID '%s' not found", courseId)));
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
     // Update scalar fields
@@ -164,9 +160,7 @@ public class CourseServiceImpl implements CourseService {
         courseRepository
             .findById(courseId)
             .orElseThrow(
-                () ->
-                    new CourseNotFoundException(
-                        String.format("Course with ID '%s' not found", courseId)));
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
     courseRepository.delete(course);
   }
@@ -209,15 +203,6 @@ public class CourseServiceImpl implements CourseService {
       throw new CourseAccessDeniedException(
           String.format(
               "User with ID '%s' is not an instructor of course '%s'", userId, course.getId()));
-    }
-  }
-
-  private void validateCollaboratorUser(User collaboratorUser) {
-    boolean isEligibleCollaborator =
-        collaboratorUser.getRoles().stream().anyMatch(COURSE_COLLABORATOR_ROLES::contains);
-    if (!isEligibleCollaborator) {
-      throw new InvalidCourseCollaboratorException(
-          "Only admins or instructors can be added as collaborators");
     }
   }
 }
