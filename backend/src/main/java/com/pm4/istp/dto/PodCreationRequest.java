@@ -6,9 +6,6 @@ import lombok.Data;
 
 @Data
 public class PodCreationRequest {
-  @NotBlank(message = "Pod name is required")
-  private String podName;
-
   private String containerName = "app";
 
   @NotBlank(message = "Image is required")
