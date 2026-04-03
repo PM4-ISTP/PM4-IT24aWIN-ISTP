@@ -12,7 +12,6 @@ import com.pm4.istp.domain.entites.UserRoleEnum;
 import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
-import com.pm4.istp.exception.InvalidCourseCollaboratorException;
 import com.pm4.istp.exception.UserNotFoundException;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
@@ -91,9 +90,7 @@ public class CourseServiceImpl implements CourseService {
         courseRepository
             .findById(courseId)
             .orElseThrow(
-                () ->
-                    new CourseNotFoundException(
-                        String.format(COURSE_NOT_FOUND_MSG, courseId)));
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
     return course;
   }
@@ -105,9 +102,7 @@ public class CourseServiceImpl implements CourseService {
         courseRepository
             .findById(courseId)
             .orElseThrow(
-                () ->
-                    new CourseNotFoundException(
-                        String.format(COURSE_NOT_FOUND_MSG, courseId)));
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
     // Update scalar fields
@@ -165,9 +160,7 @@ public class CourseServiceImpl implements CourseService {
         courseRepository
             .findById(courseId)
             .orElseThrow(
-                () ->
-                    new CourseNotFoundException(
-                        String.format(COURSE_NOT_FOUND_MSG, courseId)));
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
     courseRepository.delete(course);
   }
