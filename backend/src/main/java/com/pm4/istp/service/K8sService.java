@@ -82,7 +82,7 @@ public class K8sService {
                 // Terminal Sidecar Container
                 .addNewContainer()
                 .withName("terminal")
-                .withImage("tsl0922/ttyd:latest")
+                .withImage("tsl0922/ttyd:1.7.7")
                 .withArgs("ttyd", "-W", "-c", "student:" + terminalPassword, "sh")
                 .addNewPort()
                 .withContainerPort(7681)
