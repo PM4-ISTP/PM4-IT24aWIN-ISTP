@@ -201,12 +201,12 @@
 // ── 6. Overall Impression ────────────────────────────────────
 #category("6 · Overall Impression",(
   (
-    [Professionalism & polish],
-    [The video looks and feels like a finished product, not a rough draft.],
+    [Coherence & consistency],
+    [All elements (visuals, audio, language, editing) work together as a unified whole; the video feels cohesive rather than assembled from disconnected parts.],
   ),
   (
     [Target audience fit],
-    [The video effectively addresses instructors and IT administrators; it would motivate them to explore ISTP further.],
+    [The video would convince an instructor or IT admin to take a concrete next step; it goes beyond informing and actually motivates action.],
   ),
   (
     [Memorability & call to action],
