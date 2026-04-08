@@ -1,5 +1,6 @@
+import CourseInformation from "@/src/components/CourseInformation";
 import { fetchCourse } from "@/src/lib/actions/courses";
-import { Alert, Stack, Text } from "@mantine/core";
+import { Alert, Stack } from "@mantine/core";
 
 export default async function CourseDetails({
 	params
@@ -12,7 +13,7 @@ export default async function CourseDetails({
   return (
     <Stack p="xl" gap="lg">
       {result.success ? (
-        <Text>Not implemented yet</Text>
+        <CourseInformation courseData={result.data} />
       ) : (
         <Alert color="red" title="Failed to load course">
           {result.error}
