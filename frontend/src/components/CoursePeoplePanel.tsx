@@ -1,24 +1,13 @@
 "use client";
 
-import { Avatar, Badge, Divider, Group, Paper, Stack, Text } from "@mantine/core";
+import { Badge, Divider, Group, Paper, Stack, Text } from "@mantine/core";
 import { ROLES } from "@/src/lib/roles";
 import type { CourseUserSummary, PlatformRole } from "@/src/types/course";
+import UserAvatar from "./UserAvatar";
 
 interface CoursePeoplePanelProps {
   owner: CourseUserSummary | null;
   collaborators: CourseUserSummary[];
-}
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) {
-    return "?";
-  }
-
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
 }
 
 function getRoleBadge(role: PlatformRole): { label: string; color: string } {
@@ -37,9 +26,7 @@ function getRoleBadge(role: PlatformRole): { label: string; color: string } {
 function PersonCard({ user, courseBadge }: { user: CourseUserSummary; courseBadge?: string }) {
   return (
     <Group align="flex-start" gap="sm" wrap="nowrap">
-      <Avatar radius="xl" color="blue" src={user.picture ?? undefined}>
-        {getInitials(user.name)}
-      </Avatar>
+      <UserAvatar pictureUrl={user.picture} userName={user.name} />
       <Stack gap={4} style={{ flex: 1 }}>
         <Group gap="xs">
           <Text fw={600} size="sm">
