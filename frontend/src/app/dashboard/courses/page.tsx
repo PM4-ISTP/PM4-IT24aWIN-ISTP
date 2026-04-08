@@ -18,7 +18,7 @@ export default async function CoursesPage(props: {
           courses={result.data.content}
           totalPages={result.data.totalPages}
           currentPage={currentPage}
-          coursePathPrefix="/courses"
+          coursePathPrefix="/dashboard/courses"
         />
       ) : (
         <Alert color="red" title="Failed to load courses">
