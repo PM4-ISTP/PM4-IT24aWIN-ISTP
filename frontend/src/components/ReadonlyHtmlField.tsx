@@ -12,9 +12,9 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect } from "react";
 
 export default function ReadonlyHtmlField({ content }: { content: string | null }) {
-    const editor = useEditor({
-        immediatelyRender: false,
-        extensions: [
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
       StarterKit.configure({ link: false }),
       Link,
       Superscript,
@@ -22,18 +22,18 @@ export default function ReadonlyHtmlField({ content }: { content: string | null 
       Highlight,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
-        content: content === null ? "" : content
-    });
+    content: content === null ? "" : content,
+  });
 
-    useEffect(() => {
-      if (editor && content !== editor.getHTML()) {
-        editor.commands.setContent(content);
-      }
-    }, [content, editor]);
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
 
-    return (
-        <RichTextEditor editor={editor}>
-          <RichTextEditor.Content />
-        </RichTextEditor>
-    );
+  return (
+    <RichTextEditor editor={editor}>
+      <RichTextEditor.Content />
+    </RichTextEditor>
+  );
 }

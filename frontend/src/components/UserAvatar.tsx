@@ -13,15 +13,15 @@ function getInitials(name: string): string {
 }
 
 export default function UserAvatar({
-    pictureUrl,
-    userName
-} : {
-    pictureUrl: string | null | undefined,
-    userName: string
+  pictureUrl,
+  userName,
+}: {
+  pictureUrl: string | null | undefined;
+  userName: string;
 }) {
-    return (
-              <Avatar radius="xl" color="blue" src={pictureUrl ?? undefined}>
-                {getInitials(userName)}
-              </Avatar>
-    );
+  return (
+    <Avatar radius="xl" color="blue" src={pictureUrl ?? undefined}>
+      {getInitials(userName)}
+    </Avatar>
+  );
 }
