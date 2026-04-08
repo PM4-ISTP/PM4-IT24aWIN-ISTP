@@ -1,6 +1,5 @@
 "use client";
 
-import { Group } from "@mantine/core";
 import { RichTextEditor } from "@mantine/tiptap";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";

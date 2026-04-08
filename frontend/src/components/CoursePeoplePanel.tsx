@@ -3,7 +3,7 @@
 import { Badge, Divider, Group, Paper, Stack, Text } from "@mantine/core";
 import { ROLES } from "@/src/lib/roles";
 import type { CourseUserSummary, PlatformRole } from "@/src/types/course";
-import UserAvatar from "./UserAvatar";
+import UserAvatar from "@/src/components/UserAvatar";
 
 interface CoursePeoplePanelProps {
   owner: CourseUserSummary | null;

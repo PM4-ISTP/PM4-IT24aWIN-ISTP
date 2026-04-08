@@ -1,9 +1,7 @@
 import { Divider, Group, Paper, Stack, Title, Text } from "@mantine/core";
-import { CourseDetailResponseDto, CourseInstructorResponseDto } from "@/src/types/course";
-import { RichTextEditor } from "@mantine/tiptap";
-import UserAvatar from "./UserAvatar";
-import { useEditor } from "@tiptap/react";
-import ReadonlyHtmlField from "./ReadonlyHtmlField";
+import type { CourseDetailResponseDto, CourseInstructorResponseDto } from "@/src/types/course";
+import UserAvatar from "@/src/components/UserAvatar";
+import ReadonlyHtmlField from "@/src/components/ReadonlyHtmlField";
 
 const getOwner = (instructors: CourseInstructorResponseDto[]) => {
   const owner = instructors.find((instructor) => instructor.instructorRole === "OWNER");
