@@ -1,7 +1,9 @@
-import { Divider, Group, Paper, Stack, Title, Text, Avatar } from "@mantine/core";
+import { Divider, Group, Paper, Stack, Title, Text } from "@mantine/core";
 import { CourseDetailResponseDto, CourseInstructorResponseDto } from "@/src/types/course";
 import { RichTextEditor } from "@mantine/tiptap";
 import UserAvatar from "./UserAvatar";
+import { useEditor } from "@tiptap/react";
+import ReadonlyHtmlField from "./ReadonlyHtmlField";
 
 const getOwner = (instructors: CourseInstructorResponseDto[]) => {
     const owner = instructors.find(instructor => instructor.instructorRole === "OWNER");
@@ -24,10 +26,7 @@ export default function CourseInformation({ courseData }: {courseData: CourseDet
         <Stack>
             <Title order={1}>{courseData.title}</Title>
             <Paper shadow="xs">
-                <RichTextEditor
-                    value={courseData.description}
-                    readOnly
-                />
+                <ReadonlyHtmlField content={courseData.description} />
             </Paper>
             <Divider />
             <Group>
