@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { MultiSelect } from "@mantine/core";
+import { Loader, MultiSelect } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
+import { IconSearch } from "@tabler/icons-react";
 import type { CollaboratorUserResponseDto } from "@/src/types/course";
 
 interface ApiErrorResponse {
@@ -122,7 +123,8 @@ export function InstructorMultiSelect({
     <MultiSelect
       label="Collaborators"
       description="You are added automatically as the owner. Only admins or instructors who have already signed in can be selected."
-      placeholder="Search collaborators..."
+      placeholder={value.length === 0 ? "Type a name to search..." : "Add more..."}
+      leftSection={loading ? <Loader size={14} /> : <IconSearch size={14} />}
       data={options.map((user) => ({
         value: user.id,
         label: user.name,
@@ -133,7 +135,7 @@ export function InstructorMultiSelect({
       searchValue={searchValue}
       onSearchChange={handleSearchChange}
       onDropdownOpen={handleDropdownOpen}
-      nothingFoundMessage={loading ? "Loading..." : (errorMessage ?? "No collaborators found")}
+      nothingFoundMessage={errorMessage ?? "No collaborators found"}
       clearable
       hidePickedOptions
     />

@@ -1,8 +1,7 @@
 "use client";
 
 import { Avatar, Badge, Divider, Group, Paper, Stack, Text } from "@mantine/core";
-import { ROLES } from "@/src/lib/roles";
-import type { CourseUserSummary, PlatformRole } from "@/src/types/course";
+import type { CourseUserSummary } from "@/src/types/course";
 
 interface CoursePeoplePanelProps {
   owner: CourseUserSummary | null;
@@ -21,49 +20,19 @@ function getInitials(name: string): string {
     .join("");
 }
 
-function getRoleBadge(role: PlatformRole): { label: string; color: string } {
-  switch (role) {
-    case ROLES.ADMINISTRATOR:
-      return { label: "Admin", color: "red" };
-    case ROLES.INSTRUCTOR:
-      return { label: "Instructor", color: "blue" };
-    case ROLES.STUDENT:
-      return { label: "Student", color: "gray" };
-    default:
-      return { label: role, color: "gray" };
-  }
-}
-
-function PersonCard({ user, courseBadge }: { user: CourseUserSummary; courseBadge?: string }) {
+function PersonCard({ user }: { user: CourseUserSummary }) {
   return (
     <Group align="flex-start" gap="sm" wrap="nowrap">
       <Avatar radius="xl" color="blue" src={user.picture ?? undefined}>
         {getInitials(user.name)}
       </Avatar>
       <Stack gap={4} style={{ flex: 1 }}>
-        <Group gap="xs">
-          <Text fw={600} size="sm">
-            {user.name}
-          </Text>
-          {courseBadge ? (
-            <Badge size="xs" variant="light" color="grape">
-              {courseBadge}
-            </Badge>
-          ) : null}
-        </Group>
+        <Text fw={600} size="sm">
+          {user.name}
+        </Text>
         <Text size="xs" c="dimmed">
           {user.email}
         </Text>
-        <Group gap={6}>
-          {user.roles.map((role) => {
-            const badge = getRoleBadge(role);
-            return (
-              <Badge key={role} size="xs" variant="dot" color={badge.color}>
-                {badge.label}
-              </Badge>
-            );
-          })}
-        </Group>
       </Stack>
     </Group>
   );
@@ -89,7 +58,7 @@ export function CoursePeoplePanel({ owner, collaborators }: CoursePeoplePanelPro
             Owner
           </Text>
           {owner ? (
-            <PersonCard user={owner} courseBadge="Owner" />
+            <PersonCard user={owner} />
           ) : (
             <Text size="sm" c="dimmed">
               No owner found.
@@ -112,7 +81,7 @@ export function CoursePeoplePanel({ owner, collaborators }: CoursePeoplePanelPro
           {collaborators.length > 0 ? (
             <Stack gap="md">
               {collaborators.map((user) => (
-                <PersonCard key={user.id} user={user} courseBadge="Collaborator" />
+                <PersonCard key={user.id} user={user} />
               ))}
             </Stack>
           ) : (
