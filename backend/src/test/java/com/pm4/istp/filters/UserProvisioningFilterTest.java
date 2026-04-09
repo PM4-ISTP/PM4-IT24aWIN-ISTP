@@ -86,6 +86,7 @@ class UserProvisioningFilterTest {
         assertThat(savedUser.getId()).isEqualTo(USER_ID);
         assertThat(savedUser.getName()).isEqualTo(FULL_NAME);
         assertThat(savedUser.getEmail()).isEqualTo(EMAIL);
+        assertThat(savedUser.getUsername()).isEqualTo(USERNAME);
         assertThat(savedUser.getPicture()).isEqualTo(PICTURE);
 
         verify(filterChain).doFilter(request, response);

@@ -1,12 +1,21 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { MultiSelect } from "@mantine/core";
+import { Loader, MultiSelect } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
+import { IconSearch } from "@tabler/icons-react";
 import type { CollaboratorUserResponseDto } from "@/src/types/course";
 
 interface ApiErrorResponse {
   error?: string;
+}
+
+function formatCollaboratorLabel(user: CollaboratorUserResponseDto) {
+  const metadata = [user.username, user.email].filter(
+    (value): value is string => typeof value === "string" && value.length > 0 && value !== user.name
+  );
+
+  return metadata.length > 0 ? `${user.name} (${metadata.join(" | ")})` : user.name;
 }
 
 function isCollaboratorUser(value: unknown): value is CollaboratorUserResponseDto {
@@ -18,6 +27,7 @@ function isCollaboratorUser(value: unknown): value is CollaboratorUserResponseDt
     id?: unknown;
     name?: unknown;
     email?: unknown;
+    username?: unknown;
     picture?: unknown;
     roles?: unknown;
   };
@@ -25,6 +35,9 @@ function isCollaboratorUser(value: unknown): value is CollaboratorUserResponseDt
     typeof candidate.id === "string" &&
     typeof candidate.name === "string" &&
     typeof candidate.email === "string" &&
+    (candidate.username === undefined ||
+      candidate.username === null ||
+      typeof candidate.username === "string") &&
     (candidate.picture === undefined ||
       candidate.picture === null ||
       typeof candidate.picture === "string") &&
@@ -52,12 +65,12 @@ export function InstructorMultiSelect({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchInstructors = useCallback(
-    async (name: string) => {
+    async (query: string) => {
       setLoading(true);
       setErrorMessage(null);
       try {
         const params = new URLSearchParams({
-          ...(name ? { name } : {}),
+          ...(query ? { query } : {}),
           size: "20",
           page: "0",
         });
@@ -122,10 +135,11 @@ export function InstructorMultiSelect({
     <MultiSelect
       label="Collaborators"
       description="You are added automatically as the owner. Only admins or instructors who have already signed in can be selected."
-      placeholder="Search collaborators..."
+      placeholder={value.length === 0 ? "Type a name, username, or email..." : "Add more..."}
+      leftSection={loading ? <Loader size={14} /> : <IconSearch size={14} />}
       data={options.map((user) => ({
         value: user.id,
-        label: user.name,
+        label: formatCollaboratorLabel(user),
       }))}
       value={value}
       onChange={onChange}
@@ -133,7 +147,7 @@ export function InstructorMultiSelect({
       searchValue={searchValue}
       onSearchChange={handleSearchChange}
       onDropdownOpen={handleDropdownOpen}
-      nothingFoundMessage={loading ? "Loading..." : (errorMessage ?? "No collaborators found")}
+      nothingFoundMessage={errorMessage ?? "No collaborators found"}
       clearable
       hidePickedOptions
     />

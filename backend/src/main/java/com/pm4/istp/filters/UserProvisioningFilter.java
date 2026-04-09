@@ -110,10 +110,12 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
           user -> {
             if (!Objects.equals(user.getName(), displayName)
                 || !Objects.equals(user.getEmail(), email)
+                || !Objects.equals(user.getUsername(), username)
                 || !Objects.equals(user.getPicture(), picture)
                 || !Objects.equals(user.getRoles(), roles)) {
               user.setName(displayName);
               user.setEmail(email);
+              user.setUsername(username);
               user.setPicture(picture);
               user.setRoles(roles);
               userRepository.save(user);
@@ -124,6 +126,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
             newUser.setId(keycloakId);
             newUser.setName(displayName);
             newUser.setEmail(email);
+            newUser.setUsername(username);
             newUser.setPicture(picture);
             newUser.setRoles(roles);
             userRepository.save(newUser);

@@ -184,7 +184,7 @@ export default function EditCourse() {
   }
 
   return (
-    <Container>
+    <Container size="xl">
       <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Course" centered>
         <Stack gap="md">
           <Text size="sm">
@@ -246,7 +246,7 @@ export default function EditCourse() {
         </Group>
 
         <Grid gutter="xl" align="start">
-          <Grid.Col span={{ base: 12, lg: 8 }}>
+          <Grid.Col span={{ base: 12, md: 7, lg: 8 }}>
             <Stack gap="lg">
               <TextInput
                 label="Course Title"
@@ -291,8 +291,10 @@ export default function EditCourse() {
             </Stack>
           </Grid.Col>
 
-          <Grid.Col span={{ base: 12, lg: 4 }}>
-            <CoursePeoplePanel owner={owner} collaborators={collaborators} />
+          <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
+            <div style={{ position: "sticky", top: "var(--mantine-spacing-xl)" }}>
+              <CoursePeoplePanel owner={owner} collaborators={collaborators} />
+            </div>
           </Grid.Col>
         </Grid>
       </Stack>

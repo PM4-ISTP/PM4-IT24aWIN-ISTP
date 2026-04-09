@@ -14,6 +14,7 @@ public class ListInstructorUserResponseDto {
   private UUID id;
   private String name;
   private String email;
+  private String username;
   private String picture;
   private Set<UserRoleEnum> roles;
 }

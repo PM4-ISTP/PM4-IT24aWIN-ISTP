@@ -28,6 +28,9 @@ public class User {
   @Column(name = "email", nullable = false, unique = true)
   private String email;
 
+  @Column(name = "username")
+  private String username;
+
   @Column(name = "picture")
   private String picture;
 
@@ -58,6 +61,7 @@ public class User {
     return Objects.equals(id, user.id)
         && Objects.equals(name, user.name)
         && Objects.equals(email, user.email)
+        && Objects.equals(username, user.username)
         && Objects.equals(picture, user.picture)
         && Objects.equals(createdAt, user.createdAt)
         && Objects.equals(updatedAt, user.updatedAt);
@@ -65,6 +69,6 @@ public class User {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, email, picture, createdAt, updatedAt);
+    return Objects.hash(id, name, email, username, picture, createdAt, updatedAt);
   }
 }

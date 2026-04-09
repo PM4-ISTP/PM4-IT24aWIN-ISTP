@@ -5,6 +5,7 @@ export interface CourseUserSummary {
   id: string;
   name: string;
   email: string;
+  username?: string | null;
   picture?: string | null;
   roles: PlatformRole[];
 }
