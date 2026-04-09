@@ -46,10 +46,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
       join u.roles r
       where r in :roles
         and (lower(u.name) like lower(concat('%', :query, '%'))
-          or lower(u.username) like lower(concat('%', :query, '%')))
+          or lower(u.username) like lower(concat('%', :query, '%'))
+          or lower(u.email) like lower(concat('%', :query, '%')))
         and u.id <> :userId
       """)
-  Page<User> findDistinctByAnyRoleAndNameOrUsernameContainingIgnoreCaseAndIdNot(
+  Page<User> findDistinctByAnyRoleAndNameOrUsernameOrEmailContainingIgnoreCaseAndIdNot(
       @Param("roles") Set<UserRoleEnum> roles,
       @Param("query") String query,
       @Param("userId") UUID userId,

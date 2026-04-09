@@ -76,7 +76,7 @@ class UserServiceImplTest {
     Set<UserRoleEnum> collaboratorRoles =
         Set.of(UserRoleEnum.ROLE_ADMINISTRATOR, UserRoleEnum.ROLE_INSTRUCTOR);
 
-    when(userRepository.findDistinctByAnyRoleAndNameOrUsernameContainingIgnoreCaseAndIdNot(
+    when(userRepository.findDistinctByAnyRoleAndNameOrUsernameOrEmailContainingIgnoreCaseAndIdNot(
             collaboratorRoles, query, currentUserId, pageable))
         .thenReturn(expected);
 
@@ -84,7 +84,7 @@ class UserServiceImplTest {
 
     assertThat(result).isSameAs(expected);
     verify(userRepository)
-        .findDistinctByAnyRoleAndNameOrUsernameContainingIgnoreCaseAndIdNot(
+        .findDistinctByAnyRoleAndNameOrUsernameOrEmailContainingIgnoreCaseAndIdNot(
             collaboratorRoles, query, currentUserId, pageable);
   }
 }

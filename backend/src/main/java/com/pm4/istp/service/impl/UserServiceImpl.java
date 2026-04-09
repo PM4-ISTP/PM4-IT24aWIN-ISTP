@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public Page<User> searchCollaboratorUsersByQuery(UUID userId, String query, Pageable pageable) {
-    return userRepository.findDistinctByAnyRoleAndNameOrUsernameContainingIgnoreCaseAndIdNot(
+    return userRepository.findDistinctByAnyRoleAndNameOrUsernameOrEmailContainingIgnoreCaseAndIdNot(
         COURSE_COLLABORATOR_ROLES, query, userId, pageable);
   }
 }

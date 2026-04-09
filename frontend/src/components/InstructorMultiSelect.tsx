@@ -10,6 +10,14 @@ interface ApiErrorResponse {
   error?: string;
 }
 
+function formatCollaboratorLabel(user: CollaboratorUserResponseDto) {
+  const metadata = [user.username, user.email].filter(
+    (value): value is string => typeof value === "string" && value.length > 0 && value !== user.name
+  );
+
+  return metadata.length > 0 ? `${user.name} (${metadata.join(" | ")})` : user.name;
+}
+
 function isCollaboratorUser(value: unknown): value is CollaboratorUserResponseDto {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -19,6 +27,7 @@ function isCollaboratorUser(value: unknown): value is CollaboratorUserResponseDt
     id?: unknown;
     name?: unknown;
     email?: unknown;
+    username?: unknown;
     picture?: unknown;
     roles?: unknown;
   };
@@ -26,6 +35,9 @@ function isCollaboratorUser(value: unknown): value is CollaboratorUserResponseDt
     typeof candidate.id === "string" &&
     typeof candidate.name === "string" &&
     typeof candidate.email === "string" &&
+    (candidate.username === undefined ||
+      candidate.username === null ||
+      typeof candidate.username === "string") &&
     (candidate.picture === undefined ||
       candidate.picture === null ||
       typeof candidate.picture === "string") &&
@@ -123,11 +135,11 @@ export function InstructorMultiSelect({
     <MultiSelect
       label="Collaborators"
       description="You are added automatically as the owner. Only admins or instructors who have already signed in can be selected."
-      placeholder={value.length === 0 ? "Type a name or email..." : "Add more..."}
+      placeholder={value.length === 0 ? "Type a name, username, or email..." : "Add more..."}
       leftSection={loading ? <Loader size={14} /> : <IconSearch size={14} />}
       data={options.map((user) => ({
         value: user.id,
-        label: user.name,
+        label: formatCollaboratorLabel(user),
       }))}
       value={value}
       onChange={onChange}
