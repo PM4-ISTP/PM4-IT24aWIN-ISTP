@@ -168,11 +168,11 @@ k3d kubeconfig get istp | sed 's/0\.0\.0\.0/127.0.0.1/g' > backend/src/main/reso
 
 **Windows 11:**
 
-If you are on Windows 11, you need to run the following command:
+If you are on Windows 11, you need to run the following command (in Powershell):
 
 ```powershell
 # From the project root (pm4/)
-mkdir -p backend/src/main/resources
+New-Item -ItemType Directory -Path backend/src/main/resources -Force
 k3d kubeconfig get istp > backend/src/main/resources/Kubeconfig
 ```
 
