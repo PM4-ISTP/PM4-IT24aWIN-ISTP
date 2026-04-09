@@ -9,4 +9,6 @@ public interface UserService {
   Page<User> listCollaboratorUsers(UUID userId, Pageable pageable);
 
   Page<User> searchCollaboratorUsersByName(UUID userId, String name, Pageable pageable);
+
+  Page<User> searchCollaboratorUsersByQuery(UUID userId, String query, Pageable pageable);
 }

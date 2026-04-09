@@ -1,4 +1,5 @@
-import { Alert, Button, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Alert, Button, Group, Paper, Stack, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import { IconKey } from "@tabler/icons-react";
 import Link from "next/link";
 import { fetchPublishedCourses } from "@/src/lib/actions/courses";
 import { CourseGrid } from "@/src/components/CourseGrid";

@@ -38,4 +38,20 @@ public interface UserRepository extends JpaRepository<User, UUID> {
       @Param("name") String name,
       @Param("userId") UUID userId,
       Pageable pageable);
+
+  @Query(
+      """
+      select distinct u
+      from User u
+      join u.roles r
+      where r in :roles
+        and (lower(u.name) like lower(concat('%', :query, '%'))
+          or lower(u.username) like lower(concat('%', :query, '%')))
+        and u.id <> :userId
+      """)
+  Page<User> findDistinctByAnyRoleAndNameOrUsernameContainingIgnoreCaseAndIdNot(
+      @Param("roles") Set<UserRoleEnum> roles,
+      @Param("query") String query,
+      @Param("userId") UUID userId,
+      Pageable pageable);
 }

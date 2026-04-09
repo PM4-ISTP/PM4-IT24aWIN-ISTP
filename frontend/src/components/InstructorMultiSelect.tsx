@@ -58,7 +58,7 @@ export function InstructorMultiSelect({
       setErrorMessage(null);
       try {
         const params = new URLSearchParams({
-          ...(name ? { name } : {}),
+          ...(name ? { query: name } : {}),
           size: "20",
           page: "0",
         });
@@ -123,7 +123,7 @@ export function InstructorMultiSelect({
     <MultiSelect
       label="Collaborators"
       description="You are added automatically as the owner. Only admins or instructors who have already signed in can be selected."
-      placeholder={value.length === 0 ? "Type a name to search..." : "Add more..."}
+      placeholder={value.length === 0 ? "Type a name or email..." : "Add more..."}
       leftSection={loading ? <Loader size={14} /> : <IconSearch size={14} />}
       data={options.map((user) => ({
         value: user.id,

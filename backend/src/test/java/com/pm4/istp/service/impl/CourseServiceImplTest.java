@@ -270,4 +270,121 @@ class CourseServiceImplTest {
 
     verify(courseRepository, never()).delete(any(Course.class));
   }
+
+  @Test
+  void createCourse_withoutCollaborators_createsOnlyOwnerRelation() {
+    UUID ownerId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    owner.setName("Owner");
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
+
+    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    CreateCourseRequest request = new CreateCourseRequest("Solo Course", "Desc", false, List.of());
+
+    Course result = courseService.createCourse(ownerId, request);
+
+    assertThat(result.getCourseInstructors()).hasSize(1);
+    assertThat(result.getCourseInstructors().stream()
+            .allMatch(ci -> ci.getInstructorRole() == InstructorRoleEnum.OWNER))
+        .isTrue();
+  }
+
+  @Test
+  void getCourse_whenUserIsInstructor_returnsCourse() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User user = new User();
+    user.setId(userId);
+
+    Course course = new Course();
+    course.setId(courseId);
+
+    CourseInstructor relation = new CourseInstructor();
+    relation.setInstructorRole(InstructorRoleEnum.OWNER);
+    relation.setInstructor(user);
+    course.addCourseInstructor(relation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    Course result = courseService.getCourse(userId, courseId);
+
+    assertThat(result).isSameAs(course);
+  }
+
+  @Test
+  void getCourse_whenCourseNotFound_throwsCourseNotFoundException() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> courseService.getCourse(userId, courseId))
+        .isInstanceOf(CourseNotFoundException.class);
+  }
+
+  @Test
+  void updateCourse_whenUserIsNotInstructor_throwsCourseAccessDeniedException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID outsiderId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    UpdateCourseRequest request =
+        new UpdateCourseRequest("Title", "Desc", false, List.of());
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.updateCourse(outsiderId, courseId, request))
+        .isInstanceOf(CourseAccessDeniedException.class);
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void updateCourse_whenCourseNotFound_throwsCourseNotFoundException() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+
+    UpdateCourseRequest request =
+        new UpdateCourseRequest("Title", "Desc", false, List.of());
+
+    assertThatThrownBy(() -> courseService.updateCourse(userId, courseId, request))
+        .isInstanceOf(CourseNotFoundException.class);
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void listCoursesForInstructors_delegatesToRepository() {
+    UUID instructorId = UUID.randomUUID();
+    Pageable pageable = PageRequest.of(0, 10);
+    Page<ListCourseResponseDto> expected = new PageImpl<>(List.of());
+
+    when(courseRepository.findListCoursesForInstructor(instructorId, pageable))
+        .thenReturn(expected);
+
+    Page<ListCourseResponseDto> result =
+        courseService.listCoursesForInstructors(instructorId, pageable);
+
+    assertThat(result).isSameAs(expected);
+    verify(courseRepository).findListCoursesForInstructor(instructorId, pageable);
+  }
 }
