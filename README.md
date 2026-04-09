@@ -146,6 +146,10 @@ k3d cluster list
 kubectl cluster-info
 ```
 
+#### kubectl on Windows 11
+
+If you want to use kubectl on Windows, you need to go to the file `.kube/config` in your local user folder. There you need to replace `server: https://host.docker.internal:62824` with `server: https://127.0.0.1:62824`. The port might differ. Just use the port that is specified by the `config` file.
+
 #### Download and Configure Kubeconfig
 
 Once the cluster is created, export the kubeconfig to the backend.
