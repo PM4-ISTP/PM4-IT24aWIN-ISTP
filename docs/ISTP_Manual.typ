@@ -43,6 +43,9 @@
   width: 100%,
 )
 
+#show link: set text(fill: blue)
+#show link: underline
+
 // ─── Title Page ────────────────────────────────────────────────────────────
 
 #align(center)[
@@ -221,7 +224,42 @@ A dedicated Gmail account was created for this project. The password in Keycloak
 
 *Known issue:* Within the ZHAW network, outbound SMTP on port 587 is blocked. Password reset emails will therefore not be delivered when the platform runs on ZHAW infrastructure. This is a ZHAW network restriction, not a Keycloak misconfiguration.
 
-// ─── 3. Setup Checklist ────────────────────────────────────────────────────
+// ─── 3. Challenge Pods ────────────────────────────────────────────────────
+
+= Challenge Pods
+
+The challenges run in Kubernetes pods. The #link("https://github.com/PM4-ISTP/PM4-IT24aWIN-ISTP/tree/main?tab=readme-ov-file#kubernetes-setup-k3d")[README] explains how you can set up a k3d cluster for local development.
+
+To create a pod, you need to send a request to the backend using a request of the following form:
+
+```json
+{
+    "containerName": "test",
+    "image": "nginx:latest",
+    "podName": "nginx",
+    "containerPort": 80
+}
+```
+
+When you create a pod, a JSON response gets returned by the backend server. The response contains two links. `appUrl` leads to the app running in the pod. The app is specified by the `image` attribute from the request. `terminalUrl` leads to the terminal of the app. To login to the terminal, you need to input `student` as the username and the `terminalPassword` from the response as the password.
+
+Following is an example for a response:
+
+```json
+{
+    "status": "CREATED",
+    "podName": "challenge-dfda5bef",
+    "namespace": "default",
+    "message": "Deployment, Service, and Ingress created successfully",
+    "appUrl": "http://app-dfda5bef.127.0.0.1.nip.io",
+    "terminalUrl": "http://term-dfda5bef.127.0.0.1.nip.io",
+    "terminalPassword": "3627ef4c-405"
+}
+```
+
+The terminal does not run in the same container as the app. But they run in the same network. While you can access `localhost` of the app from the terminal (e.g., using `curl "localhost"`), you cannot access the file system of the app.
+
+// ─── 4. Setup Checklist ────────────────────────────────────────────────────
 
 = Setup Checklist
 
