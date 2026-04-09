@@ -1,4 +1,5 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
-    "gradle.javaDebug.cleanOutput": true
+    "gradle.javaDebug.cleanOutput": true,
+    "java.compile.nullAnalysis.mode": "automatic"
 }

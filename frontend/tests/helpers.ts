@@ -3,7 +3,7 @@ import { type Page, type Response, expect } from "@playwright/test";
 export async function expectApiSuccess(
   page: Page,
   trigger: () => Promise<void>,
-  urlPattern: string | RegExp = /\/api\/admin\//,
+  urlPattern: string | RegExp,
   method?: string
 ) {
   const matcher = method
