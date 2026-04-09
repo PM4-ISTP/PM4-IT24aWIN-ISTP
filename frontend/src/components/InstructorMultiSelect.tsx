@@ -65,12 +65,12 @@ export function InstructorMultiSelect({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchInstructors = useCallback(
-    async (name: string) => {
+    async (query: string) => {
       setLoading(true);
       setErrorMessage(null);
       try {
         const params = new URLSearchParams({
-          ...(name ? { query: name } : {}),
+          ...(query ? { query } : {}),
           size: "20",
           page: "0",
         });
