@@ -228,8 +228,8 @@ jobs:
           git diff --staged --quiet || git commit -m "ci(deploy): update staging to $SHA [skip ci]"
           git push origin deploy-staging
 
-  cypress-e2e:
-    name: Cypress E2E Tests (Staging)
+  playwright-e2e:
+    name: Playwright E2E Tests (Staging)
     runs-on: ubuntu-latest
     needs: update-manifests
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
@@ -252,6 +252,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
 
       - name: Build Next.js app
         run: npm run build
@@ -280,32 +283,17 @@ jobs:
           timeout 60 bash -c 'until curl -sf http://localhost:3000 > /dev/null 2>&1; do sleep 2; done'
           echo "Next.js is ready"
 
-      - name: Run Cypress E2E tests
+      - name: Run Playwright E2E tests
         run: npm run test:e2e
         env:
-          CYPRESS_KEYCLOAK_ORIGIN: https://istp-staging-auth.pm4.init-lab.ch
-          CYPRESS_KEYCLOAK_REALM: interactive-security-training-platform
-          CYPRESS_ADMIN_USERNAME: ${{ secrets.CYPRESS_ADMIN_USERNAME }}
-          CYPRESS_ADMIN_PASSWORD: ${{ secrets.CYPRESS_ADMIN_PASSWORD }}
-          CYPRESS_INSTRUCTOR_USERNAME: ${{ secrets.CYPRESS_INSTRUCTOR_USERNAME }}
-          CYPRESS_INSTRUCTOR_PASSWORD: ${{ secrets.CYPRESS_INSTRUCTOR_PASSWORD }}
-          CYPRESS_USER_USERNAME: ${{ secrets.CYPRESS_USER_USERNAME }}
-          CYPRESS_USER_PASSWORD: ${{ secrets.CYPRESS_USER_PASSWORD }}
+          BASE_URL: http://localhost:3000
 
-      - name: Upload Cypress screenshots
-        if: failure()
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-screenshots
-          path: frontend/cypress/screenshots
-          retention-days: 7
-
-      - name: Upload Cypress videos
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-videos
-          path: frontend/cypress/videos
+          name: playwright-report
+          path: frontend/playwright-report/
           retention-days: 7
 
   promote-to-prod:
