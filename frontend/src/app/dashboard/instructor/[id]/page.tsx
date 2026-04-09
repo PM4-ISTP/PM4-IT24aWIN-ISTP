@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   ActionIcon,
+  Affix,
   Alert,
   Button,
   Container,
@@ -64,10 +65,25 @@ export default function EditCourse() {
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
 
+  function clearOwnerToastTimeout() {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+      toastTimeoutRef.current = null;
+    }
+  }
+
+  function hideOwnerToast() {
+    clearOwnerToastTimeout();
+    setToastVisible(false);
+  }
+
   function showOwnerToast() {
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    clearOwnerToastTimeout();
     setToastVisible(true);
-    toastTimeoutRef.current = setTimeout(() => setToastVisible(false), 3500);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastVisible(false);
+      toastTimeoutRef.current = null;
+    }, 3500);
   }
 
   function handleCollaboratorChange(newValue: string[]) {
@@ -113,6 +129,8 @@ export default function EditCourse() {
 
     void load();
   }, [courseId]);
+
+  useEffect(() => clearOwnerToastTimeout, []);
 
   async function handleSubmit() {
     setTitleError(null);
@@ -319,16 +337,16 @@ export default function EditCourse() {
       </Stack>
 
       {toastVisible && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999 }}>
+        <Affix position={{ bottom: 24, right: 24 }}>
           <Notification
             color="orange"
             title="Can't add owner as collaborator"
             icon={<IconX size={16} />}
-            onClose={() => setToastVisible(false)}
+            onClose={hideOwnerToast}
           >
             The course owner is already managing this course and cannot be added as a collaborator.
           </Notification>
-        </div>
+        </Affix>
       )}
     </Container>
   );
