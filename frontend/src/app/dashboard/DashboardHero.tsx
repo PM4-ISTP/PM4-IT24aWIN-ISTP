@@ -31,7 +31,7 @@ export default function DashboardHero({
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: "radial-gradient(circle, rgba(0,122,255,0.18) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(circle, rgba(59,130,246,0.18) 1px, transparent 1px)",
           backgroundSize: "24px 24px",
           pointerEvents: "none",
         }}
@@ -46,7 +46,7 @@ export default function DashboardHero({
           width: 240,
           height: 240,
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(0,122,255,0.35) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(59,130,246,0.35) 0%, transparent 70%)",
           pointerEvents: "none",
         }}
       />
@@ -118,11 +118,11 @@ export default function DashboardHero({
                     width: 36,
                     height: 36,
                     borderRadius: 8,
-                    background: "rgba(0,122,255,0.18)",
+                    background: "rgba(59,130,246,0.18)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#0a84ff",
+                    color: "#3B82F6",
                     flexShrink: 0,
                   }}
                 >

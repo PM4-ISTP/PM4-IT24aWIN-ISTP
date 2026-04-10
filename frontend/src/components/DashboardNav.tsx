@@ -48,7 +48,7 @@ function NavItem({
           paddingRight: "1rem",
           textDecoration: "none",
           transition: "color 0.15s",
-          color: active ? "var(--istp-accent)" : "var(--istp-nav-inactive)",
+          color: active ? "#3B82F6" : "var(--istp-nav-inactive)",
           fontWeight: active ? 700 : 400,
         }}
       >
@@ -73,7 +73,7 @@ function NavItem({
             transform: "translateY(-50%)",
             width: 3,
             height: "55%",
-            background: "var(--istp-accent)",
+            background: "#3B82F6",
             borderRadius: "4px 0 0 4px",
           }}
         />

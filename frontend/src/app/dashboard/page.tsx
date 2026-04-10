@@ -35,11 +35,11 @@ export default async function Home() {
               <Text style={{ ...labelStyle, color: "var(--istp-heading-color)", fontSize: "0.82rem" }}>
                 Continue Learning
               </Text>
-              <Group gap={4} style={{ cursor: "pointer", color: "var(--istp-accent)" }}>
+              <Group gap={4} style={{ cursor: "pointer", color: "#3B82F6" }}>
                 <Text size="sm" c="blue" fw={600}>
                   View all
                 </Text>
-                <IconArrowRight size={15} color="var(--istp-accent)" />
+                <IconArrowRight size={15} color="#3B82F6" />
               </Group>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">

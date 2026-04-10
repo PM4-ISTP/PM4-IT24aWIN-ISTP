@@ -20,25 +20,23 @@ body {
 
 /* ── ISTP design-token CSS variables ──────────────────────────────────── */
 [data-mantine-color-scheme="light"] {
-  --istp-header-bg: #ffffff;
-  --istp-header-border: #d2d2d7;
-  --istp-nav-bg: #f5f5f7;
-  --istp-main-bg: #f5f5f7;
-  --istp-card-border: #d2d2d7;
-  --istp-heading-color: #1d1d1f;
-  --istp-label-color: #6e6e73;
-  --istp-nav-inactive: #6e6e73;
-  --istp-accent: #0071e3;
+  --istp-header-bg: #f8f9ff;
+  --istp-header-border: #e5eeff;
+  --istp-nav-bg: #eff4ff;
+  --istp-main-bg: #f4f7ff;
+  --istp-card-border: #e5eeff;
+  --istp-heading-color: #001e41;
+  --istp-label-color: #5b606b;
+  --istp-nav-inactive: #5b606b;
 }
 
 [data-mantine-color-scheme="dark"] {
-  --istp-header-bg: #1c1c1e;
-  --istp-header-border: #3a3a3c;
-  --istp-nav-bg: #000000;
-  --istp-main-bg: #000000;
-  --istp-card-border: #3a3a3c;
-  --istp-heading-color: #f5f5f7;
-  --istp-label-color: #98989d;
-  --istp-nav-inactive: #98989d;
-  --istp-accent: #0a84ff;
+  --istp-header-bg: var(--mantine-color-dark-6);
+  --istp-header-border: var(--mantine-color-dark-4);
+  --istp-nav-bg: var(--mantine-color-dark-8);
+  --istp-main-bg: var(--mantine-color-body);
+  --istp-card-border: var(--mantine-color-dark-4);
+  --istp-heading-color: var(--mantine-color-white);
+  --istp-label-color: var(--mantine-color-dark-1);
+  --istp-nav-inactive: var(--mantine-color-dark-2);
 }
