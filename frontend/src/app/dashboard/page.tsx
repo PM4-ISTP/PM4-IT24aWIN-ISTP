@@ -32,7 +32,7 @@ const labelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), 'Space Grotesk', sans-serif",
   textTransform: "uppercase",
   letterSpacing: "0.14em",
-  fontSize: "0.6rem",
+  fontSize: "0.72rem",
   fontWeight: 700,
   color: "#5B606B",
 };
@@ -102,10 +102,10 @@ function PlaceholderCourseCard({
       <Stack gap="sm">
         <Group align="flex-start" justify="space-between" wrap="nowrap">
           <Stack gap={2} style={{ flex: 1 }}>
-            <Text fw={600} size="sm" lineClamp={2} style={{ color: "#001E41" }}>
+            <Text fw={600} size="md" lineClamp={2} style={{ color: "#001E41" }}>
               {title}
             </Text>
-            <Badge size="xs" variant="light" color="blue">
+            <Badge size="sm" variant="light" color="blue">
               {topic}
             </Badge>
           </Stack>
@@ -115,10 +115,10 @@ function PlaceholderCourseCard({
         </Group>
         <Box>
           <Group justify="space-between" mb={4}>
-            <Text size="xs" c="dimmed">
+            <Text size="sm" c="dimmed">
               Progress
             </Text>
-            <Text size="xs" fw={600} c="blue">
+            <Text size="sm" fw={600} c="blue">
               {progress}%
             </Text>
           </Group>
@@ -150,11 +150,11 @@ function ActivityItem({
             flexShrink: 0,
           }}
         />
-        <Text size="sm" c="dimmed">
+        <Text size="md" c="dimmed">
           {label}
         </Text>
       </Group>
-      <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+      <Text size="sm" c="dimmed" style={{ flexShrink: 0 }}>
         {time}
       </Text>
     </Group>
@@ -290,21 +290,21 @@ export default async function Home() {
           <Stack gap={8} style={{ flex: 1, minWidth: 0 }}>
             <Text style={{ ...labelStyle, color: "rgba(255,255,255,0.45)" }}>{dateStr}</Text>
             <WelcomeTitle firstName={firstName} />
-            <Text size="sm" style={{ color: "rgba(255,255,255,0.55)" }}>
+            <Text size="md" style={{ color: "rgba(255,255,255,0.55)" }}>
               Here&apos;s an overview of your learning progress.
             </Text>
             <Group mt={8} gap="sm">
               <Button
-                size="sm"
+                size="md"
                 radius="xl"
                 variant="filled"
                 color="blue"
-                rightSection={<IconChevronRight size={14} />}
+                rightSection={<IconChevronRight size={15} />}
               >
                 Browse Courses
               </Button>
               <Button
-                size="sm"
+                size="md"
                 radius="xl"
                 variant="outline"
                 style={{ borderColor: "rgba(255,255,255,0.3)", color: "#fff" }}
@@ -314,12 +314,18 @@ export default async function Home() {
             </Group>
           </Stack>
 
-          {/* Right: inline hero stats */}
-          <Stack gap="sm" className="dashboard-hero-stats" style={{ flexShrink: 0, minWidth: 220 }}>
+          {/* Right: inline hero stats — 2×2 grid */}
+          <SimpleGrid
+            cols={2}
+            spacing="sm"
+            className="dashboard-hero-stats"
+            style={{ flexShrink: 0, width: 300 }}
+          >
             {[
               { icon: <IconBook2 size={18} />, label: "Enrolled Courses", value: "—" },
               { icon: <IconTrophy size={18} />, label: "Completed", value: "—" },
               { icon: <IconBolt size={18} />, label: "Current Streak", value: "—" },
+              { icon: <IconClock size={18} />, label: "Hours Learned", value: "—" },
             ].map(({ icon, label, value }) => (
               <Box
                 key={label}
@@ -327,7 +333,7 @@ export default async function Home() {
                   background: "rgba(255,255,255,0.06)",
                   border: "1px solid rgba(255,255,255,0.1)",
                   borderRadius: 12,
-                  padding: "0.65rem 1rem",
+                  padding: "0.75rem 1rem",
                 }}
               >
                 <Group gap="sm" wrap="nowrap">
@@ -355,41 +361,9 @@ export default async function Home() {
                 </Group>
               </Box>
             ))}
-          </Stack>
+          </SimpleGrid>
         </Group>
       </Box>
-
-      {/* Stats row */}
-      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="md">
-        <StatCard
-          icon={<IconBook2 size={18} />}
-          label="Enrolled Courses"
-          value="—"
-          sub="Placeholder"
-          color="blue"
-        />
-        <StatCard
-          icon={<IconTrophy size={18} />}
-          label="Completed"
-          value="—"
-          sub="Placeholder"
-          color="teal"
-        />
-        <StatCard
-          icon={<IconBolt size={18} />}
-          label="Current Streak"
-          value="—"
-          sub="Placeholder"
-          color="orange"
-        />
-        <StatCard
-          icon={<IconClock size={18} />}
-          label="Hours Learned"
-          value="—"
-          sub="Placeholder"
-          color="grape"
-        />
-      </SimpleGrid>
 
       {/* Main content row */}
       <Grid gutter="md">
@@ -397,12 +371,12 @@ export default async function Home() {
         <GridCol span={{ base: 12, md: 8 }}>
           <Stack gap="sm">
             <Group justify="space-between" align="center">
-              <Text style={{ ...labelStyle, color: "#001E41" }}>Continue Learning</Text>
+              <Text style={{ ...labelStyle, color: "#001E41", fontSize: "0.82rem" }}>Continue Learning</Text>
               <Group gap={4} style={{ cursor: "pointer", color: "#3B82F6" }}>
-                <Text size="xs" c="blue" fw={600}>
+                <Text size="sm" c="blue" fw={600}>
                   View all
                 </Text>
-                <IconArrowRight size={13} color="#3B82F6" />
+                <IconArrowRight size={15} color="#3B82F6" />
               </Group>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
@@ -440,18 +414,18 @@ export default async function Home() {
             {/* Overall progress */}
             <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
               <Stack gap="sm" align="center">
-                <Text style={{ ...labelStyle, alignSelf: "flex-start" }}>Overall Progress</Text>
+                <Text style={{ ...labelStyle, alignSelf: "flex-start", fontSize: "0.82rem" }}>Overall Progress</Text>
                 <RingProgress
-                  size={120}
-                  thickness={12}
+                  size={130}
+                  thickness={13}
                   sections={[{ value: 33, color: "blue" }]}
                   label={
-                    <Text size="sm" fw={700} ta="center" c="blue">
+                    <Text size="md" fw={700} ta="center" c="blue">
                       33%
                     </Text>
                   }
                 />
-                <Text size="xs" c="dimmed" ta="center">
+                <Text size="sm" c="dimmed" ta="center">
                   Placeholder — 2 of 6 courses completed
                 </Text>
               </Stack>
@@ -462,7 +436,7 @@ export default async function Home() {
             {/* Recent Activity */}
             <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
               <Stack gap="sm">
-                <Text style={labelStyle}>Recent Activity</Text>
+                <Text style={{ ...labelStyle, fontSize: "0.82rem" }}>Recent Activity</Text>
                 <ActivityItem
                   label="Completed lesson: SQL Injection"
                   time="2h ago"
@@ -483,7 +457,7 @@ export default async function Home() {
                   time="3d ago"
                   color="#8B5CF6"
                 />
-                <Text size="xs" c="dimmed" ta="center" mt={4}>
+                <Text size="sm" c="dimmed" ta="center" mt={4}>
                   Placeholder data
                 </Text>
               </Stack>
