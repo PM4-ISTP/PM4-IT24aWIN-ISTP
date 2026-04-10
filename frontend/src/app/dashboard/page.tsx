@@ -25,7 +25,6 @@ import {
   IconShieldCheck,
   IconBug,
   IconLock,
-  IconTerminal2,
   IconChevronRight,
 } from "@tabler/icons-react";
 
@@ -233,19 +232,7 @@ export default async function Home() {
               fontSize: "2rem",
             }}
           >
-            Welcome back,{" "}
-            <span
-              style={{
-                fontFamily: "var(--font-orbitron), 'Orbitron', sans-serif",
-                fontWeight: 900,
-                background: "linear-gradient(120deg, #3B82F6 0%, #06B6D4 60%, #818CF8 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              {firstName}!
-            </span>
+            Welcome back, {firstName}!
           </Title>
           <Text size="sm" style={{ color: "rgba(255,255,255,0.55)" }}>
             Here&apos;s an overview of your learning progress.
@@ -370,31 +357,7 @@ export default async function Home() {
               </Stack>
             </Paper>
 
-            {/* Security Tip of the Day */}
-            <Paper
-              withBorder
-              radius="lg"
-              p="lg"
-              style={{
-                borderColor: "#1E3A5F",
-                background: "linear-gradient(135deg, #060D1A 0%, #0A1628 100%)",
-              }}
-            >
-              <Stack gap="xs">
-                <Group gap="xs">
-                  <ThemeIcon size="sm" radius="md" color="yellow" variant="light">
-                    <IconTerminal2 size={14} />
-                  </ThemeIcon>
-                  <Text style={{ ...labelStyle, color: "rgba(255,255,255,0.45)" }}>
-                    Security Tip
-                  </Text>
-                </Group>
-                <Text size="sm" style={{ color: "rgba(255,255,255,0.85)", lineHeight: 1.6 }}>
-                  Always enable multi-factor authentication — it blocks over 99% of automated
-                  account compromise attacks.
-                </Text>
-              </Stack>
-            </Paper>
+            {/* Security Tip of the Day removed */}
 
             {/* Recent Activity */}
             <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
