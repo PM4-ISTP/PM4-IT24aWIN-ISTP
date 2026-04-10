@@ -224,6 +224,12 @@ export default async function Home() {
         .dashboard-activity-item:hover {
           background: rgba(59, 130, 246, 0.06);
         }
+        .dashboard-hero-stats {
+          display: flex;
+        }
+        @media (max-width: 700px) {
+          .dashboard-hero-stats { display: none; }
+        }
       `}</style>
       {/* Hero banner */}
       <Box
@@ -273,32 +279,84 @@ export default async function Home() {
             pointerEvents: "none",
           }}
         />
-        <Stack gap={6} className="dashboard-hero-content" style={{ position: "relative" }}>
-          <Text style={{ ...labelStyle, color: "rgba(255,255,255,0.45)" }}>{dateStr}</Text>
-          <WelcomeTitle firstName={firstName} />
-          <Text size="sm" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Here&apos;s an overview of your learning progress.
-          </Text>
-          <Group mt={12} gap="sm">
-            <Button
-              size="sm"
-              radius="xl"
-              variant="filled"
-              color="blue"
-              rightSection={<IconChevronRight size={14} />}
-            >
-              Browse Courses
-            </Button>
-            <Button
-              size="sm"
-              radius="xl"
-              variant="outline"
-              style={{ borderColor: "rgba(255,255,255,0.3)", color: "#fff" }}
-            >
-              View Leaderboard
-            </Button>
-          </Group>
-        </Stack>
+        <Group
+          className="dashboard-hero-content"
+          justify="space-between"
+          align="center"
+          wrap="nowrap"
+          style={{ position: "relative", gap: "2rem" }}
+        >
+          {/* Left: welcome text + buttons */}
+          <Stack gap={8} style={{ flex: 1, minWidth: 0 }}>
+            <Text style={{ ...labelStyle, color: "rgba(255,255,255,0.45)" }}>{dateStr}</Text>
+            <WelcomeTitle firstName={firstName} />
+            <Text size="sm" style={{ color: "rgba(255,255,255,0.55)" }}>
+              Here&apos;s an overview of your learning progress.
+            </Text>
+            <Group mt={8} gap="sm">
+              <Button
+                size="sm"
+                radius="xl"
+                variant="filled"
+                color="blue"
+                rightSection={<IconChevronRight size={14} />}
+              >
+                Browse Courses
+              </Button>
+              <Button
+                size="sm"
+                radius="xl"
+                variant="outline"
+                style={{ borderColor: "rgba(255,255,255,0.3)", color: "#fff" }}
+              >
+                View Leaderboard
+              </Button>
+            </Group>
+          </Stack>
+
+          {/* Right: inline hero stats */}
+          <Stack gap="sm" className="dashboard-hero-stats" style={{ flexShrink: 0, minWidth: 220 }}>
+            {[
+              { icon: <IconBook2 size={18} />, label: "Enrolled Courses", value: "—" },
+              { icon: <IconTrophy size={18} />, label: "Completed", value: "—" },
+              { icon: <IconBolt size={18} />, label: "Current Streak", value: "—" },
+            ].map(({ icon, label, value }) => (
+              <Box
+                key={label}
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 12,
+                  padding: "0.65rem 1rem",
+                }}
+              >
+                <Group gap="sm" wrap="nowrap">
+                  <Box
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      background: "rgba(59,130,246,0.18)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#3B82F6",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {icon}
+                  </Box>
+                  <Stack gap={1}>
+                    <Text style={{ ...labelStyle, color: "rgba(255,255,255,0.45)" }}>{label}</Text>
+                    <Text fw={700} size="lg" style={{ color: "#fff", lineHeight: 1.1 }}>
+                      {value}
+                    </Text>
+                  </Stack>
+                </Group>
+              </Box>
+            ))}
+          </Stack>
+        </Group>
       </Box>
 
       {/* Stats row */}

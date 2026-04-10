@@ -32,7 +32,7 @@ export default function WelcomeTitle({ firstName }: { firstName: string }) {
         fontFamily: "var(--font-manrope), 'Manrope', sans-serif",
         fontWeight: 800,
         color: "#fff",
-        fontSize: "2rem",
+        fontSize: "2.6rem",
         minHeight: "2.5rem",
       }}
     >
