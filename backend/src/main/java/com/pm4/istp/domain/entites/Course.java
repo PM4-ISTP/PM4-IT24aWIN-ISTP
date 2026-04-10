@@ -27,7 +27,7 @@ public class Course {
   @Column(name = "title", nullable = false)
   private String title;
 
-  @Column(name = "description", nullable = true)
+  @Column(name = "description", nullable = true, length = 5000)
   private String description;
 
   @Column(name = "short_description", nullable = true, length = 200)
