@@ -63,6 +63,7 @@ function StatCard({
       withBorder
       radius="lg"
       p="lg"
+      className="dashboard-stat-card"
       style={{ borderColor: "#E5EEFF", borderTop: `3px solid ${accent}` }}
     >
       <Group align="flex-start" justify="space-between" wrap="nowrap">
@@ -97,7 +98,7 @@ function PlaceholderCourseCard({
   icon: React.ReactNode;
 }) {
   return (
-    <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
+    <Paper withBorder radius="lg" p="lg" className="dashboard-course-card" style={{ borderColor: "#E5EEFF" }}>
       <Stack gap="sm">
         <Group align="flex-start" justify="space-between" wrap="nowrap">
           <Stack gap={2} style={{ flex: 1 }}>
@@ -138,7 +139,7 @@ function ActivityItem({
   color: string;
 }) {
   return (
-    <Group justify="space-between" wrap="nowrap">
+    <Group className="dashboard-activity-item" justify="space-between" wrap="nowrap">
       <Group gap="sm" wrap="nowrap">
         <Box
           style={{
@@ -175,6 +176,51 @@ export default async function Home() {
 
   return (
     <Stack p="xl" gap="xl">
+      <style>{`
+        @keyframes fadeSlideUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { opacity: 0.7; }
+          50%       { opacity: 1; }
+        }
+        .dashboard-hero-content {
+          animation: fadeSlideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .dashboard-glow-tr {
+          animation: pulseGlow 5s ease-in-out infinite;
+        }
+        .dashboard-glow-bl {
+          animation: pulseGlow 5s ease-in-out 2.5s infinite;
+        }
+        .dashboard-stat-card {
+          transition: transform 0.18s ease, box-shadow 0.18s ease;
+          cursor: default;
+        }
+        .dashboard-stat-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 28px rgba(59, 130, 246, 0.13);
+        }
+        .dashboard-course-card {
+          transition: transform 0.18s ease, box-shadow 0.18s ease;
+          cursor: pointer;
+        }
+        .dashboard-course-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 28px rgba(59, 130, 246, 0.10);
+        }
+        .dashboard-activity-item {
+          transition: background 0.15s ease;
+          border-radius: 6px;
+          padding: 4px 6px;
+          margin: 0 -6px;
+          cursor: default;
+        }
+        .dashboard-activity-item:hover {
+          background: rgba(59, 130, 246, 0.06);
+        }
+      `}</style>
       {/* Hero banner */}
       <Box
         style={{
@@ -197,6 +243,7 @@ export default async function Home() {
         />
         {/* Blue glow top-right */}
         <Box
+          className="dashboard-glow-tr"
           style={{
             position: "absolute",
             top: -60,
@@ -210,6 +257,7 @@ export default async function Home() {
         />
         {/* Cyan glow bottom-left */}
         <Box
+          className="dashboard-glow-bl"
           style={{
             position: "absolute",
             bottom: -60,
@@ -221,7 +269,7 @@ export default async function Home() {
             pointerEvents: "none",
           }}
         />
-        <Stack gap={6} style={{ position: "relative" }}>
+        <Stack gap={6} className="dashboard-hero-content" style={{ position: "relative" }}>
           <Text style={{ ...labelStyle, color: "rgba(255,255,255,0.45)" }}>{dateStr}</Text>
           <Title
             order={1}
@@ -232,7 +280,8 @@ export default async function Home() {
               fontSize: "2rem",
             }}
           >
-            Welcome back, {firstName}!
+            Welcome back,{" "}
+            <span style={{ color: "#3B82F6" }}>{firstName}!</span>
           </Title>
           <Text size="sm" style={{ color: "rgba(255,255,255,0.55)" }}>
             Here&apos;s an overview of your learning progress.
