@@ -14,6 +14,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { IconSearch, IconUsers } from "@tabler/icons-react";
+import { getInitials } from "@/src/lib/utils";
 import type { CollaboratorUserResponseDto, CourseParticipantDto } from "@/src/types/course";
 
 const PAGE_SIZE = 5;
@@ -22,15 +23,6 @@ interface CoursePeoplePanelProps {
   owner: CollaboratorUserResponseDto | null;
   collaborators: CollaboratorUserResponseDto[];
   participants: CourseParticipantDto[];
-}
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
 }
 
 function PersonCard({ user }: { user: CollaboratorUserResponseDto }) {

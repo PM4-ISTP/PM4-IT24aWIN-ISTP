@@ -1,6 +1,7 @@
 "use server";
 
 import { fetchBackend } from "@/src/lib/api";
+import { extractErrorMessage } from "@/src/lib/utils";
 
 import type {
   ActionResult,
@@ -11,26 +12,6 @@ import type {
   Page,
   UpdateCourseDto,
 } from "@/src/types/course";
-
-function extractErrorMessage(text: string, fallback: string): string {
-  if (!text) {
-    return fallback;
-  }
-
-  try {
-    const parsed: unknown = JSON.parse(text);
-    if (typeof parsed === "object" && parsed !== null && "error" in parsed) {
-      const errorValue = (parsed as { error?: unknown }).error;
-      if (typeof errorValue === "string" && errorValue.trim()) {
-        return errorValue;
-      }
-    }
-  } catch {
-    return text || fallback;
-  }
-
-  return text || fallback;
-}
 
 export async function createCourse(
   dto: Omit<CreateCourseDto, "instructors"> & { collaboratorIds: string[] }
