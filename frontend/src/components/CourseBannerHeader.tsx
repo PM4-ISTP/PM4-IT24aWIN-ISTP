@@ -6,8 +6,6 @@ import { getCoursePreviewText } from "@/src/lib/courseText";
 import { difficultyColor, difficultyLabel } from "@/src/lib/courseUtils";
 import type { CourseDifficulty } from "@/src/types/course";
 
-const BANNER_PREVIEW_MAX_CHARS = 200;
-
 interface CourseBannerHeaderProps {
   title: string;
   topic?: string | null;
@@ -112,9 +110,7 @@ export function CourseBannerHeader({
                   lineClamp={3}
                   style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.6, maxWidth: 600 }}
                 >
-                  {previewText.length > BANNER_PREVIEW_MAX_CHARS
-                    ? `${previewText.slice(0, BANNER_PREVIEW_MAX_CHARS)}…`
-                    : previewText}
+                  {previewText}
                 </Text>
               )}
             </div>

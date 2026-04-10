@@ -34,9 +34,10 @@ export function extractErrorMessage(text: string, fallback: string): string {
         return errorValue;
       }
     }
+    // Parsed successfully but no usable error field – fall back to raw text
+    return text || fallback;
   } catch {
+    // Not valid JSON – use raw text
     return text || fallback;
   }
-
-  return text || fallback;
 }
