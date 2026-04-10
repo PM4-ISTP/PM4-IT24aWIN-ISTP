@@ -95,8 +95,6 @@ export default async function Home() {
                 </Text>
               </Stack>
             </Paper>
-
-
           </Stack>
         </GridCol>
       </Grid>
