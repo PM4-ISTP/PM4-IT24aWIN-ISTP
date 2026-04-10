@@ -2,10 +2,10 @@ import { Group, Paper, Stack, Text, ThemeIcon } from "@mantine/core";
 import { labelStyle } from "./_shared";
 
 const accentColors: Record<string, string> = {
-  blue: "#3B82F6",
-  teal: "#10B981",
-  orange: "#F59E0B",
-  grape: "#8B5CF6",
+  blue: "#0071e3",
+  teal: "#34c759",
+  orange: "#ff9500",
+  grape: "#bf5af2",
 };
 
 export default function StatCard({
@@ -21,7 +21,7 @@ export default function StatCard({
   sub?: string;
   color: string;
 }) {
-  const accent = accentColors[color] ?? "#3B82F6";
+  const accent = accentColors[color] ?? "#0071e3";
   return (
     <Paper
       withBorder

@@ -28,7 +28,7 @@ export default function DashboardStyles() {
       }
       .dashboard-stat-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 10px 28px rgba(59, 130, 246, 0.13);
+        box-shadow: 0 10px 28px rgba(0, 122, 255, 0.13);
       }
       .dashboard-course-card {
         transition: transform 0.18s ease, box-shadow 0.18s ease;
@@ -36,7 +36,7 @@ export default function DashboardStyles() {
       }
       .dashboard-course-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 10px 28px rgba(59, 130, 246, 0.10);
+        box-shadow: 0 10px 28px rgba(0, 122, 255, 0.10);
       }
       .dashboard-activity-item {
         transition: background 0.15s ease;
@@ -46,7 +46,7 @@ export default function DashboardStyles() {
         cursor: default;
       }
       .dashboard-activity-item:hover {
-        background: rgba(59, 130, 246, 0.06);
+        background: rgba(0, 122, 255, 0.06);
       }
       .dashboard-hero-stats {
         display: flex;

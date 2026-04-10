@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
+import { ColorSchemeScript, createTheme, mantineHtmlProps, MantineProvider } from "@mantine/core";
 import { Geist, Geist_Mono, Manrope, Orbitron, Space_Grotesk } from "next/font/google";
 import NextAuthSessionProvider from "@/src/components/SessionProvider";
 import "@mantine/core/styles.css";
@@ -39,6 +39,25 @@ export const metadata: Metadata = {
   description: "Interactive Security Training Platform",
 };
 
+// Apple system blue palette — light primary #0071E3, dark primary #0A84FF
+const theme = createTheme({
+  primaryColor: "blue",
+  colors: {
+    blue: [
+      "#eaf3ff",
+      "#cce0ff",
+      "#99c3ff",
+      "#60a2ff",
+      "#2d84ff",
+      "#0a84ff",
+      "#0071e3",
+      "#0064c8",
+      "#004ea3",
+      "#003380",
+    ],
+  },
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -61,7 +80,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${spaceGrotesk.variable} ${orbitron.variable} antialiased`}
       >
-        <MantineProvider defaultColorScheme="light">
+        <MantineProvider theme={theme} defaultColorScheme="light">
           <NextAuthSessionProvider>{children}</NextAuthSessionProvider>
         </MantineProvider>
       </body>
