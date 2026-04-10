@@ -50,7 +50,7 @@ export default function RootLayout({
     // and safe to suppress. See https://mantine.dev/guides/next/
     <html lang="en" {...mantineHtmlProps} suppressHydrationWarning>
       <head>
-        <ColorSchemeScript defaultColorScheme="light" />
+        <ColorSchemeScript forceColorScheme="light" />
         {/* Material Symbols are used by the existing dashboard navigation. */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
@@ -61,7 +61,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${spaceGrotesk.variable} ${orbitron.variable} antialiased`}
       >
-        <MantineProvider defaultColorScheme="light">
+        <MantineProvider forceColorScheme="light">
           <NextAuthSessionProvider>{children}</NextAuthSessionProvider>
         </MantineProvider>
       </body>

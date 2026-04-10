@@ -32,7 +32,7 @@ export default async function Home() {
         <GridCol span={{ base: 12, md: 8 }}>
           <Stack gap="sm">
             <Group justify="space-between" align="center">
-              <Text style={{ ...labelStyle, color: "var(--istp-heading-color)", fontSize: "0.82rem" }}>
+              <Text style={{ ...labelStyle, color: "#001E41", fontSize: "0.82rem" }}>
                 Continue Learning
               </Text>
               <Group gap={4} style={{ cursor: "pointer", color: "#3B82F6" }}>
@@ -75,7 +75,7 @@ export default async function Home() {
         <GridCol span={{ base: 12, md: 4 }}>
           <Stack gap="md">
             {/* Overall progress */}
-            <Paper withBorder radius="lg" p="lg" style={{ borderColor: "var(--istp-card-border)" }}>
+            <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
               <Stack gap="sm" align="center">
                 <Text style={{ ...labelStyle, alignSelf: "flex-start", fontSize: "0.82rem" }}>
                   Overall Progress

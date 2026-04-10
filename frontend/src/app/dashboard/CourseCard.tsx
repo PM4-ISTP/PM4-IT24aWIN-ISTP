@@ -17,12 +17,12 @@ export default function CourseCard({
       radius="lg"
       p="lg"
       className="dashboard-course-card"
-      style={{ borderColor: "var(--istp-card-border)" }}
+      style={{ borderColor: "#E5EEFF" }}
     >
       <Stack gap="sm">
         <Group align="flex-start" justify="space-between" wrap="nowrap">
           <Stack gap={2} style={{ flex: 1 }}>
-            <Text fw={600} size="md" lineClamp={2} style={{ color: "var(--istp-heading-color)" }}>
+            <Text fw={600} size="md" lineClamp={2} style={{ color: "#001E41" }}>
               {title}
             </Text>
             <Badge size="sm" variant="light" color="blue">

@@ -13,30 +13,7 @@
 }
 
 body {
-  background: var(--mantine-color-body);
-  color: var(--mantine-color-text);
+  background: var(--background);
+  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-}
-
-/* ── ISTP design-token CSS variables ──────────────────────────────────── */
-[data-mantine-color-scheme="light"] {
-  --istp-header-bg: #f8f9ff;
-  --istp-header-border: #e5eeff;
-  --istp-nav-bg: #eff4ff;
-  --istp-main-bg: #f4f7ff;
-  --istp-card-border: #e5eeff;
-  --istp-heading-color: #001e41;
-  --istp-label-color: #5b606b;
-  --istp-nav-inactive: #5b606b;
-}
-
-[data-mantine-color-scheme="dark"] {
-  --istp-header-bg: var(--mantine-color-dark-7);
-  --istp-header-border: var(--mantine-color-dark-5);
-  --istp-nav-bg: var(--mantine-color-dark-8);
-  --istp-main-bg: var(--mantine-color-dark-9);
-  --istp-card-border: var(--mantine-color-dark-5);
-  --istp-heading-color: var(--mantine-color-white);
-  --istp-label-color: var(--mantine-color-dark-2);
-  --istp-nav-inactive: var(--mantine-color-dark-2);
 }
