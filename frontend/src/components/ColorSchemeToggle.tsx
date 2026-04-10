@@ -9,7 +9,7 @@ export default function ColorSchemeToggle() {
 
   return (
     <ActionIcon
-      variant="subtle"
+      variant="default"
       size="lg"
       radius="md"
       onClick={toggleColorScheme}

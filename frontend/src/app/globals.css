@@ -31,12 +31,12 @@ body {
 }
 
 [data-mantine-color-scheme="dark"] {
-  --istp-header-bg: var(--mantine-color-dark-7);
-  --istp-header-border: var(--mantine-color-dark-5);
+  --istp-header-bg: var(--mantine-color-dark-6);
+  --istp-header-border: var(--mantine-color-dark-4);
   --istp-nav-bg: var(--mantine-color-dark-8);
-  --istp-main-bg: var(--mantine-color-dark-9);
-  --istp-card-border: var(--mantine-color-dark-5);
+  --istp-main-bg: var(--mantine-color-body);
+  --istp-card-border: var(--mantine-color-dark-4);
   --istp-heading-color: var(--mantine-color-white);
-  --istp-label-color: var(--mantine-color-dark-2);
+  --istp-label-color: var(--mantine-color-dark-1);
   --istp-nav-inactive: var(--mantine-color-dark-2);
 }
