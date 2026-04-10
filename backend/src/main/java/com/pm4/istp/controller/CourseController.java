@@ -187,15 +187,18 @@ public class CourseController {
   private CourseDetailResponseDto toCourseDetailResponseDto(Course course, UUID userId) {
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
     dto.setParticipantCount(course.getCourseEnrollments().size());
-    boolean enrolled = course.getCourseEnrollments().stream()
-        .anyMatch(e -> e.getParticipant().getId().equals(userId));
+    boolean enrolled =
+        course.getCourseEnrollments().stream()
+            .anyMatch(e -> e.getParticipant().getId().equals(userId));
     dto.setEnrolled(enrolled);
-    List<CourseParticipantResponseDto> participants = course.getCourseEnrollments().stream()
-        .map(e -> {
-          var p = e.getParticipant();
-          return new CourseParticipantResponseDto(p.getId(), p.getName(), p.getPicture());
-        })
-        .collect(java.util.stream.Collectors.toList());
+    List<CourseParticipantResponseDto> participants =
+        course.getCourseEnrollments().stream()
+            .map(
+                e -> {
+                  var p = e.getParticipant();
+                  return new CourseParticipantResponseDto(p.getId(), p.getName(), p.getPicture());
+                })
+            .collect(java.util.stream.Collectors.toList());
     dto.setParticipants(participants);
     return dto;
   }

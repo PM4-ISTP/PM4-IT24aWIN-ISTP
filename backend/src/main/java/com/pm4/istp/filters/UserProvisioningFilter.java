@@ -100,8 +100,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               existingUser.map(User::getPicture).map(this::normalize).orElse(null));
       String title =
           firstNonBlank(
-              titleClaim,
-              existingUser.map(User::getTitle).map(this::normalize).orElse(null));
+              titleClaim, existingUser.map(User::getTitle).map(this::normalize).orElse(null));
 
       Set<UserRoleEnum> roles =
           authentication.getAuthorities().stream()

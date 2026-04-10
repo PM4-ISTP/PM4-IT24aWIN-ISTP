@@ -14,7 +14,9 @@ import org.springframework.data.annotation.LastModifiedDate;
 @Table(
     name = "course_enrollments",
     uniqueConstraints =
-        @UniqueConstraint(name = "uk_course_enrollment_course_participant", columnNames = {"course_id", "participant_id"}))
+        @UniqueConstraint(
+            name = "uk_course_enrollment_course_participant",
+            columnNames = {"course_id", "participant_id"}))
 @Getter
 @Setter
 @NoArgsConstructor
