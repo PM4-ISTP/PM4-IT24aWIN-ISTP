@@ -19,7 +19,7 @@ const labelStyle: React.CSSProperties = {
 const sectionLabelStyle: React.CSSProperties = {
   ...labelStyle,
   fontSize: "0.6rem",
-  color: "#5B606B",
+  color: "var(--istp-label-color)",
   letterSpacing: "0.18em",
 };
 
@@ -48,7 +48,7 @@ function NavItem({
           paddingRight: "1rem",
           textDecoration: "none",
           transition: "color 0.15s",
-          color: active ? "#3B82F6" : "#5B606B",
+          color: active ? "#3B82F6" : "var(--istp-nav-inactive)",
           fontWeight: active ? 700 : 400,
         }}
       >
