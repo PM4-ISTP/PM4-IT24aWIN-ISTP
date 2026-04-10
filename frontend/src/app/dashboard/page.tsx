@@ -1,14 +1,130 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
+import { Grid, GridCol, Group, Paper, RingProgress, SimpleGrid, Stack, Text } from "@mantine/core";
+import { IconArrowRight, IconBolt, IconBug, IconLock, IconShieldCheck } from "@tabler/icons-react";
+import DashboardStyles from "./DashboardStyles";
+import DashboardHero from "./DashboardHero";
+import CourseCard from "./CourseCard";
+import ActivityItem from "./ActivityItem";
+import { labelStyle } from "./_shared";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
   const name = session?.user?.name ?? "there";
   const firstName = name.split(" ")[0];
 
+  const today = new Date();
+  const dateStr = today.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
-    <div style={{ minHeight: "100vh", background: "#ffffff", padding: "2rem" }}>
-      <h1>Hey, {firstName}</h1>
-    </div>
+    <Stack p="xl" gap="xl">
+      <DashboardStyles />
+
+      <DashboardHero firstName={firstName} dateStr={dateStr} />
+
+      {/* Main content row */}
+      <Grid gutter="md">
+        {/* Continue learning */}
+        <GridCol span={{ base: 12, md: 8 }}>
+          <Stack gap="sm">
+            <Group justify="space-between" align="center">
+              <Text style={{ ...labelStyle, color: "#001E41", fontSize: "0.82rem" }}>
+                Continue Learning
+              </Text>
+              <Group gap={4} style={{ cursor: "pointer", color: "#3B82F6" }}>
+                <Text size="sm" c="blue" fw={600}>
+                  View all
+                </Text>
+                <IconArrowRight size={15} color="#3B82F6" />
+              </Group>
+            </Group>
+            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+              <CourseCard
+                title="Introduction to Web Application Security"
+                topic="Web Security"
+                progress={42}
+                icon={<IconShieldCheck size={16} />}
+              />
+              <CourseCard
+                title="Common Vulnerabilities and Exploits (CVE)"
+                topic="Vulnerabilities"
+                progress={15}
+                icon={<IconBug size={16} />}
+              />
+              <CourseCard
+                title="Cryptography Fundamentals"
+                topic="Cryptography"
+                progress={68}
+                icon={<IconLock size={16} />}
+              />
+              <CourseCard
+                title="Network Penetration Testing"
+                topic="Pentesting"
+                progress={5}
+                icon={<IconBolt size={16} />}
+              />
+            </SimpleGrid>
+          </Stack>
+        </GridCol>
+
+        {/* Right column */}
+        <GridCol span={{ base: 12, md: 4 }}>
+          <Stack gap="md">
+            {/* Overall progress */}
+            <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
+              <Stack gap="sm" align="center">
+                <Text style={{ ...labelStyle, alignSelf: "flex-start", fontSize: "0.82rem" }}>
+                  Overall Progress
+                </Text>
+                <RingProgress
+                  size={130}
+                  thickness={13}
+                  sections={[{ value: 33, color: "blue" }]}
+                  label={
+                    <Text size="md" fw={700} ta="center" c="blue">
+                      33%
+                    </Text>
+                  }
+                />
+                <Text size="sm" c="dimmed" ta="center">
+                  Placeholder — 2 of 6 courses completed
+                </Text>
+              </Stack>
+            </Paper>
+
+            {/* Recent Activity */}
+            <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
+              <Stack gap="sm">
+                <Text style={{ ...labelStyle, fontSize: "0.82rem" }}>Recent Activity</Text>
+                <ActivityItem
+                  label="Completed lesson: SQL Injection"
+                  time="2h ago"
+                  color="#3B82F6"
+                />
+                <ActivityItem
+                  label="Started: Cryptography Fundamentals"
+                  time="Yesterday"
+                  color="#10B981"
+                />
+                <ActivityItem label="Earned badge: Quick Learner" time="2d ago" color="#F59E0B" />
+                <ActivityItem
+                  label="Enrolled in: Network Pentesting"
+                  time="3d ago"
+                  color="#8B5CF6"
+                />
+                <Text size="sm" c="dimmed" ta="center" mt={4}>
+                  Placeholder data
+                </Text>
+              </Stack>
+            </Paper>
+          </Stack>
+        </GridCol>
+      </Grid>
+    </Stack>
   );
 }

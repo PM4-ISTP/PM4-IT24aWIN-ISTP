@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
-import { Geist, Geist_Mono, Manrope, Space_Grotesk } from "next/font/google";
+import { Geist, Geist_Mono, Manrope, Orbitron, Space_Grotesk } from "next/font/google";
 import NextAuthSessionProvider from "@/src/components/SessionProvider";
 import "@mantine/core/styles.css";
 import "@mantine/tiptap/styles.css";
@@ -28,6 +28,12 @@ const spaceGrotesk = Space_Grotesk({
   weight: ["500", "700"],
 });
 
+const orbitron = Orbitron({
+  variable: "--font-orbitron",
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+});
+
 export const metadata: Metadata = {
   title: "ISTP",
   description: "Interactive Security Training Platform",
@@ -53,7 +59,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${spaceGrotesk.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${spaceGrotesk.variable} ${orbitron.variable} antialiased`}
       >
         <MantineProvider forceColorScheme="light">
           <NextAuthSessionProvider>{children}</NextAuthSessionProvider>
