@@ -68,7 +68,8 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
                   combinedName,
                   username,
                   emailClaim,
-                  pictureClaim)
+                  pictureClaim,
+                  titleClaim)
               ? fetchUserInfoProfile(jwt)
               : Optional.empty();
 
@@ -100,7 +101,9 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               existingUser.map(User::getPicture).map(this::normalize).orElse(null));
       String title =
           firstNonBlank(
-              titleClaim, existingUser.map(User::getTitle).map(this::normalize).orElse(null));
+              titleClaim,
+              userInfoProfile.map(UserInfoProfile::title).orElse(null),
+              existingUser.map(User::getTitle).map(this::normalize).orElse(null));
 
       Set<UserRoleEnum> roles =
           authentication.getAuthorities().stream()
@@ -149,10 +152,12 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       String combinedName,
       String username,
       String email,
-      String picture) {
+      String picture,
+      String title) {
     String existingName = existingUser == null ? null : normalize(existingUser.getName());
     String existingEmail = existingUser == null ? null : normalize(existingUser.getEmail());
     String existingPicture = existingUser == null ? null : normalize(existingUser.getPicture());
+    String existingTitle = existingUser == null ? null : normalize(existingUser.getTitle());
 
     boolean nameNeedsEnrichment =
         fullName == null
@@ -160,8 +165,9 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
             && (existingName == null || Objects.equals(existingName, username));
     boolean emailNeedsEnrichment = email == null && existingEmail == null;
     boolean pictureNeedsEnrichment = picture == null && existingPicture == null;
+    boolean titleNeedsEnrichment = title == null && existingTitle == null;
 
-    return nameNeedsEnrichment || emailNeedsEnrichment || pictureNeedsEnrichment;
+    return nameNeedsEnrichment || emailNeedsEnrichment || pictureNeedsEnrichment || titleNeedsEnrichment;
   }
 
   private Optional<UserInfoProfile> fetchUserInfoProfile(Jwt jwt) {
@@ -235,5 +241,5 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
     return trimmed.isEmpty() ? null : trimmed;
   }
 
-  private record UserInfoProfile(String name, String email, String picture) {}
+  private record UserInfoProfile(String name, String email, String picture, String title) {}
 }

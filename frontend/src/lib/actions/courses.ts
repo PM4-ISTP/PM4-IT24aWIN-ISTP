@@ -24,7 +24,6 @@ export async function createCourse(
       isPublished: dto.isPublished,
       imageUrl: dto.imageUrl,
       topic: dto.topic,
-      difficulty: dto.difficulty,
       instructors: dto.collaboratorIds.map((id) => ({
         instructorId: id,
         instructorRole: "COLLABORATOR" as const,
@@ -132,7 +131,6 @@ export async function updateCourse(
       isPublished: dto.isPublished,
       imageUrl: dto.imageUrl,
       topic: dto.topic,
-      difficulty: dto.difficulty,
       instructors: dto.collaboratorIds.map((cid) => ({
         instructorId: cid,
         instructorRole: "COLLABORATOR" as const,

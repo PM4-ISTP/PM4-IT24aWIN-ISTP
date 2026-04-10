@@ -33,10 +33,9 @@ import {
 } from "@/src/lib/courseText";
 import { deleteCourse, fetchCourse, updateCourse } from "@/src/lib/actions/courses";
 import { useToast } from "@/src/hooks/useToast";
-import { TOPIC_OPTIONS, DIFFICULTY_OPTIONS } from "@/src/lib/courseConstants";
+import { TOPIC_OPTIONS } from "@/src/lib/courseConstants";
 import type {
   CollaboratorUserResponseDto,
-  CourseDifficulty,
   CourseDetailResponseDto,
   InstructorRoleEnum,
 } from "@/src/types/course";
@@ -71,7 +70,6 @@ export default function EditCourse() {
   const [isPublished, setIsPublished] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [topic, setTopic] = useState<string | null>(null);
-  const [difficulty, setDifficulty] = useState<string | null>(null);
   const [course, setCourse] = useState<CourseDetailResponseDto | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [knownUsers, setKnownUsers] = useState<Record<string, CollaboratorUserResponseDto>>({});
@@ -114,7 +112,6 @@ export default function EditCourse() {
       setIsPublished(course.isPublished);
       setImageUrl(course.imageUrl ?? "");
       setTopic(course.topic ?? null);
-      setDifficulty(course.difficulty ?? null);
 
       // Extract collaborators (not OWNER) for the multi-select
       const collaborators = course.courseInstructors.filter(
@@ -160,7 +157,6 @@ export default function EditCourse() {
       isPublished,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
-      difficulty: difficulty as CourseDifficulty | null,
       collaboratorIds: selectedInstructors,
     });
 
@@ -331,24 +327,14 @@ export default function EditCourse() {
                 required
               />
 
-              <Group grow>
-                <Select
-                  label="Topic"
-                  placeholder="Select a topic"
-                  data={TOPIC_OPTIONS}
-                  value={topic}
-                  onChange={setTopic}
-                  clearable
-                />
-                <Select
-                  label="Difficulty"
-                  placeholder="Select difficulty"
-                  data={DIFFICULTY_OPTIONS}
-                  value={difficulty}
-                  onChange={setDifficulty}
-                  clearable
-                />
-              </Group>
+              <Select
+                label="Topic"
+                placeholder="Select a topic"
+                data={TOPIC_OPTIONS}
+                value={topic}
+                onChange={setTopic}
+                clearable
+              />
 
               <TextInput
                 label="Course Image URL"

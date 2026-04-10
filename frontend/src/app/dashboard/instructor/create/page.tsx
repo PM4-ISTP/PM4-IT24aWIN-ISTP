@@ -27,8 +27,7 @@ import {
   normalizeShortDescription,
 } from "@/src/lib/courseText";
 import { useToast } from "@/src/hooks/useToast";
-import { TOPIC_OPTIONS, DIFFICULTY_OPTIONS } from "@/src/lib/courseConstants";
-import type { CourseDifficulty } from "@/src/types/course";
+import { TOPIC_OPTIONS } from "@/src/lib/courseConstants";
 
 export default function CreateCourse() {
   const router = useRouter();
@@ -39,7 +38,6 @@ export default function CreateCourse() {
   const [isPublished, setIsPublished] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [topic, setTopic] = useState<string | null>(null);
-  const [difficulty, setDifficulty] = useState<string | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
@@ -74,7 +72,6 @@ export default function CreateCourse() {
       isPublished,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
-      difficulty: difficulty as CourseDifficulty | null,
       collaboratorIds: selectedInstructors,
     });
 
@@ -144,24 +141,14 @@ export default function CreateCourse() {
 
           <MyEditor description={description} setDescription={setDescription} />
 
-          <Group grow>
-            <Select
-              label="Topic"
-              placeholder="Select a topic"
-              data={TOPIC_OPTIONS}
-              value={topic}
-              onChange={setTopic}
-              clearable
-            />
-            <Select
-              label="Difficulty"
-              placeholder="Select difficulty"
-              data={DIFFICULTY_OPTIONS}
-              value={difficulty}
-              onChange={setDifficulty}
-              clearable
-            />
-          </Group>
+          <Select
+            label="Topic"
+            placeholder="Select a topic"
+            data={TOPIC_OPTIONS}
+            value={topic}
+            onChange={setTopic}
+            clearable
+          />
 
           <TextInput
             label="Course Image URL"
