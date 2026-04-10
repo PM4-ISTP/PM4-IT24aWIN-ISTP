@@ -10,10 +10,10 @@ resources:
 images:
   - name: istp-backend
     newName: ghcr.io/pm4-istp/istp-backend
-    newTag: sha-6bf7f0b
+    newTag: sha-736f4a9
   - name: istp-frontend
     newName: ghcr.io/pm4-istp/istp-frontend
-    newTag: sha-6bf7f0b
+    newTag: sha-736f4a9
 
 configMapGenerator:
   - name: istp-config
