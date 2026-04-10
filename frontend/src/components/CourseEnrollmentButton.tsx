@@ -1,7 +1,8 @@
 "use client";
 
 import { startTransition, useState } from "react";
-import { Alert, Button, Stack, Text } from "@mantine/core";
+import { Alert, Button, Group, Stack, Text } from "@mantine/core";
+import { IconArrowRight } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { extractErrorMessage } from "@/src/lib/utils";
 
@@ -71,18 +72,33 @@ export function CourseEnrollmentButton({
 
   return (
     <Stack gap="xs" align="flex-end">
-      <Button
-        size="md"
-        radius="md"
-        color="blue"
-        loading={isSubmitting}
-        disabled={isSubmitting || hasJoined}
-        onClick={() => {
-          void handleEnroll();
-        }}
-      >
-        {hasJoined ? "Enrolled" : "Enroll in Course"}
-      </Button>
+      <Group gap="sm">
+        {hasJoined ? (
+          /* TODO: Replace href with real lesson route once lessons are implemented */
+          <Button
+            size="md"
+            radius="md"
+            color="blue"
+            rightSection={<IconArrowRight size={16} />}
+            onClick={() => router.push(`/dashboard/learn/${courseId}`)}
+          >
+            Start Next Lesson
+          </Button>
+        ) : (
+          <Button
+            size="md"
+            radius="md"
+            color="blue"
+            loading={isSubmitting}
+            disabled={isSubmitting}
+            onClick={() => {
+              void handleEnroll();
+            }}
+          >
+            Enroll in Course
+          </Button>
+        )}
+      </Group>
       <Text size="xs" style={{ color: "rgba(255,255,255,0.65)" }}>
         {currentParticipantCount} participant{currentParticipantCount === 1 ? "" : "s"}
       </Text>

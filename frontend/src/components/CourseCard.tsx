@@ -1,10 +1,8 @@
 import { Avatar, Badge, Box, Group, Image, Stack, Text, UnstyledButton } from "@mantine/core";
 import { IconClock, IconUsers } from "@tabler/icons-react";
 import { getCoursePreviewText } from "@/src/lib/courseText";
-import { difficultyColor, difficultyLabel } from "@/src/lib/courseUtils";
 import { getInitials } from "@/src/lib/utils";
 import classes from "./CourseCard.module.css";
-import type { CourseDifficulty } from "@/src/types/course";
 
 export interface CourseCardProps {
   id: string;
@@ -16,7 +14,6 @@ export interface CourseCardProps {
   updatedAt: string;
   imageUrl?: string | null;
   topic?: string | null;
-  difficulty?: CourseDifficulty | null;
   ownerName?: string | null;
   ownerPicture?: string | null;
   ownerTitle?: string | null;
@@ -33,7 +30,6 @@ export function CourseCard({
   updatedAt,
   imageUrl,
   topic,
-  difficulty,
   ownerName,
   ownerPicture,
   ownerTitle,
@@ -42,14 +38,14 @@ export function CourseCard({
   const previewText = getCoursePreviewText(shortDescription, description);
 
   const content = (
-    <Stack gap={0} h="100%" style={{ overflow: "hidden" }}>
+    <Stack gap={0} style={{ height: "100%", minWidth: 0 }}>
       {/* Thumbnail */}
       {imageUrl ? (
         <Box
           style={{
             height: 130,
             overflow: "hidden",
-            borderRadius: "inherit inherit 0 0",
+            borderRadius: "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0",
             flexShrink: 0,
           }}
         >
@@ -66,6 +62,8 @@ export function CourseCard({
           style={{
             height: 130,
             flexShrink: 0,
+            overflow: "hidden",
+            borderRadius: "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0",
             background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
             display: "flex",
             alignItems: "center",
@@ -87,9 +85,9 @@ export function CourseCard({
 
       {/* Body */}
       <Stack gap="sm" p="md" style={{ flex: 1 }}>
-        {/* Topic + Difficulty */}
+        {/* Topic */}
         <Group gap={6} wrap="nowrap">
-          {topic && (
+          {topic ? (
             <Text
               size="xs"
               fw={700}
@@ -99,23 +97,7 @@ export function CourseCard({
             >
               {topic}
             </Text>
-          )}
-          {topic && difficulty && (
-            <Text size="xs" c="dimmed">
-              •
-            </Text>
-          )}
-          {difficulty && (
-            <Badge
-              size="xs"
-              variant="light"
-              color={difficultyColor(difficulty)}
-              style={{ flexShrink: 0 }}
-            >
-              {difficultyLabel(difficulty)}
-            </Badge>
-          )}
-          {!topic && !difficulty && (
+          ) : (
             <Badge
               size="xs"
               variant="light"
@@ -131,7 +113,7 @@ export function CourseCard({
           {title}
         </Text>
 
-        <Text size="xs" c="dimmed" lineClamp={2} style={{ flex: 1 }}>
+        <Text size="xs" c="dimmed" style={{ flex: 1, overflowWrap: "break-word", wordBreak: "break-word" }}>
           {previewText || "No short description provided."}
         </Text>
 

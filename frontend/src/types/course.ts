@@ -8,6 +8,7 @@ export interface CourseUserSummary {
   email: string;
   username?: string | null;
   picture?: string | null;
+  title?: string | null;
   roles: PlatformRole[];
 }
 
@@ -25,7 +26,6 @@ export interface CreateCourseDto {
   isPublished: boolean;
   imageUrl?: string | null;
   topic?: string | null;
-  difficulty?: CourseDifficulty | null;
   instructors: InstructorAssignment[];
 }
 
@@ -67,7 +67,6 @@ export interface UpdateCourseDto {
   isPublished: boolean;
   imageUrl?: string | null;
   topic?: string | null;
-  difficulty?: CourseDifficulty | null;
   instructors: InstructorAssignment[];
 }
 

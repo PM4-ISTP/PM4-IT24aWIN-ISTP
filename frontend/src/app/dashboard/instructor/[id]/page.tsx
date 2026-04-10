@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -28,15 +28,14 @@ import { CoursePeoplePanel } from "@/src/components/CoursePeoplePanel";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
 import {
-  countWords,
-  COURSE_SHORT_DESCRIPTION_MAX_WORDS,
+  COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/lib/courseText";
 import { deleteCourse, fetchCourse, updateCourse } from "@/src/lib/actions/courses";
-import { TOPIC_OPTIONS, DIFFICULTY_OPTIONS } from "@/src/lib/courseConstants";
+import { useToast } from "@/src/hooks/useToast";
+import { TOPIC_OPTIONS } from "@/src/lib/courseConstants";
 import type {
   CollaboratorUserResponseDto,
-  CourseDifficulty,
   CourseDetailResponseDto,
   InstructorRoleEnum,
 } from "@/src/types/course";
@@ -71,7 +70,6 @@ export default function EditCourse() {
   const [isPublished, setIsPublished] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [topic, setTopic] = useState<string | null>(null);
-  const [difficulty, setDifficulty] = useState<string | null>(null);
   const [course, setCourse] = useState<CourseDetailResponseDto | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [knownUsers, setKnownUsers] = useState<Record<string, CollaboratorUserResponseDto>>({});
@@ -82,37 +80,15 @@ export default function EditCourse() {
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [toastVisible, setToastVisible] = useState(false);
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ownerToast = useToast();
+  const charLimitToast = useToast();
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
-  const shortDescriptionWordCount = countWords(shortDescription);
-  const shortDescriptionTooLong = shortDescriptionWordCount > COURSE_SHORT_DESCRIPTION_MAX_WORDS;
-
-  function clearOwnerToastTimeout() {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-      toastTimeoutRef.current = null;
-    }
-  }
-
-  function hideOwnerToast() {
-    clearOwnerToastTimeout();
-    setToastVisible(false);
-  }
-
-  function showOwnerToast() {
-    clearOwnerToastTimeout();
-    setToastVisible(true);
-    toastTimeoutRef.current = setTimeout(() => {
-      setToastVisible(false);
-      toastTimeoutRef.current = null;
-    }, 3500);
-  }
+  const shortDescriptionCharCount = shortDescription.length;
 
   function handleCollaboratorChange(newValue: string[]) {
     const ownerId = owner?.id;
     if (ownerId && newValue.includes(ownerId)) {
-      showOwnerToast();
+      ownerToast.show();
       setSelectedInstructors(newValue.filter((id) => id !== ownerId));
       return;
     }
@@ -136,7 +112,6 @@ export default function EditCourse() {
       setIsPublished(course.isPublished);
       setImageUrl(course.imageUrl ?? "");
       setTopic(course.topic ?? null);
-      setDifficulty(course.difficulty ?? null);
 
       // Extract collaborators (not OWNER) for the multi-select
       const collaborators = course.courseInstructors.filter(
@@ -157,8 +132,6 @@ export default function EditCourse() {
     void load();
   }, [courseId]);
 
-  useEffect(() => clearOwnerToastTimeout, []);
-
   async function handleSubmit() {
     setTitleError(null);
     setShortDescriptionError(null);
@@ -175,13 +148,6 @@ export default function EditCourse() {
       return;
     }
 
-    if (shortDescriptionTooLong) {
-      setShortDescriptionError(
-        `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words for the short description`
-      );
-      return;
-    }
-
     setIsSubmitting(true);
 
     const result = await updateCourse(courseId, {
@@ -191,7 +157,6 @@ export default function EditCourse() {
       isPublished,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
-      difficulty: difficulty as CourseDifficulty | null,
       collaboratorIds: selectedInstructors,
     });
 
@@ -344,42 +309,32 @@ export default function EditCourse() {
                 placeholder="Write a short summary shown on the course card and in the blue header"
                 value={shortDescription}
                 onChange={(e) => {
-                  setShortDescription(e.currentTarget.value);
+                  const newVal = e.currentTarget.value;
+                  if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
+                    charLimitToast.show();
+                    return;
+                  }
+                  setShortDescription(newVal);
                   if (shortDescriptionError) {
                     setShortDescriptionError(null);
                   }
                 }}
-                error={
-                  shortDescriptionError ??
-                  (shortDescriptionTooLong
-                    ? `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words`
-                    : null)
-                }
-                description={`Shown on course cards and in the blue course header. ${shortDescriptionWordCount}/${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words.`}
+                error={shortDescriptionError}
+                description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
                 autosize
                 minRows={2}
                 maxRows={4}
                 required
               />
 
-              <Group grow>
-                <Select
-                  label="Topic"
-                  placeholder="Select a topic"
-                  data={TOPIC_OPTIONS}
-                  value={topic}
-                  onChange={setTopic}
-                  clearable
-                />
-                <Select
-                  label="Difficulty"
-                  placeholder="Select difficulty"
-                  data={DIFFICULTY_OPTIONS}
-                  value={difficulty}
-                  onChange={setDifficulty}
-                  clearable
-                />
-              </Group>
+              <Select
+                label="Topic"
+                placeholder="Select a topic"
+                data={TOPIC_OPTIONS}
+                value={topic}
+                onChange={setTopic}
+                clearable
+              />
 
               <TextInput
                 label="Course Image URL"
@@ -434,15 +389,27 @@ export default function EditCourse() {
       </Stack>
 
       <Affix position={{ bottom: 20, right: 20 }}>
-        {toastVisible && (
+        {ownerToast.visible && (
           <Notification
             color="orange"
             title="Can't add owner as collaborator"
-            onClose={hideOwnerToast}
+            onClose={ownerToast.hide}
             withCloseButton
             icon={<IconX size={18} />}
           >
             The course owner is already managing this course and cannot be added as a collaborator.
+          </Notification>
+        )}
+        {charLimitToast.visible && (
+          <Notification
+            color="orange"
+            title="Character limit reached"
+            onClose={charLimitToast.hide}
+            withCloseButton
+            icon={<IconX size={18} />}
+          >
+            The short description cannot exceed {COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters
+            (including spaces).
           </Notification>
         )}
       </Affix>

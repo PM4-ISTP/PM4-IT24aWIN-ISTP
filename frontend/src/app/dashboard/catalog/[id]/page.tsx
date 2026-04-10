@@ -4,6 +4,7 @@ import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseBannerHeader } from "@/src/components/CourseBannerHeader";
 import { CourseInstructorCard } from "@/src/components/CourseInstructorCard";
+import { CourseJourneyCard } from "@/src/components/CourseJourneyCard";
 import { fetchPublicCourse } from "@/src/lib/actions/courses";
 import { authOptions } from "@/src/lib/auth";
 import type { InstructorRoleEnum } from "@/src/types/course";
@@ -47,7 +48,6 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
       <CourseBannerHeader
         title={course.title}
         topic={course.topic}
-        difficulty={course.difficulty}
         shortDescription={course.shortDescription}
         description={course.description}
         courseId={course.id}
@@ -64,6 +64,21 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
           {/* Left column */}
           <div style={{ flex: "1 1 500px", minWidth: 0 }}>
             <Stack gap="lg">
+              {/*
+               * Course Journey — lessons & challenges progress.
+               *
+               * TODO (lessons):    Pass `lessons={{ finished, total }}` once lesson-completion
+               *                    tracking is implemented in the backend.
+               * TODO (challenges): Pass `challenges={{ completed, total }}` once the challenges
+               *                    feature is available. Until then both bars show as placeholders.
+               */}
+              {course.isEnrolled && (
+                <CourseJourneyCard
+                  // lessons={undefined}    ← wire up when lesson API is ready
+                  // challenges={undefined} ← wire up when challenge API is ready
+                />
+              )}
+
               {/* About this course */}
               {course.description && (
                 <Paper withBorder radius="lg" p="xl" shadow="xs">

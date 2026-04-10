@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ActionIcon,
+  Affix,
   Alert,
   Button,
   Container,
   Group,
+  Notification,
   Select,
   Stack,
   Switch,
@@ -16,17 +18,16 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconX } from "@tabler/icons-react";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
 import { createCourse } from "@/src/lib/actions/courses";
 import {
-  countWords,
-  COURSE_SHORT_DESCRIPTION_MAX_WORDS,
+  COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/lib/courseText";
-import { TOPIC_OPTIONS, DIFFICULTY_OPTIONS } from "@/src/lib/courseConstants";
-import type { CourseDifficulty } from "@/src/types/course";
+import { useToast } from "@/src/hooks/useToast";
+import { TOPIC_OPTIONS } from "@/src/lib/courseConstants";
 
 export default function CreateCourse() {
   const router = useRouter();
@@ -37,14 +38,14 @@ export default function CreateCourse() {
   const [isPublished, setIsPublished] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [topic, setTopic] = useState<string | null>(null);
-  const [difficulty, setDifficulty] = useState<string | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const shortDescriptionWordCount = countWords(shortDescription);
-  const shortDescriptionTooLong = shortDescriptionWordCount > COURSE_SHORT_DESCRIPTION_MAX_WORDS;
+  const charLimitToast = useToast();
+
+  const shortDescriptionCharCount = shortDescription.length;
 
   async function handleSubmit() {
     setTitleError(null);
@@ -62,13 +63,6 @@ export default function CreateCourse() {
       return;
     }
 
-    if (shortDescriptionTooLong) {
-      setShortDescriptionError(
-        `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words for the short description`
-      );
-      return;
-    }
-
     setIsSubmitting(true);
 
     const result = await createCourse({
@@ -78,7 +72,6 @@ export default function CreateCourse() {
       isPublished,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
-      difficulty: difficulty as CourseDifficulty | null,
       collaboratorIds: selectedInstructors,
     });
 
@@ -132,40 +125,30 @@ export default function CreateCourse() {
             placeholder="Write a short summary shown on the course card and in the blue header"
             value={shortDescription}
             onChange={(e) => {
-              setShortDescription(e.currentTarget.value);
+              const newVal = e.currentTarget.value;
+              if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
+                charLimitToast.show();
+                return;
+              }
+              setShortDescription(newVal);
               if (shortDescriptionError) {
                 setShortDescriptionError(null);
               }
             }}
-            error={
-              shortDescriptionError ??
-              (shortDescriptionTooLong
-                ? `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words`
-                : null)
-            }
-            description={`Shown on course cards and in the blue course header. ${shortDescriptionWordCount}/${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words used.`}
+            error={shortDescriptionError}
+            description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
           />
 
           <MyEditor description={description} setDescription={setDescription} />
 
-          <Group grow>
-            <Select
-              label="Topic"
-              placeholder="Select a topic"
-              data={TOPIC_OPTIONS}
-              value={topic}
-              onChange={setTopic}
-              clearable
-            />
-            <Select
-              label="Difficulty"
-              placeholder="Select difficulty"
-              data={DIFFICULTY_OPTIONS}
-              value={difficulty}
-              onChange={setDifficulty}
-              clearable
-            />
-          </Group>
+          <Select
+            label="Topic"
+            placeholder="Select a topic"
+            data={TOPIC_OPTIONS}
+            value={topic}
+            onChange={setTopic}
+            clearable
+          />
 
           <TextInput
             label="Course Image URL"
@@ -202,6 +185,21 @@ export default function CreateCourse() {
           </Button>
         </Stack>
       </Stack>
+
+      <Affix position={{ bottom: 20, right: 20 }}>
+        {charLimitToast.visible && (
+          <Notification
+            color="orange"
+            title="Character limit reached"
+            onClose={charLimitToast.hide}
+            withCloseButton
+            icon={<IconX size={18} />}
+          >
+            The short description cannot exceed {COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters
+            (including spaces).
+          </Notification>
+        )}
+      </Affix>
     </Container>
   );
 }

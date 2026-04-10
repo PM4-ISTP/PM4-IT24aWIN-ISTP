@@ -3,13 +3,10 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseEnrollmentButton } from "@/src/components/CourseEnrollmentButton";
 import { getCoursePreviewText } from "@/src/lib/courseText";
-import { difficultyColor, difficultyLabel } from "@/src/lib/courseUtils";
-import type { CourseDifficulty } from "@/src/types/course";
 
 interface CourseBannerHeaderProps {
   title: string;
   topic?: string | null;
-  difficulty?: CourseDifficulty | null;
   shortDescription?: string | null;
   description?: string | null;
   courseId: string;
@@ -23,7 +20,6 @@ interface CourseBannerHeaderProps {
 export function CourseBannerHeader({
   title,
   topic,
-  difficulty,
   shortDescription,
   description,
   courseId,
@@ -66,9 +62,9 @@ export function CourseBannerHeader({
             </Group>
           </Link>
 
-          {/* Topic / Difficulty badges */}
-          <Group gap="sm">
-            {topic && (
+          {/* Topic badge */}
+          {topic && (
+            <Group gap="sm">
               <Badge
                 size="sm"
                 variant="light"
@@ -77,18 +73,8 @@ export function CourseBannerHeader({
               >
                 {topic}
               </Badge>
-            )}
-            {difficulty && (
-              <Badge
-                size="sm"
-                variant="light"
-                color={difficultyColor(difficulty)}
-                style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}
-              >
-                {difficultyLabel(difficulty)}
-              </Badge>
-            )}
-          </Group>
+            </Group>
+          )}
 
           {/* Title row */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>

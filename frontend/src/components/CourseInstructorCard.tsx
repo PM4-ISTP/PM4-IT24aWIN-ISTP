@@ -1,5 +1,4 @@
 import { Avatar, Divider, Group, Paper, Stack, Text } from "@mantine/core";
-import { IconUser } from "@tabler/icons-react";
 import { getInitials } from "@/src/lib/utils";
 import type { CourseUserSummary } from "@/src/types/course";
 
@@ -29,12 +28,12 @@ export function CourseInstructorCard({ instructor }: CourseInstructorCardProps) 
             <Text fw={700} size="sm">
               {instructor.name}
             </Text>
-            <Group gap={4}>
-              <IconUser size={11} color="var(--mantine-color-dimmed)" />
+            {/* Title is set in Keycloak (user attribute "title") — same principle as picture */}
+            {instructor.title && (
               <Text size="xs" c="dimmed">
-                Instructor
+                {instructor.title}
               </Text>
-            </Group>
+            )}
           </Stack>
         </Group>
       </Stack>
