@@ -4,6 +4,7 @@ import {
   Badge,
   Box,
   Grid,
+  GridCol,
   Group,
   Paper,
   Progress,
@@ -212,7 +213,7 @@ export default async function Home() {
       {/* Main content row */}
       <Grid gutter="md">
         {/* Continue learning */}
-        <Grid.Col span={{ base: 12, md: 8 }}>
+        <GridCol span={{ base: 12, md: 8 }}>
           <Stack gap="sm">
             <Group justify="space-between" align="center">
               <Text style={{ ...labelStyle, color: "#001E41" }}>Continue Learning</Text>
@@ -250,10 +251,10 @@ export default async function Home() {
               />
             </SimpleGrid>
           </Stack>
-        </Grid.Col>
+        </GridCol>
 
         {/* Right column */}
-        <Grid.Col span={{ base: 12, md: 4 }}>
+        <GridCol span={{ base: 12, md: 4 }}>
           <Stack gap="md">
             {/* Overall progress */}
             <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
@@ -304,7 +305,7 @@ export default async function Home() {
               </Stack>
             </Paper>
           </Stack>
-        </Grid.Col>
+        </GridCol>
       </Grid>
     </Stack>
   );
