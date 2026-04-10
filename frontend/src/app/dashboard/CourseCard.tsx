@@ -12,7 +12,13 @@ export default function CourseCard({
   icon: React.ReactNode;
 }) {
   return (
-    <Paper withBorder radius="lg" p="lg" className="dashboard-course-card" style={{ borderColor: "#E5EEFF" }}>
+    <Paper
+      withBorder
+      radius="lg"
+      p="lg"
+      className="dashboard-course-card"
+      style={{ borderColor: "#E5EEFF" }}
+    >
       <Stack gap="sm">
         <Group align="flex-start" justify="space-between" wrap="nowrap">
           <Stack gap={2} style={{ flex: 1 }}>

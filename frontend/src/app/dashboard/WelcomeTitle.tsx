@@ -37,9 +37,7 @@ export default function WelcomeTitle({ firstName }: { firstName: string }) {
       }}
     >
       {FULL_PREFIX.slice(0, prefixVisible)}
-      <span style={{ color: "#3B82F6" }}>
-        {nameAndBang.slice(0, nameVisible)}
-      </span>
+      <span style={{ color: "#3B82F6" }}>{nameAndBang.slice(0, nameVisible)}</span>
       {/* blinking cursor while typing */}
       {visibleCount < fullText.length && (
         <span

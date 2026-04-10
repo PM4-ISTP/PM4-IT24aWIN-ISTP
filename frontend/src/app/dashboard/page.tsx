@@ -33,7 +33,9 @@ export default async function Home() {
         <GridCol span={{ base: 12, md: 8 }}>
           <Stack gap="sm">
             <Group justify="space-between" align="center">
-              <Text style={{ ...labelStyle, color: "#001E41", fontSize: "0.82rem" }}>Continue Learning</Text>
+              <Text style={{ ...labelStyle, color: "#001E41", fontSize: "0.82rem" }}>
+                Continue Learning
+              </Text>
               <Group gap={4} style={{ cursor: "pointer", color: "#3B82F6" }}>
                 <Text size="sm" c="blue" fw={600}>
                   View all
@@ -76,7 +78,9 @@ export default async function Home() {
             {/* Overall progress */}
             <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
               <Stack gap="sm" align="center">
-                <Text style={{ ...labelStyle, alignSelf: "flex-start", fontSize: "0.82rem" }}>Overall Progress</Text>
+                <Text style={{ ...labelStyle, alignSelf: "flex-start", fontSize: "0.82rem" }}>
+                  Overall Progress
+                </Text>
                 <RingProgress
                   size={130}
                   thickness={13}
@@ -97,10 +101,22 @@ export default async function Home() {
             <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
               <Stack gap="sm">
                 <Text style={{ ...labelStyle, fontSize: "0.82rem" }}>Recent Activity</Text>
-                <ActivityItem label="Completed lesson: SQL Injection" time="2h ago" color="#3B82F6" />
-                <ActivityItem label="Started: Cryptography Fundamentals" time="Yesterday" color="#10B981" />
+                <ActivityItem
+                  label="Completed lesson: SQL Injection"
+                  time="2h ago"
+                  color="#3B82F6"
+                />
+                <ActivityItem
+                  label="Started: Cryptography Fundamentals"
+                  time="Yesterday"
+                  color="#10B981"
+                />
                 <ActivityItem label="Earned badge: Quick Learner" time="2d ago" color="#F59E0B" />
-                <ActivityItem label="Enrolled in: Network Pentesting" time="3d ago" color="#8B5CF6" />
+                <ActivityItem
+                  label="Enrolled in: Network Pentesting"
+                  time="3d ago"
+                  color="#8B5CF6"
+                />
                 <Text size="sm" c="dimmed" ta="center" mt={4}>
                   Placeholder data
                 </Text>
