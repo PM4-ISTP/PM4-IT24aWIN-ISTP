@@ -47,6 +47,7 @@ export default async function CatalogPage(props: {
           courses={result.data.content}
           totalPages={result.data.totalPages}
           currentPage={currentPage}
+          coursePathPrefix="/dashboard/catalog"
         />
       ) : (
         <Alert color="red" title="Failed to load catalog">

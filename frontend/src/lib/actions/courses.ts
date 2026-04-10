@@ -40,6 +40,9 @@ export async function createCourse(
       title: dto.title,
       description: dto.description,
       isPublished: dto.isPublished,
+      imageUrl: dto.imageUrl,
+      topic: dto.topic,
+      difficulty: dto.difficulty,
       instructors: dto.collaboratorIds.map((id) => ({
         instructorId: id,
         instructorRole: "COLLABORATOR" as const,
@@ -98,6 +101,9 @@ export async function updateCourse(
       title: dto.title,
       description: dto.description,
       isPublished: dto.isPublished,
+      imageUrl: dto.imageUrl,
+      topic: dto.topic,
+      difficulty: dto.difficulty,
       instructors: dto.collaboratorIds.map((cid) => ({
         instructorId: cid,
         instructorRole: "COLLABORATOR" as const,

@@ -1,6 +1,7 @@
 package com.pm4.istp.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pm4.istp.domain.entites.CourseDifficultyEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -19,6 +20,10 @@ public class UpdateCourseRequestDto {
 
   @JsonProperty("isPublished")
   private boolean isPublished;
+
+  private String imageUrl;
+  private String topic;
+  private CourseDifficultyEnum difficulty;
 
   @NotNull(message = "Instructor information is required")
   private List<UpdateCourseInstructorRequestDto> instructors;

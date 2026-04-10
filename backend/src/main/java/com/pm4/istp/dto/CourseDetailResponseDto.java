@@ -1,6 +1,7 @@
 package com.pm4.istp.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pm4.istp.domain.entites.CourseDifficultyEnum;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +19,10 @@ public class CourseDetailResponseDto {
 
   @JsonProperty("isPublished")
   private boolean isPublished;
+
+  private String imageUrl;
+  private String topic;
+  private CourseDifficultyEnum difficulty;
 
   private List<CourseDetailInstructorResponseDto> courseInstructors;
   private LocalDateTime createdAt;

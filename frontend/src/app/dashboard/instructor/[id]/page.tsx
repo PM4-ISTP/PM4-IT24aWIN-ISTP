@@ -14,6 +14,7 @@ import {
   Loader,
   Modal,
   Notification,
+  Select,
   Stack,
   Switch,
   Text,
@@ -26,7 +27,24 @@ import { CoursePeoplePanel } from "@/src/components/CoursePeoplePanel";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
 import { deleteCourse, fetchCourse, updateCourse } from "@/src/lib/actions/courses";
-import type { CollaboratorUserResponseDto, CourseDetailResponseDto } from "@/src/types/course";
+import type { CollaboratorUserResponseDto, CourseDifficulty, CourseDetailResponseDto } from "@/src/types/course";
+
+const TOPIC_OPTIONS = [
+  { value: "Cybersecurity", label: "Cybersecurity" },
+  { value: "Programming", label: "Programming" },
+  { value: "Design", label: "Design" },
+  { value: "Data Science", label: "Data Science" },
+  { value: "Networking", label: "Networking" },
+  { value: "Cloud", label: "Cloud" },
+  { value: "DevOps", label: "DevOps" },
+  { value: "Other", label: "Other" },
+];
+
+const DIFFICULTY_OPTIONS = [
+  { value: "BEGINNER", label: "Beginner" },
+  { value: "INTERMEDIATE", label: "Intermediate" },
+  { value: "ADVANCED", label: "Advanced" },
+];
 
 function mergeUsersById(
   current: Record<string, CollaboratorUserResponseDto>,
@@ -52,6 +70,9 @@ export default function EditCourse() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isPublished, setIsPublished] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [topic, setTopic] = useState<string | null>(null);
+  const [difficulty, setDifficulty] = useState<string | null>(null);
   const [course, setCourse] = useState<CourseDetailResponseDto | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [knownUsers, setKnownUsers] = useState<Record<string, CollaboratorUserResponseDto>>({});
@@ -110,6 +131,9 @@ export default function EditCourse() {
       setTitle(course.title);
       setDescription(course.description ?? "");
       setIsPublished(course.isPublished);
+      setImageUrl(course.imageUrl ?? "");
+      setTopic(course.topic ?? null);
+      setDifficulty(course.difficulty ?? null);
 
       // Extract collaborators (not OWNER) for the multi-select
       const collaborators = course.courseInstructors.filter(
@@ -147,6 +171,9 @@ export default function EditCourse() {
       title: title.trim(),
       description,
       isPublished,
+      imageUrl: imageUrl.trim() || null,
+      topic: topic,
+      difficulty: difficulty as CourseDifficulty | null,
       collaboratorIds: selectedInstructors,
     });
 
@@ -293,6 +320,34 @@ export default function EditCourse() {
                 error={titleError}
                 required
               />
+
+              <Group grow>
+                <Select
+                  label="Topic"
+                  placeholder="Select a topic"
+                  data={TOPIC_OPTIONS}
+                  value={topic}
+                  onChange={setTopic}
+                  clearable
+                />
+                <Select
+                  label="Difficulty"
+                  placeholder="Select difficulty"
+                  data={DIFFICULTY_OPTIONS}
+                  value={difficulty}
+                  onChange={setDifficulty}
+                  clearable
+                />
+              </Group>
+
+              <TextInput
+                label="Course Image URL"
+                placeholder="https://example.com/image.jpg"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.currentTarget.value)}
+                description="Optional: paste an image URL for the course thumbnail"
+              />
+
               <MyEditor description={description} setDescription={setDescription} />
               <InstructorMultiSelect
                 value={selectedInstructors}

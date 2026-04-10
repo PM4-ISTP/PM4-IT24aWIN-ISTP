@@ -52,6 +52,9 @@ public class CourseServiceImpl implements CourseService {
     courseToCreate.setTitle(course.getTitle());
     courseToCreate.setDescription(course.getDescription());
     courseToCreate.setPublished(course.isPublished());
+    courseToCreate.setImageUrl(course.getImageUrl());
+    courseToCreate.setTopic(course.getTopic());
+    courseToCreate.setDifficulty(course.getDifficulty());
 
     // Owner = the user making the request
     CourseInstructor owner = new CourseInstructor();
@@ -109,6 +112,9 @@ public class CourseServiceImpl implements CourseService {
     course.setTitle(request.getTitle());
     course.setDescription(request.getDescription());
     course.setPublished(request.isPublished());
+    course.setImageUrl(request.getImageUrl());
+    course.setTopic(request.getTopic());
+    course.setDifficulty(request.getDifficulty());
 
     // Diff instructor list: preserve OWNER, update COLLABORATORs
     Set<UUID> requestedInstructorIds =

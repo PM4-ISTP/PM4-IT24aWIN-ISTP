@@ -33,6 +33,16 @@ public class Course {
   @Column(name = "isPublished", nullable = false)
   private boolean isPublished;
 
+  @Column(name = "image_url", nullable = true)
+  private String imageUrl;
+
+  @Column(name = "topic", nullable = true)
+  private String topic;
+
+  @Column(name = "difficulty", nullable = true)
+  @Enumerated(EnumType.STRING)
+  private CourseDifficultyEnum difficulty;
+
   @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CourseInstructor> courseInstructors = new ArrayList<>();
 

@@ -22,18 +22,24 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.title,
             c.description,
             c.isPublished,
-            count(ciAll.id),
+            count(distinct ciAll.id),
             c.createdAt,
-            c.updatedAt
+            c.updatedAt,
+            c.imageUrl,
+            c.topic,
+            c.difficulty,
+            ownerUser.name
           )
           from Course c
           left join c.courseInstructors ciAll
+          left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.domain.entites.InstructorRoleEnum.OWNER
+          left join ciOwner.instructor ownerUser
           where exists (
             select 1
             from CourseInstructor ciFilter
             where ciFilter.course = c and ciFilter.instructor.id = :instructorId
           )
-          group by c.id, c.title, c.description, c.isPublished, c.createdAt, c.updatedAt
+          group by c.id, c.title, c.description, c.isPublished, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name
           """,
       countQuery =
           """
@@ -56,14 +62,20 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.title,
             c.description,
             c.isPublished,
-            count(ciAll.id),
+            count(distinct ciAll.id),
             c.createdAt,
-            c.updatedAt
+            c.updatedAt,
+            c.imageUrl,
+            c.topic,
+            c.difficulty,
+            ownerUser.name
           )
           from Course c
           left join c.courseInstructors ciAll
+          left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.domain.entites.InstructorRoleEnum.OWNER
+          left join ciOwner.instructor ownerUser
           where c.isPublished = true
-          group by c.id, c.title, c.description, c.isPublished, c.createdAt, c.updatedAt
+          group by c.id, c.title, c.description, c.isPublished, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name
           """,
       countQuery =
           """
@@ -81,18 +93,24 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.title,
             c.description,
             c.isPublished,
-            count(ciAll.id),
+            count(distinct ciAll.id),
             c.createdAt,
-            c.updatedAt
+            c.updatedAt,
+            c.imageUrl,
+            c.topic,
+            c.difficulty,
+            ownerUser.name
           )
           from Course c
           left join c.courseInstructors ciAll
+          left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.domain.entites.InstructorRoleEnum.OWNER
+          left join ciOwner.instructor ownerUser
           where c.isPublished = true
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
             )
-          group by c.id, c.title, c.description, c.isPublished, c.createdAt, c.updatedAt
+          group by c.id, c.title, c.description, c.isPublished, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name
           """,
       countQuery =
           """

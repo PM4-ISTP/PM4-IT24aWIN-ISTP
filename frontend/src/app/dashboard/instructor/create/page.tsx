@@ -8,6 +8,7 @@ import {
   Button,
   Container,
   Group,
+  Select,
   Stack,
   Switch,
   Text,
@@ -18,6 +19,24 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
 import { createCourse } from "@/src/lib/actions/courses";
+import type { CourseDifficulty } from "@/src/types/course";
+
+const TOPIC_OPTIONS = [
+  { value: "Cybersecurity", label: "Cybersecurity" },
+  { value: "Programming", label: "Programming" },
+  { value: "Design", label: "Design" },
+  { value: "Data Science", label: "Data Science" },
+  { value: "Networking", label: "Networking" },
+  { value: "Cloud", label: "Cloud" },
+  { value: "DevOps", label: "DevOps" },
+  { value: "Other", label: "Other" },
+];
+
+const DIFFICULTY_OPTIONS = [
+  { value: "BEGINNER", label: "Beginner" },
+  { value: "INTERMEDIATE", label: "Intermediate" },
+  { value: "ADVANCED", label: "Advanced" },
+];
 
 export default function CreateCourse() {
   const router = useRouter();
@@ -25,6 +44,9 @@ export default function CreateCourse() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("<p>Add a description...</p>");
   const [isPublished, setIsPublished] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [topic, setTopic] = useState<string | null>(null);
+  const [difficulty, setDifficulty] = useState<string | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
@@ -45,6 +67,9 @@ export default function CreateCourse() {
       title: title.trim(),
       description,
       isPublished,
+      imageUrl: imageUrl.trim() || null,
+      topic: topic,
+      difficulty: difficulty as CourseDifficulty | null,
       collaboratorIds: selectedInstructors,
     });
 
@@ -92,6 +117,34 @@ export default function CreateCourse() {
             error={titleError}
             required
           />
+
+          <Group grow>
+            <Select
+              label="Topic"
+              placeholder="Select a topic"
+              data={TOPIC_OPTIONS}
+              value={topic}
+              onChange={setTopic}
+              clearable
+            />
+            <Select
+              label="Difficulty"
+              placeholder="Select difficulty"
+              data={DIFFICULTY_OPTIONS}
+              value={difficulty}
+              onChange={setDifficulty}
+              clearable
+            />
+          </Group>
+
+          <TextInput
+            label="Course Image URL"
+            placeholder="https://example.com/image.jpg"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.currentTarget.value)}
+            description="Optional: paste an image URL for the course thumbnail"
+          />
+
           <MyEditor description={description} setDescription={setDescription} />
           <InstructorMultiSelect value={selectedInstructors} onChange={setSelectedInstructors} />
           <Switch
