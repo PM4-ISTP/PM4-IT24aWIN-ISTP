@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ActionIcon,
+  Affix,
   Alert,
   Button,
   Container,
   Group,
+  Notification,
   Select,
   Stack,
   Switch,
@@ -16,13 +18,12 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconX } from "@tabler/icons-react";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
 import { createCourse } from "@/src/lib/actions/courses";
 import {
-  countWords,
-  COURSE_SHORT_DESCRIPTION_MAX_WORDS,
+  COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/lib/courseText";
 import { TOPIC_OPTIONS, DIFFICULTY_OPTIONS } from "@/src/lib/courseConstants";
@@ -43,8 +44,31 @@ export default function CreateCourse() {
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const shortDescriptionWordCount = countWords(shortDescription);
-  const shortDescriptionTooLong = shortDescriptionWordCount > COURSE_SHORT_DESCRIPTION_MAX_WORDS;
+  const [charLimitToastVisible, setCharLimitToastVisible] = useState(false);
+  const charLimitToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const shortDescriptionCharCount = shortDescription.length;
+
+  function clearCharLimitToastTimeout() {
+    if (charLimitToastTimeoutRef.current) {
+      clearTimeout(charLimitToastTimeoutRef.current);
+      charLimitToastTimeoutRef.current = null;
+    }
+  }
+
+  function hideCharLimitToast() {
+    clearCharLimitToastTimeout();
+    setCharLimitToastVisible(false);
+  }
+
+  function showCharLimitToast() {
+    clearCharLimitToastTimeout();
+    setCharLimitToastVisible(true);
+    charLimitToastTimeoutRef.current = setTimeout(() => {
+      setCharLimitToastVisible(false);
+      charLimitToastTimeoutRef.current = null;
+    }, 3500);
+  }
 
   async function handleSubmit() {
     setTitleError(null);
@@ -59,13 +83,6 @@ export default function CreateCourse() {
     const normalizedShortDescription = normalizeShortDescription(shortDescription);
     if (!normalizedShortDescription) {
       setShortDescriptionError("Short description is required");
-      return;
-    }
-
-    if (shortDescriptionTooLong) {
-      setShortDescriptionError(
-        `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words for the short description`
-      );
       return;
     }
 
@@ -132,18 +149,18 @@ export default function CreateCourse() {
             placeholder="Write a short summary shown on the course card and in the blue header"
             value={shortDescription}
             onChange={(e) => {
-              setShortDescription(e.currentTarget.value);
+              const newVal = e.currentTarget.value;
+              if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
+                showCharLimitToast();
+                return;
+              }
+              setShortDescription(newVal);
               if (shortDescriptionError) {
                 setShortDescriptionError(null);
               }
             }}
-            error={
-              shortDescriptionError ??
-              (shortDescriptionTooLong
-                ? `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words`
-                : null)
-            }
-            description={`Shown on course cards and in the blue course header. ${shortDescriptionWordCount}/${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words used.`}
+            error={shortDescriptionError}
+            description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters used.`}
           />
 
           <MyEditor description={description} setDescription={setDescription} />
@@ -202,6 +219,21 @@ export default function CreateCourse() {
           </Button>
         </Stack>
       </Stack>
+
+      <Affix position={{ bottom: 20, right: 20 }}>
+        {charLimitToastVisible && (
+          <Notification
+            color="orange"
+            title="Character limit reached"
+            onClose={hideCharLimitToast}
+            withCloseButton
+            icon={<IconX size={18} />}
+          >
+            The short description cannot exceed {COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters
+            (including spaces).
+          </Notification>
+        )}
+      </Affix>
     </Container>
   );
 }

@@ -239,7 +239,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void createCourse_withTooManyShortDescriptionWords_throwsValidationException() {
+  void createCourse_withTooManyShortDescriptionChars_throwsValidationException() {
     UUID ownerId = UUID.randomUUID();
 
     User owner = new User();
@@ -248,14 +248,13 @@ class CourseServiceImplTest {
 
     when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
 
+    String tooLong = "a".repeat(201);
+
     CreateCourseRequest request =
         new CreateCourseRequest(
             "Secure Coding",
             "Long description",
-            "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen "
-                + "sixteen seventeen eighteen nineteen twenty twenty-one twenty-two twenty-three "
-                + "twenty-four twenty-five twenty-six twenty-seven twenty-eight twenty-nine thirty "
-                + "thirty-one",
+            tooLong,
             false,
             null,
             null,
@@ -264,7 +263,7 @@ class CourseServiceImplTest {
 
     assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
         .isInstanceOf(InvalidCourseShortDescriptionException.class)
-        .hasMessage("Short description can contain at most 30 words");
+        .hasMessage("Short description must be at most 200 characters");
 
     verify(courseRepository, never()).save(any(Course.class));
   }

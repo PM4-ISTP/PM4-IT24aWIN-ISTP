@@ -13,13 +13,13 @@ import com.pm4.istp.domain.entites.UserRoleEnum;
 import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
 import com.pm4.istp.exception.UserNotFoundException;
 import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
 import com.pm4.istp.service.CourseService;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CourseServiceImpl implements CourseService {
   private static final Set<UserRoleEnum> COURSE_COLLABORATOR_ROLES =
       Set.of(UserRoleEnum.ROLE_ADMINISTRATOR, UserRoleEnum.ROLE_INSTRUCTOR);
-  private static final int SHORT_DESCRIPTION_MAX_WORDS = 30;
+  private static final int SHORT_DESCRIPTION_MAX_CHARS = 200;
 
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
   private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
@@ -260,10 +260,11 @@ public class CourseServiceImpl implements CourseService {
     if (shortDescription == null || shortDescription.isBlank()) {
       return null;
     }
-    String[] words = shortDescription.trim().split("\\s+");
-    if (words.length <= SHORT_DESCRIPTION_MAX_WORDS) {
-      return shortDescription.trim();
+    String normalized = shortDescription.trim().replaceAll("\\s+", " ");
+    if (normalized.length() > SHORT_DESCRIPTION_MAX_CHARS) {
+      throw new InvalidCourseShortDescriptionException(
+          "Short description must be at most 200 characters");
     }
-    return String.join(" ", Arrays.copyOf(words, SHORT_DESCRIPTION_MAX_WORDS));
+    return normalized;
   }
 }

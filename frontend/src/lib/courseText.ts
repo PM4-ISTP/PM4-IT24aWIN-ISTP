@@ -1,9 +1,4 @@
-export const COURSE_SHORT_DESCRIPTION_MAX_WORDS = 30;
-
-export function countWords(value: string): number {
-  const normalized = value.trim();
-  return normalized ? normalized.split(/\s+/).length : 0;
-}
+export const COURSE_SHORT_DESCRIPTION_MAX_CHARS = 200;
 
 export function normalizeShortDescription(value: string): string {
   return value.trim().replace(/\s+/g, " ");

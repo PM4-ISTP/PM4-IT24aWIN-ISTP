@@ -28,8 +28,7 @@ import { CoursePeoplePanel } from "@/src/components/CoursePeoplePanel";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
 import {
-  countWords,
-  COURSE_SHORT_DESCRIPTION_MAX_WORDS,
+  COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/lib/courseText";
 import { deleteCourse, fetchCourse, updateCourse } from "@/src/lib/actions/courses";
@@ -84,9 +83,10 @@ export default function EditCourse() {
   const [formError, setFormError] = useState<string | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [charLimitToastVisible, setCharLimitToastVisible] = useState(false);
+  const charLimitToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
-  const shortDescriptionWordCount = countWords(shortDescription);
-  const shortDescriptionTooLong = shortDescriptionWordCount > COURSE_SHORT_DESCRIPTION_MAX_WORDS;
+  const shortDescriptionCharCount = shortDescription.length;
 
   function clearOwnerToastTimeout() {
     if (toastTimeoutRef.current) {
@@ -106,6 +106,27 @@ export default function EditCourse() {
     toastTimeoutRef.current = setTimeout(() => {
       setToastVisible(false);
       toastTimeoutRef.current = null;
+    }, 3500);
+  }
+
+  function clearCharLimitToastTimeout() {
+    if (charLimitToastTimeoutRef.current) {
+      clearTimeout(charLimitToastTimeoutRef.current);
+      charLimitToastTimeoutRef.current = null;
+    }
+  }
+
+  function hideCharLimitToast() {
+    clearCharLimitToastTimeout();
+    setCharLimitToastVisible(false);
+  }
+
+  function showCharLimitToast() {
+    clearCharLimitToastTimeout();
+    setCharLimitToastVisible(true);
+    charLimitToastTimeoutRef.current = setTimeout(() => {
+      setCharLimitToastVisible(false);
+      charLimitToastTimeoutRef.current = null;
     }, 3500);
   }
 
@@ -172,13 +193,6 @@ export default function EditCourse() {
     const normalizedShortDescription = normalizeShortDescription(shortDescription);
     if (!normalizedShortDescription) {
       setShortDescriptionError("Short description is required");
-      return;
-    }
-
-    if (shortDescriptionTooLong) {
-      setShortDescriptionError(
-        `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words for the short description`
-      );
       return;
     }
 
@@ -344,18 +358,18 @@ export default function EditCourse() {
                 placeholder="Write a short summary shown on the course card and in the blue header"
                 value={shortDescription}
                 onChange={(e) => {
-                  setShortDescription(e.currentTarget.value);
+                  const newVal = e.currentTarget.value;
+                  if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
+                    showCharLimitToast();
+                    return;
+                  }
+                  setShortDescription(newVal);
                   if (shortDescriptionError) {
                     setShortDescriptionError(null);
                   }
                 }}
-                error={
-                  shortDescriptionError ??
-                  (shortDescriptionTooLong
-                    ? `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words`
-                    : null)
-                }
-                description={`Shown on course cards and in the blue course header. ${shortDescriptionWordCount}/${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words.`}
+                error={shortDescriptionError}
+                description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
                 autosize
                 minRows={2}
                 maxRows={4}
@@ -443,6 +457,18 @@ export default function EditCourse() {
             icon={<IconX size={18} />}
           >
             The course owner is already managing this course and cannot be added as a collaborator.
+          </Notification>
+        )}
+        {charLimitToastVisible && (
+          <Notification
+            color="orange"
+            title="Character limit reached"
+            onClose={hideCharLimitToast}
+            withCloseButton
+            icon={<IconX size={18} />}
+          >
+            The short description cannot exceed {COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters
+            (including spaces).
           </Notification>
         )}
       </Affix>
