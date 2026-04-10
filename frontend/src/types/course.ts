@@ -54,6 +54,8 @@ export interface ListCourseResponseDto {
   topic?: string | null;
   difficulty?: CourseDifficulty | null;
   ownerName?: string | null;
+  ownerPicture?: string | null;
+  ownerTitle?: string | null;
   createdAt: string;
   updatedAt: string;
 }

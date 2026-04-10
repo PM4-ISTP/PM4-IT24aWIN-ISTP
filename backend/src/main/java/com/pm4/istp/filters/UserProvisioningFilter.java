@@ -58,6 +58,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       String username = normalize(jwt.getClaimAsString("preferred_username"));
       String emailClaim = normalize(jwt.getClaimAsString("email"));
       String pictureClaim = normalize(jwt.getClaimAsString("picture"));
+      String titleClaim = normalize(jwt.getClaimAsString("title"));
       String combinedName = combineNameParts(givenName, familyName);
 
       Optional<UserInfoProfile> userInfoProfile =
@@ -97,6 +98,10 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               pictureClaim,
               userInfoProfile.map(UserInfoProfile::picture).orElse(null),
               existingUser.map(User::getPicture).map(this::normalize).orElse(null));
+      String title =
+          firstNonBlank(
+              titleClaim,
+              existingUser.map(User::getTitle).map(this::normalize).orElse(null));
 
       Set<UserRoleEnum> roles =
           authentication.getAuthorities().stream()
@@ -112,11 +117,13 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
                 || !Objects.equals(user.getEmail(), email)
                 || !Objects.equals(user.getUsername(), username)
                 || !Objects.equals(user.getPicture(), picture)
+                || !Objects.equals(user.getTitle(), title)
                 || !Objects.equals(user.getRoles(), roles)) {
               user.setName(displayName);
               user.setEmail(email);
               user.setUsername(username);
               user.setPicture(picture);
+              user.setTitle(title);
               user.setRoles(roles);
               userRepository.save(user);
             }
@@ -128,6 +135,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
             newUser.setEmail(email);
             newUser.setUsername(username);
             newUser.setPicture(picture);
+            newUser.setTitle(title);
             newUser.setRoles(roles);
             userRepository.save(newUser);
           });
