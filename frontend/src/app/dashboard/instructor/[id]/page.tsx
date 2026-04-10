@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -32,6 +32,7 @@ import {
   normalizeShortDescription,
 } from "@/src/lib/courseText";
 import { deleteCourse, fetchCourse, updateCourse } from "@/src/lib/actions/courses";
+import { useToast } from "@/src/hooks/useToast";
 import { TOPIC_OPTIONS, DIFFICULTY_OPTIONS } from "@/src/lib/courseConstants";
 import type {
   CollaboratorUserResponseDto,
@@ -81,59 +82,15 @@ export default function EditCourse() {
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [toastVisible, setToastVisible] = useState(false);
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [charLimitToastVisible, setCharLimitToastVisible] = useState(false);
-  const charLimitToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ownerToast = useToast();
+  const charLimitToast = useToast();
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const shortDescriptionCharCount = shortDescription.length;
-
-  function clearOwnerToastTimeout() {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-      toastTimeoutRef.current = null;
-    }
-  }
-
-  function hideOwnerToast() {
-    clearOwnerToastTimeout();
-    setToastVisible(false);
-  }
-
-  function showOwnerToast() {
-    clearOwnerToastTimeout();
-    setToastVisible(true);
-    toastTimeoutRef.current = setTimeout(() => {
-      setToastVisible(false);
-      toastTimeoutRef.current = null;
-    }, 3500);
-  }
-
-  function clearCharLimitToastTimeout() {
-    if (charLimitToastTimeoutRef.current) {
-      clearTimeout(charLimitToastTimeoutRef.current);
-      charLimitToastTimeoutRef.current = null;
-    }
-  }
-
-  function hideCharLimitToast() {
-    clearCharLimitToastTimeout();
-    setCharLimitToastVisible(false);
-  }
-
-  function showCharLimitToast() {
-    clearCharLimitToastTimeout();
-    setCharLimitToastVisible(true);
-    charLimitToastTimeoutRef.current = setTimeout(() => {
-      setCharLimitToastVisible(false);
-      charLimitToastTimeoutRef.current = null;
-    }, 3500);
-  }
 
   function handleCollaboratorChange(newValue: string[]) {
     const ownerId = owner?.id;
     if (ownerId && newValue.includes(ownerId)) {
-      showOwnerToast();
+      ownerToast.show();
       setSelectedInstructors(newValue.filter((id) => id !== ownerId));
       return;
     }
@@ -177,8 +134,6 @@ export default function EditCourse() {
 
     void load();
   }, [courseId]);
-
-  useEffect(() => clearOwnerToastTimeout, []);
 
   async function handleSubmit() {
     setTitleError(null);
@@ -360,7 +315,7 @@ export default function EditCourse() {
                 onChange={(e) => {
                   const newVal = e.currentTarget.value;
                   if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
-                    showCharLimitToast();
+                    charLimitToast.show();
                     return;
                   }
                   setShortDescription(newVal);
@@ -448,22 +403,22 @@ export default function EditCourse() {
       </Stack>
 
       <Affix position={{ bottom: 20, right: 20 }}>
-        {toastVisible && (
+        {ownerToast.visible && (
           <Notification
             color="orange"
             title="Can't add owner as collaborator"
-            onClose={hideOwnerToast}
+            onClose={ownerToast.hide}
             withCloseButton
             icon={<IconX size={18} />}
           >
             The course owner is already managing this course and cannot be added as a collaborator.
           </Notification>
         )}
-        {charLimitToastVisible && (
+        {charLimitToast.visible && (
           <Notification
             color="orange"
             title="Character limit reached"
-            onClose={hideCharLimitToast}
+            onClose={charLimitToast.hide}
             withCloseButton
             icon={<IconX size={18} />}
           >

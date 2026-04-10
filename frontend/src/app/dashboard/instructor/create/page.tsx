@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ActionIcon,
@@ -26,6 +26,7 @@ import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/lib/courseText";
+import { useToast } from "@/src/hooks/useToast";
 import { TOPIC_OPTIONS, DIFFICULTY_OPTIONS } from "@/src/lib/courseConstants";
 import type { CourseDifficulty } from "@/src/types/course";
 
@@ -44,31 +45,9 @@ export default function CreateCourse() {
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [charLimitToastVisible, setCharLimitToastVisible] = useState(false);
-  const charLimitToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const charLimitToast = useToast();
 
   const shortDescriptionCharCount = shortDescription.length;
-
-  function clearCharLimitToastTimeout() {
-    if (charLimitToastTimeoutRef.current) {
-      clearTimeout(charLimitToastTimeoutRef.current);
-      charLimitToastTimeoutRef.current = null;
-    }
-  }
-
-  function hideCharLimitToast() {
-    clearCharLimitToastTimeout();
-    setCharLimitToastVisible(false);
-  }
-
-  function showCharLimitToast() {
-    clearCharLimitToastTimeout();
-    setCharLimitToastVisible(true);
-    charLimitToastTimeoutRef.current = setTimeout(() => {
-      setCharLimitToastVisible(false);
-      charLimitToastTimeoutRef.current = null;
-    }, 3500);
-  }
 
   async function handleSubmit() {
     setTitleError(null);
@@ -151,7 +130,7 @@ export default function CreateCourse() {
             onChange={(e) => {
               const newVal = e.currentTarget.value;
               if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
-                showCharLimitToast();
+                charLimitToast.show();
                 return;
               }
               setShortDescription(newVal);
@@ -221,11 +200,11 @@ export default function CreateCourse() {
       </Stack>
 
       <Affix position={{ bottom: 20, right: 20 }}>
-        {charLimitToastVisible && (
+        {charLimitToast.visible && (
           <Notification
             color="orange"
             title="Character limit reached"
-            onClose={hideCharLimitToast}
+            onClose={charLimitToast.hide}
             withCloseButton
             icon={<IconX size={18} />}
           >

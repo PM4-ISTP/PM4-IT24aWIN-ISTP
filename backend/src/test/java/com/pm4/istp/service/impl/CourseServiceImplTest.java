@@ -263,7 +263,8 @@ class CourseServiceImplTest {
 
     assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
         .isInstanceOf(InvalidCourseShortDescriptionException.class)
-        .hasMessage("Short description must be at most 200 characters");
+        .hasMessageContaining("200")
+        .hasMessageContaining("characters");
 
     verify(courseRepository, never()).save(any(Course.class));
   }
