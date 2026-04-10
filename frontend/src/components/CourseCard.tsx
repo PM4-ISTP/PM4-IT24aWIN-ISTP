@@ -2,6 +2,7 @@ import { Avatar, Badge, Box, Group, Image, Stack, Text, UnstyledButton } from "@
 import { IconClock, IconUsers } from "@tabler/icons-react";
 import { getCoursePreviewText } from "@/src/lib/courseText";
 import { difficultyColor, difficultyLabel } from "@/src/lib/courseUtils";
+import { getInitials } from "@/src/lib/utils";
 import classes from "./CourseCard.module.css";
 import type { CourseDifficulty } from "@/src/types/course";
 
@@ -22,15 +23,6 @@ export interface CourseCardProps {
   onClick?: (id: string) => void;
 }
 
-function getInitials(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 export function CourseCard({
   id,

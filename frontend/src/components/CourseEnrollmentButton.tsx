@@ -3,6 +3,10 @@
 import { startTransition, useState } from "react";
 import { Alert, Button, Stack, Text } from "@mantine/core";
 import { useRouter } from "next/navigation";
+import { extractErrorMessage } from "@/src/lib/utils";
+
+const CATALOG_ENROLL_API = (courseId: string) =>
+  `/api/backend/api/v1/courses/catalog/${courseId}/enroll`;
 
 interface CourseEnrollmentButtonProps {
   courseId: string;
@@ -10,23 +14,6 @@ interface CourseEnrollmentButtonProps {
   participantCount: number;
   isInstructor: boolean;
   isPublished: boolean;
-}
-
-function extractErrorMessage(text: string, fallback: string): string {
-  if (!text) {
-    return fallback;
-  }
-
-  try {
-    const parsed = JSON.parse(text) as { error?: unknown };
-    if (typeof parsed.error === "string" && parsed.error.trim()) {
-      return parsed.error;
-    }
-  } catch {
-    return text || fallback;
-  }
-
-  return text || fallback;
 }
 
 export function CourseEnrollmentButton({
@@ -47,7 +34,7 @@ export function CourseEnrollmentButton({
     setJoinError(null);
 
     try {
-      const response = await fetch(`/api/backend/api/v1/courses/catalog/${courseId}/enroll`, {
+      const response = await fetch(CATALOG_ENROLL_API(courseId), {
         method: "POST",
       });
 

@@ -34,7 +34,10 @@ import {
 } from "@/src/lib/courseText";
 import { deleteCourse, fetchCourse, updateCourse } from "@/src/lib/actions/courses";
 import { TOPIC_OPTIONS, DIFFICULTY_OPTIONS } from "@/src/lib/courseConstants";
-import type { CollaboratorUserResponseDto, CourseDifficulty, CourseDetailResponseDto } from "@/src/types/course";
+import type { CollaboratorUserResponseDto, CourseDifficulty, CourseDetailResponseDto, InstructorRoleEnum } from "@/src/types/course";
+
+const OWNER_ROLE: InstructorRoleEnum = "OWNER";
+const COLLABORATOR_ROLE: InstructorRoleEnum = "COLLABORATOR";
 
 function mergeUsersById(
   current: Record<string, CollaboratorUserResponseDto>,
@@ -133,7 +136,7 @@ export default function EditCourse() {
 
       // Extract collaborators (not OWNER) for the multi-select
       const collaborators = course.courseInstructors.filter(
-        (ci) => ci.instructorRole === "COLLABORATOR"
+        (ci) => ci.instructorRole === COLLABORATOR_ROLE
       );
       setSelectedInstructors(collaborators.map((ci) => ci.instructor.id));
       setInitialUsers(collaborators.map((ci) => ci.instructor));
@@ -219,7 +222,7 @@ export default function EditCourse() {
 
   const owner =
     course?.courseInstructors.find(
-      (courseInstructor) => courseInstructor.instructorRole === "OWNER"
+      (courseInstructor) => courseInstructor.instructorRole === OWNER_ROLE
     )?.instructor ?? null;
   const isOwner = owner?.id === currentUserId;
   const collaborators = selectedInstructors
