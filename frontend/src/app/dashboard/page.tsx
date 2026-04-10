@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
+import WelcomeTitle from "./WelcomeTitle";
 import {
   Badge,
   Box,
@@ -14,7 +15,6 @@ import {
   Stack,
   Text,
   ThemeIcon,
-  Title,
 } from "@mantine/core";
 import {
   IconBook2,
@@ -177,6 +177,10 @@ export default async function Home() {
   return (
     <Stack p="xl" gap="xl">
       <style>{`
+        @keyframes cursorBlink {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0; }
+        }
         @keyframes fadeSlideUp {
           from { opacity: 0; transform: translateY(18px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -271,18 +275,7 @@ export default async function Home() {
         />
         <Stack gap={6} className="dashboard-hero-content" style={{ position: "relative" }}>
           <Text style={{ ...labelStyle, color: "rgba(255,255,255,0.45)" }}>{dateStr}</Text>
-          <Title
-            order={1}
-            style={{
-              fontFamily: "var(--font-manrope), 'Manrope', sans-serif",
-              fontWeight: 800,
-              color: "#fff",
-              fontSize: "2rem",
-            }}
-          >
-            Welcome back,{" "}
-            <span style={{ color: "#3B82F6" }}>{firstName}!</span>
-          </Title>
+          <WelcomeTitle firstName={firstName} />
           <Text size="sm" style={{ color: "rgba(255,255,255,0.55)" }}>
             Here&apos;s an overview of your learning progress.
           </Text>
