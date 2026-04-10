@@ -17,6 +17,8 @@ export interface CourseCardProps {
   topic?: string | null;
   difficulty?: CourseDifficulty | null;
   ownerName?: string | null;
+  ownerPicture?: string | null;
+  ownerTitle?: string | null;
   onClick?: (id: string) => void;
 }
 
@@ -42,6 +44,8 @@ export function CourseCard({
   topic,
   difficulty,
   ownerName,
+  ownerPicture,
+  ownerTitle,
   onClick,
 }: CourseCardProps) {
   const previewText = getCoursePreviewText(shortDescription, description);
@@ -103,7 +107,7 @@ export function CourseCard({
         <Box className={classes.footer}>
           {ownerName ? (
             <Group gap={8} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-              <Avatar radius="xl" size={28} color="blue">
+              <Avatar radius="xl" size={28} color="blue" src={ownerPicture ?? undefined}>
                 {getInitials(ownerName)}
               </Avatar>
               <Stack gap={0} style={{ minWidth: 0 }}>
@@ -111,7 +115,7 @@ export function CourseCard({
                   {ownerName}
                 </Text>
                 <Text size="xs" c="dimmed">
-                  Instructor
+                  {ownerTitle ?? "Instructor"}
                 </Text>
               </Stack>
             </Group>

@@ -26,6 +26,8 @@ public class ListCourseResponseDto {
   private String topic;
   private CourseDifficultyEnum difficulty;
   private String ownerName;
+  private String ownerPicture;
+  private String ownerTitle;
 
   // Constructor for queries that don't include ownerName (instructor dashboard)
   public ListCourseResponseDto(
@@ -47,7 +49,7 @@ public class ListCourseResponseDto {
     this.updatedAt = updatedAt;
   }
 
-  // Constructor for catalog queries that include ownerName
+  // Constructor for catalog queries that include owner info
   public ListCourseResponseDto(
       UUID id,
       String title,
@@ -60,7 +62,9 @@ public class ListCourseResponseDto {
       String imageUrl,
       String topic,
       CourseDifficultyEnum difficulty,
-      String ownerName) {
+      String ownerName,
+      String ownerPicture,
+      String ownerTitle) {
     this.id = id;
     this.title = title;
     this.description = description;
@@ -73,5 +77,7 @@ public class ListCourseResponseDto {
     this.topic = topic;
     this.difficulty = difficulty;
     this.ownerName = ownerName;
+    this.ownerPicture = ownerPicture;
+    this.ownerTitle = ownerTitle;
   }
 }
