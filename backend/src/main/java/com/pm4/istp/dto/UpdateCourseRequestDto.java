@@ -18,6 +18,7 @@ public class UpdateCourseRequestDto {
 
   private String description;
 
+  @NotBlank(message = "Short description is required")
   @Size(max = 200, message = "Short description must be at most 200 characters")
   private String shortDescription;
 

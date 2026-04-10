@@ -173,7 +173,7 @@ public class CourseController {
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     Course course = courseService.getCourse(userId, id);
-    CourseDetailResponseDto dto = toCourseDetailResponseDto(course, userId);
+    CourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
     return ResponseEntity.ok(dto);
   }
 
@@ -182,11 +182,13 @@ public class CourseController {
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     Course course = courseService.enrollInCourse(userId, id);
-    CourseDetailResponseDto dto = toCourseDetailResponseDto(course, userId);
+    CourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
     return ResponseEntity.ok(dto);
   }
 
-  // ── Private helper ──
+  // ── Private helpers ──
+
+  /** Full detail including participant list – for instructor/owner endpoints. */
   private CourseDetailResponseDto toCourseDetailResponseDto(Course course, UUID userId) {
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
     UUID courseId = course.getId();
@@ -203,6 +205,16 @@ public class CourseController {
                 })
             .collect(java.util.stream.Collectors.toList());
     dto.setParticipants(participants);
+    return dto;
+  }
+
+  /** Public catalog detail – omits participant list; returns only count and enrollment status. */
+  private CourseDetailResponseDto toPublicCourseDetailResponseDto(Course course, UUID userId) {
+    CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
+    UUID courseId = course.getId();
+    dto.setParticipantCount(courseEnrollmentRepository.countByCourseId(courseId));
+    dto.setEnrolled(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId));
+    dto.setParticipants(null);
     return dto;
   }
 }

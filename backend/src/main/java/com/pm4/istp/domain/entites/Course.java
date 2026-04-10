@@ -30,7 +30,7 @@ public class Course {
   @Column(name = "description", nullable = true)
   private String description;
 
-  @Column(name = "short_description", nullable = true, length = 500)
+  @Column(name = "short_description", nullable = true, length = 200)
   private String shortDescription;
 
   @Column(name = "isPublished", nullable = false)
