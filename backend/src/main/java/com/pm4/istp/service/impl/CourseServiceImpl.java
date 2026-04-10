@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -108,7 +109,7 @@ public class CourseServiceImpl implements CourseService {
   }
 
   @Override
-  @Transactional
+  @Transactional(noRollbackFor = DataIntegrityViolationException.class)
   public Course enrollInCourse(UUID userId, UUID courseId) {
     User participant =
         userRepository
@@ -136,7 +137,12 @@ public class CourseServiceImpl implements CourseService {
     courseEnrollment.setParticipant(participant);
     course.addCourseEnrollment(courseEnrollment);
 
-    return courseRepository.save(course);
+    try {
+      return courseRepository.save(course);
+    } catch (DataIntegrityViolationException ex) {
+      // Concurrent enrollment: another request already enrolled this user; treat as already enrolled
+      return course;
+    }
   }
 
   @Override

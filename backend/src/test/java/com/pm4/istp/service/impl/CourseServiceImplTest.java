@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -319,6 +320,30 @@ class CourseServiceImplTest {
 
     assertThat(result).isSameAs(course);
     verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void enrollInCourse_whenConcurrentDuplicateInsert_treatsAsAlreadyEnrolled() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User participant = new User();
+    participant.setId(userId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(true);
+
+    when(userRepository.findById(userId)).thenReturn(Optional.of(participant));
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(false);
+    when(courseRepository.save(any(Course.class)))
+        .thenThrow(new DataIntegrityViolationException("uk_course_enrollment_course_participant"));
+
+    Course result = courseService.enrollInCourse(userId, courseId);
+
+    assertThat(result).isSameAs(course);
   }
 
   @Test
