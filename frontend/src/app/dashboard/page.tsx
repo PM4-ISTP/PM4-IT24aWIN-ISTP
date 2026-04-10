@@ -1,164 +1,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
-import WelcomeTitle from "./WelcomeTitle";
-import {
-  Badge,
-  Box,
-  Button,
-  Grid,
-  GridCol,
-  Group,
-  Paper,
-  Progress,
-  RingProgress,
-  SimpleGrid,
-  Stack,
-  Text,
-  ThemeIcon,
-} from "@mantine/core";
-import {
-  IconBook2,
-  IconBolt,
-  IconTrophy,
-  IconArrowRight,
-  IconShieldCheck,
-  IconBug,
-  IconLock,
-  IconChevronRight,
-} from "@tabler/icons-react";
-
-const labelStyle: React.CSSProperties = {
-  fontFamily: "var(--font-space-grotesk), 'Space Grotesk', sans-serif",
-  textTransform: "uppercase",
-  letterSpacing: "0.14em",
-  fontSize: "0.72rem",
-  fontWeight: 700,
-  color: "#5B606B",
-};
-
-const statAccentColors: Record<string, string> = {
-  blue: "#3B82F6",
-  teal: "#10B981",
-  orange: "#F59E0B",
-  grape: "#8B5CF6",
-};
-
-function StatCard({
-  icon,
-  label,
-  value,
-  sub,
-  color,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  sub?: string;
-  color: string;
-}) {
-  const accent = statAccentColors[color] ?? "#3B82F6";
-  return (
-    <Paper
-      withBorder
-      radius="lg"
-      p="lg"
-      className="dashboard-stat-card"
-      style={{ borderColor: "#E5EEFF", borderTop: `3px solid ${accent}` }}
-    >
-      <Group align="flex-start" justify="space-between" wrap="nowrap">
-        <Stack gap={4}>
-          <Text style={labelStyle}>{label}</Text>
-          <Text fw={700} size="xl" style={{ color: "#001E41", lineHeight: 1.2 }}>
-            {value}
-          </Text>
-          {sub && (
-            <Text size="xs" c="dimmed">
-              {sub}
-            </Text>
-          )}
-        </Stack>
-        <ThemeIcon size="lg" radius="md" color={color} variant="light">
-          {icon}
-        </ThemeIcon>
-      </Group>
-    </Paper>
-  );
-}
-
-function PlaceholderCourseCard({
-  title,
-  topic,
-  progress,
-  icon,
-}: {
-  title: string;
-  topic: string;
-  progress: number;
-  icon: React.ReactNode;
-}) {
-  return (
-    <Paper withBorder radius="lg" p="lg" className="dashboard-course-card" style={{ borderColor: "#E5EEFF" }}>
-      <Stack gap="sm">
-        <Group align="flex-start" justify="space-between" wrap="nowrap">
-          <Stack gap={2} style={{ flex: 1 }}>
-            <Text fw={600} size="md" lineClamp={2} style={{ color: "#001E41" }}>
-              {title}
-            </Text>
-            <Badge size="sm" variant="light" color="blue">
-              {topic}
-            </Badge>
-          </Stack>
-          <ThemeIcon size="md" radius="md" color="blue" variant="light">
-            {icon}
-          </ThemeIcon>
-        </Group>
-        <Box>
-          <Group justify="space-between" mb={4}>
-            <Text size="sm" c="dimmed">
-              Progress
-            </Text>
-            <Text size="sm" fw={600} c="blue">
-              {progress}%
-            </Text>
-          </Group>
-          <Progress value={progress} size="sm" radius="xl" color="blue" />
-        </Box>
-      </Stack>
-    </Paper>
-  );
-}
-
-function ActivityItem({
-  label,
-  time,
-  color,
-}: {
-  label: string;
-  time: string;
-  color: string;
-}) {
-  return (
-    <Group className="dashboard-activity-item" justify="space-between" wrap="nowrap">
-      <Group gap="sm" wrap="nowrap">
-        <Box
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            background: color,
-            flexShrink: 0,
-          }}
-        />
-        <Text size="md" c="dimmed">
-          {label}
-        </Text>
-      </Group>
-      <Text size="sm" c="dimmed" style={{ flexShrink: 0 }}>
-        {time}
-      </Text>
-    </Group>
-  );
-}
+import { Grid, GridCol, Group, Paper, RingProgress, SimpleGrid, Stack, Text } from "@mantine/core";
+import { IconArrowRight, IconBolt, IconBug, IconLock, IconShieldCheck } from "@tabler/icons-react";
+import DashboardStyles from "./DashboardStyles";
+import DashboardHero from "./DashboardHero";
+import CourseCard from "./CourseCard";
+import ActivityItem from "./ActivityItem";
+import { labelStyle } from "./_shared";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -175,188 +23,9 @@ export default async function Home() {
 
   return (
     <Stack p="xl" gap="xl">
-      <style>{`
-        @keyframes cursorBlink {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0; }
-        }
-        @keyframes fadeSlideUp {
-          from { opacity: 0; transform: translateY(18px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulseGlow {
-          0%, 100% { opacity: 0.7; }
-          50%       { opacity: 1; }
-        }
-        .dashboard-hero-content {
-          animation: fadeSlideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .dashboard-glow-tr {
-          animation: pulseGlow 5s ease-in-out infinite;
-        }
-        .dashboard-glow-bl {
-          animation: pulseGlow 5s ease-in-out 2.5s infinite;
-        }
-        .dashboard-stat-card {
-          transition: transform 0.18s ease, box-shadow 0.18s ease;
-          cursor: default;
-        }
-        .dashboard-stat-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 10px 28px rgba(59, 130, 246, 0.13);
-        }
-        .dashboard-course-card {
-          transition: transform 0.18s ease, box-shadow 0.18s ease;
-          cursor: pointer;
-        }
-        .dashboard-course-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 10px 28px rgba(59, 130, 246, 0.10);
-        }
-        .dashboard-activity-item {
-          transition: background 0.15s ease;
-          border-radius: 6px;
-          padding: 4px 6px;
-          margin: 0 -6px;
-          cursor: default;
-        }
-        .dashboard-activity-item:hover {
-          background: rgba(59, 130, 246, 0.06);
-        }
-        .dashboard-hero-stats {
-          display: flex;
-        }
-        @media (max-width: 700px) {
-          .dashboard-hero-stats { display: none; }
-        }
-      `}</style>
-      {/* Hero banner */}
-      <Box
-        style={{
-          background: "linear-gradient(135deg, #060D1A 0%, #0A1628 50%, #0D1F5C 100%)",
-          borderRadius: 16,
-          padding: "2rem 2.5rem",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Dot grid overlay */}
-        <Box
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: "radial-gradient(circle, rgba(59,130,246,0.18) 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-            pointerEvents: "none",
-          }}
-        />
-        {/* Blue glow top-right */}
-        <Box
-          className="dashboard-glow-tr"
-          style={{
-            position: "absolute",
-            top: -60,
-            right: -40,
-            width: 240,
-            height: 240,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(59,130,246,0.35) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-        {/* Cyan glow bottom-left */}
-        <Box
-          className="dashboard-glow-bl"
-          style={{
-            position: "absolute",
-            bottom: -60,
-            left: -40,
-            width: 180,
-            height: 180,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(6,182,212,0.2) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-        <Group
-          className="dashboard-hero-content"
-          justify="space-between"
-          align="center"
-          wrap="nowrap"
-          style={{ position: "relative", gap: "2rem" }}
-        >
-          {/* Left: welcome text + buttons */}
-          <Stack gap={8} style={{ flex: 1, minWidth: 0 }}>
-            <Text style={{ ...labelStyle, color: "rgba(255,255,255,0.45)" }}>{dateStr}</Text>
-            <WelcomeTitle firstName={firstName} />
-            <Text size="md" style={{ color: "rgba(255,255,255,0.55)" }}>
-              Here&apos;s an overview of your learning progress.
-            </Text>
-            <Group mt={8} gap="sm">
-              <Button
-                size="md"
-                radius="xl"
-                variant="filled"
-                color="blue"
-                rightSection={<IconChevronRight size={15} />}
-              >
-                Browse Courses
-              </Button>
-              <Button
-                size="md"
-                radius="xl"
-                variant="outline"
-                style={{ borderColor: "rgba(255,255,255,0.3)", color: "#fff" }}
-              >
-                View Leaderboard
-              </Button>
-            </Group>
-          </Stack>
+      <DashboardStyles />
 
-          {/* Right: inline hero stats */}
-          <Stack gap="sm" className="dashboard-hero-stats" style={{ flexShrink: 0, minWidth: 220 }}>
-            {[
-              { icon: <IconBook2 size={18} />, label: "Enrolled Courses", value: "—" },
-              { icon: <IconTrophy size={18} />, label: "Completed", value: "—" },
-              { icon: <IconBolt size={18} />, label: "Current Streak", value: "—" },
-            ].map(({ icon, label, value }) => (
-              <Box
-                key={label}
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 12,
-                  padding: "0.75rem 1rem",
-                }}
-              >
-                <Group gap="sm" wrap="nowrap">
-                  <Box
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 8,
-                      background: "rgba(59,130,246,0.18)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#3B82F6",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {icon}
-                  </Box>
-                  <Stack gap={1}>
-                    <Text style={{ ...labelStyle, color: "rgba(255,255,255,0.45)" }}>{label}</Text>
-                    <Text fw={700} size="lg" style={{ color: "#fff", lineHeight: 1.1 }}>
-                      {value}
-                    </Text>
-                  </Stack>
-                </Group>
-              </Box>
-            ))}
-          </Stack>
-        </Group>
-      </Box>
+      <DashboardHero firstName={firstName} dateStr={dateStr} />
 
       {/* Main content row */}
       <Grid gutter="md">
@@ -373,25 +42,25 @@ export default async function Home() {
               </Group>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-              <PlaceholderCourseCard
+              <CourseCard
                 title="Introduction to Web Application Security"
                 topic="Web Security"
                 progress={42}
                 icon={<IconShieldCheck size={16} />}
               />
-              <PlaceholderCourseCard
+              <CourseCard
                 title="Common Vulnerabilities and Exploits (CVE)"
                 topic="Vulnerabilities"
                 progress={15}
                 icon={<IconBug size={16} />}
               />
-              <PlaceholderCourseCard
+              <CourseCard
                 title="Cryptography Fundamentals"
                 topic="Cryptography"
                 progress={68}
                 icon={<IconLock size={16} />}
               />
-              <PlaceholderCourseCard
+              <CourseCard
                 title="Network Penetration Testing"
                 topic="Pentesting"
                 progress={5}
@@ -424,32 +93,14 @@ export default async function Home() {
               </Stack>
             </Paper>
 
-            {/* Security Tip of the Day removed */}
-
             {/* Recent Activity */}
             <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
               <Stack gap="sm">
                 <Text style={{ ...labelStyle, fontSize: "0.82rem" }}>Recent Activity</Text>
-                <ActivityItem
-                  label="Completed lesson: SQL Injection"
-                  time="2h ago"
-                  color="#3B82F6"
-                />
-                <ActivityItem
-                  label="Started: Cryptography Fundamentals"
-                  time="Yesterday"
-                  color="#10B981"
-                />
-                <ActivityItem
-                  label="Earned badge: Quick Learner"
-                  time="2d ago"
-                  color="#F59E0B"
-                />
-                <ActivityItem
-                  label="Enrolled in: Network Pentesting"
-                  time="3d ago"
-                  color="#8B5CF6"
-                />
+                <ActivityItem label="Completed lesson: SQL Injection" time="2h ago" color="#3B82F6" />
+                <ActivityItem label="Started: Cryptography Fundamentals" time="Yesterday" color="#10B981" />
+                <ActivityItem label="Earned badge: Quick Learner" time="2d ago" color="#F59E0B" />
+                <ActivityItem label="Enrolled in: Network Pentesting" time="3d ago" color="#8B5CF6" />
                 <Text size="sm" c="dimmed" ta="center" mt={4}>
                   Placeholder data
                 </Text>
