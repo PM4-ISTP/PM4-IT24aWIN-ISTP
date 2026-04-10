@@ -13,6 +13,7 @@ public class ListCourseResponseDto {
   private UUID id;
   private String title;
   private String description;
+  private String shortDescription;
 
   @JsonProperty("isPublished")
   private boolean isPublished;
@@ -31,6 +32,7 @@ public class ListCourseResponseDto {
       UUID id,
       String title,
       String description,
+      String shortDescription,
       boolean isPublished,
       long instructorCount,
       LocalDateTime createdAt,
@@ -38,6 +40,7 @@ public class ListCourseResponseDto {
     this.id = id;
     this.title = title;
     this.description = description;
+    this.shortDescription = shortDescription;
     this.isPublished = isPublished;
     this.instructorCount = instructorCount;
     this.createdAt = createdAt;
@@ -49,6 +52,7 @@ public class ListCourseResponseDto {
       UUID id,
       String title,
       String description,
+      String shortDescription,
       boolean isPublished,
       long instructorCount,
       LocalDateTime createdAt,
@@ -60,6 +64,7 @@ public class ListCourseResponseDto {
     this.id = id;
     this.title = title;
     this.description = description;
+    this.shortDescription = shortDescription;
     this.isPublished = isPublished;
     this.instructorCount = instructorCount;
     this.createdAt = createdAt;

@@ -1,5 +1,7 @@
-import { Badge, Box, Group, Image, Stack, Text, UnstyledButton } from "@mantine/core";
-import { IconClock, IconUser, IconUsers } from "@tabler/icons-react";
+import { Avatar, Badge, Box, Group, Image, Stack, Text, UnstyledButton } from "@mantine/core";
+import { IconClock, IconUsers } from "@tabler/icons-react";
+import { getCoursePreviewText } from "@/src/lib/courseText";
+import { difficultyColor, difficultyLabel } from "@/src/lib/courseUtils";
 import classes from "./CourseCard.module.css";
 import type { CourseDifficulty } from "@/src/types/course";
 
@@ -7,6 +9,7 @@ export interface CourseCardProps {
   id: string;
   title: string;
   description: string | null;
+  shortDescription: string | null;
   isPublished: boolean;
   instructorCount: number;
   updatedAt: string;
@@ -17,36 +20,21 @@ export interface CourseCardProps {
   onClick?: (id: string) => void;
 }
 
-function difficultyColor(d: CourseDifficulty | null | undefined): string {
-  switch (d) {
-    case "BEGINNER":
-      return "green";
-    case "INTERMEDIATE":
-      return "blue";
-    case "ADVANCED":
-      return "red";
-    default:
-      return "gray";
-  }
-}
-
-function difficultyLabel(d: CourseDifficulty | null | undefined): string {
-  switch (d) {
-    case "BEGINNER":
-      return "Beginner";
-    case "INTERMEDIATE":
-      return "Intermediate";
-    case "ADVANCED":
-      return "Advanced";
-    default:
-      return "";
-  }
+function getInitials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export function CourseCard({
   id,
   title,
   description,
+  shortDescription,
   isPublished,
   instructorCount,
   updatedAt,
@@ -56,6 +44,8 @@ export function CourseCard({
   ownerName,
   onClick,
 }: CourseCardProps) {
+  const previewText = getCoursePreviewText(shortDescription, description);
+
   const content = (
     <Stack gap={0} h="100%" style={{ overflow: "hidden" }}>
       {/* Thumbnail */}
@@ -107,21 +97,23 @@ export function CourseCard({
         </Text>
 
         <Text size="xs" c="dimmed" lineClamp={2} style={{ flex: 1 }}>
-          {description
-            ? description
-                .replace(/<\/(p|h[1-6]|li|br|div)>/gi, " ")
-                .replace(/<[^>]*>/g, "")
-                .trim()
-            : "No description provided."}
+          {previewText || "No short description provided."}
         </Text>
 
         <Box className={classes.footer}>
           {ownerName ? (
-            <Group gap={6}>
-              <IconUser size={13} stroke={1.5} />
-              <Text size="xs" c="dimmed" lineClamp={1} style={{ maxWidth: 120 }}>
-                {ownerName}
-              </Text>
+            <Group gap={8} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+              <Avatar radius="xl" size={28} color="blue">
+                {getInitials(ownerName)}
+              </Avatar>
+              <Stack gap={0} style={{ minWidth: 0 }}>
+                <Text size="xs" fw={600} lineClamp={1}>
+                  {ownerName}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Instructor
+                </Text>
+              </Stack>
             </Group>
           ) : (
             <Group gap={6}>
@@ -131,7 +123,7 @@ export function CourseCard({
               </Text>
             </Group>
           )}
-          <Group gap={6}>
+          <Group gap={4} style={{ flexShrink: 0 }}>
             <IconClock size={13} stroke={1.5} />
             <Text size="xs" c="dimmed">
               {updatedAt}

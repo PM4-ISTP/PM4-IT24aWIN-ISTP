@@ -30,6 +30,9 @@ public class Course {
   @Column(name = "description", nullable = true)
   private String description;
 
+  @Column(name = "short_description", nullable = true, length = 500)
+  private String shortDescription;
+
   @Column(name = "isPublished", nullable = false)
   private boolean isPublished;
 
@@ -46,6 +49,9 @@ public class Course {
   @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CourseInstructor> courseInstructors = new ArrayList<>();
 
+  @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<CourseEnrollment> courseEnrollments = new ArrayList<>();
+
   public void addCourseInstructor(CourseInstructor courseInstructor) {
     courseInstructors.add(courseInstructor);
     courseInstructor.setCourse(this);
@@ -54,6 +60,16 @@ public class Course {
   public void removeCourseInstructor(CourseInstructor courseInstructor) {
     courseInstructors.remove(courseInstructor);
     courseInstructor.setCourse(null);
+  }
+
+  public void addCourseEnrollment(CourseEnrollment courseEnrollment) {
+    courseEnrollments.add(courseEnrollment);
+    courseEnrollment.setCourse(this);
+  }
+
+  public void removeCourseEnrollment(CourseEnrollment courseEnrollment) {
+    courseEnrollments.remove(courseEnrollment);
+    courseEnrollment.setCourse(null);
   }
 
   @CreatedDate

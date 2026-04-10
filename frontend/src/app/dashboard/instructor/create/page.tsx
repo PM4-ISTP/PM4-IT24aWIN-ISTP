@@ -12,6 +12,7 @@ import {
   Stack,
   Switch,
   Text,
+  Textarea,
   TextInput,
   Title,
 } from "@mantine/core";
@@ -19,29 +20,19 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
 import { createCourse } from "@/src/lib/actions/courses";
+import {
+  countWords,
+  COURSE_SHORT_DESCRIPTION_MAX_WORDS,
+  normalizeShortDescription,
+} from "@/src/lib/courseText";
+import { TOPIC_OPTIONS, DIFFICULTY_OPTIONS } from "@/src/lib/courseConstants";
 import type { CourseDifficulty } from "@/src/types/course";
-
-const TOPIC_OPTIONS = [
-  { value: "Cybersecurity", label: "Cybersecurity" },
-  { value: "Programming", label: "Programming" },
-  { value: "Design", label: "Design" },
-  { value: "Data Science", label: "Data Science" },
-  { value: "Networking", label: "Networking" },
-  { value: "Cloud", label: "Cloud" },
-  { value: "DevOps", label: "DevOps" },
-  { value: "Other", label: "Other" },
-];
-
-const DIFFICULTY_OPTIONS = [
-  { value: "BEGINNER", label: "Beginner" },
-  { value: "INTERMEDIATE", label: "Intermediate" },
-  { value: "ADVANCED", label: "Advanced" },
-];
 
 export default function CreateCourse() {
   const router = useRouter();
 
   const [title, setTitle] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("<p>Add a description...</p>");
   const [isPublished, setIsPublished] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
@@ -50,14 +41,32 @@ export default function CreateCourse() {
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
+  const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const shortDescriptionWordCount = countWords(shortDescription);
+  const shortDescriptionTooLong =
+    shortDescriptionWordCount > COURSE_SHORT_DESCRIPTION_MAX_WORDS;
 
   async function handleSubmit() {
     setTitleError(null);
+    setShortDescriptionError(null);
     setFormError(null);
 
     if (!title.trim()) {
       setTitleError("Course title is required");
+      return;
+    }
+
+    const normalizedShortDescription = normalizeShortDescription(shortDescription);
+    if (!normalizedShortDescription) {
+      setShortDescriptionError("Short description is required");
+      return;
+    }
+
+    if (shortDescriptionTooLong) {
+      setShortDescriptionError(
+        `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words for the short description`
+      );
       return;
     }
 
@@ -66,6 +75,7 @@ export default function CreateCourse() {
     const result = await createCourse({
       title: title.trim(),
       description,
+      shortDescription: normalizedShortDescription,
       isPublished,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
@@ -118,6 +128,27 @@ export default function CreateCourse() {
             required
           />
 
+          <Textarea
+            label="Short Description"
+            placeholder="Write a short summary shown on the course card and in the blue header"
+            value={shortDescription}
+            onChange={(e) => {
+              setShortDescription(e.currentTarget.value);
+              if (shortDescriptionError) {
+                setShortDescriptionError(null);
+              }
+            }}
+            error={
+              shortDescriptionError ??
+              (shortDescriptionTooLong
+                ? `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words`
+                : null)
+            }
+            description={`Shown on course cards and in the blue course header. ${shortDescriptionWordCount}/${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words used.`}
+          />
+
+          <MyEditor description={description} setDescription={setDescription} />
+
           <Group grow>
             <Select
               label="Topic"
@@ -142,11 +173,11 @@ export default function CreateCourse() {
             placeholder="https://example.com/image.jpg"
             value={imageUrl}
             onChange={(e) => setImageUrl(e.currentTarget.value)}
-            description="Optional: paste an image URL for the course thumbnail"
+            description="Optional thumbnail shown on the course card."
           />
 
-          <MyEditor description={description} setDescription={setDescription} />
           <InstructorMultiSelect value={selectedInstructors} onChange={setSelectedInstructors} />
+
           <Switch
             label="Publish Course"
             checked={isPublished}

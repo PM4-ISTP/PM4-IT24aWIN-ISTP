@@ -16,6 +16,11 @@ public class CourseDetailResponseDto {
   private UUID id;
   private String title;
   private String description;
+  private String shortDescription;
+  private long participantCount;
+
+  @JsonProperty("isEnrolled")
+  private boolean isEnrolled;
 
   @JsonProperty("isPublished")
   private boolean isPublished;
@@ -25,6 +30,7 @@ public class CourseDetailResponseDto {
   private CourseDifficultyEnum difficulty;
 
   private List<CourseDetailInstructorResponseDto> courseInstructors;
+  private List<CourseParticipantResponseDto> participants;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 }

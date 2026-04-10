@@ -17,6 +17,7 @@ public class CreateCourseRequestDto {
   private String title;
 
   private String description;
+  private String shortDescription;
 
   @JsonProperty("isPublished")
   private boolean isPublished;

@@ -21,6 +21,7 @@ export interface InstructorAssignment {
 export interface CreateCourseDto {
   title: string;
   description: string;
+  shortDescription: string | null;
   isPublished: boolean;
   imageUrl?: string | null;
   topic?: string | null;
@@ -32,6 +33,7 @@ export interface CourseResponseDto {
   id: string;
   title: string;
   description: string | null;
+  shortDescription: string | null;
   isPublished: boolean;
   imageUrl?: string | null;
   topic?: string | null;
@@ -45,6 +47,7 @@ export interface ListCourseResponseDto {
   id: string;
   title: string;
   description: string | null;
+  shortDescription: string | null;
   isPublished: boolean;
   instructorCount: number;
   imageUrl?: string | null;
@@ -58,6 +61,7 @@ export interface ListCourseResponseDto {
 export interface UpdateCourseDto {
   title: string;
   description: string;
+  shortDescription: string | null;
   isPublished: boolean;
   imageUrl?: string | null;
   topic?: string | null;
@@ -76,15 +80,25 @@ export interface CourseInstructorResponseDto {
   updatedAt: string;
 }
 
+export interface CourseParticipantDto {
+  id: string;
+  name: string;
+  picture: string | null;
+}
+
 export interface CourseDetailResponseDto {
   id: string;
   title: string;
   description: string | null;
+  shortDescription: string | null;
+  participantCount: number;
+  isEnrolled: boolean;
   isPublished: boolean;
   imageUrl?: string | null;
   topic?: string | null;
   difficulty?: CourseDifficulty | null;
   courseInstructors: CourseInstructorResponseDto[];
+  participants: CourseParticipantDto[];
   createdAt: string;
   updatedAt: string;
 }
@@ -93,8 +107,15 @@ export interface Page<T> {
   content: T[];
   totalElements: number;
   totalPages: number;
-  number: number;
   size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
 }
 
-export type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
+export interface ActionResult<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}

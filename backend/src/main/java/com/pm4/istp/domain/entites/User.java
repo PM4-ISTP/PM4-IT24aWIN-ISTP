@@ -38,6 +38,10 @@ public class User {
   @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL)
   private List<CourseInstructor> coursesInstructors = new ArrayList<>();
 
+  @JsonIgnore
+  @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL)
+  private List<CourseEnrollment> courseEnrollments = new ArrayList<>();
+
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
   @Enumerated(EnumType.STRING)

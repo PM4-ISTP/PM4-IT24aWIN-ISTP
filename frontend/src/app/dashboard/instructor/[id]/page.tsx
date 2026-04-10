@@ -18,6 +18,7 @@ import {
   Stack,
   Switch,
   Text,
+  Textarea,
   TextInput,
   Title,
 } from "@mantine/core";
@@ -26,25 +27,14 @@ import { IconArrowLeft, IconTrash, IconX } from "@tabler/icons-react";
 import { CoursePeoplePanel } from "@/src/components/CoursePeoplePanel";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
+import {
+  countWords,
+  COURSE_SHORT_DESCRIPTION_MAX_WORDS,
+  normalizeShortDescription,
+} from "@/src/lib/courseText";
 import { deleteCourse, fetchCourse, updateCourse } from "@/src/lib/actions/courses";
+import { TOPIC_OPTIONS, DIFFICULTY_OPTIONS } from "@/src/lib/courseConstants";
 import type { CollaboratorUserResponseDto, CourseDifficulty, CourseDetailResponseDto } from "@/src/types/course";
-
-const TOPIC_OPTIONS = [
-  { value: "Cybersecurity", label: "Cybersecurity" },
-  { value: "Programming", label: "Programming" },
-  { value: "Design", label: "Design" },
-  { value: "Data Science", label: "Data Science" },
-  { value: "Networking", label: "Networking" },
-  { value: "Cloud", label: "Cloud" },
-  { value: "DevOps", label: "DevOps" },
-  { value: "Other", label: "Other" },
-];
-
-const DIFFICULTY_OPTIONS = [
-  { value: "BEGINNER", label: "Beginner" },
-  { value: "INTERMEDIATE", label: "Intermediate" },
-  { value: "ADVANCED", label: "Advanced" },
-];
 
 function mergeUsersById(
   current: Record<string, CollaboratorUserResponseDto>,
@@ -68,6 +58,7 @@ export default function EditCourse() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
@@ -81,10 +72,14 @@ export default function EditCourse() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
+  const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
+  const shortDescriptionWordCount = countWords(shortDescription);
+  const shortDescriptionTooLong =
+    shortDescriptionWordCount > COURSE_SHORT_DESCRIPTION_MAX_WORDS;
 
   function clearOwnerToastTimeout() {
     if (toastTimeoutRef.current) {
@@ -129,6 +124,7 @@ export default function EditCourse() {
       const course: CourseDetailResponseDto = result.data;
       setCourse(course);
       setTitle(course.title);
+      setShortDescription(course.shortDescription ?? "");
       setDescription(course.description ?? "");
       setIsPublished(course.isPublished);
       setImageUrl(course.imageUrl ?? "");
@@ -158,10 +154,24 @@ export default function EditCourse() {
 
   async function handleSubmit() {
     setTitleError(null);
+    setShortDescriptionError(null);
     setFormError(null);
 
     if (!title.trim()) {
       setTitleError("Course title is required");
+      return;
+    }
+
+    const normalizedShortDescription = normalizeShortDescription(shortDescription);
+    if (!normalizedShortDescription) {
+      setShortDescriptionError("Short description is required");
+      return;
+    }
+
+    if (shortDescriptionTooLong) {
+      setShortDescriptionError(
+        `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words for the short description`
+      );
       return;
     }
 
@@ -170,6 +180,7 @@ export default function EditCourse() {
     const result = await updateCourse(courseId, {
       title: title.trim(),
       description,
+      shortDescription: normalizedShortDescription,
       isPublished,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
@@ -321,6 +332,29 @@ export default function EditCourse() {
                 required
               />
 
+              <Textarea
+                label="Short Description"
+                placeholder="Write a short summary shown on the course card and in the blue header"
+                value={shortDescription}
+                onChange={(e) => {
+                  setShortDescription(e.currentTarget.value);
+                  if (shortDescriptionError) {
+                    setShortDescriptionError(null);
+                  }
+                }}
+                error={
+                  shortDescriptionError ??
+                  (shortDescriptionTooLong
+                    ? `Use at most ${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words`
+                    : null)
+                }
+                description={`Shown on course cards and in the blue course header. ${shortDescriptionWordCount}/${COURSE_SHORT_DESCRIPTION_MAX_WORDS} words.`}
+                autosize
+                minRows={2}
+                maxRows={4}
+                required
+              />
+
               <Group grow>
                 <Select
                   label="Topic"
@@ -345,18 +379,17 @@ export default function EditCourse() {
                 placeholder="https://example.com/image.jpg"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.currentTarget.value)}
-                description="Optional: paste an image URL for the course thumbnail"
+                description="Optional thumbnail shown on the course card."
               />
 
               <MyEditor description={description} setDescription={setDescription} />
+
               <InstructorMultiSelect
                 value={selectedInstructors}
                 onChange={handleCollaboratorChange}
                 initialUsers={initialUsers}
-                onUsersLoaded={(users) => {
-                  setKnownUsers((current) => mergeUsersById(current, users));
-                }}
               />
+
               <Switch
                 label="Publish Course"
                 checked={isPublished}
@@ -384,25 +417,28 @@ export default function EditCourse() {
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
-            <div style={{ position: "sticky", top: "var(--mantine-spacing-xl)" }}>
-              <CoursePeoplePanel owner={owner} collaborators={collaborators} />
-            </div>
+            <CoursePeoplePanel
+              owner={owner}
+              collaborators={collaborators}
+              participants={course?.participants ?? []}
+            />
           </Grid.Col>
         </Grid>
       </Stack>
 
-      {toastVisible && (
-        <Affix position={{ bottom: 24, right: 24 }}>
+      <Affix position={{ bottom: 20, right: 20 }}>
+        {toastVisible && (
           <Notification
             color="orange"
             title="Can't add owner as collaborator"
-            icon={<IconX size={16} />}
             onClose={hideOwnerToast}
+            withCloseButton
+            icon={<IconX size={18} />}
           >
             The course owner is already managing this course and cannot be added as a collaborator.
           </Notification>
-        </Affix>
-      )}
+        )}
+      </Affix>
     </Container>
   );
 }

@@ -3,7 +3,6 @@ import {
   Avatar,
   Badge,
   Box,
-  Button,
   Container,
   Divider,
   Group,
@@ -13,17 +12,20 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { getServerSession } from "next-auth";
 import {
   IconArrowLeft,
-  IconArrowRight,
   IconBook2,
   IconCheck,
   IconCircleDashed,
   IconUser,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { fetchCourse } from "@/src/lib/actions/courses";
-import type { CourseDifficulty } from "@/src/types/course";
+import { CourseEnrollmentButton } from "@/src/components/CourseEnrollmentButton";
+import { fetchPublicCourse } from "@/src/lib/actions/courses";
+import { authOptions } from "@/src/lib/auth";
+import { getCoursePreviewText } from "@/src/lib/courseText";
+import { difficultyColor, difficultyLabel } from "@/src/lib/courseUtils";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -34,27 +36,10 @@ function getInitials(name: string): string {
     .join("");
 }
 
-function difficultyColor(d: CourseDifficulty | null | undefined): string {
-  switch (d) {
-    case "BEGINNER":   return "green";
-    case "INTERMEDIATE": return "blue";
-    case "ADVANCED":   return "red";
-    default:           return "gray";
-  }
-}
-
-function difficultyLabel(d: CourseDifficulty | null | undefined): string {
-  switch (d) {
-    case "BEGINNER":     return "Beginner";
-    case "INTERMEDIATE": return "Intermediate";
-    case "ADVANCED":     return "Advanced";
-    default:             return "";
-  }
-}
-
 export default async function CatalogCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const result = await fetchCourse(id);
+  const session = await getServerSession(authOptions);
+  const result = await fetchPublicCourse(id);
 
   if (!result.success) {
     return (
@@ -77,13 +62,12 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
   const course = result.data;
   const owner =
     course.courseInstructors.find((ci) => ci.instructorRole === "OWNER")?.instructor ?? null;
+  const currentUserId = session?.userId ?? null;
+  const isInstructor = currentUserId
+    ? course.courseInstructors.some((ci) => ci.instructor.id === currentUserId)
+    : false;
 
-  const plainText = course.description
-    ? course.description
-        .replace(/<\/(p|h[1-6]|li|br|div)>/gi, " ")
-        .replace(/<[^>]*>/g, "")
-        .trim()
-    : "";
+  const previewText = getCoursePreviewText(course.shortDescription, course.description);
 
   return (
     <Box style={{ minHeight: "100vh", backgroundColor: "var(--mantine-color-gray-0)" }}>
@@ -140,21 +124,21 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
                 }}>
                   {course.title}
                 </Title>
-                {plainText && (
+                {previewText && (
                   <Text size="md" style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.6, maxWidth: 600 }}>
-                    {plainText.slice(0, 200)}{plainText.length > 200 ? "…" : ""}
+                    {previewText.slice(0, 200)}
+                    {previewText.length > 200 ? "..." : ""}
                   </Text>
                 )}
               </div>
               <div style={{ flexShrink: 0, paddingTop: 4 }}>
-                <Button
-                  size="md"
-                  radius="md"
-                  rightSection={<IconArrowRight size={18} />}
-                  style={{ backgroundColor: "#2563eb", color: "white", fontWeight: 600 }}
-                >
-                  Start Next Lesson
-                </Button>
+                <CourseEnrollmentButton
+                  courseId={course.id}
+                  isEnrolled={course.isEnrolled}
+                  participantCount={course.participantCount}
+                  isInstructor={isInstructor}
+                  isPublished={course.isPublished}
+                />
               </div>
             </div>
 
@@ -231,13 +215,10 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
                       <Text fw={700} size="sm">{owner.name}</Text>
                       <Group gap={4}>
                         <IconUser size={11} color="var(--mantine-color-dimmed)" />
-                        <Text size="xs" c="dimmed">Owner</Text>
+                        <Text size="xs" c="dimmed">Instructor</Text>
                       </Group>
                     </Stack>
                   </Group>
-                  <Button variant="light" size="sm" radius="md" fullWidth>
-                    View Profile
-                  </Button>
                 </Stack>
               </Paper>
             )}
@@ -248,3 +229,4 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
     </Box>
   );
 }
+

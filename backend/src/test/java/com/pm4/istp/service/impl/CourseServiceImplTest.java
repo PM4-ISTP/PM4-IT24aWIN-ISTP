@@ -12,6 +12,7 @@ import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseInstructorRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
 import com.pm4.istp.domain.entites.Course;
+import com.pm4.istp.domain.entites.CourseEnrollment;
 import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
 import com.pm4.istp.domain.entites.User;
@@ -19,6 +20,8 @@ import com.pm4.istp.domain.entites.UserRoleEnum;
 import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
+import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
 import java.util.List;
@@ -40,6 +43,7 @@ class CourseServiceImplTest {
 
   @Mock private UserRepository userRepository;
   @Mock private CourseRepository courseRepository;
+  @Mock private CourseEnrollmentRepository courseEnrollmentRepository;
 
   @InjectMocks private CourseServiceImpl courseService;
 
@@ -67,12 +71,17 @@ class CourseServiceImplTest {
         new CreateCourseRequest(
             "Secure Coding",
             "Intro",
+            "Learn the secure coding basics.",
             false,
+            null,
+            null,
+            null,
             List.of(new CreateCourseInstructorRequest(collaboratorId, InstructorRoleEnum.COLLABORATOR)));
 
     Course result = courseService.createCourse(ownerId, request);
 
     assertThat(result.getTitle()).isEqualTo("Secure Coding");
+    assertThat(result.getShortDescription()).isEqualTo("Learn the secure coding basics.");
     assertThat(result.getCourseInstructors()).hasSize(2);
 
     CourseInstructor ownerRelation =
@@ -122,6 +131,22 @@ class CourseServiceImplTest {
   }
 
   @Test
+  void getCourse_whenPublished_returnsCourseForAnyAuthenticatedUser() {
+    UUID requesterId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(true);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    Course result = courseService.getCourse(requesterId, courseId);
+
+    assertThat(result).isSameAs(course);
+  }
+
+  @Test
   void updateCourse_replacesCollaboratorSet_andKeepsOwner() {
     UUID ownerId = UUID.randomUUID();
     UUID oldCollaboratorId = UUID.randomUUID();
@@ -158,7 +183,11 @@ class CourseServiceImplTest {
         new UpdateCourseRequest(
             "Updated title",
             "Updated description",
+            "Updated short description for the header.",
             true,
+            null,
+            null,
+            null,
             List.of(new UpdateCourseInstructorRequest(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)));
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
@@ -170,6 +199,7 @@ class CourseServiceImplTest {
 
     assertThat(updated.getTitle()).isEqualTo("Updated title");
     assertThat(updated.getDescription()).isEqualTo("Updated description");
+    assertThat(updated.getShortDescription()).isEqualTo("Updated short description for the header.");
     assertThat(updated.isPublished()).isTrue();
 
     assertThat(updated.getCourseInstructors())
@@ -206,6 +236,89 @@ class CourseServiceImplTest {
 
     assertThat(result).isSameAs(expected);
     verify(courseRepository).findPublishedCourses(pageable);
+  }
+
+  @Test
+  void createCourse_withTooManyShortDescriptionWords_throwsValidationException() {
+    UUID ownerId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
+
+    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
+
+    CreateCourseRequest request =
+        new CreateCourseRequest(
+            "Secure Coding",
+            "Long description",
+            "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen "
+                + "sixteen seventeen eighteen nineteen twenty twenty-one twenty-two twenty-three "
+                + "twenty-four twenty-five twenty-six twenty-seven twenty-eight twenty-nine thirty "
+                + "thirty-one",
+            false,
+            null,
+            null,
+            null,
+            List.of());
+
+    assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
+        .isInstanceOf(InvalidCourseShortDescriptionException.class)
+        .hasMessage("Short description can contain at most 30 words");
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void enrollInCourse_whenPublished_createsEnrollment() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User participant = new User();
+    participant.setId(userId);
+    participant.setRoles(Set.of(UserRoleEnum.ROLE_STUDENT));
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(true);
+
+    when(userRepository.findById(userId)).thenReturn(Optional.of(participant));
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(false);
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    Course enrolledCourse = courseService.enrollInCourse(userId, courseId);
+
+    assertThat(enrolledCourse.getCourseEnrollments()).hasSize(1);
+    CourseEnrollment enrollment = enrolledCourse.getCourseEnrollments().getFirst();
+    assertThat(enrollment.getParticipant().getId()).isEqualTo(userId);
+    assertThat(enrollment.getCourse()).isSameAs(enrolledCourse);
+    verify(courseRepository).save(course);
+  }
+
+  @Test
+  void enrollInCourse_whenAlreadyEnrolled_returnsCourseWithoutSavingAgain() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User participant = new User();
+    participant.setId(userId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(true);
+
+    when(userRepository.findById(userId)).thenReturn(Optional.of(participant));
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(true);
+
+    Course result = courseService.enrollInCourse(userId, courseId);
+
+    assertThat(result).isSameAs(course);
+    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
@@ -284,7 +397,8 @@ class CourseServiceImplTest {
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    CreateCourseRequest request = new CreateCourseRequest("Solo Course", "Desc", false, List.of());
+    CreateCourseRequest request =
+        new CreateCourseRequest("Solo Course", "Desc", "Short solo summary.", false, null, null, null, List.of());
 
     Course result = courseService.createCourse(ownerId, request);
 
@@ -346,7 +460,7 @@ class CourseServiceImplTest {
     course.addCourseInstructor(ownerRelation);
 
     UpdateCourseRequest request =
-        new UpdateCourseRequest("Title", "Desc", false, List.of());
+        new UpdateCourseRequest("Title", "Desc", "Short summary.", false, null, null, null, List.of());
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
@@ -364,7 +478,7 @@ class CourseServiceImplTest {
     when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
 
     UpdateCourseRequest request =
-        new UpdateCourseRequest("Title", "Desc", false, List.of());
+        new UpdateCourseRequest("Title", "Desc", "Short summary.", false, null, null, null, List.of());
 
     assertThatThrownBy(() -> courseService.updateCourse(userId, courseId, request))
         .isInstanceOf(CourseNotFoundException.class);

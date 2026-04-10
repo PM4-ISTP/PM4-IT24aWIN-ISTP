@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -82,7 +83,16 @@ public class CourseController {
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     Course course = courseService.getCourse(userId, id);
-    CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
+    CourseDetailResponseDto dto = toCourseDetailResponseDto(course, userId);
+    return ResponseEntity.ok(dto);
+  }
+
+  @PostMapping("/{id}/enroll")
+  public ResponseEntity<CourseDetailResponseDto> enrollInCourse(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    Course course = courseService.enrollInCourse(userId, id);
+    CourseDetailResponseDto dto = toCourseDetailResponseDto(course, userId);
     return ResponseEntity.ok(dto);
   }
 
@@ -112,7 +122,7 @@ public class CourseController {
     UUID userId = parseUserId(jwt);
     UpdateCourseRequest updateCourseRequest = courseMapper.fromDto(updateCourseRequestDto);
     Course updatedCourse = courseService.updateCourse(userId, id, updateCourseRequest);
-    CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(updatedCourse);
+    CourseDetailResponseDto dto = toCourseDetailResponseDto(updatedCourse, userId);
     return ResponseEntity.ok(dto);
   }
 
@@ -152,5 +162,41 @@ public class CourseController {
       @RequestParam(required = false) String query, Pageable pageable) {
     Page<ListCourseResponseDto> courses = courseService.listPublishedCourses(query, pageable);
     return ResponseEntity.ok(courses);
+  }
+
+  // ── Public catalog endpoints ── accessible to all authenticated users (including students)
+  @GetMapping("/catalog/{id}")
+  public ResponseEntity<CourseDetailResponseDto> getPublicCourse(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    Course course = courseService.getCourse(userId, id);
+    CourseDetailResponseDto dto = toCourseDetailResponseDto(course, userId);
+    return ResponseEntity.ok(dto);
+  }
+
+  @PostMapping("/catalog/{id}/enroll")
+  public ResponseEntity<CourseDetailResponseDto> enrollInPublicCourse(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    Course course = courseService.enrollInCourse(userId, id);
+    CourseDetailResponseDto dto = toCourseDetailResponseDto(course, userId);
+    return ResponseEntity.ok(dto);
+  }
+
+  // ── Private helper ──
+  private CourseDetailResponseDto toCourseDetailResponseDto(Course course, UUID userId) {
+    CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
+    dto.setParticipantCount(course.getCourseEnrollments().size());
+    boolean enrolled = course.getCourseEnrollments().stream()
+        .anyMatch(e -> e.getParticipant().getId().equals(userId));
+    dto.setEnrolled(enrolled);
+    List<CourseParticipantResponseDto> participants = course.getCourseEnrollments().stream()
+        .map(e -> {
+          var p = e.getParticipant();
+          return new CourseParticipantResponseDto(p.getId(), p.getName(), p.getPicture());
+        })
+        .collect(java.util.stream.Collectors.toList());
+    dto.setParticipants(participants);
+    return dto;
   }
 }

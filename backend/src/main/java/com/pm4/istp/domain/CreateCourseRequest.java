@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class CreateCourseRequest {
   private String title;
   private String description;
+  private String shortDescription;
   private boolean isPublished;
   private String imageUrl;
   private String topic;
