@@ -5,7 +5,6 @@ import { IconArrowRight, IconBolt, IconBug, IconLock, IconShieldCheck } from "@t
 import DashboardStyles from "./DashboardStyles";
 import DashboardHero from "./DashboardHero";
 import CourseCard from "./CourseCard";
-import ActivityItem from "./ActivityItem";
 import { labelStyle } from "./_shared";
 
 export default async function Home() {
@@ -93,32 +92,6 @@ export default async function Home() {
                 />
                 <Text size="sm" c="dimmed" ta="center">
                   Placeholder — 2 of 6 courses completed
-                </Text>
-              </Stack>
-            </Paper>
-
-            {/* Recent Activity */}
-            <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
-              <Stack gap="sm">
-                <Text style={{ ...labelStyle, fontSize: "0.82rem" }}>Recent Activity</Text>
-                <ActivityItem
-                  label="Completed lesson: SQL Injection"
-                  time="2h ago"
-                  color="#3B82F6"
-                />
-                <ActivityItem
-                  label="Started: Cryptography Fundamentals"
-                  time="Yesterday"
-                  color="#10B981"
-                />
-                <ActivityItem label="Earned badge: Quick Learner" time="2d ago" color="#F59E0B" />
-                <ActivityItem
-                  label="Enrolled in: Network Pentesting"
-                  time="3d ago"
-                  color="#8B5CF6"
-                />
-                <Text size="sm" c="dimmed" ta="center" mt={4}>
-                  Placeholder data
                 </Text>
               </Stack>
             </Paper>
