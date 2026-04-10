@@ -140,7 +140,8 @@ public class CourseServiceImpl implements CourseService {
     try {
       return courseRepository.save(course);
     } catch (DataIntegrityViolationException ex) {
-      // Concurrent enrollment: another request already enrolled this user; treat as already enrolled
+      // Concurrent enrollment: another request already enrolled this user; treat as already
+      // enrolled
       return course;
     }
   }

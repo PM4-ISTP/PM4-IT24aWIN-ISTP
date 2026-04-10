@@ -350,9 +350,7 @@ export default function EditCourse() {
                 value={selectedInstructors}
                 onChange={handleCollaboratorChange}
                 initialUsers={initialUsers}
-                onUsersLoaded={(users) =>
-                  setKnownUsers((prev) => mergeUsersById(prev, users))
-                }
+                onUsersLoaded={(users) => setKnownUsers((prev) => mergeUsersById(prev, users))}
               />
 
               <Switch
