@@ -7,7 +7,6 @@ import {
   Group,
   Paper,
   Progress,
-  RingProgress,
   SimpleGrid,
   Stack,
   Text,
@@ -256,22 +255,20 @@ export default async function Home() {
         {/* Right column */}
         <Grid.Col span={{ base: 12, md: 4 }}>
           <Stack gap="md">
-            {/* Overall progress ring */}
+            {/* Overall progress */}
             <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
-              <Stack gap="xs" align="center">
+              <Stack gap="sm">
                 <Text style={labelStyle}>Overall Progress</Text>
-                <RingProgress
-                  size={110}
-                  thickness={10}
-                  roundCaps
-                  sections={[{ value: 33, color: "blue" }]}
-                  label={
-                    <Text ta="center" fw={700} size="sm" c="blue">
-                      33%
-                    </Text>
-                  }
-                />
-                <Text size="xs" c="dimmed">
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed">
+                    Courses completed
+                  </Text>
+                  <Text size="sm" fw={700} c="blue">
+                    33%
+                  </Text>
+                </Group>
+                <Progress value={33} size="md" radius="xl" color="blue" />
+                <Text size="xs" c="dimmed" ta="center">
                   Placeholder — 2 of 6 courses completed
                 </Text>
               </Stack>
