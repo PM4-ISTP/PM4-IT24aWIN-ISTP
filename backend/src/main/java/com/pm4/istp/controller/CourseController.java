@@ -5,8 +5,10 @@ import static com.pm4.istp.util.JwtUtil.parseUserId;
 import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
 import com.pm4.istp.domain.entites.Course;
+import com.pm4.istp.domain.entites.CourseEnrollment;
 import com.pm4.istp.dto.*;
 import com.pm4.istp.mappers.CourseMapper;
+import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.service.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
 public class CourseController {
   private final CourseMapper courseMapper;
   private final CourseService courseService;
+  private final CourseEnrollmentRepository courseEnrollmentRepository;
 
   @Operation(
       summary = "Create a course",
@@ -186,13 +189,13 @@ public class CourseController {
   // ── Private helper ──
   private CourseDetailResponseDto toCourseDetailResponseDto(Course course, UUID userId) {
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
-    dto.setParticipantCount(course.getCourseEnrollments().size());
-    boolean enrolled =
-        course.getCourseEnrollments().stream()
-            .anyMatch(e -> e.getParticipant().getId().equals(userId));
-    dto.setEnrolled(enrolled);
+    UUID courseId = course.getId();
+    dto.setParticipantCount(courseEnrollmentRepository.countByCourseId(courseId));
+    dto.setEnrolled(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId));
+    List<CourseEnrollment> enrollments =
+        courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId);
     List<CourseParticipantResponseDto> participants =
-        course.getCourseEnrollments().stream()
+        enrollments.stream()
             .map(
                 e -> {
                   var p = e.getParticipant();

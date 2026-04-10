@@ -1,3 +1,4 @@
+import sanitizeHtml from "sanitize-html";
 import { Alert, Box, Container, Divider, Group, Paper, Stack, Text } from "@mantine/core";
 import { getServerSession } from "next-auth";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
@@ -36,6 +37,15 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
   }
 
   const course = result.data;
+  const sanitizedDescription = course.description
+    ? sanitizeHtml(course.description, {
+        allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2"]),
+        allowedAttributes: {
+          ...sanitizeHtml.defaults.allowedAttributes,
+          img: ["src", "alt", "width", "height"],
+        },
+      })
+    : null;
   const owner =
     course.courseInstructors.find((ci) => ci.instructorRole === OWNER_ROLE)?.instructor ?? null;
   const currentUserId = session?.userId ?? null;
@@ -80,7 +90,7 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
               )}
 
               {/* About this course */}
-              {course.description && (
+              {sanitizedDescription && (
                 <Paper withBorder radius="lg" p="xl" shadow="xs">
                   <Stack gap="md">
                     <Group gap="sm" align="center">
@@ -92,7 +102,7 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
                     <Divider />
                     <div
                       className="course-description"
-                      dangerouslySetInnerHTML={{ __html: course.description }}
+                      dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
                     />
                   </Stack>
                 </Paper>
