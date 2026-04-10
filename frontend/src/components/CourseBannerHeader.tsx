@@ -32,31 +32,12 @@ export function CourseBannerHeader({
   const previewText = getCoursePreviewText(shortDescription, description);
 
   return (
-    <div
-      style={{
-        background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
-        padding: "48px 0 40px",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Radial glow overlay */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            "radial-gradient(circle at 20% 50%, rgba(59,130,246,0.15) 0%, transparent 50%)," +
-            "radial-gradient(circle at 80% 20%, rgba(99,102,241,0.1) 0%, transparent 40%)",
-          pointerEvents: "none",
-        }}
-      />
-
-      <Container size="lg" style={{ position: "relative" }}>
+    <div style={{ background: "var(--mantine-color-gray-0)" }}>
+      <Container size="lg" pt="lg" pb="md">
         <Stack gap="lg">
           {/* Back link */}
           <Link href={backHref} style={{ textDecoration: "none" }}>
-            <Group gap={6} style={{ color: "rgba(255,255,255,0.55)", fontSize: 14 }}>
+            <Group gap={6} style={{ color: "var(--mantine-color-dimmed)", fontSize: 14 }}>
               <IconArrowLeft size={16} />
               <span>Back to Catalog</span>
             </Group>
@@ -82,7 +63,7 @@ export function CourseBannerHeader({
               <Title
                 order={1}
                 style={{
-                  color: "white",
+                  color: "var(--mantine-color-text)",
                   fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
                   lineHeight: 1.2,
                   marginBottom: 12,
@@ -93,8 +74,8 @@ export function CourseBannerHeader({
               {previewText && (
                 <Text
                   size="md"
-                  lineClamp={3}
-                  style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.6, maxWidth: 600 }}
+                  c="dimmed"
+                  style={{ lineHeight: 1.6, maxWidth: 760, overflowWrap: "anywhere" }}
                 >
                   {previewText}
                 </Text>

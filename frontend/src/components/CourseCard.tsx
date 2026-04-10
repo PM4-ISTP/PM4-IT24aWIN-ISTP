@@ -43,7 +43,7 @@ export function CourseCard({
       {imageUrl ? (
         <Box
           style={{
-            height: 166,
+            height: 146,
             overflow: "hidden",
             borderRadius: "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0",
             flexShrink: 0,
@@ -52,7 +52,7 @@ export function CourseCard({
           <Image
             src={imageUrl}
             alt={title}
-            h={166}
+            h={146}
             fit="cover"
             style={{ display: "block", width: "100%" }}
           />
@@ -60,7 +60,7 @@ export function CourseCard({
       ) : (
         <Box
           style={{
-            height: 166,
+            height: 146,
             flexShrink: 0,
             overflow: "hidden",
             borderRadius: "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0",
@@ -74,7 +74,7 @@ export function CourseCard({
             style={{
               color: "rgba(255,255,255,0.12)",
               fontWeight: 700,
-              fontSize: 66,
+              fontSize: 58,
               lineHeight: 1,
             }}
           >
@@ -84,7 +84,7 @@ export function CourseCard({
       )}
 
       {/* Body */}
-      <Stack gap="lg" p="xl" style={{ flex: 1 }}>
+      <Stack gap="md" p="lg" style={{ flex: 1 }}>
         {/* Topic */}
         <Group gap={6} wrap="nowrap">
           {topic ? (
@@ -109,44 +109,40 @@ export function CourseCard({
           )}
         </Group>
 
-        <Text fw={700} size="xl" lineClamp={2}>
+        <Text fw={700} size="lg" lineClamp={2}>
           {title}
         </Text>
 
-        <Text
-          size="md"
-          c="dimmed"
-          style={{ flex: 1, overflowWrap: "break-word", wordBreak: "break-word" }}
-        >
+        <Text size="sm" c="dimmed" style={{ flex: 1, overflowWrap: "break-word", wordBreak: "break-word" }}>
           {previewText || "No short description provided."}
         </Text>
 
         <Box className={classes.footer}>
           {ownerName ? (
-            <Group gap={12} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-              <Avatar radius="xl" size={40} color="blue" src={ownerPicture ?? undefined}>
+            <Group gap={10} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+              <Avatar radius="xl" size={36} color="blue" src={ownerPicture ?? undefined}>
                 {getInitials(ownerName)}
               </Avatar>
               <Stack gap={0} style={{ minWidth: 0 }}>
-                <Text size="lg" fw={700} c="black" lineClamp={1}>
+                <Text size="md" fw={700} c="black" lineClamp={1}>
                   {ownerName}
                 </Text>
-                <Text size="md" c="dimmed">
+                <Text size="sm" c="dimmed">
                   {ownerTitle ?? "Instructor"}
                 </Text>
               </Stack>
             </Group>
           ) : (
-            <Group gap={8}>
-              <IconUsers size={17} stroke={1.5} />
-              <Text size="md" c="dimmed">
+            <Group gap={6}>
+              <IconUsers size={15} stroke={1.5} />
+              <Text size="sm" c="dimmed">
                 {instructorCount} instructor{instructorCount !== 1 ? "s" : ""}
               </Text>
             </Group>
           )}
-          <Group gap={6} style={{ flexShrink: 0 }}>
-            <IconClock size={16} stroke={1.5} />
-            <Text size="md" c="dimmed">
+          <Group gap={4} style={{ flexShrink: 0 }}>
+            <IconClock size={14} stroke={1.5} />
+            <Text size="sm" c="dimmed">
               {updatedAt}
             </Text>
           </Group>

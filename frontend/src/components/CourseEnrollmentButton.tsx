@@ -99,7 +99,7 @@ export function CourseEnrollmentButton({
           </Button>
         )}
       </Group>
-      <Text size="xs" style={{ color: "rgba(255,255,255,0.65)" }}>
+      <Text size="xs" c="dimmed">
         {currentParticipantCount} participant{currentParticipantCount === 1 ? "" : "s"}
       </Text>
       {joinError && (

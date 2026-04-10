@@ -69,11 +69,11 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
       />
 
       {/* Main content: two-column flex layout */}
-      <Container size="lg" py="xl">
-        <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
-          {/* Left column */}
-          <div style={{ flex: "1 1 500px", minWidth: 0 }}>
-            <Stack gap="lg">
+      <Container size="lg" pt="md" pb="xl">
+        <Stack gap="lg">
+          <div style={{ display: "flex", gap: 24, alignItems: "stretch", flexWrap: "wrap" }}>
+            {/* Left column */}
+            <div style={{ flex: "1 1 500px", minWidth: 0 }}>
               {/*
                * Course Journey — lessons & challenges progress.
                *
@@ -82,39 +82,41 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
                * TODO (challenges): Pass `challenges={{ completed, total }}` once the challenges
                *                    feature is available. Until then both bars show as placeholders.
                */}
-              {course.isEnrolled && (
-                <CourseJourneyCard
-                // lessons={undefined}    ← wire up when lesson API is ready
-                // challenges={undefined} ← wire up when challenge API is ready
+              <CourseJourneyCard
+              // lessons={undefined}    ← wire up when lesson API is ready
+              // challenges={undefined} ← wire up when challenge API is ready
+              />
+            </div>
+
+            {/* Right column – Instructor card */}
+            <div style={{ flex: "0 0 280px", alignSelf: "stretch" }}>
+              {owner && (
+                <div style={{ height: "100%" }}>
+                  <CourseInstructorCard instructor={owner} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* About this course */}
+          {sanitizedDescription && (
+            <Paper withBorder radius="lg" p="xl" shadow="xs">
+              <Stack gap="md">
+                <Group gap="sm" align="center">
+                  <IconBook2 size={18} color="var(--mantine-color-blue-6)" />
+                  <Text fw={700} size="lg">
+                    About this Course
+                  </Text>
+                </Group>
+                <Divider />
+                <div
+                  className="course-description"
+                  dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
                 />
-              )}
-
-              {/* About this course */}
-              {sanitizedDescription && (
-                <Paper withBorder radius="lg" p="xl" shadow="xs">
-                  <Stack gap="md">
-                    <Group gap="sm" align="center">
-                      <IconBook2 size={18} color="var(--mantine-color-blue-6)" />
-                      <Text fw={700} size="lg">
-                        About this Course
-                      </Text>
-                    </Group>
-                    <Divider />
-                    <div
-                      className="course-description"
-                      dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
-                    />
-                  </Stack>
-                </Paper>
-              )}
-            </Stack>
-          </div>
-
-          {/* Right column – Instructor card */}
-          <div style={{ flex: "0 0 280px", position: "sticky", top: 24 }}>
-            {owner && <CourseInstructorCard instructor={owner} />}
-          </div>
-        </div>
+              </Stack>
+            </Paper>
+          )}
+        </Stack>
       </Container>
     </Box>
   );
