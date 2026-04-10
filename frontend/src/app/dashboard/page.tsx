@@ -8,6 +8,7 @@ import {
   Group,
   Paper,
   Progress,
+  RingProgress,
   SimpleGrid,
   Stack,
   Text,
@@ -258,17 +259,18 @@ export default async function Home() {
           <Stack gap="md">
             {/* Overall progress */}
             <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
-              <Stack gap="sm">
-                <Text style={labelStyle}>Overall Progress</Text>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    Courses completed
-                  </Text>
-                  <Text size="sm" fw={700} c="blue">
-                    33%
-                  </Text>
-                </Group>
-                <Progress value={33} size="md" radius="xl" color="blue" />
+              <Stack gap="sm" align="center">
+                <Text style={{ ...labelStyle, alignSelf: "flex-start" }}>Overall Progress</Text>
+                <RingProgress
+                  size={120}
+                  thickness={12}
+                  sections={[{ value: 33, color: "blue" }]}
+                  label={
+                    <Text size="sm" fw={700} ta="center" c="blue">
+                      33%
+                    </Text>
+                  }
+                />
                 <Text size="xs" c="dimmed" ta="center">
                   Placeholder — 2 of 6 courses completed
                 </Text>
