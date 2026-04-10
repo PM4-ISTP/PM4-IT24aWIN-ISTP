@@ -172,7 +172,19 @@ export default async function Home() {
             fontSize: "2rem",
           }}
         >
-          Welcome back, {firstName} 👋
+          Welcome back,{" "}
+          <span
+            style={{
+              fontFamily: "var(--font-orbitron), 'Orbitron', sans-serif",
+              fontWeight: 900,
+              background: "linear-gradient(120deg, #3B82F6 0%, #06B6D4 60%, #818CF8 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            {firstName}!
+          </span>
         </Title>
         <Text size="sm" c="dimmed">
           Here's an overview of your learning progress.
