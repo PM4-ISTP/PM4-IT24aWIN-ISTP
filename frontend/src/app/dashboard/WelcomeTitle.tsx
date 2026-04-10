@@ -11,7 +11,6 @@ export default function WelcomeTitle({ firstName }: { firstName: string }) {
   const [visibleCount, setVisibleCount] = useState(0);
 
   useEffect(() => {
-    setVisibleCount(0);
     let i = 0;
     const id = setInterval(() => {
       i += 1;
