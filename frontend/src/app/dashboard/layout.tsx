@@ -51,7 +51,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <DashboardNav roles={roles} />
       </AppShellNavbar>
 
-      <AppShellMain style={{ background: "#FFFFFF" }}>{children}</AppShellMain>
+      <AppShellMain style={{ background: "#F4F7FF" }}>{children}</AppShellMain>
     </AppShell>
   );
 }

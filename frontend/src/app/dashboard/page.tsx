@@ -91,21 +91,14 @@ function PlaceholderCourseCard({
   topic,
   progress,
   icon,
-  accentColor = "#3B82F6",
 }: {
   title: string;
   topic: string;
   progress: number;
   icon: React.ReactNode;
-  accentColor?: string;
 }) {
   return (
-    <Paper
-      withBorder
-      radius="lg"
-      p="lg"
-      style={{ borderColor: "#E5EEFF", borderLeft: `3px solid ${accentColor}` }}
-    >
+    <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
       <Stack gap="sm">
         <Group align="flex-start" justify="space-between" wrap="nowrap">
           <Stack gap={2} style={{ flex: 1 }}>
@@ -182,7 +175,7 @@ export default async function Home() {
   });
 
   return (
-    <Stack p="xl" gap="xl" style={{ background: "#F4F7FF", minHeight: "100%" }}>
+    <Stack p="xl" gap="xl">
       {/* Hero banner */}
       <Box
         style={{
@@ -331,28 +324,24 @@ export default async function Home() {
                 topic="Web Security"
                 progress={42}
                 icon={<IconShieldCheck size={16} />}
-                accentColor="#3B82F6"
               />
               <PlaceholderCourseCard
                 title="Common Vulnerabilities and Exploits (CVE)"
                 topic="Vulnerabilities"
                 progress={15}
                 icon={<IconBug size={16} />}
-                accentColor="#EF4444"
               />
               <PlaceholderCourseCard
                 title="Cryptography Fundamentals"
                 topic="Cryptography"
                 progress={68}
                 icon={<IconLock size={16} />}
-                accentColor="#10B981"
               />
               <PlaceholderCourseCard
                 title="Network Penetration Testing"
                 topic="Pentesting"
                 progress={5}
                 icon={<IconBolt size={16} />}
-                accentColor="#F59E0B"
               />
             </SimpleGrid>
           </Stack>
