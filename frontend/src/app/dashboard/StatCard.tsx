@@ -28,12 +28,12 @@ export default function StatCard({
       radius="lg"
       p="lg"
       className="dashboard-stat-card"
-      style={{ borderColor: "var(--istp-card-border)", borderTop: `3px solid ${accent}` }}
+      style={{ borderColor: "#E5EEFF", borderTop: `3px solid ${accent}` }}
     >
       <Group align="flex-start" justify="space-between" wrap="nowrap">
         <Stack gap={4}>
           <Text style={labelStyle}>{label}</Text>
-          <Text fw={700} size="xl" style={{ color: "var(--istp-heading-color)", lineHeight: 1.2 }}>
+          <Text fw={700} size="xl" style={{ color: "#001E41", lineHeight: 1.2 }}>
             {value}
           </Text>
           {sub && (
