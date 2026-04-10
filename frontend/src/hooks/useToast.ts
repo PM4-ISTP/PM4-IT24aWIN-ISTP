@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface ToastControls {
   visible: boolean;
@@ -16,6 +16,8 @@ export function useToast(durationMs = 3500): ToastControls {
       timeoutRef.current = null;
     }
   }
+
+  useEffect(() => clearToastTimeout, []);
 
   function hide() {
     clearToastTimeout();

@@ -139,7 +139,7 @@ export default function CreateCourse() {
               }
             }}
             error={shortDescriptionError}
-            description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters used.`}
+            description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
           />
 
           <MyEditor description={description} setDescription={setDescription} />
