@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   ActionIcon,
+  Affix,
   Alert,
   Button,
   Container,
@@ -12,6 +13,7 @@ import {
   Group,
   Loader,
   Modal,
+  Notification,
   Stack,
   Switch,
   Text,
@@ -19,7 +21,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
+import { IconArrowLeft, IconTrash, IconX } from "@tabler/icons-react";
 import { CoursePeoplePanel } from "@/src/components/CoursePeoplePanel";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
@@ -59,7 +61,40 @@ export default function EditCourse() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [toastVisible, setToastVisible] = useState(false);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
+
+  function clearOwnerToastTimeout() {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+      toastTimeoutRef.current = null;
+    }
+  }
+
+  function hideOwnerToast() {
+    clearOwnerToastTimeout();
+    setToastVisible(false);
+  }
+
+  function showOwnerToast() {
+    clearOwnerToastTimeout();
+    setToastVisible(true);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastVisible(false);
+      toastTimeoutRef.current = null;
+    }, 3500);
+  }
+
+  function handleCollaboratorChange(newValue: string[]) {
+    const ownerId = owner?.id;
+    if (ownerId && newValue.includes(ownerId)) {
+      showOwnerToast();
+      setSelectedInstructors(newValue.filter((id) => id !== ownerId));
+      return;
+    }
+    setSelectedInstructors(newValue);
+  }
 
   useEffect(() => {
     async function load() {
@@ -94,6 +129,8 @@ export default function EditCourse() {
 
     void load();
   }, [courseId]);
+
+  useEffect(() => clearOwnerToastTimeout, []);
 
   async function handleSubmit() {
     setTitleError(null);
@@ -259,7 +296,7 @@ export default function EditCourse() {
               <MyEditor description={description} setDescription={setDescription} />
               <InstructorMultiSelect
                 value={selectedInstructors}
-                onChange={setSelectedInstructors}
+                onChange={handleCollaboratorChange}
                 initialUsers={initialUsers}
                 onUsersLoaded={(users) => {
                   setKnownUsers((current) => mergeUsersById(current, users));
@@ -298,6 +335,19 @@ export default function EditCourse() {
           </Grid.Col>
         </Grid>
       </Stack>
+
+      {toastVisible && (
+        <Affix position={{ bottom: 24, right: 24 }}>
+          <Notification
+            color="orange"
+            title="Can't add owner as collaborator"
+            icon={<IconX size={16} />}
+            onClose={hideOwnerToast}
+          >
+            The course owner is already managing this course and cannot be added as a collaborator.
+          </Notification>
+        </Affix>
+      )}
     </Container>
   );
 }
