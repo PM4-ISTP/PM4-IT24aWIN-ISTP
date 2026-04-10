@@ -74,8 +74,8 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
                */}
               {course.isEnrolled && (
                 <CourseJourneyCard
-                  // lessons={undefined}    ← wire up when lesson API is ready
-                  // challenges={undefined} ← wire up when challenge API is ready
+                // lessons={undefined}    ← wire up when lesson API is ready
+                // challenges={undefined} ← wire up when challenge API is ready
                 />
               )}
 

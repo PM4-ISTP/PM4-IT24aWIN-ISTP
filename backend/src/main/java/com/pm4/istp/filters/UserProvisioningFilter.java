@@ -167,7 +167,10 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
     boolean pictureNeedsEnrichment = picture == null && existingPicture == null;
     boolean titleNeedsEnrichment = title == null && existingTitle == null;
 
-    return nameNeedsEnrichment || emailNeedsEnrichment || pictureNeedsEnrichment || titleNeedsEnrichment;
+    return nameNeedsEnrichment
+        || emailNeedsEnrichment
+        || pictureNeedsEnrichment
+        || titleNeedsEnrichment;
   }
 
   private Optional<UserInfoProfile> fetchUserInfoProfile(Jwt jwt) {

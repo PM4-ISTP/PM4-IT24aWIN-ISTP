@@ -113,7 +113,11 @@ export function CourseCard({
           {title}
         </Text>
 
-        <Text size="md" c="dimmed" style={{ flex: 1, overflowWrap: "break-word", wordBreak: "break-word" }}>
+        <Text
+          size="md"
+          c="dimmed"
+          style={{ flex: 1, overflowWrap: "break-word", wordBreak: "break-word" }}
+        >
           {previewText || "No short description provided."}
         </Text>
 

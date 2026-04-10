@@ -261,7 +261,8 @@ public class CourseServiceImpl implements CourseService {
     String normalized = shortDescription.trim().replaceAll("\\s+", " ");
     if (normalized.length() > SHORT_DESCRIPTION_MAX_CHARS) {
       throw new InvalidCourseShortDescriptionException(
-          String.format("Short description must be at most %d characters", SHORT_DESCRIPTION_MAX_CHARS));
+          String.format(
+              "Short description must be at most %d characters", SHORT_DESCRIPTION_MAX_CHARS));
     }
     return normalized;
   }
