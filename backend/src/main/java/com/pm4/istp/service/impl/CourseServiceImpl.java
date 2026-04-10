@@ -5,6 +5,7 @@ import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseInstructorRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
 import com.pm4.istp.domain.entites.Course;
+import com.pm4.istp.domain.entites.CourseEnrollment;
 import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
 import com.pm4.istp.domain.entites.User;
@@ -12,7 +13,9 @@ import com.pm4.istp.domain.entites.UserRoleEnum;
 import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
 import com.pm4.istp.exception.UserNotFoundException;
+import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
 import com.pm4.istp.service.CourseService;
@@ -22,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,12 +36,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class CourseServiceImpl implements CourseService {
   private static final Set<UserRoleEnum> COURSE_COLLABORATOR_ROLES =
       Set.of(UserRoleEnum.ROLE_ADMINISTRATOR, UserRoleEnum.ROLE_INSTRUCTOR);
+  private static final int SHORT_DESCRIPTION_MAX_CHARS = 200;
 
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
   private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
 
   private final UserRepository userRepository;
   private final CourseRepository courseRepository;
+  private final CourseEnrollmentRepository courseEnrollmentRepository;
 
   @Override
   @Transactional
@@ -51,7 +57,10 @@ public class CourseServiceImpl implements CourseService {
     Course courseToCreate = new Course();
     courseToCreate.setTitle(course.getTitle());
     courseToCreate.setDescription(course.getDescription());
+    courseToCreate.setShortDescription(normalizeShortDescription(course.getShortDescription()));
     courseToCreate.setPublished(course.isPublished());
+    courseToCreate.setImageUrl(course.getImageUrl());
+    courseToCreate.setTopic(course.getTopic());
 
     // Owner = the user making the request
     CourseInstructor owner = new CourseInstructor();
@@ -91,8 +100,50 @@ public class CourseServiceImpl implements CourseService {
             .findById(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
-    verifyInstructor(course, userId);
+
+    if (!course.isPublished()) {
+      verifyInstructor(course, userId);
+    }
+
     return course;
+  }
+
+  @Override
+  @Transactional(noRollbackFor = DataIntegrityViolationException.class)
+  public Course enrollInCourse(UUID userId, UUID courseId) {
+    User participant =
+        userRepository
+            .findById(userId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+
+    if (!course.isPublished()) {
+      throw new CourseAccessDeniedException(
+          String.format("Course '%s' is not open for enrollment", courseId));
+    }
+
+    if (isInstructor(course, userId)
+        || courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)) {
+      return course;
+    }
+
+    CourseEnrollment courseEnrollment = new CourseEnrollment();
+    courseEnrollment.setParticipant(participant);
+    course.addCourseEnrollment(courseEnrollment);
+
+    try {
+      return courseRepository.save(course);
+    } catch (DataIntegrityViolationException ex) {
+      // Concurrent enrollment: another request already enrolled this user; treat as already
+      // enrolled
+      return course;
+    }
   }
 
   @Override
@@ -108,7 +159,10 @@ public class CourseServiceImpl implements CourseService {
     // Update scalar fields
     course.setTitle(request.getTitle());
     course.setDescription(request.getDescription());
+    course.setShortDescription(normalizeShortDescription(request.getShortDescription()));
     course.setPublished(request.isPublished());
+    course.setImageUrl(request.getImageUrl());
+    course.setTopic(request.getTopic());
 
     // Diff instructor list: preserve OWNER, update COLLABORATORs
     Set<UUID> requestedInstructorIds =
@@ -177,7 +231,6 @@ public class CourseServiceImpl implements CourseService {
     if (normalizedQuery == null) {
       return courseRepository.findPublishedCourses(pageable);
     }
-
     return courseRepository.findPublishedCoursesByQuery(normalizedQuery, pageable);
   }
 
@@ -195,14 +248,29 @@ public class CourseServiceImpl implements CourseService {
     }
   }
 
+  private boolean isInstructor(Course course, UUID userId) {
+    return course.getCourseInstructors().stream()
+        .anyMatch(ci -> ci.getInstructor().getId().equals(userId));
+  }
+
   private void verifyInstructor(Course course, UUID userId) {
-    boolean isInstructor =
-        course.getCourseInstructors().stream()
-            .anyMatch(ci -> ci.getInstructor().getId().equals(userId));
-    if (!isInstructor) {
+    if (!isInstructor(course, userId)) {
       throw new CourseAccessDeniedException(
           String.format(
               "User with ID '%s' is not an instructor of course '%s'", userId, course.getId()));
     }
+  }
+
+  private String normalizeShortDescription(String shortDescription) {
+    if (shortDescription == null || shortDescription.isBlank()) {
+      return null;
+    }
+    String normalized = shortDescription.trim().replaceAll("\\s+", " ");
+    if (normalized.length() > SHORT_DESCRIPTION_MAX_CHARS) {
+      throw new InvalidCourseShortDescriptionException(
+          String.format(
+              "Short description must be at most %d characters", SHORT_DESCRIPTION_MAX_CHARS));
+    }
+    return normalized;
   }
 }

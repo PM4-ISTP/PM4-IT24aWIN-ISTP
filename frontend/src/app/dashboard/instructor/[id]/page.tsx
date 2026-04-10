@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -14,9 +14,11 @@ import {
   Loader,
   Modal,
   Notification,
+  Select,
   Stack,
   Switch,
   Text,
+  Textarea,
   TextInput,
   Title,
 } from "@mantine/core";
@@ -25,8 +27,21 @@ import { IconArrowLeft, IconTrash, IconX } from "@tabler/icons-react";
 import { CoursePeoplePanel } from "@/src/components/CoursePeoplePanel";
 import MyEditor from "@/src/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
+import {
+  COURSE_SHORT_DESCRIPTION_MAX_CHARS,
+  normalizeShortDescription,
+} from "@/src/lib/courseText";
 import { deleteCourse, fetchCourse, updateCourse } from "@/src/lib/actions/courses";
-import type { CollaboratorUserResponseDto, CourseDetailResponseDto } from "@/src/types/course";
+import { useToast } from "@/src/hooks/useToast";
+import { TOPIC_OPTIONS } from "@/src/lib/courseConstants";
+import type {
+  CollaboratorUserResponseDto,
+  CourseDetailResponseDto,
+  InstructorRoleEnum,
+} from "@/src/types/course";
+
+const OWNER_ROLE: InstructorRoleEnum = "OWNER";
+const COLLABORATOR_ROLE: InstructorRoleEnum = "COLLABORATOR";
 
 function mergeUsersById(
   current: Record<string, CollaboratorUserResponseDto>,
@@ -50,8 +65,11 @@ export default function EditCourse() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
   const [isPublished, setIsPublished] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [topic, setTopic] = useState<string | null>(null);
   const [course, setCourse] = useState<CourseDetailResponseDto | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [knownUsers, setKnownUsers] = useState<Record<string, CollaboratorUserResponseDto>>({});
@@ -60,36 +78,17 @@ export default function EditCourse() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
+  const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [toastVisible, setToastVisible] = useState(false);
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ownerToast = useToast();
+  const charLimitToast = useToast();
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
-
-  function clearOwnerToastTimeout() {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-      toastTimeoutRef.current = null;
-    }
-  }
-
-  function hideOwnerToast() {
-    clearOwnerToastTimeout();
-    setToastVisible(false);
-  }
-
-  function showOwnerToast() {
-    clearOwnerToastTimeout();
-    setToastVisible(true);
-    toastTimeoutRef.current = setTimeout(() => {
-      setToastVisible(false);
-      toastTimeoutRef.current = null;
-    }, 3500);
-  }
+  const shortDescriptionCharCount = shortDescription.length;
 
   function handleCollaboratorChange(newValue: string[]) {
     const ownerId = owner?.id;
     if (ownerId && newValue.includes(ownerId)) {
-      showOwnerToast();
+      ownerToast.show();
       setSelectedInstructors(newValue.filter((id) => id !== ownerId));
       return;
     }
@@ -108,12 +107,15 @@ export default function EditCourse() {
       const course: CourseDetailResponseDto = result.data;
       setCourse(course);
       setTitle(course.title);
+      setShortDescription(course.shortDescription ?? "");
       setDescription(course.description ?? "");
       setIsPublished(course.isPublished);
+      setImageUrl(course.imageUrl ?? "");
+      setTopic(course.topic ?? null);
 
       // Extract collaborators (not OWNER) for the multi-select
       const collaborators = course.courseInstructors.filter(
-        (ci) => ci.instructorRole === "COLLABORATOR"
+        (ci) => ci.instructorRole === COLLABORATOR_ROLE
       );
       setSelectedInstructors(collaborators.map((ci) => ci.instructor.id));
       setInitialUsers(collaborators.map((ci) => ci.instructor));
@@ -130,14 +132,19 @@ export default function EditCourse() {
     void load();
   }, [courseId]);
 
-  useEffect(() => clearOwnerToastTimeout, []);
-
   async function handleSubmit() {
     setTitleError(null);
+    setShortDescriptionError(null);
     setFormError(null);
 
     if (!title.trim()) {
       setTitleError("Course title is required");
+      return;
+    }
+
+    const normalizedShortDescription = normalizeShortDescription(shortDescription);
+    if (!normalizedShortDescription) {
+      setShortDescriptionError("Short description is required");
       return;
     }
 
@@ -146,7 +153,10 @@ export default function EditCourse() {
     const result = await updateCourse(courseId, {
       title: title.trim(),
       description,
+      shortDescription: normalizedShortDescription,
       isPublished,
+      imageUrl: imageUrl.trim() || null,
+      topic: topic,
       collaboratorIds: selectedInstructors,
     });
 
@@ -181,7 +191,7 @@ export default function EditCourse() {
 
   const owner =
     course?.courseInstructors.find(
-      (courseInstructor) => courseInstructor.instructorRole === "OWNER"
+      (courseInstructor) => courseInstructor.instructorRole === OWNER_ROLE
     )?.instructor ?? null;
   const isOwner = owner?.id === currentUserId;
   const collaborators = selectedInstructors
@@ -293,15 +303,56 @@ export default function EditCourse() {
                 error={titleError}
                 required
               />
+
+              <Textarea
+                label="Short Description"
+                placeholder="Write a short summary shown on the course card and in the blue header"
+                value={shortDescription}
+                onChange={(e) => {
+                  const newVal = e.currentTarget.value;
+                  if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
+                    charLimitToast.show();
+                    return;
+                  }
+                  setShortDescription(newVal);
+                  if (shortDescriptionError) {
+                    setShortDescriptionError(null);
+                  }
+                }}
+                error={shortDescriptionError}
+                description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
+                autosize
+                minRows={2}
+                maxRows={4}
+                required
+              />
+
+              <Select
+                label="Topic"
+                placeholder="Select a topic"
+                data={TOPIC_OPTIONS}
+                value={topic}
+                onChange={setTopic}
+                clearable
+              />
+
+              <TextInput
+                label="Course Image URL"
+                placeholder="https://example.com/image.jpg"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.currentTarget.value)}
+                description="Optional thumbnail shown on the course card."
+              />
+
               <MyEditor description={description} setDescription={setDescription} />
+
               <InstructorMultiSelect
                 value={selectedInstructors}
                 onChange={handleCollaboratorChange}
                 initialUsers={initialUsers}
-                onUsersLoaded={(users) => {
-                  setKnownUsers((current) => mergeUsersById(current, users));
-                }}
+                onUsersLoaded={(users) => setKnownUsers((prev) => mergeUsersById(prev, users))}
               />
+
               <Switch
                 label="Publish Course"
                 checked={isPublished}
@@ -329,25 +380,40 @@ export default function EditCourse() {
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
-            <div style={{ position: "sticky", top: "var(--mantine-spacing-xl)" }}>
-              <CoursePeoplePanel owner={owner} collaborators={collaborators} />
-            </div>
+            <CoursePeoplePanel
+              owner={owner}
+              collaborators={collaborators}
+              participants={course?.participants ?? []}
+            />
           </Grid.Col>
         </Grid>
       </Stack>
 
-      {toastVisible && (
-        <Affix position={{ bottom: 24, right: 24 }}>
+      <Affix position={{ bottom: 20, right: 20 }}>
+        {ownerToast.visible && (
           <Notification
             color="orange"
             title="Can't add owner as collaborator"
-            icon={<IconX size={16} />}
-            onClose={hideOwnerToast}
+            onClose={ownerToast.hide}
+            withCloseButton
+            icon={<IconX size={18} />}
           >
             The course owner is already managing this course and cannot be added as a collaborator.
           </Notification>
-        </Affix>
-      )}
+        )}
+        {charLimitToast.visible && (
+          <Notification
+            color="orange"
+            title="Character limit reached"
+            onClose={charLimitToast.hide}
+            withCloseButton
+            icon={<IconX size={18} />}
+          >
+            The short description cannot exceed {COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters
+            (including spaces).
+          </Notification>
+        )}
+      </Affix>
     </Container>
   );
 }

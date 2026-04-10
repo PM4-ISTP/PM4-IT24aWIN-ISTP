@@ -18,7 +18,7 @@ export default async function CatalogPage(props: {
           Browse / Catalog
         </Title>
         <Text size="sm" c="dimmed">
-          Explore all published courses and search by title or description.
+          Explore all published courses and search by title, short description, or description.
         </Text>
       </Stack>
 
@@ -28,7 +28,7 @@ export default async function CatalogPage(props: {
             <TextInput
               name="query"
               label="Search courses"
-              placeholder="Search by title or description"
+              placeholder="Search by title, short description, or description"
               defaultValue={query}
               style={{ flex: 1 }}
             />
@@ -47,6 +47,7 @@ export default async function CatalogPage(props: {
           courses={result.data.content}
           totalPages={result.data.totalPages}
           currentPage={currentPage}
+          coursePathPrefix="/dashboard/catalog"
         />
       ) : (
         <Alert color="red" title="Failed to load catalog">

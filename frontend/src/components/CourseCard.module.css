@@ -1,23 +1,26 @@
 .card {
   background: light-dark(var(--mantine-color-white), var(--mantine-color-dark-6));
   border: 1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
-  border-radius: var(--mantine-radius-md);
-  padding: var(--mantine-spacing-md);
+  border-radius: var(--mantine-radius-lg);
+  padding: 0;
   height: 100%;
-  min-height: 148px;
+  min-height: 214px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   transition:
     border-color 120ms ease,
-    box-shadow 120ms ease;
+    box-shadow 120ms ease,
+    transform 120ms ease;
   cursor: pointer;
   width: 100%;
   text-align: left;
 }
 
 .card:hover {
-  border-color: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-2));
-  box-shadow: var(--mantine-shadow-xs);
+  border-color: light-dark(var(--mantine-color-blue-3), var(--mantine-color-dark-2));
+  box-shadow: var(--mantine-shadow-sm);
+  transform: translateY(-2px);
 }
 
 .staticCard {
@@ -33,7 +36,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: var(--mantine-spacing-xs);
+  padding-top: var(--mantine-spacing-sm);
   margin-top: auto;
   border-top: 1px solid light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
   color: var(--mantine-color-dimmed);
