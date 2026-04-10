@@ -20,7 +20,6 @@ import {
   IconBook2,
   IconBolt,
   IconTrophy,
-  IconClock,
   IconArrowRight,
   IconShieldCheck,
   IconBug,
@@ -314,18 +313,12 @@ export default async function Home() {
             </Group>
           </Stack>
 
-          {/* Right: inline hero stats — 2×2 grid */}
-          <SimpleGrid
-            cols={2}
-            spacing="sm"
-            className="dashboard-hero-stats"
-            style={{ flexShrink: 0, width: 300 }}
-          >
+          {/* Right: inline hero stats */}
+          <Stack gap="sm" className="dashboard-hero-stats" style={{ flexShrink: 0, minWidth: 220 }}>
             {[
               { icon: <IconBook2 size={18} />, label: "Enrolled Courses", value: "—" },
               { icon: <IconTrophy size={18} />, label: "Completed", value: "—" },
               { icon: <IconBolt size={18} />, label: "Current Streak", value: "—" },
-              { icon: <IconClock size={18} />, label: "Hours Learned", value: "—" },
             ].map(({ icon, label, value }) => (
               <Box
                 key={label}
@@ -361,7 +354,7 @@ export default async function Home() {
                 </Group>
               </Box>
             ))}
-          </SimpleGrid>
+          </Stack>
         </Group>
       </Box>
 
