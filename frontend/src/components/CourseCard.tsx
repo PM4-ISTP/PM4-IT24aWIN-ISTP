@@ -23,7 +23,6 @@ export interface CourseCardProps {
   onClick?: (id: string) => void;
 }
 
-
 export function CourseCard({
   id,
   title,
@@ -46,8 +45,21 @@ export function CourseCard({
     <Stack gap={0} h="100%" style={{ overflow: "hidden" }}>
       {/* Thumbnail */}
       {imageUrl ? (
-        <Box style={{ height: 130, overflow: "hidden", borderRadius: "inherit inherit 0 0", flexShrink: 0 }}>
-          <Image src={imageUrl} alt={title} h={130} fit="cover" style={{ display: "block", width: "100%" }} />
+        <Box
+          style={{
+            height: 130,
+            overflow: "hidden",
+            borderRadius: "inherit inherit 0 0",
+            flexShrink: 0,
+          }}
+        >
+          <Image
+            src={imageUrl}
+            alt={title}
+            h={130}
+            fit="cover"
+            style={{ display: "block", width: "100%" }}
+          />
         </Box>
       ) : (
         <Box
@@ -60,7 +72,14 @@ export function CourseCard({
             justifyContent: "center",
           }}
         >
-          <Text style={{ color: "rgba(255,255,255,0.12)", fontWeight: 700, fontSize: 52, lineHeight: 1 }}>
+          <Text
+            style={{
+              color: "rgba(255,255,255,0.12)",
+              fontWeight: 700,
+              fontSize: 52,
+              lineHeight: 1,
+            }}
+          >
             {title.charAt(0).toUpperCase()}
           </Text>
         </Box>
@@ -71,18 +90,38 @@ export function CourseCard({
         {/* Topic + Difficulty */}
         <Group gap={6} wrap="nowrap">
           {topic && (
-            <Text size="xs" fw={700} tt="uppercase" c="blue" style={{ letterSpacing: "0.07em", flexShrink: 0 }}>
+            <Text
+              size="xs"
+              fw={700}
+              tt="uppercase"
+              c="blue"
+              style={{ letterSpacing: "0.07em", flexShrink: 0 }}
+            >
               {topic}
             </Text>
           )}
-          {topic && difficulty && <Text size="xs" c="dimmed">•</Text>}
+          {topic && difficulty && (
+            <Text size="xs" c="dimmed">
+              •
+            </Text>
+          )}
           {difficulty && (
-            <Badge size="xs" variant="light" color={difficultyColor(difficulty)} style={{ flexShrink: 0 }}>
+            <Badge
+              size="xs"
+              variant="light"
+              color={difficultyColor(difficulty)}
+              style={{ flexShrink: 0 }}
+            >
               {difficultyLabel(difficulty)}
             </Badge>
           )}
           {!topic && !difficulty && (
-            <Badge size="xs" variant="light" color={isPublished ? "teal" : "gray"} style={{ flexShrink: 0 }}>
+            <Badge
+              size="xs"
+              variant="light"
+              color={isPublished ? "teal" : "gray"}
+              style={{ flexShrink: 0 }}
+            >
               {isPublished ? "Published" : "Draft"}
             </Badge>
           )}

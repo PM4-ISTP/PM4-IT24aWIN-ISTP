@@ -116,6 +116,4 @@ export interface Page<T> {
   empty: boolean;
 }
 
-export type ActionResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+export type ActionResult<T> = { success: true; data: T } | { success: false; error: string };

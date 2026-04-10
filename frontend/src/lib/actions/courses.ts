@@ -76,9 +76,7 @@ export async function fetchPublicCourse(
   }
 }
 
-export async function enrollInCourse(
-  id: string
-): Promise<ActionResult<CourseDetailResponseDto>> {
+export async function enrollInCourse(id: string): Promise<ActionResult<CourseDetailResponseDto>> {
   try {
     const res = await fetchBackend(`/api/v1/courses/catalog/${id}/enroll`, {
       method: "POST",

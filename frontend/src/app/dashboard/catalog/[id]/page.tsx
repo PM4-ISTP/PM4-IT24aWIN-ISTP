@@ -1,13 +1,4 @@
-import {
-  Alert,
-  Box,
-  Container,
-  Divider,
-  Group,
-  Paper,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Alert, Box, Container, Divider, Group, Paper, Stack, Text } from "@mantine/core";
 import { getServerSession } from "next-auth";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
@@ -53,7 +44,6 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
 
   return (
     <Box style={{ minHeight: "100vh", backgroundColor: "var(--mantine-color-gray-0)" }}>
-
       <CourseBannerHeader
         title={course.title}
         topic={course.topic}
@@ -71,7 +61,6 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
       {/* Main content: two-column flex layout */}
       <Container size="lg" py="xl">
         <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
-
           {/* Left column */}
           <div style={{ flex: "1 1 500px", minWidth: 0 }}>
             <Stack gap="lg">
@@ -81,7 +70,9 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
                   <Stack gap="md">
                     <Group gap="sm" align="center">
                       <IconBook2 size={18} color="var(--mantine-color-blue-6)" />
-                      <Text fw={700} size="lg">About this Course</Text>
+                      <Text fw={700} size="lg">
+                        About this Course
+                      </Text>
                     </Group>
                     <Divider />
                     <div
@@ -98,7 +89,6 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
           <div style={{ flex: "0 0 280px", position: "sticky", top: 24 }}>
             {owner && <CourseInstructorCard instructor={owner} />}
           </div>
-
         </div>
       </Container>
     </Box>

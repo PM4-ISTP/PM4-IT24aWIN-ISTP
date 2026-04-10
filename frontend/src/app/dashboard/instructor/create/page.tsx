@@ -44,8 +44,7 @@ export default function CreateCourse() {
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const shortDescriptionWordCount = countWords(shortDescription);
-  const shortDescriptionTooLong =
-    shortDescriptionWordCount > COURSE_SHORT_DESCRIPTION_MAX_WORDS;
+  const shortDescriptionTooLong = shortDescriptionWordCount > COURSE_SHORT_DESCRIPTION_MAX_WORDS;
 
   async function handleSubmit() {
     setTitleError(null);

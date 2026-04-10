@@ -26,10 +26,14 @@ export function CourseInstructorCard({ instructor }: CourseInstructorCardProps) 
             {getInitials(instructor.name)}
           </Avatar>
           <Stack gap={4} style={{ flex: 1 }}>
-            <Text fw={700} size="sm">{instructor.name}</Text>
+            <Text fw={700} size="sm">
+              {instructor.name}
+            </Text>
             <Group gap={4}>
               <IconUser size={11} color="var(--mantine-color-dimmed)" />
-              <Text size="xs" c="dimmed">Instructor</Text>
+              <Text size="xs" c="dimmed">
+                Instructor
+              </Text>
             </Group>
           </Stack>
         </Group>

@@ -32,8 +32,12 @@ function PersonCard({ user }: { user: CollaboratorUserResponseDto }) {
         {getInitials(user.name)}
       </Avatar>
       <Stack gap={4} style={{ flex: 1 }}>
-        <Text fw={600} size="sm">{user.name}</Text>
-        <Text size="xs" c="dimmed">{user.email}</Text>
+        <Text fw={600} size="sm">
+          {user.name}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {user.email}
+        </Text>
       </Stack>
     </Group>
   );
@@ -52,17 +56,11 @@ function ParticipantCard({ participant }: { participant: CourseParticipantDto })
   );
 }
 
-export function CoursePeoplePanel({
-  owner,
-  collaborators,
-  participants,
-}: CoursePeoplePanelProps) {
+export function CoursePeoplePanel({ owner, collaborators, participants }: CoursePeoplePanelProps) {
   const [search, setSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const filtered = participants.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = participants.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
   const visible = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
 
@@ -80,18 +78,22 @@ export function CoursePeoplePanel({
           </Text>
           <Text fw={700}>People and access</Text>
           <Text size="sm" c="dimmed">
-            Owners and collaborators can manage this course. Participants can join published
-            courses and are counted below.
+            Owners and collaborators can manage this course. Participants can join published courses
+            and are counted below.
           </Text>
         </Stack>
 
         {/* Owner */}
         <Stack gap="sm">
-          <Text fw={600} size="sm">Owner</Text>
+          <Text fw={600} size="sm">
+            Owner
+          </Text>
           {owner ? (
             <PersonCard user={owner} />
           ) : (
-            <Text size="sm" c="dimmed">No owner found.</Text>
+            <Text size="sm" c="dimmed">
+              No owner found.
+            </Text>
           )}
         </Stack>
 
@@ -100,8 +102,12 @@ export function CoursePeoplePanel({
         {/* Collaborators */}
         <Stack gap="sm">
           <Group justify="space-between">
-            <Text fw={600} size="sm">Collaborators</Text>
-            <Badge size="sm" variant="light" color="blue">{collaborators.length}</Badge>
+            <Text fw={600} size="sm">
+              Collaborators
+            </Text>
+            <Badge size="sm" variant="light" color="blue">
+              {collaborators.length}
+            </Badge>
           </Group>
           {collaborators.length > 0 ? (
             <Stack gap="md">
@@ -110,7 +116,9 @@ export function CoursePeoplePanel({
               ))}
             </Stack>
           ) : (
-            <Text size="sm" c="dimmed">No collaborators selected yet.</Text>
+            <Text size="sm" c="dimmed">
+              No collaborators selected yet.
+            </Text>
           )}
         </Stack>
 
@@ -121,13 +129,19 @@ export function CoursePeoplePanel({
           <Group justify="space-between">
             <Group gap={6}>
               <IconUsers size={15} />
-              <Text fw={600} size="sm">Participants</Text>
+              <Text fw={600} size="sm">
+                Participants
+              </Text>
             </Group>
-            <Badge size="sm" variant="light" color="teal">{participants.length}</Badge>
+            <Badge size="sm" variant="light" color="teal">
+              {participants.length}
+            </Badge>
           </Group>
 
           {participants.length === 0 ? (
-            <Text size="sm" c="dimmed">No participants have joined yet.</Text>
+            <Text size="sm" c="dimmed">
+              No participants have joined yet.
+            </Text>
           ) : (
             <Stack gap="xs">
               <TextInput
