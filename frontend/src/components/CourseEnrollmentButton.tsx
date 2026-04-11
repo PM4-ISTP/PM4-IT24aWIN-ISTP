@@ -78,9 +78,15 @@ export function CourseEnrollmentButton({
           <Button
             size="md"
             radius="md"
-            color="blue"
             rightSection={<IconArrowRight size={16} />}
             onClick={() => router.push(`/dashboard/learn/${courseId}`)}
+            style={{
+              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+              border: "none",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 600,
+              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+            }}
           >
             Start Next Lesson
           </Button>
@@ -88,11 +94,17 @@ export function CourseEnrollmentButton({
           <Button
             size="md"
             radius="md"
-            color="blue"
             loading={isSubmitting}
             disabled={isSubmitting}
             onClick={() => {
               void handleEnroll();
+            }}
+            style={{
+              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+              border: "none",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 600,
+              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
             }}
           >
             Enroll in Course

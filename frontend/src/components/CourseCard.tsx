@@ -92,8 +92,7 @@ export function CourseCard({
               size="sm"
               fw={700}
               tt="uppercase"
-              c="blue"
-              style={{ letterSpacing: "0.07em", flexShrink: 0 }}
+              style={{ color: "#60a5fa", letterSpacing: "0.07em", flexShrink: 0 }}
             >
               {topic}
             </Text>
@@ -128,7 +127,7 @@ export function CourseCard({
                 {getInitials(ownerName)}
               </Avatar>
               <Stack gap={0} style={{ minWidth: 0 }}>
-                <Text size="md" fw={700} c="black" lineClamp={1}>
+                <Text size="md" fw={700} lineClamp={1}>
                   {ownerName}
                 </Text>
                 <Text size="sm" c="dimmed">

@@ -46,7 +46,7 @@ export default function UserMenu({ name, roles, image, accountUrl }: UserMenuPro
               {initials}
             </Avatar>
             <div style={{ lineHeight: 1.2 }}>
-              <Text size="sm" fw={600}>
+              <Text size="sm" fw={600} style={{ color: "#e2e8f0" }}>
                 {name}
               </Text>
               <Text size="xs" c={roleColor}>
