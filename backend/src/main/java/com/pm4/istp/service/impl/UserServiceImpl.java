@@ -41,6 +41,9 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public List<User> getTeamMembers(Collection<String> emails) {
+    if (emails.isEmpty()) {
+      return List.of();
+    }
     return userRepository.findByEmailIn(emails);
   }
 }
