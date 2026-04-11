@@ -164,7 +164,8 @@ export function CourseJourneyCard({ lessons, challenges }: CourseJourneyCardProp
         padding: "2rem",
         boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
       }}
-    >      <Stack gap="md">
+    >
+      <Stack gap="md">
         {/* Header */}
         <Group justify="space-between" align="center">
           <Text size="xs" tt="uppercase" fw={700} c="dimmed" style={{ letterSpacing: "0.08em" }}>

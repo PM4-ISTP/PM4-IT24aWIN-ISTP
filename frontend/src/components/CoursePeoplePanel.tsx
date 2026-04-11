@@ -78,7 +78,8 @@ export function CoursePeoplePanel({ owner, collaborators, participants }: Course
         padding: "1.5rem",
         boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
       }}
-    >      <Stack gap="lg">
+    >
+      <Stack gap="lg">
         <Stack gap={2}>
           <Text size="xs" tt="uppercase" fw={700} c="dimmed">
             Course Team
