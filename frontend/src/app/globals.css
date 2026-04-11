@@ -5,6 +5,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ── Global dark base ─────────────────────────────────────────────────────── */
+/* Tailwind preflight can leave a transparent/white body background.          */
+/* These rules guarantee the dark gradient is always visible.                 */
+html,
+body {
+  background: linear-gradient(160deg, #0b1120 0%, #0e1a2e 50%, #0b1624 100%);
+  background-attachment: fixed;
+  color: #e2e8f0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
 /* Course description rendered HTML (from rich text editor) */
 .course-description h1,
 .course-description h2,

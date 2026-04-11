@@ -166,7 +166,7 @@ export default async function Home() {
       >
         <Text
           style={{
-            color: "#334155",
+            color: "rgba(255,255,255,0.35)",
             fontSize: "0.78rem",
             fontFamily: "var(--font-space-grotesk), sans-serif",
           }}
