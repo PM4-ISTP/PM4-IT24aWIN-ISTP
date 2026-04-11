@@ -4,6 +4,8 @@ import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.domain.entites.UserRoleEnum;
 import com.pm4.istp.repositories.UserRepository;
 import com.pm4.istp.service.UserService;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -35,5 +37,10 @@ public class UserServiceImpl implements UserService {
   public Page<User> searchCollaboratorUsersByQuery(UUID userId, String query, Pageable pageable) {
     return userRepository.findDistinctByAnyRoleAndNameOrUsernameOrEmailContainingIgnoreCaseAndIdNot(
         COURSE_COLLABORATOR_ROLES, query, userId, pageable);
+  }
+
+  @Override
+  public List<User> getTeamMembers(Collection<String> emails) {
+    return userRepository.findByEmailIn(emails);
   }
 }
