@@ -314,7 +314,9 @@ export default function AdminConfigForm({ initialConfig }: Props) {
               boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
             }}
           >
-            {!config.kubeconfigUploaded ? "Create Kubernetes configuration" : "Update Kubernetes configuration"}
+            {!config.kubeconfigUploaded
+              ? "Create Kubernetes configuration"
+              : "Update Kubernetes configuration"}
           </Button>
           <Button
             id="admin-config-form-delete-button"
