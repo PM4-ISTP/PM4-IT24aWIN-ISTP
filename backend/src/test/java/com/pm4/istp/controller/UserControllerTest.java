@@ -7,17 +7,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
+import tools.jackson.databind.ser.std.StdSerializer;
 import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.dto.ListInstructorUserResponseDto;
 import com.pm4.istp.mappers.UserMapper;
 import com.pm4.istp.service.UserService;
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +29,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.web.servlet.MockMvc;
@@ -79,11 +78,8 @@ class UserControllerTest {
           }
         };
 
-    MappingJackson2HttpMessageConverter converter =
-        new MappingJackson2HttpMessageConverter(
-            new ObjectMapper()
-                .registerModule(new JavaTimeModule())
-                .registerModule(buildPageModule()));
+    JacksonJsonHttpMessageConverter converter =
+        new JacksonJsonHttpMessageConverter(JsonMapper.builder().addModule(buildPageModule()).build());
 
     mockMvc =
         MockMvcBuilders.standaloneSetup(userController)
@@ -153,9 +149,9 @@ class UserControllerTest {
   // ── Jackson helper ────────────────────────────────────────────────────────
 
   /**
-   * In Spring Data 4.x, {@code Page<T>} no longer implements {@code Iterable}, so Jackson's
-   * default serializer fails. This module registers a custom serializer using
-   * {@code Page.getContent()} to avoid the {@code UnsupportedOperationException}.
+   * Registers a custom {@link Page} serializer so that standalone MockMvc tests produce the
+   * standard Spring page JSON structure ({@code content}, {@code totalElements}, etc.) using
+   * Jackson 3's {@link JacksonJsonHttpMessageConverter}.
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static SimpleModule buildPageModule() {
@@ -172,14 +168,14 @@ class UserControllerTest {
     }
 
     @Override
-    public void serialize(Page value, JsonGenerator gen, SerializerProvider provider)
-        throws IOException {
+    public void serialize(Page value, JsonGenerator gen, SerializationContext ctxt)
+        throws JacksonException {
       gen.writeStartObject();
-      provider.defaultSerializeField("content", value.getContent(), gen);
-      gen.writeNumberField("totalElements", value.getTotalElements());
-      gen.writeNumberField("totalPages", value.getTotalPages());
-      gen.writeNumberField("size", value.getSize());
-      gen.writeNumberField("number", value.getNumber());
+      ctxt.defaultSerializeProperty("content", value.getContent(), gen);
+      gen.writeNumberProperty("totalElements", value.getTotalElements());
+      gen.writeNumberProperty("totalPages", value.getTotalPages());
+      gen.writeNumberProperty("size", value.getSize());
+      gen.writeNumberProperty("number", value.getNumber());
       gen.writeEndObject();
     }
   }
