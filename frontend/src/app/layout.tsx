@@ -6,7 +6,6 @@ import "@mantine/core/styles.css";
 import "@mantine/tiptap/styles.css";
 import "@mantine/notifications/styles.css";
 import "./globals.css";
-import { Notifications } from "@mantine/notifications";
 
 /**
  * Custom dark theme — maps Mantine's `dark` color scale to our
