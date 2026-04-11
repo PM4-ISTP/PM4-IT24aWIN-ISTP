@@ -68,11 +68,11 @@ export default async function AdminDashboard() {
             Manage Users &amp; Roles with Keycloak
           </Button>
         </Stack>
-      <Paper withBorder radius="md" p="xl">
-        <Stack gap="md">
-          <AdminConfigForm key={config.updatedAt ?? ""} initialConfig={config} />
-        </Stack>
-      </Paper>
+        <Paper withBorder radius="md" p="xl">
+          <Stack gap="md">
+            <AdminConfigForm key={config.updatedAt ?? ""} initialConfig={config} />
+          </Stack>
+        </Paper>
       </Box>
     </Stack>
   );
