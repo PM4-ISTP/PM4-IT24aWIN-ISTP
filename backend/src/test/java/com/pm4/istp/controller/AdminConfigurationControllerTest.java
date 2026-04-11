@@ -166,7 +166,7 @@ class AdminConfigurationControllerTest {
     void testDeleteAdminConfig_Success() throws Exception {
         mockMvc.perform(delete("/api/admin/config"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Admin configuration deleted successfully"));
+                .andExpect(jsonPath("$.message").value("Admin configuration deleted successfully"));
 
         verify(adminConfigurationService).deleteAdminConfiguration();
     }
