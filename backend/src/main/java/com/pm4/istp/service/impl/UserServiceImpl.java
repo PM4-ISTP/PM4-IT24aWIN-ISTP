@@ -30,4 +30,10 @@ public class UserServiceImpl implements UserService {
     return userRepository.findDistinctByAnyRoleAndNameContainingIgnoreCaseAndIdNot(
         COURSE_COLLABORATOR_ROLES, name, userId, pageable);
   }
+
+  @Override
+  public Page<User> searchCollaboratorUsersByQuery(UUID userId, String query, Pageable pageable) {
+    return userRepository.findDistinctByAnyRoleAndNameOrUsernameOrEmailContainingIgnoreCaseAndIdNot(
+        COURSE_COLLABORATOR_ROLES, query, userId, pageable);
+  }
 }

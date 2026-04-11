@@ -1678,6 +1678,22 @@
             "claim.name": "locale",
             "jsonType.label": "String"
           }
+        },
+        {
+          "id": "35eab2ae-0cb9-45df-a0a3-e607895c604c",
+          "name": "title",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "introspection.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "user.attribute": "title",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "title",
+            "jsonType.label": "String"
+          }
         }
       ]
     },

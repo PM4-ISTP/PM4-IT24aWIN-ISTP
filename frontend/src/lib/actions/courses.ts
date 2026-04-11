@@ -1,6 +1,7 @@
 "use server";
 
 import { fetchBackend } from "@/src/lib/api";
+import { extractErrorMessage } from "@/src/lib/utils";
 
 import type {
   ActionResult,
@@ -12,26 +13,6 @@ import type {
   UpdateCourseDto,
 } from "@/src/types/course";
 
-function extractErrorMessage(text: string, fallback: string): string {
-  if (!text) {
-    return fallback;
-  }
-
-  try {
-    const parsed: unknown = JSON.parse(text);
-    if (typeof parsed === "object" && parsed !== null && "error" in parsed) {
-      const errorValue = (parsed as { error?: unknown }).error;
-      if (typeof errorValue === "string" && errorValue.trim()) {
-        return errorValue;
-      }
-    }
-  } catch {
-    return text || fallback;
-  }
-
-  return text || fallback;
-}
-
 export async function createCourse(
   dto: Omit<CreateCourseDto, "instructors"> & { collaboratorIds: string[] }
 ): Promise<ActionResult<CourseResponseDto>> {
@@ -39,7 +20,10 @@ export async function createCourse(
     const payload: CreateCourseDto = {
       title: dto.title,
       description: dto.description,
+      shortDescription: dto.shortDescription,
       isPublished: dto.isPublished,
+      imageUrl: dto.imageUrl,
+      topic: dto.topic,
       instructors: dto.collaboratorIds.map((id) => ({
         instructorId: id,
         instructorRole: "COLLABORATOR" as const,
@@ -58,6 +42,52 @@ export async function createCourse(
     }
 
     const data = (await res.json()) as CourseResponseDto;
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+export async function fetchPublicCourse(
+  id: string
+): Promise<ActionResult<CourseDetailResponseDto>> {
+  try {
+    const res = await fetchBackend(`/api/v1/courses/catalog/${id}`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      const message = extractErrorMessage(text, res.statusText);
+      return { success: false, error: `${res.status}: ${message}` };
+    }
+
+    const data = (await res.json()) as CourseDetailResponseDto;
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+export async function enrollInCourse(id: string): Promise<ActionResult<CourseDetailResponseDto>> {
+  try {
+    const res = await fetchBackend(`/api/v1/courses/catalog/${id}/enroll`, {
+      method: "POST",
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      const message = extractErrorMessage(text, res.statusText);
+      return { success: false, error: `${res.status}: ${message}` };
+    }
+
+    const data = (await res.json()) as CourseDetailResponseDto;
     return { success: true, data };
   } catch (err) {
     return {
@@ -97,7 +127,10 @@ export async function updateCourse(
     const payload: UpdateCourseDto = {
       title: dto.title,
       description: dto.description,
+      shortDescription: dto.shortDescription,
       isPublished: dto.isPublished,
+      imageUrl: dto.imageUrl,
+      topic: dto.topic,
       instructors: dto.collaboratorIds.map((cid) => ({
         instructorId: cid,
         instructorRole: "COLLABORATOR" as const,
@@ -117,6 +150,27 @@ export async function updateCourse(
 
     const data = (await res.json()) as CourseDetailResponseDto;
     return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+export async function deleteCourse(id: string): Promise<ActionResult<void>> {
+  try {
+    const res = await fetchBackend(`/api/v1/courses/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      const message = extractErrorMessage(text, res.statusText);
+      return { success: false, error: `${res.status}: ${message}` };
+    }
+
+    return { success: true, data: undefined };
   } catch (err) {
     return {
       success: false,

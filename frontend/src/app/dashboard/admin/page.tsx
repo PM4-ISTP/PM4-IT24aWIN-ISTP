@@ -1,6 +1,8 @@
 import AdminConfigForm from "@/src/components/AdminConfigForm";
 import { getApiClient } from "@/src/lib/api/server";
 import { Stack, Title, Text, Button, Paper } from "@mantine/core";
+import { Box, Button, Stack, Text, Title } from "@mantine/core";
+
 // Role guard is handled by middleware (proxy.ts) - no manual check needed here.
 export const dynamic = "force-dynamic";
 
@@ -17,19 +19,36 @@ export default async function AdminDashboard() {
   return (
     <Stack p="xl" gap="xl" maw={600}>
       <div>
-        <Title order={1}>Admin Dashboard</Title>
-        <Text c="dimmed" mt={4}>
+        <Title
+          order={1}
+          style={{
+            color: "#f1f5f9",
+            fontFamily: "var(--font-space-grotesk), sans-serif",
+            fontWeight: 700,
+          }}
+        >
+          Admin Dashboard
+        </Title>
+        <Text style={{ color: "#94a3b8" }} mt={4}>
           Manage your platform settings and users.
         </Text>
       </div>
 
-      <Paper withBorder radius="md" p="xl">
+      <Box
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 14,
+          padding: "2rem",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+        }}
+      >
         <Stack gap="md">
           <div>
-            <Text fw={600} size="lg">
+            <Text fw={600} size="lg" style={{ color: "#e2e8f0" }}>
               Keycloak Admin Console
             </Text>
-            <Text c="dimmed" size="sm" mt={4}>
+            <Text style={{ color: "#94a3b8" }} size="sm" mt={4}>
               Manage users and roles directly via the Keycloak Admin Console.
             </Text>
           </div>
@@ -38,8 +57,14 @@ export default async function AdminDashboard() {
             href={process.env.KEYCLOAK_ADMIN_URL}
             target="_blank"
             rel="noopener noreferrer"
-            variant="filled"
             radius="md"
+            style={{
+              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+              border: "none",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 600,
+              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+            }}
           >
             Manage Users &amp; Roles with Keycloak
           </Button>
@@ -50,6 +75,7 @@ export default async function AdminDashboard() {
           <AdminConfigForm key={config.updatedAt ?? ""} initialConfig={config} />
         </Stack>
       </Paper>
+      </Box>
     </Stack>
   );
 }

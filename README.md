@@ -136,7 +136,7 @@ npm run dev
 k3d is a lightweight Kubernetes distribution perfect for local development.
 
 ```bash
-k3d cluster create istp
+k3d cluster create istp --port "80:80@loadbalancer" --port "443:443@loadbalancer"
 ```
 
 **Verify the cluster is running:**
@@ -146,20 +146,43 @@ k3d cluster list
 kubectl cluster-info
 ```
 
+#### kubectl on Windows 11
+
+If you want to use kubectl on Windows, you need to go to the file `.kube/config` in your local user folder. There you need to replace `server: https://host.docker.internal:62824` with `server: https://127.0.0.1:62824`. The port might differ. Just use the port that is specified by the `config` file.
+
 #### Download and Configure Kubeconfig
 
-Once the cluster is created, export the kubeconfig to the backend:
+Once the cluster is created, export the kubeconfig to the backend.
+
+**Linux:**
+
+On Linux you can run the following command:
 
 ```bash
 # From the project root (pm4/)
 mkdir -p backend/src/main/resources
+k3d kubeconfig get istp | sed 's/0\.0\.0\.0/127.0.0.1/g' > backend/src/main/resources/Kubeconfig
+```
+
+> **Note:** The `sed` command replaces `0.0.0.0` with `127.0.0.1` in the server address. k3d generates kubeconfigs with `0.0.0.0` as the host, which is a valid bind address for a server but not a valid destination for client connections — the Java Kubernetes client will fail with "Host is down" without this substitution.
+
+**Windows 11:**
+
+If you are on Windows 11, you need to run the following command (in Powershell):
+
+```powershell
+# From the project root (pm4/)
+New-Item -ItemType Directory -Path backend/src/main/resources -Force
 k3d kubeconfig get istp > backend/src/main/resources/Kubeconfig
 ```
+
+After running the command, please open the Kubeconfig file in `backend/src/main/resources/Kubeconfig` and replace `server: https://host.docker.internal:62824` with `server: https://127.0.0.1:62824`. The port might differ. Just use the port that is specified by your Kubeconfig.
 
 **Key points:**
 
 - The Kubeconfig file is required by the backend to communicate with the Kubernetes cluster
 - The file is already `.gitignored` (contains sensitive cluster credentials)
+- Re-run this command after every cluster restart — k3d assigns a new random port each time
 
 **Verify the kubeconfig was created:**
 

@@ -173,6 +173,7 @@ export const authOptions: AuthOptions = {
       session.accessToken = token.accessToken;
       session.roles = token.roles as string[];
       session.error = token.error;
+      session.userId = token.sub;
       const liveProfile =
         typeof token.accessToken === "string" ? await fetchUserInfo(token.accessToken) : {};
 

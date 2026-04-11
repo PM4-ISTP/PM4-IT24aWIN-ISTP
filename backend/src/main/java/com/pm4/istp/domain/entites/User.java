@@ -28,12 +28,22 @@ public class User {
   @Column(name = "email", nullable = false, unique = true)
   private String email;
 
+  @Column(name = "username")
+  private String username;
+
   @Column(name = "picture")
   private String picture;
+
+  @Column(name = "title")
+  private String title;
 
   @JsonIgnore
   @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL)
   private List<CourseInstructor> coursesInstructors = new ArrayList<>();
+
+  @JsonIgnore
+  @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL)
+  private List<CourseEnrollment> courseEnrollments = new ArrayList<>();
 
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
@@ -58,13 +68,15 @@ public class User {
     return Objects.equals(id, user.id)
         && Objects.equals(name, user.name)
         && Objects.equals(email, user.email)
+        && Objects.equals(username, user.username)
         && Objects.equals(picture, user.picture)
+        && Objects.equals(title, user.title)
         && Objects.equals(createdAt, user.createdAt)
         && Objects.equals(updatedAt, user.updatedAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, email, picture, createdAt, updatedAt);
+    return Objects.hash(id, name, email, username, picture, title, createdAt, updatedAt);
   }
 }

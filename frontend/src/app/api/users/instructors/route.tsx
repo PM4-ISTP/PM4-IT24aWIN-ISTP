@@ -6,11 +6,11 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
 
   const params = new URLSearchParams();
-  const name = searchParams.get("name");
+  const query = searchParams.get("query");
   const size = searchParams.get("size") ?? "20";
   const page = searchParams.get("page") ?? "0";
 
-  if (name) params.set("name", name);
+  if (query) params.set("query", query);
   params.set("size", size);
   params.set("page", page);
 
