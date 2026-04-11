@@ -1,8 +1,21 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Fieldset, FileInput, Grid, Group, NumberInput, Select, Text } from "@mantine/core";
+import {
+  Button,
+  Center,
+  Fieldset,
+  Grid,
+  Group,
+  NumberInput,
+  Select,
+  Stack,
+  Text,
+} from "@mantine/core";
+import { Dropzone } from "@mantine/dropzone";
 import { useForm } from "@mantine/form";
+import { IconCloudUpload, IconFile, IconX } from "@tabler/icons-react";
 import { useApiClient } from "@/src/lib/api/client";
 import type { components } from "@/src/lib/api/schema";
 import {
@@ -49,6 +62,9 @@ export default function AdminConfigForm({ initialConfig }: Props) {
       };
     }
   };
+
+  const openRef = useRef<() => void>(null!);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const form = useForm({
     mode: "uncontrolled",
@@ -152,49 +168,152 @@ export default function AdminConfigForm({ initialConfig }: Props) {
               withAsterisk={config.cpuLimit != null}
             />
           </Grid.Col>
-          <Grid.Col span={8}>
-            <NumberInput
-              id="memory-limit-input"
-              label="Memory limit"
-              description="How much memory one single pod can at maximum use."
-              key={form.key("memoryLimit")}
-              {...form.getInputProps("memoryLimit")}
-              min={1}
-              allowNegative={false}
-              allowDecimal={false}
-              clampBehavior="strict"
-              required={config.memoryLimit != null}
-              withAsterisk={config.memoryLimit != null}
-            />
-          </Grid.Col>
-          <Grid.Col span={4}>
-            <Select
-              id="memory-unit-input"
-              label="Memory unit"
-              description="Please select a unit for the desired memory limit."
-              key={form.key("memoryLimitUnit")}
-              {...form.getInputProps("memoryLimitUnit")}
-              data={memoryUnits}
-              allowDeselect={false}
-              required={config.memoryLimit != null}
-              withAsterisk={config.memoryLimit != null}
-            />
+          <Grid.Col span={12}>
+            <Grid align="flex-end">
+              <Grid.Col span={8}>
+                <NumberInput
+                  id="memory-limit-input"
+                  label="Memory limit"
+                  description="How much memory one single pod can at maximum use."
+                  key={form.key("memoryLimit")}
+                  {...form.getInputProps("memoryLimit")}
+                  min={1}
+                  allowNegative={false}
+                  allowDecimal={false}
+                  clampBehavior="strict"
+                  required={config.memoryLimit != null}
+                  withAsterisk={config.memoryLimit != null}
+                />
+              </Grid.Col>
+              <Grid.Col span={4}>
+                <Select
+                  id="memory-unit-input"
+                  label="Memory unit"
+                  description="Unit for the memory limit above."
+                  key={form.key("memoryLimitUnit")}
+                  {...form.getInputProps("memoryLimitUnit")}
+                  data={memoryUnits}
+                  allowDeselect={false}
+                  required={config.memoryLimit != null}
+                  withAsterisk={config.memoryLimit != null}
+                />
+              </Grid.Col>
+            </Grid>
           </Grid.Col>
           <Grid.Col span={12}>
-            <FileInput
-              id="kubeconfig-input"
-              withAsterisk={!config.kubeconfigUploaded}
-              label="Kubeconfig"
-              description="Please upload your Kubeconfig file for the Kubernetes cluster that manages the challenge pods."
-              key={form.key("kubeconfig")}
-              disabled={form.submitting}
-              {...form.getInputProps("kubeconfig")}
-            />
+            <Stack gap={4}>
+              <Text size="sm" fw={500}>
+                Kubeconfig
+                {!config.kubeconfigUploaded && (
+                  <Text component="span" c="red" ml={2}>
+                    *
+                  </Text>
+                )}
+              </Text>
+              <Text size="xs" c="dimmed">
+                Upload your Kubeconfig file for the Kubernetes cluster that manages the challenge
+                pods.
+              </Text>
+              <Dropzone
+                id="kubeconfig-input"
+                aria-label="Kubeconfig"
+                openRef={openRef}
+                onDrop={(files) => {
+                  const file = files[0] ?? null;
+                  form.setFieldValue("kubeconfig", file);
+                  form.clearFieldError("kubeconfig");
+                  setSelectedFile(file);
+                }}
+                maxFiles={1}
+                disabled={form.submitting}
+                style={{
+                  border: "2px dashed",
+                  borderColor: form.errors.kubeconfig
+                    ? "var(--mantine-color-red-6)"
+                    : "rgba(255,255,255,0.15)",
+                  borderRadius: 10,
+                  background: "rgba(255,255,255,0.03)",
+                  cursor: "pointer",
+                  transition: "border-color 150ms ease, background 150ms ease",
+                }}
+              >
+                <Center py="md">
+                  <Dropzone.Accept>
+                    <IconCloudUpload size={40} color="#2563eb" />
+                  </Dropzone.Accept>
+                  <Dropzone.Reject>
+                    <IconX size={40} color="var(--mantine-color-red-6)" />
+                  </Dropzone.Reject>
+                  <Dropzone.Idle>
+                    {selectedFile ? (
+                      <Stack align="center" gap={6}>
+                        <IconFile size={40} color="#94a3b8" />
+                        <Text size="sm" c="dimmed">
+                          {selectedFile.name}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          Click to replace
+                        </Text>
+                      </Stack>
+                    ) : (
+                      <Stack align="center" gap={6}>
+                        <IconCloudUpload size={40} color="#94a3b8" />
+                        <Text size="sm" fw={500}>
+                          Drag &amp; drop your kubeconfig here
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          or
+                        </Text>
+                        <Button
+                          size="xs"
+                          radius="md"
+                          style={{
+                            background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                            border: "none",
+                            fontWeight: 600,
+                            boxShadow: "0 2px 8px rgba(79,70,229,0.3)",
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openRef.current?.();
+                          }}
+                        >
+                          Browse file
+                        </Button>
+                      </Stack>
+                    )}
+                  </Dropzone.Idle>
+                </Center>
+              </Dropzone>
+              {form.errors.kubeconfig && (
+                <Text size="xs" c="red">
+                  {form.errors.kubeconfig}
+                </Text>
+              )}
+              {config.kubeconfigUploaded && !selectedFile && (
+                <Text size="xs" c="dimmed">
+                  A kubeconfig is already uploaded. Upload a new file only if you want to replace
+                  it.
+                </Text>
+              )}
+            </Stack>
           </Grid.Col>
         </Grid>
 
-        <Group justify="flex-end" mt="md">
-          <Button id="admin-config-form-submit-button" type="submit" loading={form.submitting}>
+        <Group justify="space-between" mt="md">
+          <Button
+            id="admin-config-form-submit-button"
+            type="submit"
+            loading={form.submitting}
+            radius="md"
+            style={{
+              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+              border: "none",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 600,
+              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+            }}
+          >
             {!config.kubeconfigUploaded
               ? "Create Kubernetes configuration"
               : "Update Kubernetes configuration"}
@@ -204,6 +323,14 @@ export default function AdminConfigForm({ initialConfig }: Props) {
             type="button"
             onClick={() => void handleDelete()}
             loading={form.submitting}
+            radius="md"
+            style={{
+              background: "linear-gradient(90deg, #dc2626, #b91c1c)",
+              border: "none",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 600,
+              boxShadow: "0 2px 12px rgba(220,38,38,0.3)",
+            }}
           >
             Delete Kubernetes configuration
           </Button>
