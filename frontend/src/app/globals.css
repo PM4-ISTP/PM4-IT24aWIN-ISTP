@@ -1,87 +1,21 @@
 @import "tailwindcss";
 
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
 @theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-/* ── Design system tokens ─────────────────────────────────────────────────── */
-:root {
-  --ds-card-bg: rgba(255, 255, 255, 0.04);
-  --ds-card-border: rgba(255, 255, 255, 0.08);
-  --ds-accent: #60a5fa;
-  --ds-text-primary: #e2e8f0;
-  --ds-text-secondary: #94a3b8;
-}
-
-/* ── Global dark base ─────────────────────────────────────────────────────── */
-/* Tailwind preflight can leave a transparent/white body background.          */
-/* These rules guarantee the dark gradient is always visible.                 */
-html,
 body {
-  background: linear-gradient(160deg, #0b1120 0%, #0e1a2e 50%, #0b1624 100%);
-  background-attachment: fixed;
-  color: var(--ds-text-primary);
-  font-family: var(--font-space-grotesk), sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  margin: 0;
-  padding: 0;
-}
-
-/* ── Mantine input unified dark style ────────────────────────────────────── */
-/* Forces all TextInput / Textarea / Select / MultiSelect inputs to use the   */
-/* same frosted-glass look as the dashboard cards instead of Mantine defaults.*/
-.mantine-Input-input {
-  background: var(--ds-card-bg) !important;
-  border-color: var(--ds-card-border) !important;
-  color: var(--ds-text-primary);
-}
-.mantine-Input-input:focus,
-.mantine-Input-input[data-focused] {
-  border-color: var(--ds-accent) !important;
-  outline: none;
-}
-.mantine-Input-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-/* ── Mantine RichTextEditor dark style ───────────────────────────────────── */
-/* Override light-mode defaults; keep editor visually consistent with inputs. */
-.mantine-RichTextEditor-root {
-  background: var(--ds-card-bg) !important;
-  border-color: var(--ds-card-border) !important;
-  border-radius: 8px !important;
-  overflow: hidden;
-}
-.mantine-RichTextEditor-toolbar {
-  background: rgba(255, 255, 255, 0.02) !important;
-  border-bottom-color: var(--ds-card-border) !important;
-}
-.mantine-RichTextEditor-content {
-  background: transparent !important;
-}
-.mantine-RichTextEditor-content .ProseMirror {
-  color: var(--ds-text-primary);
-  min-height: 160px;
-}
-
-/* ── Mantine Select / Combobox dropdown dark style ───────────────────────── */
-.mantine-Select-dropdown,
-.mantine-Combobox-dropdown {
-  background: #0c1929 !important;
-  border-color: var(--ds-card-border) !important;
-}
-.mantine-Combobox-option {
-  color: var(--ds-text-primary);
-}
-.mantine-Combobox-option[data-combobox-selected] {
-  background: rgba(96, 165, 250, 0.15) !important;
-  color: var(--ds-accent);
-}
-.mantine-Combobox-option:hover,
-.mantine-Combobox-option[data-combobox-active] {
-  background: rgba(255, 255, 255, 0.06) !important;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 /* Course description rendered HTML (from rich text editor) */
