@@ -174,6 +174,16 @@ export default function CreateCourse() {
               label="Publish Course"
               checked={isPublished}
               onChange={(e) => setIsPublished(e.currentTarget.checked)}
+              size="md"
+              styles={{
+                label: { color: "#e2e8f0", fontWeight: 500 },
+                track: {
+                  backgroundColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.15)",
+                  borderColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.2)",
+                  cursor: "pointer",
+                },
+                thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },
+              }}
             />
 
             {formError && (
