@@ -7,7 +7,7 @@ export async function GET() {
       next: { revalidate: 3600 },
     });
     if (!res.ok) return NextResponse.json([]);
-    const data = await res.json();
+    const data: unknown = await res.json();
     return NextResponse.json(data);
   } catch {
     return NextResponse.json([]);
