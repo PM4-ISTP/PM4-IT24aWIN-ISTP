@@ -58,6 +58,11 @@ spec:
                 configMapKeyRef:
                   name: istp-config
                   key: istp-tls
+            - name: TEAM_EMAILS
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: team-emails
           volumeMounts:
             - name: kubeconfig
               mountPath: /etc/kubeconfig
