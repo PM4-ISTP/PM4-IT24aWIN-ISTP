@@ -35,7 +35,7 @@ export default async function Home() {
       <DashboardHero firstName={firstName} dateStr={dateStr} />
 
       {/* Main content row */}
-      <Grid gutter="md">
+      <Grid gap="md">
         {/* Continue learning */}
         <GridCol span={{ base: 12, md: 8 }}>
           <Stack gap="sm">
