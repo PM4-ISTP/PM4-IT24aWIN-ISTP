@@ -71,6 +71,19 @@ export function CourseBannerHeader({
           {/* Title row */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
             <div style={{ flex: "1 1 400px" }}>
+              <Text
+                size="xs"
+                tt="uppercase"
+                fw={700}
+                style={{
+                  color: "rgba(255,255,255,0.4)",
+                  letterSpacing: "0.1em",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  marginBottom: 8,
+                }}
+              >
+                Course
+              </Text>
               <Title
                 order={1}
                 style={{

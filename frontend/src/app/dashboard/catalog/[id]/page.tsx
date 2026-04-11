@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseBannerHeader } from "@/src/components/CourseBannerHeader";
-import { CourseInstructorCard } from "@/src/components/CourseInstructorCard";
 import { CourseJourneyCard } from "@/src/components/CourseJourneyCard";
 import { fetchPublicCourse } from "@/src/lib/actions/courses";
 import { authOptions } from "@/src/lib/auth";
@@ -68,35 +67,14 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
         backHref={CATALOG_BACK_HREF}
       />
 
-      {/* Main content: two-column flex layout */}
+      {/* Main content */}
       <Container size="lg" pt="md" pb="xl">
         <Stack gap="lg">
-          <div style={{ display: "flex", gap: 24, alignItems: "stretch", flexWrap: "wrap" }}>
-            {/* Left column */}
-            <div style={{ flex: "1 1 500px", minWidth: 0 }}>
-              {/*
-               * Course Journey — lessons & challenges progress.
-               *
-               * TODO (lessons):    Pass `lessons={{ finished, total }}` once lesson-completion
-               *                    tracking is implemented in the backend.
-               * TODO (challenges): Pass `challenges={{ completed, total }}` once the challenges
-               *                    feature is available. Until then both bars show as placeholders.
-               */}
-              <CourseJourneyCard
-              // lessons={undefined}    ← wire up when lesson API is ready
-              // challenges={undefined} ← wire up when challenge API is ready
-              />
-            </div>
-
-            {/* Right column – Instructor card */}
-            <div style={{ flex: "0 0 280px", alignSelf: "stretch" }}>
-              {owner && (
-                <div style={{ height: "100%" }}>
-                  <CourseInstructorCard instructor={owner} />
-                </div>
-              )}
-            </div>
-          </div>
+          <CourseJourneyCard
+            instructor={owner}
+            // lessons={undefined}    ← wire up when lesson API is ready
+            // challenges={undefined} ← wire up when challenge API is ready
+          />
 
           {/* About this course */}
           {sanitizedDescription && (
