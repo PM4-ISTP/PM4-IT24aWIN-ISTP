@@ -95,9 +95,8 @@ export function AnimatedTooltip({ items }: { items: TooltipItem[] }) {
               height: 44,
               borderRadius: "50%",
               overflow: "hidden",
-              border: hoveredId === item.id
-                ? "2px solid #60a5fa"
-                : "2px solid rgba(255,255,255,0.15)",
+              border:
+                hoveredId === item.id ? "2px solid #60a5fa" : "2px solid rgba(255,255,255,0.15)",
               transform: hoveredId === item.id ? "scale(1.12) translateY(-3px)" : "scale(1)",
               transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)",
               cursor: "pointer",
@@ -127,7 +126,12 @@ export function AnimatedTooltip({ items }: { items: TooltipItem[] }) {
                   userSelect: "none",
                 }}
               >
-                {item.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                {item.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2)}
               </span>
             )}
           </div>
