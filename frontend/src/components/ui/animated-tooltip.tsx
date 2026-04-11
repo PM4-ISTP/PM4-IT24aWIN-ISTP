@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 
 export interface TooltipItem {
   id: number;
@@ -9,7 +9,7 @@ export interface TooltipItem {
 }
 
 export function AnimatedTooltip({ items }: { items: TooltipItem[] }) {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
@@ -17,17 +17,24 @@ export function AnimatedTooltip({ items }: { items: TooltipItem[] }) {
         <div
           key={item.id}
           style={{ position: "relative", marginLeft: idx === 0 ? 0 : -12 }}
-          onMouseEnter={() => setHoveredIndex(item.id)}
-          onMouseLeave={() => setHoveredIndex(null)}
+          tabIndex={0}
+          onMouseEnter={() => setHoveredId(item.id)}
+          onMouseLeave={() => setHoveredId(null)}
+          onFocus={() => setHoveredId(item.id)}
+          onBlur={() => setHoveredId(null)}
+          aria-describedby={hoveredId === item.id ? `tooltip-${item.id}` : undefined}
         >
           {/* Tooltip */}
           <div
+            id={`tooltip-${item.id}`}
+            role="tooltip"
+            aria-hidden={hoveredId !== item.id}
             style={{
               position: "absolute",
               bottom: "calc(100% + 10px)",
               left: "50%",
-              transform: `translateX(-50%) ${hoveredIndex === item.id ? "translateY(0) scale(1)" : "translateY(6px) scale(0.92)"}`,
-              opacity: hoveredIndex === item.id ? 1 : 0,
+              transform: `translateX(-50%) ${hoveredId === item.id ? "translateY(0) scale(1)" : "translateY(6px) scale(0.92)"}`,
+              opacity: hoveredId === item.id ? 1 : 0,
               pointerEvents: "none",
               transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)",
               zIndex: 50,
@@ -88,19 +95,19 @@ export function AnimatedTooltip({ items }: { items: TooltipItem[] }) {
               height: 44,
               borderRadius: "50%",
               overflow: "hidden",
-              border: hoveredIndex === item.id
+              border: hoveredId === item.id
                 ? "2px solid #60a5fa"
                 : "2px solid rgba(255,255,255,0.15)",
-              transform: hoveredIndex === item.id ? "scale(1.12) translateY(-3px)" : "scale(1)",
+              transform: hoveredId === item.id ? "scale(1.12) translateY(-3px)" : "scale(1)",
               transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)",
               cursor: "pointer",
               position: "relative",
-              zIndex: hoveredIndex === item.id ? 10 : idx,
+              zIndex: hoveredId === item.id ? 10 : idx,
               background: "rgba(96,165,250,0.08)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: hoveredIndex === item.id ? "0 0 0 3px rgba(96,165,250,0.25)" : "none",
+              boxShadow: hoveredId === item.id ? "0 0 0 3px rgba(96,165,250,0.25)" : "none",
             }}
           >
             {item.image ? (

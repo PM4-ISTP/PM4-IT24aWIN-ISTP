@@ -4,6 +4,7 @@ import com.pm4.istp.dto.PublicTeamMemberDto;
 import com.pm4.istp.mappers.UserMapper;
 import com.pm4.istp.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,12 +22,16 @@ public class PublicController {
   private final UserService userService;
   private final UserMapper userMapper;
 
-  @Value("${team.emails}")
+  @Value("${team.emails:}")
   private String teamEmailsRaw;
 
   @GetMapping("/team")
   public ResponseEntity<List<PublicTeamMemberDto>> getTeamMembers() {
-    List<String> emails = List.of(teamEmailsRaw.split(","));
+    List<String> emails =
+        Arrays.stream(teamEmailsRaw.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .toList();
     List<PublicTeamMemberDto> team =
         userService.getTeamMembers(emails).stream()
             .map(userMapper::toPublicTeamMemberDto)
