@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Manrope, Orbitron, Space_Grotesk } from "next/font/g
 import NextAuthSessionProvider from "@/src/components/SessionProvider";
 import "@mantine/core/styles.css";
 import "@mantine/tiptap/styles.css";
+import "@mantine/notifications/styles.css";
 import "./globals.css";
 
 /**

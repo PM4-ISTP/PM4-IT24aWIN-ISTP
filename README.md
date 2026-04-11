@@ -426,64 +426,40 @@ frontend-lint
 
 ---
 
-## Cypress E2E Tests
+## Playwright E2E Tests
 
-End-to-end tests live in `frontend/cypress/e2e/` and run against a live Next.js app + Keycloak.
+End-to-end tests live in `frontend/tests/` and run against a live Next.js app + Keycloak.
 
 See [Staging URLs](#staging-urls) for the list of staging service URLs.
 
-### KEYCLOAK_ORIGIN
-
-`KEYCLOAK_ORIGIN` is the **origin (scheme + host + port) of the Keycloak server**. Cypress uses it in `cy.origin()` to fill in the Keycloak login form during the OAuth redirect.
-
-| Environment                                            | `KEYCLOAK_ORIGIN` value                     |
-| ------------------------------------------------------ | ------------------------------------------- |
-| **Local** (Docker Compose `infra/docker-compose.yaml`) | `http://localhost:9090`                     |
-| **Staging**                                            | `https://istp-staging-auth.pm4.init-lab.ch` |
-
 ### Running the tests locally
 
-#### 1. Create `cypress.env.json`
-
-```bash
-cd frontend
-cp cypress.env.json.example cypress.env.json
-```
-
-Open `frontend/cypress.env.json` and fill in the values:
-
-| Variable              | Value                                                                                    |
-| --------------------- | ---------------------------------------------------------------------------------------- |
-| `KEYCLOAK_ORIGIN`     | `http://localhost:9090` (local) or `https://istp-staging-auth.pm4.init-lab.ch` (staging) |
-| `KEYCLOAK_REALM`      | `interactive-security-training-platform`                                                 |
-| `ADMIN_USERNAME`      | Username of a Keycloak user with the `admin` role                                        |
-| `ADMIN_PASSWORD`      | Password for that user                                                                   |
-| `INSTRUCTOR_USERNAME` | Username of a Keycloak user with the `instructor` role                                   |
-| `INSTRUCTOR_PASSWORD` | Password for that user                                                                   |
-| `USER_USERNAME`       | Username of a Keycloak user without the `admin` role                                     |
-| `USER_PASSWORD`       | Password for that user                                                                   |
-
-#### 2. Start the app
+#### 1. Start the app
 
 Make sure the Next.js app is running on `http://localhost:3000` (see [Quick Start](#quick-start)).
 
-#### 3. Open / run Cypress
+#### 2. Install Playwright browsers (first time only)
 
 ```bash
-# Interactive mode (recommended during development)
 cd frontend
-npx cypress open
+npx playwright install
+```
+
+#### 3. Run the tests
+
+```bash
+# Interactive UI mode (recommended during development)
+cd frontend
+npm run test
 
 # Headless mode (CI-style)
-npx cypress run
+npm run test:e2e
 ```
 
 #### Running against staging
 
-Set `KEYCLOAK_ORIGIN` to `https://istp-staging-auth.pm4.init-lab.ch` in `cypress.env.json` and pass the staging base URL:
+Pass the staging base URL via the `BASE_URL` environment variable:
 
 ```bash
-npx cypress run --config baseUrl=https://istp-staging.pm4.init-lab.ch
+BASE_URL=https://istp-staging.pm4.init-lab.ch npm run test:e2e
 ```
-
-> `cypress.env.json` is gitignored and must never be committed.
