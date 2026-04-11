@@ -15,9 +15,7 @@ export default function UnauthorizedPage() {
         <Title order={2} style={{ color: "#f1f5f9", letterSpacing: "-0.01em" }}>
           Access Denied
         </Title>
-        <Text style={{ color: "#94a3b8" }}>
-          You do not have permission to access this page.
-        </Text>
+        <Text style={{ color: "#94a3b8" }}>You do not have permission to access this page.</Text>
         <Button
           component="a"
           href="/dashboard"

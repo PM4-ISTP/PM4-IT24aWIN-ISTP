@@ -285,7 +285,15 @@ export default function EditCourse() {
               <IconArrowLeft size={20} />
             </ActionIcon>
             <Stack gap={4}>
-              <Title order={1} size="h2" style={{ color: "#f1f5f9", fontFamily: "var(--font-space-grotesk), sans-serif", fontWeight: 700 }}>
+              <Title
+                order={1}
+                size="h2"
+                style={{
+                  color: "#f1f5f9",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  fontWeight: 700,
+                }}
+              >
                 Edit Course
               </Title>
               <Text size="sm" style={{ color: "#94a3b8" }}>
@@ -317,105 +325,105 @@ export default function EditCourse() {
                 boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
               }}
             >
-            <Stack gap="lg">
-              <TextInput
-                label="Course Title"
-                placeholder="Enter course title"
-                value={title}
-                onChange={(e) => setTitle(e.currentTarget.value)}
-                error={titleError}
-                required
-              />
+              <Stack gap="lg">
+                <TextInput
+                  label="Course Title"
+                  placeholder="Enter course title"
+                  value={title}
+                  onChange={(e) => setTitle(e.currentTarget.value)}
+                  error={titleError}
+                  required
+                />
 
-              <Textarea
-                label="Short Description"
-                placeholder="Write a short summary shown on the course card and in the blue header"
-                value={shortDescription}
-                onChange={(e) => {
-                  const newVal = e.currentTarget.value;
-                  if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
-                    charLimitToast.show();
-                    return;
-                  }
-                  setShortDescription(newVal);
-                  if (shortDescriptionError) {
-                    setShortDescriptionError(null);
-                  }
-                }}
-                error={shortDescriptionError}
-                description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
-                autosize
-                minRows={2}
-                maxRows={4}
-                required
-              />
+                <Textarea
+                  label="Short Description"
+                  placeholder="Write a short summary shown on the course card and in the blue header"
+                  value={shortDescription}
+                  onChange={(e) => {
+                    const newVal = e.currentTarget.value;
+                    if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
+                      charLimitToast.show();
+                      return;
+                    }
+                    setShortDescription(newVal);
+                    if (shortDescriptionError) {
+                      setShortDescriptionError(null);
+                    }
+                  }}
+                  error={shortDescriptionError}
+                  description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
+                  autosize
+                  minRows={2}
+                  maxRows={4}
+                  required
+                />
 
-              <Select
-                label="Topic"
-                placeholder="Select a topic"
-                data={TOPIC_OPTIONS}
-                value={topic}
-                onChange={setTopic}
-                clearable
-              />
+                <Select
+                  label="Topic"
+                  placeholder="Select a topic"
+                  data={TOPIC_OPTIONS}
+                  value={topic}
+                  onChange={setTopic}
+                  clearable
+                />
 
-              <TextInput
-                label="Course Image URL"
-                placeholder="https://example.com/image.jpg"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.currentTarget.value)}
-                description="Optional thumbnail shown on the course card."
-              />
+                <TextInput
+                  label="Course Image URL"
+                  placeholder="https://example.com/image.jpg"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.currentTarget.value)}
+                  description="Optional thumbnail shown on the course card."
+                />
 
-              <MyEditor description={description} setDescription={setDescription} />
+                <MyEditor description={description} setDescription={setDescription} />
 
-              <InstructorMultiSelect
-                value={selectedInstructors}
-                onChange={handleCollaboratorChange}
-                initialUsers={initialUsers}
-                onUsersLoaded={(users) => setKnownUsers((prev) => mergeUsersById(prev, users))}
-              />
+                <InstructorMultiSelect
+                  value={selectedInstructors}
+                  onChange={handleCollaboratorChange}
+                  initialUsers={initialUsers}
+                  onUsersLoaded={(users) => setKnownUsers((prev) => mergeUsersById(prev, users))}
+                />
 
-              <Switch
-                label="Publish Course"
-                checked={isPublished}
-                onChange={(e) => setIsPublished(e.currentTarget.checked)}
-                size="md"
-                styles={{
-                  label: { color: "#e2e8f0", fontWeight: 500 },
-                  track: {
-                    backgroundColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.15)",
-                    borderColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.2)",
-                    cursor: "pointer",
-                  },
-                  thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },
-                }}
-              />
+                <Switch
+                  label="Publish Course"
+                  checked={isPublished}
+                  onChange={(e) => setIsPublished(e.currentTarget.checked)}
+                  size="md"
+                  styles={{
+                    label: { color: "#e2e8f0", fontWeight: 500 },
+                    track: {
+                      backgroundColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.15)",
+                      borderColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.2)",
+                      cursor: "pointer",
+                    },
+                    thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },
+                  }}
+                />
 
-              {formError && (
-                <Alert color="red" title="Failed to update course">
-                  {formError}
-                </Alert>
-              )}
+                {formError && (
+                  <Alert color="red" title="Failed to update course">
+                    {formError}
+                  </Alert>
+                )}
 
-              <Button
-                radius="md"
-                loading={isSubmitting}
-                disabled={isSubmitting}
-                onClick={() => {
-                  void handleSubmit();
-                }}
-                style={{
-                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                  border: "none",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 600,
-                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                }}
-              >
-                Save Changes
-              </Button>
-            </Stack>
+                <Button
+                  radius="md"
+                  loading={isSubmitting}
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    void handleSubmit();
+                  }}
+                  style={{
+                    background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                    border: "none",
+                    fontFamily: "var(--font-space-grotesk), sans-serif",
+                    fontWeight: 600,
+                    boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+                  }}
+                >
+                  Save Changes
+                </Button>
+              </Stack>
             </Box>
           </GridCol>
 

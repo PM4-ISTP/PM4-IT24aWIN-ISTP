@@ -106,21 +106,12 @@ export default async function Home() {
                   thickness={13}
                   sections={[{ value: 33, color: "#2563eb" }]}
                   label={
-                    <Text
-                      size="md"
-                      fw={700}
-                      ta="center"
-                      style={{ color: "#60a5fa" }}
-                    >
+                    <Text size="md" fw={700} ta="center" style={{ color: "#60a5fa" }}>
                       33%
                     </Text>
                   }
                 />
-                <Text
-                  size="sm"
-                  ta="center"
-                  style={{ color: "#64748b" }}
-                >
+                <Text size="sm" ta="center" style={{ color: "#64748b" }}>
                   Placeholder — 2 of 6 courses completed
                 </Text>
               </Stack>

@@ -6,7 +6,14 @@ export default function AdminDashboard() {
   return (
     <Stack p="xl" gap="xl" maw={600}>
       <div>
-        <Title order={1} style={{ color: "#f1f5f9", fontFamily: "var(--font-space-grotesk), sans-serif", fontWeight: 700 }}>
+        <Title
+          order={1}
+          style={{
+            color: "#f1f5f9",
+            fontFamily: "var(--font-space-grotesk), sans-serif",
+            fontWeight: 700,
+          }}
+        >
           Admin Dashboard
         </Title>
         <Text style={{ color: "#94a3b8" }} mt={4}>

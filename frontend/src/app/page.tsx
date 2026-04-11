@@ -4,8 +4,7 @@ import { redirect } from "next/navigation";
 import { Box, Container, Stack, Title, Text, Badge } from "@mantine/core";
 import Login from "@/src/components/Login";
 
-const heroBackground =
-  "linear-gradient(160deg, #0b1120 0%, #0e1a2e 45%, #0b1624 100%)";
+const heroBackground = "linear-gradient(160deg, #0b1120 0%, #0e1a2e 45%, #0b1624 100%)";
 
 const cardStyle: React.CSSProperties = {
   width: "100%",
@@ -121,8 +120,8 @@ export default async function Home() {
               maxWidth: 460,
             }}
           >
-            Structured courses, interactive exercises, and real-world scenarios
-            to build practical cybersecurity skills.
+            Structured courses, interactive exercises, and real-world scenarios to build practical
+            cybersecurity skills.
           </Text>
 
           {/* Login card */}

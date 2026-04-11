@@ -15,7 +15,15 @@ export default async function InstructorDashboard(props: {
     <Stack p="xl" gap="lg">
       <Group justify="space-between" align="flex-end">
         <Stack gap={4}>
-          <Title order={1} size="h2" style={{ color: "#f1f5f9", fontFamily: "var(--font-space-grotesk), sans-serif", fontWeight: 700 }}>
+          <Title
+            order={1}
+            size="h2"
+            style={{
+              color: "#f1f5f9",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 700,
+            }}
+          >
             Manage Courses
           </Title>
           <Text size="sm" style={{ color: "#94a3b8" }}>

@@ -1,4 +1,14 @@
-import { Avatar, Box, Divider, Group, Progress, Stack, Text, ThemeIcon, Tooltip } from "@mantine/core";
+import {
+  Avatar,
+  Box,
+  Divider,
+  Group,
+  Progress,
+  Stack,
+  Text,
+  ThemeIcon,
+  Tooltip,
+} from "@mantine/core";
 import { IconCheck, IconClock, IconFlame, IconLock } from "@tabler/icons-react";
 import { getInitials } from "@/src/lib/utils";
 import type { CourseUserSummary } from "@/src/types/course";
