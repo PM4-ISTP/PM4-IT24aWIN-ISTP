@@ -1,4 +1,4 @@
-import { Avatar, Stack, Text } from "@mantine/core";
+import { Avatar, Box, Stack, Text } from "@mantine/core";
 import { getInitials } from "@/src/lib/utils";
 import type { CourseUserSummary } from "@/src/types/course";
 
@@ -8,7 +8,7 @@ interface CourseInstructorCardProps {
 
 export function CourseInstructorCard({ instructor }: CourseInstructorCardProps) {
   return (
-    <div
+    <Box
       style={{
         background: "rgba(255,255,255,0.04)",
         border: "1px solid rgba(255,255,255,0.08)",
@@ -18,7 +18,7 @@ export function CourseInstructorCard({ instructor }: CourseInstructorCardProps) 
         boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
       }}
     >
-      <div
+      <Box
         style={{
           height: 78,
           background: "linear-gradient(90deg, rgba(79,70,229,0.6) 0%, rgba(37,99,235,0.6) 100%)",
@@ -55,6 +55,6 @@ export function CourseInstructorCard({ instructor }: CourseInstructorCardProps) 
           )}
         </Stack>
       </Stack>
-    </div>
+    </Box>
   );
 }
