@@ -209,28 +209,27 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout deploy branch
+      - name: Checkout deploy-staging
         uses: actions/checkout@v4
         with:
-          ref: deploy
+          ref: deploy-staging
 
-      - name: Update image tags in staging and prod
+      - name: Update image tags in staging
         run: |
           SHA="${{ needs.build-push-backend.outputs.sha_short }}"
           sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/staging/kustomization.yaml
-          sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/prod/kustomization.yaml
 
       - name: Commit and push manifest changes
         run: |
           SHA="${{ needs.build-push-backend.outputs.sha_short }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add k8s/overlays/staging/kustomization.yaml k8s/overlays/prod/kustomization.yaml
-          git diff --staged --quiet || git commit -m "chore: update image tags to $SHA [skip ci]"
-          git push origin deploy
+          git add k8s/overlays/staging/kustomization.yaml
+          git diff --staged --quiet || git commit -m "ci(deploy): update staging to $SHA [skip ci]"
+          git push origin deploy-staging
 
-  cypress-e2e:
-    name: Cypress E2E Tests (Staging)
+  playwright-e2e:
+    name: Playwright E2E Tests (Staging)
     runs-on: ubuntu-latest
     needs: update-manifests
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
@@ -253,6 +252,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
 
       - name: Build Next.js app
         run: npm run build
@@ -281,30 +283,55 @@ jobs:
           timeout 60 bash -c 'until curl -sf http://localhost:3000 > /dev/null 2>&1; do sleep 2; done'
           echo "Next.js is ready"
 
-      - name: Run Cypress E2E tests
-        run: npm run test:e2e
+      - name: Run Playwright E2E tests
+        run: npm run test:e2e -- --project=chromium
         env:
-          CYPRESS_KEYCLOAK_ORIGIN: https://istp-staging-auth.pm4.init-lab.ch
-          CYPRESS_KEYCLOAK_REALM: interactive-security-training-platform
+          BASE_URL: http://localhost:3000
           CYPRESS_ADMIN_USERNAME: ${{ secrets.CYPRESS_ADMIN_USERNAME }}
           CYPRESS_ADMIN_PASSWORD: ${{ secrets.CYPRESS_ADMIN_PASSWORD }}
-          CYPRESS_INSTRUCTOR_USERNAME: ${{ secrets.CYPRESS_INSTRUCTOR_USERNAME }}
-          CYPRESS_INSTRUCTOR_PASSWORD: ${{ secrets.CYPRESS_INSTRUCTOR_PASSWORD }}
-          CYPRESS_USER_USERNAME: ${{ secrets.CYPRESS_USER_USERNAME }}
-          CYPRESS_USER_PASSWORD: ${{ secrets.CYPRESS_USER_PASSWORD }}
 
-      - name: Upload Cypress screenshots
-        if: failure()
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-screenshots
-          path: frontend/cypress/screenshots
+          name: playwright-report
+          path: frontend/playwright-report/
           retention-days: 7
 
-      - name: Upload Cypress videos
-        if: always()
-        uses: actions/upload-artifact@v4
+  promote-to-prod:
+    name: Promote to Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout staging
+        uses: actions/checkout@v4
         with:
-          name: cypress-videos
-          path: frontend/cypress/videos
-          retention-days: 7
+          ref: deploy-staging
+
+      - name: Get current image tag
+        id: tag
+        run: |
+          TAG=$(grep newTag k8s/overlays/staging/kustomization.yaml | awk '{print $2}')
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Checkout prod
+        uses: actions/checkout@v4
+        with:
+          ref: deploy-prod
+
+      - name: Update prod to staging version
+        run: |
+          sed -i "s/newTag: .*/newTag: ${{ steps.tag.outputs.tag }}/" k8s/overlays/prod/kustomization.yaml
+
+      - name: Commit & push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "ci(deploy): promote to prod ${{ steps.tag.outputs.tag }}" || echo "no changes"
+          git push origin deploy-prod
+  

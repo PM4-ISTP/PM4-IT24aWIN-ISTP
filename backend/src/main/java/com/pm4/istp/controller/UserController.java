@@ -31,12 +31,12 @@ public class UserController {
   @GetMapping(path = {"/collaborators", "/instructors"})
   public ResponseEntity<Page<ListInstructorUserResponseDto>> listCollaboratorUsers(
       @AuthenticationPrincipal Jwt jwt,
-      @RequestParam(required = false) String name,
+      @RequestParam(required = false) String query,
       Pageable pageable) {
     UUID userId = parseUserId(jwt);
     Page<User> users;
-    if (null != name && !name.trim().isEmpty()) {
-      users = userService.searchCollaboratorUsersByName(userId, name, pageable);
+    if (null != query && !query.trim().isEmpty()) {
+      users = userService.searchCollaboratorUsersByQuery(userId, query, pageable);
     } else {
       users = userService.listCollaboratorUsers(userId, pageable);
     }

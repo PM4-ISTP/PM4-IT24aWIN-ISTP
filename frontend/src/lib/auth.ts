@@ -170,8 +170,10 @@ export const authOptions: AuthOptions = {
       // Access token is intentionally NOT exposed to the client.
       // Use getServerSession() + fetchBackend() for backend calls.
       // Roles used for server-side authorization checks.
+      session.accessToken = token.accessToken;
       session.roles = token.roles as string[];
       session.error = token.error;
+      session.userId = token.sub;
       const liveProfile =
         typeof token.accessToken === "string" ? await fetchUserInfo(token.accessToken) : {};
 

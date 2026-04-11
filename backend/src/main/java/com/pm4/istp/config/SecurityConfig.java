@@ -38,6 +38,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/api/v1/courses/catalog")
                     .authenticated()
+                    .requestMatchers("/api/v1/courses/catalog/**")
+                    .authenticated()
                     .requestMatchers("/api/v1/courses/**")
                     .hasAnyRole("INSTRUCTOR", "ADMINISTRATOR")
                     // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow

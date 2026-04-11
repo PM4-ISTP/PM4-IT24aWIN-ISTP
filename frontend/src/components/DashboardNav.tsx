@@ -19,7 +19,7 @@ const labelStyle: React.CSSProperties = {
 const sectionLabelStyle: React.CSSProperties = {
   ...labelStyle,
   fontSize: "0.6rem",
-  color: "#5B606B",
+  color: "rgba(255,255,255,0.3)",
   letterSpacing: "0.18em",
 };
 
@@ -48,7 +48,7 @@ function NavItem({
           paddingRight: "1rem",
           textDecoration: "none",
           transition: "color 0.15s",
-          color: active ? "#3B82F6" : "#5B606B",
+          color: active ? "#60a5fa" : "rgba(255,255,255,0.55)",
           fontWeight: active ? 700 : 400,
         }}
       >
@@ -73,7 +73,7 @@ function NavItem({
             transform: "translateY(-50%)",
             width: 3,
             height: "55%",
-            background: "#3B82F6",
+            background: "#60a5fa",
             borderRadius: "4px 0 0 4px",
           }}
         />
