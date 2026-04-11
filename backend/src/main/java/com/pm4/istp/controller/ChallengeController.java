@@ -1,0 +1,188 @@
+package com.pm4.istp.controller;
+
+import static com.pm4.istp.util.JwtUtil.parseUserId;
+
+import com.pm4.istp.domain.CreateChallengeRequest;
+import com.pm4.istp.domain.UpdateChallengeRequest;
+import com.pm4.istp.domain.entites.Challenge;
+import com.pm4.istp.dto.*;
+import com.pm4.istp.mappers.ChallengeMapper;
+import com.pm4.istp.service.ChallengeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
+
+@Tag(name = "Challenge", description = "Challenge endpoints for the API")
+@RestController
+@RequestMapping("/api/v1/challenges")
+@RequiredArgsConstructor
+public class ChallengeController {
+  private final ChallengeMapper challengeMapper;
+  private final ChallengeService challengeService;
+
+  @Operation(
+      summary = "Create a challenge",
+      description = "Creates a new challenge and returns the persisted challenge.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Challenge created successfully",
+            content =
+                @Content(schema = @Schema(implementation = CreateChallengeResponseDto.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request data",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PostMapping
+  public ResponseEntity<CreateChallengeResponseDto> createChallenge(
+      @AuthenticationPrincipal Jwt jwt,
+      @Valid @RequestBody CreateChallengeRequestDto createChallengeRequestDto) {
+    UUID userId = parseUserId(jwt);
+    CreateChallengeRequest request = challengeMapper.fromDto(createChallengeRequestDto);
+    Challenge created = challengeService.createChallenge(userId, request);
+    CreateChallengeResponseDto responseDto = challengeMapper.toCreateResponseDto(created);
+    return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
+  }
+
+  @Operation(
+      summary = "Get a challenge by ID",
+      description =
+          "Returns the full details of a challenge. Visibility depends on status and user role.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Challenge found",
+            content =
+                @Content(schema = @Schema(implementation = ChallengeDetailResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @GetMapping("/{id}")
+  public ResponseEntity<ChallengeDetailResponseDto> getChallenge(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    Challenge challenge = challengeService.getChallenge(userId, id);
+    ChallengeDetailResponseDto dto = challengeMapper.toDetailResponseDto(challenge);
+    return ResponseEntity.ok(dto);
+  }
+
+  @Operation(
+      summary = "Update a challenge",
+      description = "Updates an existing challenge. Only the creator can update.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Challenge updated successfully",
+            content =
+                @Content(schema = @Schema(implementation = ChallengeDetailResponseDto.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request data",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PutMapping("/{id}")
+  public ResponseEntity<ChallengeDetailResponseDto> updateChallenge(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID id,
+      @Valid @RequestBody UpdateChallengeRequestDto updateChallengeRequestDto) {
+    UUID userId = parseUserId(jwt);
+    UpdateChallengeRequest request = challengeMapper.fromDto(updateChallengeRequestDto);
+    Challenge updated = challengeService.updateChallenge(userId, id, request);
+    ChallengeDetailResponseDto dto = challengeMapper.toDetailResponseDto(updated);
+    return ResponseEntity.ok(dto);
+  }
+
+  @Operation(
+      summary = "Delete a challenge",
+      description =
+          "Deletes a challenge and removes it from all courses. Only the creator can delete.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "204", description = "Challenge deleted successfully"),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deleteChallenge(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    challengeService.deleteChallenge(userId, id);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Operation(
+      summary = "List my challenges",
+      description = "Returns a paginated list of challenges created by the authenticated user.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Challenges retrieved successfully")
+      })
+  @GetMapping
+  public ResponseEntity<Page<ListChallengeResponseDto>> listChallenges(
+      @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
+    UUID userId = parseUserId(jwt);
+    Page<ListChallengeResponseDto> challenges =
+        challengeService.listChallengesForCreator(userId, pageable);
+    return ResponseEntity.ok(challenges);
+  }
+
+  @Operation(
+      summary = "Search available challenges",
+      description =
+          "Searches for challenges by title. Returns the user's own challenges and public ones.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Search results retrieved successfully")
+      })
+  @GetMapping("/search")
+  public ResponseEntity<Page<ListChallengeResponseDto>> searchChallenges(
+      @AuthenticationPrincipal Jwt jwt,
+      @RequestParam(name = "q", defaultValue = "") String query,
+      Pageable pageable) {
+    UUID userId = parseUserId(jwt);
+    Page<ListChallengeResponseDto> results =
+        challengeService.searchAvailableChallenges(userId, query, pageable);
+    return ResponseEntity.ok(results);
+  }
+}
