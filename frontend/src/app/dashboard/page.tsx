@@ -1,19 +1,11 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
-import { Grid, GridCol, Group, RingProgress, SimpleGrid, Stack, Text, Box } from "@mantine/core";
+import { Grid, GridCol, Group, Paper, RingProgress, SimpleGrid, Stack, Text } from "@mantine/core";
 import { IconArrowRight, IconBolt, IconBug, IconLock, IconShieldCheck } from "@tabler/icons-react";
 import DashboardStyles from "./DashboardStyles";
 import DashboardHero from "./DashboardHero";
 import CourseCard from "./CourseCard";
-
-const sectionLabelStyle: React.CSSProperties = {
-  fontFamily: "var(--font-space-grotesk), sans-serif",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  fontSize: "0.72rem",
-  fontWeight: 700,
-  color: "rgba(255,255,255,0.45)",
-};
+import { labelStyle } from "./_shared";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -29,7 +21,7 @@ export default async function Home() {
   });
 
   return (
-    <Stack gap="xl">
+    <Stack p="xl" gap="xl">
       <DashboardStyles />
 
       <DashboardHero firstName={firstName} dateStr={dateStr} />
@@ -40,19 +32,14 @@ export default async function Home() {
         <GridCol span={{ base: 12, md: 8 }}>
           <Stack gap="sm">
             <Group justify="space-between" align="center">
-              <Text style={sectionLabelStyle}>Continue Learning</Text>
-              <Group gap={4} style={{ cursor: "pointer" }}>
-                <Text
-                  size="sm"
-                  fw={600}
-                  style={{
-                    color: "#60a5fa",
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
-                  }}
-                >
+              <Text style={{ ...labelStyle, color: "#001E41", fontSize: "0.82rem" }}>
+                Continue Learning
+              </Text>
+              <Group gap={4} style={{ cursor: "pointer", color: "#3B82F6" }}>
+                <Text size="sm" c="blue" fw={600}>
                   View all
                 </Text>
-                <IconArrowRight size={15} color="#60a5fa" />
+                <IconArrowRight size={15} color="#3B82F6" />
               </Group>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
@@ -88,34 +75,26 @@ export default async function Home() {
         <GridCol span={{ base: 12, md: 4 }}>
           <Stack gap="md">
             {/* Overall progress */}
-            <Box
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 14,
-                padding: "1.5rem",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-              }}
-            >
+            <Paper withBorder radius="lg" p="lg" style={{ borderColor: "#E5EEFF" }}>
               <Stack gap="sm" align="center">
-                <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>
+                <Text style={{ ...labelStyle, alignSelf: "flex-start", fontSize: "0.82rem" }}>
                   Overall Progress
                 </Text>
                 <RingProgress
                   size={130}
                   thickness={13}
-                  sections={[{ value: 33, color: "#2563eb" }]}
+                  sections={[{ value: 33, color: "blue" }]}
                   label={
-                    <Text size="md" fw={700} ta="center" style={{ color: "#60a5fa" }}>
+                    <Text size="md" fw={700} ta="center" c="blue">
                       33%
                     </Text>
                   }
                 />
-                <Text size="sm" ta="center" style={{ color: "#64748b" }}>
+                <Text size="sm" c="dimmed" ta="center">
                   Placeholder — 2 of 6 courses completed
                 </Text>
               </Stack>
-            </Box>
+            </Paper>
           </Stack>
         </GridCol>
       </Grid>

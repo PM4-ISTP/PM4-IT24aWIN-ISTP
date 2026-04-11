@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Group, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Alert, Button, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
 import Link from "next/link";
 import { fetchPublishedCourses } from "@/src/lib/actions/courses";
 import { CourseGrid } from "@/src/components/CourseGrid";
@@ -14,23 +14,15 @@ export default async function CatalogPage(props: {
   return (
     <Stack p="xl" gap="lg">
       <Stack gap={4}>
-        <Title order={1} size="h2" style={{ color: "#f1f5f9" }}>
+        <Title order={1} size="h2">
           Browse / Catalog
         </Title>
-        <Text size="sm" style={{ color: "#94a3b8" }}>
+        <Text size="sm" c="dimmed">
           Explore all published courses and search by title, short description, or description.
         </Text>
       </Stack>
 
-      <Box
-        style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 14,
-          padding: "1.25rem 1.5rem",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-        }}
-      >
+      <Paper withBorder radius="lg" p="lg">
         <form action="/dashboard/catalog" method="get">
           <Group align="flex-end">
             <TextInput
@@ -41,38 +33,14 @@ export default async function CatalogPage(props: {
               style={{ flex: 1 }}
             />
             <Group gap="sm">
-              <Button
-                type="submit"
-                radius="md"
-                style={{
-                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                  border: "none",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 600,
-                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                }}
-              >
-                Search
-              </Button>
+              <Button type="submit">Search</Button>
               <Link href="/dashboard/catalog">
-                <Button
-                  variant="outline"
-                  radius="md"
-                  style={{
-                    borderColor: "rgba(255,255,255,0.12)",
-                    color: "#e2e8f0",
-                    background: "rgba(255,255,255,0.04)",
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
-                    fontWeight: 600,
-                  }}
-                >
-                  Reset
-                </Button>
+                <Button variant="light">Reset</Button>
               </Link>
             </Group>
           </Group>
         </form>
-      </Box>
+      </Paper>
 
       {result.success ? (
         <CourseGrid

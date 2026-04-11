@@ -1,4 +1,4 @@
-import { Badge, Box, Group, Progress, Stack, Text, ThemeIcon } from "@mantine/core";
+import { Badge, Box, Group, Paper, Progress, Stack, Text, ThemeIcon } from "@mantine/core";
 
 export default function CourseCard({
   title,
@@ -12,90 +12,39 @@ export default function CourseCard({
   icon: React.ReactNode;
 }) {
   return (
-    <Box
+    <Paper
+      withBorder
+      radius="lg"
+      p="lg"
       className="dashboard-course-card"
-      style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 14,
-        padding: "1.25rem",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
-      }}
+      style={{ borderColor: "#E5EEFF" }}
     >
       <Stack gap="sm">
         <Group align="flex-start" justify="space-between" wrap="nowrap">
-          <Stack gap={4} style={{ flex: 1 }}>
-            <Text
-              fw={600}
-              lineClamp={2}
-              style={{
-                color: "#e2e8f0",
-                fontSize: "0.9rem",
-                lineHeight: 1.45,
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-              }}
-            >
+          <Stack gap={2} style={{ flex: 1 }}>
+            <Text fw={600} size="md" lineClamp={2} style={{ color: "#001E41" }}>
               {title}
             </Text>
-            <Badge
-              size="sm"
-              variant="outline"
-              style={{
-                color: "#60a5fa",
-                borderColor: "rgba(96,165,250,0.25)",
-                background: "rgba(96,165,250,0.06)",
-                fontSize: "0.68rem",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-              }}
-            >
+            <Badge size="sm" variant="light" color="blue">
               {topic}
             </Badge>
           </Stack>
-          <ThemeIcon
-            size="md"
-            radius="md"
-            style={{
-              background: "rgba(96,165,250,0.1)",
-              color: "#60a5fa",
-              flexShrink: 0,
-            }}
-          >
+          <ThemeIcon size="md" radius="md" color="blue" variant="light">
             {icon}
           </ThemeIcon>
         </Group>
         <Box>
-          <Group justify="space-between" mb={6}>
-            <Text
-              size="xs"
-              style={{
-                color: "rgba(255,255,255,0.35)",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                fontWeight: 600,
-              }}
-            >
+          <Group justify="space-between" mb={4}>
+            <Text size="sm" c="dimmed">
               Progress
             </Text>
-            <Text
-              size="xs"
-              fw={600}
-              style={{ color: "#60a5fa", fontFamily: "var(--font-space-grotesk), sans-serif" }}
-            >
+            <Text size="sm" fw={600} c="blue">
               {progress}%
             </Text>
           </Group>
-          <Progress
-            value={progress}
-            size="xs"
-            radius="xl"
-            styles={{
-              root: { background: "rgba(255,255,255,0.08)" },
-              section: { background: "linear-gradient(90deg, #2563eb, #4f46e5)" },
-            }}
-          />
+          <Progress value={progress} size="sm" radius="xl" color="blue" />
         </Box>
       </Stack>
-    </Box>
+    </Paper>
   );
 }

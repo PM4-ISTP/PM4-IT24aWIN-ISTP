@@ -28,26 +28,15 @@ export default function WelcomeTitle({ firstName }: { firstName: string }) {
     <Title
       order={1}
       style={{
-        fontFamily: "var(--font-space-grotesk), sans-serif",
-        fontWeight: 700,
-        color: "#f1f5f9",
-        fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
-        lineHeight: 1.2,
-        letterSpacing: "-0.02em",
+        fontFamily: "var(--font-manrope), 'Manrope', sans-serif",
+        fontWeight: 800,
+        color: "#fff",
+        fontSize: "2.6rem",
         minHeight: "2.5rem",
       }}
     >
       {FULL_PREFIX.slice(0, prefixVisible)}
-      <span
-        style={{
-          background: "linear-gradient(90deg, #60a5fa, #818cf8)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
-        }}
-      >
-        {nameAndBang.slice(0, nameVisible)}
-      </span>
+      <span style={{ color: "#3B82F6" }}>{nameAndBang.slice(0, nameVisible)}</span>
       {/* blinking cursor while typing */}
       {visibleCount < fullText.length && (
         <span
@@ -55,7 +44,7 @@ export default function WelcomeTitle({ firstName }: { firstName: string }) {
             display: "inline-block",
             width: "2px",
             height: "1.2em",
-            background: "#60a5fa",
+            background: "#3B82F6",
             marginLeft: 2,
             verticalAlign: "text-bottom",
             animation: "cursorBlink 0.7s step-end infinite",

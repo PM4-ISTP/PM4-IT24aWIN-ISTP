@@ -1,21 +1,13 @@
 import { Box, Button, Group, Stack, Text } from "@mantine/core";
 import { IconBook2, IconBolt, IconTrophy, IconChevronRight } from "@tabler/icons-react";
 import WelcomeTitle from "./WelcomeTitle";
+import { labelStyle } from "./_shared";
 
 const heroStats = [
   { icon: <IconBook2 size={18} />, label: "Enrolled Courses", value: "—" },
   { icon: <IconTrophy size={18} />, label: "Completed", value: "—" },
   { icon: <IconBolt size={18} />, label: "Current Streak", value: "—" },
 ];
-
-const statLabelStyle: React.CSSProperties = {
-  fontFamily: "var(--font-space-grotesk), sans-serif",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  fontSize: "0.7rem",
-  fontWeight: 700,
-  color: "rgba(255,255,255,0.4)",
-};
 
 export default function DashboardHero({
   firstName,
@@ -27,25 +19,48 @@ export default function DashboardHero({
   return (
     <Box
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 14,
+        background: "linear-gradient(135deg, #060D1A 0%, #0A1628 50%, #0D1F5C 100%)",
+        borderRadius: 16,
         padding: "2rem 2.5rem",
         position: "relative",
         overflow: "hidden",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
       }}
     >
-      {/* Subtle blue accent glow */}
+      {/* Dot grid overlay */}
       <Box
         style={{
           position: "absolute",
+          inset: 0,
+          backgroundImage: "radial-gradient(circle, rgba(59,130,246,0.18) 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+          pointerEvents: "none",
+        }}
+      />
+      {/* Blue glow top-right */}
+      <Box
+        className="dashboard-glow-tr"
+        style={{
+          position: "absolute",
           top: -60,
-          right: -30,
-          width: 220,
-          height: 220,
+          right: -40,
+          width: 240,
+          height: 240,
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(96,165,250,0.10) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(59,130,246,0.35) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }}
+      />
+      {/* Cyan glow bottom-left */}
+      <Box
+        className="dashboard-glow-bl"
+        style={{
+          position: "absolute",
+          bottom: -60,
+          left: -40,
+          width: 180,
+          height: 180,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(6,182,212,0.2) 0%, transparent 70%)",
           pointerEvents: "none",
         }}
       />
@@ -59,45 +74,26 @@ export default function DashboardHero({
       >
         {/* Left: welcome text + buttons */}
         <Stack gap={8} style={{ flex: 1, minWidth: 0 }}>
-          <Text style={statLabelStyle}>{dateStr}</Text>
+          <Text style={{ ...labelStyle, color: "rgba(255,255,255,0.45)" }}>{dateStr}</Text>
           <WelcomeTitle firstName={firstName} />
-          <Text
-            style={{
-              color: "#94a3b8",
-              fontSize: "1rem",
-              lineHeight: 1.65,
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-            }}
-          >
+          <Text size="md" style={{ color: "rgba(255,255,255,0.55)" }}>
             Here&apos;s an overview of your learning progress.
           </Text>
           <Group mt={8} gap="sm">
             <Button
               size="md"
-              radius="md"
+              radius="xl"
+              variant="filled"
+              color="blue"
               rightSection={<IconChevronRight size={15} />}
-              style={{
-                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                border: "none",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                letterSpacing: "0.02em",
-                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-              }}
             >
               Browse Courses
             </Button>
             <Button
               size="md"
-              radius="md"
-              style={{
-                borderColor: "rgba(255,255,255,0.12)",
-                color: "#e2e8f0",
-                background: "rgba(255,255,255,0.04)",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-              }}
+              radius="xl"
               variant="outline"
+              style={{ borderColor: "rgba(255,255,255,0.3)", color: "#fff" }}
             >
               View Leaderboard
             </Button>
@@ -110,9 +106,9 @@ export default function DashboardHero({
             <Box
               key={label}
               style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 10,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 12,
                 padding: "0.75rem 1rem",
               }}
             >
@@ -122,19 +118,19 @@ export default function DashboardHero({
                     width: 36,
                     height: 36,
                     borderRadius: 8,
-                    background: "rgba(96,165,250,0.1)",
+                    background: "rgba(59,130,246,0.18)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#60a5fa",
+                    color: "#3B82F6",
                     flexShrink: 0,
                   }}
                 >
                   {icon}
                 </Box>
                 <Stack gap={1}>
-                  <Text style={statLabelStyle}>{label}</Text>
-                  <Text fw={700} size="lg" style={{ color: "#f1f5f9", lineHeight: 1.1 }}>
+                  <Text style={{ ...labelStyle, color: "rgba(255,255,255,0.45)" }}>{label}</Text>
+                  <Text fw={700} size="lg" style={{ color: "#fff", lineHeight: 1.1 }}>
                     {value}
                   </Text>
                 </Stack>
