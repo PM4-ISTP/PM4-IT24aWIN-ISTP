@@ -1,4 +1,4 @@
-import { Divider, Group, Paper, Progress, Stack, Text, ThemeIcon, Tooltip } from "@mantine/core";
+import { Box, Divider, Group, Progress, Stack, Text, ThemeIcon, Tooltip } from "@mantine/core";
 import { IconCheck, IconClock, IconFlame, IconLock } from "@tabler/icons-react";
 
 // ---------------------------------------------------------------------------
@@ -156,8 +156,15 @@ export function CourseJourneyCard({ lessons, challenges }: CourseJourneyCardProp
   const challengePercent = challenges ? calcPercent(challenges.completed, challenges.total) : 0;
 
   return (
-    <Paper withBorder radius="lg" p="xl" shadow="xs">
-      <Stack gap="md">
+    <Box
+      style={{
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 14,
+        padding: "2rem",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+      }}
+    >      <Stack gap="md">
         {/* Header */}
         <Group justify="space-between" align="center">
           <Text size="xs" tt="uppercase" fw={700} c="dimmed" style={{ letterSpacing: "0.08em" }}>
@@ -227,6 +234,6 @@ export function CourseJourneyCard({ lessons, challenges }: CourseJourneyCardProp
           <ChallengesPlaceholder />
         )}
       </Stack>
-    </Paper>
+    </Box>
   );
 }

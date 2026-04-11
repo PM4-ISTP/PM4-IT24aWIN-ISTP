@@ -1,5 +1,5 @@
 import sanitizeHtml from "sanitize-html";
-import { Alert, Container, Divider, Group, Paper, Stack, Text } from "@mantine/core";
+import { Alert, Box, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { getServerSession } from "next-auth";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
@@ -23,7 +23,7 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
       <Container>
         <Stack p="xl" gap="lg">
           <Link href={CATALOG_BACK_HREF} style={{ textDecoration: "none" }}>
-            <Group gap={6} style={{ color: "var(--mantine-color-dimmed)", fontSize: 14 }}>
+            <Group gap={6} style={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>
               <IconArrowLeft size={16} />
               <span>Back to Catalog</span>
             </Group>
@@ -100,21 +100,37 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
 
           {/* About this course */}
           {sanitizedDescription && (
-            <Paper withBorder radius="lg" p="xl" shadow="xs">
+            <Box
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 14,
+                padding: "2rem",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+              }}
+            >
               <Stack gap="md">
                 <Group gap="sm" align="center">
-                  <IconBook2 size={18} color="var(--mantine-color-blue-6)" />
-                  <Text fw={700} size="lg">
+                  <IconBook2 size={18} color="#60a5fa" />
+                  <Title
+                    order={3}
+                    style={{
+                      color: "#f1f5f9",
+                      fontFamily: "var(--font-space-grotesk), sans-serif",
+                      fontWeight: 700,
+                      fontSize: "1.1rem",
+                    }}
+                  >
                     About this Course
-                  </Text>
+                  </Title>
                 </Group>
-                <Divider />
                 <div
+                  style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "1rem" }}
                   className="course-description"
                   dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
                 />
               </Stack>
-            </Paper>
+            </Box>
           )}
         </Stack>
       </Container>

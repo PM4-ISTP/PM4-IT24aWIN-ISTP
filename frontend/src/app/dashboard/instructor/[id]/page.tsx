@@ -10,6 +10,7 @@ import {
   Button,
   Container,
   Grid,
+  GridCol,
   Group,
   Loader,
   Modal,
@@ -243,7 +244,18 @@ export default function EditCourse() {
             </Alert>
           )}
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={closeDelete} disabled={isDeleting}>
+            <Button
+              variant="outline"
+              radius="md"
+              onClick={closeDelete}
+              disabled={isDeleting}
+              style={{
+                borderColor: "rgba(255,255,255,0.12)",
+                color: "#e2e8f0",
+                background: "rgba(255,255,255,0.04)",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+              }}
+            >
               Cancel
             </Button>
             <Button
@@ -272,10 +284,10 @@ export default function EditCourse() {
               <IconArrowLeft size={20} />
             </ActionIcon>
             <Stack gap={4}>
-              <Title order={1} size="h2">
+              <Title order={1} size="h2" style={{ color: "#f1f5f9", fontFamily: "var(--font-space-grotesk), sans-serif", fontWeight: 700 }}>
                 Edit Course
               </Title>
-              <Text size="sm" c="dimmed">
+              <Text size="sm" style={{ color: "#94a3b8" }}>
                 Update the course details.
               </Text>
             </Stack>
@@ -286,6 +298,7 @@ export default function EditCourse() {
               variant="light"
               leftSection={<IconTrash size={16} />}
               onClick={openDelete}
+              radius="md"
             >
               Delete Course
             </Button>
@@ -293,7 +306,7 @@ export default function EditCourse() {
         </Group>
 
         <Grid gutter="xl" align="start">
-          <Grid.Col span={{ base: 12, md: 7, lg: 8 }}>
+          <GridCol span={{ base: 12, md: 7, lg: 8 }}>
             <Stack gap="lg">
               <TextInput
                 label="Course Title"
@@ -366,26 +379,32 @@ export default function EditCourse() {
               )}
 
               <Button
-                variant="filled"
                 radius="md"
                 loading={isSubmitting}
                 disabled={isSubmitting}
                 onClick={() => {
                   void handleSubmit();
                 }}
+                style={{
+                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                  border: "none",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  fontWeight: 600,
+                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+                }}
               >
                 Save Changes
               </Button>
             </Stack>
-          </Grid.Col>
+          </GridCol>
 
-          <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
+          <GridCol span={{ base: 12, md: 5, lg: 4 }}>
             <CoursePeoplePanel
               owner={owner}
               collaborators={collaborators}
               participants={course?.participants ?? []}
             />
-          </Grid.Col>
+          </GridCol>
         </Grid>
       </Stack>
 

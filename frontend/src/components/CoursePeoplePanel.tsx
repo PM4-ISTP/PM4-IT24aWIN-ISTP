@@ -4,10 +4,10 @@ import { useState } from "react";
 import {
   Avatar,
   Badge,
+  Box,
   Button,
   Divider,
   Group,
-  Paper,
   ScrollArea,
   Stack,
   Text,
@@ -70,8 +70,15 @@ export function CoursePeoplePanel({ owner, collaborators, participants }: Course
   }
 
   return (
-    <Paper withBorder radius="lg" p="lg">
-      <Stack gap="lg">
+    <Box
+      style={{
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 14,
+        padding: "1.5rem",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+      }}
+    >      <Stack gap="lg">
         <Stack gap={2}>
           <Text size="xs" tt="uppercase" fw={700} c="dimmed">
             Course Team
@@ -169,10 +176,16 @@ export function CoursePeoplePanel({ owner, collaborators, participants }: Course
 
                   {hasMore && (
                     <Button
-                      variant="subtle"
+                      variant="outline"
                       size="xs"
-                      color="gray"
+                      radius="md"
                       onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                      style={{
+                        borderColor: "rgba(255,255,255,0.12)",
+                        color: "#94a3b8",
+                        background: "rgba(255,255,255,0.04)",
+                        fontFamily: "var(--font-space-grotesk), sans-serif",
+                      }}
                     >
                       Show more ({filtered.length - visibleCount} remaining)
                     </Button>
@@ -183,6 +196,6 @@ export function CoursePeoplePanel({ owner, collaborators, participants }: Course
           )}
         </Stack>
       </Stack>
-    </Paper>
+    </Box>
   );
 }

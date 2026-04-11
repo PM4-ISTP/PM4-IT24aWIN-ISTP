@@ -100,10 +100,10 @@ export default function CreateCourse() {
               <IconArrowLeft size={20} />
             </ActionIcon>
             <Stack gap={4}>
-              <Title order={1} size="h2">
+              <Title order={1} size="h2" style={{ color: "#f1f5f9", fontFamily: "var(--font-space-grotesk), sans-serif", fontWeight: 700 }}>
                 Create Course
               </Title>
-              <Text size="sm" c="dimmed">
+              <Text size="sm" style={{ color: "#94a3b8" }}>
                 Fill in the details to create a new course.
               </Text>
             </Stack>
@@ -173,12 +173,18 @@ export default function CreateCourse() {
           )}
 
           <Button
-            variant="filled"
             radius="md"
             loading={isSubmitting}
             disabled={isSubmitting}
             onClick={() => {
               void handleSubmit();
+            }}
+            style={{
+              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+              border: "none",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 600,
+              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
             }}
           >
             Create Course
