@@ -203,10 +203,16 @@ export default function AdminConfigForm({ initialConfig }: Props) {
           <Grid.Col span={12}>
             <Stack gap={4}>
               <Text size="sm" fw={500}>
-                Kubeconfig{!config.kubeconfigUploaded && <Text component="span" c="red" ml={2}>*</Text>}
+                Kubeconfig
+                {!config.kubeconfigUploaded && (
+                  <Text component="span" c="red" ml={2}>
+                    *
+                  </Text>
+                )}
               </Text>
               <Text size="xs" c="dimmed">
-                Upload your Kubeconfig file for the Kubernetes cluster that manages the challenge pods.
+                Upload your Kubeconfig file for the Kubernetes cluster that manages the challenge
+                pods.
               </Text>
               <Dropzone
                 id="kubeconfig-input"
@@ -240,8 +246,12 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                     {selectedFile ? (
                       <Stack align="center" gap={6}>
                         <IconFile size={40} color="#94a3b8" />
-                        <Text size="sm" c="dimmed">{selectedFile.name}</Text>
-                        <Text size="xs" c="dimmed">Click to replace</Text>
+                        <Text size="sm" c="dimmed">
+                          {selectedFile.name}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          Click to replace
+                        </Text>
                       </Stack>
                     ) : (
                       <Stack align="center" gap={6}>
@@ -249,7 +259,9 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                         <Text size="sm" fw={500}>
                           Drag &amp; drop your kubeconfig here
                         </Text>
-                        <Text size="xs" c="dimmed">or</Text>
+                        <Text size="xs" c="dimmed">
+                          or
+                        </Text>
                         <Button
                           size="xs"
                           radius="md"
@@ -272,11 +284,14 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                 </Center>
               </Dropzone>
               {form.errors.kubeconfig && (
-                <Text size="xs" c="red">{form.errors.kubeconfig}</Text>
+                <Text size="xs" c="red">
+                  {form.errors.kubeconfig}
+                </Text>
               )}
               {config.kubeconfigUploaded && !selectedFile && (
                 <Text size="xs" c="dimmed">
-                  A kubeconfig is already uploaded. Upload a new file only if you want to replace it.
+                  A kubeconfig is already uploaded. Upload a new file only if you want to replace
+                  it.
                 </Text>
               )}
             </Stack>
