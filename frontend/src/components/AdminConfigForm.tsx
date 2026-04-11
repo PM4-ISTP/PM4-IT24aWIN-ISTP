@@ -63,7 +63,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
     }
   };
 
-  const openRef = useRef<() => void>(null);
+  const openRef = useRef<() => void>(null!);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const form = useForm({
@@ -216,10 +216,12 @@ export default function AdminConfigForm({ initialConfig }: Props) {
               </Text>
               <Dropzone
                 id="kubeconfig-input"
+                aria-label="Kubeconfig"
                 openRef={openRef}
                 onDrop={(files) => {
                   const file = files[0] ?? null;
                   form.setFieldValue("kubeconfig", file);
+                  form.clearFieldError("kubeconfig");
                   setSelectedFile(file);
                 }}
                 maxFiles={1}
@@ -312,7 +314,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
               boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
             }}
           >
-            {!config.kubeconfigUploaded ? "Save Configuration" : "Update Configuration"}
+            {!config.kubeconfigUploaded ? "Create Kubernetes configuration" : "Update Kubernetes configuration"}
           </Button>
           <Button
             id="admin-config-form-delete-button"
@@ -328,7 +330,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
               boxShadow: "0 2px 12px rgba(220,38,38,0.3)",
             }}
           >
-            Delete Configuration
+            Delete Kubernetes configuration
           </Button>
         </Group>
       </Fieldset>

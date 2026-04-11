@@ -2,16 +2,12 @@
 
 import { Tabs, Box, Stack, Text, Button } from "@mantine/core";
 import AdminConfigForm from "@/src/components/AdminConfigForm";
+import type { components } from "@/src/lib/api/schema";
 
-interface AdminConfig {
-  kubeconfigUploaded: boolean;
-  cpuLimit: string;
-  memoryLimit: string;
-  updatedAt: string;
-}
+type AdminConfigResponse = components["schemas"]["AdminConfigResponse"];
 
 interface AdminTabsProps {
-  initialConfig: AdminConfig;
+  initialConfig: AdminConfigResponse;
   keycloakAdminUrl: string | undefined;
 }
 
@@ -60,22 +56,45 @@ export default function AdminTabs({ initialConfig, keycloakAdminUrl }: AdminTabs
                 Manage users and roles directly via the Keycloak Admin Console.
               </Text>
             </div>
-            <Button
-              component="a"
-              href={keycloakAdminUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              radius="md"
-              style={{
-                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                border: "none",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-              }}
-            >
-              Manage Users & Roles with Keycloak
-            </Button>
+            {keycloakAdminUrl ? (
+              <Button
+                component="a"
+                href={keycloakAdminUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                radius="md"
+                style={{
+                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                  border: "none",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  fontWeight: 600,
+                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+                }}
+              >
+                Manage Users & Roles with Keycloak
+              </Button>
+            ) : (
+              <>
+                <Button
+                  disabled
+                  radius="md"
+                  style={{
+                    background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                    border: "none",
+                    fontFamily: "var(--font-space-grotesk), sans-serif",
+                    fontWeight: 600,
+                    boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+                    opacity: 0.5,
+                  }}
+                >
+                  Manage Users & Roles with Keycloak
+                </Button>
+                <Text style={{ color: "#94a3b8" }} size="sm">
+                  The Keycloak admin URL is not configured, so user management is currently
+                  unavailable.
+                </Text>
+              </>
+            )}
           </Stack>
         </Box>
       </Tabs.Panel>
