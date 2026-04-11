@@ -152,6 +152,36 @@ public class CourseController {
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(
+      summary = "Update course challenges",
+      description = "Replaces the challenge list for a course. Accepts own and public challenges.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Course challenges updated successfully",
+            content = @Content(schema = @Schema(implementation = CourseDetailResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course or challenge not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PutMapping("/{id}/challenges")
+  public ResponseEntity<CourseDetailResponseDto> updateCourseChallenges(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID id,
+      @Valid @RequestBody UpdateCourseChallengesRequestDto request) {
+    UUID userId = parseUserId(jwt);
+    Course updatedCourse =
+        courseService.updateCourseChallenges(userId, id, request.getChallenges());
+    CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(updatedCourse);
+    return ResponseEntity.ok(dto);
+  }
+
   @GetMapping
   public ResponseEntity<Page<ListCourseResponseDto>> listCourses(
       @AuthenticationPrincipal Jwt jwt, Pageable pageable) {

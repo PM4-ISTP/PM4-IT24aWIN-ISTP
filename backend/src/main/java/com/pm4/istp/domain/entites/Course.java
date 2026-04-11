@@ -1,5 +1,6 @@
 package com.pm4.istp.domain.entites;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ public class Course {
   @Enumerated(EnumType.STRING)
   private CourseDifficultyEnum difficulty;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CourseInstructor> courseInstructors = new ArrayList<>();
 
@@ -70,6 +72,21 @@ public class Course {
   public void removeCourseEnrollment(CourseEnrollment courseEnrollment) {
     courseEnrollments.remove(courseEnrollment);
     courseEnrollment.setCourse(null);
+  }
+
+  @JsonIgnore
+  @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OrderBy("orderIndex ASC")
+  private List<CourseChallenge> courseChallenges = new ArrayList<>();
+
+  public void addCourseChallenge(CourseChallenge courseChallenge) {
+    courseChallenges.add(courseChallenge);
+    courseChallenge.setCourse(this);
+  }
+
+  public void removeCourseChallenge(CourseChallenge courseChallenge) {
+    courseChallenges.remove(courseChallenge);
+    courseChallenge.setCourse(null);
   }
 
   @CreatedDate

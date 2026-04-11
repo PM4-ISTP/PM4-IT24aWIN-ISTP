@@ -3,7 +3,9 @@ package com.pm4.istp.service;
 import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
 import com.pm4.istp.domain.entites.Course;
+import com.pm4.istp.dto.CourseChallengeItemDto;
 import com.pm4.istp.dto.ListCourseResponseDto;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +20,9 @@ public interface CourseService {
   Course updateCourse(UUID userId, UUID courseId, UpdateCourseRequest request);
 
   void deleteCourse(UUID userId, UUID courseId);
+
+  Course updateCourseChallenges(
+      UUID userId, UUID courseId, List<CourseChallengeItemDto> challenges);
 
   Page<ListCourseResponseDto> listCoursesForInstructors(UUID instructorId, Pageable pageable);
 
