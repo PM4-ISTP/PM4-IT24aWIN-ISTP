@@ -1,7 +1,6 @@
 import AdminConfigForm from "@/src/components/AdminConfigForm";
 import { getApiClient } from "@/src/lib/api/server";
-import { Stack, Title, Text, Button, Paper } from "@mantine/core";
-import { Box, Button, Stack, Text, Title } from "@mantine/core";
+import { Box, Button, Paper, Stack, Title, Text } from "@mantine/core";
 
 // Role guard is handled by middleware (proxy.ts) - no manual check needed here.
 export const dynamic = "force-dynamic";
@@ -69,7 +68,6 @@ export default async function AdminDashboard() {
             Manage Users &amp; Roles with Keycloak
           </Button>
         </Stack>
-      </Paper>
       <Paper withBorder radius="md" p="xl">
         <Stack gap="md">
           <AdminConfigForm key={config.updatedAt ?? ""} initialConfig={config} />
