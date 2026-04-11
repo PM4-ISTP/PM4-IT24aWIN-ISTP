@@ -32,12 +32,17 @@ export function CourseBannerHeader({
   const previewText = getCoursePreviewText(shortDescription, description);
 
   return (
-    <div style={{ background: "var(--mantine-color-gray-0)" }}>
+    <div
+      style={{
+        background: "rgba(255,255,255,0.03)",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+      }}
+    >
       <Container size="lg" pt="lg" pb="md">
         <Stack gap="lg">
           {/* Back link */}
           <Link href={backHref} style={{ textDecoration: "none" }}>
-            <Group gap={6} style={{ color: "var(--mantine-color-dimmed)", fontSize: 14 }}>
+            <Group gap={6} style={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>
               <IconArrowLeft size={16} />
               <span>Back to Catalog</span>
             </Group>
@@ -48,9 +53,15 @@ export function CourseBannerHeader({
             <Group gap="sm">
               <Badge
                 size="sm"
-                variant="light"
-                color="blue"
-                style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}
+                variant="outline"
+                style={{
+                  color: "#60a5fa",
+                  borderColor: "rgba(96,165,250,0.25)",
+                  background: "rgba(96,165,250,0.06)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                }}
               >
                 {topic}
               </Badge>
@@ -63,9 +74,12 @@ export function CourseBannerHeader({
               <Title
                 order={1}
                 style={{
-                  color: "var(--mantine-color-text)",
+                  color: "#f1f5f9",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  fontWeight: 700,
                   fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
                   lineHeight: 1.2,
+                  letterSpacing: "-0.02em",
                   marginBottom: 12,
                 }}
               >
@@ -74,8 +88,12 @@ export function CourseBannerHeader({
               {previewText && (
                 <Text
                   size="md"
-                  c="dimmed"
-                  style={{ lineHeight: 1.6, maxWidth: 760, overflowWrap: "anywhere" }}
+                  style={{
+                    color: "#94a3b8",
+                    lineHeight: 1.65,
+                    maxWidth: 760,
+                    overflowWrap: "anywhere",
+                  }}
                 >
                   {previewText}
                 </Text>

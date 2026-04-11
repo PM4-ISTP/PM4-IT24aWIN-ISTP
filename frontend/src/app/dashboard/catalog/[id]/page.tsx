@@ -1,5 +1,5 @@
 import sanitizeHtml from "sanitize-html";
-import { Alert, Box, Container, Divider, Group, Paper, Stack, Text } from "@mantine/core";
+import { Alert, Container, Divider, Group, Paper, Stack, Text } from "@mantine/core";
 import { getServerSession } from "next-auth";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
@@ -54,7 +54,7 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
     : false;
 
   return (
-    <Box style={{ minHeight: "100vh", backgroundColor: "var(--mantine-color-gray-0)" }}>
+    <>
       <CourseBannerHeader
         title={course.title}
         topic={course.topic}
@@ -118,6 +118,6 @@ export default async function CatalogCoursePage({ params }: { params: Promise<{ 
           )}
         </Stack>
       </Container>
-    </Box>
+    </>
   );
 }
