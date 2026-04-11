@@ -42,7 +42,7 @@ export function TeamSection() {
           }))
         );
       })
-      .catch((_err: unknown) => {
+      .catch(() => {
         // Team section is non-critical, silently fail
       });
   }, []);
