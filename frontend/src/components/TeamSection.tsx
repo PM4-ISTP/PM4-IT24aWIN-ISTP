@@ -17,7 +17,7 @@ function isTeamMemberArray(data: unknown): data is TeamMember[] {
         typeof item === "object" &&
         item !== null &&
         "name" in item &&
-        typeof (item as Record<string, unknown>).name === "string",
+        typeof (item as Record<string, unknown>).name === "string"
     )
   );
 }
@@ -39,7 +39,7 @@ export function TeamSection() {
             name: m.name,
             designation: m.title ?? "Software Engineer",
             image: m.picture ?? "",
-          })),
+          }))
         );
       })
       .catch((_err: unknown) => {
