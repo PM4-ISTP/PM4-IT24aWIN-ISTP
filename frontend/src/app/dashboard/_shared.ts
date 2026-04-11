@@ -6,5 +6,5 @@ export const labelStyle: CSSProperties = {
   letterSpacing: "0.14em",
   fontSize: "0.72rem",
   fontWeight: 700,
-  color: "#5B606B",
+  color: "rgba(255,255,255,0.45)",
 };
