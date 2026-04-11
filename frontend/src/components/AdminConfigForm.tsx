@@ -153,54 +153,54 @@ export default function AdminConfigForm({ initialConfig }: Props) {
 
       <Fieldset id="admin-config-form">
         <Grid>
-          <Grid.Col span={12}>
-            <NumberInput
-              id="cpu-limit-input"
-              label="CPU limit"
-              description="How much CPU one single pod can at maximum use."
-              key={form.key("cpuLimit")}
-              {...form.getInputProps("cpuLimit")}
-              min={1}
-              allowNegative={false}
-              allowDecimal={false}
-              clampBehavior="strict"
-              required={config.cpuLimit != null}
-              withAsterisk={config.cpuLimit != null}
-            />
+          <Grid.Col span={6}>
+            <Stack gap="md">
+              <NumberInput
+                id="cpu-limit-input"
+                label="CPU limit"
+                description="How much CPU one single pod can at maximum use."
+                key={form.key("cpuLimit")}
+                {...form.getInputProps("cpuLimit")}
+                min={1}
+                allowNegative={false}
+                allowDecimal={false}
+                clampBehavior="strict"
+                required={config.cpuLimit != null}
+                withAsterisk={config.cpuLimit != null}
+              />
+              <Grid align="flex-end">
+                <Grid.Col span={8}>
+                  <NumberInput
+                    id="memory-limit-input"
+                    label="Memory limit"
+                    description="How much memory one single pod can at maximum use."
+                    key={form.key("memoryLimit")}
+                    {...form.getInputProps("memoryLimit")}
+                    min={1}
+                    allowNegative={false}
+                    allowDecimal={false}
+                    clampBehavior="strict"
+                    required={config.memoryLimit != null}
+                    withAsterisk={config.memoryLimit != null}
+                  />
+                </Grid.Col>
+                <Grid.Col span={4}>
+                  <Select
+                    id="memory-unit-input"
+                    label="Memory unit"
+                    description="Unit for the memory limit above."
+                    key={form.key("memoryLimitUnit")}
+                    {...form.getInputProps("memoryLimitUnit")}
+                    data={memoryUnits}
+                    allowDeselect={false}
+                    required={config.memoryLimit != null}
+                    withAsterisk={config.memoryLimit != null}
+                  />
+                </Grid.Col>
+              </Grid>
+            </Stack>
           </Grid.Col>
-          <Grid.Col span={12}>
-            <Grid align="flex-end">
-              <Grid.Col span={8}>
-                <NumberInput
-                  id="memory-limit-input"
-                  label="Memory limit"
-                  description="How much memory one single pod can at maximum use."
-                  key={form.key("memoryLimit")}
-                  {...form.getInputProps("memoryLimit")}
-                  min={1}
-                  allowNegative={false}
-                  allowDecimal={false}
-                  clampBehavior="strict"
-                  required={config.memoryLimit != null}
-                  withAsterisk={config.memoryLimit != null}
-                />
-              </Grid.Col>
-              <Grid.Col span={4}>
-                <Select
-                  id="memory-unit-input"
-                  label="Memory unit"
-                  description="Unit for the memory limit above."
-                  key={form.key("memoryLimitUnit")}
-                  {...form.getInputProps("memoryLimitUnit")}
-                  data={memoryUnits}
-                  allowDeselect={false}
-                  required={config.memoryLimit != null}
-                  withAsterisk={config.memoryLimit != null}
-                />
-              </Grid.Col>
-            </Grid>
-          </Grid.Col>
-          <Grid.Col span={12}>
+          <Grid.Col span={6}>
             <Stack gap={4}>
               <Text size="sm" fw={500}>
                 Kubeconfig{!config.kubeconfigUploaded && <Text component="span" c="red" ml={2}>*</Text>}
