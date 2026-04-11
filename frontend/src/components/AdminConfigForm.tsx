@@ -152,33 +152,37 @@ export default function AdminConfigForm({ initialConfig }: Props) {
               withAsterisk={config.cpuLimit != null}
             />
           </Grid.Col>
-          <Grid.Col span={8}>
-            <NumberInput
-              id="memory-limit-input"
-              label="Memory limit"
-              description="How much memory one single pod can at maximum use."
-              key={form.key("memoryLimit")}
-              {...form.getInputProps("memoryLimit")}
-              min={1}
-              allowNegative={false}
-              allowDecimal={false}
-              clampBehavior="strict"
-              required={config.memoryLimit != null}
-              withAsterisk={config.memoryLimit != null}
-            />
-          </Grid.Col>
-          <Grid.Col span={4}>
-            <Select
-              id="memory-unit-input"
-              label="Memory unit"
-              description="Please select a unit for the desired memory limit."
-              key={form.key("memoryLimitUnit")}
-              {...form.getInputProps("memoryLimitUnit")}
-              data={memoryUnits}
-              allowDeselect={false}
-              required={config.memoryLimit != null}
-              withAsterisk={config.memoryLimit != null}
-            />
+          <Grid.Col span={12}>
+            <Grid align="flex-end">
+              <Grid.Col span={8}>
+                <NumberInput
+                  id="memory-limit-input"
+                  label="Memory limit"
+                  description="How much memory one single pod can at maximum use."
+                  key={form.key("memoryLimit")}
+                  {...form.getInputProps("memoryLimit")}
+                  min={1}
+                  allowNegative={false}
+                  allowDecimal={false}
+                  clampBehavior="strict"
+                  required={config.memoryLimit != null}
+                  withAsterisk={config.memoryLimit != null}
+                />
+              </Grid.Col>
+              <Grid.Col span={4}>
+                <Select
+                  id="memory-unit-input"
+                  label="Memory unit"
+                  description="Unit for the memory limit above."
+                  key={form.key("memoryLimitUnit")}
+                  {...form.getInputProps("memoryLimitUnit")}
+                  data={memoryUnits}
+                  allowDeselect={false}
+                  required={config.memoryLimit != null}
+                  withAsterisk={config.memoryLimit != null}
+                />
+              </Grid.Col>
+            </Grid>
           </Grid.Col>
           <Grid.Col span={12}>
             <FileInput
@@ -193,19 +197,37 @@ export default function AdminConfigForm({ initialConfig }: Props) {
           </Grid.Col>
         </Grid>
 
-        <Group justify="flex-end" mt="md">
-          <Button id="admin-config-form-submit-button" type="submit" loading={form.submitting}>
-            {!config.kubeconfigUploaded
-              ? "Create Kubernetes configuration"
-              : "Update Kubernetes configuration"}
+        <Group justify="space-between" mt="md">
+          <Button
+            id="admin-config-form-submit-button"
+            type="submit"
+            loading={form.submitting}
+            radius="md"
+            style={{
+              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+              border: "none",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 600,
+              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+            }}
+          >
+            {!config.kubeconfigUploaded ? "Save Configuration" : "Update Configuration"}
           </Button>
           <Button
             id="admin-config-form-delete-button"
             type="button"
             onClick={() => void handleDelete()}
             loading={form.submitting}
+            radius="md"
+            style={{
+              background: "linear-gradient(90deg, #dc2626, #b91c1c)",
+              border: "none",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 600,
+              boxShadow: "0 2px 12px rgba(220,38,38,0.3)",
+            }}
           >
-            Delete Kubernetes configuration
+            Delete Configuration
           </Button>
         </Group>
       </Fieldset>
