@@ -6,6 +6,8 @@ namespace: istp-staging
 resources:
   - ../../base
   - ingress.yaml
+  - adminer/deployment.yaml
+  - adminer/service.yaml
 
 images:
   - name: istp-backend
