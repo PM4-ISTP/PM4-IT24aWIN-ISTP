@@ -1,5 +1,5 @@
 import sanitizeHtml from "sanitize-html";
-import { Alert, Box, Container, Group, Stack, Text, Title } from "@mantine/core";
+import { Alert, Box, Container, Group, Stack, Title } from "@mantine/core";
 import { getServerSession } from "next-auth";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
