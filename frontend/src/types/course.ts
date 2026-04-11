@@ -87,6 +87,13 @@ export interface CourseParticipantDto {
   picture: string | null;
 }
 
+export interface CourseChallengeResponseDto {
+  challengeId: string;
+  challengeTitle: string;
+  difficulty: string;
+  orderIndex: number;
+}
+
 export interface CourseDetailResponseDto {
   id: string;
   title: string;
@@ -100,6 +107,7 @@ export interface CourseDetailResponseDto {
   difficulty?: CourseDifficulty | null;
   courseInstructors: CourseInstructorResponseDto[];
   participants: CourseParticipantDto[];
+  courseChallenges: CourseChallengeResponseDto[];
   createdAt: string;
   updatedAt: string;
 }
