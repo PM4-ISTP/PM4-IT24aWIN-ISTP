@@ -10,12 +10,14 @@ import {
   Container,
   Group,
   Loader,
+  Modal,
   Notification,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { IconArrowLeft, IconX } from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
+import { IconArrowLeft, IconTrash, IconX } from "@tabler/icons-react";
 import {
   ChallengeFormFields,
   type ChallengeFormValues,
@@ -40,8 +42,11 @@ export default function EditChallenge() {
     status: "DRAFT",
     difficulty: "MEDIUM",
   });
+  const [courseCount, setCourseCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -58,12 +63,13 @@ export default function EditChallenge() {
 
       const challenge = result.data;
       setFormValues({
-        title: challenge.title,
+        title: challenge.title ?? "",
         shortDescription: challenge.shortDescription ?? "",
         description: challenge.description ?? "",
-        status: challenge.status,
-        difficulty: challenge.difficulty,
+        status: challenge.status ?? "DRAFT",
+        difficulty: challenge.difficulty ?? "MEDIUM",
       });
+      setCourseCount(challenge.courseCount ?? 0);
 
       setLoading(false);
     }
@@ -109,22 +115,19 @@ export default function EditChallenge() {
   }
 
   async function handleDelete() {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this challenge? This action cannot be undone."
-    );
-    if (!confirmed) return;
-
     setIsDeleting(true);
+    setDeleteError(null);
 
     const result = await deleteChallenge(challengeId);
 
     setIsDeleting(false);
 
     if (!result.success) {
-      setFormError(result.error);
+      setDeleteError(result.error);
       return;
     }
 
+    closeDelete();
     router.refresh();
     router.push("/dashboard/instructor/challenges");
   }
@@ -163,6 +166,42 @@ export default function EditChallenge() {
 
   return (
     <Container>
+      <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Challenge" centered>
+        <Stack gap="md">
+          <Text size="sm">
+            Are you sure you want to delete <strong>{formValues.title}</strong>?
+          </Text>
+          {courseCount > 0 && (
+            <Text size="sm" c="orange">
+              This challenge is connected to {courseCount} course{courseCount !== 1 ? "s" : ""}.
+            </Text>
+          )}
+          <Text size="sm" c="dimmed">
+            This action cannot be undone.
+          </Text>
+          {deleteError && (
+            <Alert color="red" title="Failed to delete challenge">
+              {deleteError}
+            </Alert>
+          )}
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={closeDelete} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              loading={isDeleting}
+              disabled={isDeleting}
+              onClick={() => {
+                void handleDelete();
+              }}
+            >
+              Delete Challenge
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       <Stack p="xl" gap="lg">
         <Group justify="space-between" align="flex-end">
           <Group gap="md" align="center">
@@ -185,12 +224,10 @@ export default function EditChallenge() {
           </Group>
           <Button
             color="red"
-            variant="outline"
-            loading={isDeleting}
-            disabled={isDeleting || isSubmitting}
-            onClick={() => {
-              void handleDelete();
-            }}
+            variant="light"
+            leftSection={<IconTrash size={16} />}
+            onClick={openDelete}
+            radius="md"
           >
             Delete Challenge
           </Button>

@@ -1,114 +1,59 @@
 "use server";
 
-import { fetchBackend } from "@/src/lib/api";
+import { getApiClient } from "@/src/lib/api/server";
+import type { components } from "@/src/lib/api/schema";
+import type { ActionResult } from "@/src/types/course";
 
-import type { ActionResult, Page } from "@/src/types/course";
-
-// Temporary manual types — replace with generated types after `npm run generate:api`
-
-export type ChallengeStatusEnum = "DRAFT" | "PRIVATE" | "PUBLIC";
-export type ChallengeDifficultyEnum = "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
-
-export interface CreateChallengeDto {
-  title: string;
-  shortDescription: string | null;
-  description: string | null;
-  status: ChallengeStatusEnum;
-  difficulty: ChallengeDifficultyEnum;
-}
-
-export interface UpdateChallengeDto {
-  title: string;
-  shortDescription: string | null;
-  description: string | null;
-  status: ChallengeStatusEnum;
-  difficulty: ChallengeDifficultyEnum;
-}
-
-export interface ChallengeResponseDto {
-  id: string;
-  title: string;
-  shortDescription: string | null;
-  description: string | null;
-  status: ChallengeStatusEnum;
-  difficulty: ChallengeDifficultyEnum;
-  maxScore: number;
-  creatorId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ChallengeCreatorDto {
-  id: string;
-  name: string;
-}
-
-export interface ChallengeDetailResponseDto {
-  id: string;
-  title: string;
-  shortDescription: string | null;
-  description: string | null;
-  status: ChallengeStatusEnum;
-  difficulty: ChallengeDifficultyEnum;
-  maxScore: number;
-  creator: ChallengeCreatorDto;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ListChallengeResponseDto {
-  id: string;
-  title: string;
-  shortDescription: string | null;
-  status: ChallengeStatusEnum;
-  difficulty: ChallengeDifficultyEnum;
-  maxScore: number;
-  creatorName: string;
-  courseCount: number;
-  updatedAt: string;
-}
-
-export interface CourseChallengeItem {
-  challengeId: string;
-  orderIndex: number;
-}
-
-function extractErrorMessage(text: string, fallback: string): string {
-  if (!text) {
-    return fallback;
-  }
-
-  try {
-    const parsed: unknown = JSON.parse(text);
-    if (typeof parsed === "object" && parsed !== null && "error" in parsed) {
-      const errorValue = (parsed as { error?: unknown }).error;
-      if (typeof errorValue === "string" && errorValue.trim()) {
-        return errorValue;
+/**
+ * Spring Boot resolves Pageable from flat query params (page, size, sort),
+ * but openapi-typescript models it as a nested object. This serializer
+ * flattens the pageable params so Spring can read them.
+ */
+function springPageableSerializer(params: Record<string, unknown>): string {
+  const parts: string[] = [];
+  for (const [key, val] of Object.entries(params)) {
+    if (key === "pageable" && typeof val === "object" && val !== null) {
+      for (const [pk, pv] of Object.entries(val as Record<string, unknown>)) {
+        if (pv != null) parts.push(`${pk}=${encodeURIComponent(String(pv as string | number))}`);
       }
+    } else if (val != null) {
+      parts.push(`${key}=${encodeURIComponent(String(val as string | number))}`);
     }
-  } catch {
-    return text || fallback;
   }
-
-  return text || fallback;
+  return parts.join("&");
 }
+
+// Re-export generated types with convenient aliases
+export type ChallengeStatusEnum = NonNullable<
+  components["schemas"]["ChallengeDetailResponseDto"]["status"]
+>;
+export type ChallengeDifficultyEnum = NonNullable<
+  components["schemas"]["ChallengeDetailResponseDto"]["difficulty"]
+>;
+
+export type CreateChallengeRequestDto = components["schemas"]["CreateChallengeRequestDto"];
+export type UpdateChallengeRequestDto = components["schemas"]["UpdateChallengeRequestDto"];
+export type CreateChallengeResponseDto = components["schemas"]["CreateChallengeResponseDto"];
+export type ChallengeDetailResponseDto = components["schemas"]["ChallengeDetailResponseDto"];
+export type ListChallengeResponseDto = components["schemas"]["ListChallengeResponseDto"];
+export type PageListChallengeResponseDto = components["schemas"]["PageListChallengeResponseDto"];
+export type CourseChallengeItemDto = components["schemas"]["CourseChallengeItemDto"];
+export type UpdateCourseChallengesRequestDto =
+  components["schemas"]["UpdateCourseChallengesRequestDto"];
 
 export async function createChallenge(
-  dto: CreateChallengeDto
-): Promise<ActionResult<ChallengeResponseDto>> {
+  dto: CreateChallengeRequestDto
+): Promise<ActionResult<CreateChallengeResponseDto>> {
   try {
-    const res = await fetchBackend("/api/v1/challenges", {
-      method: "POST",
-      body: JSON.stringify(dto),
+    const client = await getApiClient();
+    const { data, error } = await client.POST("/api/v1/challenges", {
+      body: dto,
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to create challenge" };
     }
 
-    const data = (await res.json()) as ChallengeResponseDto;
     return { success: true, data };
   } catch (err) {
     return {
@@ -122,17 +67,15 @@ export async function fetchChallenge(
   id: string
 ): Promise<ActionResult<ChallengeDetailResponseDto>> {
   try {
-    const res = await fetchBackend(`/api/v1/challenges/${id}`, {
-      cache: "no-store",
+    const client = await getApiClient();
+    const { data, error } = await client.GET("/api/v1/challenges/{id}", {
+      params: { path: { id } },
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to load challenge" };
     }
 
-    const data = (await res.json()) as ChallengeDetailResponseDto;
     return { success: true, data };
   } catch (err) {
     return {
@@ -144,21 +87,19 @@ export async function fetchChallenge(
 
 export async function updateChallenge(
   id: string,
-  dto: UpdateChallengeDto
+  dto: UpdateChallengeRequestDto
 ): Promise<ActionResult<ChallengeDetailResponseDto>> {
   try {
-    const res = await fetchBackend(`/api/v1/challenges/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(dto),
+    const client = await getApiClient();
+    const { data, error } = await client.PUT("/api/v1/challenges/{id}", {
+      params: { path: { id } },
+      body: dto,
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to update challenge" };
     }
 
-    const data = (await res.json()) as ChallengeDetailResponseDto;
     return { success: true, data };
   } catch (err) {
     return {
@@ -170,14 +111,13 @@ export async function updateChallenge(
 
 export async function deleteChallenge(id: string): Promise<ActionResult<void>> {
   try {
-    const res = await fetchBackend(`/api/v1/challenges/${id}`, {
-      method: "DELETE",
+    const client = await getApiClient();
+    const { error } = await client.DELETE("/api/v1/challenges/{id}", {
+      params: { path: { id } },
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to delete challenge" };
     }
 
     return { success: true, data: undefined };
@@ -192,17 +132,18 @@ export async function deleteChallenge(id: string): Promise<ActionResult<void>> {
 export async function fetchInstructorChallenges(
   page = 0,
   size = 20
-): Promise<ActionResult<Page<ListChallengeResponseDto>>> {
+): Promise<ActionResult<PageListChallengeResponseDto>> {
   try {
-    const res = await fetchBackend(`/api/v1/challenges?page=${page}&size=${size}`, {
-      cache: "no-store",
+    const client = await getApiClient();
+    const { data, error } = await client.GET("/api/v1/challenges", {
+      params: { query: { pageable: { page, size } } },
+      querySerializer: springPageableSerializer,
     });
 
-    if (!res.ok) {
-      return { success: false, error: `${res.status}: ${res.statusText}` };
+    if (error) {
+      return { success: false, error: "Failed to load challenges" };
     }
 
-    const data = (await res.json()) as Page<ListChallengeResponseDto>;
     return { success: true, data };
   } catch (err) {
     return {
@@ -216,20 +157,18 @@ export async function searchChallenges(
   query: string,
   page = 0,
   size = 20
-): Promise<ActionResult<Page<ListChallengeResponseDto>>> {
+): Promise<ActionResult<PageListChallengeResponseDto>> {
   try {
-    const res = await fetchBackend(
-      `/api/v1/challenges/search?q=${encodeURIComponent(query)}&page=${page}&size=${size}`,
-      { cache: "no-store" }
-    );
+    const client = await getApiClient();
+    const { data, error } = await client.GET("/api/v1/challenges/search", {
+      params: { query: { q: query, pageable: { page, size } } },
+      querySerializer: springPageableSerializer,
+    });
 
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+    if (error) {
+      return { success: false, error: "Failed to search challenges" };
     }
 
-    const data = (await res.json()) as Page<ListChallengeResponseDto>;
     return { success: true, data };
   } catch (err) {
     return {
@@ -241,21 +180,19 @@ export async function searchChallenges(
 
 export async function updateCourseChallenges(
   courseId: string,
-  challenges: CourseChallengeItem[]
+  challenges: CourseChallengeItemDto[]
 ): Promise<ActionResult<unknown>> {
   try {
-    const res = await fetchBackend(`/api/v1/courses/${courseId}/challenges`, {
-      method: "PUT",
-      body: JSON.stringify({ challenges }),
+    const client = await getApiClient();
+    const { data, error } = await client.PUT("/api/v1/courses/{id}/challenges", {
+      params: { path: { id: courseId } },
+      body: { challenges },
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to update course challenges" };
     }
 
-    const data = (await res.json()) as unknown;
     return { success: true, data };
   } catch (err) {
     return {

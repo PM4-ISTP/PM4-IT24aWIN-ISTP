@@ -1,0 +1,10 @@
+.pickerItem {
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  padding: var(--mantine-spacing-sm);
+  transition: border-color 120ms ease;
+}
+
+.pickerItem[data-selectable="true"]:hover {
+  border-color: var(--mantine-color-blue-5);
+}

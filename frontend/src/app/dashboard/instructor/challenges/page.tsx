@@ -29,8 +29,17 @@ export default async function InstructorChallenges(props: {
 
       {result.success ? (
         <ChallengeGrid
-          challenges={result.data.content}
-          totalPages={result.data.totalPages}
+          challenges={(result.data.content ?? []).map((c) => ({
+            id: c.id ?? "",
+            title: c.title ?? "",
+            shortDescription: c.shortDescription ?? undefined,
+            status: c.status ?? "DRAFT",
+            difficulty: c.difficulty ?? "MEDIUM",
+            maxScore: c.maxScore ?? 0,
+            courseCount: c.courseCount ?? 0,
+            updatedAt: c.updatedAt ?? "",
+          }))}
+          totalPages={result.data.totalPages ?? 0}
           currentPage={currentPage}
         />
       ) : (

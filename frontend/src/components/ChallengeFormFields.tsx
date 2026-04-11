@@ -80,7 +80,7 @@ export function ChallengeFormFields({
         <Input.Label>Status</Input.Label>
         <SegmentedControl
           value={values.status}
-          onChange={(val) => onChange({ ...values, status: val })}
+          onChange={(val: string) => onChange({ ...values, status: val as ChallengeStatusEnum })}
           data={STATUS_OPTIONS}
           color={STATUS_COLORS[values.status]}
           fullWidth
@@ -91,7 +91,7 @@ export function ChallengeFormFields({
         <Input.Label>Difficulty</Input.Label>
         <SegmentedControl
           value={values.difficulty}
-          onChange={(val) => onChange({ ...values, difficulty: val })}
+          onChange={(val: string) => onChange({ ...values, difficulty: val as ChallengeDifficultyEnum })}
           data={DIFFICULTY_OPTIONS}
           color={DIFFICULTY_COLORS[values.difficulty]}
           fullWidth

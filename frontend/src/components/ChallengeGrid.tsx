@@ -8,15 +8,26 @@ interface ChallengeGridProps {
   challenges: Array<{
     id: string;
     title: string;
+    shortDescription?: string;
     status: string;
     difficulty: string;
     maxScore: number;
-    creatorName: string;
     courseCount: number;
     updatedAt: string;
   }>;
   totalPages: number;
   currentPage: number;
+}
+
+function formatDateTime(iso: string): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString("de-CH", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function ChallengeGrid({ challenges, totalPages, currentPage }: ChallengeGridProps) {
@@ -44,11 +55,7 @@ export function ChallengeGrid({ challenges, totalPages, currentPage }: Challenge
           <ChallengeCard
             key={challenge.id}
             {...challenge}
-            updatedAt={new Date(challenge.updatedAt).toLocaleDateString("de-CH", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
+            updatedAt={formatDateTime(challenge.updatedAt)}
             onClick={openChallenge}
           />
         ))}

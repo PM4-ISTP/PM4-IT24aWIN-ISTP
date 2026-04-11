@@ -20,6 +20,7 @@ public class ChallengeDetailResponseDto {
   private ChallengeDifficultyEnum difficulty;
   private int maxScore;
   private ChallengeCreatorResponseDto creator;
+  private long courseCount;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 }

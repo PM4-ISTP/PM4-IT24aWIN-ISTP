@@ -89,6 +89,7 @@ public class ChallengeController {
     UUID userId = parseUserId(jwt);
     Challenge challenge = challengeService.getChallenge(userId, id);
     ChallengeDetailResponseDto dto = challengeMapper.toDetailResponseDto(challenge);
+    dto.setCourseCount(challenge.getCourseChallenges().size());
     return ResponseEntity.ok(dto);
   }
 
@@ -124,6 +125,7 @@ public class ChallengeController {
     UpdateChallengeRequest request = challengeMapper.fromDto(updateChallengeRequestDto);
     Challenge updated = challengeService.updateChallenge(userId, id, request);
     ChallengeDetailResponseDto dto = challengeMapper.toDetailResponseDto(updated);
+    dto.setCourseCount(updated.getCourseChallenges().size());
     return ResponseEntity.ok(dto);
   }
 
