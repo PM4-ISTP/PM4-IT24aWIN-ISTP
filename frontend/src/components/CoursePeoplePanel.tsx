@@ -72,11 +72,11 @@ export function CoursePeoplePanel({ owner, collaborators, participants }: Course
   return (
     <Box
       style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "var(--ds-card-bg, rgba(255,255,255,0.04))",
+        border: "1px solid var(--ds-card-border, rgba(255,255,255,0.08))",
         borderRadius: 14,
         padding: "1.5rem",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+        boxShadow: "var(--ds-card-shadow, 0 4px 24px rgba(0,0,0,0.25))",
       }}
     >
       <Stack gap="lg">
