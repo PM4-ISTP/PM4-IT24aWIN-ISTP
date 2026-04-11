@@ -6,6 +6,7 @@ import {
   ActionIcon,
   Affix,
   Alert,
+  Box,
   Button,
   Container,
   Group,
@@ -110,86 +111,96 @@ export default function CreateCourse() {
           </Group>
         </Group>
 
-        <Stack gap="lg">
-          <TextInput
-            label="Course Title"
-            placeholder="Enter course title"
-            value={title}
-            onChange={(e) => setTitle(e.currentTarget.value)}
-            error={titleError}
-            required
-          />
+        <Box
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 14,
+            padding: "2rem",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+          }}
+        >
+          <Stack gap="lg">
+            <TextInput
+              label="Course Title"
+              placeholder="Enter course title"
+              value={title}
+              onChange={(e) => setTitle(e.currentTarget.value)}
+              error={titleError}
+              required
+            />
 
-          <Textarea
-            label="Short Description"
-            placeholder="Write a short summary shown on the course card and in the blue header"
-            value={shortDescription}
-            onChange={(e) => {
-              const newVal = e.currentTarget.value;
-              if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
-                charLimitToast.show();
-                return;
-              }
-              setShortDescription(newVal);
-              if (shortDescriptionError) {
-                setShortDescriptionError(null);
-              }
-            }}
-            error={shortDescriptionError}
-            description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
-          />
+            <Textarea
+              label="Short Description"
+              placeholder="Write a short summary shown on the course card and in the blue header"
+              value={shortDescription}
+              onChange={(e) => {
+                const newVal = e.currentTarget.value;
+                if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
+                  charLimitToast.show();
+                  return;
+                }
+                setShortDescription(newVal);
+                if (shortDescriptionError) {
+                  setShortDescriptionError(null);
+                }
+              }}
+              error={shortDescriptionError}
+              description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
+            />
 
-          <MyEditor description={description} setDescription={setDescription} />
+            <MyEditor description={description} setDescription={setDescription} />
 
-          <Select
-            label="Topic"
-            placeholder="Select a topic"
-            data={TOPIC_OPTIONS}
-            value={topic}
-            onChange={setTopic}
-            clearable
-          />
+            <Select
+              label="Topic"
+              placeholder="Select a topic"
+              data={TOPIC_OPTIONS}
+              value={topic}
+              onChange={setTopic}
+              clearable
+            />
 
-          <TextInput
-            label="Course Image URL"
-            placeholder="https://example.com/image.jpg"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.currentTarget.value)}
-            description="Optional thumbnail shown on the course card."
-          />
+            <TextInput
+              label="Course Image URL"
+              placeholder="https://example.com/image.jpg"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.currentTarget.value)}
+              description="Optional thumbnail shown on the course card."
+            />
 
-          <InstructorMultiSelect value={selectedInstructors} onChange={setSelectedInstructors} />
+            <InstructorMultiSelect value={selectedInstructors} onChange={setSelectedInstructors} />
 
-          <Switch
-            label="Publish Course"
-            checked={isPublished}
-            onChange={(e) => setIsPublished(e.currentTarget.checked)}
-          />
+            <Switch
+              label="Publish Course"
+              checked={isPublished}
+              onChange={(e) => setIsPublished(e.currentTarget.checked)}
+            />
 
-          {formError && (
-            <Alert color="red" title="Failed to create course">
-              {formError}
-            </Alert>
-          )}
+            {formError && (
+              <Alert color="red" title="Failed to create course">
+                {formError}
+              </Alert>
+            )}
 
-          <Button
-            radius="md"
-            loading={isSubmitting}
-            disabled={isSubmitting}
-            onClick={() => {
-              void handleSubmit();
-            }}
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-            }}
-          >
-            Create Course
-          </Button>
-        </Stack>
+            <Button
+              radius="md"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+              onClick={() => {
+                void handleSubmit();
+              }}
+              style={{
+                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                border: "none",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                fontWeight: 600,
+                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+              }}
+            >
+              Create Course
+            </Button>
+          </Stack>
+        </Box>
       </Stack>
 
       <Affix position={{ bottom: 20, right: 20 }}>

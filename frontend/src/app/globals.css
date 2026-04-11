@@ -20,6 +20,61 @@ body {
   padding: 0;
 }
 
+/* ── Mantine input unified dark style ────────────────────────────────────── */
+/* Forces all TextInput / Textarea / Select / MultiSelect inputs to use the   */
+/* same frosted-glass look as the dashboard cards instead of Mantine defaults.*/
+.mantine-Input-input {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #e2e8f0;
+}
+.mantine-Input-input:focus,
+.mantine-Input-input[data-focused] {
+  border-color: #60a5fa !important;
+  outline: none;
+}
+.mantine-Input-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Mantine RichTextEditor dark style ───────────────────────────────────── */
+/* Override light-mode defaults; keep editor visually consistent with inputs. */
+.mantine-RichTextEditor-root {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+.mantine-RichTextEditor-toolbar {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+.mantine-RichTextEditor-content {
+  background: transparent !important;
+}
+.mantine-RichTextEditor-content .ProseMirror {
+  color: #e2e8f0;
+  min-height: 160px;
+}
+
+/* ── Mantine Select / Combobox dropdown dark style ───────────────────────── */
+.mantine-Select-dropdown,
+.mantine-Combobox-dropdown {
+  background: #0c1929 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.mantine-Combobox-option {
+  color: #e2e8f0;
+}
+.mantine-Combobox-option[data-combobox-selected] {
+  background: rgba(96, 165, 250, 0.15) !important;
+  color: #60a5fa;
+}
+.mantine-Combobox-option:hover,
+.mantine-Combobox-option[data-combobox-active] {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
 /* Course description rendered HTML (from rich text editor) */
 .course-description h1,
 .course-description h2,

@@ -7,6 +7,7 @@ import {
   ActionIcon,
   Affix,
   Alert,
+  Box,
   Button,
   Container,
   Grid,
@@ -307,6 +308,15 @@ export default function EditCourse() {
 
         <Grid gutter="xl" align="start">
           <GridCol span={{ base: 12, md: 7, lg: 8 }}>
+            <Box
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 14,
+                padding: "2rem",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+              }}
+            >
             <Stack gap="lg">
               <TextInput
                 label="Course Title"
@@ -396,6 +406,7 @@ export default function EditCourse() {
                 Save Changes
               </Button>
             </Stack>
+            </Box>
           </GridCol>
 
           <GridCol span={{ base: 12, md: 5, lg: 4 }}>
