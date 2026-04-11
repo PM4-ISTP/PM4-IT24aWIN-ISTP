@@ -1,6 +1,6 @@
-import AdminConfigForm from "@/src/components/AdminConfigForm";
+import AdminTabs from "@/src/components/AdminTabs";
 import { getApiClient } from "@/src/lib/api/server";
-import { Box, Button, Stack, Title, Text } from "@mantine/core";
+import { Stack, Title, Text } from "@mantine/core";
 
 // Role guard is handled by middleware (proxy.ts) - no manual check needed here.
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export default async function AdminDashboard() {
   };
 
   return (
-    <Stack p="xl" gap="xl" maw={600}>
+    <Stack p="xl" gap="xl">
       <div>
         <Title
           order={1}
@@ -33,54 +33,7 @@ export default async function AdminDashboard() {
         </Text>
       </div>
 
-      <Box
-        style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 14,
-          padding: "2rem",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-        }}
-      >
-        <Stack gap="md">
-          <div>
-            <Text fw={600} size="lg" style={{ color: "#e2e8f0" }}>
-              Keycloak Admin Console
-            </Text>
-            <Text style={{ color: "#94a3b8" }} size="sm" mt={4}>
-              Manage users and roles directly via the Keycloak Admin Console.
-            </Text>
-          </div>
-          <Button
-            component="a"
-            href={process.env.KEYCLOAK_ADMIN_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            radius="md"
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-            }}
-          >
-            Manage Users &amp; Roles with Keycloak
-          </Button>
-        </Stack>
-      </Box>
-
-      <Box
-        style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 14,
-          padding: "2rem",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-        }}
-      >
-        <AdminConfigForm key={config.updatedAt ?? ""} initialConfig={config} />
-      </Box>
+      <AdminTabs initialConfig={config} keycloakAdminUrl={process.env.KEYCLOAK_ADMIN_URL} />
     </Stack>
   );
 }

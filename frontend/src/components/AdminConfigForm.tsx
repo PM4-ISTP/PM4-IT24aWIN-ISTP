@@ -229,7 +229,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                   transition: "border-color 150ms ease, background 150ms ease",
                 }}
               >
-                <Center py="xl">
+                <Center py="md">
                   <Dropzone.Accept>
                     <IconCloudUpload size={40} color="#2563eb" />
                   </Dropzone.Accept>
