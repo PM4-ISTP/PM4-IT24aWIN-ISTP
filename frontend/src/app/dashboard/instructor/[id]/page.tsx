@@ -314,7 +314,7 @@ export default function EditCourse() {
           )}
         </Group>
 
-        <Grid gutter="xl" align="start">
+        <Grid gap="xl" align="start">
           <GridCol span={{ base: 12, md: 7, lg: 8 }}>
             <Box
               style={{
