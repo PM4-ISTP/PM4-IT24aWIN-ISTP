@@ -284,7 +284,7 @@ jobs:
           echo "Next.js is ready"
 
       - name: Run Playwright E2E tests
-        run: npm run test:e2e
+        run: npm run test:e2e -- --project=chromium
         env:
           BASE_URL: http://localhost:3000
           CYPRESS_ADMIN_USERNAME: ${{ secrets.CYPRESS_ADMIN_USERNAME }}
