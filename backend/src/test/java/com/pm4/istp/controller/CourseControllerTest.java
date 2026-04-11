@@ -371,9 +371,10 @@ class CourseControllerTest {
   // ── Jackson helper ────────────────────────────────────────────────────────
 
   /**
-   * Registers a custom {@link Page} serializer so that standalone MockMvc tests produce the
-   * standard Spring page JSON structure ({@code content}, {@code totalElements}, etc.) using
-   * Jackson 3's {@link JacksonJsonHttpMessageConverter}.
+   * Registers a custom {@link Page} serializer so that standalone MockMvc tests produce a
+   * reduced page JSON structure with {@code content}, {@code totalElements},
+   * {@code totalPages}, {@code size}, and {@code number} using Jackson 3's
+   * {@link JacksonJsonHttpMessageConverter}.
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static SimpleModule buildPageModule() {
