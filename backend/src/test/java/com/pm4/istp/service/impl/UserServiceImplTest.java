@@ -66,4 +66,25 @@ class UserServiceImplTest {
         .findDistinctByAnyRoleAndNameContainingIgnoreCaseAndIdNot(
             collaboratorRoles, name, currentUserId, pageable);
   }
+
+  @Test
+  void searchCollaboratorUsersByQuery_delegatesToRepository() {
+    UUID currentUserId = UUID.randomUUID();
+    Pageable pageable = PageRequest.of(0, 20);
+    String query = "biedeli1";
+    Page<User> expected = new PageImpl<>(List.of(new User()));
+    Set<UserRoleEnum> collaboratorRoles =
+        Set.of(UserRoleEnum.ROLE_ADMINISTRATOR, UserRoleEnum.ROLE_INSTRUCTOR);
+
+    when(userRepository.findDistinctByAnyRoleAndNameOrUsernameOrEmailContainingIgnoreCaseAndIdNot(
+            collaboratorRoles, query, currentUserId, pageable))
+        .thenReturn(expected);
+
+    Page<User> result = userService.searchCollaboratorUsersByQuery(currentUserId, query, pageable);
+
+    assertThat(result).isSameAs(expected);
+    verify(userRepository)
+        .findDistinctByAnyRoleAndNameOrUsernameOrEmailContainingIgnoreCaseAndIdNot(
+            collaboratorRoles, query, currentUserId, pageable);
+  }
 }

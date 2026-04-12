@@ -136,7 +136,7 @@ npm run dev
 k3d is a lightweight Kubernetes distribution perfect for local development.
 
 ```bash
-k3d cluster create istp
+k3d cluster create istp --port "80:80@loadbalancer" --port "443:443@loadbalancer"
 ```
 
 **Verify the cluster is running:**
@@ -146,20 +146,43 @@ k3d cluster list
 kubectl cluster-info
 ```
 
+#### kubectl on Windows 11
+
+If you want to use kubectl on Windows, you need to go to the file `.kube/config` in your local user folder. There you need to replace `server: https://host.docker.internal:62824` with `server: https://127.0.0.1:62824`. The port might differ. Just use the port that is specified by the `config` file.
+
 #### Download and Configure Kubeconfig
 
-Once the cluster is created, export the kubeconfig to the backend:
+Once the cluster is created, export the kubeconfig to the backend.
+
+**Linux:**
+
+On Linux you can run the following command:
 
 ```bash
 # From the project root (pm4/)
 mkdir -p backend/src/main/resources
+k3d kubeconfig get istp | sed 's/0\.0\.0\.0/127.0.0.1/g' > backend/src/main/resources/Kubeconfig
+```
+
+> **Note:** The `sed` command replaces `0.0.0.0` with `127.0.0.1` in the server address. k3d generates kubeconfigs with `0.0.0.0` as the host, which is a valid bind address for a server but not a valid destination for client connections — the Java Kubernetes client will fail with "Host is down" without this substitution.
+
+**Windows 11:**
+
+If you are on Windows 11, you need to run the following command (in Powershell):
+
+```powershell
+# From the project root (pm4/)
+New-Item -ItemType Directory -Path backend/src/main/resources -Force
 k3d kubeconfig get istp > backend/src/main/resources/Kubeconfig
 ```
+
+After running the command, please open the Kubeconfig file in `backend/src/main/resources/Kubeconfig` and replace `server: https://host.docker.internal:62824` with `server: https://127.0.0.1:62824`. The port might differ. Just use the port that is specified by your Kubeconfig.
 
 **Key points:**
 
 - The Kubeconfig file is required by the backend to communicate with the Kubernetes cluster
 - The file is already `.gitignored` (contains sensitive cluster credentials)
+- Re-run this command after every cluster restart — k3d assigns a new random port each time
 
 **Verify the kubeconfig was created:**
 
@@ -403,64 +426,40 @@ frontend-lint
 
 ---
 
-## Cypress E2E Tests
+## Playwright E2E Tests
 
-End-to-end tests live in `frontend/cypress/e2e/` and run against a live Next.js app + Keycloak.
+End-to-end tests live in `frontend/tests/` and run against a live Next.js app + Keycloak.
 
 See [Staging URLs](#staging-urls) for the list of staging service URLs.
 
-### KEYCLOAK_ORIGIN
-
-`KEYCLOAK_ORIGIN` is the **origin (scheme + host + port) of the Keycloak server**. Cypress uses it in `cy.origin()` to fill in the Keycloak login form during the OAuth redirect.
-
-| Environment                                            | `KEYCLOAK_ORIGIN` value                     |
-| ------------------------------------------------------ | ------------------------------------------- |
-| **Local** (Docker Compose `infra/docker-compose.yaml`) | `http://localhost:9090`                     |
-| **Staging**                                            | `https://istp-staging-auth.pm4.init-lab.ch` |
-
 ### Running the tests locally
 
-#### 1. Create `cypress.env.json`
-
-```bash
-cd frontend
-cp cypress.env.json.example cypress.env.json
-```
-
-Open `frontend/cypress.env.json` and fill in the values:
-
-| Variable              | Value                                                                                    |
-| --------------------- | ---------------------------------------------------------------------------------------- |
-| `KEYCLOAK_ORIGIN`     | `http://localhost:9090` (local) or `https://istp-staging-auth.pm4.init-lab.ch` (staging) |
-| `KEYCLOAK_REALM`      | `interactive-security-training-platform`                                                 |
-| `ADMIN_USERNAME`      | Username of a Keycloak user with the `admin` role                                        |
-| `ADMIN_PASSWORD`      | Password for that user                                                                   |
-| `INSTRUCTOR_USERNAME` | Username of a Keycloak user with the `instructor` role                                   |
-| `INSTRUCTOR_PASSWORD` | Password for that user                                                                   |
-| `USER_USERNAME`       | Username of a Keycloak user without the `admin` role                                     |
-| `USER_PASSWORD`       | Password for that user                                                                   |
-
-#### 2. Start the app
+#### 1. Start the app
 
 Make sure the Next.js app is running on `http://localhost:3000` (see [Quick Start](#quick-start)).
 
-#### 3. Open / run Cypress
+#### 2. Install Playwright browsers (first time only)
 
 ```bash
-# Interactive mode (recommended during development)
 cd frontend
-npx cypress open
+npx playwright install
+```
+
+#### 3. Run the tests
+
+```bash
+# Interactive UI mode (recommended during development)
+cd frontend
+npm run test
 
 # Headless mode (CI-style)
-npx cypress run
+npm run test:e2e
 ```
 
 #### Running against staging
 
-Set `KEYCLOAK_ORIGIN` to `https://istp-staging-auth.pm4.init-lab.ch` in `cypress.env.json` and pass the staging base URL:
+Pass the staging base URL via the `BASE_URL` environment variable:
 
 ```bash
-npx cypress run --config baseUrl=https://istp-staging.pm4.init-lab.ch
+BASE_URL=https://istp-staging.pm4.init-lab.ch npm run test:e2e
 ```
-
-> `cypress.env.json` is gitignored and must never be committed.
