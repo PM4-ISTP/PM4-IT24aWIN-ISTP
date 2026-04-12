@@ -1,20 +1,7 @@
-import CourseInformation from "@/src/components/CourseInformation";
-import { fetchCourse } from "@/src/lib/actions/courses";
-import { Alert, Stack } from "@mantine/core";
+import CourseDetails from "@/src/components/CourseDetails";
 
-export default async function CourseDetails({ params }: { params: Promise<{ id: string }> }) {
-  const courseId: string = (await params).id;
-  const result = await fetchCourse(courseId);
+export default async function MyCoursePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
-  return (
-    <Stack p="xl" gap="lg">
-      {result.success ? (
-        <CourseInformation courseData={result.data} />
-      ) : (
-        <Alert color="red" title="Failed to load course">
-          {result.error}
-        </Alert>
-      )}
-    </Stack>
-  );
+  return <CourseDetails userId={id} backHref="/dashboard/courses" />;
 }
