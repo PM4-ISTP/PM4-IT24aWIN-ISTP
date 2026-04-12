@@ -292,22 +292,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
+      - name: Checkout deploy-staging
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
-      - name: Ensure deploy-staging branch exists
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git ls-remote --exit-code origin deploy-staging; then
-            git checkout deploy-staging
-            git pull origin deploy-staging
-          else
-            git checkout -b deploy-staging
-            git push origin deploy-staging
-          fi
+          ref: deploy-staging
 
       - name: Update image tags in staging
         run: |
