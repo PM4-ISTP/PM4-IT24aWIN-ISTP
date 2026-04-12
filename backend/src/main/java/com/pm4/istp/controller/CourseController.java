@@ -188,7 +188,7 @@ public class CourseController {
 
   @GetMapping("/my-enrollments")
   public ResponseEntity<Page<ListCourseResponseDto>> listEnrollments(
-          @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
+      @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
     UUID userId = parseUserId(jwt);
     Page<ListCourseResponseDto> courses = courseService.listUserEnrollments(userId, pageable);
     return ResponseEntity.ok(courses);

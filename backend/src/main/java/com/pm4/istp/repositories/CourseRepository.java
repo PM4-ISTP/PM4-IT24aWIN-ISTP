@@ -111,10 +111,9 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
               from CourseInstructor ciFilter
               where ciFilter.course = c and ciFilter.instructor.id = :userId
             )
-          """
-  )
+          """)
   Page<ListCourseResponseDto> findListEnrollmentsForUser(
-          @Param("userId") UUID userId, Pageable pageable);
+      @Param("userId") UUID userId, Pageable pageable);
 
   @Query(
       value =
