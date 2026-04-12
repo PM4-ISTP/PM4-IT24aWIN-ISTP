@@ -29,7 +29,7 @@ export default function AdminTabs({ initialConfig, keycloakAdminUrl }: AdminTabs
           color: "#94a3b8",
           fontFamily: "var(--font-space-grotesk), sans-serif",
           fontWeight: 600,
-          "&[data-active]": { color: "#e2e8f0" },
+          "&[dataActive]": { color: "#e2e8f0" },
         },
         tabLabel: { fontSize: "0.95rem" },
       }}
