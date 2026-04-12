@@ -186,6 +186,14 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
+  @GetMapping("/my-enrollments")
+  public ResponseEntity<Page<ListCourseResponseDto>> listEnrollments(
+          @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
+    UUID userId = parseUserId(jwt);
+    Page<ListCourseResponseDto> courses = courseService.listUserEnrollments(userId, pageable);
+    return ResponseEntity.ok(courses);
+  }
+
   // ── Private helpers ──
 
   /** Full detail including participant list – for instructor/owner endpoints. */

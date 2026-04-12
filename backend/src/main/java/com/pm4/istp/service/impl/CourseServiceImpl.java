@@ -226,6 +226,11 @@ public class CourseServiceImpl implements CourseService {
   }
 
   @Override
+  public Page<ListCourseResponseDto> listUserEnrollments(UUID userId, Pageable pageable) {
+    return courseRepository.findListEnrollmentsForUser(userId, pageable);
+  }
+
+  @Override
   public Page<ListCourseResponseDto> listPublishedCourses(String query, Pageable pageable) {
     String normalizedQuery = query == null || query.trim().isEmpty() ? null : query.trim();
     if (normalizedQuery == null) {

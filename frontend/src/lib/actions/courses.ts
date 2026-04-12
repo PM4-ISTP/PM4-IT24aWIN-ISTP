@@ -183,23 +183,14 @@ export async function fetchInstructorCourses(
   page = 0,
   size = 20
 ): Promise<ActionResult<Page<ListCourseResponseDto>>> {
-  try {
-    const res = await fetchBackend(`/api/v1/courses?page=${page}&size=${size}`, {
-      cache: "no-store",
-    });
+  return fetchCoursesWithoutQuery("/api/v1/courses", page, size);
+}
 
-    if (!res.ok) {
-      return { success: false, error: `${res.status}: ${res.statusText}` };
-    }
-
-    const data = (await res.json()) as Page<ListCourseResponseDto>;
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+export async function fetchEnrolledCoursesOfLoggedInUser(
+  page = 0,
+  size = 20
+): Promise<ActionResult<Page<ListCourseResponseDto>>> {
+  return fetchCoursesWithoutQuery("/api/v1/courses/my-enrollments", page, size);
 }
 
 export async function fetchPublishedCourses(
@@ -222,6 +213,30 @@ export async function fetchPublishedCourses(
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
       return { success: false, error: `${res.status}: ${message}` };
+    }
+
+    const data = (await res.json()) as Page<ListCourseResponseDto>;
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+async function fetchCoursesWithoutQuery(
+  url: string,
+  page: number,
+  size: number
+): Promise<ActionResult<Page<ListCourseResponseDto>>> {
+  try {
+    const res = await fetchBackend(`${url}?page=${page}&size=${size}`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      return { success: false, error: `${res.status}: ${res.statusText}` };
     }
 
     const data = (await res.json()) as Page<ListCourseResponseDto>;
