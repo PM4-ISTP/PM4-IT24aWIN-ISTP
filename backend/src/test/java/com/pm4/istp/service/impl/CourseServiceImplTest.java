@@ -11,16 +11,22 @@ import com.pm4.istp.domain.CreateCourseInstructorRequest;
 import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseInstructorRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
+import com.pm4.istp.domain.entites.Challenge;
+import com.pm4.istp.domain.entites.ChallengeStatusEnum;
 import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.domain.entites.CourseEnrollment;
 import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
 import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.domain.entites.UserRoleEnum;
+import com.pm4.istp.dto.CourseChallengeItemDto;
 import com.pm4.istp.dto.ListCourseResponseDto;
+import com.pm4.istp.exception.ChallengeNotFoundException;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.InvalidCourseChallengeException;
 import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
+import com.pm4.istp.repositories.ChallengeRepository;
 import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
@@ -45,6 +51,7 @@ class CourseServiceImplTest {
   @Mock private UserRepository userRepository;
   @Mock private CourseRepository courseRepository;
   @Mock private CourseEnrollmentRepository courseEnrollmentRepository;
+  @Mock private ChallengeRepository challengeRepository;
 
   @InjectMocks private CourseServiceImpl courseService;
 
@@ -525,5 +532,213 @@ class CourseServiceImplTest {
 
     assertThat(result).isSameAs(expected);
     verify(courseRepository).findListCoursesForInstructor(instructorId, pageable);
+  }
+
+  private Course buildCourseWithOwner(UUID courseId, User owner) {
+    Course course = new Course();
+    course.setId(courseId);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    ownerRelation.setAccepted(true);
+    course.addCourseInstructor(ownerRelation);
+
+    return course;
+  }
+
+  private Challenge buildChallenge(UUID id, User creator, ChallengeStatusEnum status) {
+    Challenge challenge = new Challenge();
+    challenge.setId(id);
+    challenge.setTitle("Challenge " + id);
+    challenge.setStatus(status);
+    challenge.setCreator(creator);
+    return challenge;
+  }
+
+  @Test
+  void updateCourseChallenges_replacesAssignmentsWithOwnPrivateChallenge() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = buildCourseWithOwner(courseId, owner);
+    Challenge challenge = buildChallenge(challengeId, owner, ChallengeStatusEnum.PRIVATE);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    Course updated =
+        courseService.updateCourseChallenges(
+            ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0)));
+
+    assertThat(updated.getCourseChallenges()).hasSize(1);
+    assertThat(updated.getCourseChallenges().getFirst().getChallenge()).isSameAs(challenge);
+    assertThat(updated.getCourseChallenges().getFirst().getOrderIndex()).isZero();
+    verify(courseRepository).save(course);
+  }
+
+  @Test
+  void updateCourseChallenges_allowsPublicChallengeFromOtherCreator() {
+    UUID ownerId = UUID.randomUUID();
+    UUID otherCreatorId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    User otherCreator = new User();
+    otherCreator.setId(otherCreatorId);
+
+    Course course = buildCourseWithOwner(courseId, owner);
+    Challenge challenge = buildChallenge(challengeId, otherCreator, ChallengeStatusEnum.PUBLIC);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    Course updated =
+        courseService.updateCourseChallenges(
+            ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0)));
+
+    assertThat(updated.getCourseChallenges()).hasSize(1);
+  }
+
+  @Test
+  void updateCourseChallenges_rejectsDraftChallengeEvenFromOwnCreator() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = buildCourseWithOwner(courseId, owner);
+    Challenge challenge = buildChallenge(challengeId, owner, ChallengeStatusEnum.DRAFT);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+
+    assertThatThrownBy(
+            () ->
+                courseService.updateCourseChallenges(
+                    ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0))))
+        .isInstanceOf(InvalidCourseChallengeException.class)
+        .hasMessageContaining("draft");
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void updateCourseChallenges_rejectsPrivateChallengeFromOtherCreator() {
+    UUID ownerId = UUID.randomUUID();
+    UUID otherCreatorId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    User otherCreator = new User();
+    otherCreator.setId(otherCreatorId);
+
+    Course course = buildCourseWithOwner(courseId, owner);
+    Challenge challenge = buildChallenge(challengeId, otherCreator, ChallengeStatusEnum.PRIVATE);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+
+    assertThatThrownBy(
+            () ->
+                courseService.updateCourseChallenges(
+                    ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0))))
+        .isInstanceOf(ChallengeNotFoundException.class);
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void updateCourseChallenges_whenChallengeDoesNotExist_throwsChallengeNotFound() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = buildCourseWithOwner(courseId, owner);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(
+            () ->
+                courseService.updateCourseChallenges(
+                    ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0))))
+        .isInstanceOf(ChallengeNotFoundException.class);
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void updateCourseChallenges_whenCallerIsNotInstructor_throwsAccessDenied() {
+    UUID ownerId = UUID.randomUUID();
+    UUID outsiderId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = buildCourseWithOwner(courseId, owner);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(
+            () -> courseService.updateCourseChallenges(outsiderId, courseId, List.of()))
+        .isInstanceOf(CourseAccessDeniedException.class);
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void updateCourseChallenges_whenCourseNotFound_throwsCourseNotFound() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> courseService.updateCourseChallenges(ownerId, courseId, List.of()))
+        .isInstanceOf(CourseNotFoundException.class);
+  }
+
+  @Test
+  void updateCourseChallenges_withEmptyList_clearsAllAssignments() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = buildCourseWithOwner(courseId, owner);
+    // pre-seed with an existing assignment to verify it gets cleared
+    Challenge existing = buildChallenge(UUID.randomUUID(), owner, ChallengeStatusEnum.PUBLIC);
+    com.pm4.istp.domain.entites.CourseChallenge existingAssignment =
+        new com.pm4.istp.domain.entites.CourseChallenge();
+    existingAssignment.setChallenge(existing);
+    existingAssignment.setOrderIndex(0);
+    course.addCourseChallenge(existingAssignment);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    Course updated = courseService.updateCourseChallenges(ownerId, courseId, List.of());
+
+    assertThat(updated.getCourseChallenges()).isEmpty();
   }
 }

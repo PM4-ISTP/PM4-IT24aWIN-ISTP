@@ -3,8 +3,11 @@ package com.pm4.istp.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.pm4.istp.dto.ErrorDto;
+import com.pm4.istp.exception.ChallengeAccessDeniedException;
+import com.pm4.istp.exception.ChallengeNotFoundException;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.InvalidCourseChallengeException;
 import com.pm4.istp.exception.UserNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -51,5 +54,37 @@ class GlobalExceptionHandlerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getError()).isEqualTo("An unknown error occurred");
+  }
+
+  @Test
+  void handleChallengeAccessDeniedException_returnsForbidden() {
+    ResponseEntity<ErrorDto> response =
+        handler.handleChallengeAccessDeniedException(
+            new ChallengeAccessDeniedException("no access"));
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().getError()).isEqualTo("Access denied");
+  }
+
+  @Test
+  void handleChallengeNotFoundException_returnsNotFound() {
+    ResponseEntity<ErrorDto> response =
+        handler.handleChallengeNotFoundException(new ChallengeNotFoundException("missing"));
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().getError()).isEqualTo("Challenge not found");
+  }
+
+  @Test
+  void handleInvalidCourseChallengeException_returnsBadRequestWithMessage() {
+    ResponseEntity<ErrorDto> response =
+        handler.handleInvalidCourseChallengeException(
+            new InvalidCourseChallengeException("Challenge 'Foo' is a draft"));
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().getError()).isEqualTo("Challenge 'Foo' is a draft");
   }
 }
