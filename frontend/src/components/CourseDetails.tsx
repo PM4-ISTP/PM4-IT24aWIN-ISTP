@@ -11,7 +11,13 @@ import type { InstructorRoleEnum } from "@/src/types/course";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 
-export default async function CourseDetails({ userId, backHref }: { userId: string, backHref: string }) {
+export default async function CourseDetails({
+  userId,
+  backHref,
+}: {
+  userId: string;
+  backHref: string;
+}) {
   const session = await getServerSession(authOptions);
   const result = await fetchPublicCourse(userId);
 
