@@ -10,13 +10,11 @@ interface TeamMember {
 }
 
 export function TeamSection() {
-  const [people, setPeople] = useState<
-    { id: number; name: string; designation: string; image: string }[]
-  >([]);
+  const [people, setPeople] = useState<{ id: number; name: string; designation: string; image: string }[]>([]);
 
   useEffect(() => {
     fetch("/api/public/team")
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => r.ok ? r.json() : null)
       .then((team: TeamMember[] | null) => {
         if (!team || team.length === 0) return;
         setPeople(
@@ -34,15 +32,7 @@ export function TeamSection() {
   if (people.length === 0) return null;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 12,
-        marginTop: 8,
-      }}
-    >
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginTop: 8 }}>
       <p
         style={{
           color: "rgba(255,255,255,0.2)",
