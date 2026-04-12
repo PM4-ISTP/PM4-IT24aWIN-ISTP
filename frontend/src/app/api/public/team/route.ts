@@ -4,7 +4,7 @@ export async function GET() {
   try {
     const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
     const res = await fetch(`${backendUrl}/api/v1/public/team`, {
-      cache: "no-store",
+      next: { revalidate: 3600 },
     });
     if (!res.ok) return NextResponse.json([]);
     const data: unknown = await res.json();
