@@ -1,7 +1,7 @@
-import { Divider, Group, Paper, Stack, Title, Text } from "@mantine/core";
+import { Divider, Group, Paper, Stack, Title, Text, Avatar } from "@mantine/core";
 import type { CourseDetailResponseDto, CourseInstructorResponseDto } from "@/src/types/course";
-import UserAvatar from "@/src/components/UserAvatar";
 import ReadonlyHtmlField from "@/src/components/ReadonlyHtmlField";
+import { getInitials } from "@/src/lib/utils";
 
 const getOwner = (instructors: CourseInstructorResponseDto[]) => {
   const owner = instructors.find((instructor) => instructor.instructorRole === "OWNER");
@@ -14,6 +14,20 @@ const getOwner = (instructors: CourseInstructorResponseDto[]) => {
 const getCollaborators = (instructors: CourseInstructorResponseDto[]) => {
   return instructors.filter((instructor) => instructor.instructorRole === "COLLABORATOR");
 };
+
+function UserAvatar({
+  pictureUrl,
+  userName,
+}: {
+  pictureUrl: string | null | undefined;
+  userName: string;
+}) {
+  return (
+    <Avatar radius="xl" color="blue" src={pictureUrl ?? undefined}>
+      {getInitials(userName)}
+    </Avatar>
+  );
+}
 
 export default function CourseInformation({ courseData }: { courseData: CourseDetailResponseDto }) {
   const instructors = courseData.courseInstructors;

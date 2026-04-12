@@ -16,7 +16,6 @@ import {
 import { IconSearch, IconUsers } from "@tabler/icons-react";
 import { getInitials } from "@/src/lib/utils";
 import type { CollaboratorUserResponseDto, CourseParticipantDto } from "@/src/types/course";
-import UserAvatar from "@/src/components/UserAvatar";
 
 const PAGE_SIZE = 5;
 
@@ -29,7 +28,9 @@ interface CoursePeoplePanelProps {
 function PersonCard({ user }: { user: CollaboratorUserResponseDto }) {
   return (
     <Group align="flex-start" gap="sm" wrap="nowrap">
-      <UserAvatar pictureUrl={user.picture} userName={user.name} />
+      <Avatar radius="xl" color="blue" src={user.picture ?? undefined}>
+        {getInitials(user.name)}
+      </Avatar>
       <Stack gap={4} style={{ flex: 1 }}>
         <Text fw={600} size="sm">
           {user.name}
