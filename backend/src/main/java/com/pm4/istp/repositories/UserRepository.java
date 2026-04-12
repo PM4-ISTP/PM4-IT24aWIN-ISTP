@@ -2,8 +2,6 @@ package com.pm4.istp.repositories;
 
 import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.domain.entites.UserRoleEnum;
-import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -57,6 +55,4 @@ public interface UserRepository extends JpaRepository<User, UUID> {
       @Param("query") String query,
       @Param("userId") UUID userId,
       Pageable pageable);
-
-  List<User> findByEmailIn(Collection<String> emails);
 }
