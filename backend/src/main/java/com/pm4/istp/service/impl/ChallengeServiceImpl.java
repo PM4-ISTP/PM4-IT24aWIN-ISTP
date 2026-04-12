@@ -80,13 +80,72 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     verifyCreator(challenge, userId);
 
+    ChallengeStatusEnum oldStatus = challenge.getStatus();
+    ChallengeStatusEnum newStatus = request.getStatus();
+
     challenge.setTitle(request.getTitle());
     challenge.setShortDescription(request.getShortDescription());
     challenge.setDescription(request.getDescription());
-    challenge.setStatus(request.getStatus());
+    challenge.setStatus(newStatus);
     challenge.setDifficulty(request.getDifficulty());
 
-    return challengeRepository.save(challenge);
+    Challenge saved = challengeRepository.save(challenge);
+    cleanupCourseChallengesForVisibilityChange(challengeId, userId, oldStatus, newStatus);
+
+    return saved;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public int previewVisibilityImpact(UUID userId, UUID challengeId, ChallengeStatusEnum newStatus) {
+    Challenge challenge =
+        challengeRepository
+            .findById(challengeId)
+            .orElseThrow(
+                () ->
+                    new ChallengeNotFoundException(
+                        String.format(CHALLENGE_NOT_FOUND_MSG, challengeId)));
+
+    verifyCreator(challenge, userId);
+
+    return countAffectedCourses(challengeId, userId, challenge.getStatus(), newStatus);
+  }
+
+  private int countAffectedCourses(
+      UUID challengeId,
+      UUID creatorId,
+      ChallengeStatusEnum oldStatus,
+      ChallengeStatusEnum newStatus) {
+    if (oldStatus == newStatus) {
+      return 0;
+    }
+    if (newStatus == ChallengeStatusEnum.DRAFT) {
+      return (int) courseChallengeRepository.countByChallengeId(challengeId);
+    }
+    if (newStatus == ChallengeStatusEnum.PRIVATE && oldStatus == ChallengeStatusEnum.PUBLIC) {
+      return (int)
+          courseChallengeRepository.countByChallengeIdWhereCreatorNotInstructor(
+              challengeId, creatorId);
+    }
+    return 0;
+  }
+
+  private void cleanupCourseChallengesForVisibilityChange(
+      UUID challengeId,
+      UUID creatorId,
+      ChallengeStatusEnum oldStatus,
+      ChallengeStatusEnum newStatus) {
+    if (oldStatus == newStatus) {
+      return;
+    }
+    if (newStatus == ChallengeStatusEnum.DRAFT) {
+      courseChallengeRepository.deleteByChallengeId(challengeId);
+      return;
+    }
+    if (newStatus == ChallengeStatusEnum.PRIVATE && oldStatus == ChallengeStatusEnum.PUBLIC) {
+      courseChallengeRepository.deleteByChallengeIdWhereCreatorNotInstructor(
+          challengeId, creatorId);
+    }
   }
 
   @Override

@@ -3,6 +3,7 @@ package com.pm4.istp.service;
 import com.pm4.istp.domain.CreateChallengeRequest;
 import com.pm4.istp.domain.UpdateChallengeRequest;
 import com.pm4.istp.domain.entites.Challenge;
+import com.pm4.istp.domain.entites.ChallengeStatusEnum;
 import com.pm4.istp.dto.ListChallengeResponseDto;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -21,4 +22,6 @@ public interface ChallengeService {
 
   Page<ListChallengeResponseDto> searchAvailableChallenges(
       UUID userId, String search, Pageable pageable);
+
+  int previewVisibilityImpact(UUID userId, UUID challengeId, ChallengeStatusEnum newStatus);
 }

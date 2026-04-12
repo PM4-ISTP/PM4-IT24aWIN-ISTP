@@ -5,6 +5,7 @@ import static com.pm4.istp.util.JwtUtil.parseUserId;
 import com.pm4.istp.domain.CreateChallengeRequest;
 import com.pm4.istp.domain.UpdateChallengeRequest;
 import com.pm4.istp.domain.entites.Challenge;
+import com.pm4.istp.domain.entites.ChallengeStatusEnum;
 import com.pm4.istp.dto.*;
 import com.pm4.istp.mappers.ChallengeMapper;
 import com.pm4.istp.service.ChallengeService;
@@ -186,5 +187,36 @@ public class ChallengeController {
     Page<ListChallengeResponseDto> results =
         challengeService.searchAvailableChallenges(userId, query, pageable);
     return ResponseEntity.ok(results);
+  }
+
+  @Operation(
+      summary = "Preview visibility change impact",
+      description =
+          "Returns how many course assignments would be removed if the challenge's visibility were"
+              + " changed to the given status. Only the creator can call this.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Impact retrieved successfully",
+            content =
+                @Content(schema = @Schema(implementation = VisibilityImpactResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @GetMapping("/{id}/visibility-impact")
+  public ResponseEntity<VisibilityImpactResponseDto> getVisibilityImpact(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID id,
+      @RequestParam("status") ChallengeStatusEnum status) {
+    UUID userId = parseUserId(jwt);
+    int affectedCourseCount = challengeService.previewVisibilityImpact(userId, id, status);
+    return ResponseEntity.ok(new VisibilityImpactResponseDto(affectedCourseCount));
   }
 }
