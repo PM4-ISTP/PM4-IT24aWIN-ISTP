@@ -3,7 +3,6 @@ import { authOptions } from "@/src/lib/auth";
 import { redirect } from "next/navigation";
 import { Box, Container, Stack, Title, Text, Badge } from "@mantine/core";
 import Login from "@/src/components/Login";
-import { TeamSection } from "@/src/components/TeamSection";
 
 const heroBackground = "linear-gradient(160deg, #0b1120 0%, #0e1a2e 45%, #0b1624 100%)";
 
@@ -152,9 +151,6 @@ export default async function Home() {
               <Login />
             </Stack>
           </div>
-
-          {/* Team */}
-          <TeamSection />
         </Stack>
       </Container>
 
