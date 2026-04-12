@@ -56,14 +56,20 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
             c.updatedAt
           )
           from Challenge c
-          where (c.creator.id = :userId or c.status = com.pm4.istp.domain.entites.ChallengeStatusEnum.PUBLIC)
+          where (
+            (c.creator.id = :userId and c.status = com.pm4.istp.domain.entites.ChallengeStatusEnum.PRIVATE)
+            or c.status = com.pm4.istp.domain.entites.ChallengeStatusEnum.PUBLIC
+          )
           and lower(c.title) like lower(concat('%', :search, '%'))
           """,
       countQuery =
           """
           select count(c)
           from Challenge c
-          where (c.creator.id = :userId or c.status = com.pm4.istp.domain.entites.ChallengeStatusEnum.PUBLIC)
+          where (
+            (c.creator.id = :userId and c.status = com.pm4.istp.domain.entites.ChallengeStatusEnum.PRIVATE)
+            or c.status = com.pm4.istp.domain.entites.ChallengeStatusEnum.PUBLIC
+          )
           and lower(c.title) like lower(concat('%', :search, '%'))
           """)
   Page<ListChallengeResponseDto> searchAvailableChallenges(

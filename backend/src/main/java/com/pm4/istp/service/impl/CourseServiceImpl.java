@@ -16,6 +16,7 @@ import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.exception.ChallengeNotFoundException;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.InvalidCourseChallengeException;
 import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
 import com.pm4.istp.exception.UserNotFoundException;
 import com.pm4.istp.repositories.ChallengeRepository;
@@ -239,7 +240,14 @@ public class CourseServiceImpl implements CourseService {
                           String.format(
                               "Challenge with ID '%s' not found", item.getChallengeId())));
 
-      // Only allow adding own challenges or PUBLIC challenges
+      // DRAFT challenges cannot be added to any course, even by their creator
+      if (challenge.getStatus() == ChallengeStatusEnum.DRAFT) {
+        throw new InvalidCourseChallengeException(
+            String.format(
+                "Challenge '%s' is a draft and cannot be added to a course", challenge.getTitle()));
+      }
+
+      // Only allow adding own PRIVATE challenges or PUBLIC challenges
       boolean isCreator = challenge.getCreator().getId().equals(userId);
       boolean isPublic = challenge.getStatus() == ChallengeStatusEnum.PUBLIC;
       if (!isCreator && !isPublic) {
