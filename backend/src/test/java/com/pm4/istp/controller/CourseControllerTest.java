@@ -275,6 +275,20 @@ class CourseControllerTest {
         .andExpect(jsonPath("$.content").isArray());
   }
 
+  // ── listEnrollments ───────────────────────────────────────────────────────────
+
+  @Test
+  void listEnrollments_returnsOkWithPage() throws Exception {
+    Page<ListCourseResponseDto> page = new PageImpl<>(List.of(new ListCourseResponseDto()));
+
+    when(courseService.listUserEnrollments(eq(userId), any())).thenReturn(page);
+
+    mockMvc
+            .perform(get("/api/v1/courses/my-enrollments"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray());
+  }
+
   // ── listPublishedCourses ──────────────────────────────────────────────────
 
   @Test
