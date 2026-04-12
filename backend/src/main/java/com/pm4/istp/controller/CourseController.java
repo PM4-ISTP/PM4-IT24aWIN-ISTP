@@ -203,7 +203,7 @@ public class CourseController {
                   var p = e.getParticipant();
                   return new CourseParticipantResponseDto(p.getId(), p.getName(), p.getPicture());
                 })
-            .collect(java.util.stream.Collectors.toList());
+            .toList();
     dto.setParticipants(participants);
     return dto;
   }

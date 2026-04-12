@@ -83,7 +83,7 @@ class AdminConfigurationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Kubeconfig file size exceeds 1 MB limit."));
+                .andExpect(status().reason("Kubeconfig file size exceeds 1 MB limit."));
     }
 
     @Test
@@ -95,7 +95,7 @@ class AdminConfigurationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Kubeconfig is not valid base64."));
+                .andExpect(status().reason("Kubeconfig is not valid base64."));
     }
 
     @Test
@@ -159,7 +159,7 @@ class AdminConfigurationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Kubeconfig file size exceeds 1 MB limit."));
+                .andExpect(status().reason("Kubeconfig file size exceeds 1 MB limit."));
     }
 
     @Test
