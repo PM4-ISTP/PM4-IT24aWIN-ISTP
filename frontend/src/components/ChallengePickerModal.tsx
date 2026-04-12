@@ -85,13 +85,7 @@ export function ChallengePickerModal({
   }
 
   return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title="Add Challenge to Course"
-      size="lg"
-      centered
-    >
+    <Modal opened={opened} onClose={onClose} title="Add Challenge to Course" size="lg" centered>
       <Stack gap="md">
         <TextInput
           placeholder="Search challenges..."
@@ -129,18 +123,13 @@ export function ChallengePickerModal({
                     cursor: isAdded ? "default" : "pointer",
                   }}
                 >
-                  <Box
-                    className={classes.pickerItem}
-                    data-selectable={!isAdded}
-                  >
+                  <Box className={classes.pickerItem} data-selectable={!isAdded}>
                     <Stack gap={4}>
                       <Group gap="xs" wrap="nowrap">
                         <Text size="sm" fw={500} truncate>
                           {challenge.title}
                         </Text>
-                        {isAdded && (
-                          <IconCheck size={16} color="var(--mantine-color-teal-5)" />
-                        )}
+                        {isAdded && <IconCheck size={16} color="var(--mantine-color-teal-5)" />}
                       </Group>
 
                       {challenge.shortDescription && (
@@ -181,12 +170,7 @@ export function ChallengePickerModal({
 
         {totalPages > 1 && (
           <Group justify="center">
-            <Pagination
-              total={totalPages}
-              value={page + 1}
-              onChange={handlePageChange}
-              size="sm"
-            />
+            <Pagination total={totalPages} value={page + 1} onChange={handlePageChange} size="sm" />
           </Group>
         )}
       </Stack>

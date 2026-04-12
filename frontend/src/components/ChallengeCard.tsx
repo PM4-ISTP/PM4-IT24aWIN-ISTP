@@ -34,12 +34,7 @@ export function ChallengeCard({
           <Text fw={600} size="sm" lineClamp={2} style={{ flex: 1, minWidth: 0 }}>
             {title}
           </Text>
-          <Badge
-            size="xs"
-            variant="light"
-            color={getStatusColor(status)}
-            style={{ flexShrink: 0 }}
-          >
+          <Badge size="xs" variant="light" color={getStatusColor(status)} style={{ flexShrink: 0 }}>
             {status}
           </Badge>
         </Group>
@@ -63,7 +58,9 @@ export function ChallengeCard({
           </Text>
           {maxScore > 0 && (
             <>
-              <Text size="xs" c="dimmed">|</Text>
+              <Text size="xs" c="dimmed">
+                |
+              </Text>
               <Text size="xs" c="dimmed">
                 Score: {maxScore}
               </Text>

@@ -172,9 +172,7 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
   // Preload details for challenges that are missing metadata (e.g. loaded from course API)
   const preloadedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    const missing = challenges.filter(
-      (c) => !c.status && !preloadedRef.current.has(c.challengeId)
-    );
+    const missing = challenges.filter((c) => !c.status && !preloadedRef.current.has(c.challengeId));
     if (missing.length === 0) return;
 
     missing.forEach((c) => preloadedRef.current.add(c.challengeId));
@@ -294,9 +292,18 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
                 >
                   <Group justify="space-between" align="flex-start" wrap="nowrap">
                     {/* Left: content */}
-                    <Group gap="sm" wrap="nowrap" align="flex-start" style={{ flex: 1, minWidth: 0 }}>
+                    <Group
+                      gap="sm"
+                      wrap="nowrap"
+                      align="flex-start"
+                      style={{ flex: 1, minWidth: 0 }}
+                    >
                       <ActionIcon variant="transparent" size="sm" tabIndex={-1} mt={2}>
-                        {isExpanded ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
+                        {isExpanded ? (
+                          <IconChevronDown size={16} />
+                        ) : (
+                          <IconChevronRight size={16} />
+                        )}
                       </ActionIcon>
 
                       <Stack gap={6} style={{ flex: 1, minWidth: 0 }}>
@@ -332,7 +339,9 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
                           </Text>
                           {challenge.creatorName && (
                             <>
-                              <Text size="xs" c="dimmed">|</Text>
+                              <Text size="xs" c="dimmed">
+                                |
+                              </Text>
                               <Text size="xs" c="dimmed">
                                 by {challenge.creatorName}
                               </Text>
@@ -343,13 +352,14 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
                     </Group>
 
                     {/* Right: status + action buttons */}
-                    <Group gap="xs" wrap="nowrap" align="center" onClick={(e) => e.stopPropagation()}>
+                    <Group
+                      gap="xs"
+                      wrap="nowrap"
+                      align="center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {challenge.status && (
-                        <Badge
-                          size="xs"
-                          variant="light"
-                          color={getStatusColor(challenge.status)}
-                        >
+                        <Badge size="xs" variant="light" color={getStatusColor(challenge.status)}>
                           {challenge.status}
                         </Badge>
                       )}
