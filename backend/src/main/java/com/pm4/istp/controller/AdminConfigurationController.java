@@ -5,10 +5,15 @@ import com.pm4.istp.dto.AdminConfigResponse;
 import com.pm4.istp.exception.StorageException;
 import com.pm4.istp.service.AdminConfigurationService;
 import jakarta.validation.Valid;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 import lombok.NonNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,6 +33,9 @@ public class AdminConfigurationController {
   private final AdminConfigurationService adminConfigurationService;
 
   private static final long MAX_FILE_SIZE = 1_048_576;
+
+  @Value("${k8s.kubeconfig.path}")
+  private String kubeconfigPath;
 
   public AdminConfigurationController(
       @NonNull AdminConfigurationService adminConfigurationService) {
@@ -59,6 +67,17 @@ public class AdminConfigurationController {
     if (kubeconfigBytes.length > MAX_FILE_SIZE) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Kubeconfig file size exceeds 1 MB limit.");
+    }
+
+    try {
+      Path path = Paths.get(kubeconfigPath);
+      if (path.getParent() != null) {
+        Files.createDirectories(path.getParent());
+      }
+      Files.write(path, kubeconfigBytes);
+    } catch (IOException e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body("Failed to write kubeconfig to file system.");
     }
 
     com.pm4.istp.domain.AdminConfig adminConfig =
@@ -110,6 +129,17 @@ public class AdminConfigurationController {
       if (kubeconfigBytes.length > MAX_FILE_SIZE) {
         throw new ResponseStatusException(
             HttpStatus.BAD_REQUEST, "Kubeconfig file size exceeds 1 MB limit.");
+      }
+
+      try {
+        Path path = Paths.get(kubeconfigPath);
+        if (path.getParent() != null) {
+          Files.createDirectories(path.getParent());
+        }
+        Files.write(path, kubeconfigBytes);
+      } catch (IOException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body("Failed to write kubeconfig to file system.");
       }
     }
 
