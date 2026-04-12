@@ -40,6 +40,7 @@ export type PageListChallengeResponseDto = components["schemas"]["PageListChalle
 export type CourseChallengeItemDto = components["schemas"]["CourseChallengeItemDto"];
 export type UpdateCourseChallengesRequestDto =
   components["schemas"]["UpdateCourseChallengesRequestDto"];
+export type VisibilityImpactResponseDto = components["schemas"]["VisibilityImpactResponseDto"];
 
 export async function createChallenge(
   dto: CreateChallengeRequestDto
@@ -167,6 +168,29 @@ export async function searchChallenges(
 
     if (error) {
       return { success: false, error: "Failed to search challenges" };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+export async function previewVisibilityImpact(
+  id: string,
+  newStatus: ChallengeStatusEnum
+): Promise<ActionResult<VisibilityImpactResponseDto>> {
+  try {
+    const client = await getApiClient();
+    const { data, error } = await client.GET("/api/v1/challenges/{id}/visibility-impact", {
+      params: { path: { id }, query: { status: newStatus } },
+    });
+
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to preview visibility impact" };
     }
 
     return { success: true, data };
