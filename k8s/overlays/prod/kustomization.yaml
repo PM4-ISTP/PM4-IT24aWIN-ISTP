@@ -25,7 +25,6 @@ configMapGenerator:
       - istp-domain=pm4.init-lab.ch
       - istp-tls=true
       - backend-url=http://backend:8080
-      - team-emails=calabdav@students.zhaw.ch,hoffmlor@students.zhaw.ch,kaiseja1@students.zhaw.ch,schauale@students.zhaw.ch,seebeale@students.zhaw.ch,biedeli1@students.zhaw.ch
 
 # ┌─────────────────────────────────────────────────────────────────────┐
 # │ Manual secrets (create once per namespace, not managed by Kustomize)│
