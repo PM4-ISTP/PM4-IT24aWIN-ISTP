@@ -22,10 +22,26 @@ import {
   ChallengeFormFields,
   type ChallengeFormValues,
 } from "@/src/components/ChallengeFormFields";
-import { fetchChallenge, updateChallenge, deleteChallenge } from "@/src/lib/actions/challenges";
+import {
+  fetchChallenge,
+  updateChallenge,
+  deleteChallenge,
+  previewVisibilityImpact,
+  type ChallengeStatusEnum,
+} from "@/src/lib/actions/challenges";
 import { normalizeShortDescription } from "@/src/lib/courseText";
 import { useToast } from "@/src/hooks/useToast";
 import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/lib/challengeConstants";
+
+function isMoreRestrictive(
+  oldStatus: ChallengeStatusEnum,
+  newStatus: ChallengeStatusEnum
+): boolean {
+  if (oldStatus === newStatus) return false;
+  if (newStatus === "DRAFT") return true;
+  if (newStatus === "PRIVATE" && oldStatus === "PUBLIC") return true;
+  return false;
+}
 
 export default function EditChallenge() {
   const router = useRouter();
@@ -42,11 +58,14 @@ export default function EditChallenge() {
     status: "DRAFT",
     difficulty: "MEDIUM",
   });
+  const [initialStatus, setInitialStatus] = useState<ChallengeStatusEnum>("DRAFT");
   const [courseCount, setCourseCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
+  const [visibilityOpened, { open: openVisibility, close: closeVisibility }] = useDisclosure(false);
+  const [visibilityImpactCount, setVisibilityImpactCount] = useState(0);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -62,13 +81,15 @@ export default function EditChallenge() {
       }
 
       const challenge = result.data;
+      const loadedStatus = challenge.status ?? "DRAFT";
       setFormValues({
         title: challenge.title ?? "",
         shortDescription: challenge.shortDescription ?? "",
         description: challenge.description ?? "",
-        status: challenge.status ?? "DRAFT",
+        status: loadedStatus,
         difficulty: challenge.difficulty ?? "MEDIUM",
       });
+      setInitialStatus(loadedStatus);
       setCourseCount(challenge.courseCount ?? 0);
 
       setLoading(false);
@@ -77,16 +98,7 @@ export default function EditChallenge() {
     void load();
   }, [challengeId]);
 
-  async function handleSubmit() {
-    setTitleError(null);
-    setShortDescriptionError(null);
-    setFormError(null);
-
-    if (!formValues.title.trim()) {
-      setTitleError("Challenge title is required");
-      return;
-    }
-
+  async function performUpdate() {
     const normalizedShortDescription = normalizeShortDescription(formValues.shortDescription);
     if (!normalizedShortDescription) {
       setShortDescriptionError("Short description is required");
@@ -112,6 +124,47 @@ export default function EditChallenge() {
 
     router.refresh();
     router.push("/dashboard/instructor/challenges");
+  }
+
+  async function handleSubmit() {
+    setTitleError(null);
+    setShortDescriptionError(null);
+    setFormError(null);
+
+    if (!formValues.title.trim()) {
+      setTitleError("Challenge title is required");
+      return;
+    }
+
+    if (!normalizeShortDescription(formValues.shortDescription)) {
+      setShortDescriptionError("Short description is required");
+      return;
+    }
+
+    if (isMoreRestrictive(initialStatus, formValues.status)) {
+      setIsSubmitting(true);
+      const preview = await previewVisibilityImpact(challengeId, formValues.status);
+      setIsSubmitting(false);
+
+      if (!preview.success) {
+        setFormError(preview.error);
+        return;
+      }
+
+      const count = preview.data.affectedCourseCount ?? 0;
+      if (count > 0) {
+        setVisibilityImpactCount(count);
+        openVisibility();
+        return;
+      }
+    }
+
+    await performUpdate();
+  }
+
+  async function handleVisibilityConfirm() {
+    closeVisibility();
+    await performUpdate();
   }
 
   async function handleDelete() {
@@ -166,6 +219,38 @@ export default function EditChallenge() {
 
   return (
     <Container>
+      <Modal
+        opened={visibilityOpened}
+        onClose={closeVisibility}
+        title="Confirm visibility change"
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Lowering the visibility of <strong>{formValues.title}</strong> will remove it from{" "}
+            {visibilityImpactCount} course{visibilityImpactCount !== 1 ? "s" : ""}.
+          </Text>
+          <Text size="sm" c="dimmed">
+            This action cannot be undone.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={closeVisibility} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button
+              color="orange"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+              onClick={() => {
+                void handleVisibilityConfirm();
+              }}
+            >
+              Save Changes
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Challenge" centered>
         <Stack gap="md">
           <Text size="sm">
