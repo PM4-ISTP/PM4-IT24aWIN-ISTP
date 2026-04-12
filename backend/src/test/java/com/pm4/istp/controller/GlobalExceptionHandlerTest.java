@@ -5,15 +5,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.pm4.istp.dto.ErrorDto;
-import com.pm4.istp.exception.ChallengeAccessDeniedException;
-import com.pm4.istp.exception.ChallengeNotFoundException;
-import com.pm4.istp.exception.CourseAccessDeniedException;
-import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.*;
 
-import com.pm4.istp.exception.InvalidCourseCollaboratorException;
-import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
-
-import com.pm4.istp.exception.UserNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
@@ -99,6 +92,9 @@ class GlobalExceptionHandlerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getError()).isEqualTo("Challenge 'Foo' is a draft");
+  }
+
+  @Test
   void handleInvalidCourseCollaboratorException_returnsBadRequest() {
     ResponseEntity<ErrorDto> response =
         handler.handleInvalidCourseCollaboratorException(
