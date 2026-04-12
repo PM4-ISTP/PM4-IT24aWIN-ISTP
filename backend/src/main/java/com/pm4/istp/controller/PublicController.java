@@ -33,7 +33,9 @@ public class PublicController {
             .filter(s -> !s.isEmpty())
             .toList();
     List<PublicTeamMemberDto> team =
-        userService.getTeamMembers(emails).stream().map(userMapper::toPublicTeamMemberDto).toList();
+        userService.getTeamMembers(emails).stream()
+            .map(userMapper::toPublicTeamMemberDto)
+            .toList();
     return ResponseEntity.ok(team);
   }
 }
