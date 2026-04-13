@@ -228,6 +228,29 @@ jobs:
           git diff --staged --quiet || git commit -m "ci(deploy): update staging to $SHA [skip ci]"
           git push origin deploy-staging
 
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: update-manifests
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout deploy-staging branch
+        uses: actions/checkout@v4
+        with:
+          ref: deploy-staging
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Set kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+
+      - name: Deploy to cluster
+        run: |
+          kubectl --kubeconfig=kubeconfig.yaml apply -k k8s/overlays/staging
+
   playwright-e2e:
     name: Playwright E2E Tests (Staging)
     runs-on: ubuntu-latest
