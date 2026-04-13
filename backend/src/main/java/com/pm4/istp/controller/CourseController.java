@@ -223,6 +223,14 @@ public class CourseController {
     dto.setParticipantCount(courseEnrollmentRepository.countByCourseId(courseId));
     dto.setEnrolled(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId));
     dto.setParticipants(null);
+    setInstructorIdsToNull(dto.getCourseInstructors());
     return dto;
+  }
+
+  private void setInstructorIdsToNull(List<CourseDetailInstructorResponseDto> courseInstructors) {
+    for (CourseDetailInstructorResponseDto courseInstructor : courseInstructors) {
+      courseInstructor.setId(null);
+      courseInstructor.getInstructor().setId(null);
+    }
   }
 }
