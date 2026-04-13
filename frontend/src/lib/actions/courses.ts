@@ -202,6 +202,55 @@ export async function fetchInstructorCourses(
   }
 }
 
+export async function joinCourseByCode(
+  code: string
+): Promise<ActionResult<CourseDetailResponseDto>> {
+  try {
+    const res = await fetchBackend("/api/v1/courses/catalog/join", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      const message = extractErrorMessage(text, res.statusText);
+      return { success: false, error: `${res.status}: ${message}` };
+    }
+
+    const data = (await res.json()) as CourseDetailResponseDto;
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+export async function regenerateInviteCode(
+  id: string
+): Promise<ActionResult<CourseDetailResponseDto>> {
+  try {
+    const res = await fetchBackend(`/api/v1/courses/${id}/invite-code/regenerate`, {
+      method: "POST",
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      const message = extractErrorMessage(text, res.statusText);
+      return { success: false, error: `${res.status}: ${message}` };
+    }
+
+    const data = (await res.json()) as CourseDetailResponseDto;
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
 export async function fetchPublishedCourses(
   query = "",
   page = 0,

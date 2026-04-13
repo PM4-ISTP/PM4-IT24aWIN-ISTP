@@ -95,6 +95,7 @@ export interface CourseDetailResponseDto {
   participantCount: number;
   isEnrolled: boolean;
   isPublished: boolean;
+  inviteCode?: string | null;
   imageUrl?: string | null;
   topic?: string | null;
   difficulty?: CourseDifficulty | null;
