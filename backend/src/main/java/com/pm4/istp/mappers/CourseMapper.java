@@ -13,7 +13,10 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(
+    componentModel = "spring",
+    unmappedTargetPolicy = ReportingPolicy.IGNORE,
+    uses = {ChallengeMapper.class})
 public interface CourseMapper {
 
   CreateCourseInstructorRequest fromDto(CreateCourseInstructorRequestDto dto);
