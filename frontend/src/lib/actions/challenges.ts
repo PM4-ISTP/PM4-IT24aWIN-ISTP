@@ -41,6 +41,7 @@ export type CourseChallengeItemDto = components["schemas"]["CourseChallengeItemD
 export type UpdateCourseChallengesRequestDto =
   components["schemas"]["UpdateCourseChallengesRequestDto"];
 export type VisibilityImpactResponseDto = components["schemas"]["VisibilityImpactResponseDto"];
+export type CourseDetailResponseDto = components["schemas"]["CourseDetailResponseDto"];
 
 export async function createChallenge(
   dto: CreateChallengeRequestDto
@@ -205,7 +206,7 @@ export async function previewVisibilityImpact(
 export async function updateCourseChallenges(
   courseId: string,
   challenges: CourseChallengeItemDto[]
-): Promise<ActionResult<unknown>> {
+): Promise<ActionResult<CourseDetailResponseDto>> {
   try {
     const client = await getApiClient();
     const { data, error } = await client.PUT("/api/v1/courses/{id}/challenges", {

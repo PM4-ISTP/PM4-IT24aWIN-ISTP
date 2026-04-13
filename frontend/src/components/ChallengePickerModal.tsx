@@ -115,9 +115,8 @@ export function ChallengePickerModal({
               return (
                 <UnstyledButton
                   key={challenge.id}
-                  onClick={() => {
-                    if (!isAdded) onSelect(challenge);
-                  }}
+                  onClick={() => onSelect(challenge)}
+                  disabled={isAdded}
                   style={{
                     opacity: isAdded ? 0.6 : 1,
                     cursor: isAdded ? "default" : "pointer",

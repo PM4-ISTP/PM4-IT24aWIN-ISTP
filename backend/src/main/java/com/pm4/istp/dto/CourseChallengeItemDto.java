@@ -13,5 +13,6 @@ public class CourseChallengeItemDto {
   @NotNull(message = "Challenge ID is required")
   private UUID challengeId;
 
-  private int orderIndex;
+  @NotNull(message = "Order index is required")
+  private Integer orderIndex;
 }

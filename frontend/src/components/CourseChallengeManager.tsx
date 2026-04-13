@@ -115,10 +115,11 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
   const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
 
   function handleAddChallenge(challenge: ListChallengeResponseDto) {
+    if (!challenge.id) return;
     if (challenges.some((c) => c.challengeId === challenge.id)) return;
 
     const newEntry: CourseChallengeEntry = {
-      challengeId: challenge.id ?? "",
+      challengeId: challenge.id,
       challengeTitle: challenge.title ?? "",
       difficulty: challenge.difficulty ?? "MEDIUM",
       orderIndex: challenges.length,
