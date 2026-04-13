@@ -5,6 +5,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -22,13 +25,14 @@ import tools.jackson.databind.ser.std.StdSerializer;
 import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
 import com.pm4.istp.domain.entites.Course;
+import com.pm4.istp.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.dto.CourseDetailResponseDto;
-import com.pm4.istp.dto.CreateCourseInstructorRequestDto;
 import com.pm4.istp.dto.CreateCourseRequestDto;
 import com.pm4.istp.dto.CreateCourseResponseDto;
+import com.pm4.istp.dto.CourseParticipantResponseDto;
 import com.pm4.istp.dto.ListCourseResponseDto;
-import com.pm4.istp.dto.UpdateCourseInstructorRequestDto;
 import com.pm4.istp.dto.UpdateCourseRequestDto;
+import com.pm4.istp.dto.UserDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.mappers.CourseMapper;
@@ -322,9 +326,22 @@ class CourseControllerTest {
     Course course = new Course();
     course.setId(courseId);
 
+    UUID instructorId = UUID.randomUUID();
+    UUID nestedUserId = UUID.randomUUID();
+
+    UserDto instructorUser = new UserDto();
+    instructorUser.setId(nestedUserId);
+    instructorUser.setName("Instructor");
+
+    CourseDetailInstructorResponseDto instructor = new CourseDetailInstructorResponseDto();
+    instructor.setId(instructorId);
+    instructor.setInstructor(instructorUser);
+
     CourseDetailResponseDto dto = new CourseDetailResponseDto();
     dto.setId(courseId);
     dto.setTitle("Public Course");
+    dto.setCourseInstructors(List.of(instructor));
+    dto.setParticipants(List.of(new CourseParticipantResponseDto(UUID.randomUUID(), "Student", null)));
 
     when(courseService.getCourse(userId, courseId)).thenReturn(course);
     when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
@@ -335,7 +352,13 @@ class CourseControllerTest {
     mockMvc
         .perform(get("/api/v1/courses/catalog/{id}", courseId))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(courseId.toString()));
+        .andExpect(jsonPath("$.id").value(courseId.toString()))
+        .andExpect(jsonPath("$.courseInstructors").isArray())
+        .andExpect(jsonPath("$.courseInstructors", hasSize(1)))
+        .andExpect(jsonPath("$.courseInstructors[*].id").value(everyItem(nullValue())))
+        .andExpect(jsonPath("$.courseInstructors[*].instructor.id").value(everyItem(nullValue())))
+        .andExpect(jsonPath("$.courseInstructors[0].instructor.name").value("Instructor"))
+        .andExpect(jsonPath("$.participants").value(nullValue()));
   }
 
   // ── enrollInCourse ────────────────────────────────────────────────────────
