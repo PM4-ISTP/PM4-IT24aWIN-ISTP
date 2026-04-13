@@ -5,6 +5,7 @@ import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.exception.InvalidCourseCollaboratorException;
 import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
+import com.pm4.istp.exception.InvalidInviteCodeException;
 import com.pm4.istp.exception.UserNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
@@ -44,6 +45,14 @@ public class GlobalExceptionHandler {
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError("User not found");
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(InvalidInviteCodeException.class)
+  public ResponseEntity<ErrorDto> handleInvalidInviteCodeException(InvalidInviteCodeException ex) {
+    log.warn("Caught InvalidInviteCodeException: {}", ex.getMessage());
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Invalid invite code");
+    return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
   }
 
   @ExceptionHandler(InvalidCourseCollaboratorException.class)

@@ -46,6 +46,9 @@ public class Course {
   @Enumerated(EnumType.STRING)
   private CourseDifficultyEnum difficulty;
 
+  @Column(name = "invite_code", nullable = true, unique = true, length = 6)
+  private String inviteCode;
+
   @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CourseInstructor> courseInstructors = new ArrayList<>();
 

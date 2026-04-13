@@ -186,6 +186,25 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
+  @PostMapping("/catalog/join")
+  public ResponseEntity<CourseDetailResponseDto> joinByInviteCode(
+      @AuthenticationPrincipal Jwt jwt,
+      @Valid @RequestBody com.pm4.istp.dto.JoinByInviteCodeRequestDto request) {
+    UUID userId = parseUserId(jwt);
+    Course course = courseService.joinByInviteCode(request.getCode(), userId);
+    CourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
+    return ResponseEntity.ok(dto);
+  }
+
+  @PostMapping("/{id}/invite-code/regenerate")
+  public ResponseEntity<CourseDetailResponseDto> regenerateInviteCode(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    Course course = courseService.regenerateInviteCode(id, userId);
+    CourseDetailResponseDto dto = toCourseDetailResponseDto(course, userId);
+    return ResponseEntity.ok(dto);
+  }
+
   // ── Private helpers ──
 
   /** Full detail including participant list – for instructor/owner endpoints. */
@@ -208,13 +227,14 @@ public class CourseController {
     return dto;
   }
 
-  /** Public catalog detail – omits participant list; returns only count and enrollment status. */
+  /** Public catalog detail – omits participant list and invite code; returns only count and enrollment status. */
   private CourseDetailResponseDto toPublicCourseDetailResponseDto(Course course, UUID userId) {
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
     UUID courseId = course.getId();
     dto.setParticipantCount(courseEnrollmentRepository.countByCourseId(courseId));
     dto.setEnrolled(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId));
     dto.setParticipants(null);
+    dto.setInviteCode(null);
     return dto;
   }
 }

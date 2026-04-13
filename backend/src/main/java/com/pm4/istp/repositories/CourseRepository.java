@@ -2,6 +2,7 @@ package com.pm4.istp.repositories;
 
 import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.dto.ListCourseResponseDto;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CourseRepository extends JpaRepository<Course, UUID> {
   Page<Course> findByCourseInstructorsInstructorId(UUID instructorId, Pageable pageable);
+
+  Optional<Course> findByInviteCode(String inviteCode);
+
+  boolean existsByInviteCode(String inviteCode);
 
   @Query(
       value =
