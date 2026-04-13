@@ -1,7 +1,6 @@
 package com.pm4.istp.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -91,7 +90,7 @@ class K8sControllerTest {
 
   @Test
   void deletePod_returnsNoContent() throws Exception {
-    doNothing().when(k8sService).deletePod(eq("challenge-abc123"));
+    doNothing().when(k8sService).deletePod("challenge-abc123");
 
     mockMvc
         .perform(delete("/api/k8s/pods/{instanceName}", "challenge-abc123"))
@@ -100,7 +99,7 @@ class K8sControllerTest {
 
   @Test
   void deletePod_whenK8sServiceThrows_returnsInternalServerError() throws Exception {
-    doThrow(new K8sException("not found")).when(k8sService).deletePod(eq("challenge-xyz"));
+    doThrow(new K8sException("not found")).when(k8sService).deletePod("challenge-xyz");
 
     mockMvc
         .perform(delete("/api/k8s/pods/{instanceName}", "challenge-xyz"))
