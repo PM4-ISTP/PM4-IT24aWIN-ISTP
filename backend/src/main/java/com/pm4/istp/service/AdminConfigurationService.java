@@ -35,17 +35,20 @@ public class AdminConfigurationService {
 
   public AdminConfig createConfiguration(byte[] kubeconfig, String cpuLimit, String memoryLimit) {
 
-    if (adminConfigRepository.existsById(SINGLETON_ID)) {
-      throw new IllegalStateException("Admin configuration already exists");
-    }
-
-    AdminConfig adminConfig = new AdminConfig();
-    adminConfig.setId(SINGLETON_ID);
+    AdminConfig adminConfig =
+        adminConfigRepository
+            .findById(SINGLETON_ID)
+            .orElseGet(
+                () -> {
+                  AdminConfig newConfig = new AdminConfig();
+                  newConfig.setId(SINGLETON_ID);
+                  return newConfig;
+                });
 
     applyUpdates(adminConfig, kubeconfig, cpuLimit, memoryLimit);
 
     AdminConfig savedConfig = adminConfigRepository.save(adminConfig);
-    log.info("Created admin configuration with ID {}", savedConfig.getId());
+    log.info("Created/updated admin configuration with ID {}", savedConfig.getId());
     return savedConfig;
   }
 
