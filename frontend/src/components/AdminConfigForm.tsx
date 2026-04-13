@@ -217,6 +217,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
               <Dropzone
                 id="kubeconfig-input"
                 aria-label="Kubeconfig"
+                role="button"
                 openRef={openRef}
                 onDrop={(files) => {
                   const file = files[0] ?? null;
