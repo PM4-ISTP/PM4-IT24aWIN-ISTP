@@ -1,7 +1,6 @@
 package com.pm4.istp.dto;
 
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
-import com.pm4.istp.domain.entites.User;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -15,7 +14,7 @@ public class CreateCourseInstructorResponseDto {
   private UUID id;
   private InstructorRoleEnum instructorRole;
   private boolean isAccepted;
-  private User instructor;
+  private UserDto instructor;
   private LocalDateTime invitedAt;
   private LocalDateTime acceptedAt;
   private LocalDateTime createdAt;
