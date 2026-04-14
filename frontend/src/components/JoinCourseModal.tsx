@@ -37,7 +37,8 @@ export default function JoinCourseModal({ opened, onClose }: JoinCourseModalProp
     setIsSubmitting(false);
 
     if (!result.success) {
-      const status = result.error ? parseInt(result.error.split(":")[0], 10) : NaN;
+      const statusStr = result.error?.split(":")[0]?.trim() ?? "";
+      const status = /^\d+$/.test(statusStr) ? parseInt(statusStr, 10) : NaN;
       if (status === 404 || status === 400) {
         setError("Invalid or expired invite code. Please check and try again.");
       } else {
