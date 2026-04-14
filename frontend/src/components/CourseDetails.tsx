@@ -41,12 +41,17 @@ export default async function CourseDetails({
   }
 
   const course = result.data;
-  const sanitizedDescription = course.description === null ? "" : getSanitizedHtml(course.description);
+  const sanitizedDescription =
+    course.description === null ? "" : getSanitizedHtml(course.description);
   const owner =
     course.courseInstructors.find((ci) => ci.instructorRole === OWNER_ROLE)?.instructor ?? null;
   const challengeIds = (course.courseChallenges ?? []).map((c) => c.challengeId);
-  const challengeResults = await Promise.all(challengeIds.map((challengeId) => fetchChallenge(challengeId)));
-  const challengeDetails = challengeResults.flatMap((result) => (result.success ? [result.data] : []));
+  const challengeResults = await Promise.all(
+    challengeIds.map((challengeId) => fetchChallenge(challengeId))
+  );
+  const challengeDetails = challengeResults.flatMap((result) =>
+    result.success ? [result.data] : []
+  );
   const failedChallengeCount = challengeResults.length - challengeDetails.length;
 
   return (

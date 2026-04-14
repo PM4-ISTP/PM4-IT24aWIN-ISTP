@@ -46,7 +46,7 @@ export function extractErrorMessage(text: string, fallback: string): string {
 
 /**
  * Sanitizes a HTML string, so that it can be used as input for `dangerouslySetInnerHTML`.
- * 
+ *
  * @param html The HTML string that should get sanitized.
  * @returns The sanitized string.
  */

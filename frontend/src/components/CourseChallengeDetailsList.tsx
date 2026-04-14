@@ -80,8 +80,12 @@ export function CourseChallengeDetailsList({
                       #{index + 1} {formatText(challenge.title)}
                     </Title>
                     <Group gap="xs">
-                      <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>{formatText(challenge.status)}</Badge>
-                      <Badge variant="light" color={getDifficultyColor(challenge.difficulty ?? "")}>{formatText(challenge.difficulty)}</Badge>
+                      <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
+                        {formatText(challenge.status)}
+                      </Badge>
+                      <Badge variant="light" color={getDifficultyColor(challenge.difficulty ?? "")}>
+                        {formatText(challenge.difficulty)}
+                      </Badge>
                     </Group>
                   </Group>
 
@@ -91,7 +95,9 @@ export function CourseChallengeDetailsList({
                     <Text size="sm">Creator: {formatText(challenge.creator?.name)}</Text>
                     <Text size="sm">Created At: {formatDateTime(challenge.createdAt)}</Text>
                     <Text size="sm">Updated At: {formatDateTime(challenge.updatedAt)}</Text>
-                    <Text size="sm">Short Description: {formatText(challenge.shortDescription)}</Text>
+                    <Text size="sm">
+                      Short Description: {formatText(challenge.shortDescription)}
+                    </Text>
                   </SimpleGrid>
 
                   <Box>
