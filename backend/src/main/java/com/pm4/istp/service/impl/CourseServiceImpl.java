@@ -56,6 +56,7 @@ public class CourseServiceImpl implements CourseService {
   private final CourseRepository courseRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final ChallengeRepository challengeRepository;
+  private final CourseInviteCodeHelper courseInviteCodeHelper;
 
   @Override
   @Transactional
@@ -361,7 +362,6 @@ public class CourseServiceImpl implements CourseService {
   }
 
   @Override
-  @Transactional
   public Course regenerateInviteCode(UUID courseId, UUID userId) {
     Course course =
         courseRepository
@@ -380,8 +380,17 @@ public class CourseServiceImpl implements CourseService {
           String.format("Course '%s' is public; invite code regeneration is disabled", courseId));
     }
 
-    course.setInviteCode(generateUniqueInviteCode());
-    return courseRepository.save(course);
+    for (int attempt = 0; attempt < 10; attempt++) {
+      try {
+        return courseInviteCodeHelper.assignInviteCode(courseId, generateInviteCode());
+      } catch (DataIntegrityViolationException ex) {
+        if (attempt == 9) {
+          throw new IllegalStateException(
+              "Could not generate a unique invite code after 10 attempts", ex);
+        }
+      }
+    }
+    throw new IllegalStateException("Could not generate a unique invite code after 10 attempts");
   }
 
   private void verifyOwner(Course course, UUID userId) {

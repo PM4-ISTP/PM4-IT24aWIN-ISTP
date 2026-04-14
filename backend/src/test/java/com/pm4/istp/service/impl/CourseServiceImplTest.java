@@ -3,7 +3,9 @@ package com.pm4.istp.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,6 +55,7 @@ class CourseServiceImplTest {
   @Mock private CourseRepository courseRepository;
   @Mock private CourseEnrollmentRepository courseEnrollmentRepository;
   @Mock private ChallengeRepository challengeRepository;
+  @Mock private CourseInviteCodeHelper courseInviteCodeHelper;
 
   @InjectMocks private CourseServiceImpl courseService;
 
@@ -894,7 +897,7 @@ class CourseServiceImplTest {
     assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, nonOwnerId))
         .isInstanceOf(CourseAccessDeniedException.class);
 
-    verify(courseRepository, never()).save(any(Course.class));
+    verify(courseInviteCodeHelper, never()).assignInviteCode(any(), any());
   }
 
   @Test
@@ -921,7 +924,7 @@ class CourseServiceImplTest {
         .isInstanceOf(CourseAccessDeniedException.class)
         .hasMessageContaining("not published");
 
-    verify(courseRepository, never()).save(any(Course.class));
+    verify(courseInviteCodeHelper, never()).assignInviteCode(any(), any());
   }
 
   @Test
@@ -948,7 +951,7 @@ class CourseServiceImplTest {
         .isInstanceOf(CourseAccessDeniedException.class)
         .hasMessageContaining("public");
 
-    verify(courseRepository, never()).save(any(Course.class));
+    verify(courseInviteCodeHelper, never()).assignInviteCode(any(), any());
   }
 
   @Test
@@ -970,15 +973,51 @@ class CourseServiceImplTest {
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
+    Course updatedCourse = new Course();
+    updatedCourse.setId(courseId);
+    updatedCourse.setInviteCode("NEWCOD");
+
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(courseRepository.existsByInviteCode(any())).thenReturn(false);
-    when(courseRepository.save(any(Course.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
+    when(courseInviteCodeHelper.assignInviteCode(eq(courseId), any(String.class)))
+        .thenReturn(updatedCourse);
 
     Course result = courseService.regenerateInviteCode(courseId, ownerId);
 
-    assertThat(result.getInviteCode()).isNotNull().isNotEqualTo("OLDCOD").hasSize(6);
-    verify(courseRepository).save(course);
+    assertThat(result.getInviteCode()).isEqualTo("NEWCOD");
+    verify(courseInviteCodeHelper).assignInviteCode(eq(courseId), any(String.class));
+  }
+
+  @Test
+  void regenerateInviteCode_retriesOnInviteCodeConstraintViolation() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(true);
+    course.setPrivate(true);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    Course updatedCourse = new Course();
+    updatedCourse.setId(courseId);
+    updatedCourse.setInviteCode("RETCOD");
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseInviteCodeHelper.assignInviteCode(eq(courseId), any(String.class)))
+        .thenThrow(new DataIntegrityViolationException("uk_courses_invite_code"))
+        .thenReturn(updatedCourse);
+
+    Course result = courseService.regenerateInviteCode(courseId, ownerId);
+
+    assertThat(result.getInviteCode()).isEqualTo("RETCOD");
+    verify(courseInviteCodeHelper, times(2)).assignInviteCode(eq(courseId), any(String.class));
   }
 
   @Test
@@ -991,6 +1030,6 @@ class CourseServiceImplTest {
     assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
         .isInstanceOf(CourseNotFoundException.class);
 
-    verify(courseRepository, never()).save(any(Course.class));
+    verify(courseInviteCodeHelper, never()).assignInviteCode(any(), any());
   }
 }
