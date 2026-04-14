@@ -254,6 +254,12 @@ public class CourseController {
                 })
             .toList();
     dto.setParticipants(participants);
+    boolean callerIsInstructor =
+        course.getCourseInstructors().stream()
+            .anyMatch(ci -> ci.getInstructor().getId().equals(userId));
+    if (!callerIsInstructor) {
+      dto.setInviteCode(null);
+    }
     return dto;
   }
 

@@ -22,6 +22,9 @@ import tools.jackson.databind.ser.std.StdSerializer;
 import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
 import com.pm4.istp.domain.entites.Course;
+import com.pm4.istp.domain.entites.CourseInstructor;
+import com.pm4.istp.domain.entites.InstructorRoleEnum;
+import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.dto.CourseDetailResponseDto;
 import com.pm4.istp.dto.CreateCourseRequestDto;
 import com.pm4.istp.dto.CreateCourseResponseDto;
@@ -182,6 +185,61 @@ class CourseControllerTest {
         .perform(get("/api/v1/courses/{id}", courseId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(courseId.toString()));
+  }
+
+  @Test
+  void getCourse_whenCallerIsInstructor_includesInviteCode() throws Exception {
+    User instructor = new User();
+    instructor.setId(userId);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(instructor);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.addCourseInstructor(ownerRelation);
+
+    CourseDetailResponseDto dto = new CourseDetailResponseDto();
+    dto.setId(courseId);
+    dto.setInviteCode("INVITE");
+
+    when(courseService.getCourse(userId, courseId)).thenReturn(course);
+    when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
+    when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(0L);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(false);
+    when(courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId))
+        .thenReturn(List.of());
+
+    mockMvc
+        .perform(get("/api/v1/courses/{id}", courseId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.inviteCode").value("INVITE"));
+  }
+
+  @Test
+  void getCourse_whenCallerIsNotInstructor_nullsInviteCode() throws Exception {
+    Course course = new Course();
+    course.setId(courseId);
+    // no instructors → userId is not an instructor
+
+    CourseDetailResponseDto dto = new CourseDetailResponseDto();
+    dto.setId(courseId);
+    dto.setInviteCode("SECRET");
+
+    when(courseService.getCourse(userId, courseId)).thenReturn(course);
+    when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
+    when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(1L);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(true);
+    when(courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId))
+        .thenReturn(List.of());
+
+    mockMvc
+        .perform(get("/api/v1/courses/{id}", courseId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.inviteCode").doesNotExist());
   }
 
   @Test
@@ -429,9 +487,17 @@ class CourseControllerTest {
 
   @Test
   void regenerateInviteCode_returnsOk() throws Exception {
+    User instructor = new User();
+    instructor.setId(userId);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(instructor);
+
     Course course = new Course();
     course.setId(courseId);
     course.setInviteCode("NEWCOD");
+    course.addCourseInstructor(ownerRelation);
 
     CourseDetailResponseDto dto = new CourseDetailResponseDto();
     dto.setId(courseId);
