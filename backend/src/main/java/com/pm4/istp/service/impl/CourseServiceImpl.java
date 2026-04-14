@@ -125,7 +125,8 @@ public class CourseServiceImpl implements CourseService {
     if (course.isPrivate()) {
       boolean hasPrivateAccess =
           isInstructor(course, userId)
-              || courseEnrollmentRepository.existsByCourseIdAndParticipantId(course.getId(), userId);
+              || courseEnrollmentRepository.existsByCourseIdAndParticipantId(
+                  course.getId(), userId);
       if (!hasPrivateAccess) {
         throw new CourseAccessDeniedException(
             String.format("Course '%s' is private and can only be accessed via invite", courseId));
