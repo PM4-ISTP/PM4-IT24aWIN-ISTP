@@ -362,6 +362,7 @@ public class CourseServiceImpl implements CourseService {
   }
 
   @Override
+  @Transactional
   public Course regenerateInviteCode(UUID courseId, UUID userId) {
     Course course =
         courseRepository
