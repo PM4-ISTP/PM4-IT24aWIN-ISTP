@@ -81,6 +81,11 @@ export default async function CourseDetails({
             // challenges={undefined} ← wire up when challenge API is ready
           />
 
+          <CourseChallengeDetailsList
+            challenges={challengeDetails}
+            failedCount={failedChallengeCount}
+          />
+
           {/* About this course */}
           {sanitizedDescription && (
             <Box
