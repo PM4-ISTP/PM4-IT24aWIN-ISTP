@@ -1,12 +1,10 @@
 import sanitizeHtml from "sanitize-html";
 import { Alert, Box, Container, Group, Stack, Title } from "@mantine/core";
-import { getServerSession } from "next-auth";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseBannerHeader } from "@/src/components/CourseBannerHeader";
 import { CourseJourneyCard } from "@/src/components/CourseJourneyCard";
 import { fetchPublicCourse } from "@/src/lib/actions/courses";
-import { authOptions } from "@/src/lib/auth";
 import type { InstructorRoleEnum } from "@/src/types/course";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
@@ -18,7 +16,6 @@ export default async function CourseDetails({
   userId: string;
   backHref: string;
 }) {
-  const session = await getServerSession(authOptions);
   const result = await fetchPublicCourse(userId);
 
   if (!result.success) {
@@ -51,10 +48,6 @@ export default async function CourseDetails({
     : null;
   const owner =
     course.courseInstructors.find((ci) => ci.instructorRole === OWNER_ROLE)?.instructor ?? null;
-  const currentUserId = session?.userId ?? null;
-  const isInstructor = currentUserId
-    ? course.courseInstructors.some((ci) => ci.instructor.id === currentUserId)
-    : false;
 
   return (
     <>
@@ -66,7 +59,6 @@ export default async function CourseDetails({
         courseId={course.id}
         isEnrolled={course.isEnrolled}
         participantCount={course.participantCount}
-        isInstructor={isInstructor}
         isPublished={course.isPublished}
         backHref={backHref}
       />

@@ -12,7 +12,6 @@ interface CourseBannerHeaderProps {
   courseId: string;
   isEnrolled: boolean;
   participantCount: number;
-  isInstructor: boolean;
   isPublished: boolean;
   backHref: string;
 }
@@ -25,7 +24,6 @@ export function CourseBannerHeader({
   courseId,
   isEnrolled,
   participantCount,
-  isInstructor,
   isPublished,
   backHref,
 }: CourseBannerHeaderProps) {
@@ -137,7 +135,6 @@ export function CourseBannerHeader({
                 courseId={courseId}
                 isEnrolled={isEnrolled}
                 participantCount={participantCount}
-                isInstructor={isInstructor}
                 isPublished={isPublished}
               />
             </div>
