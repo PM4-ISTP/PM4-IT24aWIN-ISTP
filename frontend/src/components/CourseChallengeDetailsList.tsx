@@ -9,11 +9,11 @@ export type LoadedChallenge = {
   challenge?: ChallengeDetailResponseDto;
   errorMessage?: string;
   loadWasSuccessful: boolean;
-}
+};
 
 type CourseChallengeDetailsListProps = {
   loadedChallenges: LoadedChallenge[];
-}
+};
 
 function formatDateTime(value?: string): string {
   if (!value) return "n/a";
@@ -35,11 +35,9 @@ function formatText(value?: string | number): string {
   return String(value);
 }
 
-let idWhenLoadNotSuccessful = 0
+let idWhenLoadNotSuccessful = 0;
 
-export function CourseChallengeDetailsList({
-  loadedChallenges,
-}: CourseChallengeDetailsListProps) {
+export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallengeDetailsListProps) {
   return (
     <Stack gap="md">
       <Group justify="space-between" align="center">

@@ -2,7 +2,10 @@ import { Alert, Box, Container, Group, Stack, Title } from "@mantine/core";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseBannerHeader } from "@/src/components/CourseBannerHeader";
-import { CourseChallengeDetailsList, LoadedChallenge } from "@/src/components/CourseChallengeDetailsList";
+import {
+  CourseChallengeDetailsList,
+  LoadedChallenge,
+} from "@/src/components/CourseChallengeDetailsList";
 import { CourseJourneyCard } from "@/src/components/CourseJourneyCard";
 import { fetchChallenge } from "@/src/lib/actions/challenges";
 import { fetchPublicCourse } from "@/src/lib/actions/courses";
@@ -50,7 +53,9 @@ export default async function CourseDetails({
     challengeIds.map((challengeId) => fetchChallenge(challengeId))
   );
   const challengeRequestDetails: LoadedChallenge[] = challengeResults.flatMap((result) =>
-    result.success ? { challenge: result.data, loadWasSuccessful: result.success } : { errorMessage: result.error, loadWasSuccessful: result.success }
+    result.success
+      ? { challenge: result.data, loadWasSuccessful: result.success }
+      : { errorMessage: result.error, loadWasSuccessful: result.success }
   );
 
   return (
