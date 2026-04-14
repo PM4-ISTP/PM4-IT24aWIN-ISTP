@@ -134,8 +134,7 @@ public class CourseServiceImpl implements CourseService {
           String.format("Course '%s' is not open for enrollment", courseId));
     }
 
-    if (isInstructor(course, userId)
-        || courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)) {
+    if (courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)) {
       return course;
     }
 
