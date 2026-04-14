@@ -77,7 +77,12 @@ export default function JoinCourseModal({ opened, onClose }: JoinCourseModalProp
           placeholder="ABC123"
           value={code}
           onChange={(e) => {
-            setCode(e.currentTarget.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6));
+            setCode(
+              e.currentTarget.value
+                .toUpperCase()
+                .replace(/[^A-Z0-9]/g, "")
+                .slice(0, 6)
+            );
             if (error) setError(null);
           }}
           onKeyDown={(e) => {
