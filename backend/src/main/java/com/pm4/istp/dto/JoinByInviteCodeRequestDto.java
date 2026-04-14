@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 public class JoinByInviteCodeRequestDto {
   @NotBlank(message = "Invite code is required")
   @Size(min = 6, max = 6, message = "Invite code must be exactly 6 characters")
-  @Pattern(regexp = "[A-Z0-9]{6}", message = "Invite code must be 6 uppercase alphanumeric characters")
+  @Pattern(
+      regexp = "[A-Z0-9]{6}",
+      message = "Invite code must be 6 uppercase alphanumeric characters")
   private String code;
 }

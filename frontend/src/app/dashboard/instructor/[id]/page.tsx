@@ -33,7 +33,12 @@ import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/lib/courseText";
-import { deleteCourse, fetchCourse, regenerateInviteCode, updateCourse } from "@/src/lib/actions/courses";
+import {
+  deleteCourse,
+  fetchCourse,
+  regenerateInviteCode,
+  updateCourse,
+} from "@/src/lib/actions/courses";
 import { useToast } from "@/src/hooks/useToast";
 import { TOPIC_OPTIONS } from "@/src/lib/courseConstants";
 import type {
