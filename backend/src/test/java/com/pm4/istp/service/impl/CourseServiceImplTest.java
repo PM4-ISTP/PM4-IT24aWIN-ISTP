@@ -81,6 +81,7 @@ class CourseServiceImplTest {
             "Intro",
             "Learn the secure coding basics.",
             false,
+            false,
             null,
             null,
             null,
@@ -193,6 +194,7 @@ class CourseServiceImplTest {
             "Updated description",
             "Updated short description for the header.",
             true,
+            false,
             null,
             null,
             null,
@@ -263,6 +265,7 @@ class CourseServiceImplTest {
             "Secure Coding",
             "Long description",
             tooLong,
+            false,
             false,
             null,
             null,
@@ -430,7 +433,8 @@ class CourseServiceImplTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     CreateCourseRequest request =
-        new CreateCourseRequest("Solo Course", "Desc", "Short solo summary.", false, null, null, null, List.of());
+        new CreateCourseRequest(
+            "Solo Course", "Desc", "Short solo summary.", false, false, null, null, null, List.of());
 
     Course result = courseService.createCourse(ownerId, request);
 
@@ -492,7 +496,8 @@ class CourseServiceImplTest {
     course.addCourseInstructor(ownerRelation);
 
     UpdateCourseRequest request =
-        new UpdateCourseRequest("Title", "Desc", "Short summary.", false, null, null, null, List.of());
+        new UpdateCourseRequest(
+            "Title", "Desc", "Short summary.", false, false, null, null, null, List.of());
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
@@ -510,7 +515,8 @@ class CourseServiceImplTest {
     when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
 
     UpdateCourseRequest request =
-        new UpdateCourseRequest("Title", "Desc", "Short summary.", false, null, null, null, List.of());
+        new UpdateCourseRequest(
+            "Title", "Desc", "Short summary.", false, false, null, null, null, List.of());
 
     assertThatThrownBy(() -> courseService.updateCourse(userId, courseId, request))
         .isInstanceOf(CourseNotFoundException.class);

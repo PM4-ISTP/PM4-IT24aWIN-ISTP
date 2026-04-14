@@ -71,9 +71,10 @@ public class CourseServiceImpl implements CourseService {
     courseToCreate.setDescription(course.getDescription());
     courseToCreate.setShortDescription(normalizeShortDescription(course.getShortDescription()));
     courseToCreate.setPublished(course.isPublished());
+    courseToCreate.setPrivate(course.isPrivate());
     courseToCreate.setImageUrl(course.getImageUrl());
     courseToCreate.setTopic(course.getTopic());
-    if (course.isPublished()) {
+    if (course.isPublished() && course.isPrivate()) {
       courseToCreate.setInviteCode(generateUniqueInviteCode());
     }
 
@@ -118,6 +119,17 @@ public class CourseServiceImpl implements CourseService {
 
     if (!course.isPublished()) {
       verifyInstructor(course, userId);
+      return course;
+    }
+
+    if (course.isPrivate()) {
+      boolean hasPrivateAccess =
+          isInstructor(course, userId)
+              || courseEnrollmentRepository.existsByCourseIdAndParticipantId(course.getId(), userId);
+      if (!hasPrivateAccess) {
+        throw new CourseAccessDeniedException(
+            String.format("Course '%s' is private and can only be accessed via invite", courseId));
+      }
     }
 
     return course;
@@ -141,6 +153,11 @@ public class CourseServiceImpl implements CourseService {
     if (!course.isPublished()) {
       throw new CourseAccessDeniedException(
           String.format("Course '%s' is not open for enrollment", courseId));
+    }
+
+    if (course.isPrivate()) {
+      throw new CourseAccessDeniedException(
+          String.format("Course '%s' is private and can only be joined via invite code", courseId));
     }
 
     if (isInstructor(course, userId)
@@ -179,13 +196,16 @@ public class CourseServiceImpl implements CourseService {
     course.setTopic(request.getTopic());
 
     boolean wasPublished = course.isPublished();
+    boolean wasPrivate = course.isPrivate();
     boolean willBePublished = request.isPublished();
-    if (!wasPublished && willBePublished) {
+    boolean willBePrivate = request.isPrivate();
+    if (willBePublished && willBePrivate && (!wasPublished || !wasPrivate)) {
       course.setInviteCode(generateUniqueInviteCode());
-    } else if (wasPublished && !willBePublished) {
+    } else if (!willBePublished || !willBePrivate) {
       course.setInviteCode(null);
     }
     course.setPublished(willBePublished);
+    course.setPrivate(willBePrivate);
 
     // Diff instructor list: preserve OWNER, update COLLABORATORs
     Set<UUID> requestedInstructorIds =
@@ -341,17 +361,22 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional
-  public Course regenerateInviteCode(UUID courseId, UUID instructorId) {
+  public Course regenerateInviteCode(UUID courseId, UUID userId) {
     Course course =
         courseRepository
             .findById(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
-    verifyInstructor(course, instructorId);
+    verifyOwner(course, userId);
 
     if (!course.isPublished()) {
       throw new CourseAccessDeniedException(
           String.format("Course '%s' is not published; cannot regenerate invite code", courseId));
+    }
+
+    if (!course.isPrivate()) {
+      throw new CourseAccessDeniedException(
+          String.format("Course '%s' is public; invite code regeneration is disabled", courseId));
     }
 
     course.setInviteCode(generateUniqueInviteCode());

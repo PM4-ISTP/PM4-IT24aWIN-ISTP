@@ -130,7 +130,8 @@ class CourseControllerTest {
     when(courseMapper.toDto(course)).thenReturn(dto);
 
     CreateCourseRequestDto requestDto =
-        new CreateCourseRequestDto("Secure Coding", "Desc", "Short desc.", false, null, null, List.of());
+        new CreateCourseRequestDto(
+            "Secure Coding", "Desc", "Short desc.", false, false, null, null, List.of());
 
     mockMvc
         .perform(
@@ -145,7 +146,7 @@ class CourseControllerTest {
   @Test
   void createCourse_whenTitleBlank_returnsBadRequest() throws Exception {
     CreateCourseRequestDto requestDto =
-        new CreateCourseRequestDto("", "Desc", "Short desc.", false, null, null, List.of());
+        new CreateCourseRequestDto("", "Desc", "Short desc.", false, false, null, null, List.of());
 
     mockMvc
         .perform(
@@ -227,7 +228,7 @@ class CourseControllerTest {
 
     UpdateCourseRequestDto requestDto =
         new UpdateCourseRequestDto(
-            "Updated Title", "Desc", "Short summary.", false, null, null, List.of());
+            "Updated Title", "Desc", "Short summary.", false, false, null, null, List.of());
 
     mockMvc
         .perform(

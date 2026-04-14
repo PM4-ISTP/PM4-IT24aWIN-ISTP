@@ -30,5 +30,5 @@ public interface CourseService {
 
   Course joinByInviteCode(String code, UUID studentId);
 
-  Course regenerateInviteCode(UUID courseId, UUID instructorId);
+  Course regenerateInviteCode(UUID courseId, UUID userId);
 }

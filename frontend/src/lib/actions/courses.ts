@@ -22,6 +22,7 @@ export async function createCourse(
       description: dto.description,
       shortDescription: dto.shortDescription,
       isPublished: dto.isPublished,
+      isPrivate: dto.isPrivate,
       imageUrl: dto.imageUrl,
       topic: dto.topic,
       instructors: dto.collaboratorIds.map((id) => ({
@@ -129,6 +130,7 @@ export async function updateCourse(
       description: dto.description,
       shortDescription: dto.shortDescription,
       isPublished: dto.isPublished,
+      isPrivate: dto.isPrivate,
       imageUrl: dto.imageUrl,
       topic: dto.topic,
       instructors: dto.collaboratorIds.map((cid) => ({

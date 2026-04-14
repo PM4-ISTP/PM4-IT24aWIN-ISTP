@@ -75,6 +75,7 @@ export default function EditCourse() {
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
   const [isPublished, setIsPublished] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [topic, setTopic] = useState<string | null>(null);
   const [course, setCourse] = useState<CourseDetailResponseDto | null>(null);
@@ -123,6 +124,7 @@ export default function EditCourse() {
       setShortDescription(course.shortDescription ?? "");
       setDescription(course.description ?? "");
       setIsPublished(course.isPublished);
+      setIsPrivate(course.isPrivate);
       setImageUrl(course.imageUrl ?? "");
       setTopic(course.topic ?? null);
       setInviteCode(course.inviteCode ?? null);
@@ -188,6 +190,7 @@ export default function EditCourse() {
       description,
       shortDescription: normalizedShortDescription,
       isPublished,
+      isPrivate,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
       collaboratorIds: selectedInstructors,
@@ -239,6 +242,11 @@ export default function EditCourse() {
   }
 
   async function handleRegenerate() {
+    if (!isOwner) {
+      setRegenerateError("Only the course owner can regenerate the invite code.");
+      return;
+    }
+
     setIsRegenerating(true);
     setRegenerateError(null);
 
@@ -471,6 +479,24 @@ export default function EditCourse() {
                   }}
                 />
 
+                <Switch
+                  label="Private Course (invite-code only)"
+                  checked={isPrivate}
+                  onChange={(e) => setIsPrivate(e.currentTarget.checked)}
+                  size="md"
+                  description="Private courses are hidden from catalog and can only be joined by invite code."
+                  styles={{
+                    label: { color: "#e2e8f0", fontWeight: 500 },
+                    description: { color: "#94a3b8" },
+                    track: {
+                      backgroundColor: isPrivate ? "#7c3aed" : "rgba(255,255,255,0.15)",
+                      borderColor: isPrivate ? "#7c3aed" : "rgba(255,255,255,0.2)",
+                      cursor: "pointer",
+                    },
+                    thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },
+                  }}
+                />
+
                 <CourseChallengeManager
                   challenges={courseChallenges}
                   onChange={setCourseChallenges}
@@ -511,7 +537,7 @@ export default function EditCourse() {
                 participants={course?.participants ?? []}
               />
 
-              {isPublished && (
+              {isPublished && isPrivate && (
                 <Box
                   style={{
                     background: "rgba(255,255,255,0.04)",
@@ -583,34 +609,36 @@ export default function EditCourse() {
                       </Alert>
                     )}
 
-                    <Button
-                      variant="outline"
-                      size="xs"
-                      radius="md"
-                      loading={isRegenerating}
-                      disabled={isRegenerating}
-                      onClick={() => void handleRegenerate()}
-                      leftSection={
-                        <span
-                          className="material-symbols-outlined"
-                          style={{
-                            fontSize: "0.95rem",
-                            lineHeight: 1,
-                            fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
-                          }}
-                        >
-                          refresh
-                        </span>
-                      }
-                      style={{
-                        borderColor: "rgba(255,255,255,0.12)",
-                        color: "#e2e8f0",
-                        background: "rgba(255,255,255,0.04)",
-                        alignSelf: "flex-start",
-                      }}
-                    >
-                      Regenerate code
-                    </Button>
+                    {isOwner && (
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        radius="md"
+                        loading={isRegenerating}
+                        disabled={isRegenerating}
+                        onClick={() => void handleRegenerate()}
+                        leftSection={
+                          <span
+                            className="material-symbols-outlined"
+                            style={{
+                              fontSize: "0.95rem",
+                              lineHeight: 1,
+                              fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
+                            }}
+                          >
+                            refresh
+                          </span>
+                        }
+                        style={{
+                          borderColor: "rgba(255,255,255,0.12)",
+                          color: "#e2e8f0",
+                          background: "rgba(255,255,255,0.04)",
+                          alignSelf: "flex-start",
+                        }}
+                      >
+                        Regenerate code
+                      </Button>
+                    )}
                   </Stack>
                 </Box>
               )}

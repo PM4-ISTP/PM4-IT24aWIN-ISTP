@@ -20,6 +20,9 @@ public class CreateCourseResponseDto {
   @JsonProperty("isPublished")
   private boolean isPublished;
 
+  @JsonProperty("isPrivate")
+  private boolean isPrivate;
+
   private List<CreateCourseInstructorResponseDto> courseInstructors;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;

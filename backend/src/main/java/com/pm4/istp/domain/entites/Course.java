@@ -37,6 +37,9 @@ public class Course {
   @Column(name = "isPublished", nullable = false)
   private boolean isPublished;
 
+  @Column(name = "is_private", nullable = false, columnDefinition = "boolean default false")
+  private boolean isPrivate;
+
   @Column(name = "image_url", nullable = true)
   private String imageUrl;
 
