@@ -3,7 +3,9 @@ import { Alert, Box, Container, Group, Stack, Title } from "@mantine/core";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseBannerHeader } from "@/src/components/CourseBannerHeader";
+import { CourseChallengeDetailsList } from "@/src/components/CourseChallengeDetailsList";
 import { CourseJourneyCard } from "@/src/components/CourseJourneyCard";
+import { fetchChallenge } from "@/src/lib/actions/challenges";
 import { fetchPublicCourse } from "@/src/lib/actions/courses";
 import type { InstructorRoleEnum } from "@/src/types/course";
 
@@ -50,6 +52,10 @@ export default async function CourseDetails({
     : null;
   const owner =
     course.courseInstructors.find((ci) => ci.instructorRole === OWNER_ROLE)?.instructor ?? null;
+  const challengeIds = (course.courseChallenges ?? []).map((c) => c.challengeId);
+  const challengeResults = await Promise.all(challengeIds.map((challengeId) => fetchChallenge(challengeId)));
+  const challengeDetails = challengeResults.flatMap((result) => (result.success ? [result.data] : []));
+  const failedChallengeCount = challengeResults.length - challengeDetails.length;
 
   return (
     <>
