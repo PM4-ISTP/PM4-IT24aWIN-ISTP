@@ -1,13 +1,18 @@
 import sanitizeHtml from "sanitize-html";
-import { Alert, Badge, Box, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Badge, Box, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import type { components } from "@/src/lib/api/schema";
 import { getDifficultyColor, getStatusColor } from "@/src/lib/challengeConstants";
 
 type ChallengeDetailResponseDto = components["schemas"]["ChallengeDetailResponseDto"];
 
-interface CourseChallengeDetailsListProps {
-  challenges: ChallengeDetailResponseDto[];
-  failedCount?: number;
+export type LoadedChallenge = {
+  challenge?: ChallengeDetailResponseDto;
+  errorMessage?: string;
+  loadWasSuccessful: boolean;
+}
+
+type CourseChallengeDetailsListProps = {
+  loadedChallenges: LoadedChallenge[];
 }
 
 function formatDateTime(value?: string): string {
@@ -30,32 +35,43 @@ function formatText(value?: string | number): string {
   return String(value);
 }
 
+let idWhenLoadNotSuccessful = 0
+
 export function CourseChallengeDetailsList({
-  challenges,
-  failedCount = 0,
+  loadedChallenges,
 }: CourseChallengeDetailsListProps) {
   return (
     <Stack gap="md">
       <Group justify="space-between" align="center">
         <Title order={3}>Course Challenges</Title>
         <Text size="sm" c="dimmed">
-          {challenges.length} loaded
+          {loadedChallenges.length} challenges
         </Text>
       </Group>
 
-      {failedCount > 0 && (
-        <Alert color="yellow" title="Some challenge details could not be loaded">
-          {failedCount} challenge{failedCount === 1 ? "" : "s"} failed to load.
-        </Alert>
-      )}
-
-      {challenges.length === 0 ? (
+      {loadedChallenges.length === 0 ? (
         <Text size="sm" c="dimmed">
           No challenges assigned to this course.
         </Text>
       ) : (
         <Stack gap="sm">
-          {challenges.map((challenge, index) => {
+          {loadedChallenges.map((loadedChallenge, index) => {
+            if (!loadedChallenge.loadWasSuccessful) {
+              return (
+                <Paper
+                  key={idWhenLoadNotSuccessful++}
+                  p="md"
+                  radius="md"
+                  withBorder
+                  style={{ background: "rgba(255,255,255,0.02)" }}
+                >
+                  <Text mb={30}>Could not load this challenge.</Text>
+                  <Text>Reason: {loadedChallenge.errorMessage}</Text>
+                </Paper>
+              );
+            }
+
+            const challenge = loadedChallenge.challenge!;
             const sanitizedDescription = challenge.description
               ? sanitizeHtml(challenge.description, {
                   allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2"]),

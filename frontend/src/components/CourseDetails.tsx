@@ -2,7 +2,7 @@ import { Alert, Box, Container, Group, Stack, Title } from "@mantine/core";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseBannerHeader } from "@/src/components/CourseBannerHeader";
-import { CourseChallengeDetailsList } from "@/src/components/CourseChallengeDetailsList";
+import { CourseChallengeDetailsList, LoadedChallenge } from "@/src/components/CourseChallengeDetailsList";
 import { CourseJourneyCard } from "@/src/components/CourseJourneyCard";
 import { fetchChallenge } from "@/src/lib/actions/challenges";
 import { fetchPublicCourse } from "@/src/lib/actions/courses";
@@ -49,10 +49,9 @@ export default async function CourseDetails({
   const challengeResults = await Promise.all(
     challengeIds.map((challengeId) => fetchChallenge(challengeId))
   );
-  const challengeDetails = challengeResults.flatMap((result) =>
-    result.success ? [result.data] : []
+  const challengeRequestDetails: LoadedChallenge[] = challengeResults.flatMap((result) =>
+    result.success ? { challenge: result.data, loadWasSuccessful: result.success } : { errorMessage: result.error, loadWasSuccessful: result.success }
   );
-  const failedChallengeCount = challengeResults.length - challengeDetails.length;
 
   return (
     <>
@@ -78,10 +77,7 @@ export default async function CourseDetails({
             // challenges={undefined} ← wire up when challenge API is ready
           />
 
-          <CourseChallengeDetailsList
-            challenges={challengeDetails}
-            failedCount={failedChallengeCount}
-          />
+          <CourseChallengeDetailsList loadedChallenges={challengeRequestDetails} />
 
           {/* About this course */}
           {sanitizedDescription && (
