@@ -87,11 +87,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
               from CourseEnrollment eFilter
               where eFilter.course = c and eFilter.participant.id = :userId
             ))
-            or exists (
-              select 1
-              from CourseInstructor ciFilter
-              where ciFilter.course = c and ciFilter.instructor.id = :userId
-            )
           group by c.id, c.title, c.description, c.shortDescription, c.isPublished,
             c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty,
             ownerUser.name, ownerUser.picture, ownerUser.title
@@ -106,11 +101,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
               from CourseEnrollment eFilter
               where eFilter.course = c and eFilter.participant.id = :userId
             ))
-            or exists (
-              select 1
-              from CourseInstructor ciFilter
-              where ciFilter.course = c and ciFilter.instructor.id = :userId
-            )
           """)
   Page<ListCourseResponseDto> findListEnrollmentsForUser(
       @Param("userId") UUID userId, Pageable pageable);
