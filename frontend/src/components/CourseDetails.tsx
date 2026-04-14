@@ -1,4 +1,3 @@
-import sanitizeHtml from "sanitize-html";
 import { Alert, Box, Container, Group, Stack, Title } from "@mantine/core";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
@@ -8,6 +7,7 @@ import { CourseJourneyCard } from "@/src/components/CourseJourneyCard";
 import { fetchChallenge } from "@/src/lib/actions/challenges";
 import { fetchPublicCourse } from "@/src/lib/actions/courses";
 import type { InstructorRoleEnum } from "@/src/types/course";
+import { getSanitizedHtml } from "@/src/lib/utils";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 
@@ -41,15 +41,7 @@ export default async function CourseDetails({
   }
 
   const course = result.data;
-  const sanitizedDescription = course.description
-    ? sanitizeHtml(course.description, {
-        allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2"]),
-        allowedAttributes: {
-          ...sanitizeHtml.defaults.allowedAttributes,
-          img: ["src", "alt", "width", "height"],
-        },
-      })
-    : null;
+  const sanitizedDescription = course.description === null ? "" : getSanitizedHtml(course.description);
   const owner =
     course.courseInstructors.find((ci) => ci.instructorRole === OWNER_ROLE)?.instructor ?? null;
   const challengeIds = (course.courseChallenges ?? []).map((c) => c.challengeId);
