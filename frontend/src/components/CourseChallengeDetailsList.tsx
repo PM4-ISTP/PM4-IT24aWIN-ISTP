@@ -68,7 +68,7 @@ export function CourseChallengeDetailsList({
 
             return (
               <Paper
-                key={challenge.id ?? `${challenge.title ?? "challenge"}-${index}`}
+                key={challenge.id}
                 p="md"
                 radius="md"
                 withBorder
