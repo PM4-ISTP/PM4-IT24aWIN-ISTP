@@ -26,6 +26,7 @@ import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.exception.InvalidCourseChallengeException;
 import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
+import com.pm4.istp.exception.InvalidInviteCodeException;
 import com.pm4.istp.repositories.ChallengeRepository;
 import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.repositories.CourseRepository;
@@ -746,5 +747,250 @@ class CourseServiceImplTest {
     Course updated = courseService.updateCourseChallenges(ownerId, courseId, List.of());
 
     assertThat(updated.getCourseChallenges()).isEmpty();
+  }
+
+  // ── joinByInviteCode ───────────────────────────────────────────────────────
+
+  @Test
+  void joinByInviteCode_withInvalidCode_throwsInvalidInviteCodeException() {
+    UUID studentId = UUID.randomUUID();
+
+    User student = new User();
+    student.setId(studentId);
+
+    when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
+    when(courseRepository.findByInviteCode("BADCOD")).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> courseService.joinByInviteCode("BADCOD", studentId))
+        .isInstanceOf(InvalidInviteCodeException.class);
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void joinByInviteCode_whenCourseNotPublished_throwsInvalidInviteCodeException() {
+    UUID studentId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User student = new User();
+    student.setId(studentId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(true);
+
+    when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
+    when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.joinByInviteCode("ABC123", studentId))
+        .isInstanceOf(InvalidInviteCodeException.class);
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void joinByInviteCode_withValidCodeAndPublishedCourse_enrollsParticipant() {
+    UUID studentId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User student = new User();
+    student.setId(studentId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(true);
+    course.setPrivate(true);
+
+    when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
+    when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, studentId))
+        .thenReturn(false);
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    Course result = courseService.joinByInviteCode("ABC123", studentId);
+
+    assertThat(result.getCourseEnrollments()).hasSize(1);
+    assertThat(result.getCourseEnrollments().getFirst().getParticipant().getId())
+        .isEqualTo(studentId);
+    verify(courseRepository).save(course);
+  }
+
+  @Test
+  void joinByInviteCode_whenAlreadyEnrolled_isIdempotent() {
+    UUID studentId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User student = new User();
+    student.setId(studentId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(true);
+    course.setPrivate(true);
+
+    when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
+    when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, studentId))
+        .thenReturn(true);
+
+    Course result = courseService.joinByInviteCode("ABC123", studentId);
+
+    assertThat(result).isSameAs(course);
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void joinByInviteCode_whenCallerIsInstructor_isIdempotent() {
+    UUID instructorId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(true);
+    course.setPrivate(true);
+
+    CourseInstructor relation = new CourseInstructor();
+    relation.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
+    relation.setInstructor(instructor);
+    course.addCourseInstructor(relation);
+
+    when(userRepository.findById(instructorId)).thenReturn(Optional.of(instructor));
+    when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
+
+    Course result = courseService.joinByInviteCode("ABC123", instructorId);
+
+    assertThat(result).isSameAs(course);
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  // ── regenerateInviteCode ───────────────────────────────────────────────────
+
+  @Test
+  void regenerateInviteCode_whenNotOwner_throwsCourseAccessDeniedException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID nonOwnerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(true);
+    course.setPrivate(true);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, nonOwnerId))
+        .isInstanceOf(CourseAccessDeniedException.class);
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void regenerateInviteCode_whenCourseNotPublished_throwsCourseAccessDeniedException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(true);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
+        .isInstanceOf(CourseAccessDeniedException.class)
+        .hasMessageContaining("not published");
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void regenerateInviteCode_whenCourseIsNotPrivate_throwsCourseAccessDeniedException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(true);
+    course.setPrivate(false);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
+        .isInstanceOf(CourseAccessDeniedException.class)
+        .hasMessageContaining("public");
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void regenerateInviteCode_whenOwnerAndPrivatePublished_regeneratesCode() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(true);
+    course.setPrivate(true);
+    course.setInviteCode("OLDCOD");
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.existsByInviteCode(any())).thenReturn(false);
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    Course result = courseService.regenerateInviteCode(courseId, ownerId);
+
+    assertThat(result.getInviteCode()).isNotNull().isNotEqualTo("OLDCOD").hasSize(6);
+    verify(courseRepository).save(course);
+  }
+
+  @Test
+  void regenerateInviteCode_whenCourseNotFound_throwsCourseNotFoundException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
+        .isInstanceOf(CourseNotFoundException.class);
+
+    verify(courseRepository, never()).save(any(Course.class));
   }
 }

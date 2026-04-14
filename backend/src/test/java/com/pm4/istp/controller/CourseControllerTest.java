@@ -25,10 +25,12 @@ import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.dto.CourseDetailResponseDto;
 import com.pm4.istp.dto.CreateCourseRequestDto;
 import com.pm4.istp.dto.CreateCourseResponseDto;
+import com.pm4.istp.dto.JoinByInviteCodeRequestDto;
 import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.dto.UpdateCourseRequestDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.InvalidInviteCodeException;
 import com.pm4.istp.mappers.CourseMapper;
 import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.service.CourseService;
@@ -365,6 +367,111 @@ class CourseControllerTest {
         .perform(post("/api/v1/courses/catalog/{id}/enroll", courseId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(courseId.toString()));
+  }
+
+  // ── joinByInviteCode ──────────────────────────────────────────────────────
+
+  @Test
+  void joinByInviteCode_returnsOk() throws Exception {
+    Course course = new Course();
+    course.setId(courseId);
+
+    CourseDetailResponseDto dto = new CourseDetailResponseDto();
+    dto.setId(courseId);
+
+    when(courseService.joinByInviteCode(eq("ABC123"), eq(userId))).thenReturn(course);
+    when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
+    when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(1L);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(true);
+
+    JoinByInviteCodeRequestDto requestDto = new JoinByInviteCodeRequestDto("ABC123");
+
+    mockMvc
+        .perform(
+            post("/api/v1/courses/catalog/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(courseId.toString()));
+  }
+
+  @Test
+  void joinByInviteCode_withInvalidCode_returnsNotFound() throws Exception {
+    when(courseService.joinByInviteCode(eq("BADCOD"), eq(userId)))
+        .thenThrow(new InvalidInviteCodeException("Invalid invite code"));
+
+    JoinByInviteCodeRequestDto requestDto = new JoinByInviteCodeRequestDto("BADCOD");
+
+    mockMvc
+        .perform(
+            post("/api/v1/courses/catalog/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.error").value("Invalid invite code"));
+  }
+
+  @Test
+  void joinByInviteCode_withBlankCode_returnsBadRequest() throws Exception {
+    JoinByInviteCodeRequestDto requestDto = new JoinByInviteCodeRequestDto("");
+
+    mockMvc
+        .perform(
+            post("/api/v1/courses/catalog/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").exists());
+  }
+
+  // ── regenerateInviteCode ──────────────────────────────────────────────────
+
+  @Test
+  void regenerateInviteCode_returnsOk() throws Exception {
+    Course course = new Course();
+    course.setId(courseId);
+    course.setInviteCode("NEWCOD");
+
+    CourseDetailResponseDto dto = new CourseDetailResponseDto();
+    dto.setId(courseId);
+    dto.setInviteCode("NEWCOD");
+
+    when(courseService.regenerateInviteCode(courseId, userId)).thenReturn(course);
+    when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
+    when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(0L);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(false);
+    when(courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId))
+        .thenReturn(List.of());
+
+    mockMvc
+        .perform(post("/api/v1/courses/{id}/invite-code/regenerate", courseId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(courseId.toString()))
+        .andExpect(jsonPath("$.inviteCode").value("NEWCOD"));
+  }
+
+  @Test
+  void regenerateInviteCode_whenNotOwner_returnsForbidden() throws Exception {
+    when(courseService.regenerateInviteCode(courseId, userId))
+        .thenThrow(new CourseAccessDeniedException("not owner"));
+
+    mockMvc
+        .perform(post("/api/v1/courses/{id}/invite-code/regenerate", courseId))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.error").value("Access denied"));
+  }
+
+  @Test
+  void regenerateInviteCode_whenCourseNotFound_returnsNotFound() throws Exception {
+    when(courseService.regenerateInviteCode(courseId, userId))
+        .thenThrow(new CourseNotFoundException("not found"));
+
+    mockMvc
+        .perform(post("/api/v1/courses/{id}/invite-code/regenerate", courseId))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.error").value("Course not found"));
   }
 
   // ── Jackson helper ────────────────────────────────────────────────────────
