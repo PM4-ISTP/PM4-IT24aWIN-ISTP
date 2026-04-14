@@ -124,9 +124,7 @@ export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallenge
                         dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
                       />
                     ) : (
-                      <Text size="sm" c="dimmed">
-                        n/a
-                      </Text>
+                      <Text size="sm" c="dimmed"></Text>
                     )}
                   </Box>
                 </Stack>
