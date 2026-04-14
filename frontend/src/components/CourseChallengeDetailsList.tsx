@@ -90,19 +90,18 @@ export function CourseChallengeDetailsList({
                   </Group>
 
                   <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
-                    <Text size="sm">ID: {formatText(challenge.id)}</Text>
-                    <Text size="sm">Max Score: {formatText(challenge.maxScore)}</Text>
+                    <Text size="sm">
+                      <strong>Short</strong> Description: {formatText(challenge.shortDescription)}
+                    </Text>
                     <Text size="sm">Creator: {formatText(challenge.creator?.name)}</Text>
                     <Text size="sm">Created At: {formatDateTime(challenge.createdAt)}</Text>
                     <Text size="sm">Updated At: {formatDateTime(challenge.updatedAt)}</Text>
-                    <Text size="sm">
-                      Short Description: {formatText(challenge.shortDescription)}
-                    </Text>
+                    <Text size="sm">Max Score: {formatText(challenge.maxScore)}</Text>
                   </SimpleGrid>
 
                   <Box>
-                    <Text size="sm" fw={600} mb={4}>
-                      Description
+                    <Text size="sm" fw={600} mt={30} mb={4}>
+                      Description:
                     </Text>
                     {sanitizedDescription ? (
                       <Box
