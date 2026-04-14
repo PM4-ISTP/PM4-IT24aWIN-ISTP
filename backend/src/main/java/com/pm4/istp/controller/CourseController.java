@@ -257,7 +257,10 @@ public class CourseController {
     return dto;
   }
 
-  /** Public catalog detail – omits participant list and invite code; returns only count and enrollment status. */
+  /**
+   * Public catalog detail – omits participant list and invite code; returns only count and
+   * enrollment status.
+   */
   private CourseDetailResponseDto toPublicCourseDetailResponseDto(Course course, UUID userId) {
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
     UUID courseId = course.getId();
