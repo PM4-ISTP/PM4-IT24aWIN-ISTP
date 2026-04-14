@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AdminConfigRequest {
-  @Pattern(regexp = "^[0-9]+$", message = "CPU limit must be a positive integer")
+  @Pattern(regexp = "^\\d+$", message = "CPU limit must be a positive integer")
   private String cpuLimit;
 
   @Pattern(
-      regexp = "^[0-9]+(Mi|Gi|Ti)?$",
+      regexp = "^\\d+(Mi|Gi|Ti)?$",
       message = "Memory limit must be a number followed by optional unit (Mi, Gi, or Ti)")
   private String memoryLimit;
 

@@ -111,7 +111,17 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
             href="/dashboard/instructor"
             label="Dashboard"
             icon="dashboard"
-            active={pathname.startsWith("/dashboard/instructor")}
+            active={
+              pathname === "/dashboard/instructor" ||
+              (pathname.startsWith("/dashboard/instructor/") &&
+                !pathname.startsWith("/dashboard/instructor/challenges"))
+            }
+          />
+          <NavItem
+            href="/dashboard/instructor/challenges"
+            label="Challenges"
+            icon="flag"
+            active={pathname.startsWith("/dashboard/instructor/challenges")}
           />
         </>
       )}

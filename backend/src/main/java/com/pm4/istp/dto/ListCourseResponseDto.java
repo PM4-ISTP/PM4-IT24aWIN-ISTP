@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.pm4.istp.domain.entites.CourseDifficultyEnum;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
+@Builder
 public class ListCourseResponseDto {
   private UUID id;
   private String title;
@@ -29,27 +31,9 @@ public class ListCourseResponseDto {
   private String ownerPicture;
   private String ownerTitle;
 
-  // Constructor for queries that don't include ownerName (instructor dashboard)
-  public ListCourseResponseDto(
-      UUID id,
-      String title,
-      String description,
-      String shortDescription,
-      boolean isPublished,
-      long instructorCount,
-      LocalDateTime createdAt,
-      LocalDateTime updatedAt) {
-    this.id = id;
-    this.title = title;
-    this.description = description;
-    this.shortDescription = shortDescription;
-    this.isPublished = isPublished;
-    this.instructorCount = instructorCount;
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
-  }
-
-  // Constructor for catalog queries that include owner info
+  // Constructor for JPQL "new" expressions — parameter order must match the queries in
+  // CourseRepository
+  @SuppressWarnings("java:S107")
   public ListCourseResponseDto(
       UUID id,
       String title,

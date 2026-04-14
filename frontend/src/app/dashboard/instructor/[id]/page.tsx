@@ -41,6 +41,11 @@ import type {
   CourseDetailResponseDto,
   InstructorRoleEnum,
 } from "@/src/types/course";
+import {
+  CourseChallengeManager,
+  type CourseChallengeEntry,
+} from "@/src/components/CourseChallengeManager";
+import { updateCourseChallenges } from "@/src/lib/actions/challenges";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 const COLLABORATOR_ROLE: InstructorRoleEnum = "COLLABORATOR";
@@ -76,6 +81,7 @@ export default function EditCourse() {
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [knownUsers, setKnownUsers] = useState<Record<string, CollaboratorUserResponseDto>>({});
   const [initialUsers, setInitialUsers] = useState<CollaboratorUserResponseDto[]>([]);
+  const [courseChallenges, setCourseChallenges] = useState<CourseChallengeEntry[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -134,6 +140,25 @@ export default function EditCourse() {
         )
       );
 
+      // Load course challenges
+      const cc = (course.courseChallenges ?? []).map(
+        (
+          c: {
+            challengeId: string;
+            challengeTitle: string;
+            difficulty: string;
+            orderIndex: number;
+          },
+          i: number
+        ) => ({
+          challengeId: c.challengeId,
+          challengeTitle: c.challengeTitle,
+          difficulty: c.difficulty,
+          orderIndex: c.orderIndex ?? i,
+        })
+      );
+      setCourseChallenges(cc);
+
       setLoading(false);
     }
 
@@ -168,10 +193,25 @@ export default function EditCourse() {
       collaboratorIds: selectedInstructors,
     });
 
+    if (!result.success) {
+      setIsSubmitting(false);
+      setFormError(result.error);
+      return;
+    }
+
+    // Save course challenges separately
+    const challengeResult = await updateCourseChallenges(
+      courseId,
+      courseChallenges.map((c) => ({
+        challengeId: c.challengeId,
+        orderIndex: c.orderIndex,
+      }))
+    );
+
     setIsSubmitting(false);
 
-    if (!result.success) {
-      setFormError(result.error);
+    if (!challengeResult.success) {
+      setFormError(challengeResult.error);
       return;
     }
 
@@ -429,6 +469,11 @@ export default function EditCourse() {
                     },
                     thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },
                   }}
+                />
+
+                <CourseChallengeManager
+                  challenges={courseChallenges}
+                  onChange={setCourseChallenges}
                 />
 
                 {formError && (

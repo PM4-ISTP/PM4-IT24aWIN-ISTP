@@ -38,6 +38,10 @@ public class User {
   private String title;
 
   @JsonIgnore
+  @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL)
+  private List<Challenge> creatorChallenges = new ArrayList<>();
+
+  @JsonIgnore
   @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL)
   private List<CourseInstructor> coursesInstructors = new ArrayList<>();
 

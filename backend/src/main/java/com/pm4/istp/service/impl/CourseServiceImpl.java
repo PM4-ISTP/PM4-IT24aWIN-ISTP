@@ -4,18 +4,23 @@ import com.pm4.istp.domain.CreateCourseInstructorRequest;
 import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseInstructorRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
+import com.pm4.istp.domain.entites.*;
 import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.domain.entites.CourseEnrollment;
 import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
 import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.domain.entites.UserRoleEnum;
+import com.pm4.istp.dto.CourseChallengeItemDto;
 import com.pm4.istp.dto.ListCourseResponseDto;
+import com.pm4.istp.exception.ChallengeNotFoundException;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.InvalidCourseChallengeException;
 import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
 import com.pm4.istp.exception.InvalidInviteCodeException;
 import com.pm4.istp.exception.UserNotFoundException;
+import com.pm4.istp.repositories.ChallengeRepository;
 import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
@@ -50,6 +55,7 @@ public class CourseServiceImpl implements CourseService {
   private final UserRepository userRepository;
   private final CourseRepository courseRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
+  private final ChallengeRepository challengeRepository;
 
   @Override
   @Transactional
@@ -219,6 +225,57 @@ public class CourseServiceImpl implements CourseService {
         collaborator.setInstructor(collaboratorUser);
         course.addCourseInstructor(collaborator);
       }
+    }
+
+    return courseRepository.save(course);
+  }
+
+  @Override
+  @Transactional
+  public Course updateCourseChallenges(
+      UUID userId, UUID courseId, List<CourseChallengeItemDto> challenges) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () ->
+                    new CourseNotFoundException(
+                        String.format("Course with ID '%s' not found", courseId)));
+    verifyInstructor(course, userId);
+
+    // Clear existing challenge assignments
+    course.getCourseChallenges().clear();
+
+    // Add new challenge assignments
+    for (CourseChallengeItemDto item : challenges) {
+      Challenge challenge =
+          challengeRepository
+              .findById(item.getChallengeId())
+              .orElseThrow(
+                  () ->
+                      new ChallengeNotFoundException(
+                          String.format(
+                              "Challenge with ID '%s' not found", item.getChallengeId())));
+
+      // DRAFT challenges cannot be added to any course, even by their creator
+      if (challenge.getStatus() == ChallengeStatusEnum.DRAFT) {
+        throw new InvalidCourseChallengeException(
+            String.format(
+                "Challenge '%s' is a draft and cannot be added to a course", challenge.getTitle()));
+      }
+
+      // Only allow adding own PRIVATE challenges or PUBLIC challenges
+      boolean isCreator = challenge.getCreator().getId().equals(userId);
+      boolean isPublic = challenge.getStatus() == ChallengeStatusEnum.PUBLIC;
+      if (!isCreator && !isPublic) {
+        throw new ChallengeNotFoundException(
+            String.format("Challenge with ID '%s' not found", item.getChallengeId()));
+      }
+
+      CourseChallenge courseChallenge = new CourseChallenge();
+      courseChallenge.setChallenge(challenge);
+      courseChallenge.setOrderIndex(item.getOrderIndex());
+      course.addCourseChallenge(courseChallenge);
     }
 
     return courseRepository.save(course);

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping(path = "/api/admin/config")
@@ -41,23 +42,23 @@ public class AdminConfigurationController {
    * @return ResponseEntity containing the stored AdminConfigResponse
    */
   @PostMapping
-  public ResponseEntity<?> uploadAndStoreAdminConfig(
+  public ResponseEntity<AdminConfigResponse> uploadAndStoreAdminConfig(
       @Valid @RequestBody AdminConfigRequest request) {
 
     if (request.getKubeconfig() == null) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Kubeconfig is required.");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kubeconfig is required.");
     }
 
     byte[] kubeconfigBytes;
     try {
       kubeconfigBytes = Base64.getDecoder().decode(request.getKubeconfig());
     } catch (IllegalArgumentException e) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Kubeconfig is not valid base64.");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kubeconfig is not valid base64.");
     }
 
     if (kubeconfigBytes.length > MAX_FILE_SIZE) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Kubeconfig file size exceeds 1 MB limit.");
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Kubeconfig file size exceeds 1 MB limit.");
     }
 
     com.pm4.istp.domain.AdminConfig adminConfig =
@@ -94,20 +95,21 @@ public class AdminConfigurationController {
   }
 
   @PutMapping
-  public ResponseEntity<?> updateAdminConfig(@Valid @RequestBody AdminConfigRequest request) {
+  public ResponseEntity<AdminConfigResponse> updateAdminConfig(
+      @Valid @RequestBody AdminConfigRequest request) {
 
     byte[] kubeconfigBytes = null;
     if (request.getKubeconfig() != null) {
       try {
         kubeconfigBytes = Base64.getDecoder().decode(request.getKubeconfig());
       } catch (IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body("Kubeconfig is not valid base64.");
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST, "Kubeconfig is not valid base64.");
       }
 
       if (kubeconfigBytes.length > MAX_FILE_SIZE) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body("Kubeconfig file size exceeds 1 MB limit.");
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST, "Kubeconfig file size exceeds 1 MB limit.");
       }
     }
 
@@ -126,7 +128,7 @@ public class AdminConfigurationController {
   }
 
   @DeleteMapping
-  public ResponseEntity<?> deleteAdminConfig() {
+  public ResponseEntity<Map<String, String>> deleteAdminConfig() {
     adminConfigurationService.deleteAdminConfiguration();
     return ResponseEntity.ok(Map.of("message", "Admin configuration deleted successfully"));
   }
