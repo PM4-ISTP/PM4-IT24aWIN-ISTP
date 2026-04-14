@@ -1,8 +1,11 @@
 package com.pm4.istp.controller;
 
 import com.pm4.istp.dto.ErrorDto;
+import com.pm4.istp.exception.ChallengeAccessDeniedException;
+import com.pm4.istp.exception.ChallengeNotFoundException;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
+import com.pm4.istp.exception.InvalidCourseChallengeException;
 import com.pm4.istp.exception.InvalidCourseCollaboratorException;
 import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
 import com.pm4.istp.exception.UserNotFoundException;
@@ -20,6 +23,23 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(ChallengeAccessDeniedException.class)
+  public ResponseEntity<ErrorDto> handleChallengeAccessDeniedException(
+      ChallengeAccessDeniedException ex) {
+    log.error("Caught ChallengeAccessDeniedException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Access denied");
+    return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
+  }
+
+  @ExceptionHandler(ChallengeNotFoundException.class)
+  public ResponseEntity<ErrorDto> handleChallengeNotFoundException(ChallengeNotFoundException ex) {
+    log.error("Caught ChallengeNotFoundException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Challenge not found");
+    return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
+  }
 
   @ExceptionHandler(CourseAccessDeniedException.class)
   public ResponseEntity<ErrorDto> handleCourseAccessDeniedException(
@@ -59,6 +79,15 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorDto> handleInvalidCourseShortDescriptionException(
       InvalidCourseShortDescriptionException ex) {
     log.warn("Caught InvalidCourseShortDescriptionException: {}", ex.getMessage());
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError(ex.getMessage());
+    return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(InvalidCourseChallengeException.class)
+  public ResponseEntity<ErrorDto> handleInvalidCourseChallengeException(
+      InvalidCourseChallengeException ex) {
+    log.warn("Caught InvalidCourseChallengeException: {}", ex.getMessage());
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError(ex.getMessage());
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
