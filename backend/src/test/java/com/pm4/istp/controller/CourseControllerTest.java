@@ -38,6 +38,8 @@ import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.mappers.CourseMapper;
 import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.service.CourseService;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -392,6 +394,7 @@ class CourseControllerTest {
 
     CourseDetailResponseDto dto = new CourseDetailResponseDto();
     dto.setId(courseId);
+    dto.setCourseInstructors(Collections.emptyList());
 
     when(courseService.enrollInCourse(userId, courseId)).thenReturn(course);
     when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
