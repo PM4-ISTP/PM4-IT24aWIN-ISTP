@@ -1,7 +1,8 @@
-import sanitizeHtml from "sanitize-html";
 import { Badge, Box, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import type { components } from "@/src/lib/api/schema";
 import { getDifficultyColor, getStatusColor } from "@/src/lib/challengeConstants";
+import PlayChallengeButton from "@/src/components/PlayChallengeButton";
+import { getSanitizedHtml } from "@/src/lib/utils";
 
 type ChallengeDetailResponseDto = components["schemas"]["ChallengeDetailResponseDto"];
 
@@ -70,15 +71,7 @@ export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallenge
             }
 
             const challenge = loadedChallenge.challenge!;
-            const sanitizedDescription = challenge.description
-              ? sanitizeHtml(challenge.description, {
-                  allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2"]),
-                  allowedAttributes: {
-                    ...sanitizeHtml.defaults.allowedAttributes,
-                    img: ["src", "alt", "width", "height"],
-                  },
-                })
-              : null;
+            const sanitizedDescription = challenge.description === undefined ? "" : getSanitizedHtml(challenge.description);
 
             return (
               <Paper
@@ -125,6 +118,8 @@ export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallenge
                       <Text size="sm" c="dimmed"></Text>
                     )}
                   </Box>
+
+                  <PlayChallengeButton condition={0} />
                 </Stack>
               </Paper>
             );
