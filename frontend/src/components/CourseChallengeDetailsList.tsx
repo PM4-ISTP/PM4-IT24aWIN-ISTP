@@ -104,9 +104,7 @@ export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallenge
                   </Group>
 
                   <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
-                    <Text size="sm">
-                      <strong>Short</strong> Description: {formatText(challenge.shortDescription)}
-                    </Text>
+                    <Text size="sm">Short Description: {formatText(challenge.shortDescription)}</Text>
                     <Text size="sm">Creator: {formatText(challenge.creator?.name)}</Text>
                     <Text size="sm">Created At: {formatDateTime(challenge.createdAt)}</Text>
                     <Text size="sm">Updated At: {formatDateTime(challenge.updatedAt)}</Text>
