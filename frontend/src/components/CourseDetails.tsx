@@ -11,9 +11,11 @@ const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 
 export default async function CourseDetails({
   userId,
+  backPageName,
   backHref,
 }: {
   userId: string;
+  backPageName: string;
   backHref: string;
 }) {
   const result = await fetchPublicCourse(userId);
@@ -25,7 +27,7 @@ export default async function CourseDetails({
           <Link href={backHref} style={{ textDecoration: "none" }}>
             <Group gap={6} style={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>
               <IconArrowLeft size={16} />
-              <span>Back to Catalog</span>
+              <span>Back to {backPageName}</span>
             </Group>
           </Link>
           <Alert color="red" title="Failed to load course">
@@ -60,6 +62,7 @@ export default async function CourseDetails({
         isEnrolled={course.isEnrolled}
         participantCount={course.participantCount}
         isPublished={course.isPublished}
+        backPageName={backPageName}
         backHref={backHref}
       />
 

@@ -13,6 +13,7 @@ interface CourseBannerHeaderProps {
   isEnrolled: boolean;
   participantCount: number;
   isPublished: boolean;
+  backPageName: string;
   backHref: string;
 }
 
@@ -25,6 +26,7 @@ export function CourseBannerHeader({
   isEnrolled,
   participantCount,
   isPublished,
+  backPageName,
   backHref,
 }: CourseBannerHeaderProps) {
   const previewText = getCoursePreviewText(shortDescription, description);
@@ -61,7 +63,7 @@ export function CourseBannerHeader({
           <Link href={backHref} style={{ textDecoration: "none" }}>
             <Group gap={6} style={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>
               <IconArrowLeft size={16} />
-              <span>Back to Catalog</span>
+              <span>Back to {backPageName}</span>
             </Group>
           </Link>
 
