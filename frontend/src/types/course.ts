@@ -1,4 +1,4 @@
-import { ChallengeDetailResponseDto } from "@/src/lib/actions/challenges";
+import type { ChallengeDetailResponseDto } from "@/src/lib/actions/challenges";
 
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
 export type PlatformRole = "ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT";

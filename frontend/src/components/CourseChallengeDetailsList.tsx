@@ -13,7 +13,7 @@ import {
 import { getDifficultyColor, getStatusColor } from "@/src/lib/challengeConstants";
 import PlayChallengeButton from "@/src/components/PlayChallengeButton";
 import { getSanitizedHtml } from "@/src/lib/utils";
-import { ChallengeDetailResponseDto } from "@/src/lib/actions/challenges";
+import type { ChallengeDetailResponseDto } from "@/src/lib/actions/challenges";
 
 function formatDateTime(value?: string): string {
   if (!value) return "n/a";
