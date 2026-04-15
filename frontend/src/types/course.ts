@@ -5,7 +5,7 @@ export type PlatformRole = "ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUD
 export type CourseDifficulty = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 
 export interface CourseUserSummary {
-  id: string;
+  id: string | null;
   name: string;
   email: string;
   username?: string | null;
@@ -77,7 +77,7 @@ export interface UpdateCourseDto {
 }
 
 export interface CourseInstructorResponseDto {
-  id: string;
+  id: string | null;
   instructorRole: InstructorRoleEnum;
   isAccepted: boolean;
   instructor: CourseUserSummary;
@@ -132,7 +132,7 @@ export interface PublicCourseDetailResponseDto {
   topic?: string | null;
   difficulty?: CourseDifficulty | null;
   courseInstructors: CourseInstructorResponseDto[];
-  participants: CourseParticipantDto[];
+  participants: null;
   courseChallenges: ChallengeDetailResponseDto[];
   createdAt: string;
   updatedAt: string;
