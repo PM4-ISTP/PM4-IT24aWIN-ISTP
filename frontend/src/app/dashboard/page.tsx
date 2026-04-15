@@ -1,12 +1,13 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
-import { Grid, GridCol, Group, RingProgress, Stack, Text, Box, Alert } from "@mantine/core";
+import { Grid, GridCol, Group, RingProgress, Stack, Text, Box, Alert, Title } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import DashboardStyles from "./DashboardStyles";
 import DashboardHero from "./DashboardHero";
 import { CourseGrid } from "@/src/components/CourseGrid";
-import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/lib/actions/courses";
+import { fetchEnrolledCoursesOfLoggedInUser, fetchPublicCourse } from "@/src/lib/actions/courses";
 import Link from "next/link";
+import { CourseChallengeDetailsList } from "@/src/components/CourseChallengeDetailsList";
 
 const sectionLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -22,6 +23,9 @@ export default async function Home() {
   const name = session?.user?.name ?? "there";
   const firstName = name.split(" ")[0];
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
+
+  // TODO: delete when using real data
+  const firstCourse = result.success ? await fetchPublicCourse(result.data.content[0].id) : null;
 
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-GB", {
@@ -107,6 +111,18 @@ export default async function Home() {
           </Stack>
         </GridCol>
       </Grid>
+      <Stack gap="sm" align="center">
+        <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>
+          Currently running Challenges
+        </Text>
+            {firstCourse && firstCourse.success ? (
+              <CourseChallengeDetailsList challenges={firstCourse.data.courseChallenges} title="" />
+            ) : (
+              <Alert color="red" title="Failed to load challenges">
+                {firstCourse?.error}
+              </Alert>
+            )}
+      </Stack>
     </Stack>
   );
 }

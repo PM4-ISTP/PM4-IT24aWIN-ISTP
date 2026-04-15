@@ -37,13 +37,15 @@ function formatText(value?: string | number): string {
 
 export function CourseChallengeDetailsList({
   challenges,
+  title,
 }: {
   challenges: ChallengeDetailResponseDto[];
+  title: string;
 }) {
   return (
     <Stack gap="md">
       <Group justify="space-between" align="center">
-        <Title order={3}>Course Challenges</Title>
+        <Title order={3}>{title}</Title>
         <Text size="sm" c="dimmed">
           {challenges.length} challenges
         </Text>
@@ -112,7 +114,7 @@ export function CourseChallengeDetailsList({
                       </Group>
 
                       <Box my={30} style={{ width: 200 }}>
-                        <PlayChallengeButton condition={0} />
+                        <PlayChallengeButton condition={2} />
                       </Box>
                     </Stack>
                   </GridCol>

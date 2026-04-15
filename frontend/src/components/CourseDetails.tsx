@@ -69,7 +69,7 @@ export default async function CourseDetails({
             // challenges={undefined} ← wire up when challenge API is ready
           />
 
-          <CourseChallengeDetailsList challenges={course.courseChallenges} />
+          <CourseChallengeDetailsList challenges={course.courseChallenges} title="Course Challenges" />
 
           {/* About this course */}
           {sanitizedDescription && (
