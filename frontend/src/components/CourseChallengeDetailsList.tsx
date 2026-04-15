@@ -35,9 +35,11 @@ function formatText(value?: string | number): string {
   return String(value);
 }
 
-let idWhenLoadNotSuccessful = 0;
-
-export function CourseChallengeDetailsList({ challenges }: { challenges: ChallengeDetailResponseDto[] }) {
+export function CourseChallengeDetailsList({
+  challenges,
+}: {
+  challenges: ChallengeDetailResponseDto[];
+}) {
   return (
     <Stack gap="md">
       <Group justify="space-between" align="center">

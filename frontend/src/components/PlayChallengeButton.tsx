@@ -2,7 +2,15 @@
 
 import { Button, Flex, Text } from "@mantine/core";
 
-function ButtonWithInfoText({ buttonText, infoText, buttonColor }: { buttonText: string; infoText: string, buttonColor: string }) {
+function ButtonWithInfoText({
+  buttonText,
+  infoText,
+  buttonColor,
+}: {
+  buttonText: string;
+  infoText: string;
+  buttonColor: string;
+}) {
   return (
     <Flex direction="column" justify="flex-end">
       <Button mb={12} color={buttonColor} style={{ marginLeft: "auto" }}>
