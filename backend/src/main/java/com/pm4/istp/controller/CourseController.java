@@ -279,6 +279,7 @@ public class CourseController {
     dto.setEnrolled(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId));
     dto.setParticipants(null);
     setInstructorIdsToNull(dto.getCourseInstructors());
+    setChallengeCreatorIdsToNull(dto.getCourseChallenges());
     dto.setInviteCode(null);
     return dto;
   }
@@ -287,6 +288,12 @@ public class CourseController {
     for (CourseDetailInstructorResponseDto courseInstructor : courseInstructors) {
       courseInstructor.setId(null);
       courseInstructor.getInstructor().setId(null);
+    }
+  }
+
+  private void setChallengeCreatorIdsToNull(List<ChallengeDetailResponseDto> courseChallenges) {
+    for (ChallengeDetailResponseDto challengeDetailResponseDto : courseChallenges) {
+      challengeDetailResponseDto.getCreator().setId(null);
     }
   }
 }

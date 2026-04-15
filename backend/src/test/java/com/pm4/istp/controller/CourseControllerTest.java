@@ -16,6 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pm4.istp.dto.ChallengeCreatorResponseDto;
+import com.pm4.istp.dto.ChallengeDetailResponseDto;
 import com.pm4.istp.dto.PublicCourseDetailResponseDto;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonGenerator;
@@ -401,10 +403,18 @@ class CourseControllerTest {
     instructor.setId(instructorId);
     instructor.setInstructor(instructorUser);
 
+    ChallengeCreatorResponseDto challengeCreatorResponseDto = new ChallengeCreatorResponseDto();
+    challengeCreatorResponseDto.setId(UUID.randomUUID());
+    challengeCreatorResponseDto.setName("Creator");
+
+    ChallengeDetailResponseDto challengeDetailResponseDto = new ChallengeDetailResponseDto();
+    challengeDetailResponseDto.setCreator(challengeCreatorResponseDto);
+
     PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
     dto.setId(courseId);
     dto.setTitle("Public Course");
     dto.setCourseInstructors(List.of(instructor));
+    dto.setCourseChallenges(List.of(challengeDetailResponseDto));
     dto.setParticipants(List.of(new CourseParticipantResponseDto(UUID.randomUUID(), "Student", null)));
 
     when(courseService.getPublicCourse(userId, courseId)).thenReturn(course);
@@ -422,6 +432,9 @@ class CourseControllerTest {
         .andExpect(jsonPath("$.courseInstructors[*].id").value(everyItem(nullValue())))
         .andExpect(jsonPath("$.courseInstructors[*].instructor.id").value(everyItem(nullValue())))
         .andExpect(jsonPath("$.courseInstructors[0].instructor.name").value("Instructor"))
+        .andExpect(jsonPath("$.[*].id").value(everyItem(nullValue())))
+        .andExpect(jsonPath("$.courseChallenges[*].creator.id").value(everyItem(nullValue())))
+        .andExpect(jsonPath("$.courseChallenges[0].creator.name").value("Creator"))
         .andExpect(jsonPath("$.participants").value(nullValue()));
   }
 
