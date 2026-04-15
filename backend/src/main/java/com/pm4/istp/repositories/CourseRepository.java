@@ -121,6 +121,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.description,
             c.shortDescription,
             c.isPublished,
+            c.isPrivate,
             count(distinct ciAll.id),
             c.createdAt,
             c.updatedAt,
