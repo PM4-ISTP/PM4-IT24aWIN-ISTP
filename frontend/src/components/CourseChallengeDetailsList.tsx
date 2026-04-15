@@ -1,4 +1,15 @@
-import { Badge, Box, Grid, GridCol, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import {
+  Badge,
+  Box,
+  Grid,
+  GridCol,
+  Group,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import type { components } from "@/src/lib/api/schema";
 import { getDifficultyColor, getStatusColor } from "@/src/lib/challengeConstants";
 import PlayChallengeButton from "@/src/components/PlayChallengeButton";
@@ -71,7 +82,8 @@ export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallenge
             }
 
             const challenge = loadedChallenge.challenge!;
-            const sanitizedDescription = challenge.description === undefined ? "" : getSanitizedHtml(challenge.description);
+            const sanitizedDescription =
+              challenge.description === undefined ? "" : getSanitizedHtml(challenge.description);
 
             return (
               <Paper
@@ -90,7 +102,9 @@ export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallenge
 
                   <GridCol span={9}>
                     <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
-                      <Text size="sm">Short Description: {formatText(challenge.shortDescription)}</Text>
+                      <Text size="sm">
+                        Short Description: {formatText(challenge.shortDescription)}
+                      </Text>
                       <Text size="sm">Creator: {formatText(challenge.creator?.name)}</Text>
                       <Text size="sm">Created At: {formatDateTime(challenge.createdAt)}</Text>
                       <Text size="sm">Updated At: {formatDateTime(challenge.updatedAt)}</Text>
