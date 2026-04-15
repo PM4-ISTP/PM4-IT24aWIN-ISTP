@@ -8,7 +8,7 @@ import { CourseGrid } from "@/src/components/CourseGrid";
 import { fetchEnrolledCoursesOfLoggedInUser, fetchPublicCourse } from "@/src/lib/actions/courses";
 import Link from "next/link";
 import { CourseChallengeDetailsList } from "@/src/components/CourseChallengeDetailsList";
-import { ActionResult, PublicCourseDetailResponseDto } from "@/src/types/course";
+import type { ActionResult, PublicCourseDetailResponseDto } from "@/src/types/course";
 
 const sectionLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -29,19 +29,21 @@ function RunningChallenges({
   if (!hasRunningChallenges) {
     return <Text>No currently running challenges</Text>;
   } else {
-    {
-      fetchCourseResult.success ? (
-        <CourseChallengeDetailsList
-          challenges={fetchCourseResult.data.courseChallenges}
-          title=""
-          showIndex={false}
-        />
-      ) : (
-        <Alert color="red" title="Failed to load challenges">
-          {fetchCourseResult.error}
-        </Alert>
-      );
-    }
+    return (
+      <>
+        {fetchCourseResult.success ? (
+          <CourseChallengeDetailsList
+            challenges={fetchCourseResult.data.courseChallenges}
+            title=""
+            showIndex={false}
+          />
+        ) : (
+          <Alert color="red" title="Failed to load challenges">
+            {fetchCourseResult.error}
+          </Alert>
+        )}
+      </>
+    );
   }
 }
 
