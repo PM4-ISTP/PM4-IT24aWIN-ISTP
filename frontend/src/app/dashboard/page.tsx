@@ -8,6 +8,7 @@ import { CourseGrid } from "@/src/components/CourseGrid";
 import { fetchEnrolledCoursesOfLoggedInUser, fetchPublicCourse } from "@/src/lib/actions/courses";
 import Link from "next/link";
 import { CourseChallengeDetailsList } from "@/src/components/CourseChallengeDetailsList";
+import { ActionResult, PublicCourseDetailResponseDto } from "@/src/types/course";
 
 const sectionLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -18,6 +19,32 @@ const sectionLabelStyle: React.CSSProperties = {
   color: "rgba(255,255,255,0.45)",
 };
 
+function RunningChallenges({
+  hasRunningChallenges,
+  fetchCourseResult,
+}: {
+  hasRunningChallenges: boolean;
+  fetchCourseResult: ActionResult<PublicCourseDetailResponseDto>;
+}) {
+  if (!hasRunningChallenges) {
+    return <Text>No currently running challenges</Text>;
+  } else {
+    {
+      fetchCourseResult.success ? (
+        <CourseChallengeDetailsList
+          challenges={fetchCourseResult.data.courseChallenges}
+          title=""
+          showIndex={false}
+        />
+      ) : (
+        <Alert color="red" title="Failed to load challenges">
+          {fetchCourseResult.error}
+        </Alert>
+      );
+    }
+  }
+}
+
 export default async function Home() {
   const session = await getServerSession(authOptions);
   const name = session?.user?.name ?? "there";
@@ -25,7 +52,10 @@ export default async function Home() {
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
 
   // TODO: delete when using real data
-  const firstCourse = result.success ? await fetchPublicCourse(result.data.content[0].id) : null;
+  const firstCourse =
+    result.success && result.data.content[0] !== undefined
+      ? await fetchPublicCourse(result.data.content[0].id)
+      : null;
 
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-GB", {
@@ -111,21 +141,14 @@ export default async function Home() {
           </Stack>
         </GridCol>
       </Grid>
-      <Stack gap="sm" align="center">
+      <Stack gap="sm" align="flex-start">
         <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>
           Currently running Challenges
         </Text>
-        {firstCourse && firstCourse.success ? (
-          <CourseChallengeDetailsList
-            challenges={firstCourse.data.courseChallenges}
-            title=""
-            showIndex={false}
-          />
-        ) : (
-          <Alert color="red" title="Failed to load challenges">
-            {firstCourse?.error}
-          </Alert>
-        )}
+        <RunningChallenges
+          hasRunningChallenges={firstCourse !== null}
+          fetchCourseResult={firstCourse!}
+        />
       </Stack>
     </Stack>
   );
