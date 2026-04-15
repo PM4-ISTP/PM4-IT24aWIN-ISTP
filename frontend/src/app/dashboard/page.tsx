@@ -115,13 +115,17 @@ export default async function Home() {
         <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>
           Currently running Challenges
         </Text>
-            {firstCourse && firstCourse.success ? (
-              <CourseChallengeDetailsList challenges={firstCourse.data.courseChallenges} title="" showIndex={false} />
-            ) : (
-              <Alert color="red" title="Failed to load challenges">
-                {firstCourse?.error}
-              </Alert>
-            )}
+        {firstCourse && firstCourse.success ? (
+          <CourseChallengeDetailsList
+            challenges={firstCourse.data.courseChallenges}
+            title=""
+            showIndex={false}
+          />
+        ) : (
+          <Alert color="red" title="Failed to load challenges">
+            {firstCourse?.error}
+          </Alert>
+        )}
       </Stack>
     </Stack>
   );

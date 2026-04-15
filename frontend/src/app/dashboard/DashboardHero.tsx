@@ -78,7 +78,7 @@ export default function DashboardHero({
           </Text>
           <Group mt={8} gap="sm">
             <Button
-              onClick={ () => router.push("/dashboard/catalog") }
+              onClick={() => router.push("/dashboard/catalog")}
               size="md"
               radius="md"
               rightSection={<IconChevronRight size={15} />}

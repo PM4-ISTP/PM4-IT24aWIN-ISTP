@@ -47,7 +47,9 @@ export default function PlayChallengeButton({ condition }: { condition: number }
           infoText="Continue playing. A pod is already running."
           buttonColor="blue"
         />
-        <Text size="xs">Pod started at |TODO: replace with real data| for course |TODO: replace with real data|</Text>
+        <Text size="xs">
+          Pod started at |TODO: replace with real data| for course |TODO: replace with real data|
+        </Text>
       </Box>
     );
   } else {
