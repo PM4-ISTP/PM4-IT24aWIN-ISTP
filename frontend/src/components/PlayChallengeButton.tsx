@@ -2,6 +2,8 @@
 
 import { Box, Button, Flex, Text } from "@mantine/core";
 
+const darkgreen = "rgba(12, 105, 0, 1)";
+
 function ButtonWithInfoText({
   buttonText,
   infoText,
@@ -23,23 +25,23 @@ function ButtonWithInfoText({
 
 export default function PlayChallengeButton({ condition }: { condition: number }) {
   // TODO: Currently, this is just a placeholder. Once the play challenge flow is implemented, this component needs to be finished.
-  if (condition == 0) {
+  if (condition === 0) {
     return (
       <ButtonWithInfoText
         buttonText="Start"
         infoText="You have not started this challenge yet."
-        buttonColor="darkgreen"
+        buttonColor={darkgreen}
       />
     );
-  } else if (condition == 1) {
+  } else if (condition === 1) {
     return (
       <ButtonWithInfoText
         buttonText="Restart"
         infoText="You have already completed this challenge. You can restart it."
-        buttonColor="darkgreen"
+        buttonColor={darkgreen}
       />
     );
-  } else if (condition == 2) {
+  } else if (condition === 2) {
     return (
       <Box>
         <ButtonWithInfoText
