@@ -78,7 +78,11 @@ public class CourseServiceImpl implements CourseService {
     courseToCreate.setImageUrl(course.getImageUrl());
     courseToCreate.setTopic(course.getTopic());
     if (course.isPrivate()) {
-      courseToCreate.setInviteCode(generateUniqueInviteCode());
+      try {
+        courseToCreate.setInviteCode(generateUniqueInviteCode());
+      } catch (IllegalStateException ex) {
+        throw new InviteCodeGenerationException("Unable to generate a unique invite code", ex);
+      }
     }
 
     // Owner = the user making the request
@@ -200,13 +204,16 @@ public class CourseServiceImpl implements CourseService {
     course.setImageUrl(request.getImageUrl());
     course.setTopic(request.getTopic());
 
-    boolean wasPublished = course.isPublished();
     boolean wasPrivate = course.isPrivate();
     boolean willBePublished = request.isPublished();
     boolean willBePrivate = request.isPrivate();
     validateVisibilityState(willBePublished, willBePrivate);
     if (willBePrivate && (!wasPrivate || course.getInviteCode() == null)) {
-      course.setInviteCode(generateUniqueInviteCode());
+      try {
+        course.setInviteCode(generateUniqueInviteCode());
+      } catch (IllegalStateException ex) {
+        throw new InviteCodeGenerationException("Failed to generate invite code", ex);
+      }
     } else if (!willBePrivate) {
       course.setInviteCode(null);
     }
@@ -394,6 +401,9 @@ public class CourseServiceImpl implements CourseService {
         course.setInviteCode(generatedCode);
         return course;
       } catch (DataIntegrityViolationException ex) {
+        if (!isInviteCodeConstraintViolation(ex)) {
+          throw ex;
+        }
         if (attempt == 9) {
           throw new InviteCodeGenerationException(
               "Could not generate a unique invite code after 10 attempts", ex);
@@ -402,6 +412,18 @@ public class CourseServiceImpl implements CourseService {
     }
     throw new InviteCodeGenerationException(
         "Could not generate a unique invite code after 10 attempts");
+  }
+
+  private static boolean isInviteCodeConstraintViolation(DataIntegrityViolationException ex) {
+    Throwable t = ex;
+    while (t != null) {
+      String msg = t.getMessage();
+      if (msg != null && msg.contains("uk_courses_invite_code")) {
+        return true;
+      }
+      t = t.getCause();
+    }
+    return false;
   }
 
   private void verifyOwner(Course course, UUID userId) {
