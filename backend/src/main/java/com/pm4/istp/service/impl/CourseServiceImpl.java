@@ -18,8 +18,8 @@ import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.exception.InvalidCourseChallengeException;
 import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
-import com.pm4.istp.exception.InviteCodeGenerationException;
 import com.pm4.istp.exception.InvalidInviteCodeException;
+import com.pm4.istp.exception.InviteCodeGenerationException;
 import com.pm4.istp.exception.UserNotFoundException;
 import com.pm4.istp.repositories.ChallengeRepository;
 import com.pm4.istp.repositories.CourseEnrollmentRepository;
@@ -382,7 +382,8 @@ public class CourseServiceImpl implements CourseService {
 
     if (!course.isPrivate()) {
       throw new CourseAccessDeniedException(
-          String.format("Course '%s' is not private; invite code regeneration is disabled", courseId));
+          String.format(
+              "Course '%s' is not private; invite code regeneration is disabled", courseId));
     }
 
     for (int attempt = 0; attempt < 10; attempt++) {
@@ -399,7 +400,8 @@ public class CourseServiceImpl implements CourseService {
         }
       }
     }
-    throw new InviteCodeGenerationException("Could not generate a unique invite code after 10 attempts");
+    throw new InviteCodeGenerationException(
+        "Could not generate a unique invite code after 10 attempts");
   }
 
   private void verifyOwner(Course course, UUID userId) {

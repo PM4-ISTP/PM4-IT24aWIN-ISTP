@@ -21,4 +21,3 @@ public class InviteCodeGenerationException extends IstpException {
     super(message, cause, enableSuppression, writableStackTrace);
   }
 }
-
