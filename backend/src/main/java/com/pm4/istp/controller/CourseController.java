@@ -199,20 +199,20 @@ public class CourseController {
 
   // ── Public catalog endpoints ── accessible to all authenticated users (including students)
   @GetMapping("/catalog/{id}")
-  public ResponseEntity<CourseDetailResponseDto> getPublicCourse(
+  public ResponseEntity<PublicCourseDetailResponseDto> getPublicCourse(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     Course course = courseService.getCourse(userId, id);
-    CourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
+    PublicCourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
     return ResponseEntity.ok(dto);
   }
 
   @PostMapping("/catalog/{id}/enroll")
-  public ResponseEntity<CourseDetailResponseDto> enrollInPublicCourse(
+  public ResponseEntity<PublicCourseDetailResponseDto> enrollInPublicCourse(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     Course course = courseService.enrollInCourse(userId, id);
-    CourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
+    PublicCourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
     return ResponseEntity.ok(dto);
   }
 
@@ -247,8 +247,8 @@ public class CourseController {
   }
 
   /** Public catalog detail – omits participant list; returns only count and enrollment status. */
-  private CourseDetailResponseDto toPublicCourseDetailResponseDto(Course course, UUID userId) {
-    CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
+  private PublicCourseDetailResponseDto toPublicCourseDetailResponseDto(Course course, UUID userId) {
+    PublicCourseDetailResponseDto dto = courseMapper.toPublicCourseDetailDto(course);
     UUID courseId = course.getId();
     dto.setParticipantCount(courseEnrollmentRepository.countByCourseId(courseId));
     dto.setEnrolled(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId));

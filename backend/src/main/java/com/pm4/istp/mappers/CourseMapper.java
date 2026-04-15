@@ -5,6 +5,7 @@ import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseInstructorRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
 import com.pm4.istp.domain.entites.Course;
+import com.pm4.istp.domain.entites.CourseChallenge;
 import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.dto.*;
 import java.util.List;
@@ -30,6 +31,11 @@ public interface CourseMapper {
   UpdateCourseRequest fromDto(UpdateCourseRequestDto dto);
 
   CourseDetailResponseDto toCourseDetailDto(Course course);
+
+  PublicCourseDetailResponseDto toPublicCourseDetailDto(Course course);
+
+  @Mapping(target = ".", source = "challenge")
+  ChallengeDetailResponseDto toChallengeDetailResponseDto(CourseChallenge courseChallenge);
 
   @Mapping(
       target = "instructorCount",
