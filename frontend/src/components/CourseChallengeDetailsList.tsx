@@ -1,4 +1,4 @@
-import { Badge, Box, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Badge, Box, Grid, GridCol, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import type { components } from "@/src/lib/api/schema";
 import { getDifficultyColor, getStatusColor } from "@/src/lib/challengeConstants";
 import PlayChallengeButton from "@/src/components/PlayChallengeButton";
@@ -81,12 +81,35 @@ export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallenge
                 withBorder
                 style={{ background: "rgba(255,255,255,0.02)" }}
               >
-                <Stack gap="sm">
-                  <Group justify="space-between" align="flex-start" wrap="wrap">
+                <Grid>
+                  <GridCol span={12}>
                     <Title order={4} style={{ fontSize: "1rem" }}>
                       #{index + 1} {formatText(challenge.title)}
                     </Title>
+                  </GridCol>
 
+                  <GridCol span={9}>
+                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+                      <Text size="sm">Short Description: {formatText(challenge.shortDescription)}</Text>
+                      <Text size="sm">Creator: {formatText(challenge.creator?.name)}</Text>
+                      <Text size="sm">Created At: {formatDateTime(challenge.createdAt)}</Text>
+                      <Text size="sm">Updated At: {formatDateTime(challenge.updatedAt)}</Text>
+                      <Text size="sm">Max Score: {formatText(challenge.maxScore)}</Text>
+                    </SimpleGrid>
+
+                    <Box>
+                      <Text size="sm" fw={600} mt={30} mb={4}>
+                        Description:
+                      </Text>
+                      <Box
+                        className="course-description"
+                        style={{ fontSize: "var(--mantine-font-size-sm)" }}
+                        dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+                      />
+                    </Box>
+                  </GridCol>
+
+                  <GridCol span={3}>
                     <Stack gap="xs" align="flex-end">
                       <Group gap="xs">
                         <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
@@ -104,31 +127,8 @@ export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallenge
                         <PlayChallengeButton condition={1} />
                       </Box>
                     </Stack>
-                  </Group>
-
-                  <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
-                    <Text size="sm">Short Description: {formatText(challenge.shortDescription)}</Text>
-                    <Text size="sm">Creator: {formatText(challenge.creator?.name)}</Text>
-                    <Text size="sm">Created At: {formatDateTime(challenge.createdAt)}</Text>
-                    <Text size="sm">Updated At: {formatDateTime(challenge.updatedAt)}</Text>
-                    <Text size="sm">Max Score: {formatText(challenge.maxScore)}</Text>
-                  </SimpleGrid>
-
-                  <Box>
-                    <Text size="sm" fw={600} mt={30} mb={4}>
-                      Description:
-                    </Text>
-                    {sanitizedDescription ? (
-                      <Box
-                        className="course-description"
-                        style={{ fontSize: "var(--mantine-font-size-sm)" }}
-                        dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
-                      />
-                    ) : (
-                      <Text size="sm" c="dimmed"></Text>
-                    )}
-                  </Box>
-                </Stack>
+                  </GridCol>
+                </Grid>
               </Paper>
             );
           })}
