@@ -38,26 +38,27 @@ function formatText(value?: string | number): string {
 export function CourseChallengeDetailsList({
   challenges,
   title,
+  showIndex,
 }: {
   challenges: ChallengeDetailResponseDto[];
   title: string;
+  showIndex: boolean;
 }) {
   return (
-    <Stack gap="md">
-      <Group justify="space-between" align="center">
+    <>
+      {challenges.length === 0 ? (
+        <></>
+      ) : (
+            <Stack gap="md">
+                  <Group justify="space-between" align="center">
         <Title order={3}>{title}</Title>
         <Text size="sm" c="dimmed">
           {challenges.length} challenges
         </Text>
       </Group>
-
-      {challenges.length === 0 ? (
-        <Text size="sm" c="dimmed">
-          No challenges assigned to this course.
-        </Text>
-      ) : (
         <Stack gap="sm">
           {challenges.map((challenge, index) => {
+            const challengeTitle = showIndex ? "#" + (index + 1) + formatText(challenge.title) : formatText(challenge.title);
             const sanitizedDescription =
               challenge.description === undefined ? "" : getSanitizedHtml(challenge.description);
 
@@ -72,7 +73,7 @@ export function CourseChallengeDetailsList({
                 <Grid>
                   <GridCol span={12}>
                     <Title order={4} style={{ fontSize: "1rem" }}>
-                      #{index + 1} {formatText(challenge.title)}
+                      {challengeTitle}
                     </Title>
                   </GridCol>
 
@@ -123,7 +124,8 @@ export function CourseChallengeDetailsList({
             );
           })}
         </Stack>
+            </Stack>
       )}
-    </Stack>
+      </>
   );
 }

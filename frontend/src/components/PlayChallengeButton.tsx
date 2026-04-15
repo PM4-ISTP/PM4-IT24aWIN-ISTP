@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Flex, Text } from "@mantine/core";
+import { Box, Button, Flex, Text } from "@mantine/core";
 
 function ButtonWithInfoText({
   buttonText,
@@ -41,11 +41,14 @@ export default function PlayChallengeButton({ condition }: { condition: number }
     );
   } else if (condition == 2) {
     return (
-      <ButtonWithInfoText
-        buttonText="Continue"
-        infoText="Continue playing. A pod is already running."
-        buttonColor="blue"
-      />
+      <Box>
+        <ButtonWithInfoText
+          buttonText="Continue"
+          infoText="Continue playing. A pod is already running."
+          buttonColor="blue"
+        />
+        <Text size="xs">Pod started at |TODO: replace with real data| for course |TODO: replace with real data|</Text>
+      </Box>
     );
   } else {
     return (

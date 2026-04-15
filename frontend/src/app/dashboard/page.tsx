@@ -116,7 +116,7 @@ export default async function Home() {
           Currently running Challenges
         </Text>
             {firstCourse && firstCourse.success ? (
-              <CourseChallengeDetailsList challenges={firstCourse.data.courseChallenges} title="" />
+              <CourseChallengeDetailsList challenges={firstCourse.data.courseChallenges} title="" showIndex={false} />
             ) : (
               <Alert color="red" title="Failed to load challenges">
                 {firstCourse?.error}
