@@ -290,7 +290,9 @@ public class CourseController {
   private void filterOutNonPublicChallenges(PublicCourseDetailResponseDto dto) {
     List<ChallengeDetailResponseDto> challenges = new ArrayList<>();
     for (ChallengeDetailResponseDto challenge : dto.getCourseChallenges()) {
-      if (challenge.getStatus() == ChallengeStatusEnum.PUBLIC) challenges.add(challenge);
+      if (challenge.getStatus() == ChallengeStatusEnum.PUBLIC) {
+        challenges.add(challenge);
+      }
     }
     dto.setCourseChallenges(List.copyOf(challenges));
   }
