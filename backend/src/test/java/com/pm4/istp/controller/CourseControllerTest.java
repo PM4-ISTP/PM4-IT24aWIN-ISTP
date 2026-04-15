@@ -432,7 +432,8 @@ class CourseControllerTest {
         .andExpect(jsonPath("$.courseInstructors[*].id").value(everyItem(nullValue())))
         .andExpect(jsonPath("$.courseInstructors[*].instructor.id").value(everyItem(nullValue())))
         .andExpect(jsonPath("$.courseInstructors[0].instructor.name").value("Instructor"))
-        .andExpect(jsonPath("$.[*].id").value(everyItem(nullValue())))
+        .andExpect(jsonPath("$.courseChallenges").isArray())
+        .andExpect(jsonPath("$.courseChallenges", hasSize(1)))
         .andExpect(jsonPath("$.courseChallenges[*].creator.id").value(everyItem(nullValue())))
         .andExpect(jsonPath("$.courseChallenges[0].creator.name").value("Creator"))
         .andExpect(jsonPath("$.participants").value(nullValue()));
