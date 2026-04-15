@@ -18,7 +18,6 @@ import {
   Notification,
   Select,
   Stack,
-  Switch,
   Text,
   Textarea,
   TextInput,
@@ -34,6 +33,10 @@ import {
   normalizeShortDescription,
 } from "@/src/lib/courseText";
 import {
+  visibilityFromFlags,
+  visibilityToFlags,
+} from "@/src/lib/courseVisibility";
+import {
   deleteCourse,
   fetchCourse,
   regenerateInviteCode,
@@ -43,6 +46,7 @@ import { useToast } from "@/src/hooks/useToast";
 import { TOPIC_OPTIONS } from "@/src/lib/courseConstants";
 import type {
   CollaboratorUserResponseDto,
+  CourseVisibility,
   CourseDetailResponseDto,
   InstructorRoleEnum,
 } from "@/src/types/course";
@@ -79,8 +83,7 @@ export default function EditCourse() {
   const [title, setTitle] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
-  const [isPublished, setIsPublished] = useState(false);
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [visibility, setVisibility] = useState<CourseVisibility>("DRAFT");
   const [imageUrl, setImageUrl] = useState("");
   const [topic, setTopic] = useState<string | null>(null);
   const [course, setCourse] = useState<CourseDetailResponseDto | null>(null);
@@ -128,8 +131,7 @@ export default function EditCourse() {
       setTitle(course.title);
       setShortDescription(course.shortDescription ?? "");
       setDescription(course.description ?? "");
-      setIsPublished(course.isPublished);
-      setIsPrivate(course.isPrivate);
+      setVisibility(visibilityFromFlags(course.isPublished, course.isPrivate));
       setImageUrl(course.imageUrl ?? "");
       setTopic(course.topic ?? null);
       setInviteCode(course.inviteCode ?? null);
@@ -189,6 +191,8 @@ export default function EditCourse() {
     }
 
     setIsSubmitting(true);
+
+    const { isPublished, isPrivate } = visibilityToFlags(visibility);
 
     const result = await updateCourse(courseId, {
       title: title.trim(),
@@ -468,38 +472,21 @@ export default function EditCourse() {
                   onUsersLoaded={(users) => setKnownUsers((prev) => mergeUsersById(prev, users))}
                 />
 
-                <Switch
-                  label="Publish Course"
-                  checked={isPublished}
-                  onChange={(e) => setIsPublished(e.currentTarget.checked)}
-                  size="md"
-                  styles={{
-                    label: { color: "#e2e8f0", fontWeight: 500 },
-                    track: {
-                      backgroundColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.15)",
-                      borderColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.2)",
-                      cursor: "pointer",
-                    },
-                    thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },
+                <Select
+                  label="Visibility"
+                  value={visibility}
+                  onChange={(value) => {
+                    if (value) {
+                      setVisibility(value as CourseVisibility);
+                    }
                   }}
-                />
-
-                <Switch
-                  label="Private Course (invite-code only)"
-                  checked={isPrivate}
-                  onChange={(e) => setIsPrivate(e.currentTarget.checked)}
-                  size="md"
-                  description="Private courses are hidden from catalog and can only be joined by invite code."
-                  styles={{
-                    label: { color: "#e2e8f0", fontWeight: 500 },
-                    description: { color: "#94a3b8" },
-                    track: {
-                      backgroundColor: isPrivate ? "#7c3aed" : "rgba(255,255,255,0.15)",
-                      borderColor: isPrivate ? "#7c3aed" : "rgba(255,255,255,0.2)",
-                      cursor: "pointer",
-                    },
-                    thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },
-                  }}
+                  data={[
+                    { value: "DRAFT", label: "Draft (only instructors can view)" },
+                    { value: "PUBLIC", label: "Public (visible in catalog)" },
+                    { value: "PRIVATE", label: "Private (invite code only)" },
+                  ]}
+                  description="Choose exactly one state. Draft keeps it hidden, Public shows in catalog, Private is join-by-code only."
+                  allowDeselect={false}
                 />
 
                 <CourseChallengeManager
@@ -542,7 +529,7 @@ export default function EditCourse() {
                 participants={course?.participants ?? []}
               />
 
-              {isPublished && isPrivate && (
+              {visibility === "PRIVATE" && (
                 <Box
                   style={{
                     background: "rgba(255,255,255,0.04)",

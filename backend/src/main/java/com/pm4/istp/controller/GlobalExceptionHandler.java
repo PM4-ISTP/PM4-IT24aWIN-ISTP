@@ -8,6 +8,7 @@ import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.exception.InvalidCourseChallengeException;
 import com.pm4.istp.exception.InvalidCourseCollaboratorException;
 import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
+import com.pm4.istp.exception.InviteCodeGenerationException;
 import com.pm4.istp.exception.InvalidInviteCodeException;
 import com.pm4.istp.exception.UserNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -102,6 +103,15 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
   }
 
+  @ExceptionHandler(InviteCodeGenerationException.class)
+  public ResponseEntity<ErrorDto> handleInviteCodeGenerationException(
+      InviteCodeGenerationException ex) {
+    log.error("Caught InviteCodeGenerationException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Could not regenerate invite code");
+    return new ResponseEntity<>(errorDto, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorDto> handleMethodArgumentNotValidException(
       MethodArgumentNotValidException ex) {
@@ -131,6 +141,14 @@ public class GlobalExceptionHandler {
             .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
             .orElse("Constraint violation occurred");
     errorDto.setError(errorMessage);
+    return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<ErrorDto> handleIllegalArgumentException(IllegalArgumentException ex) {
+    log.warn("Caught IllegalArgumentException: {}", ex.getMessage());
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError(ex.getMessage() == null ? "Invalid request" : ex.getMessage());
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
   }
 
