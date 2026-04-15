@@ -10,22 +10,10 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import type { components } from "@/src/lib/api/schema";
 import { getDifficultyColor, getStatusColor } from "@/src/lib/challengeConstants";
 import PlayChallengeButton from "@/src/components/PlayChallengeButton";
 import { getSanitizedHtml } from "@/src/lib/utils";
-
-type ChallengeDetailResponseDto = components["schemas"]["ChallengeDetailResponseDto"];
-
-export type LoadedChallenge = {
-  challenge?: ChallengeDetailResponseDto;
-  errorMessage?: string;
-  loadWasSuccessful: boolean;
-};
-
-type CourseChallengeDetailsListProps = {
-  loadedChallenges: LoadedChallenge[];
-};
+import { ChallengeDetailResponseDto } from "@/src/lib/actions/challenges";
 
 function formatDateTime(value?: string): string {
   if (!value) return "n/a";
@@ -49,39 +37,23 @@ function formatText(value?: string | number): string {
 
 let idWhenLoadNotSuccessful = 0;
 
-export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallengeDetailsListProps) {
+export function CourseChallengeDetailsList({ challenges }: { challenges: ChallengeDetailResponseDto[] }) {
   return (
     <Stack gap="md">
       <Group justify="space-between" align="center">
         <Title order={3}>Course Challenges</Title>
         <Text size="sm" c="dimmed">
-          {loadedChallenges.length} challenges
+          {challenges.length} challenges
         </Text>
       </Group>
 
-      {loadedChallenges.length === 0 ? (
+      {challenges.length === 0 ? (
         <Text size="sm" c="dimmed">
           No challenges assigned to this course.
         </Text>
       ) : (
         <Stack gap="sm">
-          {loadedChallenges.map((loadedChallenge, index) => {
-            if (!loadedChallenge.loadWasSuccessful) {
-              return (
-                <Paper
-                  key={idWhenLoadNotSuccessful++}
-                  p="md"
-                  radius="md"
-                  withBorder
-                  style={{ background: "rgba(255,255,255,0.02)" }}
-                >
-                  <Text mb={30}>Could not load this challenge.</Text>
-                  <Text>Reason: {loadedChallenge.errorMessage}</Text>
-                </Paper>
-              );
-            }
-
-            const challenge = loadedChallenge.challenge!;
+          {challenges.map((challenge, index) => {
             const sanitizedDescription =
               challenge.description === undefined ? "" : getSanitizedHtml(challenge.description);
 

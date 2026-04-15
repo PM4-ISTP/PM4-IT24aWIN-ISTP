@@ -3,9 +3,7 @@ import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseBannerHeader } from "@/src/components/CourseBannerHeader";
 import { CourseChallengeDetailsList } from "@/src/components/CourseChallengeDetailsList";
-import type { LoadedChallenge } from "@/src/components/CourseChallengeDetailsList";
 import { CourseJourneyCard } from "@/src/components/CourseJourneyCard";
-import { fetchChallenge } from "@/src/lib/actions/challenges";
 import { fetchPublicCourse } from "@/src/lib/actions/courses";
 import type { InstructorRoleEnum } from "@/src/types/course";
 import { getSanitizedHtml } from "@/src/lib/utils";
@@ -46,15 +44,6 @@ export default async function CourseDetails({
     course.description === null ? "" : getSanitizedHtml(course.description);
   const owner =
     course.courseInstructors.find((ci) => ci.instructorRole === OWNER_ROLE)?.instructor ?? null;
-  const challengeIds = (course.courseChallenges ?? []).map((c) => c.challengeId);
-  const challengeResults = await Promise.all(
-    challengeIds.map((challengeId) => fetchChallenge(challengeId))
-  );
-  const challengeRequestDetails: LoadedChallenge[] = challengeResults.flatMap((result) =>
-    result.success
-      ? { challenge: result.data, loadWasSuccessful: result.success }
-      : { errorMessage: result.error, loadWasSuccessful: result.success }
-  );
 
   return (
     <>
@@ -80,7 +69,7 @@ export default async function CourseDetails({
             // challenges={undefined} ← wire up when challenge API is ready
           />
 
-          <CourseChallengeDetailsList loadedChallenges={challengeRequestDetails} />
+          <CourseChallengeDetailsList challenges={course.courseChallenges} />
 
           {/* About this course */}
           {sanitizedDescription && (

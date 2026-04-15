@@ -10,6 +10,7 @@ import type {
   CreateCourseDto,
   ListCourseResponseDto,
   Page,
+  PublicCourseDetailResponseDto,
   UpdateCourseDto,
 } from "@/src/types/course";
 
@@ -53,7 +54,7 @@ export async function createCourse(
 
 export async function fetchPublicCourse(
   id: string
-): Promise<ActionResult<CourseDetailResponseDto>> {
+): Promise<ActionResult<PublicCourseDetailResponseDto>> {
   try {
     const res = await fetchBackend(`/api/v1/courses/catalog/${id}`, {
       cache: "no-store",
@@ -65,7 +66,7 @@ export async function fetchPublicCourse(
       return { success: false, error: `${res.status}: ${message}` };
     }
 
-    const data = (await res.json()) as CourseDetailResponseDto;
+    const data = (await res.json()) as PublicCourseDetailResponseDto;
     return { success: true, data };
   } catch (err) {
     return {

@@ -1,3 +1,5 @@
+import { ChallengeDetailResponseDto } from "@/src/lib/actions/challenges";
+
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
 export type PlatformRole = "ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT";
 export type CourseDifficulty = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
@@ -108,6 +110,24 @@ export interface CourseDetailResponseDto {
   courseInstructors: CourseInstructorResponseDto[];
   participants: CourseParticipantDto[];
   courseChallenges: CourseChallengeResponseDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublicCourseDetailResponseDto {
+  id: string;
+  title: string;
+  description: string | null;
+  shortDescription: string | null;
+  participantCount: number;
+  isEnrolled: boolean;
+  isPublished: boolean;
+  imageUrl?: string | null;
+  topic?: string | null;
+  difficulty?: CourseDifficulty | null;
+  courseInstructors: CourseInstructorResponseDto[];
+  participants: CourseParticipantDto[];
+  courseChallenges: ChallengeDetailResponseDto[];
   createdAt: string;
   updatedAt: string;
 }
