@@ -37,6 +37,9 @@ public class Course {
   @Column(name = "isPublished", nullable = false)
   private boolean isPublished;
 
+  @Column(name = "is_private", nullable = false, columnDefinition = "boolean default false")
+  private boolean isPrivate;
+
   @Column(name = "image_url", nullable = true)
   private String imageUrl;
 
@@ -46,6 +49,9 @@ public class Course {
   @Column(name = "difficulty", nullable = true)
   @Enumerated(EnumType.STRING)
   private CourseDifficultyEnum difficulty;
+
+  @Column(name = "invite_code", nullable = true, unique = true, length = 6)
+  private String inviteCode;
 
   @JsonIgnore
   @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)

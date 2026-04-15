@@ -2,6 +2,7 @@ import { Alert, Box, Button, Group, Stack, Text, TextInput, Title } from "@manti
 import Link from "next/link";
 import { fetchPublishedCourses } from "@/src/lib/actions/courses";
 import { CourseGrid } from "@/src/components/CourseGrid";
+import JoinCourseButton from "@/src/components/JoinCourseButton";
 
 export default async function CatalogPage(props: {
   searchParams: Promise<{ page?: string; query?: string }>;
@@ -41,6 +42,7 @@ export default async function CatalogPage(props: {
               style={{ flex: 1 }}
             />
             <Group gap="sm">
+              <JoinCourseButton />
               <Button
                 type="submit"
                 radius="md"

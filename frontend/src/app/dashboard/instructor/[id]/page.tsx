@@ -33,7 +33,12 @@ import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/lib/courseText";
-import { deleteCourse, fetchCourse, updateCourse } from "@/src/lib/actions/courses";
+import {
+  deleteCourse,
+  fetchCourse,
+  regenerateInviteCode,
+  updateCourse,
+} from "@/src/lib/actions/courses";
 import { useToast } from "@/src/hooks/useToast";
 import { TOPIC_OPTIONS } from "@/src/lib/courseConstants";
 import type {
@@ -75,6 +80,7 @@ export default function EditCourse() {
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
   const [isPublished, setIsPublished] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [topic, setTopic] = useState<string | null>(null);
   const [course, setCourse] = useState<CourseDetailResponseDto | null>(null);
@@ -92,6 +98,11 @@ export default function EditCourse() {
   const charLimitToast = useToast();
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const shortDescriptionCharCount = shortDescription.length;
+
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [regenerateError, setRegenerateError] = useState<string | null>(null);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   function handleCollaboratorChange(newValue: string[]) {
     const ownerId = owner?.id;
@@ -118,8 +129,10 @@ export default function EditCourse() {
       setShortDescription(course.shortDescription ?? "");
       setDescription(course.description ?? "");
       setIsPublished(course.isPublished);
+      setIsPrivate(course.isPrivate);
       setImageUrl(course.imageUrl ?? "");
       setTopic(course.topic ?? null);
+      setInviteCode(course.inviteCode ?? null);
 
       // Extract collaborators (not OWNER) for the multi-select
       const collaborators = course.courseInstructors.filter(
@@ -182,6 +195,7 @@ export default function EditCourse() {
       description,
       shortDescription: normalizedShortDescription,
       isPublished,
+      isPrivate,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
       collaboratorIds: selectedInstructors,
@@ -209,6 +223,7 @@ export default function EditCourse() {
       return;
     }
 
+    setInviteCode(result.data.inviteCode ?? null);
     router.refresh();
     router.push("/dashboard/instructor");
   }
@@ -229,6 +244,35 @@ export default function EditCourse() {
     closeDelete();
     router.refresh();
     router.push("/dashboard/instructor");
+  }
+
+  async function handleRegenerate() {
+    if (!isOwner) {
+      setRegenerateError("Only the course owner can regenerate the invite code.");
+      return;
+    }
+
+    setIsRegenerating(true);
+    setRegenerateError(null);
+
+    const result = await regenerateInviteCode(courseId);
+
+    setIsRegenerating(false);
+
+    if (!result.success) {
+      setRegenerateError(result.error);
+      return;
+    }
+
+    setInviteCode(result.data.inviteCode ?? null);
+  }
+
+  function handleCopyCode() {
+    if (!inviteCode) return;
+    void navigator.clipboard.writeText(inviteCode).then(() => {
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    });
   }
 
   const owner =
@@ -440,6 +484,24 @@ export default function EditCourse() {
                   }}
                 />
 
+                <Switch
+                  label="Private Course (invite-code only)"
+                  checked={isPrivate}
+                  onChange={(e) => setIsPrivate(e.currentTarget.checked)}
+                  size="md"
+                  description="Private courses are hidden from catalog and can only be joined by invite code."
+                  styles={{
+                    label: { color: "#e2e8f0", fontWeight: 500 },
+                    description: { color: "#94a3b8" },
+                    track: {
+                      backgroundColor: isPrivate ? "#7c3aed" : "rgba(255,255,255,0.15)",
+                      borderColor: isPrivate ? "#7c3aed" : "rgba(255,255,255,0.2)",
+                      cursor: "pointer",
+                    },
+                    thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },
+                  }}
+                />
+
                 <CourseChallengeManager
                   challenges={courseChallenges}
                   onChange={setCourseChallenges}
@@ -473,11 +535,119 @@ export default function EditCourse() {
           </GridCol>
 
           <GridCol span={{ base: 12, md: 5, lg: 4 }}>
-            <CoursePeoplePanel
-              owner={owner}
-              collaborators={collaborators}
-              participants={course?.participants ?? []}
-            />
+            <Stack gap="lg">
+              <CoursePeoplePanel
+                owner={owner}
+                collaborators={collaborators}
+                participants={course?.participants ?? []}
+              />
+
+              {isPublished && isPrivate && (
+                <Box
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 14,
+                    padding: "1.5rem",
+                    boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+                  }}
+                >
+                  <Stack gap="sm">
+                    <Text
+                      size="sm"
+                      fw={600}
+                      style={{
+                        color: "#94a3b8",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        fontSize: "0.7rem",
+                      }}
+                    >
+                      Invite Code
+                    </Text>
+
+                    <Group gap="xs" align="center">
+                      <Text
+                        style={{
+                          fontFamily: "var(--font-space-grotesk), monospace",
+                          fontSize: "1.6rem",
+                          fontWeight: 700,
+                          letterSpacing: "0.3em",
+                          color: "#f1f5f9",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {inviteCode ?? "—"}
+                      </Text>
+                      {inviteCode && (
+                        <Button
+                          variant="subtle"
+                          size="xs"
+                          radius="md"
+                          onClick={handleCopyCode}
+                          style={{ color: codeCopied ? "#4ade80" : "#94a3b8" }}
+                          leftSection={
+                            <span
+                              className="material-symbols-outlined"
+                              style={{
+                                fontSize: "0.95rem",
+                                lineHeight: 1,
+                                fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
+                              }}
+                            >
+                              {codeCopied ? "check" : "content_copy"}
+                            </span>
+                          }
+                        >
+                          {codeCopied ? "Copied!" : "Copy"}
+                        </Button>
+                      )}
+                    </Group>
+
+                    <Text size="xs" style={{ color: "#64748b" }}>
+                      Share this code with students to let them join the course directly.
+                    </Text>
+
+                    {regenerateError && (
+                      <Alert color="red" variant="light" py="xs">
+                        {regenerateError}
+                      </Alert>
+                    )}
+
+                    {isOwner && (
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        radius="md"
+                        loading={isRegenerating}
+                        disabled={isRegenerating}
+                        onClick={() => void handleRegenerate()}
+                        leftSection={
+                          <span
+                            className="material-symbols-outlined"
+                            style={{
+                              fontSize: "0.95rem",
+                              lineHeight: 1,
+                              fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
+                            }}
+                          >
+                            refresh
+                          </span>
+                        }
+                        style={{
+                          borderColor: "rgba(255,255,255,0.12)",
+                          color: "#e2e8f0",
+                          background: "rgba(255,255,255,0.04)",
+                          alignSelf: "flex-start",
+                        }}
+                      >
+                        Regenerate code
+                      </Button>
+                    )}
+                  </Stack>
+                </Box>
+              )}
+            </Stack>
           </GridCol>
         </Grid>
       </Stack>

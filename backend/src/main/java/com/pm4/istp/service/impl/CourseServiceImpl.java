@@ -18,12 +18,14 @@ import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.exception.InvalidCourseChallengeException;
 import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
+import com.pm4.istp.exception.InvalidInviteCodeException;
 import com.pm4.istp.exception.UserNotFoundException;
 import com.pm4.istp.repositories.ChallengeRepository;
 import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.repositories.CourseRepository;
 import com.pm4.istp.repositories.UserRepository;
 import com.pm4.istp.service.CourseService;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -46,10 +48,15 @@ public class CourseServiceImpl implements CourseService {
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
   private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
 
+  private static final String INVITE_CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  private static final int INVITE_CODE_LENGTH = 6;
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
   private final UserRepository userRepository;
   private final CourseRepository courseRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final ChallengeRepository challengeRepository;
+  private final CourseInviteCodeHelper courseInviteCodeHelper;
 
   @Override
   @Transactional
@@ -65,8 +72,12 @@ public class CourseServiceImpl implements CourseService {
     courseToCreate.setDescription(course.getDescription());
     courseToCreate.setShortDescription(normalizeShortDescription(course.getShortDescription()));
     courseToCreate.setPublished(course.isPublished());
+    courseToCreate.setPrivate(course.isPrivate());
     courseToCreate.setImageUrl(course.getImageUrl());
     courseToCreate.setTopic(course.getTopic());
+    if (course.isPublished() && course.isPrivate()) {
+      courseToCreate.setInviteCode(generateUniqueInviteCode());
+    }
 
     // Owner = the user making the request
     CourseInstructor owner = new CourseInstructor();
@@ -109,6 +120,18 @@ public class CourseServiceImpl implements CourseService {
 
     if (!course.isPublished()) {
       verifyInstructor(course, userId);
+      return course;
+    }
+
+    if (course.isPrivate()) {
+      boolean hasPrivateAccess =
+          isInstructor(course, userId)
+              || courseEnrollmentRepository.existsByCourseIdAndParticipantId(
+                  course.getId(), userId);
+      if (!hasPrivateAccess) {
+        throw new CourseAccessDeniedException(
+            String.format("Course '%s' is private and can only be accessed via invite", courseId));
+      }
     }
 
     return course;
@@ -132,6 +155,11 @@ public class CourseServiceImpl implements CourseService {
     if (!course.isPublished()) {
       throw new CourseAccessDeniedException(
           String.format("Course '%s' is not open for enrollment", courseId));
+    }
+
+    if (course.isPrivate()) {
+      throw new CourseAccessDeniedException(
+          String.format("Course '%s' is private and can only be joined via invite code", courseId));
     }
 
     if (isInstructor(course, userId)
@@ -166,9 +194,20 @@ public class CourseServiceImpl implements CourseService {
     course.setTitle(request.getTitle());
     course.setDescription(request.getDescription());
     course.setShortDescription(normalizeShortDescription(request.getShortDescription()));
-    course.setPublished(request.isPublished());
     course.setImageUrl(request.getImageUrl());
     course.setTopic(request.getTopic());
+
+    boolean wasPublished = course.isPublished();
+    boolean wasPrivate = course.isPrivate();
+    boolean willBePublished = request.isPublished();
+    boolean willBePrivate = request.isPrivate();
+    if (willBePublished && willBePrivate && (!wasPublished || !wasPrivate)) {
+      course.setInviteCode(generateUniqueInviteCode());
+    } else if (!willBePublished || !willBePrivate) {
+      course.setInviteCode(null);
+    }
+    course.setPublished(willBePublished);
+    course.setPrivate(willBePrivate);
 
     // Diff instructor list: preserve OWNER, update COLLABORATORs
     Set<UUID> requestedInstructorIds =
@@ -291,6 +330,72 @@ public class CourseServiceImpl implements CourseService {
     return courseRepository.findPublishedCoursesByQuery(normalizedQuery, pageable);
   }
 
+  @Override
+  @Transactional(noRollbackFor = DataIntegrityViolationException.class)
+  public Course joinByInviteCode(String code, UUID studentId) {
+    User participant =
+        userRepository
+            .findById(studentId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, studentId)));
+
+    Course course =
+        courseRepository
+            .findByInviteCode(code)
+            .filter(Course::isPublished)
+            .orElseThrow(() -> new InvalidInviteCodeException("Invalid invite code"));
+
+    if (isInstructor(course, studentId)
+        || courseEnrollmentRepository.existsByCourseIdAndParticipantId(course.getId(), studentId)) {
+      return course;
+    }
+
+    CourseEnrollment courseEnrollment = new CourseEnrollment();
+    courseEnrollment.setParticipant(participant);
+    course.addCourseEnrollment(courseEnrollment);
+
+    try {
+      return courseRepository.save(course);
+    } catch (DataIntegrityViolationException ex) {
+      // Concurrent enrollment: another request already enrolled this user; treat as already
+      // enrolled
+      return course;
+    }
+  }
+
+  @Override
+  @Transactional
+  public Course regenerateInviteCode(UUID courseId, UUID userId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+    verifyOwner(course, userId);
+
+    if (!course.isPublished()) {
+      throw new CourseAccessDeniedException(
+          String.format("Course '%s' is not published; cannot regenerate invite code", courseId));
+    }
+
+    if (!course.isPrivate()) {
+      throw new CourseAccessDeniedException(
+          String.format("Course '%s' is public; invite code regeneration is disabled", courseId));
+    }
+
+    for (int attempt = 0; attempt < 10; attempt++) {
+      try {
+        return courseInviteCodeHelper.assignInviteCode(courseId, generateInviteCode());
+      } catch (DataIntegrityViolationException ex) {
+        if (attempt == 9) {
+          throw new IllegalStateException(
+              "Could not generate a unique invite code after 10 attempts", ex);
+        }
+      }
+    }
+    throw new IllegalStateException("Could not generate a unique invite code after 10 attempts");
+  }
+
   private void verifyOwner(Course course, UUID userId) {
     boolean isOwner =
         course.getCourseInstructors().stream()
@@ -316,6 +421,24 @@ public class CourseServiceImpl implements CourseService {
           String.format(
               "User with ID '%s' is not an instructor of course '%s'", userId, course.getId()));
     }
+  }
+
+  private String generateInviteCode() {
+    StringBuilder sb = new StringBuilder(INVITE_CODE_LENGTH);
+    for (int i = 0; i < INVITE_CODE_LENGTH; i++) {
+      sb.append(INVITE_CODE_CHARS.charAt(SECURE_RANDOM.nextInt(INVITE_CODE_CHARS.length())));
+    }
+    return sb.toString();
+  }
+
+  private String generateUniqueInviteCode() {
+    for (int attempt = 0; attempt < 10; attempt++) {
+      String code = generateInviteCode();
+      if (!courseRepository.existsByInviteCode(code)) {
+        return code;
+      }
+    }
+    throw new IllegalStateException("Could not generate a unique invite code after 10 attempts");
   }
 
   private String normalizeShortDescription(String shortDescription) {

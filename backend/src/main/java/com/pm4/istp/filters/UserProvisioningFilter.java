@@ -85,6 +85,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
             HttpServletResponse.SC_BAD_REQUEST, "Unable to provision user: email is required");
         return;
       }
+
       String displayName =
           resolveDisplayName(
               fullName,

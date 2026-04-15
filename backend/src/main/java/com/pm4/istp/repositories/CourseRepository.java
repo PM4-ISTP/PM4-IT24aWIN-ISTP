@@ -2,6 +2,7 @@ package com.pm4.istp.repositories;
 
 import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.dto.ListCourseResponseDto;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,10 @@ import org.springframework.stereotype.Repository;
 public interface CourseRepository extends JpaRepository<Course, UUID> {
   Page<Course> findByCourseInstructorsInstructorId(UUID instructorId, Pageable pageable);
 
+  Optional<Course> findByInviteCode(String inviteCode);
+
+  boolean existsByInviteCode(String inviteCode);
+
   @Query(
       value =
           """
@@ -23,6 +28,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.description,
             c.shortDescription,
             c.isPublished,
+            c.isPrivate,
             count(distinct ciAll.id),
             c.createdAt,
             c.updatedAt,
@@ -42,7 +48,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             from CourseInstructor ciFilter
             where ciFilter.course = c and ciFilter.instructor.id = :instructorId
           )
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name, ownerUser.picture, ownerUser.title
+          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
@@ -66,6 +72,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.description,
             c.shortDescription,
             c.isPublished,
+            c.isPrivate,
             count(distinct ciAll.id),
             c.createdAt,
             c.updatedAt,
@@ -80,14 +87,14 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.domain.entites.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
-          where c.isPublished = true
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name, ownerUser.picture, ownerUser.title
+          where c.isPublished = true and c.isPrivate = false
+          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
           select count(c)
           from Course c
-          where c.isPublished = true
+          where c.isPublished = true and c.isPrivate = false
           """)
   Page<ListCourseResponseDto> findPublishedCourses(Pageable pageable);
 
@@ -100,6 +107,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.description,
             c.shortDescription,
             c.isPublished,
+            c.isPrivate,
             count(distinct ciAll.id),
             c.createdAt,
             c.updatedAt,
@@ -114,19 +122,19 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.domain.entites.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
-          where c.isPublished = true
+          where c.isPublished = true and c.isPrivate = false
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
             )
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name, ownerUser.picture, ownerUser.title
+          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
           select count(c)
           from Course c
-          where c.isPublished = true
+          where c.isPublished = true and c.isPrivate = false
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))

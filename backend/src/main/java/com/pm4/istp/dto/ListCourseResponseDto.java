@@ -20,6 +20,9 @@ public class ListCourseResponseDto {
   @JsonProperty("isPublished")
   private boolean isPublished;
 
+  @JsonProperty("isPrivate")
+  private boolean isPrivate;
+
   private long instructorCount;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
@@ -40,6 +43,7 @@ public class ListCourseResponseDto {
       String description,
       String shortDescription,
       boolean isPublished,
+      boolean isPrivate,
       long instructorCount,
       LocalDateTime createdAt,
       LocalDateTime updatedAt,
@@ -54,6 +58,7 @@ public class ListCourseResponseDto {
     this.description = description;
     this.shortDescription = shortDescription;
     this.isPublished = isPublished;
+    this.isPrivate = isPrivate;
     this.instructorCount = instructorCount;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
