@@ -3,5 +3,5 @@ import CourseDetails from "@/src/components/CourseDetails";
 export default async function CatalogCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  return <CourseDetails userId={id} backPageName="Catalog" backHref="/dashboard/catalog" />;
+  return <CourseDetails courseId={id} backPageName="Catalog" backHref="/dashboard/catalog" />;
 }
