@@ -218,8 +218,7 @@ public class CourseController {
 
   @PostMapping("/catalog/join")
   public ResponseEntity<CourseDetailResponseDto> joinByInviteCode(
-      @AuthenticationPrincipal Jwt jwt,
-      @Valid @RequestBody JoinByInviteCodeRequestDto request) {
+      @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody JoinByInviteCodeRequestDto request) {
     UUID userId = parseUserId(jwt);
     Course course = courseService.joinByInviteCode(request.getCode(), userId);
     CourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
