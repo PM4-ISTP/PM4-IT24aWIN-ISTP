@@ -95,7 +95,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
               where eFilter.course = c and eFilter.participant.id = :userId
             ))
           group by c.id, c.title, c.description, c.shortDescription, c.isPublished,
-            c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty,
+            c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty,
             ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
