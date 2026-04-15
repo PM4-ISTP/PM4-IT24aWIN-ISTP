@@ -224,6 +224,24 @@ public class CourseController {
     return ResponseEntity.ok(courses);
   }
 
+  @PostMapping("/catalog/join")
+  public ResponseEntity<PublicCourseDetailResponseDto> joinByInviteCode(
+      @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody JoinByInviteCodeRequestDto request) {
+    UUID userId = parseUserId(jwt);
+    Course course = courseService.joinByInviteCode(request.getCode(), userId);
+    PublicCourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
+    return ResponseEntity.ok(dto);
+  }
+
+  @PostMapping("/{id}/invite-code/regenerate")
+  public ResponseEntity<CourseDetailResponseDto> regenerateInviteCode(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    Course course = courseService.regenerateInviteCode(id, userId);
+    CourseDetailResponseDto dto = toCourseDetailResponseDto(course, userId);
+    return ResponseEntity.ok(dto);
+  }
+
   // ── Private helpers ──
 
   /** Full detail including participant list – for instructor/owner endpoints. */
@@ -243,6 +261,12 @@ public class CourseController {
                 })
             .toList();
     dto.setParticipants(participants);
+    boolean callerIsInstructor =
+        course.getCourseInstructors().stream()
+            .anyMatch(ci -> ci.getInstructor().getId().equals(userId));
+    if (!callerIsInstructor) {
+      dto.setInviteCode(null);
+    }
     return dto;
   }
 
@@ -255,6 +279,7 @@ public class CourseController {
     dto.setEnrolled(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId));
     dto.setParticipants(null);
     setInstructorIdsToNull(dto.getCourseInstructors());
+    dto.setInviteCode(null);
     return dto;
   }
 

@@ -37,6 +37,7 @@ export default function CreateCourse() {
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("<p>Add a description...</p>");
   const [isPublished, setIsPublished] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [topic, setTopic] = useState<string | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
@@ -71,6 +72,7 @@ export default function CreateCourse() {
       description,
       shortDescription: normalizedShortDescription,
       isPublished,
+      isPrivate,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
       collaboratorIds: selectedInstructors,
@@ -188,6 +190,24 @@ export default function CreateCourse() {
                 track: {
                   backgroundColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.15)",
                   borderColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.2)",
+                  cursor: "pointer",
+                },
+                thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },
+              }}
+            />
+
+            <Switch
+              label="Private Course (invite-code only)"
+              checked={isPrivate}
+              onChange={(e) => setIsPrivate(e.currentTarget.checked)}
+              size="md"
+              description="Private courses are hidden from the catalog and can only be joined via invite code."
+              styles={{
+                label: { color: "#e2e8f0", fontWeight: 500 },
+                description: { color: "#94a3b8" },
+                track: {
+                  backgroundColor: isPrivate ? "#7c3aed" : "rgba(255,255,255,0.15)",
+                  borderColor: isPrivate ? "#7c3aed" : "rgba(255,255,255,0.2)",
                   cursor: "pointer",
                 },
                 thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },

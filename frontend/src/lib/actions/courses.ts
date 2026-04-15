@@ -23,6 +23,7 @@ export async function createCourse(
       description: dto.description,
       shortDescription: dto.shortDescription,
       isPublished: dto.isPublished,
+      isPrivate: dto.isPrivate,
       imageUrl: dto.imageUrl,
       topic: dto.topic,
       instructors: dto.collaboratorIds.map((id) => ({
@@ -130,6 +131,7 @@ export async function updateCourse(
       description: dto.description,
       shortDescription: dto.shortDescription,
       isPublished: dto.isPublished,
+      isPrivate: dto.isPrivate,
       imageUrl: dto.imageUrl,
       topic: dto.topic,
       instructors: dto.collaboratorIds.map((cid) => ({
@@ -192,6 +194,55 @@ export async function fetchEnrolledCoursesOfLoggedInUser(
   size = 20
 ): Promise<ActionResult<Page<ListCourseResponseDto>>> {
   return fetchCoursesWithoutQuery("/api/v1/courses/my-enrollments", page, size);
+}
+
+export async function joinCourseByCode(
+  code: string
+): Promise<ActionResult<CourseDetailResponseDto>> {
+  try {
+    const res = await fetchBackend("/api/v1/courses/catalog/join", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      const message = extractErrorMessage(text, res.statusText);
+      return { success: false, error: `${res.status}: ${message}` };
+    }
+
+    const data = (await res.json()) as CourseDetailResponseDto;
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+export async function regenerateInviteCode(
+  id: string
+): Promise<ActionResult<CourseDetailResponseDto>> {
+  try {
+    const res = await fetchBackend(`/api/v1/courses/${id}/invite-code/regenerate`, {
+      method: "POST",
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      const message = extractErrorMessage(text, res.statusText);
+      return { success: false, error: `${res.status}: ${message}` };
+    }
+
+    const data = (await res.json()) as CourseDetailResponseDto;
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
 }
 
 export async function fetchPublishedCourses(

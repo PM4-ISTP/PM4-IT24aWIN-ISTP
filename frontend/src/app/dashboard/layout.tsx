@@ -3,6 +3,8 @@ import { authOptions } from "@/src/lib/auth";
 import { AppShell, AppShellHeader, AppShellNavbar, AppShellMain, Group } from "@mantine/core";
 import UserMenu from "@/src/components/UserMenu";
 import DashboardNav from "@/src/components/DashboardNav";
+import JoinCourseButton from "@/src/components/JoinCourseButton";
+import { ROLES } from "@/src/lib/roles";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
@@ -48,7 +50,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
               ZHAW
             </p>
           </div>
-          <UserMenu name={name} roles={roles} image={image} accountUrl={accountUrl} />
+          <Group gap="sm">
+            {roles.includes(ROLES.STUDENT) && <JoinCourseButton />}
+            <UserMenu name={name} roles={roles} image={image} accountUrl={accountUrl} />
+          </Group>
         </Group>
       </AppShellHeader>
 

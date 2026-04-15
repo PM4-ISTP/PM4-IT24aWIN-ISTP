@@ -26,6 +26,7 @@ export interface CreateCourseDto {
   description: string;
   shortDescription: string | null;
   isPublished: boolean;
+  isPrivate: boolean;
   imageUrl?: string | null;
   topic?: string | null;
   instructors: InstructorAssignment[];
@@ -37,6 +38,7 @@ export interface CourseResponseDto {
   description: string | null;
   shortDescription: string | null;
   isPublished: boolean;
+  isPrivate: boolean;
   imageUrl?: string | null;
   topic?: string | null;
   difficulty?: CourseDifficulty | null;
@@ -51,6 +53,7 @@ export interface ListCourseResponseDto {
   description: string | null;
   shortDescription: string | null;
   isPublished: boolean;
+  isPrivate: boolean;
   instructorCount: number;
   imageUrl?: string | null;
   topic?: string | null;
@@ -67,6 +70,7 @@ export interface UpdateCourseDto {
   description: string;
   shortDescription: string | null;
   isPublished: boolean;
+  isPrivate: boolean;
   imageUrl?: string | null;
   topic?: string | null;
   instructors: InstructorAssignment[];
@@ -104,6 +108,8 @@ export interface CourseDetailResponseDto {
   participantCount: number;
   isEnrolled: boolean;
   isPublished: boolean;
+  isPrivate: boolean;
+  inviteCode?: string | null;
   imageUrl?: string | null;
   topic?: string | null;
   difficulty?: CourseDifficulty | null;

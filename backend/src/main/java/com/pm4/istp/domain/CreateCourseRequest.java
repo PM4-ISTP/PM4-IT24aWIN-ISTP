@@ -14,6 +14,7 @@ public class CreateCourseRequest {
   private String description;
   private String shortDescription;
   private boolean isPublished;
+  private boolean isPrivate;
   private String imageUrl;
   private String topic;
   private CourseDifficultyEnum difficulty;

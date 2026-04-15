@@ -25,9 +25,14 @@ public class CourseDetailResponseDto {
   @JsonProperty("isPublished")
   private boolean isPublished;
 
+  @JsonProperty("isPrivate")
+  private boolean isPrivate;
+
   private String imageUrl;
   private String topic;
   private CourseDifficultyEnum difficulty;
+
+  private String inviteCode;
 
   private List<CourseDetailInstructorResponseDto> courseInstructors;
   private List<CourseParticipantResponseDto> participants;

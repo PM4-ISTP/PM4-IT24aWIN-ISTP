@@ -31,4 +31,8 @@ public interface CourseService {
   Page<ListCourseResponseDto> listUserEnrollments(UUID userId, Pageable pageable);
 
   Page<ListCourseResponseDto> listPublishedCourses(String query, Pageable pageable);
+
+  Course joinByInviteCode(String code, UUID studentId);
+
+  Course regenerateInviteCode(UUID courseId, UUID userId);
 }

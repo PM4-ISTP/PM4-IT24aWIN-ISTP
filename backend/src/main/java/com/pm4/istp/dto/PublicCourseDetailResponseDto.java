@@ -29,6 +29,8 @@ public class PublicCourseDetailResponseDto {
   private String topic;
   private CourseDifficultyEnum difficulty;
 
+  private String inviteCode;
+
   private List<CourseDetailInstructorResponseDto> courseInstructors;
   private List<CourseParticipantResponseDto> participants;
   private List<ChallengeDetailResponseDto> courseChallenges;
