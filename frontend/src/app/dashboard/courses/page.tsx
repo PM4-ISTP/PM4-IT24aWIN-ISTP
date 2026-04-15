@@ -4,8 +4,10 @@ import { Alert, Stack, Title } from "@mantine/core";
 
 export default async function CoursesPage(props: { searchParams: Promise<{ page?: string }> }) {
   const searchParams = await props.searchParams;
-  const currentPage = Math.max(1, parseInt(searchParams.page ?? "1"));
-  const result = await fetchEnrolledCoursesOfLoggedInUser();
+  const parsedPage = Number.parseInt(searchParams.page ?? "1", 10);
+  const currentPage = Number.isNaN(parsedPage) ? 1 : Math.max(1, parsedPage);
+  const pageSize = 20;
+  const result = await fetchEnrolledCoursesOfLoggedInUser(currentPage - 1, pageSize);
 
   return (
     <Stack p="xl" gap="md">
