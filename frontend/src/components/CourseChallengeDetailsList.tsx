@@ -138,7 +138,7 @@ export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallenge
                       </Group>
 
                       <Box my={30} style={{ width: 200 }}>
-                        <PlayChallengeButton condition={1} />
+                        <PlayChallengeButton condition={0} />
                       </Box>
                     </Stack>
                   </GridCol>
