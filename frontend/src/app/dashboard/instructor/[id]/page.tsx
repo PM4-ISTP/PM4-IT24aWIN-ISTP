@@ -32,10 +32,7 @@ import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/lib/courseText";
-import {
-  visibilityFromFlags,
-  visibilityToFlags,
-} from "@/src/lib/courseVisibility";
+import { visibilityFromFlags, visibilityToFlags } from "@/src/lib/courseVisibility";
 import {
   deleteCourse,
   fetchCourse,

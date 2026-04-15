@@ -28,4 +28,3 @@ export function visibilityToFlags(visibility: CourseVisibility): {
       return { isPublished: false, isPrivate: false };
   }
 }
-
