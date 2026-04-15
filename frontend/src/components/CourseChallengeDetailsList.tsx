@@ -59,7 +59,7 @@ export function CourseChallengeDetailsList({
           <Stack gap="sm">
             {challenges.map((challenge, index) => {
               const challengeTitle = showIndex
-                ? "#" + (index + 1) + formatText(challenge.title)
+                ? "#" + (index + 1) + " " + formatText(challenge.title)
                 : formatText(challenge.title);
               const sanitizedDescription =
                 challenge.description === undefined ? "" : getSanitizedHtml(challenge.description);
