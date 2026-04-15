@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pm4.istp.dto.PublicCourseDetailResponseDto;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
@@ -400,14 +401,14 @@ class CourseControllerTest {
     instructor.setId(instructorId);
     instructor.setInstructor(instructorUser);
 
-    CourseDetailResponseDto dto = new CourseDetailResponseDto();
+    PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
     dto.setId(courseId);
     dto.setTitle("Public Course");
     dto.setCourseInstructors(List.of(instructor));
     dto.setParticipants(List.of(new CourseParticipantResponseDto(UUID.randomUUID(), "Student", null)));
 
-    when(courseService.getCourse(userId, courseId)).thenReturn(course);
-    when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
+    when(courseService.getPublicCourse(userId, courseId)).thenReturn(course);
+    when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
     when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(0L);
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(false);
@@ -453,12 +454,12 @@ class CourseControllerTest {
     Course course = new Course();
     course.setId(courseId);
 
-    CourseDetailResponseDto dto = new CourseDetailResponseDto();
+    PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
     dto.setId(courseId);
     dto.setCourseInstructors(Collections.emptyList());
 
     when(courseService.enrollInCourse(userId, courseId)).thenReturn(course);
-    when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
+    when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
     when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(1L);
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(true);
@@ -476,11 +477,11 @@ class CourseControllerTest {
     Course course = new Course();
     course.setId(courseId);
 
-    CourseDetailResponseDto dto = new CourseDetailResponseDto();
+    PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
     dto.setId(courseId);
 
     when(courseService.joinByInviteCode(eq("ABC123"), eq(userId))).thenReturn(course);
-    when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
+    when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
     when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(1L);
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(true);
