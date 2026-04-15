@@ -16,6 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pm4.istp.domain.entites.Challenge;
+import com.pm4.istp.domain.entites.ChallengeStatusEnum;
+import com.pm4.istp.domain.entites.CourseChallenge;
 import com.pm4.istp.dto.ChallengeCreatorResponseDto;
 import com.pm4.istp.dto.ChallengeDetailResponseDto;
 import com.pm4.istp.dto.PublicCourseDetailResponseDto;
@@ -389,6 +392,11 @@ class CourseControllerTest {
 
   @Test
   void getPublicCourse_returnsOk() throws Exception {
+    ChallengeDetailResponseDto challenge1 = generateChallengeDetailResponseDto("Challenge 1", ChallengeStatusEnum.DRAFT, "Creator 1");
+    ChallengeDetailResponseDto challenge2 = generateChallengeDetailResponseDto("Challenge 2", ChallengeStatusEnum.PUBLIC, "Creator 2");
+    ChallengeDetailResponseDto challenge3 = generateChallengeDetailResponseDto("Challenge 3", ChallengeStatusEnum.PRIVATE, "Creator 3");
+    ChallengeDetailResponseDto challenge4 = generateChallengeDetailResponseDto("Challenge 4", ChallengeStatusEnum.PUBLIC, "Creator 4");
+
     Course course = new Course();
     course.setId(courseId);
 
@@ -403,21 +411,14 @@ class CourseControllerTest {
     instructor.setId(instructorId);
     instructor.setInstructor(instructorUser);
 
-    ChallengeCreatorResponseDto challengeCreatorResponseDto = new ChallengeCreatorResponseDto();
-    challengeCreatorResponseDto.setId(UUID.randomUUID());
-    challengeCreatorResponseDto.setName("Creator");
-
-    ChallengeDetailResponseDto challengeDetailResponseDto = new ChallengeDetailResponseDto();
-    challengeDetailResponseDto.setCreator(challengeCreatorResponseDto);
-
     PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
     dto.setId(courseId);
     dto.setTitle("Public Course");
     dto.setCourseInstructors(List.of(instructor));
-    dto.setCourseChallenges(List.of(challengeDetailResponseDto));
+    dto.setCourseChallenges(List.of(challenge1, challenge2, challenge3, challenge4));
     dto.setParticipants(List.of(new CourseParticipantResponseDto(UUID.randomUUID(), "Student", null)));
 
-    when(courseService.getPublicCourse(userId, courseId)).thenReturn(course);
+    when(courseService.getCourse(userId, courseId)).thenReturn(course);
     when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
     when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(0L);
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
@@ -433,9 +434,10 @@ class CourseControllerTest {
         .andExpect(jsonPath("$.courseInstructors[*].instructor.id").value(everyItem(nullValue())))
         .andExpect(jsonPath("$.courseInstructors[0].instructor.name").value("Instructor"))
         .andExpect(jsonPath("$.courseChallenges").isArray())
-        .andExpect(jsonPath("$.courseChallenges", hasSize(1)))
+        .andExpect(jsonPath("$.courseChallenges", hasSize(2)))
         .andExpect(jsonPath("$.courseChallenges[*].creator.id").value(everyItem(nullValue())))
-        .andExpect(jsonPath("$.courseChallenges[0].creator.name").value("Creator"))
+        .andExpect(jsonPath("$.courseChallenges[0].creator.name").value("Creator 2"))
+        .andExpect(jsonPath("$.courseChallenges[1].creator.name").value("Creator 4"))
         .andExpect(jsonPath("$.participants").value(nullValue()));
   }
 
@@ -598,6 +600,20 @@ class CourseControllerTest {
         .perform(post("/api/v1/courses/{id}/invite-code/regenerate", courseId))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.error").value("Course not found"));
+  }
+
+  // ── Mock object generators ────────────────────────────────────────────────
+  private ChallengeDetailResponseDto generateChallengeDetailResponseDto(String title, ChallengeStatusEnum challengeStatus, String creatorName) {
+    ChallengeCreatorResponseDto challengeCreatorResponseDto = new ChallengeCreatorResponseDto();
+    challengeCreatorResponseDto.setId(UUID.randomUUID());
+    challengeCreatorResponseDto.setName(creatorName);
+
+    ChallengeDetailResponseDto challengeDetailResponseDto = new ChallengeDetailResponseDto();
+    challengeDetailResponseDto.setTitle(title);
+    challengeDetailResponseDto.setCreator(challengeCreatorResponseDto);
+    challengeDetailResponseDto.setStatus(challengeStatus);
+
+    return challengeDetailResponseDto;
   }
 
   // ── Jackson helper ────────────────────────────────────────────────────────

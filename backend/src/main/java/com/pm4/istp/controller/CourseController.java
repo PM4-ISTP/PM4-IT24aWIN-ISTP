@@ -4,6 +4,7 @@ import static com.pm4.istp.util.JwtUtil.parseUserId;
 
 import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
+import com.pm4.istp.domain.entites.ChallengeStatusEnum;
 import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.domain.entites.CourseEnrollment;
 import com.pm4.istp.dto.*;
@@ -17,6 +18,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -202,7 +206,7 @@ public class CourseController {
   public ResponseEntity<PublicCourseDetailResponseDto> getPublicCourse(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
-    Course course = courseService.getPublicCourse(userId, id);
+    Course course = courseService.getCourse(userId, id);
     PublicCourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
     return ResponseEntity.ok(dto);
   }
@@ -278,10 +282,19 @@ public class CourseController {
     dto.setParticipantCount(courseEnrollmentRepository.countByCourseId(courseId));
     dto.setEnrolled(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId));
     dto.setParticipants(null);
+    filterOutNonPublicChallenges(dto);
     setInstructorIdsToNull(dto.getCourseInstructors());
     setChallengeCreatorIdsToNull(dto.getCourseChallenges());
     dto.setInviteCode(null);
     return dto;
+  }
+
+  private void filterOutNonPublicChallenges(PublicCourseDetailResponseDto dto) {
+    List<ChallengeDetailResponseDto> challenges = new ArrayList<>();
+    for (ChallengeDetailResponseDto challenge : dto.getCourseChallenges()) {
+      if (challenge.getStatus() == ChallengeStatusEnum.PUBLIC) challenges.add(challenge);
+    }
+    dto.setCourseChallenges(List.copyOf(challenges));
   }
 
   private void setInstructorIdsToNull(List<CourseDetailInstructorResponseDto> courseInstructors) {
