@@ -1,10 +1,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
-import { Grid, GridCol, Group, RingProgress, SimpleGrid, Stack, Text, Box } from "@mantine/core";
-import { IconArrowRight, IconBolt, IconBug, IconLock, IconShieldCheck } from "@tabler/icons-react";
+import { Grid, GridCol, Group, RingProgress, Stack, Text, Box, Alert } from "@mantine/core";
+import { IconArrowRight } from "@tabler/icons-react";
 import DashboardStyles from "./DashboardStyles";
 import DashboardHero from "./DashboardHero";
-import CourseCard from "./CourseCard";
+import { CourseGrid } from "@/src/components/CourseGrid";
+import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/lib/actions/courses";
+import Link from "next/link";
 
 const sectionLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -19,6 +21,7 @@ export default async function Home() {
   const session = await getServerSession(authOptions);
   const name = session?.user?.name ?? "there";
   const firstName = name.split(" ")[0];
+  const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
 
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-GB", {
@@ -42,45 +45,30 @@ export default async function Home() {
             <Group justify="space-between" align="center">
               <Text style={sectionLabelStyle}>Continue Learning</Text>
               <Group gap={4} style={{ cursor: "pointer" }}>
-                <Text
-                  size="sm"
-                  fw={600}
+                <Link
+                  href="/dashboard/courses"
                   style={{
                     color: "#60a5fa",
                     fontFamily: "var(--font-space-grotesk), sans-serif",
                   }}
                 >
                   View all
-                </Text>
+                </Link>
                 <IconArrowRight size={15} color="#60a5fa" />
               </Group>
             </Group>
-            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-              <CourseCard
-                title="Introduction to Web Application Security"
-                topic="Web Security"
-                progress={42}
-                icon={<IconShieldCheck size={16} />}
+            {result.success ? (
+              <CourseGrid
+                courses={result.data.content}
+                totalPages={1}
+                currentPage={1}
+                coursePathPrefix="/dashboard/courses"
               />
-              <CourseCard
-                title="Common Vulnerabilities and Exploits (CVE)"
-                topic="Vulnerabilities"
-                progress={15}
-                icon={<IconBug size={16} />}
-              />
-              <CourseCard
-                title="Cryptography Fundamentals"
-                topic="Cryptography"
-                progress={68}
-                icon={<IconLock size={16} />}
-              />
-              <CourseCard
-                title="Network Penetration Testing"
-                topic="Pentesting"
-                progress={5}
-                icon={<IconBolt size={16} />}
-              />
-            </SimpleGrid>
+            ) : (
+              <Alert color="red" title="Failed to load courses">
+                {result.error}
+              </Alert>
+            )}
           </Stack>
         </GridCol>
 

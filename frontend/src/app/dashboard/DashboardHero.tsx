@@ -1,6 +1,9 @@
+"use client";
+
 import { Box, Button, Group, Stack, Text } from "@mantine/core";
 import { IconBook2, IconBolt, IconTrophy, IconChevronRight } from "@tabler/icons-react";
 import WelcomeTitle from "./WelcomeTitle";
+import { useRouter } from "next/navigation";
 
 const heroStats = [
   { icon: <IconBook2 size={18} />, label: "Enrolled Courses", value: "—" },
@@ -24,6 +27,8 @@ export default function DashboardHero({
   firstName: string;
   dateStr: string;
 }) {
+  const router = useRouter();
+
   return (
     <Box
       style={{
@@ -73,6 +78,7 @@ export default function DashboardHero({
           </Text>
           <Group mt={8} gap="sm">
             <Button
+              onClick={ () => router.push("/dashboard/catalog") }
               size="md"
               radius="md"
               rightSection={<IconChevronRight size={15} />}
