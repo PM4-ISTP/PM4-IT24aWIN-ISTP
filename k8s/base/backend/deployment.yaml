@@ -41,8 +41,6 @@ spec:
                 configMapKeyRef:
                   name: istp-config
                   key: keycloak-issuer-uri
-            - name: K8S_KUBECONFIG_PATH
-              value: /etc/kubeconfig/kubeconfig
             - name: K8S_DEFAULT_NAMESPACE
               valueFrom:
                 configMapKeyRef:
@@ -58,10 +56,6 @@ spec:
                 configMapKeyRef:
                   name: istp-config
                   key: istp-tls
-          volumeMounts:
-            - name: kubeconfig
-              mountPath: /etc/kubeconfig
-              readOnly: true
           resources:
             requests:
               cpu: 250m
@@ -69,7 +63,4 @@ spec:
             limits:
               cpu: "1"
               memory: 1Gi
-      volumes:
-        - name: kubeconfig
-          secret:
-            secretName: kubeconfig # created manually, see README
+

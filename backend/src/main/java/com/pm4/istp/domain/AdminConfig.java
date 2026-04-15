@@ -3,6 +3,7 @@ package com.pm4.istp.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -30,7 +31,8 @@ public class AdminConfig {
   @Column(name = "memory_limit")
   private String memoryLimit;
 
-  @Column(name = "kubeconfig", nullable = false)
+  @Lob
+  @Column(name = "kubeconfig", columnDefinition = "TEXT", nullable = false)
   private String kubeconfig;
 
   @Column(name = "updated_at", nullable = false)
