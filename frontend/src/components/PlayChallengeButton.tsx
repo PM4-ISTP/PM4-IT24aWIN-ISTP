@@ -19,7 +19,7 @@ export default function PlayChallengeButton({ condition }: { condition: number }
     return (
       <ButtonWithInfoText
         buttonText="Start"
-        infoText=""
+        infoText="You have not started this challenge yet."
         buttonColor="darkgreen"
       />
     );
