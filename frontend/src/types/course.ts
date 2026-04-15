@@ -1,6 +1,7 @@
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
 export type PlatformRole = "ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT";
 export type CourseDifficulty = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+export type CourseVisibility = "DRAFT" | "PUBLIC" | "PRIVATE";
 
 export interface CourseUserSummary {
   id: string;

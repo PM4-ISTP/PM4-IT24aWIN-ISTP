@@ -117,6 +117,17 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
+  void handleInviteCodeGenerationException_returnsInternalServerErrorWithSpecificMessage() {
+    ResponseEntity<ErrorDto> response =
+        handler.handleInviteCodeGenerationException(
+            new InviteCodeGenerationException("could not regenerate"));
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().getError()).isEqualTo("Could not regenerate invite code");
+  }
+
+  @Test
   void handleMethodArgumentNotValidException_returnsBadRequestWithFieldError() {
     MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
     BindingResult bindingResult = mock(BindingResult.class);
@@ -176,5 +187,15 @@ class GlobalExceptionHandlerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getError()).isEqualTo("Constraint violation occurred");
+  }
+
+  @Test
+  void handleIllegalArgumentException_returnsBadRequestWithMessage() {
+    ResponseEntity<ErrorDto> response =
+        handler.handleIllegalArgumentException(new IllegalArgumentException("invalid visibility"));
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().getError()).isEqualTo("invalid visibility");
   }
 }
