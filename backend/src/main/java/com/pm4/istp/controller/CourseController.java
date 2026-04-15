@@ -202,7 +202,7 @@ public class CourseController {
   public ResponseEntity<PublicCourseDetailResponseDto> getPublicCourse(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
-    Course course = courseService.getCourse(userId, id);
+    Course course = courseService.getPublicCourse(userId, id);
     PublicCourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
     return ResponseEntity.ok(dto);
   }

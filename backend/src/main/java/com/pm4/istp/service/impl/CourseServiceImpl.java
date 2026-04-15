@@ -115,6 +115,14 @@ public class CourseServiceImpl implements CourseService {
   }
 
   @Override
+  @Transactional(readOnly = true)
+  public Course getPublicCourse(UUID userId, UUID courseId) {
+    Course course = getCourse(userId, courseId);
+    course.getCourseChallenges().removeIf(courseChallenge -> courseChallenge.getChallenge().getStatus() != ChallengeStatusEnum.PUBLIC);
+    return course;
+  }
+
+  @Override
   @Transactional(noRollbackFor = DataIntegrityViolationException.class)
   public Course enrollInCourse(UUID userId, UUID courseId) {
     User participant =
