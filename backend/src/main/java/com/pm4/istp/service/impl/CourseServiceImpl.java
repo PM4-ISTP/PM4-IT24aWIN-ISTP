@@ -415,13 +415,13 @@ public class CourseServiceImpl implements CourseService {
   }
 
   private static boolean isInviteCodeConstraintViolation(DataIntegrityViolationException ex) {
-    Throwable t = ex;
-    while (t != null) {
-      String msg = t.getMessage();
+    Throwable current = ex;
+    while (current != null) {
+      String msg = current.getMessage();
       if (msg != null && msg.contains("uk_courses_invite_code")) {
         return true;
       }
-      t = t.getCause();
+      current = current.getCause();
     }
     return false;
   }
