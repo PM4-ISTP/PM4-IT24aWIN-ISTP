@@ -169,8 +169,7 @@ public class CourseServiceImpl implements CourseService {
           String.format("Course '%s' is not open for enrollment", courseId));
     }
 
-    if (isInstructor(course, userId)
-        || courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)) {
+    if (courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)) {
       return course;
     }
 
@@ -330,6 +329,11 @@ public class CourseServiceImpl implements CourseService {
   public Page<ListCourseResponseDto> listCoursesForInstructors(
       UUID instructorId, Pageable pageable) {
     return courseRepository.findListCoursesForInstructor(instructorId, pageable);
+  }
+
+  @Override
+  public Page<ListCourseResponseDto> listUserEnrollments(UUID userId, Pageable pageable) {
+    return courseRepository.findListEnrollmentsForUser(userId, pageable);
   }
 
   @Override

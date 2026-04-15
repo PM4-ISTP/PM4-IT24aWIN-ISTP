@@ -13,7 +13,6 @@ interface CourseEnrollmentButtonProps {
   courseId: string;
   isEnrolled: boolean;
   participantCount: number;
-  isInstructor: boolean;
   isPublished: boolean;
 }
 
@@ -21,7 +20,6 @@ export function CourseEnrollmentButton({
   courseId,
   isEnrolled,
   participantCount,
-  isInstructor,
   isPublished,
 }: CourseEnrollmentButtonProps) {
   const router = useRouter();
@@ -66,7 +64,7 @@ export function CourseEnrollmentButton({
     }
   }
 
-  if (!isPublished || isInstructor) {
+  if (!isPublished) {
     return null;
   }
 

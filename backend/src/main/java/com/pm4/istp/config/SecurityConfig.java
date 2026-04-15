@@ -36,7 +36,7 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml")
                     .permitAll()
-                    .requestMatchers("/api/v1/courses/catalog")
+                    .requestMatchers("/api/v1/courses/my-enrollments", "/api/v1/courses/catalog")
                     .authenticated()
                     .requestMatchers("/api/v1/courses/catalog/**")
                     .authenticated()

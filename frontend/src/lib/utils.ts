@@ -1,3 +1,5 @@
+import sanitizeHtml from "sanitize-html";
+
 export function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
@@ -40,4 +42,20 @@ export function extractErrorMessage(text: string, fallback: string): string {
     // Not valid JSON – use raw text
     return text || fallback;
   }
+}
+
+/**
+ * Sanitizes a HTML string, so that it can be used as input for `dangerouslySetInnerHTML`.
+ *
+ * @param html The HTML string that should get sanitized.
+ * @returns The sanitized string.
+ */
+export function getSanitizedHtml(html: string) {
+  return sanitizeHtml(html, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2"]),
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      img: ["src", "alt", "width", "height"],
+    },
+  });
 }

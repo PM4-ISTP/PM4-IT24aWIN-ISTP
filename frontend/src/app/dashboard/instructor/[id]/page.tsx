@@ -62,7 +62,7 @@ function mergeUsersById(
 ): Record<string, CollaboratorUserResponseDto> {
   const next = { ...current };
   users.forEach((user) => {
-    next[user.id] = user;
+    next[user.id as string] = user; // each user always has an ID stored
   });
   return next;
 }
@@ -137,7 +137,7 @@ export default function EditCourse() {
       const collaborators = course.courseInstructors.filter(
         (ci) => ci.instructorRole === COLLABORATOR_ROLE
       );
-      setSelectedInstructors(collaborators.map((ci) => ci.instructor.id));
+      setSelectedInstructors(collaborators.map((ci) => ci.instructor.id as string)); // each instructor always has an ID stored
       setInitialUsers(collaborators.map((ci) => ci.instructor));
       setKnownUsers(
         mergeUsersById(

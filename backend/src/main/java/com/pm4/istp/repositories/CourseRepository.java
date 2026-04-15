@@ -85,6 +85,55 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           )
           from Course c
           left join c.courseInstructors ciAll
+          left join c.courseInstructors ciOwner
+            on ciOwner.instructorRole = com.pm4.istp.domain.entites.InstructorRoleEnum.OWNER
+          left join ciOwner.instructor ownerUser
+          where
+            (c.isPublished = true and exists (
+              select 1
+              from CourseEnrollment eFilter
+              where eFilter.course = c and eFilter.participant.id = :userId
+            ))
+          group by c.id, c.title, c.description, c.shortDescription, c.isPublished,
+            c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty,
+            ownerUser.name, ownerUser.picture, ownerUser.title
+          """,
+      countQuery =
+          """
+          select count(distinct c.id)
+          from Course c
+          where
+            (c.isPublished = true and exists (
+              select 1
+              from CourseEnrollment eFilter
+              where eFilter.course = c and eFilter.participant.id = :userId
+            ))
+          """)
+  Page<ListCourseResponseDto> findListEnrollmentsForUser(
+      @Param("userId") UUID userId, Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select new com.pm4.istp.dto.ListCourseResponseDto(
+            c.id,
+            c.title,
+            c.description,
+            c.shortDescription,
+            c.isPublished,
+            c.isPrivate,
+            count(distinct ciAll.id),
+            c.createdAt,
+            c.updatedAt,
+            c.imageUrl,
+            c.topic,
+            c.difficulty,
+            ownerUser.name,
+            ownerUser.picture,
+            ownerUser.title
+          )
+          from Course c
+          left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.domain.entites.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
           where c.isPublished = true and c.isPrivate = false

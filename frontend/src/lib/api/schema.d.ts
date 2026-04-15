@@ -220,6 +220,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/courses/my-enrollments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEnrollments"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/courses/catalog": {
     parameters: {
       query?: never;
@@ -252,26 +268,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/challenges/search": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Search available challenges
-     * @description Searches for challenges by title. Returns the user's own challenges and public ones.
-     */
-    get: operations["searchChallenges"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/v1/challenges/{id}/visibility-impact": {
     parameters: {
       query?: never;
@@ -284,6 +280,26 @@ export interface paths {
      * @description Returns how many course assignments would be removed if the challenge's visibility were changed to the given status. Only the creator can call this.
      */
     get: operations["getVisibilityImpact"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/challenges/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search available challenges
+     * @description Searches for challenges by title. Returns the user's own challenges and public ones.
+     */
+    get: operations["searchChallenges"];
     put?: never;
     post?: never;
     delete?: never;
@@ -342,7 +358,7 @@ export interface components {
       id?: string;
       /** @enum {string} */
       instructorRole?: "OWNER" | "COLLABORATOR";
-      instructor?: components["schemas"]["User"];
+      instructor?: components["schemas"]["UserDto"];
       /** Format: date-time */
       invitedAt?: string;
       /** Format: date-time */
@@ -383,7 +399,7 @@ export interface components {
       name?: string;
       picture?: string;
     };
-    User: {
+    UserDto: {
       /** Format: uuid */
       id?: string;
       name?: string;
@@ -391,11 +407,6 @@ export interface components {
       username?: string;
       picture?: string;
       title?: string;
-      roles?: ("ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT")[];
-      /** Format: date-time */
-      createdAt?: string;
-      /** Format: date-time */
-      updatedAt?: string;
     };
     ErrorDto: {
       error?: string;
@@ -404,7 +415,7 @@ export interface components {
       /** Format: uuid */
       challengeId: string;
       /** Format: int32 */
-      orderIndex?: number;
+      orderIndex: number;
     };
     UpdateCourseChallengesRequestDto: {
       challenges: components["schemas"]["CourseChallengeItemDto"][];
@@ -448,6 +459,13 @@ export interface components {
       memoryLimit?: string;
       kubeconfig?: string;
     };
+    AdminConfigResponse: {
+      kubeconfigUploaded?: boolean;
+      cpuLimit?: string;
+      memoryLimit?: string;
+      /** Format: date-time */
+      updatedAt?: string;
+    };
     CreateCourseInstructorRequestDto: {
       /** Format: uuid */
       instructorId: string;
@@ -469,7 +487,7 @@ export interface components {
       id?: string;
       /** @enum {string} */
       instructorRole?: "OWNER" | "COLLABORATOR";
-      instructor?: components["schemas"]["User"];
+      instructor?: components["schemas"]["UserDto"];
       /** Format: date-time */
       invitedAt?: string;
       /** Format: date-time */
@@ -492,6 +510,30 @@ export interface components {
       /** Format: date-time */
       updatedAt?: string;
       published?: boolean;
+      isPublished?: boolean;
+    };
+    PublicCourseDetailResponseDto: {
+      /** Format: uuid */
+      id?: string;
+      title?: string;
+      description?: string;
+      shortDescription?: string;
+      /** Format: int64 */
+      participantCount?: number;
+      imageUrl?: string;
+      topic?: string;
+      /** @enum {string} */
+      difficulty?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+      courseInstructors?: components["schemas"]["CourseDetailInstructorResponseDto"][];
+      participants?: components["schemas"]["CourseParticipantResponseDto"][];
+      courseChallenges?: components["schemas"]["ChallengeDetailResponseDto"][];
+      /** Format: date-time */
+      createdAt?: string;
+      /** Format: date-time */
+      updatedAt?: string;
+      enrolled?: boolean;
+      published?: boolean;
+      isEnrolled?: boolean;
       isPublished?: boolean;
     };
     CreateChallengeRequestDto: {
@@ -564,27 +606,27 @@ export interface components {
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
-      pageable?: components["schemas"]["PageableObject"];
       first?: boolean;
       last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
+      pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
     PageableObject: {
-      paged?: boolean;
       /** Format: int64 */
       offset?: number;
       sort?: components["schemas"]["SortObject"];
-      /** Format: int32 */
-      pageNumber?: number;
+      paged?: boolean;
       /** Format: int32 */
       pageSize?: number;
+      /** Format: int32 */
+      pageNumber?: number;
       unpaged?: boolean;
     };
     SortObject: {
-      sorted?: boolean;
       empty?: boolean;
+      sorted?: boolean;
       unsorted?: boolean;
     };
     ListCourseResponseDto: {
@@ -620,11 +662,11 @@ export interface components {
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
-      pageable?: components["schemas"]["PageableObject"];
       first?: boolean;
       last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
+      pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
     ListChallengeResponseDto: {
@@ -644,10 +686,6 @@ export interface components {
       /** Format: date-time */
       updatedAt?: string;
     };
-    VisibilityImpactResponseDto: {
-      /** Format: int32 */
-      affectedCourseCount?: number;
-    };
     PageListChallengeResponseDto: {
       /** Format: int64 */
       totalElements?: number;
@@ -659,19 +697,16 @@ export interface components {
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
-      pageable?: components["schemas"]["PageableObject"];
       first?: boolean;
       last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
+      pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
-    AdminConfigResponse: {
-      kubeconfigUploaded?: boolean;
-      cpuLimit?: string;
-      memoryLimit?: string;
-      /** Format: date-time */
-      updatedAt?: string;
+    VisibilityImpactResponseDto: {
+      /** Format: int32 */
+      affectedCourseCount?: number;
     };
   };
   responses: never;
@@ -1009,7 +1044,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": Record<string, never>;
+          "*/*": components["schemas"]["AdminConfigResponse"];
         };
       };
     };
@@ -1033,7 +1068,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": Record<string, never>;
+          "*/*": components["schemas"]["AdminConfigResponse"];
         };
       };
     };
@@ -1053,7 +1088,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": Record<string, never>;
+          "*/*": {
+            [key: string]: string;
+          };
         };
       };
     };
@@ -1161,7 +1198,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["CourseDetailResponseDto"];
+          "*/*": components["schemas"]["PublicCourseDetailResponseDto"];
         };
       };
     };
@@ -1300,6 +1337,28 @@ export interface operations {
       };
     };
   };
+  listEnrollments: {
+    parameters: {
+      query: {
+        pageable: components["schemas"]["Pageable"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["PageListCourseResponseDto"];
+        };
+      };
+    };
+  };
   listPublishedCourses: {
     parameters: {
       query: {
@@ -1340,30 +1399,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["CourseDetailResponseDto"];
-        };
-      };
-    };
-  };
-  searchChallenges: {
-    parameters: {
-      query: {
-        q?: string;
-        pageable: components["schemas"]["Pageable"];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Search results retrieved successfully */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["PageListChallengeResponseDto"];
+          "*/*": components["schemas"]["PublicCourseDetailResponseDto"];
         };
       };
     };
@@ -1406,6 +1442,29 @@ export interface operations {
         };
         content: {
           "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+    };
+  };
+  searchChallenges: {
+    parameters: {
+      query: {
+        q?: string;
+        pageable: components["schemas"]["Pageable"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Search results retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["PageListChallengeResponseDto"];
         };
       };
     };

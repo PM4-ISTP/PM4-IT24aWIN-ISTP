@@ -5,6 +5,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -13,6 +16,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pm4.istp.domain.entites.Challenge;
+import com.pm4.istp.domain.entites.ChallengeStatusEnum;
+import com.pm4.istp.domain.entites.CourseChallenge;
+import com.pm4.istp.dto.ChallengeCreatorResponseDto;
+import com.pm4.istp.dto.ChallengeDetailResponseDto;
+import com.pm4.istp.dto.PublicCourseDetailResponseDto;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
@@ -22,21 +31,26 @@ import tools.jackson.databind.ser.std.StdSerializer;
 import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
 import com.pm4.istp.domain.entites.Course;
+import com.pm4.istp.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
 import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.dto.CourseDetailResponseDto;
 import com.pm4.istp.dto.CreateCourseRequestDto;
 import com.pm4.istp.dto.CreateCourseResponseDto;
+import com.pm4.istp.dto.CourseParticipantResponseDto;
 import com.pm4.istp.dto.JoinByInviteCodeRequestDto;
 import com.pm4.istp.dto.ListCourseResponseDto;
 import com.pm4.istp.dto.UpdateCourseRequestDto;
+import com.pm4.istp.dto.UserDto;
 import com.pm4.istp.exception.CourseAccessDeniedException;
 import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.exception.InvalidInviteCodeException;
 import com.pm4.istp.mappers.CourseMapper;
 import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.service.CourseService;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -334,6 +348,20 @@ class CourseControllerTest {
         .andExpect(jsonPath("$.content").isArray());
   }
 
+  // ── listEnrollments ───────────────────────────────────────────────────────────
+
+  @Test
+  void listEnrollments_returnsOkWithPage() throws Exception {
+    Page<ListCourseResponseDto> page = new PageImpl<>(List.of(new ListCourseResponseDto()));
+
+    when(courseService.listUserEnrollments(eq(userId), any())).thenReturn(page);
+
+    mockMvc
+            .perform(get("/api/v1/courses/my-enrollments"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray());
+  }
+
   // ── listPublishedCourses ──────────────────────────────────────────────────
 
   @Test
@@ -364,15 +392,34 @@ class CourseControllerTest {
 
   @Test
   void getPublicCourse_returnsOk() throws Exception {
+    ChallengeDetailResponseDto challenge1 = generateChallengeDetailResponseDto("Challenge 1", ChallengeStatusEnum.DRAFT, "Creator 1");
+    ChallengeDetailResponseDto challenge2 = generateChallengeDetailResponseDto("Challenge 2", ChallengeStatusEnum.PUBLIC, "Creator 2");
+    ChallengeDetailResponseDto challenge3 = generateChallengeDetailResponseDto("Challenge 3", ChallengeStatusEnum.PRIVATE, "Creator 3");
+    ChallengeDetailResponseDto challenge4 = generateChallengeDetailResponseDto("Challenge 4", ChallengeStatusEnum.PUBLIC, "Creator 4");
+
     Course course = new Course();
     course.setId(courseId);
 
-    CourseDetailResponseDto dto = new CourseDetailResponseDto();
+    UUID instructorId = UUID.randomUUID();
+    UUID nestedUserId = UUID.randomUUID();
+
+    UserDto instructorUser = new UserDto();
+    instructorUser.setId(nestedUserId);
+    instructorUser.setName("Instructor");
+
+    CourseDetailInstructorResponseDto instructor = new CourseDetailInstructorResponseDto();
+    instructor.setId(instructorId);
+    instructor.setInstructor(instructorUser);
+
+    PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
     dto.setId(courseId);
     dto.setTitle("Public Course");
+    dto.setCourseInstructors(List.of(instructor));
+    dto.setCourseChallenges(List.of(challenge1, challenge2, challenge3, challenge4));
+    dto.setParticipants(List.of(new CourseParticipantResponseDto(UUID.randomUUID(), "Student", null)));
 
     when(courseService.getCourse(userId, courseId)).thenReturn(course);
-    when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
+    when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
     when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(0L);
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(false);
@@ -380,7 +427,18 @@ class CourseControllerTest {
     mockMvc
         .perform(get("/api/v1/courses/catalog/{id}", courseId))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(courseId.toString()));
+        .andExpect(jsonPath("$.id").value(courseId.toString()))
+        .andExpect(jsonPath("$.courseInstructors").isArray())
+        .andExpect(jsonPath("$.courseInstructors", hasSize(1)))
+        .andExpect(jsonPath("$.courseInstructors[*].id").value(everyItem(nullValue())))
+        .andExpect(jsonPath("$.courseInstructors[*].instructor.id").value(everyItem(nullValue())))
+        .andExpect(jsonPath("$.courseInstructors[0].instructor.name").value("Instructor"))
+        .andExpect(jsonPath("$.courseChallenges").isArray())
+        .andExpect(jsonPath("$.courseChallenges", hasSize(2)))
+        .andExpect(jsonPath("$.courseChallenges[*].creator.id").value(everyItem(nullValue())))
+        .andExpect(jsonPath("$.courseChallenges[0].creator.name").value("Creator 2"))
+        .andExpect(jsonPath("$.courseChallenges[1].creator.name").value("Creator 4"))
+        .andExpect(jsonPath("$.participants").value(nullValue()));
   }
 
   // ── enrollInCourse ────────────────────────────────────────────────────────
@@ -412,11 +470,13 @@ class CourseControllerTest {
     Course course = new Course();
     course.setId(courseId);
 
-    CourseDetailResponseDto dto = new CourseDetailResponseDto();
+    PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
     dto.setId(courseId);
+    dto.setCourseInstructors(Collections.emptyList());
+    dto.setCourseChallenges(Collections.emptyList());
 
     when(courseService.enrollInCourse(userId, courseId)).thenReturn(course);
-    when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
+    when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
     when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(1L);
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(true);
@@ -434,11 +494,13 @@ class CourseControllerTest {
     Course course = new Course();
     course.setId(courseId);
 
-    CourseDetailResponseDto dto = new CourseDetailResponseDto();
+    PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
     dto.setId(courseId);
+    dto.setCourseInstructors(Collections.emptyList());
+    dto.setCourseChallenges(Collections.emptyList());
 
     when(courseService.joinByInviteCode(eq("ABC123"), eq(userId))).thenReturn(course);
-    when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
+    when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
     when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(1L);
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(true);
@@ -538,6 +600,20 @@ class CourseControllerTest {
         .perform(post("/api/v1/courses/{id}/invite-code/regenerate", courseId))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.error").value("Course not found"));
+  }
+
+  // ── Mock object generators ────────────────────────────────────────────────
+  private ChallengeDetailResponseDto generateChallengeDetailResponseDto(String title, ChallengeStatusEnum challengeStatus, String creatorName) {
+    ChallengeCreatorResponseDto challengeCreatorResponseDto = new ChallengeCreatorResponseDto();
+    challengeCreatorResponseDto.setId(UUID.randomUUID());
+    challengeCreatorResponseDto.setName(creatorName);
+
+    ChallengeDetailResponseDto challengeDetailResponseDto = new ChallengeDetailResponseDto();
+    challengeDetailResponseDto.setTitle(title);
+    challengeDetailResponseDto.setCreator(challengeCreatorResponseDto);
+    challengeDetailResponseDto.setStatus(challengeStatus);
+
+    return challengeDetailResponseDto;
   }
 
   // ── Jackson helper ────────────────────────────────────────────────────────

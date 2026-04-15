@@ -4,6 +4,7 @@ import static com.pm4.istp.util.JwtUtil.parseUserId;
 
 import com.pm4.istp.domain.CreateCourseRequest;
 import com.pm4.istp.domain.UpdateCourseRequest;
+import com.pm4.istp.domain.entites.ChallengeStatusEnum;
 import com.pm4.istp.domain.entites.Course;
 import com.pm4.istp.domain.entites.CourseEnrollment;
 import com.pm4.istp.dto.*;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -199,29 +201,37 @@ public class CourseController {
 
   // ── Public catalog endpoints ── accessible to all authenticated users (including students)
   @GetMapping("/catalog/{id}")
-  public ResponseEntity<CourseDetailResponseDto> getPublicCourse(
+  public ResponseEntity<PublicCourseDetailResponseDto> getPublicCourse(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     Course course = courseService.getCourse(userId, id);
-    CourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
+    PublicCourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
     return ResponseEntity.ok(dto);
   }
 
   @PostMapping("/catalog/{id}/enroll")
-  public ResponseEntity<CourseDetailResponseDto> enrollInPublicCourse(
+  public ResponseEntity<PublicCourseDetailResponseDto> enrollInPublicCourse(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     Course course = courseService.enrollInCourse(userId, id);
-    CourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
+    PublicCourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
     return ResponseEntity.ok(dto);
   }
 
+  @GetMapping("/my-enrollments")
+  public ResponseEntity<Page<ListCourseResponseDto>> listEnrollments(
+      @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
+    UUID userId = parseUserId(jwt);
+    Page<ListCourseResponseDto> courses = courseService.listUserEnrollments(userId, pageable);
+    return ResponseEntity.ok(courses);
+  }
+
   @PostMapping("/catalog/join")
-  public ResponseEntity<CourseDetailResponseDto> joinByInviteCode(
+  public ResponseEntity<PublicCourseDetailResponseDto> joinByInviteCode(
       @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody JoinByInviteCodeRequestDto request) {
     UUID userId = parseUserId(jwt);
     Course course = courseService.joinByInviteCode(request.getCode(), userId);
-    CourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
+    PublicCourseDetailResponseDto dto = toPublicCourseDetailResponseDto(course, userId);
     return ResponseEntity.ok(dto);
   }
 
@@ -262,17 +272,41 @@ public class CourseController {
     return dto;
   }
 
-  /**
-   * Public catalog detail – omits participant list and invite code; returns only count and
-   * enrollment status.
-   */
-  private CourseDetailResponseDto toPublicCourseDetailResponseDto(Course course, UUID userId) {
-    CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
+  /** Public catalog detail – omits participant list; returns only count and enrollment status. */
+  private PublicCourseDetailResponseDto toPublicCourseDetailResponseDto(
+      Course course, UUID userId) {
+    PublicCourseDetailResponseDto dto = courseMapper.toPublicCourseDetailDto(course);
     UUID courseId = course.getId();
     dto.setParticipantCount(courseEnrollmentRepository.countByCourseId(courseId));
     dto.setEnrolled(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId));
     dto.setParticipants(null);
+    filterOutNonPublicChallenges(dto);
+    setInstructorIdsToNull(dto.getCourseInstructors());
+    setChallengeCreatorIdsToNull(dto.getCourseChallenges());
     dto.setInviteCode(null);
     return dto;
+  }
+
+  private void filterOutNonPublicChallenges(PublicCourseDetailResponseDto dto) {
+    List<ChallengeDetailResponseDto> challenges = new ArrayList<>();
+    for (ChallengeDetailResponseDto challenge : dto.getCourseChallenges()) {
+      if (challenge.getStatus() == ChallengeStatusEnum.PUBLIC) {
+        challenges.add(challenge);
+      }
+    }
+    dto.setCourseChallenges(List.copyOf(challenges));
+  }
+
+  private void setInstructorIdsToNull(List<CourseDetailInstructorResponseDto> courseInstructors) {
+    for (CourseDetailInstructorResponseDto courseInstructor : courseInstructors) {
+      courseInstructor.setId(null);
+      courseInstructor.getInstructor().setId(null);
+    }
+  }
+
+  private void setChallengeCreatorIdsToNull(List<ChallengeDetailResponseDto> courseChallenges) {
+    for (ChallengeDetailResponseDto challengeDetailResponseDto : courseChallenges) {
+      challengeDetailResponseDto.getCreator().setId(null);
+    }
   }
 }

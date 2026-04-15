@@ -49,7 +49,6 @@ export default function JoinCourseModal({ opened, onClose }: JoinCourseModalProp
 
     handleClose();
     router.push(`/dashboard/catalog/${result.data.id}`);
-    router.refresh();
   }
 
   return (
