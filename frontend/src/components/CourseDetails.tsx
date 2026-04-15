@@ -11,15 +11,15 @@ import { getSanitizedHtml } from "@/src/lib/utils";
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 
 export default async function CourseDetails({
-  userId,
+  courseId,
   backPageName,
   backHref,
 }: {
-  userId: string;
+  courseId: string;
   backPageName: string;
   backHref: string;
 }) {
-  const result = await fetchPublicCourse(userId);
+  const result = await fetchPublicCourse(courseId);
 
   if (!result.success) {
     return (
