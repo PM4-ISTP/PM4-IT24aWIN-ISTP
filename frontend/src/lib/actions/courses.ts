@@ -77,7 +77,7 @@ export async function fetchPublicCourse(
   }
 }
 
-export async function enrollInCourse(id: string): Promise<ActionResult<CourseDetailResponseDto>> {
+export async function enrollInCourse(id: string): Promise<ActionResult<PublicCourseDetailResponseDto>> {
   try {
     const res = await fetchBackend(`/api/v1/courses/catalog/${id}/enroll`, {
       method: "POST",
@@ -89,7 +89,7 @@ export async function enrollInCourse(id: string): Promise<ActionResult<CourseDet
       return { success: false, error: `${res.status}: ${message}` };
     }
 
-    const data = (await res.json()) as CourseDetailResponseDto;
+    const data = (await res.json()) as PublicCourseDetailResponseDto;
     return { success: true, data };
   } catch (err) {
     return {
@@ -198,7 +198,7 @@ export async function fetchEnrolledCoursesOfLoggedInUser(
 
 export async function joinCourseByCode(
   code: string
-): Promise<ActionResult<CourseDetailResponseDto>> {
+): Promise<ActionResult<PublicCourseDetailResponseDto>> {
   try {
     const res = await fetchBackend("/api/v1/courses/catalog/join", {
       method: "POST",
@@ -211,7 +211,7 @@ export async function joinCourseByCode(
       return { success: false, error: `${res.status}: ${message}` };
     }
 
-    const data = (await res.json()) as CourseDetailResponseDto;
+    const data = (await res.json()) as PublicCourseDetailResponseDto;
     return { success: true, data };
   } catch (err) {
     return {
