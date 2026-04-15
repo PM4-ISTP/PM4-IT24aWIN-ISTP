@@ -470,6 +470,7 @@ class CourseControllerTest {
     PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
     dto.setId(courseId);
     dto.setCourseInstructors(Collections.emptyList());
+    dto.setCourseChallenges(Collections.emptyList());
 
     when(courseService.enrollInCourse(userId, courseId)).thenReturn(course);
     when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
@@ -492,6 +493,8 @@ class CourseControllerTest {
 
     PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
     dto.setId(courseId);
+    dto.setCourseInstructors(Collections.emptyList());
+    dto.setCourseChallenges(Collections.emptyList());
 
     when(courseService.joinByInviteCode(eq("ABC123"), eq(userId))).thenReturn(course);
     when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
