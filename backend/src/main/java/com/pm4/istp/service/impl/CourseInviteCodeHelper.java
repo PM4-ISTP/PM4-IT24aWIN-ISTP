@@ -28,7 +28,7 @@ class CourseInviteCodeHelper {
    * @throws CourseNotFoundException if the course no longer exists
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public Course assignInviteCode(UUID courseId, String code) {
+  public void assignInviteCode(UUID courseId, String code) {
     Course course =
         courseRepository
             .findById(courseId)
@@ -37,6 +37,6 @@ class CourseInviteCodeHelper {
                     new CourseNotFoundException(
                         String.format("Course with ID '%s' not found", courseId)));
     course.setInviteCode(code);
-    return courseRepository.save(course);
+    courseRepository.save(course);
   }
 }

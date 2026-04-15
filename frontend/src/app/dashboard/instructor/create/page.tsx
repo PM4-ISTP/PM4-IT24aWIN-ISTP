@@ -13,7 +13,6 @@ import {
   Notification,
   Select,
   Stack,
-  Switch,
   Text,
   Textarea,
   TextInput,
@@ -27,8 +26,10 @@ import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/lib/courseText";
+import { visibilityToFlags } from "@/src/lib/courseVisibility";
 import { useToast } from "@/src/hooks/useToast";
 import { TOPIC_OPTIONS } from "@/src/lib/courseConstants";
+import type { CourseVisibility } from "@/src/types/course";
 
 export default function CreateCourse() {
   const router = useRouter();
@@ -36,8 +37,7 @@ export default function CreateCourse() {
   const [title, setTitle] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("<p>Add a description...</p>");
-  const [isPublished, setIsPublished] = useState(false);
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [visibility, setVisibility] = useState<CourseVisibility>("DRAFT");
   const [imageUrl, setImageUrl] = useState("");
   const [topic, setTopic] = useState<string | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
@@ -66,6 +66,8 @@ export default function CreateCourse() {
     }
 
     setIsSubmitting(true);
+
+    const { isPublished, isPrivate } = visibilityToFlags(visibility);
 
     const result = await createCourse({
       title: title.trim(),
@@ -180,38 +182,21 @@ export default function CreateCourse() {
 
             <InstructorMultiSelect value={selectedInstructors} onChange={setSelectedInstructors} />
 
-            <Switch
-              label="Publish Course"
-              checked={isPublished}
-              onChange={(e) => setIsPublished(e.currentTarget.checked)}
-              size="md"
-              styles={{
-                label: { color: "#e2e8f0", fontWeight: 500 },
-                track: {
-                  backgroundColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.15)",
-                  borderColor: isPublished ? "#3b82f6" : "rgba(255,255,255,0.2)",
-                  cursor: "pointer",
-                },
-                thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },
+            <Select
+              label="Visibility"
+              value={visibility}
+              onChange={(value) => {
+                if (value) {
+                  setVisibility(value as CourseVisibility);
+                }
               }}
-            />
-
-            <Switch
-              label="Private Course (invite-code only)"
-              checked={isPrivate}
-              onChange={(e) => setIsPrivate(e.currentTarget.checked)}
-              size="md"
-              description="Private courses are hidden from the catalog and can only be joined via invite code."
-              styles={{
-                label: { color: "#e2e8f0", fontWeight: 500 },
-                description: { color: "#94a3b8" },
-                track: {
-                  backgroundColor: isPrivate ? "#7c3aed" : "rgba(255,255,255,0.15)",
-                  borderColor: isPrivate ? "#7c3aed" : "rgba(255,255,255,0.2)",
-                  cursor: "pointer",
-                },
-                thumb: { backgroundColor: "#ffffff", borderColor: "transparent" },
-              }}
+              data={[
+                { value: "DRAFT", label: "Draft (only instructors can view)" },
+                { value: "PUBLIC", label: "Public (visible in catalog)" },
+                { value: "PRIVATE", label: "Private (invite code only)" },
+              ]}
+              description="Choose exactly one state. Draft keeps it hidden, Public shows in catalog, Private is join-by-code only."
+              allowDeselect={false}
             />
 
             {formError && (

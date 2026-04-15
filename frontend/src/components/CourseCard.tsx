@@ -10,6 +10,7 @@ export interface CourseCardProps {
   description: string | null;
   shortDescription: string | null;
   isPublished: boolean;
+  isPrivate: boolean;
   instructorCount: number;
   updatedAt: string;
   imageUrl?: string | null;
@@ -26,6 +27,7 @@ export function CourseCard({
   description,
   shortDescription,
   isPublished,
+  isPrivate,
   instructorCount,
   updatedAt,
   imageUrl,
@@ -36,6 +38,8 @@ export function CourseCard({
   onClick,
 }: CourseCardProps) {
   const previewText = getCoursePreviewText(shortDescription, description);
+  const statusLabel = isPrivate ? "Private" : isPublished ? "Published" : "Draft";
+  const statusColor = isPrivate ? "violet" : isPublished ? "teal" : "gray";
 
   const content = (
     <Stack gap={0} style={{ height: "100%", minWidth: 0 }}>
@@ -85,9 +89,12 @@ export function CourseCard({
 
       {/* Body */}
       <Stack gap="md" p="lg" style={{ flex: 1 }}>
-        {/* Topic */}
+        {/* Topic + visibility */}
         <Group gap={6} wrap="nowrap">
-          {topic ? (
+          <Badge size="xs" variant="light" color={statusColor} style={{ flexShrink: 0 }}>
+            {statusLabel}
+          </Badge>
+          {topic && (
             <Text
               size="sm"
               fw={700}
@@ -96,15 +103,6 @@ export function CourseCard({
             >
               {topic}
             </Text>
-          ) : (
-            <Badge
-              size="xs"
-              variant="light"
-              color={isPublished ? "teal" : "gray"}
-              style={{ flexShrink: 0 }}
-            >
-              {isPublished ? "Published" : "Draft"}
-            </Badge>
           )}
         </Group>
 

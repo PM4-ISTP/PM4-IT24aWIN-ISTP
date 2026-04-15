@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -29,6 +31,7 @@ import com.pm4.istp.exception.CourseNotFoundException;
 import com.pm4.istp.exception.InvalidCourseChallengeException;
 import com.pm4.istp.exception.InvalidCourseShortDescriptionException;
 import com.pm4.istp.exception.InvalidInviteCodeException;
+import com.pm4.istp.exception.InviteCodeGenerationException;
 import com.pm4.istp.repositories.ChallengeRepository;
 import com.pm4.istp.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.repositories.CourseRepository;
@@ -40,6 +43,7 @@ import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -280,6 +284,35 @@ class CourseServiceImplTest {
         .isInstanceOf(InvalidCourseShortDescriptionException.class)
         .hasMessageContaining("200")
         .hasMessageContaining("characters");
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void createCourse_withPublishedAndPrivate_throwsIllegalArgumentException() {
+    UUID ownerId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
+
+    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
+
+    CreateCourseRequest request =
+        new CreateCourseRequest(
+            "Secure Coding",
+            "Long description",
+            "Short summary.",
+            true,
+            true,
+            null,
+            null,
+            null,
+            List.of());
+
+    assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("published and private");
 
     verify(courseRepository, never()).save(any(Course.class));
   }
@@ -771,7 +804,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void joinByInviteCode_whenCourseNotPublished_throwsInvalidInviteCodeException() {
+  void joinByInviteCode_whenCourseIsPublic_throwsInvalidInviteCodeException() {
     UUID studentId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
@@ -780,8 +813,8 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
+    course.setPublished(true);
+    course.setPrivate(false);
 
     when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
     when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
@@ -793,7 +826,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void joinByInviteCode_withValidCodeAndPublishedCourse_enrollsParticipant() {
+  void joinByInviteCode_withValidCodeAndPrivateCourse_enrollsParticipant() {
     UUID studentId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
@@ -802,7 +835,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setPublished(false);
     course.setPrivate(true);
 
     when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
@@ -830,7 +863,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setPublished(false);
     course.setPrivate(true);
 
     when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
@@ -854,7 +887,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setPublished(false);
     course.setPrivate(true);
 
     CourseInstructor relation = new CourseInstructor();
@@ -901,33 +934,6 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void regenerateInviteCode_whenCourseNotPublished_throwsCourseAccessDeniedException() {
-    UUID ownerId = UUID.randomUUID();
-    UUID courseId = UUID.randomUUID();
-
-    User owner = new User();
-    owner.setId(ownerId);
-
-    Course course = new Course();
-    course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
-
-    CourseInstructor ownerRelation = new CourseInstructor();
-    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
-    ownerRelation.setInstructor(owner);
-    course.addCourseInstructor(ownerRelation);
-
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-
-    assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
-        .isInstanceOf(CourseAccessDeniedException.class)
-        .hasMessageContaining("not published");
-
-    verify(courseInviteCodeHelper, never()).assignInviteCode(any(), any());
-  }
-
-  @Test
   void regenerateInviteCode_whenCourseIsNotPrivate_throwsCourseAccessDeniedException() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
@@ -949,13 +955,13 @@ class CourseServiceImplTest {
 
     assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
         .isInstanceOf(CourseAccessDeniedException.class)
-        .hasMessageContaining("public");
+        .hasMessageContaining("not private");
 
     verify(courseInviteCodeHelper, never()).assignInviteCode(any(), any());
   }
 
   @Test
-  void regenerateInviteCode_whenOwnerAndPrivatePublished_regeneratesCode() {
+  void regenerateInviteCode_whenOwnerAndPrivate_regeneratesCode() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
@@ -964,7 +970,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setPublished(false);
     course.setPrivate(true);
     course.setInviteCode("OLDCOD");
 
@@ -973,18 +979,19 @@ class CourseServiceImplTest {
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    Course updatedCourse = new Course();
-    updatedCourse.setId(courseId);
-    updatedCourse.setInviteCode("NEWCOD");
-
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(courseInviteCodeHelper.assignInviteCode(eq(courseId), any(String.class)))
-        .thenReturn(updatedCourse);
+    doNothing().when(courseInviteCodeHelper).assignInviteCode(eq(courseId), any(String.class));
 
     Course result = courseService.regenerateInviteCode(courseId, ownerId);
 
-    assertThat(result.getInviteCode()).isEqualTo("NEWCOD");
-    verify(courseInviteCodeHelper).assignInviteCode(eq(courseId), any(String.class));
+    ArgumentCaptor<String> codeCaptor = ArgumentCaptor.forClass(String.class);
+    verify(courseInviteCodeHelper).assignInviteCode(eq(courseId), codeCaptor.capture());
+    String generatedCode = codeCaptor.getValue();
+
+    assertThat(result).isSameAs(course);
+    assertThat(result.getInviteCode()).isEqualTo(generatedCode);
+    assertThat(generatedCode).hasSize(6);
+    assertThat(result.getCourseInstructors()).hasSize(1);
   }
 
   @Test
@@ -997,7 +1004,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setPublished(false);
     course.setPrivate(true);
 
     CourseInstructor ownerRelation = new CourseInstructor();
@@ -1005,18 +1012,16 @@ class CourseServiceImplTest {
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    Course updatedCourse = new Course();
-    updatedCourse.setId(courseId);
-    updatedCourse.setInviteCode("RETCOD");
-
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(courseInviteCodeHelper.assignInviteCode(eq(courseId), any(String.class)))
-        .thenThrow(new DataIntegrityViolationException("uk_courses_invite_code"))
-        .thenReturn(updatedCourse);
+    doThrow(new DataIntegrityViolationException("uk_courses_invite_code"))
+        .doNothing()
+        .when(courseInviteCodeHelper)
+        .assignInviteCode(eq(courseId), any(String.class));
 
     Course result = courseService.regenerateInviteCode(courseId, ownerId);
 
-    assertThat(result.getInviteCode()).isEqualTo("RETCOD");
+    assertThat(result).isSameAs(course);
+    assertThat(result.getInviteCode()).hasSize(6);
     verify(courseInviteCodeHelper, times(2)).assignInviteCode(eq(courseId), any(String.class));
   }
 
@@ -1031,5 +1036,168 @@ class CourseServiceImplTest {
         .isInstanceOf(CourseNotFoundException.class);
 
     verify(courseInviteCodeHelper, never()).assignInviteCode(any(), any());
+  }
+
+  @Test
+  void updateCourse_withPublishedAndPrivate_throwsIllegalArgumentException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(false);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    UpdateCourseRequest updateRequest =
+        new UpdateCourseRequest(
+            "Updated title",
+            "Updated description",
+            "Updated short description",
+            true,
+            true,
+            null,
+            null,
+            null,
+            List.of());
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.updateCourse(ownerId, courseId, updateRequest))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("published and private");
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void regenerateInviteCode_after10ConstraintViolations_throwsInviteCodeGenerationException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(true);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    doThrow(new DataIntegrityViolationException("uk_courses_invite_code"))
+        .when(courseInviteCodeHelper)
+        .assignInviteCode(eq(courseId), any(String.class));
+
+    assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
+        .isInstanceOf(InviteCodeGenerationException.class)
+        .hasMessageContaining("10 attempts");
+
+    verify(courseInviteCodeHelper, times(10)).assignInviteCode(eq(courseId), any(String.class));
+  }
+
+  @Test
+  void regenerateInviteCode_onNonInviteCodeConstraintViolation_rethrowsImmediately() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(true);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    doThrow(new DataIntegrityViolationException("uk_course_enrollment_other_constraint"))
+        .when(courseInviteCodeHelper)
+        .assignInviteCode(eq(courseId), any(String.class));
+
+    assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
+        .isInstanceOf(DataIntegrityViolationException.class);
+
+    // Should not retry — only one attempt made
+    verify(courseInviteCodeHelper, times(1)).assignInviteCode(eq(courseId), any(String.class));
+  }
+
+  @Test
+  void createCourse_whenInviteCodeExhausted_throwsInviteCodeGenerationException() {
+    UUID ownerId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
+
+    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
+    when(courseRepository.existsByInviteCode(any(String.class))).thenReturn(true);
+
+    CreateCourseRequest request =
+        new CreateCourseRequest(
+            "Private Course",
+            "Desc",
+            null,
+            false,
+            true,
+            null,
+            null,
+            null,
+            List.of());
+
+    assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
+        .isInstanceOf(InviteCodeGenerationException.class);
+  }
+
+  @Test
+  void updateCourse_whenInviteCodeExhausted_throwsInviteCodeGenerationException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(false);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.existsByInviteCode(any(String.class))).thenReturn(true);
+
+    UpdateCourseRequest updateRequest =
+        new UpdateCourseRequest(
+            "Updated title",
+            "Updated description",
+            null,
+            false,
+            true,
+            null,
+            null,
+            null,
+            List.of());
+
+    assertThatThrownBy(() -> courseService.updateCourse(ownerId, courseId, updateRequest))
+        .isInstanceOf(InviteCodeGenerationException.class);
   }
 }
