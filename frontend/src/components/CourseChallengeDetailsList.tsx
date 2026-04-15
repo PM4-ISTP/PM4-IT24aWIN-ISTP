@@ -86,14 +86,24 @@ export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallenge
                     <Title order={4} style={{ fontSize: "1rem" }}>
                       #{index + 1} {formatText(challenge.title)}
                     </Title>
-                    <Group gap="xs">
-                      <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
-                        {formatText(challenge.status)}
-                      </Badge>
-                      <Badge variant="light" color={getDifficultyColor(challenge.difficulty ?? "")}>
-                        {formatText(challenge.difficulty)}
-                      </Badge>
-                    </Group>
+
+                    <Stack gap="xs" align="flex-end">
+                      <Group gap="xs">
+                        <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
+                          {formatText(challenge.status)}
+                        </Badge>
+                        <Badge
+                          variant="light"
+                          color={getDifficultyColor(challenge.difficulty ?? "")}
+                        >
+                          {formatText(challenge.difficulty)}
+                        </Badge>
+                      </Group>
+
+                      <Box my={30} style={{ width: 200 }}>
+                        <PlayChallengeButton condition={1} />
+                      </Box>
+                    </Stack>
                   </Group>
 
                   <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
@@ -118,8 +128,6 @@ export function CourseChallengeDetailsList({ loadedChallenges }: CourseChallenge
                       <Text size="sm" c="dimmed"></Text>
                     )}
                   </Box>
-
-                  <PlayChallengeButton condition={0} />
                 </Stack>
               </Paper>
             );
