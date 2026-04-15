@@ -91,12 +91,7 @@ export function CourseCard({
       <Stack gap="md" p="lg" style={{ flex: 1 }}>
         {/* Topic + visibility */}
         <Group gap={6} wrap="nowrap">
-          <Badge
-            size="xs"
-            variant="light"
-            color={statusColor}
-            style={{ flexShrink: 0 }}
-          >
+          <Badge size="xs" variant="light" color={statusColor} style={{ flexShrink: 0 }}>
             {statusLabel}
           </Badge>
           {topic && (
