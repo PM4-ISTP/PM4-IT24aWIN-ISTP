@@ -2,13 +2,12 @@ package com.pm4.istp.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.pm4.istp.domain.entites.CourseDifficultyEnum;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor

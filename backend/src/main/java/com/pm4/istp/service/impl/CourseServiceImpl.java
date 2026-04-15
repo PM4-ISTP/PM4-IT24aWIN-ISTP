@@ -118,7 +118,11 @@ public class CourseServiceImpl implements CourseService {
   @Transactional(readOnly = true)
   public Course getPublicCourse(UUID userId, UUID courseId) {
     Course course = getCourse(userId, courseId);
-    course.getCourseChallenges().removeIf(courseChallenge -> courseChallenge.getChallenge().getStatus() != ChallengeStatusEnum.PUBLIC);
+    course
+        .getCourseChallenges()
+        .removeIf(
+            courseChallenge ->
+                courseChallenge.getChallenge().getStatus() != ChallengeStatusEnum.PUBLIC);
     return course;
   }
 

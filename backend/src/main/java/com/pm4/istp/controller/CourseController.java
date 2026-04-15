@@ -247,7 +247,8 @@ public class CourseController {
   }
 
   /** Public catalog detail – omits participant list; returns only count and enrollment status. */
-  private PublicCourseDetailResponseDto toPublicCourseDetailResponseDto(Course course, UUID userId) {
+  private PublicCourseDetailResponseDto toPublicCourseDetailResponseDto(
+      Course course, UUID userId) {
     PublicCourseDetailResponseDto dto = courseMapper.toPublicCourseDetailDto(course);
     UUID courseId = course.getId();
     dto.setParticipantCount(courseEnrollmentRepository.countByCourseId(courseId));
