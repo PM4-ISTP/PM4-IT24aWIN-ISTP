@@ -730,11 +730,15 @@ export interface components {
       cpuLimit?: string;
       memoryLimit?: string;
       kubeconfig?: string;
+      /** Format: int32 */
+      podTtlSeconds?: number;
     };
     AdminConfigResponse: {
       kubeconfigUploaded?: boolean;
       cpuLimit?: string;
       memoryLimit?: string;
+      /** Format: int32 */
+      podTtlSeconds?: number;
       /** Format: date-time */
       updatedAt?: string;
     };

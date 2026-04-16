@@ -204,8 +204,7 @@ public class ChallengePodService {
         return PodStatusResponse.notFound();
       }
 
-      AdminConfig adminConfig =
-          adminConfigurationService.getAdminConfiguration().orElse(null);
+      AdminConfig adminConfig = adminConfigurationService.getAdminConfiguration().orElse(null);
       int ttl = adminConfig != null ? adminConfig.getPodTtlSeconds() : 3600;
       return buildResponse(existing.get(0), ttl);
 
@@ -236,8 +235,7 @@ public class ChallengePodService {
       if (!userId.toString().equals(labels.get(LABEL_USER_ID))
           || !challengeId.toString().equals(labels.get(LABEL_CHALLENGE_ID))) {
         log.warn(
-            "Ownership mismatch on delete for instance {}: denying",
-            d.getMetadata().getName());
+            "Ownership mismatch on delete for instance {}: denying", d.getMetadata().getName());
         throw new ChallengePodException("Ownership check failed for pod deletion.");
       }
 
@@ -254,9 +252,7 @@ public class ChallengePodService {
     }
   }
 
-  /**
-   * Reap pods whose age exceeds ttlSeconds. Called by the scheduler.
-   */
+  /** Reap pods whose age exceeds ttlSeconds. Called by the scheduler. */
   public void reapExpiredPods(int ttlSeconds) {
     KubernetesClient client = getClient();
     List<Deployment> allPods =
@@ -326,8 +322,7 @@ public class ChallengePodService {
     String instanceName = deployment.getMetadata().getName();
     String hash = instanceName.substring("pod-".length());
 
-    String password =
-        annotations != null ? annotations.get(ANNOTATION_TERMINAL_PASSWORD) : null;
+    String password = annotations != null ? annotations.get(ANNOTATION_TERMINAL_PASSWORD) : null;
 
     Instant createdAt = null;
     Instant expiresAt = null;
@@ -343,7 +338,8 @@ public class ChallengePodService {
 
     PodStatusEnum status = mapDeploymentStatus(deployment);
 
-    return new PodStatusResponse(status, instanceName, appUrl, terminalUrl, password, createdAt, expiresAt);
+    return new PodStatusResponse(
+        status, instanceName, appUrl, terminalUrl, password, createdAt, expiresAt);
   }
 
   private PodStatusEnum mapDeploymentStatus(Deployment d) {
@@ -357,9 +353,7 @@ public class ChallengePodService {
         boolean replicaFailure =
             conditions.stream()
                 .anyMatch(
-                    c ->
-                        "ReplicaFailure".equals(c.getType())
-                            && "True".equals(c.getStatus()));
+                    c -> "ReplicaFailure".equals(c.getType()) && "True".equals(c.getStatus()));
         if (replicaFailure) {
           return PodStatusEnum.FAILED;
         }
@@ -415,9 +409,7 @@ public class ChallengePodService {
             .withNewResources()
             .addToLimits(
                 "cpu",
-                adminConfig.getCpuLimit() != null
-                    ? new Quantity(adminConfig.getCpuLimit())
-                    : null)
+                adminConfig.getCpuLimit() != null ? new Quantity(adminConfig.getCpuLimit()) : null)
             .addToLimits(
                 "memory",
                 adminConfig.getMemoryLimit() != null
