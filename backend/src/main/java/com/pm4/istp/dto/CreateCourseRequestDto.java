@@ -28,7 +28,10 @@ public class CreateCourseRequestDto {
   @JsonProperty("isPrivate")
   private boolean isPrivate;
 
+  @Size(max = 2048, message = "Image URL must be at most 2048 characters")
   private String imageUrl;
+
+  @Size(max = 255, message = "Topic must be at most 255 characters")
   private String topic;
 
   @NotNull(message = "Instructor information is required")

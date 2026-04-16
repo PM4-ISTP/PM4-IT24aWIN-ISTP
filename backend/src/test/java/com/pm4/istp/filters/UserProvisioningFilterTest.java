@@ -156,6 +156,154 @@ class UserProvisioningFilterTest {
     }
 
     @Test
+    void doFilterInternal_oversizedPicture_discardsPictureAndSavesUser() throws Exception {
+        String oversizedPicture = "https://example.com/" + "a".repeat(2040);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(oversizedPicture).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getPicture()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_longButValidPicture_savesPictureUrl() throws Exception {
+        String longValidPicture = "https://example.com/" + "a".repeat(2028);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(longValidPicture).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getPicture()).isEqualTo(longValidPicture);
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_oversizedUsername_discardsUsernameAndSavesUser() throws Exception {
+        String oversizedUsername = "u".repeat(300);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(oversizedUsername).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getUsername()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_oversizedName_discardsNameAndUsesFallback() throws Exception {
+        String oversizedName = "n".repeat(300);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(oversizedName).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getName()).isEqualTo(USERNAME);
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_oversizedTitle_discardsTitleAndSavesUser() throws Exception {
+        String oversizedTitle = "t".repeat(300);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(oversizedTitle).when(jwt).getClaimAsString("title");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getTitle()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_oversizedEmail_withExistingUser_usesExistingEmail() throws Exception {
+        String oversizedEmail = "a".repeat(250) + "@example.com";
+        User existingUser = new User();
+        existingUser.setId(USER_ID);
+        existingUser.setName(FULL_NAME);
+        existingUser.setEmail(EMAIL);
+        existingUser.setUsername(USERNAME);
+        existingUser.setPicture(PICTURE);
+        existingUser.setRoles(Set.of());
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(oversizedEmail).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(userRepository, never()).save(any());
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_oversizedEmail_withNoExistingUser_returns400() throws Exception {
+        String oversizedEmail = "a".repeat(250) + "@example.com";
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(oversizedEmail).when(jwt).getClaimAsString("email");
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(userRepository, never()).save(any());
+        verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Unable to provision user: email is required");
+        verify(filterChain, never()).doFilter(request, response);
+    }
+
+    @Test
     void doFilterInternal_nullAuthentication_skipsProvisioningAndContinuesChain() throws Exception {
         when(securityContext.getAuthentication()).thenReturn(null);
 
