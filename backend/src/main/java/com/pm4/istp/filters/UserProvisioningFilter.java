@@ -33,6 +33,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class UserProvisioningFilter extends OncePerRequestFilter {
 
+  private static final int PICTURE_MAX_LENGTH = 255;
+
   private final UserRepository userRepository;
 
   @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}")
@@ -57,7 +59,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       String familyName = normalize(jwt.getClaimAsString("family_name"));
       String username = normalize(jwt.getClaimAsString("preferred_username"));
       String emailClaim = normalize(jwt.getClaimAsString("email"));
-      String pictureClaim = normalize(jwt.getClaimAsString("picture"));
+      String pictureClaim = truncatePicture(normalize(jwt.getClaimAsString("picture")));
       String titleClaim = normalize(jwt.getClaimAsString("title"));
       String combinedName = combineNameParts(givenName, familyName);
 
@@ -98,7 +100,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       String picture =
           firstNonBlank(
               pictureClaim,
-              userInfoProfile.map(UserInfoProfile::picture).orElse(null),
+              truncatePicture(userInfoProfile.map(UserInfoProfile::picture).orElse(null)),
               existingUser.map(User::getPicture).map(this::normalize).orElse(null));
       String title =
           firstNonBlank(
@@ -234,6 +236,17 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       }
     }
     return null;
+  }
+
+  private String truncatePicture(String value) {
+    if (value == null) {
+      return null;
+    }
+    if (value.length() > PICTURE_MAX_LENGTH) {
+      log.warn("Discarding picture value exceeding {} characters (length={})", PICTURE_MAX_LENGTH, value.length());
+      return null;
+    }
+    return value;
   }
 
   private String normalize(String value) {
