@@ -138,7 +138,7 @@ export function InstructorMultiSelect({
       placeholder={value.length === 0 ? "Type a name, username, or email..." : "Add more..."}
       leftSection={loading ? <Loader size={14} /> : <IconSearch size={14} />}
       data={options.map((user) => ({
-        value: user.id,
+        value: user.id as string, // each user always has an ID stored
         label: formatCollaboratorLabel(user),
       }))}
       value={value}
