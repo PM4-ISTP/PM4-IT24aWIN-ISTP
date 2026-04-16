@@ -15,7 +15,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pm4.istp.domain.AdminConfig;
 import com.pm4.istp.dto.AdminConfigRequest;
-import com.pm4.istp.exception.StorageException;
 import com.pm4.istp.service.AdminConfigurationService;
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -171,37 +170,4 @@ class AdminConfigurationControllerTest {
         verify(adminConfigurationService).deleteAdminConfiguration();
     }
 
-    @Test
-    void testHandleStorageException_OnCreate() throws Exception {
-        String kubeconfigBase64 = Base64.getEncoder().encodeToString("content".getBytes());
-
-        when(adminConfigurationService.createConfiguration(any(byte[].class), any(), any()))
-                .thenThrow(new StorageException("Failed to store", new RuntimeException()));
-
-        AdminConfigRequest request = new AdminConfigRequest(null, null, kubeconfigBase64);
-
-        mockMvc.perform(
-                post("/api/admin/config")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Storage error: Failed to store"));
-    }
-
-    @Test
-    void testHandleStorageException_OnUpdate() throws Exception {
-        String kubeconfigBase64 = Base64.getEncoder().encodeToString("content".getBytes());
-
-        when(adminConfigurationService.updateConfiguration(any(byte[].class), any(), any()))
-                .thenThrow(new StorageException("Failed to update", new RuntimeException()));
-
-        AdminConfigRequest request = new AdminConfigRequest(null, null, kubeconfigBase64);
-
-        mockMvc.perform(
-                put("/api/admin/config")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Storage error: Failed to update"));
-    }
 }

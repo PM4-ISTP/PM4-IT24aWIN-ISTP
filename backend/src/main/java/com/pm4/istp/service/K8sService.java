@@ -1,9 +1,11 @@
 package com.pm4.istp.service;
 
+import com.pm4.istp.domain.AdminConfig;
 import com.pm4.istp.dto.PodCreationRequest;
 import com.pm4.istp.dto.PodCreationResponse;
 import com.pm4.istp.exception.K8sException;
 import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -12,10 +14,9 @@ import io.fabric8.kubernetes.api.model.networking.v1.IngressBuilder;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
-import java.io.File;
-import java.nio.file.Files;
 import java.util.Map;
 import java.util.UUID;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,25 +25,36 @@ import org.springframework.stereotype.Service;
 @Service
 public class K8sService {
 
-  @Value("${k8s.kubeconfig.path}")
-  private String kubeconfigPath;
+  private final AdminConfigurationService adminConfigurationService;
+  private final String defaultNamespace;
+  private final String domain;
+  private final boolean tls;
 
-  @Value("${k8s.default.namespace}")
-  private String defaultNamespace;
+  public K8sService(
+      @NonNull AdminConfigurationService adminConfigurationService,
+      @Value("${k8s.default.namespace}") String defaultNamespace,
+      @Value("${istp.domain}") String domain,
+      @Value("${istp.tls}") boolean tls) {
+    this.adminConfigurationService = adminConfigurationService;
+    this.defaultNamespace = defaultNamespace;
+    this.domain = domain;
+    this.tls = tls;
+  }
 
-  @Value("${istp.domain}")
-  private String domain;
-
-  @Value("${istp.tls}")
-  private boolean tls;
+  private AdminConfig loadAdminConfig() {
+    return adminConfigurationService
+        .getAdminConfiguration()
+        .orElseThrow(
+            () -> new K8sException("No admin configuration found. Upload a kubeconfig first."));
+  }
 
   public PodCreationResponse createPod(PodCreationRequest request) {
     try {
-      File kubeconfigFile = new File(kubeconfigPath);
-      if (!kubeconfigFile.exists()) {
-        throw new K8sException("Kubeconfig file not found at: " + kubeconfigPath);
+      AdminConfig adminConfig = loadAdminConfig();
+      String kubeconfigContent = adminConfig.getKubeconfig();
+      if (kubeconfigContent == null || kubeconfigContent.isBlank()) {
+        throw new K8sException("Admin configuration exists but kubeconfig content is missing.");
       }
-      String kubeconfigContent = Files.readString(kubeconfigFile.toPath());
       Config config = Config.fromKubeconfig(kubeconfigContent);
 
       try (KubernetesClient client = new KubernetesClientBuilder().withConfig(config).build()) {
@@ -78,6 +90,18 @@ public class K8sService {
                         ? request.getContainerName()
                         : "app")
                 .withImage(request.getImage())
+                .withNewResources()
+                .addToLimits(
+                    "cpu",
+                    adminConfig.getCpuLimit() != null
+                        ? new Quantity(adminConfig.getCpuLimit())
+                        : null)
+                .addToLimits(
+                    "memory",
+                    adminConfig.getMemoryLimit() != null
+                        ? new Quantity(adminConfig.getMemoryLimit())
+                        : null)
+                .endResources()
                 .addNewPort()
                 .withContainerPort(request.getContainerPort())
                 .endPort()
@@ -200,11 +224,11 @@ public class K8sService {
 
   public void deletePod(String instanceName) {
     try {
-      File kubeconfigFile = new File(kubeconfigPath);
-      if (!kubeconfigFile.exists()) {
-        throw new K8sException("Kubeconfig file not found at: " + kubeconfigPath);
+      AdminConfig adminConfig = loadAdminConfig();
+      String kubeconfigContent = adminConfig.getKubeconfig();
+      if (kubeconfigContent == null || kubeconfigContent.isBlank()) {
+        throw new K8sException("Admin configuration exists but kubeconfig content is missing.");
       }
-      String kubeconfigContent = Files.readString(kubeconfigFile.toPath());
       Config config = Config.fromKubeconfig(kubeconfigContent);
 
       try (KubernetesClient client = new KubernetesClientBuilder().withConfig(config).build()) {

@@ -2,7 +2,6 @@ package com.pm4.istp.controller;
 
 import com.pm4.istp.dto.AdminConfigRequest;
 import com.pm4.istp.dto.AdminConfigResponse;
-import com.pm4.istp.exception.StorageException;
 import com.pm4.istp.service.AdminConfigurationService;
 import jakarta.validation.Valid;
 import java.util.Base64;
@@ -12,7 +11,6 @@ import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -131,11 +129,5 @@ public class AdminConfigurationController {
   public ResponseEntity<Map<String, String>> deleteAdminConfig() {
     adminConfigurationService.deleteAdminConfiguration();
     return ResponseEntity.ok(Map.of("message", "Admin configuration deleted successfully"));
-  }
-
-  @ExceptionHandler(StorageException.class)
-  public ResponseEntity<String> handleStorageException(StorageException storageException) {
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body("Storage error: " + storageException.getMessage());
   }
 }
