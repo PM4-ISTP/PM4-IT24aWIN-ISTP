@@ -178,7 +178,8 @@ class UserProvisioningFilterTest {
 
     @Test
     void doFilterInternal_longButValidPicture_savesPictureUrl() throws Exception {
-        String longValidPicture = "https://example.com/" + "a".repeat(500);
+        // URL exactly at the 2048-char boundary (length = 2048) should be accepted
+        String longValidPicture = "https://example.com/" + "a".repeat(2028);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
         when(jwt.getSubject()).thenReturn(USER_ID.toString());
