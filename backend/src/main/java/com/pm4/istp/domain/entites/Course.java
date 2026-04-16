@@ -46,10 +46,6 @@ public class Course {
   @Column(name = "topic", nullable = true)
   private String topic;
 
-  @Column(name = "difficulty", nullable = true)
-  @Enumerated(EnumType.STRING)
-  private CourseDifficultyEnum difficulty;
-
   @Column(name = "invite_code", nullable = true, unique = true, length = 6)
   private String inviteCode;
 

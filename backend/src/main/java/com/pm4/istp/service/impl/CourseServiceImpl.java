@@ -77,7 +77,6 @@ public class CourseServiceImpl implements CourseService {
     validateVisibilityState(course.isPublished(), course.isPrivate());
     courseToCreate.setImageUrl(course.getImageUrl());
     courseToCreate.setTopic(course.getTopic());
-    courseToCreate.setDifficulty(course.getDifficulty());
     if (course.isPrivate()) {
       try {
         courseToCreate.setInviteCode(generateUniqueInviteCode());
@@ -203,7 +202,6 @@ public class CourseServiceImpl implements CourseService {
     course.setShortDescription(normalizeShortDescription(request.getShortDescription()));
     course.setImageUrl(request.getImageUrl());
     course.setTopic(request.getTopic());
-    course.setDifficulty(request.getDifficulty());
 
     boolean wasPrivate = course.isPrivate();
     boolean willBePublished = request.isPublished();

@@ -2,7 +2,6 @@ import type { ChallengeDetailResponseDto } from "@/src/lib/actions/challenges";
 
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
 export type PlatformRole = "ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT";
-export type CourseDifficulty = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 export type CourseVisibility = "DRAFT" | "PUBLIC" | "PRIVATE";
 
 export interface CourseUserSummary {
@@ -42,7 +41,6 @@ export interface CourseResponseDto {
   isPrivate: boolean;
   imageUrl?: string | null;
   topic?: string | null;
-  difficulty?: CourseDifficulty | null;
   instructors: InstructorAssignment[];
   createdAt: string;
   updatedAt: string;
@@ -58,7 +56,6 @@ export interface ListCourseResponseDto {
   instructorCount: number;
   imageUrl?: string | null;
   topic?: string | null;
-  difficulty?: CourseDifficulty | null;
   ownerName?: string | null;
   ownerPicture?: string | null;
   ownerTitle?: string | null;
@@ -113,9 +110,7 @@ export interface CourseDetailResponseDto {
   inviteCode?: string | null;
   imageUrl?: string | null;
   topic?: string | null;
-  difficulty?: CourseDifficulty | null;
   courseInstructors: CourseInstructorResponseDto[];
-  participants: CourseParticipantDto[];
   courseChallenges: CourseChallengeResponseDto[];
   createdAt: string;
   updatedAt: string;
@@ -131,7 +126,6 @@ export interface PublicCourseDetailResponseDto {
   isPublished: boolean;
   imageUrl?: string | null;
   topic?: string | null;
-  difficulty?: CourseDifficulty | null;
   courseInstructors: CourseInstructorResponseDto[];
   participants: null;
   courseChallenges: ChallengeDetailResponseDto[];
