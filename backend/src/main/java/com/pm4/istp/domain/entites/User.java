@@ -22,19 +22,19 @@ public class User {
   @Column(name = "id", updatable = false, nullable = false, unique = true)
   private UUID id;
 
-  @Column(name = "name", nullable = false)
+  @Column(name = "name", nullable = false, length = 255)
   private String name;
 
-  @Column(name = "email", nullable = false, unique = true)
+  @Column(name = "email", nullable = false, unique = true, length = 255)
   private String email;
 
-  @Column(name = "username")
+  @Column(name = "username", length = 255)
   private String username;
 
-  @Column(name = "picture")
+  @Column(name = "picture", columnDefinition = "TEXT")
   private String picture;
 
-  @Column(name = "title")
+  @Column(name = "title", length = 255)
   private String title;
 
   @JsonIgnore

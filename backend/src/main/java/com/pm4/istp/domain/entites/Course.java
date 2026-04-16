@@ -40,7 +40,7 @@ public class Course {
   @Column(name = "is_private", nullable = false, columnDefinition = "boolean default false")
   private boolean isPrivate;
 
-  @Column(name = "image_url", nullable = true)
+  @Column(name = "image_url", nullable = true, length = 2048)
   private String imageUrl;
 
   @Column(name = "topic", nullable = true)
