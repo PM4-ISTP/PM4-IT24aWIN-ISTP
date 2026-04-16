@@ -33,7 +33,10 @@ import {
   type ChallengeDetailResponseDto,
   type ListChallengeResponseDto,
 } from "@/src/features/course/actions/challenges";
-import { getDifficultyColor, getStatusColor } from "@/src/features/course/constants/challengeConstants";
+import {
+  getDifficultyColor,
+  getStatusColor,
+} from "@/src/features/course/constants/challengeConstants";
 
 export interface CourseChallengeEntry {
   challengeId: string;

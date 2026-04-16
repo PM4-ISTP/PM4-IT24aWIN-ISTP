@@ -1,7 +1,10 @@
 import { Badge, Box, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import { IconBook, IconClock } from "@tabler/icons-react";
 import classes from "./ChallengeCard.module.css";
-import { getDifficultyColor, getStatusColor } from "@/src/features/course/constants/challengeConstants";
+import {
+  getDifficultyColor,
+  getStatusColor,
+} from "@/src/features/course/constants/challengeConstants";
 
 export interface ChallengeCardProps {
   id: string;

@@ -15,8 +15,14 @@ import {
 } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { IconCheck, IconSearch } from "@tabler/icons-react";
-import { searchChallenges, type ListChallengeResponseDto } from "@/src/features/course/actions/challenges";
-import { getDifficultyColor, getStatusColor } from "@/src/features/course/constants/challengeConstants";
+import {
+  searchChallenges,
+  type ListChallengeResponseDto,
+} from "@/src/features/course/actions/challenges";
+import {
+  getDifficultyColor,
+  getStatusColor,
+} from "@/src/features/course/constants/challengeConstants";
 import classes from "./ChallengePickerModal.module.css";
 
 const PAGE_SIZE = 8;

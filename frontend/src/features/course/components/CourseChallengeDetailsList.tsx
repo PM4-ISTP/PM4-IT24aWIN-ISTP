@@ -10,7 +10,10 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { getDifficultyColor, getStatusColor } from "@/src/features/course/constants/challengeConstants";
+import {
+  getDifficultyColor,
+  getStatusColor,
+} from "@/src/features/course/constants/challengeConstants";
 import PlayChallengeButton from "@/src/features/course/components/PlayChallengeButton";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
 import type { ChallengeDetailResponseDto } from "@/src/features/course/actions/challenges";

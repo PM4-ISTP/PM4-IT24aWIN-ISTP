@@ -2,7 +2,10 @@
 
 import { Input, SegmentedControl, Stack, Textarea, TextInput } from "@mantine/core";
 import MyEditor from "@/src/shared/components/MyEditor";
-import type { ChallengeStatusEnum, ChallengeDifficultyEnum } from "@/src/features/course/actions/challenges";
+import type {
+  ChallengeStatusEnum,
+  ChallengeDifficultyEnum,
+} from "@/src/features/course/actions/challenges";
 import {
   CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
   STATUS_OPTIONS,

@@ -1,4 +1,7 @@
-import type { ChallengeStatusEnum, ChallengeDifficultyEnum } from "@/src/features/course/actions/challenges";
+import type {
+  ChallengeStatusEnum,
+  ChallengeDifficultyEnum,
+} from "@/src/features/course/actions/challenges";
 
 export const CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS = 200;
 
