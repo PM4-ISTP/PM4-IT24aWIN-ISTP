@@ -18,7 +18,7 @@ import { IconArrowLeft, IconX } from "@tabler/icons-react";
 import {
   ChallengeFormFields,
   type ChallengeFormValues,
-} from "@/src/features/course/components/ChallengeFormFields";
+} from "@/src/features/course/components/challenges/ChallengeFormFields";
 import { createChallenge } from "@/src/features/course/actions/challenges";
 import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
 import { useToast } from "@/src/shared/hooks/useToast";

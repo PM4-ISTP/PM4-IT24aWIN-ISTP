@@ -21,7 +21,7 @@ import { IconArrowLeft, IconTrash, IconX } from "@tabler/icons-react";
 import {
   ChallengeFormFields,
   type ChallengeFormValues,
-} from "@/src/features/course/components/ChallengeFormFields";
+} from "@/src/features/course/components/challenges/ChallengeFormFields";
 import {
   fetchChallenge,
   updateChallenge,

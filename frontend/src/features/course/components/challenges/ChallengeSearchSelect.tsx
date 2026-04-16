@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { TextInput } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 import type { ListChallengeResponseDto } from "@/src/features/course/actions/challenges";
-import { ChallengePickerModal } from "@/src/features/course/components/ChallengePickerModal";
+import { ChallengePickerModal } from "@/src/features/course/components/challenges/ChallengePickerModal";
 
 export interface ChallengeSearchSelectProps {
   excludeIds: string[];

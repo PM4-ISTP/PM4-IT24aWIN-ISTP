@@ -2,7 +2,7 @@
 
 import { Group, Pagination, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChallengeCard } from "@/src/features/course/components/ChallengeCard";
+import { ChallengeCard } from "@/src/features/course/components/challenges/ChallengeCard";
 
 interface ChallengeGridProps {
   challenges: Array<{

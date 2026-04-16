@@ -1,9 +1,9 @@
 import { Alert, Box, Container, Group, Stack, Title } from "@mantine/core";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
-import { CourseBannerHeader } from "@/src/features/course/components/CourseBannerHeader";
-import { CourseChallengeDetailsList } from "@/src/features/course/components/CourseChallengeDetailsList";
-import { CourseJourneyCard } from "@/src/features/course/components/CourseJourneyCard";
+import { CourseBannerHeader } from "@/src/features/course/components/course/CourseBannerHeader";
+import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
+import { CourseJourneyCard } from "@/src/features/course/components/course/CourseJourneyCard";
 import { fetchPublicCourse } from "@/src/features/course/actions/courses";
 import type { InstructorRoleEnum } from "@/src/shared/types/course";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";

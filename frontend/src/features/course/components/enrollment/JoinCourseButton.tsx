@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@mantine/core";
-import JoinCourseModal from "@/src/features/course/components/JoinCourseModal";
+import JoinCourseModal from "@/src/features/course/components/enrollment/JoinCourseModal";
 
 export default function JoinCourseButton() {
   const [opened, setOpened] = useState(false);

@@ -20,7 +20,7 @@ import {
 } from "@mantine/core";
 import { IconArrowLeft, IconX } from "@tabler/icons-react";
 import MyEditor from "@/src/shared/components/MyEditor";
-import { InstructorMultiSelect } from "@/src/features/course/components/InstructorMultiSelect";
+import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
 import { createCourse } from "@/src/features/course/actions/courses";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,

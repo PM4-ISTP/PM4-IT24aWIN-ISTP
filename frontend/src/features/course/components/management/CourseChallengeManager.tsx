@@ -27,7 +27,7 @@ import {
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
-import { ChallengeSearchSelect } from "@/src/features/course/components/ChallengeSearchSelect";
+import { ChallengeSearchSelect } from "@/src/features/course/components/challenges/ChallengeSearchSelect";
 import {
   fetchChallenge,
   type ChallengeDetailResponseDto,

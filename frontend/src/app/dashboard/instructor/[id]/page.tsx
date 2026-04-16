@@ -25,9 +25,9 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft, IconTrash, IconX } from "@tabler/icons-react";
-import { CoursePeoplePanel } from "@/src/features/course/components/CoursePeoplePanel";
+import { CoursePeoplePanel } from "@/src/features/course/components/people/CoursePeoplePanel";
 import MyEditor from "@/src/shared/components/MyEditor";
-import { InstructorMultiSelect } from "@/src/features/course/components/InstructorMultiSelect";
+import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
@@ -53,7 +53,7 @@ import type {
 import {
   CourseChallengeManager,
   type CourseChallengeEntry,
-} from "@/src/features/course/components/CourseChallengeManager";
+} from "@/src/features/course/components/management/CourseChallengeManager";
 import { updateCourseChallenges } from "@/src/features/course/actions/challenges";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";

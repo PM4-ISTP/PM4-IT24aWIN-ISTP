@@ -3,7 +3,7 @@ import { authOptions } from "@/src/shared/lib/auth";
 import { AppShell, AppShellHeader, AppShellNavbar, AppShellMain, Group } from "@mantine/core";
 import UserMenu from "@/src/features/user/components/UserMenu";
 import DashboardNav from "@/src/shared/components/DashboardNav";
-import JoinCourseButton from "@/src/features/course/components/JoinCourseButton";
+import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
 import { ROLES } from "@/src/shared/lib/roles";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {

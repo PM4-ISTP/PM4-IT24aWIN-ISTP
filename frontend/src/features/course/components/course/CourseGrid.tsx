@@ -2,7 +2,7 @@
 
 import { Group, Pagination, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CourseCard } from "@/src/features/course/components/CourseCard";
+import { CourseCard } from "@/src/features/course/components/course/CourseCard";
 import type { ListCourseResponseDto } from "@/src/shared/types/course";
 
 interface CourseGridProps {

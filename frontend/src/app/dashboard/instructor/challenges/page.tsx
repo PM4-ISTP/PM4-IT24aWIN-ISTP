@@ -2,7 +2,7 @@ import { Alert, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import Link from "next/link";
 import { fetchInstructorChallenges } from "@/src/features/course/actions/challenges";
-import { ChallengeGrid } from "@/src/features/course/components/ChallengeGrid";
+import { ChallengeGrid } from "@/src/features/course/components/challenges/ChallengeGrid";
 
 export default async function InstructorChallenges(props: {
   searchParams: Promise<{ page?: string }>;

@@ -1,4 +1,4 @@
-import { CourseGrid } from "@/src/features/course/components/CourseGrid";
+import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/features/course/actions/courses";
 import { Alert, Stack, Title } from "@mantine/core";
 

@@ -1,7 +1,7 @@
 import { Badge, Box, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
-import { CourseEnrollmentButton } from "@/src/features/course/components/CourseEnrollmentButton";
+import { CourseEnrollmentButton } from "@/src/features/course/components/enrollment/CourseEnrollmentButton";
 import { getCoursePreviewText } from "@/src/features/course/utils/courseText";
 
 interface CourseBannerHeaderProps {

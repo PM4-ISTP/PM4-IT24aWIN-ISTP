@@ -4,13 +4,13 @@ import { Grid, GridCol, Group, RingProgress, Stack, Text, Box, Alert } from "@ma
 import { IconArrowRight } from "@tabler/icons-react";
 import DashboardStyles from "@/src/shared/components/DashboardStyles";
 import DashboardHero from "@/src/shared/components/DashboardHero";
-import { CourseGrid } from "@/src/features/course/components/CourseGrid";
+import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import {
   fetchEnrolledCoursesOfLoggedInUser,
   fetchPublicCourse,
 } from "@/src/features/course/actions/courses";
 import Link from "next/link";
-import { CourseChallengeDetailsList } from "@/src/features/course/components/CourseChallengeDetailsList";
+import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
 import type { ActionResult, PublicCourseDetailResponseDto } from "@/src/shared/types/course";
 
 const sectionLabelStyle: React.CSSProperties = {
