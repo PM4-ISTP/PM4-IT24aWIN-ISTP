@@ -1,7 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
-import { ROLE_GROUPS } from "./lib/roles";
-import { isStringArray } from "./lib/utils";
+import { ROLE_GROUPS } from "./shared/lib/roles";
+import { isStringArray } from "./shared/lib/utils";
 
 const ROUTE_ROLES: Record<string, readonly string[]> = {
   "/dashboard/admin": ROLE_GROUPS.ADMIN_ONLY,

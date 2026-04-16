@@ -1,8 +1,8 @@
 import { Alert, Box, Button, Group, Stack, Text, TextInput, Title } from "@mantine/core";
 import Link from "next/link";
-import { fetchPublishedCourses } from "@/src/lib/actions/courses";
-import { CourseGrid } from "@/src/components/CourseGrid";
-import JoinCourseButton from "@/src/components/JoinCourseButton";
+import { fetchPublishedCourses } from "@/src/features/course/actions/courses";
+import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
+import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
 
 export default async function CatalogPage(props: {
   searchParams: Promise<{ page?: string; query?: string }>;

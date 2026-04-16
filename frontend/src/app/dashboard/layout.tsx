@@ -1,10 +1,10 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/src/lib/auth";
+import { authOptions } from "@/src/shared/lib/auth";
 import { AppShell, AppShellHeader, AppShellNavbar, AppShellMain, Group } from "@mantine/core";
-import UserMenu from "@/src/components/UserMenu";
-import DashboardNav from "@/src/components/DashboardNav";
-import JoinCourseButton from "@/src/components/JoinCourseButton";
-import { ROLES } from "@/src/lib/roles";
+import UserMenu from "@/src/features/user/components/UserMenu";
+import DashboardNav from "@/src/shared/components/DashboardNav";
+import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
+import { ROLES } from "@/src/shared/lib/roles";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);

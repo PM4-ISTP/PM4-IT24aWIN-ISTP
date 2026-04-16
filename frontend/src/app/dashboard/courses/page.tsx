@@ -1,5 +1,5 @@
-import { CourseGrid } from "@/src/components/CourseGrid";
-import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/lib/actions/courses";
+import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
+import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/features/course/actions/courses";
 import { Alert, Stack, Title } from "@mantine/core";
 
 export default async function CoursesPage(props: { searchParams: Promise<{ page?: string }> }) {
