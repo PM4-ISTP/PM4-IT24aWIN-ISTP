@@ -1,4 +1,4 @@
-import { fetchBackend } from "@/src/lib/api";
+import { fetchBackend } from "@/src/shared/lib/api";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 

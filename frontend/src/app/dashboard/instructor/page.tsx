@@ -1,8 +1,8 @@
 import { Alert, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import Link from "next/link";
-import { fetchInstructorCourses } from "@/src/lib/actions/courses";
-import { CourseGrid } from "@/src/components/CourseGrid";
+import { fetchInstructorCourses } from "@/src/features/course/actions/courses";
+import { CourseGrid } from "@/src/features/course/components/CourseGrid";
 
 export default async function InstructorDashboard(props: {
   searchParams: Promise<{ page?: string }>;

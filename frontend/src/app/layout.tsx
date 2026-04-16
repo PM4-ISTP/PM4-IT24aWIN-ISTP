@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ColorSchemeScript, createTheme, mantineHtmlProps, MantineProvider } from "@mantine/core";
 import { Geist, Geist_Mono, Manrope, Orbitron, Space_Grotesk } from "next/font/google";
-import NextAuthSessionProvider from "@/src/components/SessionProvider";
+import NextAuthSessionProvider from "@/src/features/user/components/SessionProvider";
 import "@mantine/core/styles.css";
 import "@mantine/tiptap/styles.css";
 import "@mantine/notifications/styles.css";

@@ -21,17 +21,17 @@ import { IconArrowLeft, IconTrash, IconX } from "@tabler/icons-react";
 import {
   ChallengeFormFields,
   type ChallengeFormValues,
-} from "@/src/components/ChallengeFormFields";
+} from "@/src/features/course/components/ChallengeFormFields";
 import {
   fetchChallenge,
   updateChallenge,
   deleteChallenge,
   previewVisibilityImpact,
   type ChallengeStatusEnum,
-} from "@/src/lib/actions/challenges";
-import { normalizeShortDescription } from "@/src/lib/courseText";
-import { useToast } from "@/src/hooks/useToast";
-import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/lib/challengeConstants";
+} from "@/src/features/course/actions/challenges";
+import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
+import { useToast } from "@/src/shared/hooks/useToast";
+import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/features/course/constants/challengeConstants";
 
 function isMoreRestrictive(
   oldStatus: ChallengeStatusEnum,

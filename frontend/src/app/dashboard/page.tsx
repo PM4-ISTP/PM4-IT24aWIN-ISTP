@@ -1,14 +1,14 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/src/lib/auth";
+import { authOptions } from "@/src/shared/lib/auth";
 import { Grid, GridCol, Group, RingProgress, Stack, Text, Box, Alert } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
-import DashboardStyles from "./DashboardStyles";
-import DashboardHero from "./DashboardHero";
-import { CourseGrid } from "@/src/components/CourseGrid";
-import { fetchEnrolledCoursesOfLoggedInUser, fetchPublicCourse } from "@/src/lib/actions/courses";
+import DashboardStyles from "@/src/shared/components/DashboardStyles";
+import DashboardHero from "@/src/shared/components/DashboardHero";
+import { CourseGrid } from "@/src/features/course/components/CourseGrid";
+import { fetchEnrolledCoursesOfLoggedInUser, fetchPublicCourse } from "@/src/features/course/actions/courses";
 import Link from "next/link";
-import { CourseChallengeDetailsList } from "@/src/components/CourseChallengeDetailsList";
-import type { ActionResult, PublicCourseDetailResponseDto } from "@/src/types/course";
+import { CourseChallengeDetailsList } from "@/src/features/course/components/CourseChallengeDetailsList";
+import type { ActionResult, PublicCourseDetailResponseDto } from "@/src/shared/types/course";
 
 const sectionLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",

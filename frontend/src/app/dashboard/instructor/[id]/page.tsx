@@ -25,33 +25,33 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft, IconTrash, IconX } from "@tabler/icons-react";
-import { CoursePeoplePanel } from "@/src/components/CoursePeoplePanel";
-import MyEditor from "@/src/components/MyEditor";
-import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
+import { CoursePeoplePanel } from "@/src/features/course/components/CoursePeoplePanel";
+import MyEditor from "@/src/shared/components/MyEditor";
+import { InstructorMultiSelect } from "@/src/features/course/components/InstructorMultiSelect";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
-} from "@/src/lib/courseText";
-import { visibilityFromFlags, visibilityToFlags } from "@/src/lib/courseVisibility";
+} from "@/src/features/course/utils/courseText";
+import { visibilityFromFlags, visibilityToFlags } from "@/src/features/course/utils/courseVisibility";
 import {
   deleteCourse,
   fetchCourse,
   regenerateInviteCode,
   updateCourse,
-} from "@/src/lib/actions/courses";
-import { useToast } from "@/src/hooks/useToast";
-import { TOPIC_OPTIONS } from "@/src/lib/courseConstants";
+} from "@/src/features/course/actions/courses";
+import { useToast } from "@/src/shared/hooks/useToast";
+import { TOPIC_OPTIONS } from "@/src/features/course/constants/courseConstants";
 import type {
   CollaboratorUserResponseDto,
   CourseVisibility,
   CourseDetailResponseDto,
   InstructorRoleEnum,
-} from "@/src/types/course";
+} from "@/src/shared/types/course";
 import {
   CourseChallengeManager,
   type CourseChallengeEntry,
-} from "@/src/components/CourseChallengeManager";
-import { updateCourseChallenges } from "@/src/lib/actions/challenges";
+} from "@/src/features/course/components/CourseChallengeManager";
+import { updateCourseChallenges } from "@/src/features/course/actions/challenges";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 const COLLABORATOR_ROLE: InstructorRoleEnum = "COLLABORATOR";

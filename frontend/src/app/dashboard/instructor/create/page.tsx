@@ -19,17 +19,17 @@ import {
   Title,
 } from "@mantine/core";
 import { IconArrowLeft, IconX } from "@tabler/icons-react";
-import MyEditor from "@/src/components/MyEditor";
-import { InstructorMultiSelect } from "@/src/components/InstructorMultiSelect";
-import { createCourse } from "@/src/lib/actions/courses";
+import MyEditor from "@/src/shared/components/MyEditor";
+import { InstructorMultiSelect } from "@/src/features/course/components/InstructorMultiSelect";
+import { createCourse } from "@/src/features/course/actions/courses";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
-} from "@/src/lib/courseText";
-import { visibilityToFlags } from "@/src/lib/courseVisibility";
-import { useToast } from "@/src/hooks/useToast";
-import { TOPIC_OPTIONS } from "@/src/lib/courseConstants";
-import type { CourseVisibility } from "@/src/types/course";
+} from "@/src/features/course/utils/courseText";
+import { visibilityToFlags } from "@/src/features/course/utils/courseVisibility";
+import { useToast } from "@/src/shared/hooks/useToast";
+import { TOPIC_OPTIONS } from "@/src/features/course/constants/courseConstants";
+import type { CourseVisibility } from "@/src/shared/types/course";
 
 export default function CreateCourse() {
   const router = useRouter();

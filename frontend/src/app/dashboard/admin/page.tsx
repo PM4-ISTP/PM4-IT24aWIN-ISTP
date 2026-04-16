@@ -1,5 +1,5 @@
-import AdminTabs from "@/src/components/AdminTabs";
-import { getApiClient } from "@/src/lib/api/server";
+import AdminTabs from "@/src/features/admin/components/AdminTabs";
+import { getApiClient } from "@/src/shared/lib/api/server";
 import { Stack, Title, Text } from "@mantine/core";
 
 // Role guard is handled by middleware (proxy.ts) - no manual check needed here.
