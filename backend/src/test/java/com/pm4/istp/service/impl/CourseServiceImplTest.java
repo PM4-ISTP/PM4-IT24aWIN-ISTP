@@ -18,6 +18,7 @@ import com.pm4.istp.domain.UpdateCourseRequest;
 import com.pm4.istp.domain.entites.Challenge;
 import com.pm4.istp.domain.entites.ChallengeStatusEnum;
 import com.pm4.istp.domain.entites.Course;
+import com.pm4.istp.domain.entites.CourseDifficultyEnum;
 import com.pm4.istp.domain.entites.CourseEnrollment;
 import com.pm4.istp.domain.entites.CourseInstructor;
 import com.pm4.istp.domain.entites.InstructorRoleEnum;
@@ -479,6 +480,61 @@ class CourseServiceImplTest {
     assertThat(result.getCourseInstructors().stream()
             .allMatch(ci -> ci.getInstructorRole() == InstructorRoleEnum.OWNER))
         .isTrue();
+  }
+
+  @Test
+  void createCourse_mapsDifficultyFromRequest() {
+    UUID ownerId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
+
+    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    CreateCourseRequest request =
+        new CreateCourseRequest(
+            "Course", "Desc", "Short description for the course.", false, false, null, null,
+            CourseDifficultyEnum.INTERMEDIATE, List.of());
+
+    Course result = courseService.createCourse(ownerId, request);
+
+    assertThat(result.getDifficulty()).isEqualTo(CourseDifficultyEnum.INTERMEDIATE);
+  }
+
+  @Test
+  void updateCourse_mapsDifficultyFromRequest() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setDifficulty(CourseDifficultyEnum.BEGINNER);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    ownerRelation.setAccepted(true);
+    course.addCourseInstructor(ownerRelation);
+
+    UpdateCourseRequest updateRequest =
+        new UpdateCourseRequest(
+            "Updated", "Desc", "Short description for the update.", false, false, null, null,
+            CourseDifficultyEnum.ADVANCED, List.of());
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    Course updated = courseService.updateCourse(ownerId, courseId, updateRequest);
+
+    assertThat(updated.getDifficulty()).isEqualTo(CourseDifficultyEnum.ADVANCED);
   }
 
   @Test
