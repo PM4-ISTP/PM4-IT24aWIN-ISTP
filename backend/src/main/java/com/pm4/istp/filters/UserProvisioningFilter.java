@@ -56,7 +56,8 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       Optional<User> existingUser = userRepository.findById(keycloakId);
 
       String fullName =
-          discardIfTooLong(normalize(jwt.getClaimAsString("name")), MAX_COLUMN_LENGTH, "name", keycloakId);
+          discardIfTooLong(
+              normalize(jwt.getClaimAsString("name")), MAX_COLUMN_LENGTH, "name", keycloakId);
       String givenName =
           discardIfTooLong(
               normalize(jwt.getClaimAsString("given_name")),
