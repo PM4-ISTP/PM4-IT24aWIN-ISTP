@@ -33,7 +33,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class UserProvisioningFilter extends OncePerRequestFilter {
 
-  private static final int PICTURE_MAX_LENGTH = 255;
+  private static final int MAX_COLUMN_LENGTH = 255;
 
   private final UserRepository userRepository;
 
@@ -54,13 +54,13 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       UUID keycloakId = UUID.fromString(jwt.getSubject());
       Optional<User> existingUser = userRepository.findById(keycloakId);
 
-      String fullName = normalize(jwt.getClaimAsString("name"));
-      String givenName = normalize(jwt.getClaimAsString("given_name"));
-      String familyName = normalize(jwt.getClaimAsString("family_name"));
-      String username = normalize(jwt.getClaimAsString("preferred_username"));
-      String emailClaim = normalize(jwt.getClaimAsString("email"));
-      String pictureClaim = sanitizePicture(normalize(jwt.getClaimAsString("picture")), keycloakId);
-      String titleClaim = normalize(jwt.getClaimAsString("title"));
+      String fullName = truncate(normalize(jwt.getClaimAsString("name")), MAX_COLUMN_LENGTH, "name", keycloakId);
+      String givenName = truncate(normalize(jwt.getClaimAsString("given_name")), MAX_COLUMN_LENGTH, "given_name", keycloakId);
+      String familyName = truncate(normalize(jwt.getClaimAsString("family_name")), MAX_COLUMN_LENGTH, "family_name", keycloakId);
+      String username = truncate(normalize(jwt.getClaimAsString("preferred_username")), MAX_COLUMN_LENGTH, "preferred_username", keycloakId);
+      String emailClaim = discardIfTooLong(normalize(jwt.getClaimAsString("email")), MAX_COLUMN_LENGTH, "email", keycloakId);
+      String pictureClaim = discardIfTooLong(normalize(jwt.getClaimAsString("picture")), MAX_COLUMN_LENGTH, "picture", keycloakId);
+      String titleClaim = truncate(normalize(jwt.getClaimAsString("title")), MAX_COLUMN_LENGTH, "title", keycloakId);
       String combinedName = combineNameParts(givenName, familyName);
 
       Optional<UserInfoProfile> userInfoProfile =
@@ -89,18 +89,22 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       }
 
       String displayName =
-          resolveDisplayName(
-              fullName,
-              combinedName,
-              userInfoProfile.map(UserInfoProfile::name).orElse(null),
-              existingUser.map(User::getName).map(this::normalize).orElse(null),
-              username,
-              email,
+          truncate(
+              resolveDisplayName(
+                  fullName,
+                  combinedName,
+                  userInfoProfile.map(UserInfoProfile::name).orElse(null),
+                  existingUser.map(User::getName).map(this::normalize).orElse(null),
+                  username,
+                  email,
+                  keycloakId),
+              MAX_COLUMN_LENGTH,
+              "displayName",
               keycloakId);
       String picture =
           firstNonBlank(
               pictureClaim,
-              sanitizePicture(userInfoProfile.map(UserInfoProfile::picture).orElse(null), keycloakId),
+              discardIfTooLong(userInfoProfile.map(UserInfoProfile::picture).orElse(null), MAX_COLUMN_LENGTH, "picture", keycloakId),
               existingUser.map(User::getPicture).map(this::normalize).orElse(null));
       String title =
           firstNonBlank(
@@ -238,12 +242,27 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
     return null;
   }
 
-  private String sanitizePicture(String value, UUID keycloakId) {
-    if (value == null) {
-      return null;
+  private String truncate(String value, int maxLength, String fieldName, UUID keycloakId) {
+    if (value != null && value.length() > maxLength) {
+      log.warn(
+          "Truncating {} value exceeding {} characters (length={}, userId={})",
+          fieldName,
+          maxLength,
+          value.length(),
+          keycloakId);
+      return value.substring(0, maxLength);
     }
-    if (value.length() > PICTURE_MAX_LENGTH) {
-      log.warn("Discarding picture value exceeding {} characters (length={}, userId={})", PICTURE_MAX_LENGTH, value.length(), keycloakId);
+    return value;
+  }
+
+  private String discardIfTooLong(String value, int maxLength, String fieldName, UUID keycloakId) {
+    if (value != null && value.length() > maxLength) {
+      log.warn(
+          "Discarding {} value exceeding {} characters (length={}, userId={})",
+          fieldName,
+          maxLength,
+          value.length(),
+          keycloakId);
       return null;
     }
     return value;
