@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import com.pm4.istp.admin.db.AdminConfig;
 import com.pm4.istp.admin.repositories.AdminConfigRepository;
 import com.pm4.istp.admin.services.AdminConfigurationService;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -33,6 +34,9 @@ class AdminConfigurationServiceTest {
 
     @Mock
     private AdminConfigRepository adminConfigRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private AdminConfigurationService adminConfigurationService;
@@ -74,7 +78,7 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AdminConfig result = adminConfigurationService.createConfiguration(kubeconfig, "1", "1Gi");
+        AdminConfig result = adminConfigurationService.createConfiguration(kubeconfig, "1", "1Gi", null);
 
         assertNotNull(result);
         assertEquals(SINGLETON_ID, result.getId());
@@ -93,7 +97,7 @@ class AdminConfigurationServiceTest {
 
         IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
-                () -> adminConfigurationService.createConfiguration(kubeconfig, "1", "1Gi"));
+                () -> adminConfigurationService.createConfiguration(kubeconfig, "1", "1Gi", null));
 
         assertEquals("Admin configuration already exists", exception.getMessage());
         verify(adminConfigRepository).existsById(SINGLETON_ID);
@@ -106,7 +110,7 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AdminConfig result = adminConfigurationService.createConfiguration(null, "2", "2Gi");
+        AdminConfig result = adminConfigurationService.createConfiguration(null, "2", "2Gi", null);
 
         assertEquals(SINGLETON_ID, result.getId());
         assertEquals("2", result.getCpuLimit());
@@ -125,7 +129,7 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AdminConfig result = adminConfigurationService.createConfiguration(emptyFile, "2", "2Gi");
+        AdminConfig result = adminConfigurationService.createConfiguration(emptyFile, "2", "2Gi", null);
 
         assertEquals("2", result.getCpuLimit());
         assertEquals("2Gi", result.getMemoryLimit());
@@ -141,7 +145,7 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AdminConfig result = adminConfigurationService.createConfiguration(kubeconfig, " ", "");
+        AdminConfig result = adminConfigurationService.createConfiguration(kubeconfig, " ", "", null);
 
         assertEquals(SINGLETON_ID, result.getId());
         assertNull(result.getCpuLimit());
@@ -165,7 +169,7 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AdminConfig result = adminConfigurationService.updateConfiguration(kubeconfig, "3", "3Gi");
+        AdminConfig result = adminConfigurationService.updateConfiguration(kubeconfig, "3", "3Gi", null);
 
         assertEquals(SINGLETON_ID, result.getId());
         assertEquals("3", result.getCpuLimit());
@@ -183,7 +187,7 @@ class AdminConfigurationServiceTest {
 
         IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
-                () -> adminConfigurationService.updateConfiguration(kubeconfig, "3", "3Gi"));
+                () -> adminConfigurationService.updateConfiguration(kubeconfig, "3", "3Gi", null));
 
         assertEquals("Admin configuration does not exist. Create it first.", exception.getMessage());
         verify(adminConfigRepository).findById(SINGLETON_ID);
@@ -203,7 +207,7 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AdminConfig result = adminConfigurationService.updateConfiguration(null, null, null);
+        AdminConfig result = adminConfigurationService.updateConfiguration(null, null, null, null);
 
         assertEquals("2", result.getCpuLimit());
         assertEquals("2Gi", result.getMemoryLimit());
@@ -226,7 +230,7 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AdminConfig result = adminConfigurationService.updateConfiguration(null, "   ", "");
+        AdminConfig result = adminConfigurationService.updateConfiguration(null, "   ", "", null);
 
         assertEquals("2", result.getCpuLimit());
         assertEquals("2Gi", result.getMemoryLimit());
@@ -248,7 +252,7 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AdminConfig result = adminConfigurationService.updateConfiguration(null, "4", null);
+        AdminConfig result = adminConfigurationService.updateConfiguration(null, "4", null, null);
 
         assertEquals("4", result.getCpuLimit());
         assertEquals("1Gi", result.getMemoryLimit());
@@ -269,7 +273,7 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AdminConfig result = adminConfigurationService.updateConfiguration(null, null, "4Gi");
+        AdminConfig result = adminConfigurationService.updateConfiguration(null, null, "4Gi", null);
 
         assertEquals("1", result.getCpuLimit());
         assertEquals("4Gi", result.getMemoryLimit());
@@ -290,7 +294,7 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AdminConfig result = adminConfigurationService.updateConfiguration(kubeconfig, null, null);
+        AdminConfig result = adminConfigurationService.updateConfiguration(kubeconfig, null, null, null);
 
         assertEquals("1", result.getCpuLimit());
         assertEquals("1Gi", result.getMemoryLimit());
@@ -326,7 +330,7 @@ class AdminConfigurationServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         LocalDateTime before = LocalDateTime.now();
-        AdminConfig result = adminConfigurationService.createConfiguration(null, "1", "1Gi");
+        AdminConfig result = adminConfigurationService.createConfiguration(null, "1", "1Gi", null);
         LocalDateTime after = LocalDateTime.now();
 
         assertNotNull(result.getUpdatedAt());
@@ -345,7 +349,7 @@ class AdminConfigurationServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         LocalDateTime before = LocalDateTime.now();
-        AdminConfig result = adminConfigurationService.updateConfiguration(null, "5", "5Gi");
+        AdminConfig result = adminConfigurationService.updateConfiguration(null, "5", "5Gi", null);
         LocalDateTime after = LocalDateTime.now();
 
         assertNotNull(result.getUpdatedAt());
@@ -359,7 +363,7 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        adminConfigurationService.createConfiguration(kubeconfig, "6", "6Gi");
+        adminConfigurationService.createConfiguration(kubeconfig, "6", "6Gi", null);
 
         ArgumentCaptor<AdminConfig> captor = ArgumentCaptor.forClass(AdminConfig.class);
         verify(adminConfigRepository).save(captor.capture());
