@@ -284,6 +284,34 @@ class UserProvisioningFilterTest {
     }
 
     @Test
+    void doFilterInternal_oversizedUserinfoEmail_withExistingUser_usesExistingEmail() throws Exception {
+        String oversizedEmail = "a".repeat(250) + "@example.com";
+        User existingUser = new User();
+        existingUser.setId(USER_ID);
+        existingUser.setName(FULL_NAME);
+        existingUser.setEmail(EMAIL);
+        existingUser.setUsername(USERNAME);
+        existingUser.setPicture(PICTURE);
+        existingUser.setRoles(Set.of());
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        // No email in JWT claim; oversized email comes from userinfo profile via name enrichment
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(oversizedEmail).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        // Oversized email discarded at both JWT and userinfo sources; existing email retained — no save
+        verify(userRepository, never()).save(any());
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
     void doFilterInternal_nullAuthentication_skipsProvisioningAndContinuesChain() throws Exception {
         when(securityContext.getAuthentication()).thenReturn(null);
 

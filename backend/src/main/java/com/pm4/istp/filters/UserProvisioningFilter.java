@@ -100,7 +100,11 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       String email =
           firstNonBlank(
               emailClaim,
-              userInfoProfile.map(UserInfoProfile::email).orElse(null),
+              discardIfTooLong(
+                  userInfoProfile.map(UserInfoProfile::email).orElse(null),
+                  MAX_COLUMN_LENGTH,
+                  "email",
+                  keycloakId),
               existingUser.map(User::getEmail).map(this::normalize).orElse(null));
 
       if (email == null) {
@@ -135,7 +139,11 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       String title =
           firstNonBlank(
               titleClaim,
-              userInfoProfile.map(UserInfoProfile::title).orElse(null),
+              truncate(
+                  userInfoProfile.map(UserInfoProfile::title).orElse(null),
+                  MAX_COLUMN_LENGTH,
+                  "title",
+                  keycloakId),
               existingUser.map(User::getTitle).map(this::normalize).orElse(null));
 
       Set<UserRoleEnum> roles =
