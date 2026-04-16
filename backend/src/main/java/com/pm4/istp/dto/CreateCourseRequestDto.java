@@ -30,6 +30,7 @@ public class CreateCourseRequestDto {
 
   @Size(max = 255, message = "Image URL must be at most 255 characters")
   private String imageUrl;
+
   private String topic;
 
   @NotNull(message = "Instructor information is required")

@@ -54,13 +54,35 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       UUID keycloakId = UUID.fromString(jwt.getSubject());
       Optional<User> existingUser = userRepository.findById(keycloakId);
 
-      String fullName = truncate(normalize(jwt.getClaimAsString("name")), MAX_COLUMN_LENGTH, "name", keycloakId);
-      String givenName = truncate(normalize(jwt.getClaimAsString("given_name")), MAX_COLUMN_LENGTH, "given_name", keycloakId);
-      String familyName = truncate(normalize(jwt.getClaimAsString("family_name")), MAX_COLUMN_LENGTH, "family_name", keycloakId);
-      String username = truncate(normalize(jwt.getClaimAsString("preferred_username")), MAX_COLUMN_LENGTH, "preferred_username", keycloakId);
-      String emailClaim = discardIfTooLong(normalize(jwt.getClaimAsString("email")), MAX_COLUMN_LENGTH, "email", keycloakId);
-      String pictureClaim = discardIfTooLong(normalize(jwt.getClaimAsString("picture")), MAX_COLUMN_LENGTH, "picture", keycloakId);
-      String titleClaim = truncate(normalize(jwt.getClaimAsString("title")), MAX_COLUMN_LENGTH, "title", keycloakId);
+      String fullName =
+          truncate(normalize(jwt.getClaimAsString("name")), MAX_COLUMN_LENGTH, "name", keycloakId);
+      String givenName =
+          truncate(
+              normalize(jwt.getClaimAsString("given_name")),
+              MAX_COLUMN_LENGTH,
+              "given_name",
+              keycloakId);
+      String familyName =
+          truncate(
+              normalize(jwt.getClaimAsString("family_name")),
+              MAX_COLUMN_LENGTH,
+              "family_name",
+              keycloakId);
+      String username =
+          truncate(
+              normalize(jwt.getClaimAsString("preferred_username")),
+              MAX_COLUMN_LENGTH,
+              "preferred_username",
+              keycloakId);
+      String emailClaim =
+          discardIfTooLong(
+              normalize(jwt.getClaimAsString("email")), MAX_COLUMN_LENGTH, "email", keycloakId);
+      String pictureClaim =
+          discardIfTooLong(
+              normalize(jwt.getClaimAsString("picture")), MAX_COLUMN_LENGTH, "picture", keycloakId);
+      String titleClaim =
+          truncate(
+              normalize(jwt.getClaimAsString("title")), MAX_COLUMN_LENGTH, "title", keycloakId);
       String combinedName = combineNameParts(givenName, familyName);
 
       Optional<UserInfoProfile> userInfoProfile =
@@ -104,7 +126,11 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       String picture =
           firstNonBlank(
               pictureClaim,
-              discardIfTooLong(userInfoProfile.map(UserInfoProfile::picture).orElse(null), MAX_COLUMN_LENGTH, "picture", keycloakId),
+              discardIfTooLong(
+                  userInfoProfile.map(UserInfoProfile::picture).orElse(null),
+                  MAX_COLUMN_LENGTH,
+                  "picture",
+                  keycloakId),
               existingUser.map(User::getPicture).map(this::normalize).orElse(null));
       String title =
           firstNonBlank(
