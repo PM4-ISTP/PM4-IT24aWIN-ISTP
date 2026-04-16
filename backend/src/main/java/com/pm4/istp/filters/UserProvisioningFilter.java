@@ -59,7 +59,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       String familyName = normalize(jwt.getClaimAsString("family_name"));
       String username = normalize(jwt.getClaimAsString("preferred_username"));
       String emailClaim = normalize(jwt.getClaimAsString("email"));
-      String pictureClaim = truncatePicture(normalize(jwt.getClaimAsString("picture")));
+      String pictureClaim = sanitizePicture(normalize(jwt.getClaimAsString("picture")), keycloakId);
       String titleClaim = normalize(jwt.getClaimAsString("title"));
       String combinedName = combineNameParts(givenName, familyName);
 
@@ -100,7 +100,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       String picture =
           firstNonBlank(
               pictureClaim,
-              truncatePicture(userInfoProfile.map(UserInfoProfile::picture).orElse(null)),
+              sanitizePicture(userInfoProfile.map(UserInfoProfile::picture).orElse(null), keycloakId),
               existingUser.map(User::getPicture).map(this::normalize).orElse(null));
       String title =
           firstNonBlank(
@@ -238,12 +238,12 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
     return null;
   }
 
-  private String truncatePicture(String value) {
+  private String sanitizePicture(String value, UUID keycloakId) {
     if (value == null) {
       return null;
     }
     if (value.length() > PICTURE_MAX_LENGTH) {
-      log.warn("Discarding picture value exceeding {} characters (length={})", PICTURE_MAX_LENGTH, value.length());
+      log.warn("Discarding picture value exceeding {} characters (length={}, userId={})", PICTURE_MAX_LENGTH, value.length(), keycloakId);
       return null;
     }
     return value;
