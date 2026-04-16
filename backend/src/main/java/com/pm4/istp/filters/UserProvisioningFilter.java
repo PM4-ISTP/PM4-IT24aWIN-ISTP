@@ -34,6 +34,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class UserProvisioningFilter extends OncePerRequestFilter {
 
   private static final int MAX_COLUMN_LENGTH = 255;
+  private static final int MAX_PICTURE_LENGTH = 2048;
 
   private final UserRepository userRepository;
 
@@ -79,7 +80,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               normalize(jwt.getClaimAsString("email")), MAX_COLUMN_LENGTH, "email", keycloakId);
       String pictureClaim =
           discardIfTooLong(
-              normalize(jwt.getClaimAsString("picture")), MAX_COLUMN_LENGTH, "picture", keycloakId);
+              normalize(jwt.getClaimAsString("picture")), MAX_PICTURE_LENGTH, "picture", keycloakId);
       String titleClaim =
           truncate(
               normalize(jwt.getClaimAsString("title")), MAX_COLUMN_LENGTH, "title", keycloakId);
@@ -132,7 +133,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               pictureClaim,
               discardIfTooLong(
                   userInfoProfile.map(UserInfoProfile::picture).orElse(null),
-                  MAX_COLUMN_LENGTH,
+                  MAX_PICTURE_LENGTH,
                   "picture",
                   keycloakId),
               existingUser.map(User::getPicture).map(this::normalize).orElse(null));

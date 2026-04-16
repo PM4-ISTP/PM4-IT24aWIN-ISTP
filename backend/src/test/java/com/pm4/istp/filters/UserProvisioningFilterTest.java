@@ -157,7 +157,7 @@ class UserProvisioningFilterTest {
 
     @Test
     void doFilterInternal_oversizedPicture_discardsPictureAndSavesUser() throws Exception {
-        String oversizedPicture = "https://example.com/" + "a".repeat(250);
+        String oversizedPicture = "https://example.com/" + "a".repeat(2040);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
         when(jwt.getSubject()).thenReturn(USER_ID.toString());
@@ -173,6 +173,27 @@ class UserProvisioningFilterTest {
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue().getPicture()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_longButValidPicture_savesPictureUrl() throws Exception {
+        String longValidPicture = "https://example.com/" + "a".repeat(500);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(longValidPicture).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getPicture()).isEqualTo(longValidPicture);
         verify(filterChain).doFilter(request, response);
     }
 

@@ -31,7 +31,7 @@ public class User {
   @Column(name = "username", length = 255)
   private String username;
 
-  @Column(name = "picture", length = 255)
+  @Column(name = "picture", columnDefinition = "TEXT")
   private String picture;
 
   @Column(name = "title", length = 255)
