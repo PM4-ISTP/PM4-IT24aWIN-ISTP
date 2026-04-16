@@ -199,7 +199,7 @@ class UserProvisioningFilterTest {
     }
 
     @Test
-    void doFilterInternal_oversizedUsername_truncatesTo255() throws Exception {
+    void doFilterInternal_oversizedUsername_discardsUsernameAndSavesUser() throws Exception {
         String oversizedUsername = "u".repeat(300);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
@@ -212,14 +212,15 @@ class UserProvisioningFilterTest {
 
         filter.doFilterInternal(request, response, filterChain);
 
+        // Oversized username is discarded (not truncated); user is saved with null username
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
-        assertThat(userCaptor.getValue().getUsername()).hasSize(255);
+        assertThat(userCaptor.getValue().getUsername()).isNull();
         verify(filterChain).doFilter(request, response);
     }
 
     @Test
-    void doFilterInternal_oversizedName_truncatesTo255() throws Exception {
+    void doFilterInternal_oversizedName_discardsNameAndUsesFallback() throws Exception {
         String oversizedName = "n".repeat(300);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
@@ -232,14 +233,15 @@ class UserProvisioningFilterTest {
 
         filter.doFilterInternal(request, response, filterChain);
 
+        // Oversized name is discarded (not truncated); displayName falls back to username
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
-        assertThat(userCaptor.getValue().getName()).hasSize(255);
+        assertThat(userCaptor.getValue().getName()).isEqualTo(USERNAME);
         verify(filterChain).doFilter(request, response);
     }
 
     @Test
-    void doFilterInternal_oversizedTitle_truncatesTo255() throws Exception {
+    void doFilterInternal_oversizedTitle_discardsTitleAndSavesUser() throws Exception {
         String oversizedTitle = "t".repeat(300);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(jwt);
@@ -253,9 +255,10 @@ class UserProvisioningFilterTest {
 
         filter.doFilterInternal(request, response, filterChain);
 
+        // Oversized title is discarded (not truncated); user is saved with null title
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
-        assertThat(userCaptor.getValue().getTitle()).hasSize(255);
+        assertThat(userCaptor.getValue().getTitle()).isNull();
         verify(filterChain).doFilter(request, response);
     }
 

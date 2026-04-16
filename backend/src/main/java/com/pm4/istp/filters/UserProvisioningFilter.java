@@ -56,21 +56,22 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       Optional<User> existingUser = userRepository.findById(keycloakId);
 
       String fullName =
-          truncate(normalize(jwt.getClaimAsString("name")), MAX_COLUMN_LENGTH, "name", keycloakId);
+          discardIfTooLong(
+              normalize(jwt.getClaimAsString("name")), MAX_COLUMN_LENGTH, "name", keycloakId);
       String givenName =
-          truncate(
+          discardIfTooLong(
               normalize(jwt.getClaimAsString("given_name")),
               MAX_COLUMN_LENGTH,
               "given_name",
               keycloakId);
       String familyName =
-          truncate(
+          discardIfTooLong(
               normalize(jwt.getClaimAsString("family_name")),
               MAX_COLUMN_LENGTH,
               "family_name",
               keycloakId);
       String username =
-          truncate(
+          discardIfTooLong(
               normalize(jwt.getClaimAsString("preferred_username")),
               MAX_COLUMN_LENGTH,
               "preferred_username",
@@ -85,7 +86,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               "picture",
               keycloakId);
       String titleClaim =
-          truncate(
+          discardIfTooLong(
               normalize(jwt.getClaimAsString("title")), MAX_COLUMN_LENGTH, "title", keycloakId);
       String combinedName = combineNameParts(givenName, familyName);
 
@@ -119,7 +120,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       }
 
       String displayName =
-          truncate(
+          discardIfTooLong(
               resolveDisplayName(
                   fullName,
                   combinedName,
@@ -143,7 +144,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       String title =
           firstNonBlank(
               titleClaim,
-              truncate(
+              discardIfTooLong(
                   userInfoProfile.map(UserInfoProfile::title).orElse(null),
                   MAX_COLUMN_LENGTH,
                   "title",
@@ -278,19 +279,6 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       }
     }
     return null;
-  }
-
-  private String truncate(String value, int maxLength, String fieldName, UUID keycloakId) {
-    if (value != null && value.length() > maxLength) {
-      log.warn(
-          "Truncating {} value exceeding {} characters (length={}, userId={})",
-          fieldName,
-          maxLength,
-          value.length(),
-          keycloakId);
-      return value.substring(0, maxLength);
-    }
-    return value;
   }
 
   private String discardIfTooLong(String value, int maxLength, String fieldName, UUID keycloakId) {
