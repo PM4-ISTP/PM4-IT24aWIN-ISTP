@@ -131,6 +131,10 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
             }
           },
           () -> {
+            deleteOrphanByEmail(keycloakId, email);
+            if (username != null) {
+              deleteOrphanByUsername(keycloakId, username);
+            }
             User newUser = new User();
             newUser.setId(keycloakId);
             newUser.setName(displayName);
@@ -144,6 +148,34 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
     }
 
     filterChain.doFilter(request, response);
+  }
+
+  private void deleteOrphanByEmail(UUID newKeycloakId, String email) {
+    userRepository
+        .findByEmail(email)
+        .filter(orphan -> !orphan.getId().equals(newKeycloakId))
+        .ifPresent(
+            orphan -> {
+              log.warn(
+                  "Deleting orphaned user record (email conflict): old id={}, new id={}",
+                  orphan.getId(),
+                  newKeycloakId);
+              userRepository.delete(orphan);
+            });
+  }
+
+  private void deleteOrphanByUsername(UUID newKeycloakId, String username) {
+    userRepository
+        .findByUsername(username)
+        .filter(orphan -> !orphan.getId().equals(newKeycloakId))
+        .ifPresent(
+            orphan -> {
+              log.warn(
+                  "Deleting orphaned user record (username conflict): old id={}, new id={}",
+                  orphan.getId(),
+                  newKeycloakId);
+              userRepository.delete(orphan);
+            });
   }
 
   private boolean shouldFetchUserInfo(

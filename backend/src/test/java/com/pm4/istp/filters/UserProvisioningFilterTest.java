@@ -57,6 +57,8 @@ class UserProvisioningFilterTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         lenient().doReturn(null).when(jwt).getClaimAsString(anyString());
         lenient().doReturn(null).when(jwt).getTokenValue();
+        lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        lenient().when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
     }
 
     @AfterEach
@@ -186,6 +188,100 @@ class UserProvisioningFilterTest {
 
         verify(userRepository, never()).existsById(any());
         verify(userRepository, never()).save(any());
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_newKeycloakId_sameEmail_deletesOrphanAndSavesNewUser() throws Exception {
+        UUID orphanId = UUID.randomUUID();
+        User orphan = new User();
+        orphan.setId(orphanId);
+        orphan.setName("Old Name");
+        orphan.setEmail(EMAIL);
+        orphan.setUsername("olduser");
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(orphan));
+        when(userRepository.findByUsername(USERNAME)).thenReturn(Optional.empty());
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(userRepository).delete(orphan);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getId()).isEqualTo(USER_ID);
+        assertThat(userCaptor.getValue().getEmail()).isEqualTo(EMAIL);
+
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_newKeycloakId_sameUsername_deletesOrphanAndSavesNewUser() throws Exception {
+        UUID orphanId = UUID.randomUUID();
+        User orphan = new User();
+        orphan.setId(orphanId);
+        orphan.setName("Old Name");
+        orphan.setEmail("old@example.com");
+        orphan.setUsername(USERNAME);
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(USERNAME)).thenReturn(Optional.of(orphan));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(userRepository).delete(orphan);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getId()).isEqualTo(USER_ID);
+        assertThat(userCaptor.getValue().getUsername()).isEqualTo(USERNAME);
+
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_existingUser_sameEmailAndUsername_doesNotDeleteAnything() throws Exception {
+        User existingUser = new User();
+        existingUser.setId(USER_ID);
+        existingUser.setName(FULL_NAME);
+        existingUser.setEmail(EMAIL);
+        existingUser.setUsername(USERNAME);
+        existingUser.setPicture(PICTURE);
+        existingUser.setRoles(Set.of());
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(userRepository, never()).delete(any());
         verify(filterChain).doFilter(request, response);
     }
 

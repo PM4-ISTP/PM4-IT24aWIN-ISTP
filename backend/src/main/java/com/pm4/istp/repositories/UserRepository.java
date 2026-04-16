@@ -2,6 +2,7 @@ package com.pm4.istp.repositories;
 
 import com.pm4.istp.domain.entites.User;
 import com.pm4.istp.domain.entites.UserRoleEnum;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -13,6 +14,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
+
+  Optional<User> findByEmail(String email);
+
+  Optional<User> findByUsername(String username);
   @Query(
       """
       select distinct u
