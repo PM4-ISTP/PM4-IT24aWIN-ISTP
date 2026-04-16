@@ -31,7 +31,7 @@ public class Challenge {
   @Column(name = "short_description")
   private String shortDescription;
 
-  @Column(name = "description", nullable = true)
+  @Column(name = "description", nullable = true, length = 5000)
   private String description;
 
   @Column(name = "status", nullable = false)
