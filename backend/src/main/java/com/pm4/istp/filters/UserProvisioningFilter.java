@@ -80,7 +80,10 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               normalize(jwt.getClaimAsString("email")), MAX_COLUMN_LENGTH, "email", keycloakId);
       String pictureClaim =
           discardIfTooLong(
-              normalize(jwt.getClaimAsString("picture")), MAX_PICTURE_LENGTH, "picture", keycloakId);
+              normalize(jwt.getClaimAsString("picture")),
+              MAX_PICTURE_LENGTH,
+              "picture",
+              keycloakId);
       String titleClaim =
           truncate(
               normalize(jwt.getClaimAsString("title")), MAX_COLUMN_LENGTH, "title", keycloakId);
