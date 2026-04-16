@@ -111,6 +111,7 @@ export interface CourseDetailResponseDto {
   imageUrl?: string | null;
   topic?: string | null;
   courseInstructors: CourseInstructorResponseDto[];
+  participants: CourseParticipantDto[];
   courseChallenges: CourseChallengeResponseDto[];
   createdAt: string;
   updatedAt: string;
