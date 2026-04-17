@@ -1,7 +1,6 @@
 package com.pm4.istp.course.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.pm4.istp.course.db.entities.CourseDifficultyEnum;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Builder;
@@ -29,7 +28,6 @@ public class ListCourseResponseDto {
 
   private String imageUrl;
   private String topic;
-  private CourseDifficultyEnum difficulty;
   private String ownerName;
   private String ownerPicture;
   private String ownerTitle;
@@ -49,7 +47,6 @@ public class ListCourseResponseDto {
       LocalDateTime updatedAt,
       String imageUrl,
       String topic,
-      CourseDifficultyEnum difficulty,
       String ownerName,
       String ownerPicture,
       String ownerTitle) {
@@ -64,7 +61,6 @@ public class ListCourseResponseDto {
     this.updatedAt = updatedAt;
     this.imageUrl = imageUrl;
     this.topic = topic;
-    this.difficulty = difficulty;
     this.ownerName = ownerName;
     this.ownerPicture = ownerPicture;
     this.ownerTitle = ownerTitle;

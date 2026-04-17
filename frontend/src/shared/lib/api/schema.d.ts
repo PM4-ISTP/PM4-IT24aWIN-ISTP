@@ -379,8 +379,6 @@ export interface components {
       participantCount?: number;
       imageUrl?: string;
       topic?: string;
-      /** @enum {string} */
-      difficulty?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
       courseInstructors?: components["schemas"]["CourseDetailInstructorResponseDto"][];
       participants?: components["schemas"]["CourseParticipantResponseDto"][];
       courseChallenges?: components["schemas"]["CourseChallengeResponseDto"][];
@@ -522,8 +520,6 @@ export interface components {
       participantCount?: number;
       imageUrl?: string;
       topic?: string;
-      /** @enum {string} */
-      difficulty?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
       courseInstructors?: components["schemas"]["CourseDetailInstructorResponseDto"][];
       participants?: components["schemas"]["CourseParticipantResponseDto"][];
       courseChallenges?: components["schemas"]["ChallengeDetailResponseDto"][];
@@ -643,8 +639,6 @@ export interface components {
       updatedAt?: string;
       imageUrl?: string;
       topic?: string;
-      /** @enum {string} */
-      difficulty?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
       ownerName?: string;
       ownerPicture?: string;
       ownerTitle?: string;

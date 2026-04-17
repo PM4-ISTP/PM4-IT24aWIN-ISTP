@@ -34,7 +34,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.updatedAt,
             c.imageUrl,
             c.topic,
-            c.difficulty,
             ownerUser.name,
             ownerUser.picture,
             ownerUser.title
@@ -48,7 +47,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             from CourseInstructor ciFilter
             where ciFilter.course = c and ciFilter.instructor.id = :instructorId
           )
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name, ownerUser.picture, ownerUser.title
+          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
@@ -78,7 +77,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.updatedAt,
             c.imageUrl,
             c.topic,
-            c.difficulty,
             ownerUser.name,
             ownerUser.picture,
             ownerUser.title
@@ -95,7 +93,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
               where eFilter.course = c and eFilter.participant.id = :userId
             ))
           group by c.id, c.title, c.description, c.shortDescription, c.isPublished,
-            c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty,
+            c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic,
             ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
@@ -127,7 +125,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.updatedAt,
             c.imageUrl,
             c.topic,
-            c.difficulty,
             ownerUser.name,
             ownerUser.picture,
             ownerUser.title
@@ -137,7 +134,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
           where c.isPublished = true and c.isPrivate = false
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name, ownerUser.picture, ownerUser.title
+          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
@@ -162,7 +159,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.updatedAt,
             c.imageUrl,
             c.topic,
-            c.difficulty,
             ownerUser.name,
             ownerUser.picture,
             ownerUser.title
@@ -177,7 +173,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
               or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
             )
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, c.difficulty, ownerUser.name, ownerUser.picture, ownerUser.title
+          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
