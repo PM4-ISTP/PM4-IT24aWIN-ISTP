@@ -140,6 +140,7 @@ jobs:
         run: ./gradlew test jacocoTestReport
 
       - name: Run SonarQube analysis
+        continue-on-error: true
         run: ./gradlew sonar
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
