@@ -119,6 +119,12 @@ export function ChallengePodPanel({ challengeId }: { challengeId: string }) {
           {data.terminalPassword && (
             <Box>
               <Text size="xs" c="dimmed">
+                Username:{" "}
+                <Text component="span" ff="monospace" size="xs">
+                  student
+                </Text>
+              </Text>
+              <Text size="xs" c="dimmed">
                 Password:{" "}
                 <Text component="span" ff="monospace" size="xs">
                   {data.terminalPassword}
