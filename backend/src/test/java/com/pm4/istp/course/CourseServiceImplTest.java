@@ -101,7 +101,6 @@ class CourseServiceImplTest {
         false,
         null,
         null,
-        null,
         List.of(new CreateCourseInstructorRequest(collaboratorId, InstructorRoleEnum.COLLABORATOR)));
 
     Course result = courseService.createCourse(ownerId, request);
@@ -211,7 +210,6 @@ class CourseServiceImplTest {
         false,
         null,
         null,
-        null,
         List.of(new UpdateCourseInstructorRequest(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)));
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
@@ -282,7 +280,6 @@ class CourseServiceImplTest {
         false,
         null,
         null,
-        null,
         List.of());
 
     assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
@@ -309,7 +306,6 @@ class CourseServiceImplTest {
         "Short summary.",
         true,
         true,
-        null,
         null,
         null,
         List.of());
@@ -474,7 +470,7 @@ class CourseServiceImplTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     CreateCourseRequest request = new CreateCourseRequest(
-        "Solo Course", "Desc", "Short solo summary.", false, false, null, null, null, List.of());
+        "Solo Course", "Desc", "Short solo summary.", false, false, null, null, List.of());
 
     Course result = courseService.createCourse(ownerId, request);
 
@@ -536,7 +532,7 @@ class CourseServiceImplTest {
     course.addCourseInstructor(ownerRelation);
 
     UpdateCourseRequest request = new UpdateCourseRequest(
-        "Title", "Desc", "Short summary.", false, false, null, null, null, List.of());
+        "Title", "Desc", "Short summary.", false, false, null, null, List.of());
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
@@ -554,7 +550,7 @@ class CourseServiceImplTest {
     when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
 
     UpdateCourseRequest request = new UpdateCourseRequest(
-        "Title", "Desc", "Short summary.", false, false, null, null, null, List.of());
+        "Title", "Desc", "Short summary.", false, false, null, null, List.of());
 
     assertThatThrownBy(() -> courseService.updateCourse(userId, courseId, request))
         .isInstanceOf(CourseNotFoundException.class);
@@ -1058,7 +1054,6 @@ class CourseServiceImplTest {
         true,
         null,
         null,
-        null,
         List.of());
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
@@ -1149,7 +1144,6 @@ class CourseServiceImplTest {
         true,
         null,
         null,
-        null,
         List.of());
 
     assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
@@ -1183,7 +1177,6 @@ class CourseServiceImplTest {
         null,
         false,
         true,
-        null,
         null,
         null,
         List.of());
