@@ -3,25 +3,7 @@
 import { getApiClient } from "@/src/shared/lib/api/server";
 import type { components } from "@/src/shared/lib/api/schema";
 import type { ActionResult } from "@/src/shared/types/course";
-
-/**
- * Spring Boot resolves Pageable from flat query params (page, size, sort),
- * but openapi-typescript models it as a nested object. This serializer
- * flattens the pageable params so Spring can read them.
- */
-function springPageableSerializer(params: Record<string, unknown>): string {
-  const parts: string[] = [];
-  for (const [key, val] of Object.entries(params)) {
-    if (key === "pageable" && typeof val === "object" && val !== null) {
-      for (const [pk, pv] of Object.entries(val as Record<string, unknown>)) {
-        if (pv != null) parts.push(`${pk}=${encodeURIComponent(String(pv as string | number))}`);
-      }
-    } else if (val != null) {
-      parts.push(`${key}=${encodeURIComponent(String(val as string | number))}`);
-    }
-  }
-  return parts.join("&");
-}
+import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers";
 
 // Re-export generated types with convenient aliases
 export type ChallengeStatusEnum = NonNullable<
