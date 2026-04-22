@@ -291,6 +291,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get a course by ID as a student
+     * @description Returns a detailed response of a course for a student. User IDs are set to null due to security concerns.
+     */
     get: operations["getPublicCourse"];
     put?: never;
     post?: never;
@@ -649,26 +653,26 @@ export interface components {
       sort?: components["schemas"]["SortObject"];
       first?: boolean;
       last?: boolean;
+      pageable?: components["schemas"]["PageableObject"];
       /** Format: int32 */
       numberOfElements?: number;
-      pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
     PageableObject: {
       /** Format: int64 */
       offset?: number;
       sort?: components["schemas"]["SortObject"];
-      paged?: boolean;
       /** Format: int32 */
       pageNumber?: number;
       /** Format: int32 */
       pageSize?: number;
+      paged?: boolean;
       unpaged?: boolean;
     };
     SortObject: {
       empty?: boolean;
-      unsorted?: boolean;
       sorted?: boolean;
+      unsorted?: boolean;
     };
     ListCourseResponseDto: {
       /** Format: uuid */
@@ -705,9 +709,9 @@ export interface components {
       sort?: components["schemas"]["SortObject"];
       first?: boolean;
       last?: boolean;
+      pageable?: components["schemas"]["PageableObject"];
       /** Format: int32 */
       numberOfElements?: number;
-      pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
     ListChallengeResponseDto: {
@@ -740,9 +744,9 @@ export interface components {
       sort?: components["schemas"]["SortObject"];
       first?: boolean;
       last?: boolean;
+      pageable?: components["schemas"]["PageableObject"];
       /** Format: int32 */
       numberOfElements?: number;
-      pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
     VisibilityImpactResponseDto: {
@@ -1480,13 +1484,31 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Course found */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PublicCourseDetailResponseDto"];
+        };
+      };
+      /** @description This can indicate one of two things. First this course is private and the user is neither an instructor of the course nor enrolled in the course. Second this course is a draft and the user is not an instructor of the course. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };

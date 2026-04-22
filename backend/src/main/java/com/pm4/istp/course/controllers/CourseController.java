@@ -219,6 +219,28 @@ public class CourseController {
   }
 
   // ── Public catalog endpoints ── accessible to all authenticated users (including students)
+
+  @Operation(
+      summary = "Get a course by ID as a student",
+      description =
+          "Returns a detailed response of a course for a student. User IDs are set to null due to security concerns.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Course found",
+            content =
+                @Content(schema = @Schema(implementation = PublicCourseDetailResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description =
+                "This can indicate one of two things. First this course is private and the user is neither an instructor of the course nor enrolled in the course. Second this course is a draft and the user is not an instructor of the course.",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @GetMapping("/catalog/{id}")
   public ResponseEntity<PublicCourseDetailResponseDto> getPublicCourse(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {

@@ -1,6 +1,8 @@
 "use server";
 
 import { fetchBackend } from "@/src/shared/lib/api";
+import { components } from "@/src/shared/lib/api/schema";
+import { getApiClient } from "@/src/shared/lib/api/server";
 import { extractErrorMessage } from "@/src/shared/lib/utils";
 
 import type {
@@ -10,9 +12,10 @@ import type {
   CreateCourseDto,
   ListCourseResponseDto,
   Page,
-  PublicCourseDetailResponseDto,
   UpdateCourseDto,
 } from "@/src/shared/types/course";
+
+export type PublicCourseDetailResponseDto = components["schemas"]["PublicCourseDetailResponseDto"];
 
 export async function createCourse(
   dto: Omit<CreateCourseDto, "instructors"> & { collaboratorIds: string[] }
@@ -57,17 +60,15 @@ export async function fetchPublicCourse(
   id: string
 ): Promise<ActionResult<PublicCourseDetailResponseDto>> {
   try {
-    const res = await fetchBackend(`/api/v1/courses/catalog/${id}`, {
-      cache: "no-store",
+    const client = await getApiClient();
+    const { data, error } = await client.GET("/api/v1/courses/catalog/{id}", {
+      params: { path: { id } },
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to load course" };
     }
 
-    const data = (await res.json()) as PublicCourseDetailResponseDto;
     return { success: true, data };
   } catch (err) {
     return {
