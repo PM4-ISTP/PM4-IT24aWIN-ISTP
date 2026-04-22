@@ -8,11 +8,11 @@ import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import {
   fetchEnrolledCoursesOfLoggedInUser,
   fetchPublicCourse,
-  PublicCourseDetailResponseDto,
 } from "@/src/features/course/actions/courses";
+import type { PublicCourseDetailResponseDto } from "@/src/features/course/actions/courses";
 import Link from "next/link";
 import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
-import { ActionResult } from "@/src/shared/types/course";
+import type { ActionResult } from "@/src/shared/types/course";
 
 const sectionLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",

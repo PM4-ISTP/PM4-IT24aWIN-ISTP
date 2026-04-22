@@ -1,7 +1,7 @@
 "use server";
 
 import { fetchBackend } from "@/src/shared/lib/api";
-import { components } from "@/src/shared/lib/api/schema";
+import type { components } from "@/src/shared/lib/api/schema";
 import { getApiClient } from "@/src/shared/lib/api/server";
 import { extractErrorMessage } from "@/src/shared/lib/utils";
 

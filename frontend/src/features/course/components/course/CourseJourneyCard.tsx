@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 import { IconCheck, IconClock, IconFlame, IconLock } from "@tabler/icons-react";
 import { getInitials } from "@/src/shared/lib/utils";
-import { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
+import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
 
 // ---------------------------------------------------------------------------
 // Types
