@@ -211,14 +211,14 @@ public class CourseController {
     return ResponseEntity.ok(courses);
   }
 
+  // ── Public catalog endpoints ── accessible to all authenticated users (including students)
+
   @GetMapping("/catalog")
   public ResponseEntity<Page<ListCourseResponseDto>> listPublishedCourses(
       @RequestParam(required = false) String query, Pageable pageable) {
     Page<ListCourseResponseDto> courses = courseService.listPublishedCourses(query, pageable);
     return ResponseEntity.ok(courses);
   }
-
-  // ── Public catalog endpoints ── accessible to all authenticated users (including students)
 
   @Operation(
       summary = "Get a course by ID as a student",
