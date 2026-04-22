@@ -16,7 +16,8 @@ import type {
 } from "@/src/shared/types/course";
 
 export type PublicCourseDetailResponseDto = components["schemas"]["PublicCourseDetailResponseDto"];
-export type CourseDetailInstructorResponseDto = components["schemas"]["CourseDetailInstructorResponseDto"];
+export type CourseDetailInstructorResponseDto =
+  components["schemas"]["CourseDetailInstructorResponseDto"];
 
 export async function createCourse(
   dto: Omit<CreateCourseDto, "instructors"> & { collaboratorIds: string[] }

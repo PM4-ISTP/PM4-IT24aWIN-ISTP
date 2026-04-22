@@ -4,7 +4,10 @@ import Link from "next/link";
 import { CourseBannerHeader } from "@/src/features/course/components/course/CourseBannerHeader";
 import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
 import { CourseJourneyCard } from "@/src/features/course/components/course/CourseJourneyCard";
-import { CourseDetailInstructorResponseDto, fetchPublicCourse } from "@/src/features/course/actions/courses";
+import {
+  CourseDetailInstructorResponseDto,
+  fetchPublicCourse,
+} from "@/src/features/course/actions/courses";
 import type { InstructorRoleEnum } from "@/src/shared/types/course";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
 
@@ -13,7 +16,7 @@ const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 function getOwner(instructors: CourseDetailInstructorResponseDto[] | undefined) {
   let owner = undefined;
   if (instructors) {
-    owner = instructors.find((ci) => ci.instructorRole === OWNER_ROLE)
+    owner = instructors.find((ci) => ci.instructorRole === OWNER_ROLE);
   }
   return owner;
 }
@@ -29,8 +32,11 @@ export default async function CourseDetails({
 }) {
   const result = await fetchPublicCourse(courseId);
 
-  if (!result.success || result.data.id === undefined) { // If ID is undefined, we cannot really do anything with the course anymore. Something is clearly very wrong.
-    const errorMessage = result.success ? "Something failed during the loading of the course." : result.error;
+  if (!result.success || result.data.id === undefined) {
+    // If ID is undefined, we cannot really do anything with the course anymore. Something is clearly very wrong.
+    const errorMessage = result.success
+      ? "Something failed during the loading of the course."
+      : result.error;
 
     return (
       <Container>
