@@ -4,9 +4,7 @@ import Link from "next/link";
 import { CourseBannerHeader } from "@/src/features/course/components/course/CourseBannerHeader";
 import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
 import { CourseJourneyCard } from "@/src/features/course/components/course/CourseJourneyCard";
-import {
-  fetchPublicCourse,
-} from "@/src/features/course/actions/courses";
+import { fetchPublicCourse } from "@/src/features/course/actions/courses";
 import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
 import type { InstructorRoleEnum } from "@/src/shared/types/course";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
