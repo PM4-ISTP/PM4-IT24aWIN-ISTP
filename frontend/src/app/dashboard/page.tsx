@@ -8,10 +8,11 @@ import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import {
   fetchEnrolledCoursesOfLoggedInUser,
   fetchPublicCourse,
+  PublicCourseDetailResponseDto,
 } from "@/src/features/course/actions/courses";
 import Link from "next/link";
 import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
-import type { ActionResult, PublicCourseDetailResponseDto } from "@/src/shared/types/course";
+import { ActionResult } from "@/src/shared/types/course";
 
 const sectionLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -36,7 +37,7 @@ function RunningChallenges({
       <>
         {fetchCourseResult.success ? (
           <CourseChallengeDetailsList
-            challenges={fetchCourseResult.data.courseChallenges}
+            challenges={fetchCourseResult.data.courseChallenges ?? []}
             title=""
             showIndex={false}
           />
