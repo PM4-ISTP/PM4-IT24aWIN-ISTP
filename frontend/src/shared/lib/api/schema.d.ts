@@ -157,6 +157,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Enroll in a course
+     * @description Enroll in a course and returns the course in which the student enrolled themselves.
+     */
     post: operations["enrollInPublicCourse"];
     delete?: never;
     options?: never;
@@ -645,28 +649,28 @@ export interface components {
       totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListInstructorUserResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
-      first?: boolean;
-      last?: boolean;
-      pageable?: components["schemas"]["PageableObject"];
       /** Format: int32 */
       numberOfElements?: number;
+      pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
     PageableObject: {
       /** Format: int64 */
       offset?: number;
       sort?: components["schemas"]["SortObject"];
+      paged?: boolean;
       /** Format: int32 */
       pageNumber?: number;
       /** Format: int32 */
       pageSize?: number;
-      paged?: boolean;
       unpaged?: boolean;
     };
     SortObject: {
@@ -701,17 +705,17 @@ export interface components {
       totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListCourseResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
-      first?: boolean;
-      last?: boolean;
-      pageable?: components["schemas"]["PageableObject"];
       /** Format: int32 */
       numberOfElements?: number;
+      pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
     ListChallengeResponseDto: {
@@ -736,17 +740,17 @@ export interface components {
       totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListChallengeResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
-      first?: boolean;
-      last?: boolean;
-      pageable?: components["schemas"]["PageableObject"];
       /** Format: int32 */
       numberOfElements?: number;
+      pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
     VisibilityImpactResponseDto: {
@@ -1259,13 +1263,22 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Enrolled in course */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PublicCourseDetailResponseDto"];
+        };
+      };
+      /** @description Unexpected server error. Might occur, when user or course does not exist or the course is not public. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };

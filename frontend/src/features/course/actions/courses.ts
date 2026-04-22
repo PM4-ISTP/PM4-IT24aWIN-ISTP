@@ -84,17 +84,15 @@ export async function enrollInCourse(
   id: string
 ): Promise<ActionResult<PublicCourseDetailResponseDto>> {
   try {
-    const res = await fetchBackend(`/api/v1/courses/catalog/${id}/enroll`, {
-      method: "POST",
+    const client = await getApiClient();
+    const { data, error } = await client.POST("/api/v1/courses/catalog/{id}/enroll", {
+      params: { path: { id } },
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to load enroll in course" };
     }
 
-    const data = (await res.json()) as PublicCourseDetailResponseDto;
     return { success: true, data };
   } catch (err) {
     return {

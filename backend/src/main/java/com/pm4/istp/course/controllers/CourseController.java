@@ -250,6 +250,23 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
+  @Operation(
+      summary = "Enroll in a course",
+      description =
+          "Enroll in a course and returns the course in which the student enrolled themselves.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Enrolled in course",
+            content =
+                @Content(schema = @Schema(implementation = PublicCourseDetailResponseDto.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description =
+                "Unexpected server error. Might occur, when user or course does not exist or the course is not public.",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @PostMapping("/catalog/{id}/enroll")
   public ResponseEntity<PublicCourseDetailResponseDto> enrollInPublicCourse(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
