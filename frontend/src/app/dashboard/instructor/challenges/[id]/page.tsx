@@ -6,12 +6,14 @@ import {
   ActionIcon,
   Affix,
   Alert,
+  Box,
   Button,
   Container,
   Group,
   Loader,
   Modal,
   Notification,
+  Paper,
   Stack,
   Text,
   Title,
@@ -22,6 +24,7 @@ import {
   ChallengeFormFields,
   type ChallengeFormValues,
 } from "@/src/features/course/components/challenges/ChallengeFormFields";
+import { ChallengePodPanel } from "@/src/features/challenge-pod/components/ChallengePodPanel";
 import {
   fetchChallenge,
   updateChallenge,
@@ -381,6 +384,25 @@ export default function EditChallenge() {
             onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
             onDockerImageErrorClear={() => setDockerImageError(null)}
           />
+
+          <Paper
+            p="md"
+            radius="md"
+            withBorder
+            style={{ background: "rgba(255,255,255,0.02)" }}
+          >
+            <Group justify="space-between" align="center">
+              <Box>
+                <Text size="sm" fw={600}>
+                  Test this challenge
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Start a pod to preview the challenge before publishing.
+                </Text>
+              </Box>
+              <ChallengePodPanel challengeId={challengeId} />
+            </Group>
+          </Paper>
 
           {formError && (
             <Alert color="red" title="Failed to update challenge">
