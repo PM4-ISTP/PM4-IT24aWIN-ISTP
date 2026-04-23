@@ -161,18 +161,27 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
       existingUser.ifPresentOrElse(
           user -> {
-            if (!Objects.equals(user.getName(), displayName)
-                || !Objects.equals(user.getEmail(), email)
-                || !Objects.equals(user.getUsername(), username)
-                || !Objects.equals(user.getPicture(), picture)
-                || !Objects.equals(user.getTitle(), title)
-                || !Objects.equals(user.getRoles(), roles)) {
+            boolean reactivated = user.isDeleted();
+            if (reactivated) {
+              // User was soft-deleted but has logged back in via Keycloak — reactivate.
+              user.setDeletedAt(null);
+            }
+            boolean profileChanged =
+                !Objects.equals(user.getName(), displayName)
+                    || !Objects.equals(user.getEmail(), email)
+                    || !Objects.equals(user.getUsername(), username)
+                    || !Objects.equals(user.getPicture(), picture)
+                    || !Objects.equals(user.getTitle(), title)
+                    || !Objects.equals(user.getRoles(), roles);
+            if (profileChanged) {
               user.setName(displayName);
               user.setEmail(email);
               user.setUsername(username);
               user.setPicture(picture);
               user.setTitle(title);
               user.setRoles(roles);
+            }
+            if (reactivated || profileChanged) {
               userRepository.save(user);
             }
           },
