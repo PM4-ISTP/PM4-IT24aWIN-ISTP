@@ -56,6 +56,9 @@ public class User {
   @Column(name = "title", length = 255)
   private String title;
 
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
+
   @JsonIgnore
   @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL)
   private List<Challenge> creatorChallenges = new ArrayList<>();
@@ -82,6 +85,10 @@ public class User {
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
 
+  public boolean isDeleted() {
+    return deletedAt != null;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) {
@@ -94,12 +101,13 @@ public class User {
         && Objects.equals(username, user.username)
         && Objects.equals(picture, user.picture)
         && Objects.equals(title, user.title)
+        && Objects.equals(deletedAt, user.deletedAt)
         && Objects.equals(createdAt, user.createdAt)
         && Objects.equals(updatedAt, user.updatedAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, email, username, picture, title, createdAt, updatedAt);
+    return Objects.hash(id, name, email, username, picture, title, deletedAt, createdAt, updatedAt);
   }
 }

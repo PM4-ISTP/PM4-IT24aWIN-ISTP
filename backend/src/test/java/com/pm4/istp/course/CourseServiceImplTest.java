@@ -88,8 +88,8 @@ class CourseServiceImplTest {
     collaborator.setName("Collaborator");
     collaborator.setRoles(Set.of(UserRoleEnum.ROLE_ADMINISTRATOR));
 
-    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
-    when(userRepository.findById(collaboratorId)).thenReturn(Optional.of(collaborator));
+    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
+    when(userRepository.findByIdAndDeletedAtIsNull(collaboratorId)).thenReturn(Optional.of(collaborator));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -213,7 +213,7 @@ class CourseServiceImplTest {
         List.of(new UpdateCourseInstructorRequest(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)));
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(userRepository.findById(newCollaboratorId)).thenReturn(Optional.of(newCollaborator));
+    when(userRepository.findByIdAndDeletedAtIsNull(newCollaboratorId)).thenReturn(Optional.of(newCollaborator));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -268,7 +268,7 @@ class CourseServiceImplTest {
     owner.setId(ownerId);
     owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
 
-    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
+    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
 
     String tooLong = "a".repeat(201);
 

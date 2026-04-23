@@ -1,7 +1,9 @@
-package com.pm4.istp.user.repositories;
+package com.pm4.istp.repositories;
 
-import com.pm4.istp.user.db.entities.User;
-import com.pm4.istp.user.db.entities.UserRoleEnum;
+import com.pm4.istp.domain.entites.User;
+import com.pm4.istp.domain.entites.UserRoleEnum;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -13,6 +15,14 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
+  List<User> findAllByDeletedAtIsNull();
+
+  List<User> findAllByEmailIgnoreCaseAndDeletedAtIsNull(String email);
+
+  List<User> findAllByUsernameIgnoreCaseAndDeletedAtIsNull(String username);
+
+  Optional<User> findByIdAndDeletedAtIsNull(UUID id);
+
   @Query(
       """
       select distinct u
@@ -20,6 +30,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
       join u.roles r
       where r in :roles
         and u.id <> :userId
+        and u.deletedAt is null
       """)
   Page<User> findDistinctByAnyRoleAndIdNot(
       @Param("roles") Set<UserRoleEnum> roles, @Param("userId") UUID userId, Pageable pageable);
@@ -32,6 +43,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
       where r in :roles
         and lower(u.name) like lower(concat('%', :name, '%'))
         and u.id <> :userId
+        and u.deletedAt is null
       """)
   Page<User> findDistinctByAnyRoleAndNameContainingIgnoreCaseAndIdNot(
       @Param("roles") Set<UserRoleEnum> roles,
@@ -49,6 +61,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
           or lower(u.username) like lower(concat('%', :query, '%'))
           or lower(u.email) like lower(concat('%', :query, '%')))
         and u.id <> :userId
+        and u.deletedAt is null
       """)
   Page<User> findDistinctByAnyRoleAndNameOrUsernameOrEmailContainingIgnoreCaseAndIdNot(
       @Param("roles") Set<UserRoleEnum> roles,
