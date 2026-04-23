@@ -412,7 +412,11 @@ export default function AdminCourseManagement() {
       >
         <Stack gap="md">
           <Text size="sm">
-            Delete <Text span fw={700}>{selectedTitle}</Text>? This cannot be undone.
+            Delete{" "}
+            <Text span fw={700}>
+              {selectedTitle}
+            </Text>
+            ? This cannot be undone.
           </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setDeleteOpened(false)} disabled={saving}>

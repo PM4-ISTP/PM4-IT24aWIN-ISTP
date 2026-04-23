@@ -89,36 +89,33 @@ export default function AdminChallengeManagement() {
     },
   });
 
-  const fetchPage = useCallback(
-    async (q: string, o: string, p: number) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const url = new URL("/api/backend/api/admin/challenges", window.location.origin);
-        const qTrim = q.trim();
-        const oTrim = o.trim();
-        if (qTrim) url.searchParams.set("q", qTrim);
-        if (oTrim) url.searchParams.set("owner", oTrim);
-        url.searchParams.set("page", String(p));
-        url.searchParams.set("size", String(PAGE_SIZE));
-        url.searchParams.set("sort", "updatedAt,desc");
+  const fetchPage = useCallback(async (q: string, o: string, p: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const url = new URL("/api/backend/api/admin/challenges", window.location.origin);
+      const qTrim = q.trim();
+      const oTrim = o.trim();
+      if (qTrim) url.searchParams.set("q", qTrim);
+      if (oTrim) url.searchParams.set("owner", oTrim);
+      url.searchParams.set("page", String(p));
+      url.searchParams.set("size", String(PAGE_SIZE));
+      url.searchParams.set("sort", "updatedAt,desc");
 
-        const res = await fetch(url.toString(), { method: "GET" });
-        if (!res.ok) {
-          setError("Failed to load challenges");
-          return;
-        }
-        const data = (await res.json()) as PageResponse<AdminChallengeListItem>;
-        setChallenges(data.content ?? []);
-        setTotalPages(data.totalPages ?? 0);
-      } catch {
+      const res = await fetch(url.toString(), { method: "GET" });
+      if (!res.ok) {
         setError("Failed to load challenges");
-      } finally {
-        setLoading(false);
+        return;
       }
-    },
-    []
-  );
+      const data = (await res.json()) as PageResponse<AdminChallengeListItem>;
+      setChallenges(data.content ?? []);
+      setTotalPages(data.totalPages ?? 0);
+    } catch {
+      setError("Failed to load challenges");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     void fetchPage(query, owner, page);
@@ -293,7 +290,12 @@ export default function AdminChallengeManagement() {
                 </Table.Td>
                 <Table.Td>
                   <Group gap="xs">
-                    <Badge variant="light" color={c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"}>
+                    <Badge
+                      variant="light"
+                      color={
+                        c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"
+                      }
+                    >
                       {c.status}
                     </Badge>
                     <Badge variant="light" color="blue">
@@ -419,7 +421,11 @@ export default function AdminChallengeManagement() {
       >
         <Stack gap="md">
           <Text size="sm">
-            Delete <Text span fw={700}>{selectedTitle}</Text>? This cannot be undone.
+            Delete{" "}
+            <Text span fw={700}>
+              {selectedTitle}
+            </Text>
+            ? This cannot be undone.
           </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setDeleteOpened(false)} disabled={saving}>
