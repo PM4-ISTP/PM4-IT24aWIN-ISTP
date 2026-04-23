@@ -8,6 +8,7 @@ import {
   IconTerminal2,
 } from "@tabler/icons-react";
 import { useState } from "react";
+import { useApiClient } from "@/src/shared/lib/api/client";
 import { useChallengePodStatus } from "../hooks/useChallengePodStatus";
 import { ChallengePodStatusBadge } from "./ChallengePodStatusBadge";
 
@@ -25,15 +26,15 @@ function formatExpiry(expiresAt?: string | null): string {
 }
 
 export function ChallengePodPanel({ challengeId }: { challengeId: string }) {
+  const apiClient = useApiClient();
   const { data, loading, refetch } = useChallengePodStatus(challengeId);
   const [actionLoading, setActionLoading] = useState(false);
 
   const handleStart = async () => {
     setActionLoading(true);
     try {
-      await fetch(`/api/backend/api/v1/challenge-pods/${challengeId}`, {
-        method: "POST",
-        credentials: "include",
+      await apiClient.POST("/api/v1/challenge-pods/{challengeId}", {
+        params: { path: { challengeId } },
       });
       await refetch();
     } finally {
@@ -44,9 +45,8 @@ export function ChallengePodPanel({ challengeId }: { challengeId: string }) {
   const handleStop = async () => {
     setActionLoading(true);
     try {
-      await fetch(`/api/backend/api/v1/challenge-pods/${challengeId}`, {
-        method: "DELETE",
-        credentials: "include",
+      await apiClient.DELETE("/api/v1/challenge-pods/{challengeId}", {
+        params: { path: { challengeId } },
       });
       await refetch();
     } finally {

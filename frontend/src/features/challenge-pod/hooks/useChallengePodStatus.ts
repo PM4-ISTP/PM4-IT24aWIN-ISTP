@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useApiClient } from "@/src/shared/lib/api/client";
 import { POLL_INTERVAL_MS, RUNNING_POLL_INTERVAL_MS } from "../constants";
 
 export type PodStatusEnum = "NOT_FOUND" | "PROVISIONING" | "RUNNING" | "FAILED" | "TERMINATING";
@@ -24,48 +25,47 @@ export function useChallengePodStatus(
   loading: boolean;
   refetch: () => Promise<void>;
 } {
+  const apiClient = useApiClient();
   const [data, setData] = useState<PodStatusResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchOnce = useCallback(async () => {
     try {
-      const response = await fetch(`/api/backend/api/v1/challenge-pods/${challengeId}`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+      const { data: json, error: apiError } = await apiClient.GET(
+        "/api/v1/challenge-pods/{challengeId}",
+        { params: { path: { challengeId } } }
+      );
 
-      if (!response.ok) {
-        setError(`Request failed: ${response.status}`);
+      if (apiError !== undefined) {
+        setError("Request failed");
         return;
       }
 
-      const json = (await response.json()) as PodStatusResponse;
-      setData(json);
+      setData(json as PodStatusResponse);
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
     } finally {
       setLoading(false);
     }
-  }, [challengeId]);
+  }, [apiClient, challengeId]);
 
+  // Trigger an initial fetch (and re-fetch when challengeId or enabled changes)
   useEffect(() => {
     if (!enabled) return;
-
     void fetchOnce();
+  }, [enabled, fetchOnce]);
 
-    // No active pod — stop polling until user triggers an action
-    if (data?.status === "NOT_FOUND" || data?.status === "FAILED") return;
+  // Set up polling interval based on the *resolved* status, not stale closure state
+  useEffect(() => {
+    if (!enabled) return;
+    if (!data || data.status === "NOT_FOUND" || data.status === "FAILED") return;
 
-    // Poll faster while transitioning, slower once running
-    const intervalMs = data?.status === "RUNNING" ? RUNNING_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
-
+    const intervalMs = data.status === "RUNNING" ? RUNNING_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
     const id = setInterval(() => void fetchOnce(), intervalMs);
     return () => clearInterval(id);
-  }, [enabled, fetchOnce, data?.status]);
+  }, [enabled, data?.status, fetchOnce]);
 
   return { data, error, loading, refetch: fetchOnce };
 }
