@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
@@ -38,8 +37,6 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml")
                     .permitAll()
-                    .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**")
-                    .hasRole("ADMINISTRATOR")
                     .requestMatchers("/api/v1/courses/my-enrollments", "/api/v1/courses/catalog")
                     .authenticated()
                     .requestMatchers("/api/v1/courses/catalog/**")

@@ -17,6 +17,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
   Optional<User> findByIdAndDeletedAtIsNull(UUID id);
 
+  Optional<User> findByEmailIgnoreCaseAndIdNot(String email, UUID id);
+
+  Optional<User> findByUsernameIgnoreCaseAndIdNot(String username, UUID id);
+
   @Query(
       """
       select distinct u

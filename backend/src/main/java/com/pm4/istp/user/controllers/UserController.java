@@ -14,9 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,16 +42,5 @@ public class UserController {
     }
 
     return ResponseEntity.ok(users.map(userMapper::toListInstructorUserResponseDto));
-  }
-
-  @DeleteMapping("/{userId}")
-  public ResponseEntity<Void> deleteUser(
-      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID userId) {
-    UUID callerId = parseUserId(jwt);
-    if (callerId.equals(userId)) {
-      throw new IllegalArgumentException("Administrators cannot delete their own account");
-    }
-    userService.softDeleteUser(userId);
-    return ResponseEntity.noContent().build();
   }
 }
