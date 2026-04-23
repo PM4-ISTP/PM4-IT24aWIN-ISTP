@@ -49,8 +49,8 @@ export default async function InstructorDashboard(props: {
 
       {result.success ? (
         <CourseGrid
-          courses={result.data.content}
-          totalPages={result.data.totalPages}
+          courses={result.data.content ?? []}
+          totalPages={result.data.totalPages ?? 1}
           currentPage={currentPage}
           coursePathPrefix="/dashboard/instructor"
         />

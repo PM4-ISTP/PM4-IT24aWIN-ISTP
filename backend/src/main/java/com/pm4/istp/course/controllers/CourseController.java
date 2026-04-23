@@ -203,6 +203,18 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
+  @Operation(
+      summary = "Get courses for which the user is their instructor",
+      description =
+          "Returns a paginated list of courses for which the user is their instructor (owner or collaborator).")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Courses found"),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @GetMapping
   public ResponseEntity<Page<ListCourseResponseDto>> listCourses(
       @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
@@ -213,6 +225,17 @@ public class CourseController {
 
   // ── Public catalog endpoints ── accessible to all authenticated users (including students)
 
+  @Operation(
+      summary = "Get published courses",
+      description = "Returns a paginated list of published courses.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Courses found"),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @GetMapping("/catalog")
   public ResponseEntity<Page<ListCourseResponseDto>> listPublishedCourses(
       @RequestParam(required = false) String query, Pageable pageable) {
@@ -276,6 +299,17 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
+  @Operation(
+      summary = "Get enrolled courses of user",
+      description = "Returns a paginated list of the enrolled courses of the user.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Enrollments found"),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @GetMapping("/my-enrollments")
   public ResponseEntity<Page<ListCourseResponseDto>> listEnrollments(
       @AuthenticationPrincipal Jwt jwt, Pageable pageable) {

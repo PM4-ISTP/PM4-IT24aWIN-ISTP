@@ -1,6 +1,7 @@
 "use server";
 
 import { fetchBackend } from "@/src/shared/lib/api";
+import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers";
 import type { components } from "@/src/shared/lib/api/schema";
 import { getApiClient } from "@/src/shared/lib/api/server";
 import { extractErrorMessage } from "@/src/shared/lib/utils";
@@ -10,14 +11,14 @@ import type {
   CourseDetailResponseDto,
   CourseResponseDto,
   CreateCourseDto,
-  ListCourseResponseDto,
-  Page,
   UpdateCourseDto,
 } from "@/src/shared/types/course";
 
 export type PublicCourseDetailResponseDto = components["schemas"]["PublicCourseDetailResponseDto"];
 export type CourseDetailInstructorResponseDto =
   components["schemas"]["CourseDetailInstructorResponseDto"];
+export type PageListCourseResponseDto = components["schemas"]["PageListCourseResponseDto"];
+export type ListCourseResponseDto = components["schemas"]["ListCourseResponseDto"];
 
 export async function createCourse(
   dto: Omit<CreateCourseDto, "instructors"> & { collaboratorIds: string[] }
@@ -188,15 +189,49 @@ export async function deleteCourse(id: string): Promise<ActionResult<void>> {
 export async function fetchInstructorCourses(
   page = 0,
   size = 20
-): Promise<ActionResult<Page<ListCourseResponseDto>>> {
-  return fetchCoursesWithoutQuery("/api/v1/courses", page, size);
+): Promise<ActionResult<PageListCourseResponseDto>> {
+  try {
+    const client = await getApiClient();
+    const { data, error } = await client.GET("/api/v1/courses", {
+      params: { query: { pageable: { page: page, size: size } } },
+      querySerializer: springPageableSerializer,
+    });
+
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to load enrollments" };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
 }
 
 export async function fetchEnrolledCoursesOfLoggedInUser(
   page = 0,
   size = 20
-): Promise<ActionResult<Page<ListCourseResponseDto>>> {
-  return fetchCoursesWithoutQuery("/api/v1/courses/my-enrollments", page, size);
+): Promise<ActionResult<PageListCourseResponseDto>> {
+  try {
+    const client = await getApiClient();
+    const { data, error } = await client.GET("/api/v1/courses/my-enrollments", {
+      params: { query: { pageable: { page: page, size: size } } },
+      querySerializer: springPageableSerializer,
+    });
+
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to load enrollments" };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
 }
 
 export async function joinCourseByCode(
@@ -252,49 +287,18 @@ export async function fetchPublishedCourses(
   query = "",
   page = 0,
   size = 12
-): Promise<ActionResult<Page<ListCourseResponseDto>>> {
+): Promise<ActionResult<PageListCourseResponseDto>> {
   try {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      size: size.toString(),
-      ...(query.trim() ? { query: query.trim() } : {}),
+    const client = await getApiClient();
+    const { data, error } = await client.GET("/api/v1/courses/catalog", {
+      params: { query: { query: query, pageable: { page: page, size: size } } },
+      querySerializer: springPageableSerializer,
     });
 
-    const res = await fetchBackend(`/api/v1/courses/catalog?${params}`, {
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to load published courses" };
     }
 
-    const data = (await res.json()) as Page<ListCourseResponseDto>;
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
-}
-
-async function fetchCoursesWithoutQuery(
-  url: string,
-  page: number,
-  size: number
-): Promise<ActionResult<Page<ListCourseResponseDto>>> {
-  try {
-    const res = await fetchBackend(`${url}?page=${page}&size=${size}`, {
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      return { success: false, error: `${res.status}: ${res.statusText}` };
-    }
-
-    const data = (await res.json()) as Page<ListCourseResponseDto>;
     return { success: true, data };
   } catch (err) {
     return {
