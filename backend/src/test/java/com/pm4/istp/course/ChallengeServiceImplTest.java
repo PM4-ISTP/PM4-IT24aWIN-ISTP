@@ -78,7 +78,8 @@ class ChallengeServiceImplTest {
             "Short summary",
             "Long description",
             ChallengeStatusEnum.DRAFT,
-            ChallengeDifficultyEnum.HARD);
+            ChallengeDifficultyEnum.HARD,
+            "registry/buffer-overflow:latest");
 
     Challenge created = challengeService.createChallenge(creatorId, request);
 
@@ -87,6 +88,7 @@ class ChallengeServiceImplTest {
     assertThat(created.getDescription()).isEqualTo("Long description");
     assertThat(created.getStatus()).isEqualTo(ChallengeStatusEnum.DRAFT);
     assertThat(created.getDifficulty()).isEqualTo(ChallengeDifficultyEnum.HARD);
+    assertThat(created.getDockerImage()).isEqualTo("registry/buffer-overflow:latest");
     assertThat(created.getMaxScore()).isZero();
     assertThat(created.getCreator()).isSameAs(creator);
     verify(challengeRepository).save(any(Challenge.class));
@@ -99,7 +101,12 @@ class ChallengeServiceImplTest {
 
     CreateChallengeRequest request =
         new CreateChallengeRequest(
-            "Title", "Short", "Desc", ChallengeStatusEnum.DRAFT, ChallengeDifficultyEnum.EASY);
+            "Title",
+            "Short",
+            "Desc",
+            ChallengeStatusEnum.DRAFT,
+            ChallengeDifficultyEnum.EASY,
+            "image:tag");
 
     assertThatThrownBy(() -> challengeService.createChallenge(creatorId, request))
         .isInstanceOf(UserNotFoundException.class);
@@ -213,7 +220,8 @@ class ChallengeServiceImplTest {
             "Updated short",
             "Updated desc",
             ChallengeStatusEnum.PUBLIC,
-            ChallengeDifficultyEnum.EASY);
+            ChallengeDifficultyEnum.EASY,
+            "registry/updated:1.0");
 
     Challenge updated = challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -222,6 +230,7 @@ class ChallengeServiceImplTest {
     assertThat(updated.getDescription()).isEqualTo("Updated desc");
     assertThat(updated.getStatus()).isEqualTo(ChallengeStatusEnum.PUBLIC);
     assertThat(updated.getDifficulty()).isEqualTo(ChallengeDifficultyEnum.EASY);
+    assertThat(updated.getDockerImage()).isEqualTo("registry/updated:1.0");
     verify(courseChallengeRepository, never()).deleteByChallengeId(any());
     verify(courseChallengeRepository, never())
         .deleteByChallengeIdWhereCreatorNotInstructor(any(), any());
@@ -244,7 +253,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.DRAFT,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            "image:tag");
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -270,7 +280,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PRIVATE,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            "image:tag");
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -296,7 +307,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PUBLIC,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            "image:tag");
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -321,7 +333,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PRIVATE,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            "image:tag");
 
     assertThatThrownBy(() -> challengeService.updateChallenge(otherId, challengeId, request))
         .isInstanceOf(ChallengeAccessDeniedException.class);
@@ -343,7 +356,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PUBLIC,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            "image:tag");
 
     assertThatThrownBy(() -> challengeService.updateChallenge(creatorId, challengeId, request))
         .isInstanceOf(ChallengeNotFoundException.class);
