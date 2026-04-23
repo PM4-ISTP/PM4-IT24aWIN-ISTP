@@ -238,18 +238,15 @@ export async function joinCourseByCode(
   code: string
 ): Promise<ActionResult<PublicCourseDetailResponseDto>> {
   try {
-    const res = await fetchBackend("/api/v1/courses/catalog/join", {
-      method: "POST",
-      body: JSON.stringify({ code }),
+    const client = await getApiClient();
+    const { data, error } = await client.POST("/api/v1/courses/catalog/join", {
+      body: { code },
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to join course" };
     }
 
-    const data = (await res.json()) as PublicCourseDetailResponseDto;
     return { success: true, data };
   } catch (err) {
     return {

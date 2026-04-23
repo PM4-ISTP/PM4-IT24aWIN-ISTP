@@ -181,6 +181,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Join a private course by invite code
+     * @description Enrolls the authenticated user into a private course using a 6-character invite code.
+     */
     post: operations["joinByInviteCode"];
     delete?: never;
     options?: never;
@@ -657,10 +661,10 @@ export interface components {
       roles?: ("ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT")[];
     };
     PageListInstructorUserResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListInstructorUserResponseDto"][];
@@ -678,12 +682,12 @@ export interface components {
       /** Format: int64 */
       offset?: number;
       sort?: components["schemas"]["SortObject"];
-      /** Format: int32 */
-      pageSize?: number;
+      unpaged?: boolean;
       /** Format: int32 */
       pageNumber?: number;
+      /** Format: int32 */
+      pageSize?: number;
       paged?: boolean;
-      unpaged?: boolean;
     };
     SortObject: {
       empty?: boolean;
@@ -713,10 +717,10 @@ export interface components {
       isPrivate?: boolean;
     };
     PageListCourseResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListCourseResponseDto"][];
@@ -748,10 +752,10 @@ export interface components {
       updatedAt?: string;
     };
     PageListChallengeResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListChallengeResponseDto"][];
@@ -1317,13 +1321,40 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
+      /** @description Joined course successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PublicCourseDetailResponseDto"];
+        };
+      };
+      /** @description Invalid request payload or user not found */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Invalid or expired invite code */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };

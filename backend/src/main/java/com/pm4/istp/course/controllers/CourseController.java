@@ -318,6 +318,30 @@ public class CourseController {
     return ResponseEntity.ok(courses);
   }
 
+  @Operation(
+      summary = "Join a private course by invite code",
+      description =
+          "Enrolls the authenticated user into a private course using a 6-character invite code.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Joined course successfully",
+            content =
+                @Content(schema = @Schema(implementation = PublicCourseDetailResponseDto.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request payload or user not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Invalid or expired invite code",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @PostMapping("/catalog/join")
   public ResponseEntity<PublicCourseDetailResponseDto> joinByInviteCode(
       @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody JoinByInviteCodeRequestDto request) {
