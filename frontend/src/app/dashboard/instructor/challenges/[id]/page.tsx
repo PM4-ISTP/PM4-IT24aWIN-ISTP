@@ -31,7 +31,10 @@ import {
 } from "@/src/features/course/actions/challenges";
 import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
 import { useToast } from "@/src/shared/hooks/useToast";
-import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/features/course/constants/challengeConstants";
+import {
+  CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
+  DOCKER_IMAGE_PATTERN,
+} from "@/src/features/course/constants/challengeConstants";
 
 function isMoreRestrictive(
   oldStatus: ChallengeStatusEnum,
@@ -57,6 +60,7 @@ export default function EditChallenge() {
     description: "",
     status: "DRAFT",
     difficulty: "MEDIUM",
+    dockerImage: "",
   });
   const [initialStatus, setInitialStatus] = useState<ChallengeStatusEnum>("DRAFT");
   const [courseCount, setCourseCount] = useState(0);
@@ -68,6 +72,7 @@ export default function EditChallenge() {
   const [visibilityImpactCount, setVisibilityImpactCount] = useState(0);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
+  const [dockerImageError, setDockerImageError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const charLimitToast = useToast();
 
@@ -88,6 +93,7 @@ export default function EditChallenge() {
         description: challenge.description ?? "",
         status: loadedStatus,
         difficulty: challenge.difficulty ?? "MEDIUM",
+        dockerImage: challenge.dockerImage ?? "",
       });
       setInitialStatus(loadedStatus);
       setCourseCount(challenge.courseCount ?? 0);
@@ -105,6 +111,8 @@ export default function EditChallenge() {
       return;
     }
 
+    const trimmedDockerImage = formValues.dockerImage.trim();
+
     setIsSubmitting(true);
 
     const result = await updateChallenge(challengeId, {
@@ -113,6 +121,7 @@ export default function EditChallenge() {
       description: formValues.description,
       status: formValues.status,
       difficulty: formValues.difficulty,
+      dockerImage: trimmedDockerImage,
     });
 
     setIsSubmitting(false);
@@ -129,6 +138,7 @@ export default function EditChallenge() {
   async function handleSubmit() {
     setTitleError(null);
     setShortDescriptionError(null);
+    setDockerImageError(null);
     setFormError(null);
 
     if (!formValues.title.trim()) {
@@ -138,6 +148,18 @@ export default function EditChallenge() {
 
     if (!normalizeShortDescription(formValues.shortDescription)) {
       setShortDescriptionError("Short description is required");
+      return;
+    }
+
+    const trimmedDockerImage = formValues.dockerImage.trim();
+    if (!trimmedDockerImage) {
+      setDockerImageError("Docker image is required");
+      return;
+    }
+    if (!DOCKER_IMAGE_PATTERN.test(trimmedDockerImage)) {
+      setDockerImageError(
+        "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)"
+      );
       return;
     }
 
@@ -324,8 +346,10 @@ export default function EditChallenge() {
             onChange={setFormValues}
             titleError={titleError}
             shortDescriptionError={shortDescriptionError}
+            dockerImageError={dockerImageError}
             onCharLimitExceeded={() => charLimitToast.show()}
             onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
+            onDockerImageErrorClear={() => setDockerImageError(null)}
           />
 
           {formError && (

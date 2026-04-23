@@ -22,7 +22,10 @@ import {
 import { createChallenge } from "@/src/features/course/actions/challenges";
 import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
 import { useToast } from "@/src/shared/hooks/useToast";
-import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/features/course/constants/challengeConstants";
+import {
+  CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
+  DOCKER_IMAGE_PATTERN,
+} from "@/src/features/course/constants/challengeConstants";
 
 export default function CreateChallenge() {
   const router = useRouter();
@@ -33,16 +36,19 @@ export default function CreateChallenge() {
     description: "<p>Add a description...</p>",
     status: "DRAFT",
     difficulty: "MEDIUM",
+    dockerImage: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
+  const [dockerImageError, setDockerImageError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const charLimitToast = useToast();
 
   async function handleSubmit() {
     setTitleError(null);
     setShortDescriptionError(null);
+    setDockerImageError(null);
     setFormError(null);
 
     if (!formValues.title.trim()) {
@@ -56,6 +62,18 @@ export default function CreateChallenge() {
       return;
     }
 
+    const trimmedDockerImage = formValues.dockerImage.trim();
+    if (!trimmedDockerImage) {
+      setDockerImageError("Docker image is required");
+      return;
+    }
+    if (!DOCKER_IMAGE_PATTERN.test(trimmedDockerImage)) {
+      setDockerImageError(
+        "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)"
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     const result = await createChallenge({
@@ -64,6 +82,7 @@ export default function CreateChallenge() {
       description: formValues.description,
       status: formValues.status,
       difficulty: formValues.difficulty,
+      dockerImage: trimmedDockerImage,
     });
 
     setIsSubmitting(false);
@@ -107,8 +126,10 @@ export default function CreateChallenge() {
             onChange={setFormValues}
             titleError={titleError}
             shortDescriptionError={shortDescriptionError}
+            dockerImageError={dockerImageError}
             onCharLimitExceeded={() => charLimitToast.show()}
             onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
+            onDockerImageErrorClear={() => setDockerImageError(null)}
           />
 
           {formError && (

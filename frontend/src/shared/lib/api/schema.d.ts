@@ -426,6 +426,7 @@ export interface components {
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
+      dockerImage: string;
     };
     ChallengeCreatorResponseDto: {
       /** Format: uuid */
@@ -444,6 +445,7 @@ export interface components {
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
       maxScore?: number;
+      dockerImage?: string;
       creator?: components["schemas"]["ChallengeCreatorResponseDto"];
       /** Format: int64 */
       courseCount?: number;
@@ -540,6 +542,7 @@ export interface components {
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
+      dockerImage: string;
     };
     CreateChallengeResponseDto: {
       /** Format: uuid */
@@ -553,6 +556,7 @@ export interface components {
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
       maxScore?: number;
+      dockerImage?: string;
       /** Format: uuid */
       creatorId?: string;
       /** Format: date-time */
@@ -674,6 +678,7 @@ export interface components {
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
       maxScore?: number;
+      dockerImage?: string;
       creatorName?: string;
       /** Format: int64 */
       courseCount?: number;
