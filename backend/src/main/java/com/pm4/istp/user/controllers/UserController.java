@@ -47,7 +47,12 @@ public class UserController {
   }
 
   @DeleteMapping("/{userId}")
-  public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
+  public ResponseEntity<Void> deleteUser(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID userId) {
+    UUID callerId = parseUserId(jwt);
+    if (callerId.equals(userId)) {
+      throw new IllegalArgumentException("Administrators cannot delete their own account");
+    }
     userService.softDeleteUser(userId);
     return ResponseEntity.noContent().build();
   }
