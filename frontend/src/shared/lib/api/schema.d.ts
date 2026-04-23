@@ -129,6 +129,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Regenerate invite code
+     * @description Regenerates the invite code of a private course. Only the course owner can perform this action.
+     */
     post: operations["regenerateInviteCode"];
     delete?: never;
     options?: never;
@@ -446,8 +450,8 @@ export interface components {
       /** Format: date-time */
       updatedAt?: string;
       private?: boolean;
-      enrolled?: boolean;
       published?: boolean;
+      enrolled?: boolean;
       isEnrolled?: boolean;
       isPublished?: boolean;
       isPrivate?: boolean;
@@ -593,8 +597,8 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
-      enrolled?: boolean;
       published?: boolean;
+      enrolled?: boolean;
       isEnrolled?: boolean;
       isPublished?: boolean;
     };
@@ -661,10 +665,10 @@ export interface components {
       roles?: ("ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT")[];
     };
     PageListInstructorUserResponseDto: {
-      /** Format: int32 */
-      totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
+      /** Format: int32 */
+      totalPages?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListInstructorUserResponseDto"][];
@@ -682,12 +686,12 @@ export interface components {
       /** Format: int64 */
       offset?: number;
       sort?: components["schemas"]["SortObject"];
+      paged?: boolean;
       unpaged?: boolean;
       /** Format: int32 */
       pageNumber?: number;
       /** Format: int32 */
       pageSize?: number;
-      paged?: boolean;
     };
     SortObject: {
       empty?: boolean;
@@ -717,10 +721,10 @@ export interface components {
       isPrivate?: boolean;
     };
     PageListCourseResponseDto: {
-      /** Format: int32 */
-      totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
+      /** Format: int32 */
+      totalPages?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListCourseResponseDto"][];
@@ -752,10 +756,10 @@ export interface components {
       updatedAt?: string;
     };
     PageListChallengeResponseDto: {
-      /** Format: int32 */
-      totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
+      /** Format: int32 */
+      totalPages?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListChallengeResponseDto"][];
@@ -1244,13 +1248,40 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Invite code regenerated successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["CourseDetailResponseDto"];
+        };
+      };
+      /** @description Access denied or invite code regeneration not allowed for public course */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Course not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };

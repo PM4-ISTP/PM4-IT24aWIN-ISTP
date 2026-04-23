@@ -351,6 +351,29 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
+  @Operation(
+      summary = "Regenerate invite code",
+      description =
+          "Regenerates the invite code of a private course. Only the course owner can perform this action.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Invite code regenerated successfully",
+            content = @Content(schema = @Schema(implementation = CourseDetailResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied or invite code regeneration not allowed for public course",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @PostMapping("/{id}/invite-code/regenerate")
   public ResponseEntity<CourseDetailResponseDto> regenerateInviteCode(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {

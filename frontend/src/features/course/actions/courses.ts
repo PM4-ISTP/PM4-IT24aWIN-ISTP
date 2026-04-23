@@ -8,13 +8,14 @@ import { extractErrorMessage } from "@/src/shared/lib/utils";
 
 import type {
   ActionResult,
-  CourseDetailResponseDto,
+  CourseDetailResponseDto as OldCourseDetailResponseDto,
   CourseResponseDto,
   CreateCourseDto,
   UpdateCourseDto,
 } from "@/src/shared/types/course";
 
 export type PublicCourseDetailResponseDto = components["schemas"]["PublicCourseDetailResponseDto"];
+export type CourseDetailResponseDto = components["schemas"]["CourseDetailResponseDto"];
 export type CourseDetailInstructorResponseDto =
   components["schemas"]["CourseDetailInstructorResponseDto"];
 export type PageListCourseResponseDto = components["schemas"]["PageListCourseResponseDto"];
@@ -103,7 +104,7 @@ export async function enrollInCourse(
   }
 }
 
-export async function fetchCourse(id: string): Promise<ActionResult<CourseDetailResponseDto>> {
+export async function fetchCourse(id: string): Promise<ActionResult<OldCourseDetailResponseDto>> {
   try {
     const res = await fetchBackend(`/api/v1/courses/${id}`, {
       cache: "no-store",
@@ -115,7 +116,7 @@ export async function fetchCourse(id: string): Promise<ActionResult<CourseDetail
       return { success: false, error: `${res.status}: ${message}` };
     }
 
-    const data = (await res.json()) as CourseDetailResponseDto;
+    const data = (await res.json()) as OldCourseDetailResponseDto;
     return { success: true, data };
   } catch (err) {
     return {
@@ -128,7 +129,7 @@ export async function fetchCourse(id: string): Promise<ActionResult<CourseDetail
 export async function updateCourse(
   id: string,
   dto: Omit<UpdateCourseDto, "instructors"> & { collaboratorIds: string[] }
-): Promise<ActionResult<CourseDetailResponseDto>> {
+): Promise<ActionResult<OldCourseDetailResponseDto>> {
   try {
     const payload: UpdateCourseDto = {
       title: dto.title,
@@ -155,7 +156,7 @@ export async function updateCourse(
       return { success: false, error: `${res.status}: ${message}` };
     }
 
-    const data = (await res.json()) as CourseDetailResponseDto;
+    const data = (await res.json()) as OldCourseDetailResponseDto;
     return { success: true, data };
   } catch (err) {
     return {
@@ -260,18 +261,16 @@ export async function regenerateInviteCode(
   id: string
 ): Promise<ActionResult<CourseDetailResponseDto>> {
   try {
-    const res = await fetchBackend(`/api/v1/courses/${id}/invite-code/regenerate`, {
-      method: "POST",
+    const client = await getApiClient();
+    const { data, error } = await client.POST("/api/v1/courses/{id}/invite-code/regenerate", {
+      params: { path: { id } },
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+    if (error) {
+      return { success: false, error: error.error ?? "Failed to regenerate invite code" };
     }
 
-    const data = (await res.json()) as CourseDetailResponseDto;
-    return { success: true, data };
+    return { success: true, data: data };
   } catch (err) {
     return {
       success: false,
