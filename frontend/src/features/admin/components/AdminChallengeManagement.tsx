@@ -62,8 +62,6 @@ function formatDate(value?: string | null) {
 export default function AdminChallengeManagement() {
   const [query, setQuery] = useState("");
   const [owner, setOwner] = useState("");
-  const [status, setStatus] = useState<ChallengeStatus | "">("");
-  const [difficulty, setDifficulty] = useState<ChallengeDifficulty | "">("");
   const [page, setPage] = useState(0);
 
   const [challenges, setChallenges] = useState<AdminChallengeListItem[]>([]);
@@ -92,7 +90,7 @@ export default function AdminChallengeManagement() {
   });
 
   const fetchPage = useCallback(
-    async (q: string, o: string, s: string, d: string, p: number) => {
+    async (q: string, o: string, p: number) => {
       setLoading(true);
       setError(null);
       try {
@@ -101,8 +99,6 @@ export default function AdminChallengeManagement() {
         const oTrim = o.trim();
         if (qTrim) url.searchParams.set("q", qTrim);
         if (oTrim) url.searchParams.set("owner", oTrim);
-        if (s) url.searchParams.set("status", s);
-        if (d) url.searchParams.set("difficulty", d);
         url.searchParams.set("page", String(p));
         url.searchParams.set("size", String(PAGE_SIZE));
         url.searchParams.set("sort", "updatedAt,desc");
@@ -125,12 +121,12 @@ export default function AdminChallengeManagement() {
   );
 
   useEffect(() => {
-    void fetchPage(query, owner, status, difficulty, page);
-  }, [fetchPage, query, owner, status, difficulty, page]);
+    void fetchPage(query, owner, page);
+  }, [fetchPage, query, owner, page]);
 
   const debouncedSearch = useDebouncedCallback((nextQ: string, nextOwner: string) => {
     setPage(0);
-    void fetchPage(nextQ, nextOwner, status, difficulty, 0);
+    void fetchPage(nextQ, nextOwner, 0);
   }, 300);
 
   function onQueryChange(next: string) {
@@ -141,20 +137,6 @@ export default function AdminChallengeManagement() {
   function onOwnerChange(next: string) {
     setOwner(next);
     debouncedSearch(query, next);
-  }
-
-  function onStatusChange(next: string | null) {
-    const v = (next ?? "") as ChallengeStatus | "";
-    setStatus(v);
-    setPage(0);
-    void fetchPage(query, owner, v, difficulty, 0);
-  }
-
-  function onDifficultyChange(next: string | null) {
-    const v = (next ?? "") as ChallengeDifficulty | "";
-    setDifficulty(v);
-    setPage(0);
-    void fetchPage(query, owner, status, v, 0);
   }
 
   const selectedTitle = useMemo(() => selected?.title ?? "", [selected]);
@@ -200,7 +182,7 @@ export default function AdminChallengeManagement() {
       }
       setEditOpened(false);
       setSelected(null);
-      void fetchPage(query, owner, status, difficulty, page);
+      void fetchPage(query, owner, page);
     } catch {
       setError("Failed to update challenge");
     } finally {
@@ -223,7 +205,7 @@ export default function AdminChallengeManagement() {
       setDeleteOpened(false);
       setSelected(null);
       setPage(0);
-      void fetchPage(query, owner, status, difficulty, 0);
+      void fetchPage(query, owner, 0);
     } catch {
       setError("Failed to delete challenge");
     } finally {
@@ -249,34 +231,6 @@ export default function AdminChallengeManagement() {
             value={owner}
             onChange={(e) => onOwnerChange(e.currentTarget.value)}
             w={260}
-          />
-          <Select
-            label="Status"
-            placeholder="Any"
-            data={[
-              { value: "", label: "Any" },
-              { value: "DRAFT", label: "DRAFT" },
-              { value: "PRIVATE", label: "PRIVATE" },
-              { value: "PUBLIC", label: "PUBLIC" },
-            ]}
-            value={status}
-            onChange={onStatusChange}
-            w={160}
-          />
-          <Select
-            label="Difficulty"
-            placeholder="Any"
-            data={[
-              { value: "", label: "Any" },
-              { value: "BEGINNER", label: "BEGINNER" },
-              { value: "EASY", label: "EASY" },
-              { value: "MEDIUM", label: "MEDIUM" },
-              { value: "HARD", label: "HARD" },
-              { value: "EXPERT", label: "EXPERT" },
-            ]}
-            value={difficulty}
-            onChange={onDifficultyChange}
-            w={160}
           />
         </Group>
         {loading && (
