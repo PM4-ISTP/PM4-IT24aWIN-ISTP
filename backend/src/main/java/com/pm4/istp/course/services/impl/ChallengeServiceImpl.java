@@ -36,7 +36,7 @@ public class ChallengeServiceImpl implements ChallengeService {
   public Challenge createChallenge(UUID userId, CreateChallengeRequest request) {
     User creator =
         userRepository
-            .findById(userId)
+            .findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
