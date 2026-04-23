@@ -163,7 +163,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       existingUser.ifPresentOrElse(
           user -> {
             if (user.isDeleted()) {
-              // Account was soft-deleted due to a conflict — once deleted, always gone.
+              // Account was soft-deleted due to a conflict. Once deleted, always gone.
               return;
             }
             boolean profileChanged =
