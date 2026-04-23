@@ -164,13 +164,18 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
       existingUser.ifPresentOrElse(
           user -> {
-            if (!Objects.equals(user.getName(), displayName)
-                || !Objects.equals(user.getEmail(), email)
-                || !Objects.equals(user.getUsername(), username)
-                || !Objects.equals(user.getPicture(), picture)
-                || !Objects.equals(user.getTitle(), title)
-                || !Objects.equals(user.getRoles(), roles)
-                || user.isDeleted()) {
+            if (user.isDeleted()) {
+              // Account was soft-deleted due to a conflict — once deleted, always gone.
+              return;
+            }
+            boolean profileChanged =
+                !Objects.equals(user.getName(), displayName)
+                    || !Objects.equals(user.getEmail(), email)
+                    || !Objects.equals(user.getUsername(), username)
+                    || !Objects.equals(user.getPicture(), picture)
+                    || !Objects.equals(user.getTitle(), title)
+                    || !Objects.equals(user.getRoles(), roles);
+            if (profileChanged) {
               user.setName(displayName);
               user.setEmail(email);
               user.setUsername(username);
@@ -201,6 +206,9 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
   }
 
   private void deactivateConflictsByEmail(UUID newKeycloakId, String email) {
+    if (email == null) {
+      return;
+    }
     userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(email).stream()
         .filter(conflict -> !conflict.getId().equals(newKeycloakId))
         .forEach(conflict -> deactivateUser(conflict, "email", newKeycloakId));

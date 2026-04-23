@@ -1,7 +1,7 @@
-package com.pm4.istp.repositories;
+package com.pm4.istp.user.repositories;
 
-import com.pm4.istp.domain.entites.User;
-import com.pm4.istp.domain.entites.UserRoleEnum;
+import com.pm4.istp.user.db.entities.User;
+import com.pm4.istp.user.db.entities.UserRoleEnum;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -22,6 +22,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
   List<User> findAllByUsernameIgnoreCaseAndDeletedAtIsNull(String username);
 
   Optional<User> findByIdAndDeletedAtIsNull(UUID id);
+
+  Optional<User> findByEmailIgnoreCaseAndIdNot(String email, UUID id);
+
+  Optional<User> findByUsernameIgnoreCaseAndIdNot(String username, UUID id);
 
   @Query(
       """
