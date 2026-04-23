@@ -2,6 +2,8 @@
 
 import { Tabs, Box, Stack, Text, Button } from "@mantine/core";
 import AdminConfigForm from "@/src/features/admin/components/AdminConfigForm";
+import AdminCourseManagement from "@/src/features/admin/components/AdminCourseManagement";
+import AdminChallengeManagement from "@/src/features/admin/components/AdminChallengeManagement";
 import type { components } from "@/src/shared/lib/api/schema";
 
 type AdminConfigResponse = components["schemas"]["AdminConfigResponse"];
@@ -23,7 +25,7 @@ export default function AdminTabs({ initialConfig, keycloakAdminUrl }: AdminTabs
   return (
     <Tabs
       defaultValue="config"
-      style={{ maxWidth: 680 }}
+      style={{ maxWidth: 1100, width: "100%" }}
       styles={{
         tab: {
           color: "#94a3b8",
@@ -37,6 +39,8 @@ export default function AdminTabs({ initialConfig, keycloakAdminUrl }: AdminTabs
       <Tabs.List mb="lg">
         <Tabs.Tab value="config">Platform Config</Tabs.Tab>
         <Tabs.Tab value="users">User Management</Tabs.Tab>
+        <Tabs.Tab value="courses">Courses</Tabs.Tab>
+        <Tabs.Tab value="challenges">Challenges</Tabs.Tab>
       </Tabs.List>
 
       <Tabs.Panel value="config">
@@ -96,6 +100,18 @@ export default function AdminTabs({ initialConfig, keycloakAdminUrl }: AdminTabs
               </>
             )}
           </Stack>
+        </Box>
+      </Tabs.Panel>
+
+      <Tabs.Panel value="courses">
+        <Box style={cardStyle}>
+          <AdminCourseManagement />
+        </Box>
+      </Tabs.Panel>
+
+      <Tabs.Panel value="challenges">
+        <Box style={cardStyle}>
+          <AdminChallengeManagement />
         </Box>
       </Tabs.Panel>
     </Tabs>

@@ -2,6 +2,7 @@ package com.pm4.istp.course.repositories;
 
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
+import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -188,4 +189,52 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           """)
   Page<ListCourseResponseDto> findPublishedCoursesByQuery(
       @Param("query") String query, Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select distinct new com.pm4.istp.admin.dto.AdminCourseListItemDto(
+            c.id,
+            c.title,
+            c.description,
+            c.shortDescription,
+            c.isPublished,
+            c.isPrivate,
+            c.createdAt,
+            c.updatedAt,
+            c.topic,
+            c.imageUrl,
+            ownerUser.id,
+            ownerUser.name,
+            ownerUser.username
+          )
+          from Course c
+          left join c.courseInstructors ciOwner
+            on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
+          left join ciOwner.instructor ownerUser
+          where (:query is null
+              or lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%')))
+            and (:owner is null
+              or lower(coalesce(ownerUser.name, '')) like lower(concat('%', :owner, '%'))
+              or lower(coalesce(ownerUser.username, '')) like lower(concat('%', :owner, '%')))
+          """,
+      countQuery =
+          """
+          select count(distinct c.id)
+          from Course c
+          left join c.courseInstructors ciOwner
+            on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
+          left join ciOwner.instructor ownerUser
+          where (:query is null
+              or lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%')))
+            and (:owner is null
+              or lower(coalesce(ownerUser.name, '')) like lower(concat('%', :owner, '%'))
+              or lower(coalesce(ownerUser.username, '')) like lower(concat('%', :owner, '%')))
+          """)
+  Page<AdminCourseListItemDto> findAllCoursesForAdmin(
+      @Param("query") String query, @Param("owner") String owner, Pageable pageable);
 }
