@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -161,10 +162,9 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
       existingUser.ifPresentOrElse(
           user -> {
-            boolean reactivated = user.isDeleted();
-            if (reactivated) {
-              // User was soft-deleted but has logged back in via Keycloak — reactivate.
-              user.setDeletedAt(null);
+            if (user.isDeleted()) {
+              // Account was soft-deleted due to a conflict — once deleted, always gone.
+              return;
             }
             boolean profileChanged =
                 !Objects.equals(user.getName(), displayName)
@@ -180,12 +180,41 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               user.setPicture(picture);
               user.setTitle(title);
               user.setRoles(roles);
-            }
-            if (reactivated || profileChanged) {
               userRepository.save(user);
             }
           },
           () -> {
+            // Soft-delete any active account that shares the same email or username but belongs
+            // to a different Keycloak UUID (the old account was deleted in Keycloak and a new
+            // one was created with the same credentials).
+            if (email != null) {
+              userRepository
+                  .findByEmailIgnoreCaseAndIdNot(email, keycloakId)
+                  .filter(u -> !u.isDeleted())
+                  .ifPresent(
+                      u -> {
+                        u.setDeletedAt(LocalDateTime.now());
+                        userRepository.save(u);
+                        log.info(
+                            "Soft-deleted user {} due to email conflict with new user {}",
+                            u.getId(),
+                            keycloakId);
+                      });
+            }
+            if (username != null) {
+              userRepository
+                  .findByUsernameIgnoreCaseAndIdNot(username, keycloakId)
+                  .filter(u -> !u.isDeleted())
+                  .ifPresent(
+                      u -> {
+                        u.setDeletedAt(LocalDateTime.now());
+                        userRepository.save(u);
+                        log.info(
+                            "Soft-deleted user {} due to username conflict with new user {}",
+                            u.getId(),
+                            keycloakId);
+                      });
+            }
             User newUser = new User();
             newUser.setId(keycloakId);
             newUser.setName(displayName);

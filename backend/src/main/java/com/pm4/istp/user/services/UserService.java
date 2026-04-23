@@ -11,6 +11,4 @@ public interface UserService {
   Page<User> searchCollaboratorUsersByName(UUID userId, String name, Pageable pageable);
 
   Page<User> searchCollaboratorUsersByQuery(UUID userId, String query, Pageable pageable);
-
-  void softDeleteUser(UUID userId);
 }
