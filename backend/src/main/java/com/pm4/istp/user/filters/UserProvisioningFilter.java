@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -73,7 +74,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               keycloakId);
       String username =
           discardIfTooLong(
-              normalize(jwt.getClaimAsString("preferred_username")),
+              normalizeIdentifier(jwt.getClaimAsString("preferred_username")),
               MAX_COLUMN_LENGTH,
               "preferred_username",
               keycloakId);
@@ -104,14 +105,15 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               : Optional.empty();
 
       String email =
-          firstNonBlank(
-              emailClaim,
-              discardIfTooLong(
-                  userInfoProfile.map(UserInfoProfile::email).orElse(null),
-                  MAX_COLUMN_LENGTH,
-                  "email",
-                  keycloakId),
-              existingUser.map(User::getEmail).map(this::normalize).orElse(null));
+          normalizeIdentifier(
+              firstNonBlank(
+                  emailClaim,
+                  discardIfTooLong(
+                      userInfoProfile.map(UserInfoProfile::email).orElse(null),
+                      MAX_COLUMN_LENGTH,
+                      "email",
+                      keycloakId),
+                  existingUser.map(User::getEmail).map(this::normalize).orElse(null)));
 
       if (email == null) {
         log.error("Cannot provision user {}: email is missing", keycloakId);
@@ -180,41 +182,14 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               user.setPicture(picture);
               user.setTitle(title);
               user.setRoles(roles);
+              user.setDeletedAt(null);
               userRepository.save(user);
             }
           },
           () -> {
-            // Soft-delete any active account that shares the same email or username but belongs
-            // to a different Keycloak UUID (the old account was deleted in Keycloak and a new
-            // one was created with the same credentials).
-            if (email != null) {
-              userRepository
-                  .findByEmailIgnoreCaseAndIdNot(email, keycloakId)
-                  .filter(u -> !u.isDeleted())
-                  .ifPresent(
-                      u -> {
-                        u.setDeletedAt(LocalDateTime.now());
-                        userRepository.save(u);
-                        log.info(
-                            "Soft-deleted user {} due to email conflict with new user {}",
-                            u.getId(),
-                            keycloakId);
-                      });
-            }
-            if (username != null) {
-              userRepository
-                  .findByUsernameIgnoreCaseAndIdNot(username, keycloakId)
-                  .filter(u -> !u.isDeleted())
-                  .ifPresent(
-                      u -> {
-                        u.setDeletedAt(LocalDateTime.now());
-                        userRepository.save(u);
-                        log.info(
-                            "Soft-deleted user {} due to username conflict with new user {}",
-                            u.getId(),
-                            keycloakId);
-                      });
-            }
+            deactivateConflictsByEmail(keycloakId, email);
+            deactivateConflictsByUsername(keycloakId, username);
+
             User newUser = new User();
             newUser.setId(keycloakId);
             newUser.setName(displayName);
@@ -228,6 +203,43 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
     }
 
     filterChain.doFilter(request, response);
+  }
+
+  private void deactivateConflictsByEmail(UUID newKeycloakId, String email) {
+    if (email == null) {
+      return;
+    }
+    userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(email).stream()
+        .filter(conflict -> !conflict.getId().equals(newKeycloakId))
+        .forEach(conflict -> deactivateUser(conflict, "email", newKeycloakId));
+  }
+
+  private void deactivateConflictsByUsername(UUID newKeycloakId, String username) {
+    if (username == null) {
+      return;
+    }
+
+    userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull(username).stream()
+        .filter(conflict -> !conflict.getId().equals(newKeycloakId))
+        .forEach(conflict -> deactivateUser(conflict, "username", newKeycloakId));
+  }
+
+  private void deactivateUser(User conflict, String reason, UUID newKeycloakId) {
+    if (conflict.isDeleted()) {
+      return;
+    }
+
+    LocalDateTime now = LocalDateTime.now();
+    conflict.setDeletedAt(now);
+    conflict.setEmail("deactivated+" + conflict.getId() + "@invalid.local");
+    conflict.setUsername("deactivated-" + conflict.getId());
+
+    log.warn(
+        "Deactivating conflicting user record ({} conflict): old id={}, new id={}",
+        reason,
+        conflict.getId(),
+        newKeycloakId);
+    userRepository.save(conflict);
   }
 
   private boolean shouldFetchUserInfo(
@@ -339,6 +351,11 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
     String trimmed = value.trim();
     return trimmed.isEmpty() ? null : trimmed;
+  }
+
+  private String normalizeIdentifier(String value) {
+    String normalized = normalize(value);
+    return normalized == null ? null : normalized.toLowerCase(Locale.ROOT);
   }
 
   private record UserInfoProfile(String name, String email, String picture, String title) {}

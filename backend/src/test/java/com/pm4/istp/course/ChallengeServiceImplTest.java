@@ -68,7 +68,7 @@ class ChallengeServiceImplTest {
     UUID creatorId = UUID.randomUUID();
     User creator = buildUser(creatorId);
 
-    when(userRepository.findById(creatorId)).thenReturn(Optional.of(creator));
+    when(userRepository.findByIdAndDeletedAtIsNull(creatorId)).thenReturn(Optional.of(creator));
     when(challengeRepository.save(any(Challenge.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -95,7 +95,7 @@ class ChallengeServiceImplTest {
   @Test
   void createChallenge_whenUserNotFound_throwsUserNotFoundException() {
     UUID creatorId = UUID.randomUUID();
-    when(userRepository.findById(creatorId)).thenReturn(Optional.empty());
+    when(userRepository.findByIdAndDeletedAtIsNull(creatorId)).thenReturn(Optional.empty());
 
     CreateChallengeRequest request =
         new CreateChallengeRequest(
