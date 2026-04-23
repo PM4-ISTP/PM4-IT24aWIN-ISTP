@@ -1,13 +1,13 @@
 "use server";
 
 import { fetchBackend } from "@/src/shared/lib/api";
+import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers";
 import type { components } from "@/src/shared/lib/api/schema";
 import { getApiClient } from "@/src/shared/lib/api/server";
 import { extractErrorMessage } from "@/src/shared/lib/utils";
 
 import type {
-  ActionResult,
   CourseDetailResponseDto as OldCourseDetailResponseDto,
   CourseResponseDto,
   CreateCourseDto,

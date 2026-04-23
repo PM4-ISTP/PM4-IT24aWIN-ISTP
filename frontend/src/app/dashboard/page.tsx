@@ -15,7 +15,7 @@ import type {
 } from "@/src/features/course/actions/courses";
 import Link from "next/link";
 import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
-import type { ActionResult } from "@/src/shared/types/course";
+import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 
 const sectionLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",

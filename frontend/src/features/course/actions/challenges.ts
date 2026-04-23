@@ -2,7 +2,7 @@
 
 import { getApiClient } from "@/src/shared/lib/api/server";
 import type { components } from "@/src/shared/lib/api/schema";
-import type { ActionResult } from "@/src/shared/types/course";
+import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers";
 
 // Re-export generated types with convenient aliases
