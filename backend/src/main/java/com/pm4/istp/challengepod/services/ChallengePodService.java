@@ -99,6 +99,8 @@ public class ChallengePodService {
     }
 
     Config config = Config.fromKubeconfig(kubeconfigContent);
+    config.setConnectionTimeout(5_000);
+    config.setRequestTimeout(10_000);
     KubernetesClient newClient = new KubernetesClientBuilder().withConfig(config).build();
 
     // Another thread may have raced us — discard ours if we lost

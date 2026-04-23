@@ -57,7 +57,10 @@ export function useChallengePodStatus(
 
     void fetchOnce();
 
-    // Poll faster when PROVISIONING, slower when RUNNING
+    // No active pod — stop polling until user triggers an action
+    if (data?.status === "NOT_FOUND" || data?.status === "FAILED") return;
+
+    // Poll faster while transitioning, slower once running
     const intervalMs = data?.status === "RUNNING" ? RUNNING_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
 
     const id = setInterval(() => void fetchOnce(), intervalMs);
