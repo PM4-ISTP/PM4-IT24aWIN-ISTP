@@ -46,6 +46,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     challenge.setDescription(request.getDescription());
     challenge.setStatus(request.getStatus());
     challenge.setDifficulty(request.getDifficulty());
+    challenge.setDockerImage(request.getDockerImage());
     challenge.setMaxScore(0);
     challenge.setCreator(creator);
 
@@ -88,6 +89,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     challenge.setDescription(request.getDescription());
     challenge.setStatus(newStatus);
     challenge.setDifficulty(request.getDifficulty());
+    challenge.setDockerImage(request.getDockerImage());
 
     Challenge saved = challengeRepository.save(challenge);
     cleanupCourseChallengesForVisibilityChange(challengeId, userId, oldStatus, newStatus);

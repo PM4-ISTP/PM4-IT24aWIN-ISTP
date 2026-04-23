@@ -19,6 +19,7 @@ public class ChallengeDetailResponseDto {
   private ChallengeStatusEnum status;
   private ChallengeDifficultyEnum difficulty;
   private int maxScore;
+  private String dockerImage;
   private ChallengeCreatorResponseDto creator;
   private long courseCount;
   private LocalDateTime createdAt;

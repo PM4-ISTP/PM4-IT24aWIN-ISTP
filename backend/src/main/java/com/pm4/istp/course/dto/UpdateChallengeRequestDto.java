@@ -4,6 +4,7 @@ import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,4 +27,10 @@ public class UpdateChallengeRequestDto {
 
   @NotNull(message = "Challenge difficulty is required")
   private ChallengeDifficultyEnum difficulty;
+
+  @NotBlank(message = "Docker image is required")
+  @Pattern(
+      regexp = "^[\\w.\\-/]+(:[\\w.\\-]+)?$",
+      message = "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)")
+  private String dockerImage;
 }
