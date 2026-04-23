@@ -38,7 +38,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
 
   const config: AdminConfigResponse = initialConfig;
 
-  const defaultMemoryUnit = MemoryUnit.Byte;
+  const defaultMemoryUnit = MemoryUnit.MebiByte;
 
   const getInitialFormValues = (adminConfig: AdminConfigResponse) => {
     try {
