@@ -385,12 +385,7 @@ export default function EditChallenge() {
             onDockerImageErrorClear={() => setDockerImageError(null)}
           />
 
-          <Paper
-            p="md"
-            radius="md"
-            withBorder
-            style={{ background: "rgba(255,255,255,0.02)" }}
-          >
+          <Paper p="md" radius="md" withBorder style={{ background: "rgba(255,255,255,0.02)" }}>
             <Group justify="space-between" align="center">
               <Box>
                 <Text size="sm" fw={600}>
