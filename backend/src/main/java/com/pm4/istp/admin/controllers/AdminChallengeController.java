@@ -50,4 +50,3 @@ public class AdminChallengeController {
     return ResponseEntity.noContent().build();
   }
 }
-

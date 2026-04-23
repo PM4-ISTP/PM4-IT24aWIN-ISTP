@@ -21,6 +21,7 @@ public class AdminCourseListItemDto {
 
   @JsonProperty("isPrivate")
   private boolean isPrivate;
+
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private String topic;

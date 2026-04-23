@@ -1,10 +1,10 @@
 package com.pm4.istp.course.repositories;
 
-import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.admin.dto.AdminChallengeListItemDto;
-import com.pm4.istp.course.dto.ListChallengeResponseDto;
+import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.dto.ListChallengeResponseDto;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

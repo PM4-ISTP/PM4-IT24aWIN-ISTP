@@ -37,7 +37,8 @@ public class AdminCourseChallengeService {
 
   @Transactional(readOnly = true)
   public Page<AdminCourseListItemDto> listCourses(String query, String owner, Pageable pageable) {
-    return courseRepository.findAllCoursesForAdmin(normalizeQuery(query), normalizeQuery(owner), pageable);
+    return courseRepository.findAllCoursesForAdmin(
+        normalizeQuery(query), normalizeQuery(owner), pageable);
   }
 
   public Course updateCourse(UUID courseId, AdminUpdateCourseRequestDto request) {
@@ -58,7 +59,8 @@ public class AdminCourseChallengeService {
     course.setImageUrl(normalizeBlankToNull(request.getImageUrl()));
 
     // Ensure private courses have an invite code.
-    if (request.isPrivate() && (course.getInviteCode() == null || course.getInviteCode().isBlank())) {
+    if (request.isPrivate()
+        && (course.getInviteCode() == null || course.getInviteCode().isBlank())) {
       try {
         course.setInviteCode(generateUniqueInviteCode());
       } catch (IllegalStateException ex) {
@@ -161,4 +163,3 @@ public class AdminCourseChallengeService {
     return sb.toString();
   }
 }
-

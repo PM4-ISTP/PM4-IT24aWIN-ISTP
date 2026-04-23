@@ -15,6 +15,7 @@ public class AdminUpdateCourseRequestDto {
 
   @JsonProperty("isPrivate")
   private boolean isPrivate;
+
   private String topic;
   private String imageUrl;
 }

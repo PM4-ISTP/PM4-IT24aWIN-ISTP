@@ -1,8 +1,8 @@
 package com.pm4.istp.course.repositories;
 
+import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
-import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;

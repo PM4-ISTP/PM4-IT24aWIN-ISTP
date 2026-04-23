@@ -18,4 +18,3 @@ public class AdminUpdateChallengeRequestDto {
   // This is still manually maintained in the project (subtasks not implemented yet).
   private Integer maxScore;
 }
-
