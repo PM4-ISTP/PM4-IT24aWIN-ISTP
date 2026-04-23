@@ -31,6 +31,7 @@ public class UpdateChallengeRequestDto {
   @NotBlank(message = "Docker image is required")
   @Pattern(
       regexp = "^[\\w.\\-/]+(:[\\w.\\-]+)?$",
-      message = "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)")
+      message =
+          "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)")
   private String dockerImage;
 }
