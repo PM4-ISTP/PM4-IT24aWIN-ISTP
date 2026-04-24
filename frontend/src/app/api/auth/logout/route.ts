@@ -2,17 +2,32 @@ import { getToken } from "next-auth/jwt";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-const NEXT_AUTH_COOKIES = [
+const NEXT_AUTH_COOKIE_PREFIXES = [
   "next-auth.session-token",
   "__Secure-next-auth.session-token",
   "next-auth.csrf-token",
   "__Host-next-auth.csrf-token",
+  "__Secure-next-auth.csrf-token",
   "next-auth.callback-url",
   "__Secure-next-auth.callback-url",
   "next-auth.pkce.code_verifier",
   "next-auth.state",
   "next-auth.nonce",
 ] as const;
+
+function getNextAuthCookieNamesToClear(request: NextRequest): string[] {
+  const names = new Set<string>(NEXT_AUTH_COOKIE_PREFIXES);
+
+  for (const cookie of request.cookies.getAll()) {
+    for (const prefix of NEXT_AUTH_COOKIE_PREFIXES) {
+      if (cookie.name === prefix || cookie.name.startsWith(`${prefix}.`)) {
+        names.add(cookie.name);
+      }
+    }
+  }
+
+  return [...names];
+}
 
 function isHttpsRequest(request: NextRequest): boolean {
   const forwardedProto = request.headers.get("x-forwarded-proto");
@@ -26,7 +41,7 @@ function isHttpsRequest(request: NextRequest): boolean {
 function clearNextAuthCookies(request: NextRequest, response: NextResponse): void {
   const isHttps = isHttpsRequest(request);
 
-  for (const name of NEXT_AUTH_COOKIES) {
+  for (const name of getNextAuthCookieNamesToClear(request)) {
     const requiresSecurePrefix = name.startsWith("__Secure-") || name.startsWith("__Host-");
     const secure = isHttps || requiresSecurePrefix;
 
