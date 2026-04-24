@@ -98,7 +98,7 @@ export default function UserMenu({ name, roles, image, accountUrl }: UserMenuPro
         <Menu.Item
           color="red"
           component={Link}
-          href="/api/auth/logout"
+          href="/logout"
           prefetch={false}
           data-testid="logout-link"
           leftSection={
