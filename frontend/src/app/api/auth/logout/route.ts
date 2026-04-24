@@ -14,9 +14,28 @@ const NEXT_AUTH_COOKIES = [
   "next-auth.nonce",
 ] as const;
 
-function clearNextAuthCookies(response: NextResponse): void {
+function isHttpsRequest(request: NextRequest): boolean {
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  if (forwardedProto) {
+    return forwardedProto.split(",")[0]?.trim().toLowerCase() === "https";
+  }
+
+  return request.nextUrl.protocol === "https:";
+}
+
+function clearNextAuthCookies(request: NextRequest, response: NextResponse): void {
+  const isHttps = isHttpsRequest(request);
+
   for (const name of NEXT_AUTH_COOKIES) {
-    response.cookies.set(name, "", { path: "/", maxAge: 0 });
+    const requiresSecurePrefix = name.startsWith("__Secure-") || name.startsWith("__Host-");
+    const secure = isHttps || requiresSecurePrefix;
+
+    response.cookies.set(name, "", {
+      path: "/",
+      maxAge: 0,
+      secure,
+      sameSite: "lax",
+    });
   }
 }
 
@@ -49,7 +68,7 @@ export async function GET(request: NextRequest) {
   const postLogoutRedirectUri = `${baseUrl}/`;
 
   const response = NextResponse.redirect(postLogoutRedirectUri, 302);
-  clearNextAuthCookies(response);
+  clearNextAuthCookies(request, response);
 
   const issuer = process.env.AUTH_KEYCLOAK_ISSUER;
   const clientId = process.env.AUTH_KEYCLOAK_ID;

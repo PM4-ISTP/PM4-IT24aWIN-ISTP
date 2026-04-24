@@ -96,6 +96,9 @@ export default function UserMenu({ name, roles, image, accountUrl }: UserMenuPro
 
         <Menu.Item
           color="red"
+          component="a"
+          href="/api/auth/logout"
+          data-testid="logout-link"
           leftSection={
             <span
               className="material-symbols-outlined"
@@ -108,7 +111,6 @@ export default function UserMenu({ name, roles, image, accountUrl }: UserMenuPro
               logout
             </span>
           }
-          onClick={() => window.location.assign("/api/auth/logout")}
         >
           Log out
         </Menu.Item>
