@@ -1,6 +1,9 @@
 "use client";
+import Link from "next/link";
 export default function Logout() {
   return (
-    <a href="/api/auth/logout">Sign out</a>
+    <Link href="/api/auth/logout" prefetch={false}>
+      Sign out
+    </Link>
   );
 }
