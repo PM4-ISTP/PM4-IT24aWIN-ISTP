@@ -43,9 +43,6 @@ public class Challenge {
   @Enumerated(EnumType.STRING)
   private ChallengeDifficultyEnum difficulty;
 
-  // This field wil be filled by the SubTasks which will come later, for now we
-  // will set it manually
-  // to 0
   @Column(name = "max_score", nullable = false)
   private int maxScore;
 
@@ -56,6 +53,15 @@ public class Challenge {
   @JsonIgnore
   @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CourseChallenge> courseChallenges = new ArrayList<>();
+
+  @JsonIgnore
+  @OneToMany(
+      mappedBy = "challenge",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  @OrderBy("orderIndex ASC")
+  private List<SubTask> subTasks = new ArrayList<>();
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)

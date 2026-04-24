@@ -1,14 +1,18 @@
 package com.pm4.istp.course.mappers;
 
 import com.pm4.istp.course.db.CreateChallengeRequest;
+import com.pm4.istp.course.db.SubTaskRequest;
 import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.CourseChallenge;
+import com.pm4.istp.course.db.entities.SubTask;
 import com.pm4.istp.course.dto.ChallengeCreatorResponseDto;
 import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
 import com.pm4.istp.course.dto.CourseChallengeResponseDto;
 import com.pm4.istp.course.dto.CreateChallengeRequestDto;
 import com.pm4.istp.course.dto.CreateChallengeResponseDto;
+import com.pm4.istp.course.dto.SubTaskRequestDto;
+import com.pm4.istp.course.dto.SubTaskResponseDto;
 import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
 import com.pm4.istp.user.db.entities.User;
 import org.mapstruct.Mapper;
@@ -22,12 +26,16 @@ public interface ChallengeMapper {
 
   UpdateChallengeRequest fromDto(UpdateChallengeRequestDto dto);
 
+  SubTaskRequest fromDto(SubTaskRequestDto dto);
+
   @Mapping(target = "creatorId", source = "creator.id")
   CreateChallengeResponseDto toCreateResponseDto(Challenge challenge);
 
   ChallengeDetailResponseDto toDetailResponseDto(Challenge challenge);
 
   ChallengeCreatorResponseDto toCreatorDto(User user);
+
+  SubTaskResponseDto toSubTaskResponseDto(SubTask subTask);
 
   @Mapping(target = "challengeId", source = "challenge.id")
   @Mapping(target = "challengeTitle", source = "challenge.title")

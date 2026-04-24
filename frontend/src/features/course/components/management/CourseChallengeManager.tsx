@@ -9,6 +9,7 @@ import {
   Badge,
   Box,
   Button,
+  Code,
   Collapse,
   Divider,
   Group,
@@ -23,6 +24,7 @@ import {
   IconBook2,
   IconChevronDown,
   IconChevronRight,
+  IconListCheck,
   IconPencil,
   IconPlus,
   IconTrash,
@@ -54,16 +56,130 @@ interface CourseChallengeManagerProps {
   onChange: (challenges: CourseChallengeEntry[]) => void;
 }
 
+const RICH_TEXT_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2"]),
+  allowedAttributes: {
+    ...sanitizeHtml.defaults.allowedAttributes,
+    img: ["src", "alt", "width", "height"],
+  },
+};
+
+type SubTaskDetail = NonNullable<ChallengeDetailResponseDto["subTasks"]>[number];
+
+function SubTaskListView({ subTasks }: { subTasks: SubTaskDetail[] }) {
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+
+  const sorted = [...subTasks].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+
+  return (
+    <Stack gap="xs">
+      <Group gap="sm" align="center">
+        <IconListCheck size={16} color="#60a5fa" />
+        <Text size="sm" fw={600} style={{ color: "#f1f5f9" }}>
+          Sub Tasks ({sorted.length})
+        </Text>
+      </Group>
+
+      <Stack gap="xs">
+        {sorted.map((st, i) => {
+          const key = st.id ?? `local-${i}`;
+          const isExpanded = expandedKey === key;
+          const description = st.description
+            ? sanitizeHtml(st.description, RICH_TEXT_SANITIZE_OPTIONS)
+            : null;
+          const flag = st.flag?.trim();
+          const hasFlag = Boolean(flag);
+          const title = st.title?.trim() || `Sub Task ${i + 1}`;
+
+          return (
+            <Box
+              key={key}
+              style={{
+                border: "1px solid var(--mantine-color-default-border)",
+                borderRadius: "var(--mantine-radius-sm)",
+                overflow: "hidden",
+              }}
+            >
+              <Box
+                p="xs"
+                style={{ cursor: "pointer" }}
+                onClick={() => setExpandedKey(isExpanded ? null : key)}
+              >
+                <Group justify="space-between" align="center" wrap="nowrap">
+                  <Group gap="xs" wrap="nowrap" align="center" style={{ flex: 1, minWidth: 0 }}>
+                    <ActionIcon variant="transparent" size="sm" tabIndex={-1}>
+                      {isExpanded ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
+                    </ActionIcon>
+                    <Text size="xs" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
+                      #{i + 1}
+                    </Text>
+                    <Text size="sm" fw={500} truncate style={{ flex: 1, minWidth: 0 }}>
+                      {title}
+                    </Text>
+                  </Group>
+                  {hasFlag && (
+                    <Badge size="xs" variant="light" color="grape">
+                      Flag
+                    </Badge>
+                  )}
+                </Group>
+              </Box>
+              <Collapse expanded={isExpanded}>
+                <Box
+                  p="sm"
+                  style={{
+                    borderTop: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(255,255,255,0.02)",
+                  }}
+                >
+                  <Stack gap="md">
+                    <Stack gap="xs">
+                      <Group gap="xs" align="center">
+                        <IconBook2 size={14} color="#60a5fa" />
+                        <Text size="xs" fw={600} style={{ color: "#f1f5f9" }}>
+                          Description
+                        </Text>
+                      </Group>
+                      {description ? (
+                        <Box
+                          className="course-description"
+                          style={{
+                            fontSize: "var(--mantine-font-size-sm)",
+                            color: "#cbd5e1",
+                          }}
+                          dangerouslySetInnerHTML={{ __html: description }}
+                        />
+                      ) : (
+                        <Text size="sm" c="dimmed">
+                          No description.
+                        </Text>
+                      )}
+                    </Stack>
+
+                    {hasFlag && (
+                      <Stack gap={4}>
+                        <Text size="xs" fw={600} style={{ color: "#f1f5f9" }}>
+                          Flag:
+                        </Text>
+                        <Code>{flag}</Code>
+                      </Stack>
+                    )}
+                  </Stack>
+                </Box>
+              </Collapse>
+            </Box>
+          );
+        })}
+      </Stack>
+    </Stack>
+  );
+}
+
 function ChallengeDetailView({ detail }: { detail: ChallengeDetailResponseDto }) {
   const sanitizedDescription = detail.description
-    ? sanitizeHtml(detail.description, {
-        allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2"]),
-        allowedAttributes: {
-          ...sanitizeHtml.defaults.allowedAttributes,
-          img: ["src", "alt", "width", "height"],
-        },
-      })
+    ? sanitizeHtml(detail.description, RICH_TEXT_SANITIZE_OPTIONS)
     : null;
+  const subTasks = detail.subTasks ?? [];
 
   return (
     <Stack gap="md">
@@ -103,6 +219,14 @@ function ChallengeDetailView({ detail }: { detail: ChallengeDetailResponseDto })
               dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
             />
           </Stack>
+        </>
+      )}
+
+      {/* Sub Tasks */}
+      {subTasks.length > 0 && (
+        <>
+          <Divider style={{ borderColor: "rgba(255,255,255,0.08)" }} />
+          <SubTaskListView subTasks={subTasks} />
         </>
       )}
     </Stack>
