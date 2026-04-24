@@ -329,7 +329,9 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
     LocalDateTime deletedAt = LocalDateTime.now();
     List<User> emailConflicts =
-        email == null ? List.of() : userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(email);
+        email == null
+            ? List.of()
+            : userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(email);
     List<User> usernameConflicts =
         username == null
             ? List.of()
@@ -363,7 +365,8 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
         conflictUser.setEmail(toInvalidEmail(conflictUser.getEmail(), conflictUser.getId()));
       }
       if (usernameConflicted) {
-        conflictUser.setUsername(toInvalidUsername(conflictUser.getUsername(), conflictUser.getId()));
+        conflictUser.setUsername(
+            toInvalidUsername(conflictUser.getUsername(), conflictUser.getId()));
       }
 
       conflictUser.setDeletedAt(deletedAt);
