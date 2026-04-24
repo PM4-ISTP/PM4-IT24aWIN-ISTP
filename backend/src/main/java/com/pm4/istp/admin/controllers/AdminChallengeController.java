@@ -3,8 +3,6 @@ package com.pm4.istp.admin.controllers;
 import com.pm4.istp.admin.dto.AdminChallengeListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateChallengeRequestDto;
 import com.pm4.istp.admin.services.AdminCourseChallengeService;
-import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
-import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +28,8 @@ public class AdminChallengeController {
   public ResponseEntity<Page<AdminChallengeListItemDto>> listChallenges(
       @RequestParam(name = "q", required = false) String query,
       @RequestParam(name = "owner", required = false) String owner,
-      @RequestParam(name = "status", required = false) ChallengeStatusEnum status,
-      @RequestParam(name = "difficulty", required = false) ChallengeDifficultyEnum difficulty,
       Pageable pageable) {
-    return ResponseEntity.ok(
-        adminCourseChallengeService.listChallenges(query, owner, status, difficulty, pageable));
+    return ResponseEntity.ok(adminCourseChallengeService.listChallenges(query, owner, pageable));
   }
 
   @PutMapping("/{id}")

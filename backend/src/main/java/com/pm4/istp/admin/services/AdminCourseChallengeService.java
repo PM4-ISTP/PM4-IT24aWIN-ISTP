@@ -5,8 +5,6 @@ import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateChallengeRequestDto;
 import com.pm4.istp.admin.dto.AdminUpdateCourseRequestDto;
 import com.pm4.istp.course.db.entities.Challenge;
-import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
-import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
@@ -86,11 +84,9 @@ public class AdminCourseChallengeService {
   public Page<AdminChallengeListItemDto> listChallenges(
       String query,
       String owner,
-      ChallengeStatusEnum status,
-      ChallengeDifficultyEnum difficulty,
       Pageable pageable) {
     return challengeRepository.findAllChallengesForAdmin(
-        normalizeQuery(query), normalizeQuery(owner), status, difficulty, pageable);
+        normalizeQuery(query), normalizeQuery(owner), pageable);
   }
 
   public Challenge updateChallenge(UUID challengeId, AdminUpdateChallengeRequestDto request) {

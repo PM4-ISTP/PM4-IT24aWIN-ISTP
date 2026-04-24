@@ -2,8 +2,6 @@ package com.pm4.istp.course.repositories;
 
 import com.pm4.istp.admin.dto.AdminChallengeListItemDto;
 import com.pm4.istp.course.db.entities.Challenge;
-import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
-import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -104,8 +102,6 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
             and (:owner is null
               or lower(coalesce(c.creator.name, '')) like lower(concat('%', :owner, '%'))
               or lower(coalesce(c.creator.username, '')) like lower(concat('%', :owner, '%')))
-            and (:status is null or c.status = :status)
-            and (:difficulty is null or c.difficulty = :difficulty)
           """,
       countQuery =
           """
@@ -118,13 +114,7 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
             and (:owner is null
               or lower(coalesce(c.creator.name, '')) like lower(concat('%', :owner, '%'))
               or lower(coalesce(c.creator.username, '')) like lower(concat('%', :owner, '%')))
-            and (:status is null or c.status = :status)
-            and (:difficulty is null or c.difficulty = :difficulty)
           """)
   Page<AdminChallengeListItemDto> findAllChallengesForAdmin(
-      @Param("query") String query,
-      @Param("owner") String owner,
-      @Param("status") ChallengeStatusEnum status,
-      @Param("difficulty") ChallengeDifficultyEnum difficulty,
-      Pageable pageable);
+      @Param("query") String query, @Param("owner") String owner, Pageable pageable);
 }
