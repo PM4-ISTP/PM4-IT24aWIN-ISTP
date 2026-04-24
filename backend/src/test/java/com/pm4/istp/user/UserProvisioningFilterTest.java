@@ -71,6 +71,8 @@ class UserProvisioningFilterTest {
         lenient().doReturn(null).when(jwt).getTokenValue();
         lenient().when(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(anyString())).thenReturn(java.util.List.of());
         lenient().when(userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull(anyString())).thenReturn(java.util.List.of());
+        lenient().when(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNotNull(anyString())).thenReturn(java.util.List.of());
+        lenient().when(userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNotNull(anyString())).thenReturn(java.util.List.of());
     }
 
     @AfterEach
@@ -491,5 +493,42 @@ class UserProvisioningFilterTest {
         filter.doFilterInternal(request, response, filterChain);
 
         verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    void doFilterInternal_existingUser_emailNowConflictsWithAlreadyDeletedUser_scrubsDeletedEmail() throws Exception {
+        User existingUser = new User();
+        existingUser.setId(USER_ID);
+        existingUser.setName(FULL_NAME);
+        existingUser.setEmail("old@email.com");
+        existingUser.setUsername(USERNAME);
+        existingUser.setPicture(PICTURE);
+        existingUser.setRoles(Set.of());
+
+        UUID deletedUserId = UUID.randomUUID();
+        User deletedUser = new User();
+        deletedUser.setId(deletedUserId);
+        deletedUser.setName("Old Name");
+        deletedUser.setEmail(EMAIL);
+        deletedUser.setUsername("someone");
+        deletedUser.setDeletedAt(java.time.LocalDateTime.now().minusDays(1));
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
+        when(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNotNull(EMAIL)).thenReturn(java.util.List.of(deletedUser));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(deletedUser.getEmail()).contains("@invalid.local");
+        verify(userRepository).save(existingUser);
+        verify(userRepository).save(deletedUser);
+        verify(filterChain).doFilter(request, response);
     }
 }

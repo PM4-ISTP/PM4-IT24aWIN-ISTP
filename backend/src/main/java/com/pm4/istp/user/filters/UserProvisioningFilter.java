@@ -328,26 +328,41 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
     }
 
     LocalDateTime deletedAt = LocalDateTime.now();
-    List<User> emailConflicts =
+    List<User> activeEmailConflicts =
         email == null
             ? List.of()
-            : userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(email);
-    List<User> usernameConflicts =
+            : safeList(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(email));
+    List<User> activeUsernameConflicts =
         username == null
             ? List.of()
-            : userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull(username);
+            : safeList(userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull(username));
 
-    List<User> conflicts = new ArrayList<>(emailConflicts.size() + usernameConflicts.size());
-    conflicts.addAll(emailConflicts);
-    conflicts.addAll(usernameConflicts);
+    List<User> deletedEmailConflicts =
+        email == null
+            ? List.of()
+            : safeList(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNotNull(email));
+    List<User> deletedUsernameConflicts =
+        username == null
+            ? List.of()
+            : safeList(userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNotNull(username));
+
+    List<User> conflicts =
+        new ArrayList<>(
+            activeEmailConflicts.size()
+                + activeUsernameConflicts.size()
+                + deletedEmailConflicts.size()
+                + deletedUsernameConflicts.size());
+    conflicts.addAll(activeEmailConflicts);
+    conflicts.addAll(activeUsernameConflicts);
+    conflicts.addAll(deletedEmailConflicts);
+    conflicts.addAll(deletedUsernameConflicts);
 
     Set<UUID> handledUserIds = new HashSet<>(conflicts.size());
     for (User conflictUser : conflicts) {
       if (conflictUser == null
           || conflictUser.getId() == null
           || conflictUser.getId().equals(currentUserId)
-          || !handledUserIds.add(conflictUser.getId())
-          || conflictUser.isDeleted()) {
+          || !handledUserIds.add(conflictUser.getId())) {
         continue;
       }
 
@@ -361,24 +376,50 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
         continue;
       }
 
-      if (emailConflicted) {
+      boolean changed = false;
+
+      if (emailConflicted && !isInvalidEmail(conflictUser.getEmail())) {
         conflictUser.setEmail(toInvalidEmail(conflictUser.getEmail(), conflictUser.getId()));
+        changed = true;
       }
-      if (usernameConflicted) {
+      if (usernameConflicted && !isDeletedUsername(conflictUser.getUsername())) {
         conflictUser.setUsername(
             toInvalidUsername(conflictUser.getUsername(), conflictUser.getId()));
+        changed = true;
       }
 
-      conflictUser.setDeletedAt(deletedAt);
+      if (!conflictUser.isDeleted()) {
+        conflictUser.setDeletedAt(deletedAt);
+        changed = true;
+      }
+
+      if (!changed) {
+        continue;
+      }
       userRepository.save(conflictUser);
 
       log.info(
-          "Soft-deleted user {} due to conflict with user {} (email={}, username={})",
+          "Updated conflicting user {} due to conflict with user {} (email={}, username={}, deleted={})",
           conflictUser.getId(),
           currentUserId,
           emailConflicted,
-          usernameConflicted);
+          usernameConflicted,
+          conflictUser.isDeleted());
     }
+  }
+
+  private List<User> safeList(List<User> users) {
+    return users == null ? List.of() : users;
+  }
+
+  private boolean isInvalidEmail(String email) {
+    String normalized = normalizeLowercase(email);
+    return normalized != null && normalized.endsWith("@invalid.local");
+  }
+
+  private boolean isDeletedUsername(String username) {
+    String normalized = normalizeLowercase(username);
+    return normalized != null && normalized.contains("__deleted__");
   }
 
   private String normalizeLowercase(String value) {
