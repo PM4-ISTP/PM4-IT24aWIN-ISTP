@@ -3,11 +3,7 @@ package com.pm4.istp.course;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,7 +14,6 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -947,7 +942,7 @@ class CourseServiceImplTest {
         .isInstanceOf(CourseAccessDeniedException.class)
         .hasMessageContaining("not private");
 
-    verify(courseInviteCodeHelper, never()).assignInviteCode(any(), any());
+    verify(courseInviteCodeHelper, never()).generateAndAssign(any());
   }
 
   @Test
@@ -970,49 +965,14 @@ class CourseServiceImplTest {
     course.addCourseInstructor(ownerRelation);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    doNothing().when(courseInviteCodeHelper).assignInviteCode(eq(courseId), any(String.class));
+    when(courseInviteCodeHelper.generateAndAssign(courseId)).thenReturn("NEWCOD");
 
     Course result = courseService.regenerateInviteCode(courseId, ownerId);
 
-    ArgumentCaptor<String> codeCaptor = ArgumentCaptor.forClass(String.class);
-    verify(courseInviteCodeHelper).assignInviteCode(eq(courseId), codeCaptor.capture());
-    String generatedCode = codeCaptor.getValue();
-
+    verify(courseInviteCodeHelper).generateAndAssign(courseId);
     assertThat(result).isSameAs(course);
-    assertThat(result.getInviteCode()).isEqualTo(generatedCode);
-    assertThat(generatedCode).hasSize(6);
+    assertThat(result.getInviteCode()).isEqualTo("NEWCOD");
     assertThat(result.getCourseInstructors()).hasSize(1);
-  }
-
-  @Test
-  void regenerateInviteCode_retriesOnInviteCodeConstraintViolation() {
-    UUID ownerId = UUID.randomUUID();
-    UUID courseId = UUID.randomUUID();
-
-    User owner = new User();
-    owner.setId(ownerId);
-
-    Course course = new Course();
-    course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
-
-    CourseInstructor ownerRelation = new CourseInstructor();
-    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
-    ownerRelation.setInstructor(owner);
-    course.addCourseInstructor(ownerRelation);
-
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    doThrow(new DataIntegrityViolationException("uk_courses_invite_code"))
-        .doNothing()
-        .when(courseInviteCodeHelper)
-        .assignInviteCode(eq(courseId), any(String.class));
-
-    Course result = courseService.regenerateInviteCode(courseId, ownerId);
-
-    assertThat(result).isSameAs(course);
-    assertThat(result.getInviteCode()).hasSize(6);
-    verify(courseInviteCodeHelper, times(2)).assignInviteCode(eq(courseId), any(String.class));
   }
 
   @Test
@@ -1025,7 +985,7 @@ class CourseServiceImplTest {
     assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
         .isInstanceOf(CourseNotFoundException.class);
 
-    verify(courseInviteCodeHelper, never()).assignInviteCode(any(), any());
+    verify(courseInviteCodeHelper, never()).generateAndAssign(any());
   }
 
   @Test
@@ -1066,7 +1026,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void regenerateInviteCode_after10ConstraintViolations_throwsInviteCodeGenerationException() {
+  void regenerateInviteCode_whenHelperExhausted_throwsInviteCodeGenerationException() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
@@ -1084,45 +1044,12 @@ class CourseServiceImplTest {
     course.addCourseInstructor(ownerRelation);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    doThrow(new DataIntegrityViolationException("uk_courses_invite_code"))
-        .when(courseInviteCodeHelper)
-        .assignInviteCode(eq(courseId), any(String.class));
+    when(courseInviteCodeHelper.generateAndAssign(courseId))
+        .thenThrow(new InviteCodeGenerationException(
+            "Could not generate a unique invite code after 10 attempts"));
 
     assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
-        .isInstanceOf(InviteCodeGenerationException.class)
-        .hasMessageContaining("10 attempts");
-
-    verify(courseInviteCodeHelper, times(10)).assignInviteCode(eq(courseId), any(String.class));
-  }
-
-  @Test
-  void regenerateInviteCode_onNonInviteCodeConstraintViolation_rethrowsImmediately() {
-    UUID ownerId = UUID.randomUUID();
-    UUID courseId = UUID.randomUUID();
-
-    User owner = new User();
-    owner.setId(ownerId);
-
-    Course course = new Course();
-    course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
-
-    CourseInstructor ownerRelation = new CourseInstructor();
-    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
-    ownerRelation.setInstructor(owner);
-    course.addCourseInstructor(ownerRelation);
-
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    doThrow(new DataIntegrityViolationException("uk_course_enrollment_other_constraint"))
-        .when(courseInviteCodeHelper)
-        .assignInviteCode(eq(courseId), any(String.class));
-
-    assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
-        .isInstanceOf(DataIntegrityViolationException.class);
-
-    // Should not retry — only one attempt made
-    verify(courseInviteCodeHelper, times(1)).assignInviteCode(eq(courseId), any(String.class));
+        .isInstanceOf(InviteCodeGenerationException.class);
   }
 
   @Test
@@ -1134,7 +1061,9 @@ class CourseServiceImplTest {
     owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
 
     when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
-    when(courseRepository.existsByInviteCode(any(String.class))).thenReturn(true);
+    when(courseInviteCodeHelper.saveNewCourseWithInviteCode(any(Course.class)))
+        .thenThrow(new InviteCodeGenerationException(
+            "Could not generate a unique invite code after 10 attempts"));
 
     CreateCourseRequest request = new CreateCourseRequest(
         "Private Course",
@@ -1169,7 +1098,11 @@ class CourseServiceImplTest {
     course.addCourseInstructor(ownerRelation);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(courseRepository.existsByInviteCode(any(String.class))).thenReturn(true);
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+    when(courseInviteCodeHelper.generateAndAssign(courseId))
+        .thenThrow(new InviteCodeGenerationException(
+            "Could not generate a unique invite code after 10 attempts"));
 
     UpdateCourseRequest updateRequest = new UpdateCourseRequest(
         "Updated title",
