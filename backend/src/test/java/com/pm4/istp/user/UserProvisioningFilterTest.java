@@ -69,6 +69,8 @@ class UserProvisioningFilterTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         lenient().doReturn(null).when(jwt).getClaimAsString(anyString());
         lenient().doReturn(null).when(jwt).getTokenValue();
+        lenient().when(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(anyString())).thenReturn(java.util.List.of());
+        lenient().when(userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull(anyString())).thenReturn(java.util.List.of());
     }
 
     @AfterEach
@@ -102,6 +104,123 @@ class UserProvisioningFilterTest {
         assertThat(savedUser.getPicture()).isEqualTo(PICTURE);
 
         verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_newKeycloakId_sameEmail_deactivatesConflictingUserAndSavesNewUser() throws Exception {
+        UUID conflictingUserId = UUID.randomUUID();
+        User conflictingUser = new User();
+        conflictingUser.setId(conflictingUserId);
+        conflictingUser.setName("Old Name");
+        conflictingUser.setEmail(EMAIL);
+        conflictingUser.setUsername("olduser");
+        conflictingUser.setDeletedAt(null);
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+        when(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(EMAIL)).thenReturn(java.util.List.of(conflictingUser));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(conflictingUser.getDeletedAt()).isNotNull();
+        assertThat(conflictingUser.getEmail()).contains("@invalid.local");
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository, org.mockito.Mockito.atLeast(2)).save(userCaptor.capture());
+        assertThat(userCaptor.getAllValues()).anyMatch(saved -> USER_ID.equals(saved.getId()) && EMAIL.equals(saved.getEmail()));
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_newKeycloakId_sameUsername_deactivatesConflictingUserAndSavesNewUser() throws Exception {
+        UUID conflictingUserId = UUID.randomUUID();
+        User conflictingUser = new User();
+        conflictingUser.setId(conflictingUserId);
+        conflictingUser.setName("Old Name");
+        conflictingUser.setEmail("old@example.com");
+        conflictingUser.setUsername(USERNAME);
+        conflictingUser.setDeletedAt(null);
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+        when(userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull(USERNAME)).thenReturn(java.util.List.of(conflictingUser));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(conflictingUser.getDeletedAt()).isNotNull();
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository, org.mockito.Mockito.atLeast(2)).save(userCaptor.capture());
+        assertThat(userCaptor.getAllValues()).anyMatch(saved -> USER_ID.equals(saved.getId()) && USERNAME.equals(saved.getUsername()));
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_existingUser_sameEmailAndUsername_doesNotDeleteAnything() throws Exception {
+        User existingUser = new User();
+        existingUser.setId(USER_ID);
+        existingUser.setName(FULL_NAME);
+        existingUser.setEmail(EMAIL);
+        existingUser.setUsername(USERNAME);
+        existingUser.setPicture(PICTURE);
+        existingUser.setRoles(Set.of());
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn(USERNAME).when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn(EMAIL).when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(userRepository, never()).delete(any());
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_newUser_mixedCaseEmailAndUsername_normalizesAndFindsIgnoreCaseConflicts() throws Exception {
+        UUID conflictingUserId = UUID.randomUUID();
+        User conflictingUser = new User();
+        conflictingUser.setId(conflictingUserId);
+        conflictingUser.setName("Old Name");
+        conflictingUser.setEmail("test@example.com");
+        conflictingUser.setUsername("testuser");
+        conflictingUser.setDeletedAt(null);
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(USER_ID.toString());
+        doReturn("TeStUsEr").when(jwt).getClaimAsString("preferred_username");
+        doReturn(FULL_NAME).when(jwt).getClaimAsString("name");
+        doReturn("TeSt@Example.com").when(jwt).getClaimAsString("email");
+        doReturn(PICTURE).when(jwt).getClaimAsString("picture");
+        when(authentication.getAuthorities()).thenReturn(Set.of());
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+        when(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com")).thenReturn(java.util.List.of(conflictingUser));
+        when(userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull("testuser")).thenReturn(java.util.List.of());
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(conflictingUser.getDeletedAt()).isNotNull();
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository, org.mockito.Mockito.atLeast(2)).save(userCaptor.capture());
+        assertThat(userCaptor.getAllValues()).anyMatch(saved -> "test@example.com".equals(saved.getEmail()) && "testuser".equals(saved.getUsername()));
     }
 
     @Test
