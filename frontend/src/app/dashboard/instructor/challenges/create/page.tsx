@@ -84,6 +84,9 @@ export default function CreateChallenge() {
       setDockerImageError(
         "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)"
       );
+      return;
+    }
+
     const subTaskValidation = validateSubTasks(formValues.subTasks);
     if (!subTaskValidation.valid) {
       setSubTaskErrors(subTaskValidation.errors);
