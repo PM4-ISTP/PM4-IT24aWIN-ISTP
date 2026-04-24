@@ -8,6 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ── CI checks (run on every branch and pull request) ───────────────────────
+
   lint-and-format:
     name: Lint & Format Frontend
     runs-on: ubuntu-latest
@@ -145,11 +147,15 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # ── Image builds (dev and main branches only) ──────────────────────────────
+
   build-push-backend:
     name: Build & Push Backend Image
     runs-on: ubuntu-latest
     needs: [backend-lint-and-format, backend-test-and-sonar]
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    if: |
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
     outputs:
       sha_short: ${{ steps.vars.outputs.sha_short }}
     permissions:
@@ -158,9 +164,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-          fetch-depth: 0
 
       - name: Set short SHA
         id: vars
@@ -199,16 +202,15 @@ jobs:
     name: Build & Push Frontend Image
     runs-on: ubuntu-latest
     needs: lint-and-format
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    if: |
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
     permissions:
       contents: read
       packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-          fetch-depth: 0
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -239,61 +241,39 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  update-manifests:
-    name: Update K8s Manifests
-    runs-on: ubuntu-latest
-    needs: [build-push-backend, build-push-frontend]
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout deploy-staging
-        uses: actions/checkout@v4
-        with:
-          ref: deploy-staging
-
-      - name: Update image tags in staging
-        run: |
-          SHA="${{ needs.build-push-backend.outputs.sha_short }}"
-          sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/staging/kustomization.yaml
-
-      - name: Commit and push manifest changes
-        run: |
-          SHA="${{ needs.build-push-backend.outputs.sha_short }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add k8s/overlays/staging/kustomization.yaml
-          git diff --staged --quiet || git commit -m "ci(deploy): update staging to $SHA [skip ci]"
-          git push origin deploy-staging
+  # ── Staging deployment (dev branch) ────────────────────────────────────────
+  # Merge into dev → build images → deploy to staging → run E2E tests
 
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    needs: update-manifests
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
-
+    needs: [build-push-backend, build-push-frontend]
+    if: |
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/dev'
     steps:
-      - name: Checkout deploy-staging branch
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: deploy-staging
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
       - name: Set kubeconfig
-        run: |
-          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+        run: echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
 
-      - name: Deploy to cluster
+      - name: Update image tags and deploy to staging
         run: |
+          SHA="${{ needs.build-push-backend.outputs.sha_short }}"
+          sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/staging/kustomization.yaml
           kubectl --kubeconfig=kubeconfig.yaml apply -k k8s/overlays/staging
 
   playwright-e2e:
     name: Playwright E2E Tests (Staging)
     runs-on: ubuntu-latest
-    needs: update-manifests
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    needs: deploy-staging
+    if: |
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/dev'
     permissions:
       contents: read
     defaults:
@@ -359,40 +339,32 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 7
 
-  promote-to-prod:
-    name: Promote to Production
+  # ── Production deployment (main branch) ────────────────────────────────────
+  # Merge dev → main → build images → deploy to production
+  #
+  # Prerequisite: add a KUBECONFIG_PROD secret in GitHub repository settings
+  # containing the kubeconfig for the production cluster. If staging and
+  # production share a cluster, KUBECONFIG_PROD can point to the same cluster.
+
+  deploy-prod:
+    name: Deploy to Production
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-
-    permissions:
-      contents: write
-
+    needs: [build-push-backend, build-push-frontend]
+    if: |
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/main'
     steps:
-      - name: Checkout staging
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: deploy-staging
 
-      - name: Get current image tag
-        id: tag
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Set kubeconfig
+        run: echo "${{ secrets.KUBECONFIG_PROD }}" > kubeconfig.yaml
+
+      - name: Update image tags and deploy to production
         run: |
-          TAG=$(grep newTag k8s/overlays/staging/kustomization.yaml | awk '{print $2}')
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-
-      - name: Checkout prod
-        uses: actions/checkout@v4
-        with:
-          ref: deploy-prod
-
-      - name: Update prod to staging version
-        run: |
-          sed -i "s/newTag: .*/newTag: ${{ steps.tag.outputs.tag }}/" k8s/overlays/prod/kustomization.yaml
-
-      - name: Commit & push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "ci(deploy): promote to prod ${{ steps.tag.outputs.tag }}" || echo "no changes"
-          git push origin deploy-prod
-  
+          SHA="${{ needs.build-push-backend.outputs.sha_short }}"
+          sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/prod/kustomization.yaml
+          kubectl --kubeconfig=kubeconfig.yaml apply -k k8s/overlays/prod

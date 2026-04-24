@@ -13,8 +13,8 @@ public class AdminConfigRequest {
   private String cpuLimit;
 
   @Pattern(
-      regexp = "^\\d+(B|Mi|Gi|Ti)?$",
-      message = "Memory limit must be a number followed by optional unit (B, Mi, Gi, or Ti)")
+      regexp = "^\\d+(Mi|Gi|Ti)?$",
+      message = "Memory limit must be a number followed by optional unit (Mi, Gi, or Ti)")
   private String memoryLimit;
 
   private String kubeconfig;

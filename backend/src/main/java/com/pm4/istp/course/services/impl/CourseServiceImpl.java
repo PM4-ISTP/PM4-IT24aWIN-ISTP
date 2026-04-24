@@ -58,7 +58,7 @@ public class CourseServiceImpl implements CourseService {
   public Course createCourse(UUID userId, CreateCourseRequest course) {
     User instructorUser =
         userRepository
-            .findById(userId)
+            .findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
@@ -85,7 +85,7 @@ public class CourseServiceImpl implements CourseService {
       for (CreateCourseInstructorRequest req : course.getInstructors()) {
         User collaboratorUser =
             userRepository
-                .findById(req.getInstructorId())
+                .findByIdAndDeletedAtIsNull(req.getInstructorId())
                 .orElseThrow(
                     () ->
                         new UserNotFoundException(
@@ -139,7 +139,7 @@ public class CourseServiceImpl implements CourseService {
   public Course enrollInCourse(UUID userId, UUID courseId) {
     User participant =
         userRepository
-            .findById(userId)
+            .findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
@@ -231,7 +231,7 @@ public class CourseServiceImpl implements CourseService {
       if (!existingInstructorIds.contains(req.getInstructorId())) {
         User collaboratorUser =
             userRepository
-                .findById(req.getInstructorId())
+                .findByIdAndDeletedAtIsNull(req.getInstructorId())
                 .orElseThrow(
                     () ->
                         new UserNotFoundException(
@@ -340,7 +340,7 @@ public class CourseServiceImpl implements CourseService {
   public Course joinByInviteCode(String code, UUID studentId) {
     User participant =
         userRepository
-            .findById(studentId)
+            .findByIdAndDeletedAtIsNull(studentId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, studentId)));
 

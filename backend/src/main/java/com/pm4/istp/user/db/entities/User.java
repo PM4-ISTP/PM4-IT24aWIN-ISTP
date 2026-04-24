@@ -44,7 +44,7 @@ public class User {
   @Column(name = "name", nullable = false, length = 255)
   private String name;
 
-  @Column(name = "email", nullable = false, unique = true, length = 255)
+  @Column(name = "email", nullable = false, length = 255)
   private String email;
 
   @Column(name = "username", length = 255)
@@ -82,6 +82,13 @@ public class User {
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
 
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
+
+  public boolean isDeleted() {
+    return deletedAt != null;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) {
@@ -95,11 +102,12 @@ public class User {
         && Objects.equals(picture, user.picture)
         && Objects.equals(title, user.title)
         && Objects.equals(createdAt, user.createdAt)
-        && Objects.equals(updatedAt, user.updatedAt);
+        && Objects.equals(updatedAt, user.updatedAt)
+        && Objects.equals(deletedAt, user.deletedAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, email, username, picture, title, createdAt, updatedAt);
+    return Objects.hash(id, name, email, username, picture, title, createdAt, updatedAt, deletedAt);
   }
 }

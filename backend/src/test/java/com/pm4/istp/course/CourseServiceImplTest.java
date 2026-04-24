@@ -83,8 +83,8 @@ class CourseServiceImplTest {
     collaborator.setName("Collaborator");
     collaborator.setRoles(Set.of(UserRoleEnum.ROLE_ADMINISTRATOR));
 
-    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
-    when(userRepository.findById(collaboratorId)).thenReturn(Optional.of(collaborator));
+    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
+    when(userRepository.findByIdAndDeletedAtIsNull(collaboratorId)).thenReturn(Optional.of(collaborator));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -208,7 +208,7 @@ class CourseServiceImplTest {
         List.of(new UpdateCourseInstructorRequest(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)));
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(userRepository.findById(newCollaboratorId)).thenReturn(Optional.of(newCollaborator));
+    when(userRepository.findByIdAndDeletedAtIsNull(newCollaboratorId)).thenReturn(Optional.of(newCollaborator));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -263,7 +263,7 @@ class CourseServiceImplTest {
     owner.setId(ownerId);
     owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
 
-    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
+    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
 
     String tooLong = "a".repeat(201);
 
@@ -293,7 +293,7 @@ class CourseServiceImplTest {
     owner.setId(ownerId);
     owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
 
-    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
+    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
 
     CreateCourseRequest request = new CreateCourseRequest(
         "Secure Coding",
@@ -325,7 +325,7 @@ class CourseServiceImplTest {
     course.setId(courseId);
     course.setPublished(true);
 
-    when(userRepository.findById(userId)).thenReturn(Optional.of(participant));
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(participant));
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(false);
@@ -353,7 +353,7 @@ class CourseServiceImplTest {
     course.setId(courseId);
     course.setPublished(true);
 
-    when(userRepository.findById(userId)).thenReturn(Optional.of(participant));
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(participant));
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(true);
@@ -376,7 +376,7 @@ class CourseServiceImplTest {
     course.setId(courseId);
     course.setPublished(true);
 
-    when(userRepository.findById(userId)).thenReturn(Optional.of(participant));
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(participant));
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(false);
@@ -460,7 +460,7 @@ class CourseServiceImplTest {
     owner.setName("Owner");
     owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
 
-    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
+    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -779,7 +779,7 @@ class CourseServiceImplTest {
     User student = new User();
     student.setId(studentId);
 
-    when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
+    when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
     when(courseRepository.findByInviteCode("BADCOD")).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> courseService.joinByInviteCode("BADCOD", studentId))
@@ -801,7 +801,7 @@ class CourseServiceImplTest {
     course.setPublished(true);
     course.setPrivate(false);
 
-    when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
+    when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
     when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
 
     assertThatThrownBy(() -> courseService.joinByInviteCode("ABC123", studentId))
@@ -823,7 +823,7 @@ class CourseServiceImplTest {
     course.setPublished(false);
     course.setPrivate(true);
 
-    when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
+    when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
     when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, studentId))
         .thenReturn(false);
@@ -851,7 +851,7 @@ class CourseServiceImplTest {
     course.setPublished(false);
     course.setPrivate(true);
 
-    when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
+    when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
     when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, studentId))
         .thenReturn(true);
@@ -880,7 +880,7 @@ class CourseServiceImplTest {
     relation.setInstructor(instructor);
     course.addCourseInstructor(relation);
 
-    when(userRepository.findById(instructorId)).thenReturn(Optional.of(instructor));
+    when(userRepository.findByIdAndDeletedAtIsNull(instructorId)).thenReturn(Optional.of(instructor));
     when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
 
     Course result = courseService.joinByInviteCode("ABC123", instructorId);
