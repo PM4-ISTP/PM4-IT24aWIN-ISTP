@@ -1060,7 +1060,7 @@ class CourseServiceImplTest {
     owner.setId(ownerId);
     owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
 
-    when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
+    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
     when(courseInviteCodeHelper.saveNewCourseWithInviteCode(any(Course.class)))
         .thenThrow(new InviteCodeGenerationException(
             "Could not generate a unique invite code after 10 attempts"));
