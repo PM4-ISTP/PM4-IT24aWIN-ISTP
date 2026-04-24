@@ -383,7 +383,8 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
         changed = true;
       }
       if (usernameConflicted && !isDeletedUsername(conflictUser.getUsername())) {
-        conflictUser.setUsername(toInvalidUsername(conflictUser.getUsername(), conflictUser.getId()));
+        conflictUser.setUsername(
+            toInvalidUsername(conflictUser.getUsername(), conflictUser.getId()));
         changed = true;
       }
 
