@@ -45,6 +45,7 @@ public class Challenge {
 
   @Column(name = "docker_image", nullable = false)
   private String dockerImage;
+
   @Column(name = "max_score", nullable = false)
   private int maxScore;
 
