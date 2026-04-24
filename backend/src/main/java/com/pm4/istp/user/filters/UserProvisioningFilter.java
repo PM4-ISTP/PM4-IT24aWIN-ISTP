@@ -81,7 +81,10 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               keycloakId);
       String emailClaim =
           discardIfTooLong(
-              normalizeLowercase(jwt.getClaimAsString("email")), MAX_COLUMN_LENGTH, "email", keycloakId);
+              normalizeLowercase(jwt.getClaimAsString("email")),
+              MAX_COLUMN_LENGTH,
+              "email",
+              keycloakId);
       String pictureClaim =
           discardIfTooLong(
               normalize(jwt.getClaimAsString("picture")),
@@ -413,7 +416,8 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       return candidate;
     }
     int maxBaseLen = MAX_COLUMN_LENGTH - ("__deleted__".length() + userId.toString().length());
-    String truncated = maxBaseLen > 0 ? base.substring(0, Math.min(base.length(), maxBaseLen)) : "deleted";
+    String truncated =
+        maxBaseLen > 0 ? base.substring(0, Math.min(base.length(), maxBaseLen)) : "deleted";
     return truncated + "__deleted__" + userId;
   }
 
