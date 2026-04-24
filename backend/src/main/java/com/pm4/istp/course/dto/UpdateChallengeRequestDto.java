@@ -37,6 +37,7 @@ public class UpdateChallengeRequestDto {
       message =
           "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)")
   private String dockerImage;
+
   @NotEmpty(message = "At least one sub task is required")
   @Valid
   private List<SubTaskRequestDto> subTasks;
