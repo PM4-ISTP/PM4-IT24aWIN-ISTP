@@ -44,6 +44,8 @@ import com.pm4.istp.user.repositories.UserRepository;
 @ExtendWith(MockitoExtension.class)
 class ChallengeServiceImplTest {
 
+  private static final String DEFAULT_DOCKER_IMAGE = "registry/default:latest";
+
   @Mock private UserRepository userRepository;
   @Mock private ChallengeRepository challengeRepository;
   @Mock private CourseChallengeRepository courseChallengeRepository;
@@ -78,7 +80,18 @@ class ChallengeServiceImplTest {
       String desc,
       ChallengeStatusEnum status,
       ChallengeDifficultyEnum difficulty) {
-    return new CreateChallengeRequest(title, shortDesc, desc, status, difficulty, oneSubTask());
+    return new CreateChallengeRequest(
+        title, shortDesc, desc, status, difficulty, DEFAULT_DOCKER_IMAGE, oneSubTask());
+  }
+
+  private CreateChallengeRequest createRequest(
+      String title,
+      String shortDesc,
+      String desc,
+      ChallengeStatusEnum status,
+      ChallengeDifficultyEnum difficulty,
+      String dockerImage) {
+    return new CreateChallengeRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneSubTask());
   }
 
   private UpdateChallengeRequest updateRequest(
@@ -87,7 +100,18 @@ class ChallengeServiceImplTest {
       String desc,
       ChallengeStatusEnum status,
       ChallengeDifficultyEnum difficulty) {
-    return new UpdateChallengeRequest(title, shortDesc, desc, status, difficulty, oneSubTask());
+    return new UpdateChallengeRequest(
+        title, shortDesc, desc, status, difficulty, DEFAULT_DOCKER_IMAGE, oneSubTask());
+  }
+
+  private UpdateChallengeRequest updateRequest(
+      String title,
+      String shortDesc,
+      String desc,
+      ChallengeStatusEnum status,
+      ChallengeDifficultyEnum difficulty,
+      String dockerImage) {
+    return new UpdateChallengeRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneSubTask());
   }
 
   @Test
@@ -106,7 +130,7 @@ class ChallengeServiceImplTest {
             "Long description",
             ChallengeStatusEnum.DRAFT,
             ChallengeDifficultyEnum.HARD,
-            "registry/buffer-overflow:latest");
+            "registry/buffer-overflow:latest",
             new ArrayList<>(
                 List.of(
                     new SubTaskRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0),
@@ -148,6 +172,7 @@ class ChallengeServiceImplTest {
             "D",
             ChallengeStatusEnum.DRAFT,
             ChallengeDifficultyEnum.EASY,
+            DEFAULT_DOCKER_IMAGE,
             new ArrayList<>(List.of(new SubTaskRequest(null, "Only", "Just desc", "   ", 0))));
 
     Challenge created = challengeService.createChallenge(creatorId, request);
@@ -319,6 +344,7 @@ class ChallengeServiceImplTest {
             "D",
             ChallengeStatusEnum.PUBLIC,
             ChallengeDifficultyEnum.EASY,
+            DEFAULT_DOCKER_IMAGE,
             new ArrayList<>(
                 List.of(
                     new SubTaskRequest(null, "New first", "desc", null, 0),
