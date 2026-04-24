@@ -60,6 +60,15 @@ public class Challenge {
   @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CourseChallenge> courseChallenges = new ArrayList<>();
 
+  @JsonIgnore
+  @OneToMany(
+      mappedBy = "challenge",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  @OrderBy("orderIndex ASC")
+  private List<SubTask> subTasks = new ArrayList<>();
+
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;

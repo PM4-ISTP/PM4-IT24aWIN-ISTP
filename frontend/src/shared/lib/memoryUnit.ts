@@ -1,5 +1,4 @@
 export const enum MemoryUnit {
-  Byte = "B",
   MebiByte = "Mi",
   GibiByte = "Gi",
   TebiByte = "Ti",
@@ -11,7 +10,6 @@ export type MemorySpecification = {
 };
 
 export const memoryUnits: ReadonlyArray<MemoryUnit> = [
-  MemoryUnit.Byte,
   MemoryUnit.MebiByte,
   MemoryUnit.GibiByte,
   MemoryUnit.TebiByte,
@@ -22,7 +20,7 @@ export const memorySpecificationToString = (memorySpecification: MemorySpecifica
 };
 
 export const stringToMemorySpecification = (specificationAsString: string): MemorySpecification => {
-  const match = specificationAsString.match(/^(\d+)(B|Mi|Gi|Ti)$/);
+  const match = specificationAsString.match(/^(\d+)(Mi|Gi|Ti)$/);
   if (!match) {
     throw new Error(specificationAsString + " is not a valid memory specification.");
   }

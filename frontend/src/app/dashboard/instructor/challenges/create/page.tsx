@@ -21,6 +21,7 @@ import {
 } from "@/src/features/course/components/challenges/ChallengeFormFields";
 import { createChallenge } from "@/src/features/course/actions/challenges";
 import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
+import { toRequestSubTasks, validateSubTasks } from "@/src/features/course/utils/subTasks";
 import { useToast } from "@/src/shared/hooks/useToast";
 import {
   CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
@@ -37,11 +38,22 @@ export default function CreateChallenge() {
     status: "DRAFT",
     difficulty: "MEDIUM",
     dockerImage: "",
+    subTasks: [
+      {
+        title: "",
+        description: "",
+        flag: "",
+        orderIndex: 0,
+      },
+    ],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [dockerImageError, setDockerImageError] = useState<string | null>(null);
+  const [subTaskErrors, setSubTaskErrors] = useState<
+    Array<Partial<Record<"title" | "description" | "flag", string>>>
+  >([]);
   const [formError, setFormError] = useState<string | null>(null);
   const charLimitToast = useToast();
 
@@ -49,6 +61,7 @@ export default function CreateChallenge() {
     setTitleError(null);
     setShortDescriptionError(null);
     setDockerImageError(null);
+    setSubTaskErrors([]);
     setFormError(null);
 
     if (!formValues.title.trim()) {
@@ -71,6 +84,12 @@ export default function CreateChallenge() {
       setDockerImageError(
         "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)"
       );
+    const subTaskValidation = validateSubTasks(formValues.subTasks);
+    if (!subTaskValidation.valid) {
+      setSubTaskErrors(subTaskValidation.errors);
+      if (subTaskValidation.formError) {
+        setFormError(subTaskValidation.formError);
+      }
       return;
     }
 
@@ -83,6 +102,7 @@ export default function CreateChallenge() {
       status: formValues.status,
       difficulty: formValues.difficulty,
       dockerImage: trimmedDockerImage,
+      subTasks: toRequestSubTasks(formValues.subTasks),
     });
 
     setIsSubmitting(false);
@@ -127,6 +147,8 @@ export default function CreateChallenge() {
             titleError={titleError}
             shortDescriptionError={shortDescriptionError}
             dockerImageError={dockerImageError}
+            subTaskErrors={subTaskErrors}
+            defaultExpandedSubTaskIndex={0}
             onCharLimitExceeded={() => charLimitToast.show()}
             onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
             onDockerImageErrorClear={() => setDockerImageError(null)}

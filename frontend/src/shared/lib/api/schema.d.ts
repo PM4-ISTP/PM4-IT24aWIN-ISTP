@@ -427,6 +427,25 @@ export interface components {
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage: string;
+      subTasks: components["schemas"]["SubTaskRequestDto"][];
+    };
+    SubTaskRequestDto: {
+      /** Format: uuid */
+      id?: string;
+      title: string;
+      description: string;
+      flag?: string;
+      /** Format: int32 */
+      orderIndex: number;
+    };
+    SubTaskResponseDto: {
+      /** Format: uuid */
+      id?: string;
+      title?: string;
+      description?: string;
+      flag?: string;
+      /** Format: int32 */
+      orderIndex?: number;
     };
     ChallengeCreatorResponseDto: {
       /** Format: uuid */
@@ -449,6 +468,7 @@ export interface components {
       creator?: components["schemas"]["ChallengeCreatorResponseDto"];
       /** Format: int64 */
       courseCount?: number;
+      subTasks?: components["schemas"]["SubTaskResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
@@ -543,6 +563,7 @@ export interface components {
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage: string;
+      subTasks: components["schemas"]["SubTaskRequestDto"][];
     };
     CreateChallengeResponseDto: {
       /** Format: uuid */
@@ -559,6 +580,7 @@ export interface components {
       dockerImage?: string;
       /** Format: uuid */
       creatorId?: string;
+      subTasks?: components["schemas"]["SubTaskResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
