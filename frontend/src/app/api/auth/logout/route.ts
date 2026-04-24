@@ -20,9 +20,33 @@ function clearNextAuthCookies(response: NextResponse): void {
   }
 }
 
+function normalizeBaseUrl(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  return trimmed.endsWith("/") ? trimmed.slice(0, -1) : trimmed;
+}
+
+function getPublicBaseUrl(request: NextRequest): string {
+  const configured =
+    normalizeBaseUrl(process.env.AUTH_POST_LOGOUT_REDIRECT_URI) ??
+    normalizeBaseUrl(process.env.NEXTAUTH_URL);
+  if (configured) {
+    return configured;
+  }
+
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  if (forwardedProto && forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
 export async function GET(request: NextRequest) {
-  const origin = new URL(request.url).origin;
-  const postLogoutRedirectUri = `${origin}/`;
+  const baseUrl = getPublicBaseUrl(request);
+  const postLogoutRedirectUri = `${baseUrl}/`;
 
   const response = NextResponse.redirect(postLogoutRedirectUri, 302);
   clearNextAuthCookies(response);
