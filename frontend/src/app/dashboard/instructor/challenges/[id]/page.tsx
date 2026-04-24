@@ -30,6 +30,11 @@ import {
   type ChallengeStatusEnum,
 } from "@/src/features/course/actions/challenges";
 import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
+import {
+  toFormSubTasks,
+  toRequestSubTasks,
+  validateSubTasks,
+} from "@/src/features/course/utils/subTasks";
 import { useToast } from "@/src/shared/hooks/useToast";
 import {
   CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
@@ -61,6 +66,7 @@ export default function EditChallenge() {
     status: "DRAFT",
     difficulty: "MEDIUM",
     dockerImage: "",
+    subTasks: [],
   });
   const [initialStatus, setInitialStatus] = useState<ChallengeStatusEnum>("DRAFT");
   const [courseCount, setCourseCount] = useState(0);
@@ -73,6 +79,9 @@ export default function EditChallenge() {
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [dockerImageError, setDockerImageError] = useState<string | null>(null);
+  const [subTaskErrors, setSubTaskErrors] = useState<
+    Array<Partial<Record<"title" | "description" | "flag", string>>>
+  >([]);
   const [formError, setFormError] = useState<string | null>(null);
   const charLimitToast = useToast();
 
@@ -94,6 +103,8 @@ export default function EditChallenge() {
         status: loadedStatus,
         difficulty: challenge.difficulty ?? "MEDIUM",
         dockerImage: challenge.dockerImage ?? "",
+        dockerImage: challenge.dockerImage ?? "",
+        subTasks: toFormSubTasks(challenge.subTasks),
       });
       setInitialStatus(loadedStatus);
       setCourseCount(challenge.courseCount ?? 0);
@@ -112,6 +123,26 @@ export default function EditChallenge() {
     }
 
     const trimmedDockerImage = formValues.dockerImage.trim();
+    const trimmedDockerImage = formValues.dockerImage.trim();
+    if (!trimmedDockerImage) {
+      setDockerImageError("Docker image is required");
+      return;
+    }
+    if (!DOCKER_IMAGE_PATTERN.test(trimmedDockerImage)) {
+      setDockerImageError(
+        "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)"
+      );
+      return;
+    }
+
+    const subTaskValidation = validateSubTasks(formValues.subTasks);
+    if (!subTaskValidation.valid) {
+      setSubTaskErrors(subTaskValidation.errors);
+      if (subTaskValidation.formError) {
+        setFormError(subTaskValidation.formError);
+      }
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -122,6 +153,8 @@ export default function EditChallenge() {
       status: formValues.status,
       difficulty: formValues.difficulty,
       dockerImage: trimmedDockerImage,
+      dockerImage: trimmedDockerImage,
+      subTasks: toRequestSubTasks(formValues.subTasks),
     });
 
     setIsSubmitting(false);
@@ -139,6 +172,8 @@ export default function EditChallenge() {
     setTitleError(null);
     setShortDescriptionError(null);
     setDockerImageError(null);
+    setDockerImageError(null);
+    setSubTaskErrors([]);
     setFormError(null);
 
     if (!formValues.title.trim()) {
@@ -160,6 +195,15 @@ export default function EditChallenge() {
       setDockerImageError(
         "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)"
       );
+      return;
+    }
+
+    const subTaskValidation = validateSubTasks(formValues.subTasks);
+    if (!subTaskValidation.valid) {
+      setSubTaskErrors(subTaskValidation.errors);
+      if (subTaskValidation.formError) {
+        setFormError(subTaskValidation.formError);
+      }
       return;
     }
 
@@ -347,6 +391,8 @@ export default function EditChallenge() {
             titleError={titleError}
             shortDescriptionError={shortDescriptionError}
             dockerImageError={dockerImageError}
+            subTaskErrors={subTaskErrors}
+            defaultExpandedSubTaskIndex={0}
             onCharLimitExceeded={() => charLimitToast.show()}
             onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
             onDockerImageErrorClear={() => setDockerImageError(null)}

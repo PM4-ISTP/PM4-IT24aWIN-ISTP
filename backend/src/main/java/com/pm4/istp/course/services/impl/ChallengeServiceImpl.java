@@ -1,9 +1,11 @@
 package com.pm4.istp.course.services.impl;
 
 import com.pm4.istp.course.db.CreateChallengeRequest;
+import com.pm4.istp.course.db.SubTaskRequest;
 import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.db.entities.SubTask;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
@@ -13,6 +15,10 @@ import com.pm4.istp.course.services.ChallengeService;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.repositories.UserRepository;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -36,7 +42,7 @@ public class ChallengeServiceImpl implements ChallengeService {
   public Challenge createChallenge(UUID userId, CreateChallengeRequest request) {
     User creator =
         userRepository
-            .findById(userId)
+            .findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
@@ -47,8 +53,11 @@ public class ChallengeServiceImpl implements ChallengeService {
     challenge.setStatus(request.getStatus());
     challenge.setDifficulty(request.getDifficulty());
     challenge.setDockerImage(request.getDockerImage());
-    challenge.setMaxScore(0);
     challenge.setCreator(creator);
+
+    List<SubTask> subTasks = buildSubTasksForCreate(request.getSubTasks(), challenge);
+    challenge.getSubTasks().addAll(subTasks);
+    challenge.setMaxScore(challenge.getSubTasks().size());
 
     return challengeRepository.save(challenge);
   }
@@ -91,10 +100,68 @@ public class ChallengeServiceImpl implements ChallengeService {
     challenge.setDifficulty(request.getDifficulty());
     challenge.setDockerImage(request.getDockerImage());
 
+    applySubTaskUpdates(challenge, request.getSubTasks());
+    challenge.setMaxScore(challenge.getSubTasks().size());
+
     Challenge saved = challengeRepository.save(challenge);
     cleanupCourseChallengesForVisibilityChange(challengeId, userId, oldStatus, newStatus);
 
     return saved;
+  }
+
+  private List<SubTask> buildSubTasksForCreate(List<SubTaskRequest> requests, Challenge parent) {
+    List<SubTask> result = new ArrayList<>();
+    if (requests == null) {
+      return result;
+    }
+    int idx = 0;
+    for (SubTaskRequest req : requests) {
+      SubTask st = new SubTask();
+      st.setChallenge(parent);
+      st.setTitle(req.getTitle());
+      st.setDescription(req.getDescription());
+      st.setFlag(normalizeFlag(req.getFlag()));
+      st.setOrderIndex(idx++);
+      result.add(st);
+    }
+    return result;
+  }
+
+  private void applySubTaskUpdates(Challenge challenge, List<SubTaskRequest> requests) {
+    List<SubTaskRequest> incoming = requests == null ? List.of() : requests;
+
+    Map<UUID, SubTask> existingById = new HashMap<>();
+    for (SubTask existing : challenge.getSubTasks()) {
+      if (existing.getId() != null) {
+        existingById.put(existing.getId(), existing);
+      }
+    }
+
+    List<SubTask> retained = new ArrayList<>();
+    int idx = 0;
+    for (SubTaskRequest req : incoming) {
+      SubTask target = req.getId() != null ? existingById.remove(req.getId()) : null;
+      if (target == null) {
+        target = new SubTask();
+        target.setChallenge(challenge);
+      }
+      target.setTitle(req.getTitle());
+      target.setDescription(req.getDescription());
+      target.setFlag(normalizeFlag(req.getFlag()));
+      target.setOrderIndex(idx++);
+      retained.add(target);
+    }
+
+    challenge.getSubTasks().clear();
+    challenge.getSubTasks().addAll(retained);
+  }
+
+  private String normalizeFlag(String flag) {
+    if (flag == null) {
+      return null;
+    }
+    String trimmed = flag.trim();
+    return trimmed.isEmpty() ? null : trimmed;
   }
 
   @Override

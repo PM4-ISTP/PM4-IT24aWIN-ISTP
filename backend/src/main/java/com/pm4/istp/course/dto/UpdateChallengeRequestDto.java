@@ -2,10 +2,13 @@ package com.pm4.istp.course.dto;
 
 import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,4 +37,8 @@ public class UpdateChallengeRequestDto {
       message =
           "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)")
   private String dockerImage;
+
+  @NotEmpty(message = "At least one sub task is required")
+  @Valid
+  private List<SubTaskRequestDto> subTasks;
 }

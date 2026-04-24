@@ -2,6 +2,10 @@
 
 import { Input, SegmentedControl, Stack, Textarea, TextInput } from "@mantine/core";
 import MyEditor from "@/src/shared/components/MyEditor";
+import {
+  SubTaskManager,
+  type SubTaskFormValues,
+} from "@/src/features/course/components/challenges/SubTaskManager";
 import type {
   ChallengeStatusEnum,
   ChallengeDifficultyEnum,
@@ -14,6 +18,8 @@ import {
   DIFFICULTY_COLORS,
 } from "@/src/features/course/constants/challengeConstants";
 
+export type { SubTaskFormValues };
+
 export interface ChallengeFormValues {
   title: string;
   shortDescription: string;
@@ -21,6 +27,7 @@ export interface ChallengeFormValues {
   status: ChallengeStatusEnum;
   difficulty: ChallengeDifficultyEnum;
   dockerImage: string;
+  subTasks: SubTaskFormValues[];
 }
 
 export interface ChallengeFormFieldsProps {
@@ -29,6 +36,8 @@ export interface ChallengeFormFieldsProps {
   titleError?: string | null;
   shortDescriptionError?: string | null;
   dockerImageError?: string | null;
+  subTaskErrors?: Array<Partial<Record<"title" | "description" | "flag", string>>>;
+  defaultExpandedSubTaskIndex?: number | null;
   onCharLimitExceeded?: () => void;
   onShortDescriptionErrorClear?: () => void;
   onDockerImageErrorClear?: () => void;
@@ -40,6 +49,8 @@ export function ChallengeFormFields({
   titleError,
   shortDescriptionError,
   dockerImageError,
+  subTaskErrors,
+  defaultExpandedSubTaskIndex,
   onCharLimitExceeded,
   onShortDescriptionErrorClear,
   onDockerImageErrorClear,
@@ -121,6 +132,13 @@ export function ChallengeFormFields({
           fullWidth
         />
       </Stack>
+
+      <SubTaskManager
+        subTasks={values.subTasks}
+        onChange={(subTasks) => onChange({ ...values, subTasks })}
+        errors={subTaskErrors}
+        defaultExpandedIndex={defaultExpandedSubTaskIndex}
+      />
     </Stack>
   );
 }

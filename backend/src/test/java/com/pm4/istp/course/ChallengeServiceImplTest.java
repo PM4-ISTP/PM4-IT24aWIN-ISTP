@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,10 +25,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import com.pm4.istp.course.db.CreateChallengeRequest;
+import com.pm4.istp.course.db.SubTaskRequest;
 import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.db.entities.SubTask;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
@@ -40,6 +43,8 @@ import com.pm4.istp.user.repositories.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ChallengeServiceImplTest {
+
+  private static final String DEFAULT_DOCKER_IMAGE = "registry/default:latest";
 
   @Mock private UserRepository userRepository;
   @Mock private ChallengeRepository challengeRepository;
@@ -60,26 +65,75 @@ class ChallengeServiceImplTest {
     challenge.setStatus(status);
     challenge.setDifficulty(ChallengeDifficultyEnum.MEDIUM);
     challenge.setCreator(creator);
+    challenge.setSubTasks(new ArrayList<>());
     return challenge;
   }
 
+  private List<SubTaskRequest> oneSubTask() {
+    return new ArrayList<>(
+        List.of(new SubTaskRequest(null, "Task 1", "Find the flag", "ISTP{demo}", 0)));
+  }
+
+  private CreateChallengeRequest createRequest(
+      String title,
+      String shortDesc,
+      String desc,
+      ChallengeStatusEnum status,
+      ChallengeDifficultyEnum difficulty) {
+    return createRequest(title, shortDesc, desc, status, difficulty, DEFAULT_DOCKER_IMAGE, oneSubTask());
+  }
+
+  private CreateChallengeRequest createRequest(
+      String title,
+      String shortDesc,
+      String desc,
+      ChallengeStatusEnum status,
+      ChallengeDifficultyEnum difficulty,
+      String dockerImage,
+      List<SubTaskRequest> subTasks) {
+    return new CreateChallengeRequest(title, shortDesc, desc, status, difficulty, dockerImage, subTasks);
+  }
+
+  private UpdateChallengeRequest updateRequest(
+      String title,
+      String shortDesc,
+      String desc,
+      ChallengeStatusEnum status,
+      ChallengeDifficultyEnum difficulty) {
+    return updateRequest(title, shortDesc, desc, status, difficulty, DEFAULT_DOCKER_IMAGE);
+  }
+
+  private UpdateChallengeRequest updateRequest(
+      String title,
+      String shortDesc,
+      String desc,
+      ChallengeStatusEnum status,
+      ChallengeDifficultyEnum difficulty,
+      String dockerImage) {
+    return new UpdateChallengeRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneSubTask());
+  }
+
   @Test
-  void createChallenge_persistsChallengeWithCreatorAndDefaultMaxScore() {
+  void createChallenge_persistsChallengeWithCreatorAndSubTasks() {
     UUID creatorId = UUID.randomUUID();
     User creator = buildUser(creatorId);
 
-    when(userRepository.findById(creatorId)).thenReturn(Optional.of(creator));
+    when(userRepository.findByIdAndDeletedAtIsNull(creatorId)).thenReturn(Optional.of(creator));
     when(challengeRepository.save(any(Challenge.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     CreateChallengeRequest request =
-        new CreateChallengeRequest(
+        createRequest(
             "Buffer Overflow",
             "Short summary",
             "Long description",
             ChallengeStatusEnum.DRAFT,
             ChallengeDifficultyEnum.HARD,
-            "registry/buffer-overflow:latest");
+            "registry/buffer-overflow:latest",
+            new ArrayList<>(
+                List.of(
+                    new SubTaskRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0),
+                    new SubTaskRequest(null, "Exploit", "Pop a shell", null, 1))));
 
     Challenge created = challengeService.createChallenge(creatorId, request);
 
@@ -89,24 +143,50 @@ class ChallengeServiceImplTest {
     assertThat(created.getStatus()).isEqualTo(ChallengeStatusEnum.DRAFT);
     assertThat(created.getDifficulty()).isEqualTo(ChallengeDifficultyEnum.HARD);
     assertThat(created.getDockerImage()).isEqualTo("registry/buffer-overflow:latest");
-    assertThat(created.getMaxScore()).isZero();
     assertThat(created.getCreator()).isSameAs(creator);
+    assertThat(created.getSubTasks()).hasSize(2);
+    assertThat(created.getSubTasks().get(0).getTitle()).isEqualTo("Recon");
+    assertThat(created.getSubTasks().get(0).getFlag()).isEqualTo("ISTP{abc}");
+    assertThat(created.getSubTasks().get(0).getOrderIndex()).isZero();
+    assertThat(created.getSubTasks().get(1).getTitle()).isEqualTo("Exploit");
+    assertThat(created.getSubTasks().get(1).getFlag()).isNull();
+    assertThat(created.getSubTasks().get(1).getOrderIndex()).isEqualTo(1);
+    assertThat(created.getMaxScore()).isEqualTo(2);
     verify(challengeRepository).save(any(Challenge.class));
+  }
+
+  @Test
+  void createChallenge_trimsEmptyFlagToNull() {
+    UUID creatorId = UUID.randomUUID();
+    User creator = buildUser(creatorId);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(creatorId)).thenReturn(Optional.of(creator));
+    when(challengeRepository.save(any(Challenge.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    CreateChallengeRequest request =
+        new CreateChallengeRequest(
+            "T",
+            "S",
+            "D",
+            ChallengeStatusEnum.DRAFT,
+            ChallengeDifficultyEnum.EASY,
+            DEFAULT_DOCKER_IMAGE,
+            new ArrayList<>(List.of(new SubTaskRequest(null, "Only", "Just desc", "   ", 0))));
+
+    Challenge created = challengeService.createChallenge(creatorId, request);
+
+    assertThat(created.getSubTasks().get(0).getFlag()).isNull();
   }
 
   @Test
   void createChallenge_whenUserNotFound_throwsUserNotFoundException() {
     UUID creatorId = UUID.randomUUID();
-    when(userRepository.findById(creatorId)).thenReturn(Optional.empty());
+    when(userRepository.findByIdAndDeletedAtIsNull(creatorId)).thenReturn(Optional.empty());
 
     CreateChallengeRequest request =
-        new CreateChallengeRequest(
-            "Title",
-            "Short",
-            "Desc",
-            ChallengeStatusEnum.DRAFT,
-            ChallengeDifficultyEnum.EASY,
-            "image:tag");
+        createRequest(
+            "Title", "Short", "Desc", ChallengeStatusEnum.DRAFT, ChallengeDifficultyEnum.EASY);
 
     assertThatThrownBy(() -> challengeService.createChallenge(creatorId, request))
         .isInstanceOf(UserNotFoundException.class);
@@ -215,7 +295,7 @@ class ChallengeServiceImplTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     UpdateChallengeRequest request =
-        new UpdateChallengeRequest(
+        updateRequest(
             "Updated",
             "Updated short",
             "Updated desc",
@@ -237,6 +317,51 @@ class ChallengeServiceImplTest {
   }
 
   @Test
+  void updateChallenge_reusesSubTasksByIdAndReindexes() {
+    UUID creatorId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    User creator = buildUser(creatorId);
+    Challenge challenge = buildChallenge(challengeId, creator, ChallengeStatusEnum.PUBLIC);
+
+    UUID existingId = UUID.randomUUID();
+    SubTask existing = new SubTask();
+    existing.setId(existingId);
+    existing.setChallenge(challenge);
+    existing.setTitle("Old");
+    existing.setDescription("Old desc");
+    existing.setOrderIndex(0);
+    challenge.getSubTasks().add(existing);
+
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(challengeRepository.save(any(Challenge.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    UpdateChallengeRequest request =
+        new UpdateChallengeRequest(
+            "T",
+            "S",
+            "D",
+            ChallengeStatusEnum.PUBLIC,
+            ChallengeDifficultyEnum.EASY,
+            DEFAULT_DOCKER_IMAGE,
+            new ArrayList<>(
+                List.of(
+                    new SubTaskRequest(null, "New first", "desc", null, 0),
+                    new SubTaskRequest(existingId, "Renamed", "updated desc", "ISTP{x}", 1))));
+
+    Challenge updated = challengeService.updateChallenge(creatorId, challengeId, request);
+
+    assertThat(updated.getSubTasks()).hasSize(2);
+    assertThat(updated.getSubTasks().get(0).getId()).isNull();
+    assertThat(updated.getSubTasks().get(0).getTitle()).isEqualTo("New first");
+    assertThat(updated.getSubTasks().get(1).getId()).isEqualTo(existingId);
+    assertThat(updated.getSubTasks().get(1).getTitle()).isEqualTo("Renamed");
+    assertThat(updated.getSubTasks().get(1).getFlag()).isEqualTo("ISTP{x}");
+    assertThat(updated.getSubTasks().get(1).getOrderIndex()).isEqualTo(1);
+    assertThat(updated.getMaxScore()).isEqualTo(2);
+  }
+
+  @Test
   void updateChallenge_whenDowngradedToDraft_deletesAllCourseAssignments() {
     UUID creatorId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
@@ -248,7 +373,7 @@ class ChallengeServiceImplTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     UpdateChallengeRequest request =
-        new UpdateChallengeRequest(
+        updateRequest(
             "Title",
             "Short",
             "Desc",
@@ -275,7 +400,7 @@ class ChallengeServiceImplTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     UpdateChallengeRequest request =
-        new UpdateChallengeRequest(
+        updateRequest(
             "Title",
             "Short",
             "Desc",
@@ -302,7 +427,7 @@ class ChallengeServiceImplTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     UpdateChallengeRequest request =
-        new UpdateChallengeRequest(
+        updateRequest(
             "Title",
             "Short",
             "Desc",
@@ -328,7 +453,7 @@ class ChallengeServiceImplTest {
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
 
     UpdateChallengeRequest request =
-        new UpdateChallengeRequest(
+        updateRequest(
             "Title",
             "Short",
             "Desc",
@@ -351,7 +476,7 @@ class ChallengeServiceImplTest {
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.empty());
 
     UpdateChallengeRequest request =
-        new UpdateChallengeRequest(
+        updateRequest(
             "Title",
             "Short",
             "Desc",

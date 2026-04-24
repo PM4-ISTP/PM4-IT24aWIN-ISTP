@@ -2,6 +2,7 @@ package com.pm4.istp.course.db;
 
 import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,4 +17,5 @@ public class CreateChallengeRequest {
   private ChallengeStatusEnum status;
   private ChallengeDifficultyEnum difficulty;
   private String dockerImage;
+  private List<SubTaskRequest> subTasks;
 }

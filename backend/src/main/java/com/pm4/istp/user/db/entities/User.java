@@ -82,6 +82,13 @@ public class User {
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
 
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
+
+  public boolean isDeleted() {
+    return deletedAt != null;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) {
@@ -95,11 +102,12 @@ public class User {
         && Objects.equals(picture, user.picture)
         && Objects.equals(title, user.title)
         && Objects.equals(createdAt, user.createdAt)
-        && Objects.equals(updatedAt, user.updatedAt);
+        && Objects.equals(updatedAt, user.updatedAt)
+        && Objects.equals(deletedAt, user.deletedAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, email, username, picture, title, createdAt, updatedAt);
+    return Objects.hash(id, name, email, username, picture, title, createdAt, updatedAt, deletedAt);
   }
 }

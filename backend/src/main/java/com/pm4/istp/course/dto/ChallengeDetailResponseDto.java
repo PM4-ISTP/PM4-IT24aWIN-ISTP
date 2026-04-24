@@ -3,6 +3,7 @@ package com.pm4.istp.course.dto;
 import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,6 +23,7 @@ public class ChallengeDetailResponseDto {
   private String dockerImage;
   private ChallengeCreatorResponseDto creator;
   private long courseCount;
+  private List<SubTaskResponseDto> subTasks;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 }
