@@ -1,6 +1,4 @@
 "use client";
-
-import { signOut } from "next-auth/react";
 import { Avatar, Group, Menu, Text, UnstyledButton } from "@mantine/core";
 import { ROLES } from "@/src/shared/lib/roles";
 
@@ -110,7 +108,7 @@ export default function UserMenu({ name, roles, image, accountUrl }: UserMenuPro
               logout
             </span>
           }
-          onClick={() => void signOut()}
+          onClick={() => window.location.assign("/api/auth/logout")}
         >
           Log out
         </Menu.Item>
