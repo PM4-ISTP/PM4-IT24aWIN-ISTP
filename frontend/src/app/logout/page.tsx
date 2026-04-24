@@ -1,11 +1,5 @@
-"use client";
-
-import { useEffect } from "react";
+import { redirect } from "next/navigation";
 
 export default function LogoutPage() {
-  useEffect(() => {
-    window.location.assign("/api/auth/logout");
-  }, []);
-
-  return null;
+  redirect("/api/auth/logout");
 }
