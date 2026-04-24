@@ -2,6 +2,7 @@ package com.pm4.istp.user.repositories;
 
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.db.entities.UserRoleEnum;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -16,6 +17,10 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<User, UUID> {
 
   Optional<User> findByIdAndDeletedAtIsNull(UUID id);
+
+  List<User> findAllByEmailIgnoreCaseAndDeletedAtIsNull(String email);
+
+  List<User> findAllByUsernameIgnoreCaseAndDeletedAtIsNull(String username);
 
   Optional<User> findByEmailIgnoreCaseAndIdNot(String email, UUID id);
 

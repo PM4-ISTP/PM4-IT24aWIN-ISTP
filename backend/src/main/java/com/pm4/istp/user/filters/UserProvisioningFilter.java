@@ -10,7 +10,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -73,13 +75,13 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               keycloakId);
       String username =
           discardIfTooLong(
-              normalize(jwt.getClaimAsString("preferred_username")),
+              normalizeLowercase(jwt.getClaimAsString("preferred_username")),
               MAX_COLUMN_LENGTH,
               "preferred_username",
               keycloakId);
       String emailClaim =
           discardIfTooLong(
-              normalize(jwt.getClaimAsString("email")), MAX_COLUMN_LENGTH, "email", keycloakId);
+              normalizeLowercase(jwt.getClaimAsString("email")), MAX_COLUMN_LENGTH, "email", keycloakId);
       String pictureClaim =
           discardIfTooLong(
               normalize(jwt.getClaimAsString("picture")),
@@ -104,14 +106,15 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               : Optional.empty();
 
       String email =
-          firstNonBlank(
-              emailClaim,
-              discardIfTooLong(
-                  userInfoProfile.map(UserInfoProfile::email).orElse(null),
-                  MAX_COLUMN_LENGTH,
-                  "email",
-                  keycloakId),
-              existingUser.map(User::getEmail).map(this::normalize).orElse(null));
+          normalizeLowercase(
+              firstNonBlank(
+                  emailClaim,
+                  discardIfTooLong(
+                      userInfoProfile.map(UserInfoProfile::email).orElse(null),
+                      MAX_COLUMN_LENGTH,
+                      "email",
+                      keycloakId),
+                  existingUser.map(User::getEmail).map(this::normalize).orElse(null)));
 
       if (email == null) {
         log.error("Cannot provision user {}: email is missing", keycloakId);
@@ -187,34 +190,55 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
             // Soft-delete any active account that shares the same email or username but belongs
             // to a different Keycloak UUID (the old account was deleted in Keycloak and a new
             // one was created with the same credentials).
-            if (email != null) {
-              userRepository
-                  .findByEmailIgnoreCaseAndIdNot(email, keycloakId)
-                  .filter(u -> !u.isDeleted())
-                  .ifPresent(
-                      u -> {
-                        u.setDeletedAt(LocalDateTime.now());
-                        userRepository.save(u);
-                        log.info(
-                            "Soft-deleted user {} due to email conflict with new user {}",
-                            u.getId(),
-                            keycloakId);
-                      });
+            LocalDateTime deletedAt = LocalDateTime.now();
+            List<User> emailConflicts =
+                email == null
+                    ? List.of()
+                    : userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(email);
+            List<User> usernameConflicts =
+                username == null
+                    ? List.of()
+                    : userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull(username);
+
+            List<User> conflicts = new ArrayList<>(emailConflicts.size() + usernameConflicts.size());
+            conflicts.addAll(emailConflicts);
+            conflicts.addAll(usernameConflicts);
+
+            Set<UUID> handledUserIds = new HashSet<>(conflicts.size());
+            for (User conflictUser : conflicts) {
+              if (conflictUser == null
+                  || conflictUser.getId() == null
+                  || conflictUser.getId().equals(keycloakId)
+                  || !handledUserIds.add(conflictUser.getId())
+                  || conflictUser.isDeleted()) {
+                continue;
+              }
+
+              boolean emailConflicted =
+                  email != null
+                      && Objects.equals(normalizeLowercase(conflictUser.getEmail()), email);
+              boolean usernameConflicted =
+                  username != null
+                      && Objects.equals(normalizeLowercase(conflictUser.getUsername()), username);
+
+              if (emailConflicted) {
+                conflictUser.setEmail(toInvalidEmail(conflictUser.getEmail(), conflictUser.getId()));
+              }
+              if (usernameConflicted) {
+                conflictUser.setUsername(
+                    toInvalidUsername(conflictUser.getUsername(), conflictUser.getId()));
+              }
+
+              conflictUser.setDeletedAt(deletedAt);
+              userRepository.save(conflictUser);
+
+              log.info(
+                  "Soft-deleted user {} due to {} conflict with new user {}",
+                  conflictUser.getId(),
+                  emailConflicted ? "email" : "username",
+                  keycloakId);
             }
-            if (username != null) {
-              userRepository
-                  .findByUsernameIgnoreCaseAndIdNot(username, keycloakId)
-                  .filter(u -> !u.isDeleted())
-                  .ifPresent(
-                      u -> {
-                        u.setDeletedAt(LocalDateTime.now());
-                        userRepository.save(u);
-                        log.info(
-                            "Soft-deleted user {} due to username conflict with new user {}",
-                            u.getId(),
-                            keycloakId);
-                      });
-            }
+
             User newUser = new User();
             newUser.setId(keycloakId);
             newUser.setName(displayName);
@@ -339,6 +363,48 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
     String trimmed = value.trim();
     return trimmed.isEmpty() ? null : trimmed;
+  }
+
+  private String normalizeLowercase(String value) {
+    String normalized = normalize(value);
+    if (normalized == null) {
+      return null;
+    }
+    return normalized.toLowerCase(Locale.ROOT);
+  }
+
+  private String toInvalidEmail(String email, UUID userId) {
+    if (userId == null) {
+      return null;
+    }
+    String normalizedEmail = normalizeLowercase(email);
+    String localPart = normalizedEmail == null ? "deleted" : normalizedEmail.split("@", 2)[0];
+
+    String suffix = "+deleted-" + userId + "@invalid.local";
+    int maxLocalPartLength = MAX_COLUMN_LENGTH - suffix.length();
+    String safeLocalPart =
+        maxLocalPartLength > 0
+            ? localPart.substring(0, Math.min(localPart.length(), maxLocalPartLength))
+            : "deleted";
+    if (safeLocalPart.isEmpty()) {
+      safeLocalPart = "deleted";
+    }
+    return safeLocalPart + suffix;
+  }
+
+  private String toInvalidUsername(String username, UUID userId) {
+    if (userId == null) {
+      return null;
+    }
+    String normalized = normalizeLowercase(username);
+    String base = normalized == null ? "deleted" : normalized;
+    String candidate = base + "__deleted__" + userId;
+    if (candidate.length() <= MAX_COLUMN_LENGTH) {
+      return candidate;
+    }
+    int maxBaseLen = MAX_COLUMN_LENGTH - ("__deleted__".length() + userId.toString().length());
+    String truncated = maxBaseLen > 0 ? base.substring(0, Math.min(base.length(), maxBaseLen)) : "deleted";
+    return truncated + "__deleted__" + userId;
   }
 
   private record UserInfoProfile(String name, String email, String picture, String title) {}
