@@ -1,0 +1,59 @@
+import { getToken } from "next-auth/jwt";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+
+const NEXT_AUTH_COOKIES = [
+  "next-auth.session-token",
+  "__Secure-next-auth.session-token",
+  "next-auth.csrf-token",
+  "__Host-next-auth.csrf-token",
+  "next-auth.callback-url",
+  "__Secure-next-auth.callback-url",
+  "next-auth.pkce.code_verifier",
+  "next-auth.state",
+  "next-auth.nonce",
+] as const;
+
+function clearNextAuthCookies(response: NextResponse): void {
+  for (const name of NEXT_AUTH_COOKIES) {
+    response.cookies.set(name, "", { path: "/", maxAge: 0 });
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const origin = new URL(request.url).origin;
+  const postLogoutRedirectUri = `${origin}/`;
+
+  const response = NextResponse.redirect(postLogoutRedirectUri, 302);
+  clearNextAuthCookies(response);
+
+  const issuer = process.env.AUTH_KEYCLOAK_ISSUER;
+  const clientId = process.env.AUTH_KEYCLOAK_ID;
+  const secret = process.env.NEXTAUTH_SECRET;
+
+  if (!issuer || !clientId) {
+    return response;
+  }
+
+  let idTokenHint: string | undefined;
+  if (secret) {
+    try {
+      const token = await getToken({ req: request, secret });
+      if (typeof token?.idToken === "string") {
+        idTokenHint = token.idToken;
+      }
+    } catch {
+      // Ignore and fall back to client_id-only logout if possible.
+    }
+  }
+
+  const logoutUrl = new URL(`${issuer}/protocol/openid-connect/logout`);
+  logoutUrl.searchParams.set("post_logout_redirect_uri", postLogoutRedirectUri);
+  logoutUrl.searchParams.set("client_id", clientId);
+  if (idTokenHint) {
+    logoutUrl.searchParams.set("id_token_hint", idTokenHint);
+  }
+
+  response.headers.set("Location", logoutUrl.toString());
+  return response;
+}

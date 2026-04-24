@@ -153,6 +153,7 @@ export const authOptions: AuthOptions = {
             accessToken: account.access_token,
             accessTokenExpires: (account.expires_at ?? 0) * 1000,
             refreshToken: account.refresh_token,
+            idToken: account.id_token,
           },
           initialClaims
         );
