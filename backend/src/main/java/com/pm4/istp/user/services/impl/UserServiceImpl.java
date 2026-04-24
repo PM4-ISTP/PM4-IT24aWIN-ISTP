@@ -1,10 +1,10 @@
-package com.pm4.istp.service.impl;
+package com.pm4.istp.user.services.impl;
 
-import com.pm4.istp.domain.entites.User;
-import com.pm4.istp.domain.entites.UserRoleEnum;
-import com.pm4.istp.exception.UserNotFoundException;
-import com.pm4.istp.repositories.UserRepository;
-import com.pm4.istp.service.UserService;
+import com.pm4.istp.user.db.entities.User;
+import com.pm4.istp.user.db.entities.UserRoleEnum;
+import com.pm4.istp.user.exceptions.UserNotFoundException;
+import com.pm4.istp.user.repositories.UserRepository;
+import com.pm4.istp.user.services.UserService;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
