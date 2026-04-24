@@ -403,7 +403,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
           currentUserId,
           emailConflicted,
           usernameConflicted,
-          !conflictUser.isDeleted());
+          conflictUser.isDeleted());
     }
   }
 
