@@ -82,9 +82,7 @@ public class AdminCourseChallengeService {
 
   @Transactional(readOnly = true)
   public Page<AdminChallengeListItemDto> listChallenges(
-      String query,
-      String owner,
-      Pageable pageable) {
+      String query, String owner, Pageable pageable) {
     return challengeRepository.findAllChallengesForAdmin(
         normalizeQuery(query), normalizeQuery(owner), pageable);
   }
