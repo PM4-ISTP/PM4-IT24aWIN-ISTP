@@ -169,6 +169,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               // Account was soft-deleted due to a conflict. Once deleted, always gone.
               return;
             }
+            softDeleteConflicts(keycloakId, email, username);
             boolean profileChanged =
                 !Objects.equals(user.getName(), displayName)
                     || !Objects.equals(user.getEmail(), email)
@@ -190,54 +191,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
             // Soft-delete any active account that shares the same email or username but belongs
             // to a different Keycloak UUID (the old account was deleted in Keycloak and a new
             // one was created with the same credentials).
-            LocalDateTime deletedAt = LocalDateTime.now();
-            List<User> emailConflicts =
-                email == null
-                    ? List.of()
-                    : userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(email);
-            List<User> usernameConflicts =
-                username == null
-                    ? List.of()
-                    : userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull(username);
-
-            List<User> conflicts = new ArrayList<>(emailConflicts.size() + usernameConflicts.size());
-            conflicts.addAll(emailConflicts);
-            conflicts.addAll(usernameConflicts);
-
-            Set<UUID> handledUserIds = new HashSet<>(conflicts.size());
-            for (User conflictUser : conflicts) {
-              if (conflictUser == null
-                  || conflictUser.getId() == null
-                  || conflictUser.getId().equals(keycloakId)
-                  || !handledUserIds.add(conflictUser.getId())
-                  || conflictUser.isDeleted()) {
-                continue;
-              }
-
-              boolean emailConflicted =
-                  email != null
-                      && Objects.equals(normalizeLowercase(conflictUser.getEmail()), email);
-              boolean usernameConflicted =
-                  username != null
-                      && Objects.equals(normalizeLowercase(conflictUser.getUsername()), username);
-
-              if (emailConflicted) {
-                conflictUser.setEmail(toInvalidEmail(conflictUser.getEmail(), conflictUser.getId()));
-              }
-              if (usernameConflicted) {
-                conflictUser.setUsername(
-                    toInvalidUsername(conflictUser.getUsername(), conflictUser.getId()));
-              }
-
-              conflictUser.setDeletedAt(deletedAt);
-              userRepository.save(conflictUser);
-
-              log.info(
-                  "Soft-deleted user {} due to {} conflict with new user {}",
-                  conflictUser.getId(),
-                  emailConflicted ? "email" : "username",
-                  keycloakId);
-            }
+            softDeleteConflicts(keycloakId, email, username);
 
             User newUser = new User();
             newUser.setId(keycloakId);
@@ -363,6 +317,62 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
     String trimmed = value.trim();
     return trimmed.isEmpty() ? null : trimmed;
+  }
+
+  private void softDeleteConflicts(UUID currentUserId, String email, String username) {
+    if (email == null && username == null) {
+      return;
+    }
+
+    LocalDateTime deletedAt = LocalDateTime.now();
+    List<User> emailConflicts =
+        email == null ? List.of() : userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(email);
+    List<User> usernameConflicts =
+        username == null
+            ? List.of()
+            : userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull(username);
+
+    List<User> conflicts = new ArrayList<>(emailConflicts.size() + usernameConflicts.size());
+    conflicts.addAll(emailConflicts);
+    conflicts.addAll(usernameConflicts);
+
+    Set<UUID> handledUserIds = new HashSet<>(conflicts.size());
+    for (User conflictUser : conflicts) {
+      if (conflictUser == null
+          || conflictUser.getId() == null
+          || conflictUser.getId().equals(currentUserId)
+          || !handledUserIds.add(conflictUser.getId())
+          || conflictUser.isDeleted()) {
+        continue;
+      }
+
+      boolean emailConflicted =
+          email != null && Objects.equals(normalizeLowercase(conflictUser.getEmail()), email);
+      boolean usernameConflicted =
+          username != null
+              && Objects.equals(normalizeLowercase(conflictUser.getUsername()), username);
+
+      if (!emailConflicted && !usernameConflicted) {
+        continue;
+      }
+
+      if (emailConflicted) {
+        conflictUser.setEmail(toInvalidEmail(conflictUser.getEmail(), conflictUser.getId()));
+      }
+      if (usernameConflicted) {
+        conflictUser.setUsername(toInvalidUsername(conflictUser.getUsername(), conflictUser.getId()));
+      }
+
+      conflictUser.setDeletedAt(deletedAt);
+      userRepository.save(conflictUser);
+
+      log.info(
+          "Soft-deleted user {} due to conflict with user {} (email={}, username={})",
+          conflictUser.getId(),
+          currentUserId,
+          emailConflicted,
+          usernameConflicted);
+    }
   }
 
   private String normalizeLowercase(String value) {
