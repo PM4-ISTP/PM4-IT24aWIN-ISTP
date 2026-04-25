@@ -1,5 +1,5 @@
 import { getApiClient } from "@/src/shared/lib/api/server";
-import { components } from "@/src/shared/lib/api/schema";
+import { type components } from "@/src/shared/lib/api/schema";
 
 export type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
 
