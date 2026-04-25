@@ -6,6 +6,7 @@ export type ActionResult<T> = { success: true; data: T } | { success: false; err
 type ApiClient = Awaited<ReturnType<typeof getApiClient>>;
 
 type OpenApiResponse<T> = {
+  response: Response;
   data?: T;
   error?: components["schemas"]["ErrorDto"];
 };
@@ -16,10 +17,13 @@ export async function withActionResult<T>(
 ): Promise<ActionResult<T>> {
   try {
     const client = await getApiClient();
-    const { data, error } = await action(client);
+    const { response, data, error } = await action(client);
 
     if (error !== undefined) {
       return { success: false, error: error?.error ?? fallbackMessage };
+    }
+    if (!response.ok) {
+      return { success: false, error: fallbackMessage };
     }
 
     /*
