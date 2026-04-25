@@ -16,6 +16,7 @@ import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
+import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseChallengeException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
@@ -390,6 +391,30 @@ public class CourseServiceImpl implements CourseService {
 
     course.setInviteCode(courseInviteCodeHelper.generateAndAssign(courseId));
     return course;
+  }
+
+  @Override
+  @Transactional
+  public void removeParticipant(UUID ownerId, UUID courseId, UUID participantId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+
+    verifyOwner(course, ownerId);
+
+    CourseEnrollment enrollment =
+        courseEnrollmentRepository
+            .findByCourseIdAndParticipantId(courseId, participantId)
+            .orElseThrow(
+                () ->
+                    new CourseParticipantNotFoundException(
+                        String.format(
+                            "Participant with ID '%s' is not enrolled in course '%s'",
+                            participantId, courseId)));
+
+    courseEnrollmentRepository.delete(enrollment);
   }
 
   private void verifyOwner(Course course, UUID userId) {
