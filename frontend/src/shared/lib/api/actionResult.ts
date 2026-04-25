@@ -1,4 +1,5 @@
 import { getApiClient } from "@/src/shared/lib/api/server";
+import { components } from "@/src/shared/lib/api/schema";
 
 export type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
 
@@ -6,7 +7,7 @@ type ApiClient = Awaited<ReturnType<typeof getApiClient>>;
 
 type OpenApiResponse<T> = {
   data?: T;
-  error?: { error?: string };
+  error?: components["schemas"]["ErrorDto"];
 };
 
 export async function withActionResult<T>(
@@ -22,7 +23,7 @@ export async function withActionResult<T>(
       return { success: false, error: error?.error ?? fallbackMessage };
     }
 
-    return { success: true, data: data };
+    return { success: true, data };
   } catch (err) {
     return {
       success: false,
