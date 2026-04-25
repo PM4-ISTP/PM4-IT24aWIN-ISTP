@@ -18,16 +18,28 @@ export async function withActionResult<T>(
     const client = await getApiClient();
     const { data, error } = await action(client);
 
-    if (data === undefined || error !== undefined) {
+    if (error !== undefined) {
       // This also handles edge cases, where data and error are both undefined. It happens, when the user is not authenticated.
       return { success: false, error: error?.error ?? fallbackMessage };
     }
 
-    return { success: true, data };
+    /*
+      data can be either T or undefined. If error is not undefined, data must
+      be in a valid state. So we can cast it to T. If we use
+      withActionResultNoContent, then T is equal to void.
+    */
+    return { success: true, data: data as T };
   } catch (err) {
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",
     };
   }
+}
+
+export async function withActionResultNoContent(
+  action: (client: ApiClient) => Promise<OpenApiResponse<void>>,
+  fallbackMessage: string
+): Promise<ActionResult<void>> {
+  return await withActionResult(action, fallbackMessage);
 }

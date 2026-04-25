@@ -2,6 +2,7 @@
 
 import { getApiClient } from "@/src/shared/lib/api/server";
 import type { components } from "@/src/shared/lib/api/schema";
+import { withActionResultNoContent } from "@/src/shared/lib/api/actionResult";
 import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers";
 
@@ -94,23 +95,13 @@ export async function updateChallenge(
 }
 
 export async function deleteChallenge(id: string): Promise<ActionResult<void>> {
-  try {
-    const client = await getApiClient();
-    const { error } = await client.DELETE("/api/v1/challenges/{id}", {
-      params: { path: { id } },
-    });
-
-    if (error) {
-      return { success: false, error: error.error ?? "Failed to delete challenge" };
-    }
-
-    return { success: true, data: undefined };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withActionResultNoContent(
+    (client) =>
+      client.DELETE("/api/v1/challenges/{id}", {
+        params: { path: { id } },
+      }),
+    "Failed to delete challenge"
+  );
 }
 
 export async function fetchInstructorChallenges(
