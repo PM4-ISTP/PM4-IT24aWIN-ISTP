@@ -1,11 +1,11 @@
 "use server";
 
 import { fetchBackend } from "@/src/shared/lib/api";
+import { withActionResult } from "@/src/shared/lib/api/actionResult";
 import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers";
 import type { components } from "@/src/shared/lib/api/schema";
 import { getApiClient } from "@/src/shared/lib/api/server";
-import { withApiResult } from "@/src/shared/lib/api/withApiResult";
 import { extractErrorMessage } from "@/src/shared/lib/utils";
 
 import type {
@@ -64,7 +64,7 @@ export async function createCourse(
 export async function fetchPublicCourse(
   id: string
 ): Promise<ActionResult<PublicCourseDetailResponseDto>> {
-  return await withApiResult(
+  return await withActionResult(
     (client) =>
       client.GET("/api/v1/courses/catalog/{id}", {
         params: { path: { id } },
