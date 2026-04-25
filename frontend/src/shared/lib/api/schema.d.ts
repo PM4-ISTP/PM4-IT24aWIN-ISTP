@@ -450,8 +450,8 @@ export interface components {
       /** Format: date-time */
       updatedAt?: string;
       private?: boolean;
-      published?: boolean;
       enrolled?: boolean;
+      published?: boolean;
       isEnrolled?: boolean;
       isPublished?: boolean;
       isPrivate?: boolean;
@@ -483,6 +483,15 @@ export interface components {
     UpdateCourseChallengesRequestDto: {
       challenges: components["schemas"]["CourseChallengeItemDto"][];
     };
+    SubTaskRequestDto: {
+      /** Format: uuid */
+      id?: string;
+      title: string;
+      description: string;
+      flag?: string;
+      /** Format: int32 */
+      orderIndex?: number;
+    };
     UpdateChallengeRequestDto: {
       title: string;
       shortDescription?: string;
@@ -491,6 +500,7 @@ export interface components {
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
+      subTasks: components["schemas"]["SubTaskRequestDto"][];
     };
     ChallengeCreatorResponseDto: {
       /** Format: uuid */
@@ -512,10 +522,20 @@ export interface components {
       creator?: components["schemas"]["ChallengeCreatorResponseDto"];
       /** Format: int64 */
       courseCount?: number;
+      subTasks?: components["schemas"]["SubTaskResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
+    };
+    SubTaskResponseDto: {
+      /** Format: uuid */
+      id?: string;
+      title?: string;
+      description?: string;
+      flag?: string;
+      /** Format: int32 */
+      orderIndex?: number;
     };
     AdminConfigRequest: {
       cpuLimit?: string;
@@ -597,8 +617,8 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
-      published?: boolean;
       enrolled?: boolean;
+      published?: boolean;
       isEnrolled?: boolean;
       isPublished?: boolean;
     };
@@ -613,6 +633,7 @@ export interface components {
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
+      subTasks: components["schemas"]["SubTaskRequestDto"][];
     };
     CreateChallengeResponseDto: {
       /** Format: uuid */
@@ -628,6 +649,7 @@ export interface components {
       maxScore?: number;
       /** Format: uuid */
       creatorId?: string;
+      subTasks?: components["schemas"]["SubTaskResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
@@ -669,14 +691,14 @@ export interface components {
       totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListInstructorUserResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
@@ -688,9 +710,9 @@ export interface components {
       sort?: components["schemas"]["SortObject"];
       paged?: boolean;
       /** Format: int32 */
-      pageNumber?: number;
-      /** Format: int32 */
       pageSize?: number;
+      /** Format: int32 */
+      pageNumber?: number;
       unpaged?: boolean;
     };
     SortObject: {
@@ -725,14 +747,14 @@ export interface components {
       totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListCourseResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
@@ -760,14 +782,14 @@ export interface components {
       totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListChallengeResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
