@@ -5,7 +5,6 @@ import { withActionResult } from "@/src/shared/lib/api/actionResult";
 import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers";
 import type { components } from "@/src/shared/lib/api/schema";
-import { getApiClient } from "@/src/shared/lib/api/server";
 import { extractErrorMessage } from "@/src/shared/lib/utils";
 
 import type {
@@ -76,23 +75,13 @@ export async function fetchPublicCourse(
 export async function enrollInCourse(
   id: string
 ): Promise<ActionResult<PublicCourseDetailResponseDto>> {
-  try {
-    const client = await getApiClient();
-    const { data, error } = await client.POST("/api/v1/courses/catalog/{id}/enroll", {
-      params: { path: { id } },
-    });
-
-    if (error) {
-      return { success: false, error: error.error ?? "Failed to load enroll in course" };
-    }
-
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withActionResult(
+    (client) =>
+      client.POST("/api/v1/courses/catalog/{id}/enroll", {
+        params: { path: { id } },
+      }),
+    "Failed to enroll in course"
+  );
 }
 
 export async function fetchCourse(id: string): Promise<ActionResult<OldCourseDetailResponseDto>> {
@@ -182,92 +171,52 @@ export async function fetchInstructorCourses(
   page = 0,
   size = 20
 ): Promise<ActionResult<PageListCourseResponseDto>> {
-  try {
-    const client = await getApiClient();
-    const { data, error } = await client.GET("/api/v1/courses", {
-      params: { query: { pageable: { page: page, size: size } } },
-      querySerializer: springPageableSerializer,
-    });
-
-    if (error) {
-      return { success: false, error: error.error ?? "Failed to load enrollments" };
-    }
-
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withActionResult(
+    (client) =>
+      client.GET("/api/v1/courses", {
+        params: { query: { pageable: { page, size } } },
+        querySerializer: springPageableSerializer,
+      }),
+    "Failed to load the courses for which the current user is owner or collaborator"
+  );
 }
 
 export async function fetchEnrolledCoursesOfLoggedInUser(
   page = 0,
   size = 20
 ): Promise<ActionResult<PageListCourseResponseDto>> {
-  try {
-    const client = await getApiClient();
-    const { data, error } = await client.GET("/api/v1/courses/my-enrollments", {
-      params: { query: { pageable: { page: page, size: size } } },
-      querySerializer: springPageableSerializer,
-    });
-
-    if (error) {
-      return { success: false, error: error.error ?? "Failed to load enrollments" };
-    }
-
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withActionResult(
+    (client) =>
+      client.GET("/api/v1/courses/my-enrollments", {
+        params: { query: { pageable: { page, size } } },
+        querySerializer: springPageableSerializer,
+      }),
+    "Failed to load enrollments"
+  );
 }
 
 export async function joinCourseByCode(
   code: string
 ): Promise<ActionResult<PublicCourseDetailResponseDto>> {
-  try {
-    const client = await getApiClient();
-    const { data, error } = await client.POST("/api/v1/courses/catalog/join", {
-      body: { code },
-    });
-
-    if (error) {
-      return { success: false, error: error.error ?? "Failed to join course" };
-    }
-
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withActionResult(
+    (client) =>
+      client.POST("/api/v1/courses/catalog/join", {
+        body: { code },
+      }),
+    "Failed to join course"
+  );
 }
 
 export async function regenerateInviteCode(
   id: string
 ): Promise<ActionResult<CourseDetailResponseDto>> {
-  try {
-    const client = await getApiClient();
-    const { data, error } = await client.POST("/api/v1/courses/{id}/invite-code/regenerate", {
-      params: { path: { id } },
-    });
-
-    if (error) {
-      return { success: false, error: error.error ?? "Failed to regenerate invite code" };
-    }
-
-    return { success: true, data: data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withActionResult(
+    (client) =>
+      client.POST("/api/v1/courses/{id}/invite-code/regenerate", {
+        params: { path: { id } },
+      }),
+    "Failed to regenerate invite code"
+  );
 }
 
 export async function fetchPublishedCourses(
@@ -275,22 +224,12 @@ export async function fetchPublishedCourses(
   page = 0,
   size = 12
 ): Promise<ActionResult<PageListCourseResponseDto>> {
-  try {
-    const client = await getApiClient();
-    const { data, error } = await client.GET("/api/v1/courses/catalog", {
-      params: { query: { query: query, pageable: { page: page, size: size } } },
-      querySerializer: springPageableSerializer,
-    });
-
-    if (error) {
-      return { success: false, error: error.error ?? "Failed to load published courses" };
-    }
-
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withActionResult(
+    (client) =>
+      client.GET("/api/v1/courses/catalog", {
+        params: { query: { query, pageable: { page, size } } },
+        querySerializer: springPageableSerializer,
+      }),
+    "Failed to load published courses"
+  );
 }
