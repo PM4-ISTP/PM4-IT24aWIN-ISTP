@@ -5,6 +5,7 @@ import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers";
 import type { components } from "@/src/shared/lib/api/schema";
 import { getApiClient } from "@/src/shared/lib/api/server";
+import { withApiResult } from "@/src/shared/lib/api/withApiResult";
 import { extractErrorMessage } from "@/src/shared/lib/utils";
 
 import type {
@@ -63,23 +64,13 @@ export async function createCourse(
 export async function fetchPublicCourse(
   id: string
 ): Promise<ActionResult<PublicCourseDetailResponseDto>> {
-  try {
-    const client = await getApiClient();
-    const { data, error } = await client.GET("/api/v1/courses/catalog/{id}", {
-      params: { path: { id } },
-    });
-
-    if (error) {
-      return { success: false, error: error.error ?? "Failed to load course" };
-    }
-
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withApiResult(
+    (client) =>
+      client.GET("/api/v1/courses/catalog/{id}", {
+        params: { path: { id } },
+      }),
+    "Failed to load course"
+  );
 }
 
 export async function enrollInCourse(
