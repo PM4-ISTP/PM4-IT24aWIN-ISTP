@@ -35,7 +35,7 @@ export function CourseEnrollmentButton({
         params: { path: { id: courseId } },
       });
 
-      if (!data || error) {
+      if (data === undefined || error !== undefined) {
         setJoinError(error?.error ?? "Cannot join course");
         return;
       }
