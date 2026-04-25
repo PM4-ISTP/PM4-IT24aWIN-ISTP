@@ -450,8 +450,8 @@ export interface components {
       /** Format: date-time */
       updatedAt?: string;
       private?: boolean;
-      enrolled?: boolean;
       published?: boolean;
+      enrolled?: boolean;
       isEnrolled?: boolean;
       isPublished?: boolean;
       isPrivate?: boolean;
@@ -597,8 +597,8 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
-      enrolled?: boolean;
       published?: boolean;
+      enrolled?: boolean;
       isEnrolled?: boolean;
       isPublished?: boolean;
     };
@@ -665,10 +665,10 @@ export interface components {
       roles?: ("ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT")[];
     };
     PageListInstructorUserResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       first?: boolean;
       last?: boolean;
       /** Format: int32 */
@@ -686,12 +686,12 @@ export interface components {
       /** Format: int64 */
       offset?: number;
       sort?: components["schemas"]["SortObject"];
-      unpaged?: boolean;
-      /** Format: int32 */
-      pageNumber?: number;
       paged?: boolean;
       /** Format: int32 */
+      pageNumber?: number;
+      /** Format: int32 */
       pageSize?: number;
+      unpaged?: boolean;
     };
     SortObject: {
       empty?: boolean;
@@ -721,10 +721,10 @@ export interface components {
       isPrivate?: boolean;
     };
     PageListCourseResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       first?: boolean;
       last?: boolean;
       /** Format: int32 */
@@ -756,10 +756,10 @@ export interface components {
       updatedAt?: string;
     };
     PageListChallengeResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       first?: boolean;
       last?: boolean;
       /** Format: int32 */
