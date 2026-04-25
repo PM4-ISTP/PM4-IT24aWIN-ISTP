@@ -19,7 +19,6 @@ export async function withActionResult<T>(
     const { data, error } = await action(client);
 
     if (error !== undefined) {
-      // This also handles edge cases, where data and error are both undefined. It happens, when the user is not authenticated.
       return { success: false, error: error?.error ?? fallbackMessage };
     }
 
