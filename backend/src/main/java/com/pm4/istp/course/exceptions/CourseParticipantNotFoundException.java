@@ -23,4 +23,3 @@ public class CourseParticipantNotFoundException extends IstpException {
     super(message, cause, enableSuppression, writableStackTrace);
   }
 }
-
