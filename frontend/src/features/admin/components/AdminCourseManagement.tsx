@@ -21,6 +21,7 @@ import { useDebouncedCallback } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import { IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
+import { readBackendError } from "@/src/shared/lib/readBackendError";
 
 type AdminCourseListItem = {
   id: string;
@@ -50,29 +51,6 @@ const wrapTextStyle: React.CSSProperties = {
   overflowWrap: "anywhere",
   wordBreak: "break-word",
 };
-
-async function readBackendError(res: Response): Promise<string | null> {
-  try {
-    const body = await res.text();
-    if (!body) return null;
-    try {
-      const json = JSON.parse(body) as unknown;
-      if (
-        json &&
-        typeof json === "object" &&
-        "error" in json &&
-        typeof (json as { error?: unknown }).error === "string"
-      ) {
-        return (json as { error: string }).error;
-      }
-    } catch {
-      // ignore JSON parse errors
-    }
-    return body;
-  } catch {
-    return null;
-  }
-}
 
 function cleanText(v: string) {
   const t = v.trim();
