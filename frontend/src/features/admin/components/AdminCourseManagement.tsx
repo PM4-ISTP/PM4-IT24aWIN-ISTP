@@ -137,9 +137,7 @@ export default function AdminCourseManagement() {
       const res = await fetch(url.toString(), { method: "GET" });
       if (!res.ok) {
         const msg = await readBackendError(res);
-        setError(
-          `Failed to load courses (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`
-        );
+        setError(`Failed to load courses (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
         return;
       }
       const data = (await res.json()) as PageResponse<AdminCourseListItem>;
