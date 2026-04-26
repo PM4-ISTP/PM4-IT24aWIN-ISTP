@@ -53,6 +53,29 @@ const wrapTextStyle: React.CSSProperties = {
   wordBreak: "break-word",
 };
 
+async function readBackendError(res: Response): Promise<string | null> {
+  try {
+    const body = await res.text();
+    if (!body) return null;
+    try {
+      const json = JSON.parse(body) as unknown;
+      if (
+        json &&
+        typeof json === "object" &&
+        "error" in json &&
+        typeof (json as { error?: unknown }).error === "string"
+      ) {
+        return (json as { error: string }).error;
+      }
+    } catch {
+      // ignore JSON parse errors
+    }
+    return body;
+  } catch {
+    return null;
+  }
+}
+
 function cleanText(v: string) {
   const t = v.trim();
   return t.length === 0 ? null : t;
@@ -107,7 +130,10 @@ export default function AdminChallengeManagement() {
 
       const res = await fetch(url.toString(), { method: "GET" });
       if (!res.ok) {
-        setError(`Failed to load challenges (HTTP ${res.status})`);
+        const msg = await readBackendError(res);
+        setError(
+          `Failed to load challenges (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`
+        );
         return;
       }
       const data = (await res.json()) as PageResponse<AdminChallengeListItem>;
@@ -172,7 +198,8 @@ export default function AdminChallengeManagement() {
         }),
       });
       if (!res.ok) {
-        setError("Failed to update challenge");
+        const msg = await readBackendError(res);
+        setError(`Failed to update challenge (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
         return;
       }
       setEditOpened(false);
@@ -194,7 +221,8 @@ export default function AdminChallengeManagement() {
         method: "DELETE",
       });
       if (!res.ok) {
-        setError("Failed to delete challenge");
+        const msg = await readBackendError(res);
+        setError(`Failed to delete challenge (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
         return;
       }
       setDeleteOpened(false);

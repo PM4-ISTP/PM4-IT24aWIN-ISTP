@@ -14,6 +14,29 @@ import {
 } from "@mantine/core";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 
+async function readBackendError(res: Response): Promise<string | null> {
+  try {
+    const body = await res.text();
+    if (!body) return null;
+    try {
+      const json = JSON.parse(body) as unknown;
+      if (
+        json &&
+        typeof json === "object" &&
+        "error" in json &&
+        typeof (json as { error?: unknown }).error === "string"
+      ) {
+        return (json as { error: string }).error;
+      }
+    } catch {
+      // ignore JSON parse errors
+    }
+    return body;
+  } catch {
+    return null;
+  }
+}
+
 export default function AdminTopicManagement() {
   const [topics, setTopics] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,7 +56,8 @@ export default function AdminTopicManagement() {
     try {
       const res = await fetch("/api/backend/api/admin/topics", { method: "GET" });
       if (!res.ok) {
-        setError(`Failed to load topics (HTTP ${res.status})`);
+        const msg = await readBackendError(res);
+        setError(`Failed to load topics (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
         return;
       }
       const data = (await res.json()) as string[];
@@ -61,7 +85,8 @@ export default function AdminTopicManagement() {
         body: JSON.stringify({ value }),
       });
       if (!res.ok) {
-        setError(`Failed to add topic (HTTP ${res.status})`);
+        const msg = await readBackendError(res);
+        setError(`Failed to add topic (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
         return;
       }
       setNewTopic("");
@@ -87,7 +112,8 @@ export default function AdminTopicManagement() {
         method: "DELETE",
       });
       if (!res.ok) {
-        setError(`Failed to delete topic (HTTP ${res.status})`);
+        const msg = await readBackendError(res);
+        setError(`Failed to delete topic (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
         return;
       }
       setDeleteOpened(false);
