@@ -1,4 +1,4 @@
-﻿package com.pm4.istp.course.controllers;
+package com.pm4.istp.course.controllers;
 
 import static com.pm4.istp.shared.util.JwtUtil.parseUserId;
 
