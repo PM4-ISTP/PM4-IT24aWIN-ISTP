@@ -37,7 +37,10 @@ async function getFirstCourse(fetchCourseResult: ActionResult<PageListCourseResp
     fetchCourseResult.data !== undefined &&
     fetchCourseResult.data.content !== undefined
   ) {
-    firstCourse = await fetchPublicCourse(fetchCourseResult.data.content[0].id!);
+    const firstEnrolledCourse = fetchCourseResult.data.content[0];
+    if (firstEnrolledCourse !== undefined && firstEnrolledCourse.id !== undefined) {
+      firstCourse = await fetchPublicCourse(firstEnrolledCourse.id);
+    }
   }
   return firstCourse;
 }
