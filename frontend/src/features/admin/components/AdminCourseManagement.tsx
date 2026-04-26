@@ -293,12 +293,7 @@ export default function AdminCourseManagement() {
                 </Table.Td>
                 <Table.Td>
                   <Stack gap={2}>
-                    <Text
-                      size="sm"
-                      lineClamp={1}
-                      style={wrapTextStyle}
-                      title={c.ownerName ?? "-"}
-                    >
+                    <Text size="sm" lineClamp={1} style={wrapTextStyle} title={c.ownerName ?? "-"}>
                       {c.ownerName ?? "-"}
                     </Text>
                     <Text

@@ -447,16 +447,16 @@ export default function EditCourse() {
                   required
                 />
 
-            <Select
-              label="Topic"
-              placeholder="Select a topic"
-              data={topicOptions.options}
-              value={topic}
-              onChange={setTopic}
-              clearable
-              searchable
-              disabled={topicOptions.loading}
-            />
+                <Select
+                  label="Topic"
+                  placeholder="Select a topic"
+                  data={topicOptions.options}
+                  value={topic}
+                  onChange={setTopic}
+                  clearable
+                  searchable
+                  disabled={topicOptions.loading}
+                />
 
                 <TextInput
                   label="Course Image URL"

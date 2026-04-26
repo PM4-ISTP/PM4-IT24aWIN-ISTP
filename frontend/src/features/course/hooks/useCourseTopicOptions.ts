@@ -49,4 +49,3 @@ export function useCourseTopicOptions() {
 
   return { options, loading, error };
 }
-
