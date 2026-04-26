@@ -22,4 +22,3 @@ export async function readBackendError(res: Response): Promise<string | null> {
     return null;
   }
 }
-
