@@ -8,7 +8,14 @@ export function springPageableSerializer(params: Record<string, unknown>): strin
   for (const [key, val] of Object.entries(params)) {
     if (key === "pageable" && typeof val === "object" && val !== null) {
       for (const [pk, pv] of Object.entries(val as Record<string, unknown>)) {
-        if (pv != null) parts.push(`${pk}=${encodeURIComponent(String(pv as string | number))}`);
+        if (pv == null) continue;
+        if (Array.isArray(pv)) {
+          for (const item of pv) {
+            if (item != null) parts.push(`${pk}=${encodeURIComponent(String(item))}`);
+          }
+        } else {
+          parts.push(`${pk}=${encodeURIComponent(String(pv as string | number))}`);
+        }
       }
     } else if (val != null) {
       parts.push(`${key}=${encodeURIComponent(String(val as string | number))}`);
