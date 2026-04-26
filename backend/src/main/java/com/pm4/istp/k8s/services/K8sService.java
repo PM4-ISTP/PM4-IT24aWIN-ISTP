@@ -34,8 +34,8 @@ public class K8sService {
   public K8sService(
       @NonNull AdminConfigurationService adminConfigurationService,
       @Value("${k8s.default.namespace}") String defaultNamespace,
-      @Value("${istp.domain:localhost}") String domain,
-      @Value("${istp.tls:false}") boolean tls) {
+      @Value("${istp.domain}") String domain,
+      @Value("${istp.tls}") boolean tls) {
     this.adminConfigurationService = adminConfigurationService;
     this.defaultNamespace = defaultNamespace;
     this.domain = domain;
