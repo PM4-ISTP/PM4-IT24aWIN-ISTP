@@ -27,7 +27,8 @@ public class AdminTopicController {
   }
 
   @PostMapping
-  public ResponseEntity<Map<String, String>> addTopic(@Valid @RequestBody AdminTopicRequest request) {
+  public ResponseEntity<Map<String, String>> addTopic(
+      @Valid @RequestBody AdminTopicRequest request) {
     adminTopicService.addTopic(request.getValue());
     return ResponseEntity.ok(Map.of("message", "Topic added"));
   }
@@ -38,4 +39,3 @@ public class AdminTopicController {
     return ResponseEntity.ok(Map.of("message", "Topic deleted"));
   }
 }
-

@@ -9,4 +9,3 @@ public interface AdminTopicService {
 
   void deleteTopic(String value);
 }
-

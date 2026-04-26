@@ -88,8 +88,7 @@ public class AdminCourseChallengeService {
   }
 
   @Transactional(readOnly = true)
-  public Page<AdminChallengeListItemDto> listChallenges(
-      String query, Pageable pageable) {
+  public Page<AdminChallengeListItemDto> listChallenges(String query, Pageable pageable) {
     String normalizedQuery = normalizeQuery(query);
 
     if (normalizedQuery == null) {

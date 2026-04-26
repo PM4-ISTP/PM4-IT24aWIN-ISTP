@@ -7,4 +7,3 @@ public interface CourseTopicService {
 
   String normalizeAndValidate(String topic);
 }
-

@@ -10,4 +10,3 @@ public class AdminTopicRequest {
   @Size(max = 255, message = "Topic must be at most 255 characters")
   private String value;
 }
-
