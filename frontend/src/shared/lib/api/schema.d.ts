@@ -317,7 +317,7 @@ export interface paths {
     };
     /**
      * Get a course by ID as a student
-     * @description Returns a detailed response of a course for a student. User IDs are set to null due to security concerns.
+     * @description Returns a detailed response of a course for a student. User IDs are omitted due to security concerns.
      */
     get: operations["getPublicCourse"];
     put?: never;
@@ -687,10 +687,10 @@ export interface components {
       roles?: ("ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT")[];
     };
     PageListInstructorUserResponseDto: {
-      /** Format: int32 */
-      totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
+      /** Format: int32 */
+      totalPages?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListInstructorUserResponseDto"][];
@@ -710,9 +710,9 @@ export interface components {
       sort?: components["schemas"]["SortObject"];
       paged?: boolean;
       /** Format: int32 */
-      pageSize?: number;
-      /** Format: int32 */
       pageNumber?: number;
+      /** Format: int32 */
+      pageSize?: number;
       unpaged?: boolean;
     };
     SortObject: {
@@ -743,10 +743,10 @@ export interface components {
       isPrivate?: boolean;
     };
     PageListCourseResponseDto: {
-      /** Format: int32 */
-      totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
+      /** Format: int32 */
+      totalPages?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListCourseResponseDto"][];
@@ -778,10 +778,10 @@ export interface components {
       updatedAt?: string;
     };
     PageListChallengeResponseDto: {
-      /** Format: int32 */
-      totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
+      /** Format: int32 */
+      totalPages?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListChallengeResponseDto"][];
