@@ -6,6 +6,7 @@ import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.CourseTopicRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +42,12 @@ public class AdminTopicServiceImpl implements AdminTopicService {
     CourseTopic topic = new CourseTopic();
     topic.setTopic(normalized);
     topic.setActive(true);
-    courseTopicRepository.save(topic);
+    try {
+      courseTopicRepository.save(topic);
+    } catch (DataIntegrityViolationException ex) {
+      // Concurrent insert (or unique constraint violation) - treat as "already exists"
+      throw new IllegalArgumentException("Topic already exists");
+    }
   }
 
   @Override
