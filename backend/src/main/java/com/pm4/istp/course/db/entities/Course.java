@@ -12,8 +12,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "courses")
 @Getter
 @Setter
@@ -34,7 +36,7 @@ public class Course {
   @Column(name = "short_description", nullable = true, length = 200)
   private String shortDescription;
 
-  @Column(name = "isPublished", nullable = false)
+  @Column(name = "is_published", nullable = false, columnDefinition = "boolean default false")
   private boolean isPublished;
 
   @Column(name = "is_private", nullable = false, columnDefinition = "boolean default false")

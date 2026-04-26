@@ -43,7 +43,7 @@ import {
   updateCourse,
 } from "@/src/features/course/actions/courses";
 import { useToast } from "@/src/shared/hooks/useToast";
-import { TOPIC_OPTIONS } from "@/src/features/course/constants/courseConstants";
+import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 import type {
   CollaboratorUserResponseDto,
   CourseVisibility,
@@ -99,6 +99,7 @@ export default function EditCourse() {
   const [formError, setFormError] = useState<string | null>(null);
   const ownerToast = useToast();
   const charLimitToast = useToast();
+  const topicOptions = useCourseTopicOptions();
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const shortDescriptionCharCount = shortDescription.length;
 
@@ -446,14 +447,16 @@ export default function EditCourse() {
                   required
                 />
 
-                <Select
-                  label="Topic"
-                  placeholder="Select a topic"
-                  data={TOPIC_OPTIONS}
-                  value={topic}
-                  onChange={setTopic}
-                  clearable
-                />
+            <Select
+              label="Topic"
+              placeholder="Select a topic"
+              data={topicOptions.options}
+              value={topic}
+              onChange={setTopic}
+              clearable
+              searchable
+              disabled={topicOptions.loading}
+            />
 
                 <TextInput
                   label="Course Image URL"

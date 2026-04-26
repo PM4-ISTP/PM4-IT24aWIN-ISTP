@@ -26,10 +26,8 @@ public class AdminChallengeController {
 
   @GetMapping
   public ResponseEntity<Page<AdminChallengeListItemDto>> listChallenges(
-      @RequestParam(name = "q", required = false) String query,
-      @RequestParam(name = "owner", required = false) String owner,
-      Pageable pageable) {
-    return ResponseEntity.ok(adminCourseChallengeService.listChallenges(query, owner, pageable));
+      @RequestParam(name = "q", required = false) String query, Pageable pageable) {
+    return ResponseEntity.ok(adminCourseChallengeService.listChallenges(query, pageable));
   }
 
   @PutMapping("/{id}")

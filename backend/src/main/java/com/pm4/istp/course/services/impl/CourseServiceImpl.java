@@ -25,6 +25,7 @@ import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseService;
+import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.repositories.UserRepository;
@@ -58,6 +59,7 @@ public class CourseServiceImpl implements CourseService {
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final ChallengeRepository challengeRepository;
   private final CourseInviteCodeHelper courseInviteCodeHelper;
+  private final CourseTopicService courseTopicService;
 
   @Override
   @Transactional
@@ -76,7 +78,7 @@ public class CourseServiceImpl implements CourseService {
     courseToCreate.setPrivate(course.isPrivate());
     validateVisibilityState(course.isPublished(), course.isPrivate());
     courseToCreate.setImageUrl(course.getImageUrl());
-    courseToCreate.setTopic(course.getTopic());
+    courseToCreate.setTopic(courseTopicService.normalizeAndValidate(course.getTopic()));
     if (course.isPrivate()) {
       try {
         courseToCreate.setInviteCode(generateUniqueInviteCode());
@@ -202,7 +204,7 @@ public class CourseServiceImpl implements CourseService {
     course.setDescription(request.getDescription());
     course.setShortDescription(normalizeShortDescription(request.getShortDescription()));
     course.setImageUrl(request.getImageUrl());
-    course.setTopic(request.getTopic());
+    course.setTopic(courseTopicService.normalizeAndValidate(request.getTopic()));
 
     boolean wasPrivate = course.isPrivate();
     boolean willBePublished = request.isPublished();
