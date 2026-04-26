@@ -246,7 +246,7 @@ public class CourseController {
   @Operation(
       summary = "Get a course by ID as a student",
       description =
-          "Returns a detailed response of a course for a student. User IDs are set to null due to security concerns.")
+          "Returns a detailed response of a course for a student. User IDs are omitted due to security concerns.")
   @ApiResponses(
       value = {
         @ApiResponse(
