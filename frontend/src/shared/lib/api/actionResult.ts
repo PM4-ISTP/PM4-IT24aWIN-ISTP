@@ -11,7 +11,8 @@ type OpenApiResponse<T> = {
   error?: components["schemas"]["ErrorDto"];
 };
 
-export async function withActionResult<T>(
+export async function performFetch<T>(
+  successResultMapper: (data: T | undefined) => ActionResult<T>,
   action: (client: ApiClient) => Promise<OpenApiResponse<T>>,
   fallbackMessage: string
 ): Promise<ActionResult<T>> {
@@ -26,12 +27,7 @@ export async function withActionResult<T>(
       return { success: false, error: fallbackMessage };
     }
 
-    /*
-      data can be either T or undefined. If error is not undefined, data must
-      be in a valid state. So we can cast it to T. If we use
-      withActionResultNoContent, then T is equal to void.
-    */
-    return { success: true, data: data as T };
+    return successResultMapper(data);
   } catch (err) {
     return {
       success: false,
@@ -40,9 +36,36 @@ export async function withActionResult<T>(
   }
 }
 
-export async function withActionResultNoContent(
+export function withActionResult<T extends NonNullable<unknown>>(
+  action: (client: ApiClient) => Promise<OpenApiResponse<T>>,
+  fallbackMessage: string
+): Promise<ActionResult<T>> {
+  return performFetch(
+    (data) => {
+      if (data === undefined) {
+        return { success: false, error: fallbackMessage };
+      } else {
+        return { success: true, data };
+      }
+    },
+    action,
+    fallbackMessage
+  );
+}
+
+export function withActionResultNoContent(
   action: (client: ApiClient) => Promise<OpenApiResponse<void>>,
   fallbackMessage: string
 ): Promise<ActionResult<void>> {
-  return await withActionResult(action, fallbackMessage);
+  return performFetch(
+    (data) => {
+      if (data !== undefined) {
+        return { success: false, error: fallbackMessage };
+      } else {
+        return { success: true, data };
+      }
+    },
+    action,
+    fallbackMessage
+  );
 }
