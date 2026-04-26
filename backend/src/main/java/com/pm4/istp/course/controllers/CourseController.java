@@ -1,4 +1,4 @@
-package com.pm4.istp.course.controllers;
+﻿package com.pm4.istp.course.controllers;
 
 import static com.pm4.istp.shared.util.JwtUtil.parseUserId;
 
@@ -229,7 +229,7 @@ public class CourseController {
     return ResponseEntity.ok(courseTopicService.listActiveTopics());
   }
 
-  // ── Public catalog endpoints ── accessible to all authenticated users (including students)
+  // -- Public catalog endpoints -- accessible to all authenticated users (including students)
   @GetMapping("/catalog/{id}")
   public ResponseEntity<PublicCourseDetailResponseDto> getPublicCourse(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
@@ -274,9 +274,9 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
-  // ── Private helpers ──
+  // -- Private helpers --
 
-  /** Full detail including participant list – for instructor/owner endpoints. */
+  /** Full detail including participant list - for instructor/owner endpoints. */
   private CourseDetailResponseDto toCourseDetailResponseDto(Course course, UUID userId) {
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
     UUID courseId = course.getId();
@@ -302,7 +302,7 @@ public class CourseController {
     return dto;
   }
 
-  /** Public catalog detail – omits participant list; returns only count and enrollment status. */
+  /** Public catalog detail - omits participant list; returns only count and enrollment status. */
   private PublicCourseDetailResponseDto toPublicCourseDetailResponseDto(
       Course course, UUID userId) {
     PublicCourseDetailResponseDto dto = courseMapper.toPublicCourseDetailDto(course);

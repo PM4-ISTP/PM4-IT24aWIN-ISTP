@@ -1,8 +1,8 @@
 package com.pm4.istp.course.configs;
 
 import com.pm4.istp.course.db.entities.CourseTopic;
+import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.CourseTopicRepository;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CourseTopicSeeder implements ApplicationRunner {
   private final CourseTopicRepository courseTopicRepository;
+  private final CourseRepository courseRepository;
 
   @Override
   @Transactional
@@ -21,23 +22,18 @@ public class CourseTopicSeeder implements ApplicationRunner {
       return;
     }
 
-    List<String> defaults =
-        List.of(
-            "Cybersecurity",
-            "Programming",
-            "Design",
-            "Data Science",
-            "Networking",
-            "Cloud",
-            "DevOps",
-            "Other");
-
-    defaults.forEach(
-        value -> {
+    courseRepository
+        .findDistinctNonBlankTopics()
+        .stream()
+        .map(String::trim)
+        .filter(v -> !v.isBlank())
+        .distinct()
+        .forEach(
+            value -> {
           CourseTopic topic = new CourseTopic();
           topic.setTopic(value);
           topic.setActive(true);
           courseTopicRepository.save(topic);
-        });
+            });
   }
 }
