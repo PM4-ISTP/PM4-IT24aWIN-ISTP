@@ -22,18 +22,16 @@ public class CourseTopicSeeder implements ApplicationRunner {
       return;
     }
 
-    courseRepository
-        .findDistinctNonBlankTopics()
-        .stream()
+    courseRepository.findDistinctNonBlankTopics().stream()
         .map(String::trim)
         .filter(v -> !v.isBlank())
         .distinct()
         .forEach(
             value -> {
-          CourseTopic topic = new CourseTopic();
-          topic.setTopic(value);
-          topic.setActive(true);
-          courseTopicRepository.save(topic);
+              CourseTopic topic = new CourseTopic();
+              topic.setTopic(value);
+              topic.setActive(true);
+              courseTopicRepository.save(topic);
             });
   }
 }
