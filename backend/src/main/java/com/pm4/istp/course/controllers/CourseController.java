@@ -21,6 +21,7 @@ import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.mappers.CourseMapper;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.services.CourseService;
+import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.shared.dto.ErrorDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -57,6 +58,7 @@ public class CourseController {
   private final CourseMapper courseMapper;
   private final CourseService courseService;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
+  private final CourseTopicService courseTopicService;
 
   @Operation(
       summary = "Create a course",
@@ -216,6 +218,15 @@ public class CourseController {
       @RequestParam(required = false) String query, Pageable pageable) {
     Page<ListCourseResponseDto> courses = courseService.listPublishedCourses(query, pageable);
     return ResponseEntity.ok(courses);
+  }
+
+  @GetMapping("/topics")
+  @Operation(
+      operationId = "listCourseTopics",
+      summary = "List course topics",
+      description = "Returns the list of allowed course topics for topic selection UIs.")
+  public ResponseEntity<List<String>> listCourseTopics() {
+    return ResponseEntity.ok(courseTopicService.listActiveTopics());
   }
 
   // ── Public catalog endpoints ── accessible to all authenticated users (including students)

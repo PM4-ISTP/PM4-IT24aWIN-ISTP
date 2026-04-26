@@ -47,6 +47,12 @@ type PageResponse<T> = {
 
 const PAGE_SIZE = 10;
 
+const wrapTextStyle: React.CSSProperties = {
+  whiteSpace: "pre-wrap",
+  overflowWrap: "anywhere",
+  wordBreak: "break-word",
+};
+
 function cleanText(v: string) {
   const t = v.trim();
   return t.length === 0 ? null : t;
@@ -61,7 +67,6 @@ function formatDate(value?: string | null) {
 
 export default function AdminChallengeManagement() {
   const [query, setQuery] = useState("");
-  const [owner, setOwner] = useState("");
   const [page, setPage] = useState(0);
 
   const [challenges, setChallenges] = useState<AdminChallengeListItem[]>([]);
@@ -89,22 +94,20 @@ export default function AdminChallengeManagement() {
     },
   });
 
-  const fetchPage = useCallback(async (q: string, o: string, p: number) => {
+  const fetchPage = useCallback(async (q: string, p: number) => {
     setLoading(true);
     setError(null);
     try {
       const url = new URL("/api/backend/api/admin/challenges", window.location.origin);
       const qTrim = q.trim();
-      const oTrim = o.trim();
       if (qTrim) url.searchParams.set("q", qTrim);
-      if (oTrim) url.searchParams.set("owner", oTrim);
       url.searchParams.set("page", String(p));
       url.searchParams.set("size", String(PAGE_SIZE));
       url.searchParams.set("sort", "updatedAt,desc");
 
       const res = await fetch(url.toString(), { method: "GET" });
       if (!res.ok) {
-        setError("Failed to load challenges");
+        setError(`Failed to load challenges (HTTP ${res.status})`);
         return;
       }
       const data = (await res.json()) as PageResponse<AdminChallengeListItem>;
@@ -118,22 +121,17 @@ export default function AdminChallengeManagement() {
   }, []);
 
   useEffect(() => {
-    void fetchPage(query, owner, page);
-  }, [fetchPage, query, owner, page]);
+    void fetchPage(query, page);
+  }, [fetchPage, query, page]);
 
-  const debouncedSearch = useDebouncedCallback((nextQ: string, nextOwner: string) => {
+  const debouncedSearch = useDebouncedCallback((nextQ: string) => {
     setPage(0);
-    void fetchPage(nextQ, nextOwner, 0);
+    void fetchPage(nextQ, 0);
   }, 300);
 
   function onQueryChange(next: string) {
     setQuery(next);
-    debouncedSearch(next, owner);
-  }
-
-  function onOwnerChange(next: string) {
-    setOwner(next);
-    debouncedSearch(query, next);
+    debouncedSearch(next);
   }
 
   const selectedTitle = useMemo(() => selected?.title ?? "", [selected]);
@@ -179,7 +177,7 @@ export default function AdminChallengeManagement() {
       }
       setEditOpened(false);
       setSelected(null);
-      void fetchPage(query, owner, page);
+      void fetchPage(query, page);
     } catch {
       setError("Failed to update challenge");
     } finally {
@@ -202,7 +200,7 @@ export default function AdminChallengeManagement() {
       setDeleteOpened(false);
       setSelected(null);
       setPage(0);
-      void fetchPage(query, owner, 0);
+      void fetchPage(query, 0);
     } catch {
       setError("Failed to delete challenge");
     } finally {
@@ -220,14 +218,7 @@ export default function AdminChallengeManagement() {
             leftSection={<IconSearch size={16} />}
             value={query}
             onChange={(e) => onQueryChange(e.currentTarget.value)}
-            w={320}
-          />
-          <TextInput
-            label="Owner"
-            placeholder="Name or username..."
-            value={owner}
-            onChange={(e) => onOwnerChange(e.currentTarget.value)}
-            w={260}
+            w={420}
           />
         </Group>
         {loading && (
@@ -246,13 +237,13 @@ export default function AdminChallengeManagement() {
         </Text>
       )}
 
-      <Table highlightOnHover withTableBorder striped={false}>
+      <Table highlightOnHover withTableBorder striped={false} style={{ tableLayout: "fixed" }}>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Title</Table.Th>
-            <Table.Th>Creator</Table.Th>
+            <Table.Th style={{ width: 240 }}>Creator</Table.Th>
             <Table.Th>Status</Table.Th>
-            <Table.Th>Updated</Table.Th>
+            <Table.Th style={{ width: 190 }}>Updated</Table.Th>
             <Table.Th style={{ width: 96 }} />
           </Table.Tr>
         </Table.Thead>
@@ -270,11 +261,17 @@ export default function AdminChallengeManagement() {
               <Table.Tr key={c.id}>
                 <Table.Td>
                   <Stack gap={2}>
-                    <Text fw={600} size="sm">
+                    <Text fw={600} size="sm" lineClamp={1} style={wrapTextStyle} title={c.title}>
                       {c.title}
                     </Text>
                     {c.shortDescription ? (
-                      <Text size="xs" c="dimmed" lineClamp={2}>
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        lineClamp={2}
+                        style={wrapTextStyle}
+                        title={c.shortDescription}
+                      >
                         {c.shortDescription}
                       </Text>
                     ) : null}
@@ -282,8 +279,21 @@ export default function AdminChallengeManagement() {
                 </Table.Td>
                 <Table.Td>
                   <Stack gap={2}>
-                    <Text size="sm">{c.creatorName ?? "-"}</Text>
-                    <Text size="xs" c="dimmed">
+                    <Text
+                      size="sm"
+                      lineClamp={1}
+                      style={wrapTextStyle}
+                      title={c.creatorName ?? "-"}
+                    >
+                      {c.creatorName ?? "-"}
+                    </Text>
+                    <Text
+                      size="xs"
+                      c="dimmed"
+                      lineClamp={1}
+                      style={wrapTextStyle}
+                      title={c.creatorUsername ? `@${c.creatorUsername}` : ""}
+                    >
                       {c.creatorUsername ? `@${c.creatorUsername}` : ""}
                     </Text>
                   </Stack>

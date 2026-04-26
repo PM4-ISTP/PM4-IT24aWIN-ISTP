@@ -34,7 +34,12 @@ export function ChallengeCard({
       <Stack gap="sm" h="100%">
         {/* Header: Title + Status badge */}
         <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <Text fw={600} size="sm" lineClamp={2} style={{ flex: 1, minWidth: 0 }}>
+          <Text
+            fw={600}
+            size="sm"
+            lineClamp={2}
+            style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere", wordBreak: "break-word" }}
+          >
             {title}
           </Text>
           <Badge size="xs" variant="light" color={getStatusColor(status)} style={{ flexShrink: 0 }}>
@@ -45,7 +50,12 @@ export function ChallengeCard({
         {/* Short description */}
         <Box style={{ flex: 1 }}>
           {shortDescription && (
-            <Text size="xs" c="dimmed" lineClamp={2} style={{ lineHeight: 1.5 }}>
+            <Text
+              size="xs"
+              c="dimmed"
+              lineClamp={2}
+              style={{ lineHeight: 1.5, overflowWrap: "anywhere", wordBreak: "break-word" }}
+            >
               {shortDescription}
             </Text>
           )}

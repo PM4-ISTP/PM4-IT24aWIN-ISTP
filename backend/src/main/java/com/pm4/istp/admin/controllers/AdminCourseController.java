@@ -26,10 +26,8 @@ public class AdminCourseController {
 
   @GetMapping
   public ResponseEntity<Page<AdminCourseListItemDto>> listCourses(
-      @RequestParam(name = "q", required = false) String query,
-      @RequestParam(name = "owner", required = false) String owner,
-      Pageable pageable) {
-    return ResponseEntity.ok(adminCourseChallengeService.listCourses(query, owner, pageable));
+      @RequestParam(name = "q", required = false) String query, Pageable pageable) {
+    return ResponseEntity.ok(adminCourseChallengeService.listCourses(query, pageable));
   }
 
   @PutMapping("/{id}")

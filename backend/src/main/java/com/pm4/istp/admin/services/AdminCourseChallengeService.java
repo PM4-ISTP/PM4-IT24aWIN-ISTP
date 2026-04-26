@@ -11,6 +11,7 @@ import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
 import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
+import com.pm4.istp.course.services.CourseTopicService;
 import java.security.SecureRandom;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -32,11 +33,17 @@ public class AdminCourseChallengeService {
 
   private final CourseRepository courseRepository;
   private final ChallengeRepository challengeRepository;
+  private final CourseTopicService courseTopicService;
 
   @Transactional(readOnly = true)
-  public Page<AdminCourseListItemDto> listCourses(String query, String owner, Pageable pageable) {
-    return courseRepository.findAllCoursesForAdmin(
-        normalizeQuery(query), normalizeQuery(owner), pageable);
+  public Page<AdminCourseListItemDto> listCourses(String query, Pageable pageable) {
+    String normalizedQuery = normalizeQuery(query);
+
+    if (normalizedQuery == null) {
+      return courseRepository.findAllCoursesForAdmin(pageable);
+    }
+
+    return courseRepository.findAllCoursesForAdminByQuery(normalizedQuery, pageable);
   }
 
   public Course updateCourse(UUID courseId, AdminUpdateCourseRequestDto request) {
@@ -53,7 +60,7 @@ public class AdminCourseChallengeService {
     course.setShortDescription(normalizeBlankToNull(request.getShortDescription()));
     course.setPublished(request.isPublished());
     course.setPrivate(request.isPrivate());
-    course.setTopic(normalizeBlankToNull(request.getTopic()));
+    course.setTopic(courseTopicService.normalizeAndValidate(request.getTopic()));
     course.setImageUrl(normalizeBlankToNull(request.getImageUrl()));
 
     // Ensure private courses have an invite code.
@@ -82,9 +89,14 @@ public class AdminCourseChallengeService {
 
   @Transactional(readOnly = true)
   public Page<AdminChallengeListItemDto> listChallenges(
-      String query, String owner, Pageable pageable) {
-    return challengeRepository.findAllChallengesForAdmin(
-        normalizeQuery(query), normalizeQuery(owner), pageable);
+      String query, Pageable pageable) {
+    String normalizedQuery = normalizeQuery(query);
+
+    if (normalizedQuery == null) {
+      return challengeRepository.findAllChallengesForAdmin(pageable);
+    }
+
+    return challengeRepository.findAllChallengesForAdminByQuery(normalizedQuery, pageable);
   }
 
   public Challenge updateChallenge(UUID challengeId, AdminUpdateChallengeRequestDto request) {

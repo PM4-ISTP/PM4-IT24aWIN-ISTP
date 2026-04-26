@@ -1,9 +1,11 @@
 package com.pm4.istp.course.db.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.UUID;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,28 +14,18 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
+@Table(name = "course_topics")
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "course_challenges")
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-public class CourseChallenge {
+public class CourseTopic {
   @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "id", updatable = false, nullable = false, unique = true)
-  private UUID id;
+  @Column(name = "topic", nullable = false, unique = true, length = 255)
+  private String topic;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "course_id", nullable = false)
-  private Course course;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "challenge_id", nullable = false)
-  private Challenge challenge;
-
-  @Column(name = "order_index", nullable = false)
-  private int orderIndex;
+  @Column(name = "is_active", nullable = false)
+  private boolean active = true;
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)

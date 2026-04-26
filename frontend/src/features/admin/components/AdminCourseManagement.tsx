@@ -15,10 +15,12 @@ import {
   TextInput,
   Textarea,
   Switch,
+  Select,
 } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import { IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
+import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 
 type AdminCourseListItem = {
   id: string;
@@ -43,6 +45,12 @@ type PageResponse<T> = {
 
 const PAGE_SIZE = 10;
 
+const wrapTextStyle: React.CSSProperties = {
+  whiteSpace: "pre-wrap",
+  overflowWrap: "anywhere",
+  wordBreak: "break-word",
+};
+
 function cleanText(v: string) {
   const t = v.trim();
   return t.length === 0 ? null : t;
@@ -56,8 +64,8 @@ function formatDate(value?: string | null) {
 }
 
 export default function AdminCourseManagement() {
+  const topicOptions = useCourseTopicOptions();
   const [query, setQuery] = useState("");
-  const [owner, setOwner] = useState("");
   const [page, setPage] = useState(0);
   const [courses, setCourses] = useState<AdminCourseListItem[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -76,7 +84,7 @@ export default function AdminCourseManagement() {
       shortDescription: "",
       isPublished: false,
       isPrivate: false,
-      topic: "",
+      topic: "" as string,
       imageUrl: "",
     },
     validate: {
@@ -92,22 +100,20 @@ export default function AdminCourseManagement() {
     },
   });
 
-  const fetchPage = useCallback(async (q: string, o: string, p: number) => {
+  const fetchPage = useCallback(async (q: string, p: number) => {
     setLoading(true);
     setError(null);
     try {
       const url = new URL("/api/backend/api/admin/courses", window.location.origin);
       const qTrim = q.trim();
-      const oTrim = o.trim();
       if (qTrim) url.searchParams.set("q", qTrim);
-      if (oTrim) url.searchParams.set("owner", oTrim);
       url.searchParams.set("page", String(p));
       url.searchParams.set("size", String(PAGE_SIZE));
       url.searchParams.set("sort", "updatedAt,desc");
 
       const res = await fetch(url.toString(), { method: "GET" });
       if (!res.ok) {
-        setError("Failed to load courses");
+        setError(`Failed to load courses (HTTP ${res.status})`);
         return;
       }
       const data = (await res.json()) as PageResponse<AdminCourseListItem>;
@@ -121,22 +127,17 @@ export default function AdminCourseManagement() {
   }, []);
 
   useEffect(() => {
-    void fetchPage(query, owner, page);
-  }, [fetchPage, query, owner, page]);
+    void fetchPage(query, page);
+  }, [fetchPage, query, page]);
 
-  const debouncedSearch = useDebouncedCallback((nextQ: string, nextOwner: string) => {
+  const debouncedSearch = useDebouncedCallback((nextQ: string) => {
     setPage(0);
-    void fetchPage(nextQ, nextOwner, 0);
+    void fetchPage(nextQ, 0);
   }, 300);
 
   function onQueryChange(next: string) {
     setQuery(next);
-    debouncedSearch(next, owner);
-  }
-
-  function onOwnerChange(next: string) {
-    setOwner(next);
-    debouncedSearch(query, next);
+    debouncedSearch(next);
   }
 
   const selectedTitle = useMemo(() => selected?.title ?? "", [selected]);
@@ -184,7 +185,7 @@ export default function AdminCourseManagement() {
       }
       setEditOpened(false);
       setSelected(null);
-      void fetchPage(query, owner, page);
+      void fetchPage(query, page);
     } catch {
       setError("Failed to update course");
     } finally {
@@ -207,7 +208,7 @@ export default function AdminCourseManagement() {
       setDeleteOpened(false);
       setSelected(null);
       setPage(0);
-      void fetchPage(query, owner, 0);
+      void fetchPage(query, 0);
     } catch {
       setError("Failed to delete course");
     } finally {
@@ -225,14 +226,7 @@ export default function AdminCourseManagement() {
             leftSection={<IconSearch size={16} />}
             value={query}
             onChange={(e) => onQueryChange(e.currentTarget.value)}
-            w={320}
-          />
-          <TextInput
-            label="Owner"
-            placeholder="Name or username..."
-            value={owner}
-            onChange={(e) => onOwnerChange(e.currentTarget.value)}
-            w={260}
+            w={420}
           />
         </Group>
         {loading && (
@@ -251,13 +245,19 @@ export default function AdminCourseManagement() {
         </Text>
       )}
 
-      <Table highlightOnHover withTableBorder withColumnBorders={false} striped={false}>
+      <Table
+        highlightOnHover
+        withTableBorder
+        withColumnBorders={false}
+        striped={false}
+        style={{ tableLayout: "fixed" }}
+      >
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Title</Table.Th>
-            <Table.Th>Owner</Table.Th>
-            <Table.Th>Visibility</Table.Th>
-            <Table.Th>Updated</Table.Th>
+            <Table.Th style={{ width: 240 }}>Owner</Table.Th>
+            <Table.Th style={{ width: 190 }}>Visibility</Table.Th>
+            <Table.Th style={{ width: 190 }}>Updated</Table.Th>
             <Table.Th style={{ width: 96 }} />
           </Table.Tr>
         </Table.Thead>
@@ -275,11 +275,17 @@ export default function AdminCourseManagement() {
               <Table.Tr key={c.id}>
                 <Table.Td>
                   <Stack gap={2}>
-                    <Text fw={600} size="sm">
+                    <Text fw={600} size="sm" lineClamp={1} style={wrapTextStyle} title={c.title}>
                       {c.title}
                     </Text>
                     {c.shortDescription ? (
-                      <Text size="xs" c="dimmed" lineClamp={2}>
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        lineClamp={2}
+                        style={wrapTextStyle}
+                        title={c.shortDescription}
+                      >
                         {c.shortDescription}
                       </Text>
                     ) : null}
@@ -287,8 +293,21 @@ export default function AdminCourseManagement() {
                 </Table.Td>
                 <Table.Td>
                   <Stack gap={2}>
-                    <Text size="sm">{c.ownerName ?? "-"}</Text>
-                    <Text size="xs" c="dimmed">
+                    <Text
+                      size="sm"
+                      lineClamp={1}
+                      style={wrapTextStyle}
+                      title={c.ownerName ?? "-"}
+                    >
+                      {c.ownerName ?? "-"}
+                    </Text>
+                    <Text
+                      size="xs"
+                      c="dimmed"
+                      lineClamp={1}
+                      style={wrapTextStyle}
+                      title={c.ownerUsername ? `@${c.ownerUsername}` : ""}
+                    >
                       {c.ownerUsername ? `@${c.ownerUsername}` : ""}
                     </Text>
                   </Stack>
@@ -362,7 +381,16 @@ export default function AdminCourseManagement() {
               maxRows={8}
               {...form.getInputProps("description")}
             />
-            <TextInput label="Topic" {...form.getInputProps("topic")} />
+            <Select
+              label="Topic"
+              placeholder="Select a topic"
+              data={topicOptions.options}
+              value={form.values.topic || null}
+              onChange={(value) => form.setFieldValue("topic", value ?? "")}
+              clearable
+              searchable
+              disabled={topicOptions.loading}
+            />
             <TextInput label="Image URL" {...form.getInputProps("imageUrl")} />
 
             <Group justify="space-between" wrap="wrap">

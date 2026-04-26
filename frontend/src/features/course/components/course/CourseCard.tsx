@@ -113,7 +113,9 @@ export function CourseCard({
         <Text
           size="sm"
           c="dimmed"
+          lineClamp={4}
           style={{ flex: 1, overflowWrap: "break-word", wordBreak: "break-word" }}
+          title={previewText ?? undefined}
         >
           {previewText || "No short description provided."}
         </Text>

@@ -95,26 +95,45 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
             c.creator.username
           )
           from Challenge c
-          where (:query is null
-              or lower(c.title) like lower(concat('%', :query, '%'))
-              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
-              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%')))
-            and (:owner is null
-              or lower(coalesce(c.creator.name, '')) like lower(concat('%', :owner, '%'))
-              or lower(coalesce(c.creator.username, '')) like lower(concat('%', :owner, '%')))
           """,
       countQuery =
           """
           select count(c)
           from Challenge c
-          where (:query is null
-              or lower(c.title) like lower(concat('%', :query, '%'))
-              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
-              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%')))
-            and (:owner is null
-              or lower(coalesce(c.creator.name, '')) like lower(concat('%', :owner, '%'))
-              or lower(coalesce(c.creator.username, '')) like lower(concat('%', :owner, '%')))
           """)
-  Page<AdminChallengeListItemDto> findAllChallengesForAdmin(
-      @Param("query") String query, @Param("owner") String owner, Pageable pageable);
+  Page<AdminChallengeListItemDto> findAllChallengesForAdmin(Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select new com.pm4.istp.admin.dto.AdminChallengeListItemDto(
+            c.id,
+            c.title,
+            c.shortDescription,
+            c.description,
+            c.status,
+            c.difficulty,
+            c.maxScore,
+            (select count(cc) from CourseChallenge cc where cc.challenge = c),
+            c.createdAt,
+            c.updatedAt,
+            c.creator.id,
+            c.creator.name,
+            c.creator.username
+          )
+          from Challenge c
+          where lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+          """,
+      countQuery =
+          """
+          select count(c)
+          from Challenge c
+          where lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+          """)
+  Page<AdminChallengeListItemDto> findAllChallengesForAdminByQuery(
+      @Param("query") String query, Pageable pageable);
 }

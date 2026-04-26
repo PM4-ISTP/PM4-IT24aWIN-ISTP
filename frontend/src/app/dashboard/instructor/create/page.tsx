@@ -28,7 +28,7 @@ import {
 } from "@/src/features/course/utils/courseText";
 import { visibilityToFlags } from "@/src/features/course/utils/courseVisibility";
 import { useToast } from "@/src/shared/hooks/useToast";
-import { TOPIC_OPTIONS } from "@/src/features/course/constants/courseConstants";
+import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 import type { CourseVisibility } from "@/src/shared/types/course";
 
 export default function CreateCourse() {
@@ -46,6 +46,7 @@ export default function CreateCourse() {
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const charLimitToast = useToast();
+  const topicOptions = useCourseTopicOptions();
 
   const shortDescriptionCharCount = shortDescription.length;
 
@@ -166,10 +167,12 @@ export default function CreateCourse() {
             <Select
               label="Topic"
               placeholder="Select a topic"
-              data={TOPIC_OPTIONS}
+              data={topicOptions.options}
               value={topic}
               onChange={setTopic}
               clearable
+              searchable
+              disabled={topicOptions.loading}
             />
 
             <TextInput
