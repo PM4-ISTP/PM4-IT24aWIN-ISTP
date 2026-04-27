@@ -276,7 +276,7 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get enrolled courses of user
+     * Get enrolled courses of user (public and private)
      * @description Returns a paginated list of the enrolled courses of the user.
      */
     get: operations["listEnrollments"];
@@ -687,10 +687,10 @@ export interface components {
       roles?: ("ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT")[];
     };
     PageListInstructorUserResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListInstructorUserResponseDto"][];
@@ -708,11 +708,11 @@ export interface components {
       /** Format: int64 */
       offset?: number;
       sort?: components["schemas"]["SortObject"];
-      paged?: boolean;
-      /** Format: int32 */
-      pageNumber?: number;
       /** Format: int32 */
       pageSize?: number;
+      /** Format: int32 */
+      pageNumber?: number;
+      paged?: boolean;
       unpaged?: boolean;
     };
     SortObject: {
@@ -743,10 +743,10 @@ export interface components {
       isPrivate?: boolean;
     };
     PageListCourseResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListCourseResponseDto"][];
@@ -778,10 +778,10 @@ export interface components {
       updatedAt?: string;
     };
     PageListChallengeResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListChallengeResponseDto"][];

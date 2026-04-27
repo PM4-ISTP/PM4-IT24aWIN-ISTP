@@ -300,7 +300,7 @@ public class CourseController {
   }
 
   @Operation(
-      summary = "Get enrolled courses of user",
+      summary = "Get enrolled courses of user (public and private)",
       description = "Returns a paginated list of the enrolled courses of the user.")
   @ApiResponses(
       value = {
