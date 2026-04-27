@@ -103,6 +103,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get courses for which the user is their instructor
+     * @description Returns a paginated list of courses for which the user is their instructor (owner or collaborator).
+     */
     get: operations["listCourses"];
     put?: never;
     /**
@@ -110,6 +114,26 @@ export interface paths {
      * @description Creates a new course with its primary instructor and returns the persisted course.
      */
     post: operations["createCourse"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/courses/{id}/invite-code/regenerate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Regenerate invite code
+     * @description Regenerates the invite code of a private course. Only the course owner can perform this action.
+     */
+    post: operations["regenerateInviteCode"];
     delete?: never;
     options?: never;
     head?: never;
@@ -141,7 +165,31 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Enroll in a course
+     * @description Enroll in a course and returns the course in which the student enrolled themselves.
+     */
     post: operations["enrollInPublicCourse"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/courses/catalog/join": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Join a private course by invite code
+     * @description Enrolls the authenticated user into a private course using a 6-character invite code.
+     */
+    post: operations["joinByInviteCode"];
     delete?: never;
     options?: never;
     head?: never;
@@ -227,6 +275,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get enrolled courses of user (public and private)
+     * @description Returns a paginated list of the enrolled courses of the user.
+     */
     get: operations["listEnrollments"];
     put?: never;
     post?: never;
@@ -243,6 +295,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get published courses
+     * @description Returns a paginated list of published courses.
+     */
     get: operations["listPublishedCourses"];
     put?: never;
     post?: never;
@@ -259,6 +315,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get a course by ID as a student
+     * @description Returns a detailed response of a course for a student. User IDs are omitted due to security concerns.
+     */
     get: operations["getPublicCourse"];
     put?: never;
     post?: never;
@@ -341,8 +401,10 @@ export interface components {
       imageUrl?: string;
       topic?: string;
       instructors: components["schemas"]["UpdateCourseInstructorRequestDto"][];
+      private?: boolean;
       published?: boolean;
       isPublished?: boolean;
+      isPrivate?: boolean;
     };
     CourseChallengeResponseDto: {
       /** Format: uuid */
@@ -379,6 +441,7 @@ export interface components {
       participantCount?: number;
       imageUrl?: string;
       topic?: string;
+      inviteCode?: string;
       courseInstructors?: components["schemas"]["CourseDetailInstructorResponseDto"][];
       participants?: components["schemas"]["CourseParticipantResponseDto"][];
       courseChallenges?: components["schemas"]["CourseChallengeResponseDto"][];
@@ -386,10 +449,12 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
+      private?: boolean;
       enrolled?: boolean;
       published?: boolean;
       isEnrolled?: boolean;
       isPublished?: boolean;
+      isPrivate?: boolean;
     };
     CourseParticipantResponseDto: {
       /** Format: uuid */
@@ -418,6 +483,15 @@ export interface components {
     UpdateCourseChallengesRequestDto: {
       challenges: components["schemas"]["CourseChallengeItemDto"][];
     };
+    SubTaskRequestDto: {
+      /** Format: uuid */
+      id?: string;
+      title: string;
+      description: string;
+      flag?: string;
+      /** Format: int32 */
+      orderIndex?: number;
+    };
     UpdateChallengeRequestDto: {
       title: string;
       shortDescription?: string;
@@ -426,6 +500,7 @@ export interface components {
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
+      subTasks: components["schemas"]["SubTaskRequestDto"][];
     };
     ChallengeCreatorResponseDto: {
       /** Format: uuid */
@@ -447,10 +522,20 @@ export interface components {
       creator?: components["schemas"]["ChallengeCreatorResponseDto"];
       /** Format: int64 */
       courseCount?: number;
+      subTasks?: components["schemas"]["SubTaskResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
+    };
+    SubTaskResponseDto: {
+      /** Format: uuid */
+      id?: string;
+      title?: string;
+      description?: string;
+      flag?: string;
+      /** Format: int32 */
+      orderIndex?: number;
     };
     AdminConfigRequest: {
       cpuLimit?: string;
@@ -477,8 +562,10 @@ export interface components {
       imageUrl?: string;
       topic?: string;
       instructors: components["schemas"]["CreateCourseInstructorRequestDto"][];
+      private?: boolean;
       published?: boolean;
       isPublished?: boolean;
+      isPrivate?: boolean;
     };
     CreateCourseInstructorResponseDto: {
       /** Format: uuid */
@@ -507,8 +594,10 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
+      private?: boolean;
       published?: boolean;
       isPublished?: boolean;
+      isPrivate?: boolean;
     };
     PublicCourseDetailResponseDto: {
       /** Format: uuid */
@@ -520,6 +609,7 @@ export interface components {
       participantCount?: number;
       imageUrl?: string;
       topic?: string;
+      inviteCode?: string;
       courseInstructors?: components["schemas"]["CourseDetailInstructorResponseDto"][];
       participants?: components["schemas"]["CourseParticipantResponseDto"][];
       courseChallenges?: components["schemas"]["ChallengeDetailResponseDto"][];
@@ -532,6 +622,9 @@ export interface components {
       isEnrolled?: boolean;
       isPublished?: boolean;
     };
+    JoinByInviteCodeRequestDto: {
+      code: string;
+    };
     CreateChallengeRequestDto: {
       title: string;
       shortDescription?: string;
@@ -540,6 +633,7 @@ export interface components {
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
+      subTasks: components["schemas"]["SubTaskRequestDto"][];
     };
     CreateChallengeResponseDto: {
       /** Format: uuid */
@@ -555,6 +649,7 @@ export interface components {
       maxScore?: number;
       /** Format: uuid */
       creatorId?: string;
+      subTasks?: components["schemas"]["SubTaskResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
@@ -592,10 +687,10 @@ export interface components {
       roles?: ("ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT")[];
     };
     PageListInstructorUserResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListInstructorUserResponseDto"][];
@@ -613,11 +708,11 @@ export interface components {
       /** Format: int64 */
       offset?: number;
       sort?: components["schemas"]["SortObject"];
-      paged?: boolean;
       /** Format: int32 */
       pageSize?: number;
       /** Format: int32 */
       pageNumber?: number;
+      paged?: boolean;
       unpaged?: boolean;
     };
     SortObject: {
@@ -642,14 +737,16 @@ export interface components {
       ownerName?: string;
       ownerPicture?: string;
       ownerTitle?: string;
+      private?: boolean;
       published?: boolean;
       isPublished?: boolean;
+      isPrivate?: boolean;
     };
     PageListCourseResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListCourseResponseDto"][];
@@ -681,10 +778,10 @@ export interface components {
       updatedAt?: string;
     };
     PageListChallengeResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListChallengeResponseDto"][];
@@ -1100,13 +1197,22 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Courses found */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PageListCourseResponseDto"];
+        };
+      };
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -1135,6 +1241,55 @@ export interface operations {
       };
       /** @description Invalid request data or referenced user not found */
       400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+    };
+  };
+  regenerateInviteCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Invite code regenerated successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["CourseDetailResponseDto"];
+        };
+      };
+      /** @description Access denied or invite code regeneration not allowed for public course */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Course not found */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -1186,13 +1341,73 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Enrolled in course */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PublicCourseDetailResponseDto"];
+        };
+      };
+      /** @description Unexpected server error. Might occur, when user or course does not exist or the course is not public. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+    };
+  };
+  joinByInviteCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["JoinByInviteCodeRequestDto"];
+      };
+    };
+    responses: {
+      /** @description Joined course successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["PublicCourseDetailResponseDto"];
+        };
+      };
+      /** @description Invalid request payload or user not found */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Invalid or expired invite code */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -1342,13 +1557,22 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Enrollments found */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PageListCourseResponseDto"];
+        };
+      };
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -1365,13 +1589,22 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Courses found */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PageListCourseResponseDto"];
+        };
+      };
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -1387,13 +1620,31 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Course found */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PublicCourseDetailResponseDto"];
+        };
+      };
+      /** @description This can indicate one of two things. First this course is private and the user is neither an instructor of the course nor enrolled in the course. Second this course is a draft and the user is not an instructor of the course. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };

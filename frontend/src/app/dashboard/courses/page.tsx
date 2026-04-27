@@ -15,8 +15,8 @@ export default async function CoursesPage(props: { searchParams: Promise<{ page?
 
       {result.success ? (
         <CourseGrid
-          courses={result.data.content}
-          totalPages={result.data.totalPages}
+          courses={result.data.content ?? []}
+          totalPages={result.data.totalPages ?? 1}
           currentPage={currentPage}
           coursePathPrefix="/dashboard/courses"
         />

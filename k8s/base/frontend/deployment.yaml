@@ -24,11 +24,31 @@ spec:
           ports:
             - containerPort: 3000
           env:
+            - name: NEXTAUTH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: nextauth-url
             - name: NEXTAUTH_SECRET
               valueFrom:
                 secretKeyRef:
                   name: nextauth-secret
                   key: NEXTAUTH_SECRET
+            - name: AUTH_KEYCLOAK_ISSUER
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-issuer-uri
+            - name: AUTH_KEYCLOAK_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-client-id
+            - name: AUTH_KEYCLOAK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nextauth-secret
+                  key: AUTH_KEYCLOAK_SECRET
             - name: KEYCLOAK_ADMIN_URL
               valueFrom:
                 configMapKeyRef:

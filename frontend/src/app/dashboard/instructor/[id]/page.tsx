@@ -39,6 +39,7 @@ import {
 import {
   deleteCourse,
   fetchCourse,
+  removeCourseParticipant,
   regenerateInviteCode,
   updateCourse,
 } from "@/src/features/course/actions/courses";
@@ -107,6 +108,9 @@ export default function EditCourse() {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
+
+  const [removeParticipantError, setRemoveParticipantError] = useState<string | null>(null);
+  const [removingParticipantIds, setRemovingParticipantIds] = useState<string[]>([]);
 
   function handleCollaboratorChange(newValue: string[]) {
     const ownerId = owner?.id;
@@ -278,6 +282,38 @@ export default function EditCourse() {
       setCodeCopied(true);
       setTimeout(() => setCodeCopied(false), 2000);
     });
+  }
+
+  function handleRemoveParticipant(participantId: string) {
+    if (!isOwner) {
+      setRemoveParticipantError("Only the course owner can remove participants.");
+      return;
+    }
+
+    if (removingParticipantIds.includes(participantId)) return;
+
+    setRemoveParticipantError(null);
+    setRemovingParticipantIds((ids) => [...ids, participantId]);
+
+    void (async () => {
+      const result = await removeCourseParticipant(courseId, participantId);
+
+      setRemovingParticipantIds((ids) => ids.filter((id) => id !== participantId));
+
+      if (!result.success) {
+        setRemoveParticipantError(result.error);
+        return;
+      }
+
+      setCourse((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          participants: prev.participants.filter((p) => p.id !== participantId),
+          participantCount: Math.max(0, prev.participantCount - 1),
+        };
+      });
+    })();
   }
 
   const owner =
@@ -536,6 +572,10 @@ export default function EditCourse() {
                 owner={owner}
                 collaborators={collaborators}
                 participants={course?.participants ?? []}
+                canRemoveParticipants={isOwner}
+                removeParticipantError={removeParticipantError}
+                removingParticipantIds={removingParticipantIds}
+                onRemoveParticipant={handleRemoveParticipant}
               />
 
               {visibility === "PRIVATE" && (

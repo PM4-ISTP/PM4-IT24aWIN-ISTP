@@ -2,9 +2,12 @@ package com.pm4.istp.course.dto;
 
 import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,4 +29,8 @@ public class CreateChallengeRequestDto {
 
   @NotNull(message = "Challenge difficulty is required")
   private ChallengeDifficultyEnum difficulty;
+
+  @NotEmpty(message = "At least one sub task is required")
+  @Valid
+  private List<SubTaskRequestDto> subTasks;
 }

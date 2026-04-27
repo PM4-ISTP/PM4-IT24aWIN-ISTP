@@ -5,6 +5,7 @@ import UserMenu from "@/src/features/user/components/UserMenu";
 import DashboardNav from "@/src/shared/components/DashboardNav";
 import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
 import { ROLES } from "@/src/shared/lib/roles";
+import SessionErrorHandler from "@/src/features/user/components/SessionErrorHandler";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
@@ -74,6 +75,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           MozOsxFontSmoothing: "grayscale",
         }}
       >
+        <SessionErrorHandler />
         {children}
       </AppShellMain>
     </AppShell>

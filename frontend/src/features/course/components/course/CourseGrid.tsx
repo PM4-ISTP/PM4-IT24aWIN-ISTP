@@ -3,7 +3,7 @@
 import { Group, Pagination, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CourseCard } from "@/src/features/course/components/course/CourseCard";
-import type { ListCourseResponseDto } from "@/src/shared/types/course";
+import type { ListCourseResponseDto } from "@/src/features/course/actions/courses";
 
 interface CourseGridProps {
   courses: ListCourseResponseDto[];
@@ -45,12 +45,7 @@ export function CourseGrid({
         {courses.map((course) => (
           <CourseCard
             key={course.id}
-            {...course}
-            updatedAt={new Date(course.updatedAt).toLocaleDateString("de-CH", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
+            course={course}
             onClick={coursePathPrefix ? handleCourseOpen : undefined}
           />
         ))}
