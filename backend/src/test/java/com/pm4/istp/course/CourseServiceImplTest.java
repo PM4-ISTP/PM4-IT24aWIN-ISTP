@@ -254,7 +254,7 @@ class CourseServiceImplTest {
 
     when(courseRepository.findPublishedCoursesByQuery("secure", pageable)).thenReturn(expected);
 
-    Page<ListCourseResponseDto> result = courseService.listPublishedCourses("  secure  ", pageable);
+    Page<ListCourseResponseDto> result = courseService.listPublishedCourses("  secure  ", null, pageable);
 
     assertThat(result).isSameAs(expected);
     verify(courseRepository).findPublishedCoursesByQuery("secure", pageable);
@@ -267,7 +267,7 @@ class CourseServiceImplTest {
 
     when(courseRepository.findPublishedCourses(pageable)).thenReturn(expected);
 
-    Page<ListCourseResponseDto> result = courseService.listPublishedCourses("   ", pageable);
+    Page<ListCourseResponseDto> result = courseService.listPublishedCourses("   ", null, pageable);
 
     assertThat(result).isSameAs(expected);
     verify(courseRepository).findPublishedCourses(pageable);

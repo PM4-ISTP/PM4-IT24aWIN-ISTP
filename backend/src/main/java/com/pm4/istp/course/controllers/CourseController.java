@@ -215,8 +215,11 @@ public class CourseController {
 
   @GetMapping("/catalog")
   public ResponseEntity<Page<ListCourseResponseDto>> listPublishedCourses(
-      @RequestParam(required = false) String query, Pageable pageable) {
-    Page<ListCourseResponseDto> courses = courseService.listPublishedCourses(query, pageable);
+      @RequestParam(required = false) String query,
+      @RequestParam(required = false) String topic,
+      Pageable pageable) {
+    String normalizedTopic = courseTopicService.normalizeAndValidate(topic);
+    Page<ListCourseResponseDto> courses = courseService.listPublishedCourses(query, normalizedTopic, pageable);
     return ResponseEntity.ok(courses);
   }
 

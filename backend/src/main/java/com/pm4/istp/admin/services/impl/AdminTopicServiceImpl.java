@@ -6,6 +6,7 @@ import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.CourseTopicRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional
 public class AdminTopicServiceImpl implements AdminTopicService {
+  private static final int MIN_TOPIC_LENGTH = 3;
+  private static final int MAX_TOPIC_LENGTH = 24;
   private final CourseTopicRepository courseTopicRepository;
   private final CourseRepository courseRepository;
+
+  @Value("${istp.topics.max-count:200}")
+  private long maxTopicCount;
 
   @Override
   @Transactional(readOnly = true)
@@ -37,6 +43,10 @@ public class AdminTopicServiceImpl implements AdminTopicService {
       existing.setActive(true);
       courseTopicRepository.save(existing);
       return;
+    }
+
+    if (courseTopicRepository.count() >= maxTopicCount) {
+      throw new IllegalArgumentException("Topic limit reached");
     }
 
     CourseTopic topic = new CourseTopic();
@@ -69,6 +79,15 @@ public class AdminTopicServiceImpl implements AdminTopicService {
     String trimmed = value.trim();
     if (trimmed.isBlank()) {
       throw new IllegalArgumentException("Topic value is required");
+    }
+    if (trimmed.length() < MIN_TOPIC_LENGTH) {
+      throw new IllegalArgumentException("Topic must be at least 3 characters");
+    }
+    if (trimmed.length() > MAX_TOPIC_LENGTH) {
+      throw new IllegalArgumentException("Topic must be at most 24 characters");
+    }
+    if (!trimmed.matches("^[A-Za-z][A-Za-z0-9-]*$")) {
+      throw new IllegalArgumentException("Topic must be a single word (letters, numbers, '-')");
     }
     return trimmed;
   }

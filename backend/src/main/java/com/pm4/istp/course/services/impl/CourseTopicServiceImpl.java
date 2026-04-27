@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional
 public class CourseTopicServiceImpl implements CourseTopicService {
+  private static final int MAX_TOPIC_LENGTH = 24;
   private final CourseTopicRepository courseTopicRepository;
 
   @Override
@@ -30,6 +31,9 @@ public class CourseTopicServiceImpl implements CourseTopicService {
     String normalized = topic.trim();
     if (normalized.isBlank()) {
       return null;
+    }
+    if (normalized.length() > MAX_TOPIC_LENGTH) {
+      throw new IllegalArgumentException("Invalid topic. Please select a topic from the list.");
     }
     if (!courseTopicRepository.existsByTopicAndActiveTrue(normalized)) {
       throw new IllegalArgumentException("Invalid topic. Please select a topic from the list.");

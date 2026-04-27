@@ -340,12 +340,21 @@ public class CourseServiceImpl implements CourseService {
   }
 
   @Override
-  public Page<ListCourseResponseDto> listPublishedCourses(String query, Pageable pageable) {
+  public Page<ListCourseResponseDto> listPublishedCourses(String query, String topic, Pageable pageable) {
     String normalizedQuery = query == null || query.trim().isEmpty() ? null : query.trim();
-    if (normalizedQuery == null) {
-      return courseRepository.findPublishedCourses(pageable);
+    String normalizedTopic = topic == null || topic.trim().isEmpty() ? null : topic.trim();
+
+    if (normalizedTopic == null) {
+      if (normalizedQuery == null) {
+        return courseRepository.findPublishedCourses(pageable);
+      }
+      return courseRepository.findPublishedCoursesByQuery(normalizedQuery, pageable);
     }
-    return courseRepository.findPublishedCoursesByQuery(normalizedQuery, pageable);
+
+    if (normalizedQuery == null) {
+      return courseRepository.findPublishedCoursesByTopic(normalizedTopic, pageable);
+    }
+    return courseRepository.findPublishedCoursesByQueryAndTopic(normalizedQuery, normalizedTopic, pageable);
   }
 
   @Override

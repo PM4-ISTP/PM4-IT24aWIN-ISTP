@@ -7,6 +7,6 @@ import lombok.Data;
 @Data
 public class AdminTopicRequest {
   @NotBlank(message = "Topic value is required")
-  @Size(max = 255, message = "Topic must be at most 255 characters")
+  @Size(min = 3, max = 24, message = "Topic must be between 3 and 24 characters")
   private String value;
 }

@@ -175,6 +175,12 @@ export default function CreateCourse() {
               disabled={topicOptions.loading}
             />
 
+            {topicOptions.error && (
+              <Alert color="red" variant="light" title="Topics could not be loaded">
+                You can still create the course without selecting a topic.
+              </Alert>
+            )}
+
             <TextInput
               label="Course Image URL"
               placeholder="https://example.com/image.jpg"

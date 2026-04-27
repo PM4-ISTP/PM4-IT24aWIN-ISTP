@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActionIcon,
+  Affix,
   Badge,
   Button,
   Group,
   Loader,
   Modal,
+  Notification,
   NumberInput,
   Pagination,
   Select,
@@ -17,10 +19,15 @@ import {
   TextInput,
   Textarea,
 } from "@mantine/core";
-import { useDebouncedCallback } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
-import { IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconPencil, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
+import { useAdminPagedList } from "@/src/features/admin/hooks/useAdminPagedList";
+import { cleanText, formatDate, wrapTextStyle } from "@/src/features/admin/lib/adminUi";
+import MyEditor from "@/src/shared/components/MyEditor";
+import { useToast } from "@/src/shared/hooks/useToast";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/features/course/constants/challengeConstants";
+import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
 
 type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC";
 type ChallengeDifficulty = "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
@@ -41,39 +48,27 @@ type AdminChallengeListItem = {
   creatorUsername: string | null;
 };
 
-type PageResponse<T> = {
-  content?: T[];
-  totalPages?: number;
-};
-
 const PAGE_SIZE = 10;
 
-const wrapTextStyle: React.CSSProperties = {
-  whiteSpace: "pre-wrap",
-  overflowWrap: "anywhere",
-  wordBreak: "break-word",
-};
-
-function cleanText(v: string) {
-  const t = v.trim();
-  return t.length === 0 ? null : t;
-}
-
-function formatDate(value?: string | null) {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString();
-}
-
 export default function AdminChallengeManagement() {
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(0);
-
-  const [challenges, setChallenges] = useState<AdminChallengeListItem[]>([]);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const charLimitToast = useToast();
+  const {
+    query,
+    onQueryChange,
+    page,
+    setPage,
+    items: challenges,
+    totalPages,
+    loading,
+    error,
+    setError,
+    refresh,
+  } = useAdminPagedList<AdminChallengeListItem>({
+    endpoint: "/api/backend/api/admin/challenges",
+    label: "challenges",
+    pageSize: PAGE_SIZE,
+    sort: "updatedAt,desc",
+  });
 
   const [editOpened, setEditOpened] = useState(false);
   const [deleteOpened, setDeleteOpened] = useState(false);
@@ -84,7 +79,7 @@ export default function AdminChallengeManagement() {
     initialValues: {
       title: "",
       shortDescription: "",
-      description: "",
+      description: "<p>Add a description...</p>",
       status: "DRAFT" as ChallengeStatus,
       difficulty: "BEGINNER" as ChallengeDifficulty,
       maxScore: 0,
@@ -95,64 +90,23 @@ export default function AdminChallengeManagement() {
     },
   });
 
-  const fetchPage = useCallback(async (q: string, p: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const url = new URL("/api/backend/api/admin/challenges", window.location.origin);
-      const qTrim = q.trim();
-      if (qTrim) url.searchParams.set("q", qTrim);
-      url.searchParams.set("page", String(p));
-      url.searchParams.set("size", String(PAGE_SIZE));
-      url.searchParams.set("sort", "updatedAt,desc");
-
-      const res = await fetch(url.toString(), { method: "GET" });
-      if (!res.ok) {
-        const msg = await readBackendError(res);
-        setError(`Failed to load challenges (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
-        return;
-      }
-      const data = (await res.json()) as PageResponse<AdminChallengeListItem>;
-      setChallenges(data.content ?? []);
-      setTotalPages(data.totalPages ?? 0);
-    } catch {
-      setError("Failed to load challenges");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void fetchPage(query, page);
-  }, [fetchPage, query, page]);
-
-  const debouncedSearch = useDebouncedCallback((nextQ: string) => {
-    setPage(0);
-    void fetchPage(nextQ, 0);
-  }, 300);
-
-  function onQueryChange(next: string) {
-    setQuery(next);
-    debouncedSearch(next);
-  }
-
   const selectedTitle = useMemo(() => selected?.title ?? "", [selected]);
 
-  function openEdit(ch: AdminChallengeListItem) {
-    setSelected(ch);
+  function openEdit(challenge: AdminChallengeListItem) {
+    setSelected(challenge);
     form.setValues({
-      title: ch.title ?? "",
-      shortDescription: ch.shortDescription ?? "",
-      description: ch.description ?? "",
-      status: ch.status ?? "DRAFT",
-      difficulty: ch.difficulty ?? "BEGINNER",
-      maxScore: ch.maxScore ?? 0,
+      title: challenge.title ?? "",
+      shortDescription: challenge.shortDescription ?? "",
+      description: challenge.description ?? "<p>Add a description...</p>",
+      status: challenge.status ?? "DRAFT",
+      difficulty: challenge.difficulty ?? "BEGINNER",
+      maxScore: challenge.maxScore ?? 0,
     });
     setEditOpened(true);
   }
 
-  function openDelete(ch: AdminChallengeListItem) {
-    setSelected(ch);
+  function openDelete(challenge: AdminChallengeListItem) {
+    setSelected(challenge);
     setDeleteOpened(true);
   }
 
@@ -161,12 +115,13 @@ export default function AdminChallengeManagement() {
     setSaving(true);
     setError(null);
     try {
+      const normalizedShortDescription = normalizeShortDescription(values.shortDescription);
       const res = await fetch(`/api/backend/api/admin/challenges/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: values.title.trim(),
-          shortDescription: cleanText(values.shortDescription),
+          shortDescription: cleanText(normalizedShortDescription),
           description: cleanText(values.description),
           status: values.status,
           difficulty: values.difficulty,
@@ -180,7 +135,7 @@ export default function AdminChallengeManagement() {
       }
       setEditOpened(false);
       setSelected(null);
-      void fetchPage(query, page);
+      refresh();
     } catch {
       setError("Failed to update challenge");
     } finally {
@@ -203,8 +158,11 @@ export default function AdminChallengeManagement() {
       }
       setDeleteOpened(false);
       setSelected(null);
-      setPage(0);
-      void fetchPage(query, 0);
+      if (page !== 0) {
+        setPage(0);
+      } else {
+        refresh();
+      }
     } catch {
       setError("Failed to delete challenge");
     } finally {
@@ -283,12 +241,7 @@ export default function AdminChallengeManagement() {
                 </Table.Td>
                 <Table.Td>
                   <Stack gap={2}>
-                    <Text
-                      size="sm"
-                      lineClamp={1}
-                      style={wrapTextStyle}
-                      title={c.creatorName ?? "-"}
-                    >
+                    <Text size="sm" lineClamp={1} style={wrapTextStyle} title={c.creatorName ?? "-"}>
                       {c.creatorName ?? "-"}
                     </Text>
                     <Text
@@ -304,22 +257,14 @@ export default function AdminChallengeManagement() {
                 </Table.Td>
                 <Table.Td>
                   <Group gap="xs">
-                    <Badge
-                      variant="light"
-                      color={
-                        c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"
-                      }
-                    >
+                    <Badge variant="light" color={c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"}>
                       {c.status}
                     </Badge>
                     <Badge variant="light" color="blue">
                       {c.difficulty}
                     </Badge>
-                    <Badge variant="light" color="gray">
-                      Score {c.maxScore ?? 0}
-                    </Badge>
-                    <Badge variant="light" color="gray">
-                      In {c.courseCount ?? 0} courses
+                    <Badge variant="light" color="grape">
+                      Courses: {c.courseCount}
                     </Badge>
                   </Group>
                 </Table.Td>
@@ -365,23 +310,29 @@ export default function AdminChallengeManagement() {
         centered
         size="lg"
       >
-        <form onSubmit={form.onSubmit((values) => void submitEdit(values))}>
-          <Stack gap="sm">
-            <TextInput label="Title" required {...form.getInputProps("title")} />
-            <Textarea
-              label="Short description"
-              autosize
-              minRows={2}
-              maxRows={4}
-              {...form.getInputProps("shortDescription")}
-            />
-            <Textarea
-              label="Description"
-              autosize
-              minRows={3}
-              maxRows={8}
-              {...form.getInputProps("description")}
-            />
+	        <form onSubmit={form.onSubmit((values) => void submitEdit(values))}>
+	          <Stack gap="sm">
+	            <TextInput label="Title" required {...form.getInputProps("title")} />
+	            <Textarea
+	              label="Short description"
+	              autosize
+	              minRows={2}
+	              maxRows={4}
+	              value={form.values.shortDescription}
+	              onChange={(e) => {
+	                const next = e.currentTarget.value;
+	                if (next.length > CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS) {
+	                  charLimitToast.show();
+	                  return;
+	                }
+	                form.setFieldValue("shortDescription", next);
+	              }}
+	              description={`${form.values.shortDescription.length}/${CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
+	            />
+	            <MyEditor
+	              description={form.values.description}
+	              setDescription={(value) => form.setFieldValue("description", value)}
+	            />
             <Group grow>
               <Select
                 label="Status"
@@ -427,12 +378,7 @@ export default function AdminChallengeManagement() {
         </form>
       </Modal>
 
-      <Modal
-        opened={deleteOpened}
-        onClose={() => setDeleteOpened(false)}
-        title="Delete Challenge"
-        centered
-      >
+      <Modal opened={deleteOpened} onClose={() => setDeleteOpened(false)} title="Delete Challenge" centered>
         <Stack gap="md">
           <Text size="sm">
             Delete{" "}
@@ -450,7 +396,22 @@ export default function AdminChallengeManagement() {
             </Button>
           </Group>
         </Stack>
-      </Modal>
-    </Stack>
-  );
-}
+	      </Modal>
+
+	      <Affix position={{ bottom: 20, right: 20 }}>
+	        {charLimitToast.visible && (
+	          <Notification
+	            color="orange"
+	            title="Character limit reached"
+	            onClose={charLimitToast.hide}
+	            withCloseButton
+	            icon={<IconX size={18} />}
+	          >
+	            The short description cannot exceed {CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters
+	            (including spaces).
+	          </Notification>
+	        )}
+	      </Affix>
+	    </Stack>
+	  );
+	}

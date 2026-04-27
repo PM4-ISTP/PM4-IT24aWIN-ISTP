@@ -1,16 +1,27 @@
-import { Alert, Box, Button, Group, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Alert, Box, Button, Group, NativeSelect, Stack, Text, TextInput, Title } from "@mantine/core";
 import Link from "next/link";
-import { fetchPublishedCourses } from "@/src/features/course/actions/courses";
+import { fetchCourseTopics, fetchPublishedCourses } from "@/src/features/course/actions/courses";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
 
 export default async function CatalogPage(props: {
-  searchParams: Promise<{ page?: string; query?: string }>;
+  searchParams: Promise<{ page?: string; query?: string; topic?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const currentPage = Math.max(1, parseInt(searchParams.page ?? "1"));
   const query = searchParams.query ?? "";
-  const result = await fetchPublishedCourses(query, currentPage - 1, 12);
+  const topic = searchParams.topic ?? "";
+
+  const [result, topicsResult] = await Promise.all([
+    fetchPublishedCourses(query, currentPage - 1, 12, topic),
+    fetchCourseTopics(),
+  ]);
+
+  const topics = topicsResult.success ? topicsResult.data : [];
+  const topicData = [
+    { value: "", label: "All topics" },
+    ...topics.map((t) => ({ value: t, label: t })),
+  ];
 
   return (
     <Stack p="xl" gap="lg">
@@ -31,20 +42,27 @@ export default async function CatalogPage(props: {
           padding: "1.25rem 1.5rem",
           boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
         }}
-      >
-        <form action="/dashboard/catalog" method="get">
-          <Group align="flex-end">
-            <TextInput
-              name="query"
-              label="Search courses"
-              placeholder="Search by title, short description, or description"
-              defaultValue={query}
-              style={{ flex: 1 }}
-            />
-            <Group gap="sm">
-              <JoinCourseButton />
-              <Button
-                type="submit"
+	      >
+	        <form action="/dashboard/catalog" method="get">
+	          <Group align="flex-end" wrap="wrap">
+	            <TextInput
+	              name="query"
+	              label="Search courses"
+	              placeholder="Search by title, short description, or description"
+	              defaultValue={query}
+	              style={{ flex: 1 }}
+	            />
+	            <NativeSelect
+	              name="topic"
+	              label="Topic"
+	              data={topicData}
+	              defaultValue={topic}
+	              w={220}
+	            />
+	            <Group gap="sm">
+	              <JoinCourseButton />
+	              <Button
+	                type="submit"
                 radius="md"
                 style={{
                   background: "linear-gradient(90deg, #2563eb, #4f46e5)",

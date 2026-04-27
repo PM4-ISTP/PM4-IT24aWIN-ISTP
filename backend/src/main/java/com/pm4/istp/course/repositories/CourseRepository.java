@@ -169,6 +169,86 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
+          where c.isPublished = true and c.isPrivate = false and c.topic = :topic
+          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
+          """,
+      countQuery =
+          """
+          select count(c)
+          from Course c
+          where c.isPublished = true and c.isPrivate = false and c.topic = :topic
+          """)
+  Page<ListCourseResponseDto> findPublishedCoursesByTopic(
+      @Param("topic") String topic, Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select new com.pm4.istp.course.dto.ListCourseResponseDto(
+            c.id,
+            c.title,
+            c.description,
+            c.shortDescription,
+            c.isPublished,
+            c.isPrivate,
+            count(distinct ciAll.id),
+            c.createdAt,
+            c.updatedAt,
+            c.imageUrl,
+            c.topic,
+            ownerUser.name,
+            ownerUser.picture,
+            ownerUser.title
+          )
+          from Course c
+          left join c.courseInstructors ciAll
+          left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
+          left join ciOwner.instructor ownerUser
+          where c.isPublished = true and c.isPrivate = false and c.topic = :topic
+            and (
+              lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+            )
+          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
+          """,
+      countQuery =
+          """
+          select count(c)
+          from Course c
+          where c.isPublished = true and c.isPrivate = false and c.topic = :topic
+            and (
+              lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+            )
+          """)
+  Page<ListCourseResponseDto> findPublishedCoursesByQueryAndTopic(
+      @Param("query") String query, @Param("topic") String topic, Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select new com.pm4.istp.course.dto.ListCourseResponseDto(
+            c.id,
+            c.title,
+            c.description,
+            c.shortDescription,
+            c.isPublished,
+            c.isPrivate,
+            count(distinct ciAll.id),
+            c.createdAt,
+            c.updatedAt,
+            c.imageUrl,
+            c.topic,
+            ownerUser.name,
+            ownerUser.picture,
+            ownerUser.title
+          )
+          from Course c
+          left join c.courseInstructors ciAll
+          left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
+          left join ciOwner.instructor ownerUser
           where c.isPublished = true and c.isPrivate = false
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
@@ -216,7 +296,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           """,
       countQuery =
           """
-          select count(c)
+          select count(distinct c.id)
           from Course c
           """)
   Page<AdminCourseListItemDto> findAllCoursesForAdmin(Pageable pageable);
@@ -259,6 +339,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
       @Param("query") String query, Pageable pageable);
 
   @Modifying
-  @Query("update Course c set c.topic = null where c.topic = :topic")
+  @Query("update Course c set c.topic = null, c.updatedAt = CURRENT_TIMESTAMP where c.topic = :topic")
   int clearTopic(@Param("topic") String topic);
 }

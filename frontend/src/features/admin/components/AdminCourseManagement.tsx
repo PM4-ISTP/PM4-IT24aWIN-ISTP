@@ -1,27 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActionIcon,
+  Affix,
   Badge,
   Button,
   Group,
   Loader,
   Modal,
+  Notification,
   Pagination,
+  Select,
   Stack,
+  Switch,
   Table,
   Text,
   TextInput,
   Textarea,
-  Switch,
-  Select,
 } from "@mantine/core";
-import { useDebouncedCallback } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
-import { IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconPencil, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
+import { useAdminPagedList } from "@/src/features/admin/hooks/useAdminPagedList";
+import { cleanText, formatDate, wrapTextStyle } from "@/src/features/admin/lib/adminUi";
 import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
+import MyEditor from "@/src/shared/components/MyEditor";
+import { useToast } from "@/src/shared/hooks/useToast";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { COURSE_SHORT_DESCRIPTION_MAX_CHARS, normalizeShortDescription } from "@/src/features/course/utils/courseText";
 
 type AdminCourseListItem = {
   id: string;
@@ -39,44 +45,42 @@ type AdminCourseListItem = {
   ownerUsername: string | null;
 };
 
-type PageResponse<T> = {
-  content?: T[];
-  totalPages?: number;
-};
-
 const PAGE_SIZE = 10;
-
-const wrapTextStyle: React.CSSProperties = {
-  whiteSpace: "pre-wrap",
-  overflowWrap: "anywhere",
-  wordBreak: "break-word",
-};
-
-function cleanText(v: string) {
-  const t = v.trim();
-  return t.length === 0 ? null : t;
-}
-
-function formatDate(value?: string | null) {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString();
-}
 
 export default function AdminCourseManagement() {
   const topicOptions = useCourseTopicOptions();
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(0);
-  const [courses, setCourses] = useState<AdminCourseListItem[]>([]);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
+  const [toastConfig, setToastConfig] = useState<{
+    color: "red" | "orange";
+    title: string;
+    message: string;
+  } | null>(null);
+  const {
+    query,
+    onQueryChange,
+    page,
+    setPage,
+    items: courses,
+    totalPages,
+    loading,
+    error,
+    setError,
+    refresh,
+  } = useAdminPagedList<AdminCourseListItem>({
+    endpoint: "/api/backend/api/admin/courses",
+    label: "courses",
+    pageSize: PAGE_SIZE,
+  });
 
   const [editOpened, setEditOpened] = useState(false);
   const [deleteOpened, setDeleteOpened] = useState(false);
   const [selected, setSelected] = useState<AdminCourseListItem | null>(null);
   const [saving, setSaving] = useState(false);
+
+  function showToast(color: "red" | "orange", title: string, message: string) {
+    setToastConfig({ color, title, message });
+    toast.show();
+  }
 
   const form = useForm({
     initialValues: {
@@ -101,54 +105,13 @@ export default function AdminCourseManagement() {
     },
   });
 
-  const fetchPage = useCallback(async (q: string, p: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const url = new URL("/api/backend/api/admin/courses", window.location.origin);
-      const qTrim = q.trim();
-      if (qTrim) url.searchParams.set("q", qTrim);
-      url.searchParams.set("page", String(p));
-      url.searchParams.set("size", String(PAGE_SIZE));
-      url.searchParams.set("sort", "updatedAt,desc");
-
-      const res = await fetch(url.toString(), { method: "GET" });
-      if (!res.ok) {
-        const msg = await readBackendError(res);
-        setError(`Failed to load courses (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
-        return;
-      }
-      const data = (await res.json()) as PageResponse<AdminCourseListItem>;
-      setCourses(data.content ?? []);
-      setTotalPages(data.totalPages ?? 0);
-    } catch {
-      setError("Failed to load courses");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void fetchPage(query, page);
-  }, [fetchPage, query, page]);
-
-  const debouncedSearch = useDebouncedCallback((nextQ: string) => {
-    setPage(0);
-    void fetchPage(nextQ, 0);
-  }, 300);
-
-  function onQueryChange(next: string) {
-    setQuery(next);
-    debouncedSearch(next);
-  }
-
   const selectedTitle = useMemo(() => selected?.title ?? "", [selected]);
 
   function openEdit(course: AdminCourseListItem) {
     setSelected(course);
     form.setValues({
       title: course.title ?? "",
-      description: course.description ?? "",
+      description: course.description ?? "<p>Add a description...</p>",
       shortDescription: course.shortDescription ?? "",
       isPublished: !!course.isPublished,
       isPrivate: !!course.isPrivate,
@@ -168,13 +131,14 @@ export default function AdminCourseManagement() {
     setSaving(true);
     setError(null);
     try {
+      const normalizedShortDescription = normalizeShortDescription(values.shortDescription);
       const res = await fetch(`/api/backend/api/admin/courses/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: values.title.trim(),
           description: cleanText(values.description),
-          shortDescription: cleanText(values.shortDescription),
+          shortDescription: cleanText(normalizedShortDescription),
           isPublished: values.isPublished,
           isPrivate: values.isPrivate,
           topic: cleanText(values.topic),
@@ -183,14 +147,23 @@ export default function AdminCourseManagement() {
       });
       if (!res.ok) {
         const msg = await readBackendError(res);
-        setError(`Failed to update course (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
+        const msgLower = msg?.toLowerCase() ?? "";
+        if (msgLower.includes("invalid topic")) {
+          showToast("orange", "Invalid topic", "Please select a topic from the list.");
+          return;
+        }
+        showToast(
+          "red",
+          "Failed to update course",
+          `HTTP ${res.status}${msg ? `: ${msg}` : ""}`
+        );
         return;
       }
       setEditOpened(false);
       setSelected(null);
-      void fetchPage(query, page);
+      refresh();
     } catch {
-      setError("Failed to update course");
+      showToast("red", "Failed to update course", "Please try again.");
     } finally {
       setSaving(false);
     }
@@ -201,20 +174,21 @@ export default function AdminCourseManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/backend/api/admin/courses/${selected.id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(`/api/backend/api/admin/courses/${selected.id}`, { method: "DELETE" });
       if (!res.ok) {
         const msg = await readBackendError(res);
-        setError(`Failed to delete course (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
+        showToast("red", "Failed to delete course", `HTTP ${res.status}${msg ? `: ${msg}` : ""}`);
         return;
       }
       setDeleteOpened(false);
       setSelected(null);
-      setPage(0);
-      void fetchPage(query, 0);
+      if (page !== 0) {
+        setPage(0);
+      } else {
+        refresh();
+      }
     } catch {
-      setError("Failed to delete course");
+      showToast("red", "Failed to delete course", "Please try again.");
     } finally {
       setSaving(false);
     }
@@ -364,26 +338,36 @@ export default function AdminCourseManagement() {
         size="lg"
       >
         <form onSubmit={form.onSubmit((values) => void submitEdit(values))}>
-          <Stack gap="sm">
-            <TextInput label="Title" required {...form.getInputProps("title")} />
-            <Textarea
-              label="Short description"
-              autosize
-              minRows={2}
-              maxRows={4}
-              {...form.getInputProps("shortDescription")}
-            />
-            <Textarea
-              label="Description"
-              autosize
-              minRows={3}
-              maxRows={8}
-              {...form.getInputProps("description")}
-            />
-            <Select
-              label="Topic"
-              placeholder="Select a topic"
-              data={topicOptions.options}
+	          <Stack gap="sm">
+	            <TextInput label="Title" required {...form.getInputProps("title")} />
+	            <Textarea
+	              label="Short description"
+	              autosize
+	              minRows={2}
+	              maxRows={4}
+	              value={form.values.shortDescription}
+	              onChange={(e) => {
+	                const next = e.currentTarget.value;
+	                if (next.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
+	                  showToast(
+	                    "orange",
+	                    "Character limit reached",
+	                    `Short description cannot exceed ${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`
+	                  );
+	                  return;
+	                }
+	                form.setFieldValue("shortDescription", next);
+	              }}
+	              description={`${form.values.shortDescription.length}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
+	            />
+	            <MyEditor
+	              description={form.values.description}
+	              setDescription={(value) => form.setFieldValue("description", value)}
+	            />
+	            <Select
+	              label="Topic"
+	              placeholder="Select a topic"
+	              data={topicOptions.options}
               value={form.values.topic || null}
               onChange={(value) => form.setFieldValue("topic", value ?? "")}
               clearable
@@ -431,12 +415,7 @@ export default function AdminCourseManagement() {
         </form>
       </Modal>
 
-      <Modal
-        opened={deleteOpened}
-        onClose={() => setDeleteOpened(false)}
-        title="Delete Course"
-        centered
-      >
+      <Modal opened={deleteOpened} onClose={() => setDeleteOpened(false)} title="Delete Course" centered>
         <Stack gap="md">
           <Text size="sm">
             Delete{" "}
@@ -455,6 +434,20 @@ export default function AdminCourseManagement() {
           </Group>
         </Stack>
       </Modal>
+
+      {toast.visible && toastConfig && (
+        <Affix position={{ bottom: 20, right: 20 }} style={{ zIndex: 3000 }}>
+          <Notification
+            color={toastConfig.color}
+            title={toastConfig.title}
+            onClose={toast.hide}
+            withCloseButton
+            icon={<IconX size={18} />}
+          >
+            {toastConfig.message}
+          </Notification>
+        </Affix>
+      )}
     </Stack>
   );
 }
