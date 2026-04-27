@@ -241,7 +241,12 @@ export default function AdminChallengeManagement() {
                 </Table.Td>
                 <Table.Td>
                   <Stack gap={2}>
-                    <Text size="sm" lineClamp={1} style={wrapTextStyle} title={c.creatorName ?? "-"}>
+                    <Text
+                      size="sm"
+                      lineClamp={1}
+                      style={wrapTextStyle}
+                      title={c.creatorName ?? "-"}
+                    >
                       {c.creatorName ?? "-"}
                     </Text>
                     <Text
@@ -257,7 +262,12 @@ export default function AdminChallengeManagement() {
                 </Table.Td>
                 <Table.Td>
                   <Group gap="xs">
-                    <Badge variant="light" color={c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"}>
+                    <Badge
+                      variant="light"
+                      color={
+                        c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"
+                      }
+                    >
                       {c.status}
                     </Badge>
                     <Badge variant="light" color="blue">
@@ -310,29 +320,29 @@ export default function AdminChallengeManagement() {
         centered
         size="lg"
       >
-	        <form onSubmit={form.onSubmit((values) => void submitEdit(values))}>
-	          <Stack gap="sm">
-	            <TextInput label="Title" required {...form.getInputProps("title")} />
-	            <Textarea
-	              label="Short description"
-	              autosize
-	              minRows={2}
-	              maxRows={4}
-	              value={form.values.shortDescription}
-	              onChange={(e) => {
-	                const next = e.currentTarget.value;
-	                if (next.length > CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS) {
-	                  charLimitToast.show();
-	                  return;
-	                }
-	                form.setFieldValue("shortDescription", next);
-	              }}
-	              description={`${form.values.shortDescription.length}/${CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
-	            />
-	            <MyEditor
-	              description={form.values.description}
-	              setDescription={(value) => form.setFieldValue("description", value)}
-	            />
+        <form onSubmit={form.onSubmit((values) => void submitEdit(values))}>
+          <Stack gap="sm">
+            <TextInput label="Title" required {...form.getInputProps("title")} />
+            <Textarea
+              label="Short description"
+              autosize
+              minRows={2}
+              maxRows={4}
+              value={form.values.shortDescription}
+              onChange={(e) => {
+                const next = e.currentTarget.value;
+                if (next.length > CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS) {
+                  charLimitToast.show();
+                  return;
+                }
+                form.setFieldValue("shortDescription", next);
+              }}
+              description={`${form.values.shortDescription.length}/${CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
+            />
+            <MyEditor
+              description={form.values.description}
+              setDescription={(value) => form.setFieldValue("description", value)}
+            />
             <Group grow>
               <Select
                 label="Status"
@@ -378,7 +388,12 @@ export default function AdminChallengeManagement() {
         </form>
       </Modal>
 
-      <Modal opened={deleteOpened} onClose={() => setDeleteOpened(false)} title="Delete Challenge" centered>
+      <Modal
+        opened={deleteOpened}
+        onClose={() => setDeleteOpened(false)}
+        title="Delete Challenge"
+        centered
+      >
         <Stack gap="md">
           <Text size="sm">
             Delete{" "}
@@ -396,22 +411,22 @@ export default function AdminChallengeManagement() {
             </Button>
           </Group>
         </Stack>
-	      </Modal>
+      </Modal>
 
-	      <Affix position={{ bottom: 20, right: 20 }}>
-	        {charLimitToast.visible && (
-	          <Notification
-	            color="orange"
-	            title="Character limit reached"
-	            onClose={charLimitToast.hide}
-	            withCloseButton
-	            icon={<IconX size={18} />}
-	          >
-	            The short description cannot exceed {CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters
-	            (including spaces).
-	          </Notification>
-	        )}
-	      </Affix>
-	    </Stack>
-	  );
-	}
+      <Affix position={{ bottom: 20, right: 20 }}>
+        {charLimitToast.visible && (
+          <Notification
+            color="orange"
+            title="Character limit reached"
+            onClose={charLimitToast.hide}
+            withCloseButton
+            icon={<IconX size={18} />}
+          >
+            The short description cannot exceed {CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters
+            (including spaces).
+          </Notification>
+        )}
+      </Affix>
+    </Stack>
+  );
+}

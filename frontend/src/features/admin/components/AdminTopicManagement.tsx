@@ -87,11 +87,19 @@ export default function AdminTopicManagement() {
     if (!value) return;
 
     if (value.length < MIN_TOPIC_LENGTH) {
-      showToast("orange", "Topic too short", `Topic must be at least ${MIN_TOPIC_LENGTH} characters.`);
+      showToast(
+        "orange",
+        "Topic too short",
+        `Topic must be at least ${MIN_TOPIC_LENGTH} characters.`
+      );
       return;
     }
     if (value.length > MAX_TOPIC_LENGTH) {
-      showToast("orange", "Topic too long", `Topic must be at most ${MAX_TOPIC_LENGTH} characters.`);
+      showToast(
+        "orange",
+        "Topic too long",
+        `Topic must be at most ${MAX_TOPIC_LENGTH} characters.`
+      );
       return;
     }
     if (!TOPIC_PATTERN.test(value)) {
@@ -119,15 +127,27 @@ export default function AdminTopicManagement() {
           return;
         }
         if (msgLower.includes("at least") || msgLower.includes("between")) {
-          showToast("orange", "Topic too short", `Topic must be at least ${MIN_TOPIC_LENGTH} characters.`);
+          showToast(
+            "orange",
+            "Topic too short",
+            `Topic must be at least ${MIN_TOPIC_LENGTH} characters.`
+          );
           return;
         }
         if (msgLower.includes("at most")) {
-          showToast("orange", "Topic too long", `Topic must be at most ${MAX_TOPIC_LENGTH} characters.`);
+          showToast(
+            "orange",
+            "Topic too long",
+            `Topic must be at most ${MAX_TOPIC_LENGTH} characters.`
+          );
           return;
         }
         if (msgLower.includes("single word")) {
-          showToast("orange", "Invalid topic", "Use a single word (letters, numbers, '-'). No spaces.");
+          showToast(
+            "orange",
+            "Invalid topic",
+            "Use a single word (letters, numbers, '-'). No spaces."
+          );
           return;
         }
         if (msgLower.includes("limit reached")) {
@@ -272,7 +292,12 @@ export default function AdminTopicManagement() {
         </Table.Tbody>
       </Table>
 
-      <Modal opened={deleteOpened} onClose={() => setDeleteOpened(false)} title="Delete Topic" centered>
+      <Modal
+        opened={deleteOpened}
+        onClose={() => setDeleteOpened(false)}
+        title="Delete Topic"
+        centered
+      >
         <Stack gap="md">
           <Text size="sm">
             Delete{" "}
@@ -308,4 +333,3 @@ export default function AdminTopicManagement() {
     </Stack>
   );
 }
-

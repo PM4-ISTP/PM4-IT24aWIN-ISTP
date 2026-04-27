@@ -27,7 +27,10 @@ import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopi
 import MyEditor from "@/src/shared/components/MyEditor";
 import { useToast } from "@/src/shared/hooks/useToast";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
-import { COURSE_SHORT_DESCRIPTION_MAX_CHARS, normalizeShortDescription } from "@/src/features/course/utils/courseText";
+import {
+  COURSE_SHORT_DESCRIPTION_MAX_CHARS,
+  normalizeShortDescription,
+} from "@/src/features/course/utils/courseText";
 
 type AdminCourseListItem = {
   id: string;
@@ -152,11 +155,7 @@ export default function AdminCourseManagement() {
           showToast("orange", "Invalid topic", "Please select a topic from the list.");
           return;
         }
-        showToast(
-          "red",
-          "Failed to update course",
-          `HTTP ${res.status}${msg ? `: ${msg}` : ""}`
-        );
+        showToast("red", "Failed to update course", `HTTP ${res.status}${msg ? `: ${msg}` : ""}`);
         return;
       }
       setEditOpened(false);
@@ -174,7 +173,9 @@ export default function AdminCourseManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/backend/api/admin/courses/${selected.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/backend/api/admin/courses/${selected.id}`, {
+        method: "DELETE",
+      });
       if (!res.ok) {
         const msg = await readBackendError(res);
         showToast("red", "Failed to delete course", `HTTP ${res.status}${msg ? `: ${msg}` : ""}`);
@@ -338,36 +339,36 @@ export default function AdminCourseManagement() {
         size="lg"
       >
         <form onSubmit={form.onSubmit((values) => void submitEdit(values))}>
-	          <Stack gap="sm">
-	            <TextInput label="Title" required {...form.getInputProps("title")} />
-	            <Textarea
-	              label="Short description"
-	              autosize
-	              minRows={2}
-	              maxRows={4}
-	              value={form.values.shortDescription}
-	              onChange={(e) => {
-	                const next = e.currentTarget.value;
-	                if (next.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
-	                  showToast(
-	                    "orange",
-	                    "Character limit reached",
-	                    `Short description cannot exceed ${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`
-	                  );
-	                  return;
-	                }
-	                form.setFieldValue("shortDescription", next);
-	              }}
-	              description={`${form.values.shortDescription.length}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
-	            />
-	            <MyEditor
-	              description={form.values.description}
-	              setDescription={(value) => form.setFieldValue("description", value)}
-	            />
-	            <Select
-	              label="Topic"
-	              placeholder="Select a topic"
-	              data={topicOptions.options}
+          <Stack gap="sm">
+            <TextInput label="Title" required {...form.getInputProps("title")} />
+            <Textarea
+              label="Short description"
+              autosize
+              minRows={2}
+              maxRows={4}
+              value={form.values.shortDescription}
+              onChange={(e) => {
+                const next = e.currentTarget.value;
+                if (next.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
+                  showToast(
+                    "orange",
+                    "Character limit reached",
+                    `Short description cannot exceed ${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`
+                  );
+                  return;
+                }
+                form.setFieldValue("shortDescription", next);
+              }}
+              description={`${form.values.shortDescription.length}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
+            />
+            <MyEditor
+              description={form.values.description}
+              setDescription={(value) => form.setFieldValue("description", value)}
+            />
+            <Select
+              label="Topic"
+              placeholder="Select a topic"
+              data={topicOptions.options}
               value={form.values.topic || null}
               onChange={(value) => form.setFieldValue("topic", value ?? "")}
               clearable
@@ -415,7 +416,12 @@ export default function AdminCourseManagement() {
         </form>
       </Modal>
 
-      <Modal opened={deleteOpened} onClose={() => setDeleteOpened(false)} title="Delete Course" centered>
+      <Modal
+        opened={deleteOpened}
+        onClose={() => setDeleteOpened(false)}
+        title="Delete Course"
+        centered
+      >
         <Stack gap="md">
           <Text size="sm">
             Delete{" "}
