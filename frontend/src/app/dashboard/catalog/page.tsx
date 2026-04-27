@@ -1,4 +1,14 @@
-import { Alert, Box, Button, Group, NativeSelect, Stack, Text, TextInput, Title } from "@mantine/core";
+import {
+  Alert,
+  Box,
+  Button,
+  Group,
+  NativeSelect,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import Link from "next/link";
 import { fetchCourseTopics, fetchPublishedCourses } from "@/src/features/course/actions/courses";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
@@ -42,27 +52,27 @@ export default async function CatalogPage(props: {
           padding: "1.25rem 1.5rem",
           boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
         }}
-	      >
-	        <form action="/dashboard/catalog" method="get">
-	          <Group align="flex-end" wrap="wrap">
-	            <TextInput
-	              name="query"
-	              label="Search courses"
-	              placeholder="Search by title, short description, or description"
-	              defaultValue={query}
-	              style={{ flex: 1 }}
-	            />
-	            <NativeSelect
-	              name="topic"
-	              label="Topic"
-	              data={topicData}
-	              defaultValue={topic}
-	              w={220}
-	            />
-	            <Group gap="sm">
-	              <JoinCourseButton />
-	              <Button
-	                type="submit"
+      >
+        <form action="/dashboard/catalog" method="get">
+          <Group align="flex-end" wrap="wrap">
+            <TextInput
+              name="query"
+              label="Search courses"
+              placeholder="Search by title, short description, or description"
+              defaultValue={query}
+              style={{ flex: 1 }}
+            />
+            <NativeSelect
+              name="topic"
+              label="Topic"
+              data={topicData}
+              defaultValue={topic}
+              w={220}
+            />
+            <Group gap="sm">
+              <JoinCourseButton />
+              <Button
+                type="submit"
                 radius="md"
                 style={{
                   background: "linear-gradient(90deg, #2563eb, #4f46e5)",

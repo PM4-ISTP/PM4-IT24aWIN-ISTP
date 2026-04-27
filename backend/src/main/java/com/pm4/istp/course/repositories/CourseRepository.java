@@ -339,6 +339,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
       @Param("query") String query, Pageable pageable);
 
   @Modifying
-  @Query("update Course c set c.topic = null, c.updatedAt = CURRENT_TIMESTAMP where c.topic = :topic")
+  @Query(
+      "update Course c set c.topic = null, c.updatedAt = CURRENT_TIMESTAMP where c.topic = :topic")
   int clearTopic(@Param("topic") String topic);
 }
