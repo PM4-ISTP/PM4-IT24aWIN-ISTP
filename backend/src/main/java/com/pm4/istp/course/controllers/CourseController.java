@@ -219,7 +219,8 @@ public class CourseController {
       @RequestParam(required = false) String topic,
       Pageable pageable) {
     String normalizedTopic = courseTopicService.normalizeAndValidate(topic);
-    Page<ListCourseResponseDto> courses = courseService.listPublishedCourses(query, normalizedTopic, pageable);
+    Page<ListCourseResponseDto> courses =
+        courseService.listPublishedCourses(query, normalizedTopic, pageable);
     return ResponseEntity.ok(courses);
   }
 
