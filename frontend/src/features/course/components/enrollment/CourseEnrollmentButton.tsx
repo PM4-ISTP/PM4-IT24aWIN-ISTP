@@ -4,10 +4,7 @@ import { startTransition, useState } from "react";
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { extractErrorMessage } from "@/src/shared/lib/utils";
-
-const CATALOG_ENROLL_API = (courseId: string) =>
-  `/api/backend/api/v1/courses/catalog/${courseId}/enroll`;
+import { useApiClient } from "@/src/shared/lib/api/client";
 
 interface CourseEnrollmentButtonProps {
   courseId: string;
@@ -23,6 +20,7 @@ export function CourseEnrollmentButton({
   isPublished,
 }: CourseEnrollmentButtonProps) {
   const router = useRouter();
+  const client = useApiClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   const [hasJoined, setHasJoined] = useState(isEnrolled);
@@ -33,17 +31,16 @@ export function CourseEnrollmentButton({
     setJoinError(null);
 
     try {
-      const response = await fetch(CATALOG_ENROLL_API(courseId), {
-        method: "POST",
+      const { data, error } = await client.POST("/api/v1/courses/catalog/{id}/enroll", {
+        params: { path: { id: courseId } },
       });
 
-      if (!response.ok) {
-        const message = extractErrorMessage(await response.text(), response.statusText);
-        setJoinError(`${response.status}: ${message}`);
+      if (data === undefined || error !== undefined) {
+        setJoinError(error?.error ?? "Cannot join course");
         return;
       }
 
-      const updatedCourse = (await response.json()) as {
+      const updatedCourse = data as {
         isEnrolled?: boolean;
         participantCount?: number;
       };

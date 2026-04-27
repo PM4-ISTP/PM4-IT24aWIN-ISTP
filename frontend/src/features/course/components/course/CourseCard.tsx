@@ -3,48 +3,34 @@ import { IconClock, IconUsers } from "@tabler/icons-react";
 import { getCoursePreviewText } from "@/src/features/course/utils/courseText";
 import { getInitials } from "@/src/shared/lib/utils";
 import classes from "./CourseCard.module.css";
+import type { ListCourseResponseDto } from "@/src/features/course/actions/courses";
 
 export interface CourseCardProps {
-  id: string;
-  title: string;
-  description: string | null;
-  shortDescription: string | null;
-  isPublished: boolean;
-  isPrivate: boolean;
-  instructorCount: number;
-  updatedAt: string;
-  imageUrl?: string | null;
-  topic?: string | null;
-  ownerName?: string | null;
-  ownerPicture?: string | null;
-  ownerTitle?: string | null;
+  course: ListCourseResponseDto;
   onClick?: (id: string) => void;
 }
 
-export function CourseCard({
-  id,
-  title,
-  description,
-  shortDescription,
-  isPublished,
-  isPrivate,
-  instructorCount,
-  updatedAt,
-  imageUrl,
-  topic,
-  ownerName,
-  ownerPicture,
-  ownerTitle,
-  onClick,
-}: CourseCardProps) {
-  const previewText = getCoursePreviewText(shortDescription, description);
-  const statusLabel = isPrivate ? "Private" : isPublished ? "Published" : "Draft";
-  const statusColor = isPrivate ? "violet" : isPublished ? "teal" : "gray";
+function getStringRepresentationOfDate(date: string | undefined) {
+  if (date === undefined) {
+    return "No date specified";
+  } else {
+    return new Date(date).toLocaleDateString("de-CH", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+}
+
+export function CourseCard({ course, onClick }: CourseCardProps) {
+  const previewText = getCoursePreviewText(course.shortDescription, course.description);
+  const statusLabel = course.isPrivate ? "Private" : course.isPublished ? "Published" : "Draft";
+  const statusColor = course.isPrivate ? "violet" : course.isPublished ? "teal" : "gray";
 
   const content = (
     <Stack gap={0} style={{ height: "100%", minWidth: 0 }}>
       {/* Thumbnail */}
-      {imageUrl ? (
+      {course.imageUrl ? (
         <Box
           style={{
             height: 146,
@@ -54,8 +40,8 @@ export function CourseCard({
           }}
         >
           <Image
-            src={imageUrl}
-            alt={title}
+            src={course.imageUrl}
+            alt={course.title}
             h={146}
             fit="cover"
             style={{ display: "block", width: "100%" }}
@@ -82,7 +68,7 @@ export function CourseCard({
               lineHeight: 1,
             }}
           >
-            {title.charAt(0).toUpperCase()}
+            {course.title?.charAt(0).toUpperCase()}
           </Text>
         </Box>
       )}
@@ -94,20 +80,20 @@ export function CourseCard({
           <Badge size="xs" variant="light" color={statusColor} style={{ flexShrink: 0 }}>
             {statusLabel}
           </Badge>
-          {topic && (
+          {course.topic && (
             <Text
               size="sm"
               fw={700}
               tt="uppercase"
               style={{ color: "#60a5fa", letterSpacing: "0.07em", flexShrink: 0 }}
             >
-              {topic}
+              {course.topic}
             </Text>
           )}
         </Group>
 
         <Text fw={700} size="lg" lineClamp={2}>
-          {title}
+          {course.title}
         </Text>
 
         <Text
@@ -119,17 +105,17 @@ export function CourseCard({
         </Text>
 
         <Box className={classes.footer}>
-          {ownerName ? (
+          {course.ownerName ? (
             <Group gap={10} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-              <Avatar radius="xl" size={36} color="blue" src={ownerPicture ?? undefined}>
-                {getInitials(ownerName)}
+              <Avatar radius="xl" size={36} color="blue" src={course.ownerPicture}>
+                {getInitials(course.ownerName)}
               </Avatar>
               <Stack gap={0} style={{ minWidth: 0 }}>
                 <Text size="md" fw={700} lineClamp={1}>
-                  {ownerName}
+                  {course.ownerName}
                 </Text>
                 <Text size="sm" c="dimmed">
-                  {ownerTitle ?? "Instructor"}
+                  {course.ownerTitle ?? "Instructor"}
                 </Text>
               </Stack>
             </Group>
@@ -137,14 +123,14 @@ export function CourseCard({
             <Group gap={6}>
               <IconUsers size={15} stroke={1.5} />
               <Text size="sm" c="dimmed">
-                {instructorCount} instructor{instructorCount !== 1 ? "s" : ""}
+                {course.instructorCount} instructor{course.instructorCount !== 1 ? "s" : ""}
               </Text>
             </Group>
           )}
           <Group gap={4} style={{ flexShrink: 0 }}>
             <IconClock size={14} stroke={1.5} />
             <Text size="sm" c="dimmed">
-              {updatedAt}
+              {getStringRepresentationOfDate(course.updatedAt)}
             </Text>
           </Group>
         </Box>
@@ -152,7 +138,7 @@ export function CourseCard({
     </Stack>
   );
 
-  if (!onClick) {
+  if (!onClick || course.id === undefined) {
     return (
       <Box className={`${classes.card} ${classes.staticCard}`} style={{ padding: 0 }}>
         {content}
@@ -161,7 +147,11 @@ export function CourseCard({
   }
 
   return (
-    <UnstyledButton className={classes.card} style={{ padding: 0 }} onClick={() => onClick(id)}>
+    <UnstyledButton
+      className={classes.card}
+      style={{ padding: 0 }}
+      onClick={() => onClick(course.id!)} // already checked, that ID is not undefined
+    >
       {content}
     </UnstyledButton>
   );

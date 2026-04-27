@@ -78,8 +78,8 @@ export default async function CatalogPage(props: {
 
       {result.success ? (
         <CourseGrid
-          courses={result.data.content}
-          totalPages={result.data.totalPages}
+          courses={result.data.content ?? []}
+          totalPages={result.data.totalPages ?? 1}
           currentPage={currentPage}
           coursePathPrefix="/dashboard/catalog"
         />
