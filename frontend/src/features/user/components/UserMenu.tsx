@@ -1,7 +1,6 @@
 "use client";
-
-import { signOut } from "next-auth/react";
 import { Avatar, Group, Menu, Text, UnstyledButton } from "@mantine/core";
+import Link from "next/link";
 import { ROLES } from "@/src/shared/lib/roles";
 
 const ROLE_CONFIG: Record<string, { label: string; color: string }> = {
@@ -98,6 +97,10 @@ export default function UserMenu({ name, roles, image, accountUrl }: UserMenuPro
 
         <Menu.Item
           color="red"
+          component={Link}
+          href="/logout"
+          prefetch={false}
+          data-testid="logout-link"
           leftSection={
             <span
               className="material-symbols-outlined"
@@ -110,7 +113,6 @@ export default function UserMenu({ name, roles, image, accountUrl }: UserMenuPro
               logout
             </span>
           }
-          onClick={() => void signOut()}
         >
           Log out
         </Menu.Item>

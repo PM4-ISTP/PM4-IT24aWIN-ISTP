@@ -17,8 +17,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
 
   Optional<Course> findByInviteCode(String inviteCode);
 
-  boolean existsByInviteCode(String inviteCode);
-
   @Query(
       value =
           """

@@ -1,0 +1,15 @@
+name: PR Source Branch Check
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  check-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Only allow PRs from dev
+        run: |
+          if [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "PRs to main are only allowed from dev (current: ${{ github.head_ref }})"
+            exit 1
+          fi
+          echo "PR comes from dev"

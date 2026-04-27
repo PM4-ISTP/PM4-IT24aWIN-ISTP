@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 import { IconCheck, IconClock, IconFlame, IconLock } from "@tabler/icons-react";
 import { getInitials } from "@/src/shared/lib/utils";
-import type { CourseUserSummary } from "@/src/shared/types/course";
+import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,7 +57,7 @@ export interface CourseJourneyCardProps {
    * When provided, renders an "Instructor" section to the right of the
    * journey content, separated by a vertical divider — no separate card needed.
    */
-  instructor?: CourseUserSummary | null;
+  instructor?: CourseDetailInstructorResponseDto;
 }
 
 // ---------------------------------------------------------------------------
@@ -288,18 +288,18 @@ export function CourseJourneyCard({ lessons, challenges, instructor }: CourseJou
                   radius="xl"
                   size={52}
                   color="blue"
-                  src={instructor.picture ?? undefined}
+                  src={instructor.instructor?.picture}
                   style={{ border: "2px solid rgba(255,255,255,0.1)", flexShrink: 0 }}
                 >
-                  {getInitials(instructor.name)}
+                  {getInitials(instructor.instructor?.name ?? "")}
                 </Avatar>
                 <Stack gap={2}>
                   <Text fw={600} size="sm" style={{ color: "#e2e8f0", lineHeight: 1.2 }}>
-                    {instructor.name}
+                    {instructor.instructor?.name}
                   </Text>
-                  {instructor.title && (
+                  {instructor.instructor?.title && (
                     <Text size="xs" style={{ color: "#94a3b8", lineHeight: 1.3 }}>
-                      {instructor.title}
+                      {instructor.instructor?.title}
                     </Text>
                   )}
                 </Stack>

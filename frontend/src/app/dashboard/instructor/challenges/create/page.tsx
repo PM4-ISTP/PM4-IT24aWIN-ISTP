@@ -21,6 +21,7 @@ import {
 } from "@/src/features/course/components/challenges/ChallengeFormFields";
 import { createChallenge } from "@/src/features/course/actions/challenges";
 import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
+import { toRequestSubTasks, validateSubTasks } from "@/src/features/course/utils/subTasks";
 import { useToast } from "@/src/shared/hooks/useToast";
 import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/features/course/constants/challengeConstants";
 
@@ -33,16 +34,28 @@ export default function CreateChallenge() {
     description: "<p>Add a description...</p>",
     status: "DRAFT",
     difficulty: "MEDIUM",
+    subTasks: [
+      {
+        title: "",
+        description: "",
+        flag: "",
+        orderIndex: 0,
+      },
+    ],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
+  const [subTaskErrors, setSubTaskErrors] = useState<
+    Array<Partial<Record<"title" | "description" | "flag", string>>>
+  >([]);
   const [formError, setFormError] = useState<string | null>(null);
   const charLimitToast = useToast();
 
   async function handleSubmit() {
     setTitleError(null);
     setShortDescriptionError(null);
+    setSubTaskErrors([]);
     setFormError(null);
 
     if (!formValues.title.trim()) {
@@ -56,6 +69,15 @@ export default function CreateChallenge() {
       return;
     }
 
+    const subTaskValidation = validateSubTasks(formValues.subTasks);
+    if (!subTaskValidation.valid) {
+      setSubTaskErrors(subTaskValidation.errors);
+      if (subTaskValidation.formError) {
+        setFormError(subTaskValidation.formError);
+      }
+      return;
+    }
+
     setIsSubmitting(true);
 
     const result = await createChallenge({
@@ -64,6 +86,7 @@ export default function CreateChallenge() {
       description: formValues.description,
       status: formValues.status,
       difficulty: formValues.difficulty,
+      subTasks: toRequestSubTasks(formValues.subTasks),
     });
 
     setIsSubmitting(false);
@@ -107,6 +130,8 @@ export default function CreateChallenge() {
             onChange={setFormValues}
             titleError={titleError}
             shortDescriptionError={shortDescriptionError}
+            subTaskErrors={subTaskErrors}
+            defaultExpandedSubTaskIndex={0}
             onCharLimitExceeded={() => charLimitToast.show()}
             onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
           />

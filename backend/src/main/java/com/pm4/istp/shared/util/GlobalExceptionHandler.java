@@ -4,6 +4,7 @@ import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
+import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseChallengeException;
 import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
@@ -57,6 +58,15 @@ public class GlobalExceptionHandler {
     log.error("Caught CourseNotFoundException", ex);
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError("Course not found");
+    return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(CourseParticipantNotFoundException.class)
+  public ResponseEntity<ErrorDto> handleCourseParticipantNotFoundException(
+      CourseParticipantNotFoundException ex) {
+    log.error("Caught CourseParticipantNotFoundException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Participant not found");
     return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
   }
 

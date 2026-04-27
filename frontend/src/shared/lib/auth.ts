@@ -153,6 +153,7 @@ export const authOptions: AuthOptions = {
             accessToken: account.access_token,
             accessTokenExpires: (account.expires_at ?? 0) * 1000,
             refreshToken: account.refresh_token,
+            idToken: account.id_token,
           },
           initialClaims
         );
@@ -174,8 +175,13 @@ export const authOptions: AuthOptions = {
       session.roles = token.roles as string[];
       session.error = token.error;
       session.userId = token.sub;
+      // Skip fetching live profile when the token is in an error state (e.g. refresh
+      // failed because the refresh token expired or an admin terminated the session).
+      // Calling userinfo with an expired/invalid access token would always return 401.
       const liveProfile =
-        typeof token.accessToken === "string" ? await fetchUserInfo(token.accessToken) : {};
+        typeof token.accessToken === "string" && !token.error
+          ? await fetchUserInfo(token.accessToken)
+          : {};
 
       if (session.user) {
         session.user.name =

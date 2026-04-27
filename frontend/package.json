@@ -13,7 +13,7 @@
     "prepare": "husky",
     "test": "playwright test --ui",
     "test:e2e": "playwright test",
-    "generate:api": "openapi-typescript http://localhost:8080/v3/api-docs -o src/lib/api/schema.d.ts"
+    "generate:api": "openapi-typescript http://localhost:8080/v3/api-docs -o src/shared/lib/api/schema.d.ts"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [

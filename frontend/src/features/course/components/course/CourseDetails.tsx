@@ -5,10 +5,19 @@ import { CourseBannerHeader } from "@/src/features/course/components/course/Cour
 import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
 import { CourseJourneyCard } from "@/src/features/course/components/course/CourseJourneyCard";
 import { fetchPublicCourse } from "@/src/features/course/actions/courses";
+import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
 import type { InstructorRoleEnum } from "@/src/shared/types/course";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
+
+function getOwner(instructors: CourseDetailInstructorResponseDto[] | undefined) {
+  let owner = undefined;
+  if (instructors) {
+    owner = instructors.find((ci) => ci.instructorRole === OWNER_ROLE);
+  }
+  return owner;
+}
 
 export default async function CourseDetails({
   courseId,
@@ -21,7 +30,12 @@ export default async function CourseDetails({
 }) {
   const result = await fetchPublicCourse(courseId);
 
-  if (!result.success) {
+  if (!result.success || result.data.id === undefined) {
+    // If ID is undefined, we cannot really do anything with the course anymore. Something is clearly very wrong.
+    const errorMessage = result.success
+      ? "Something failed during the loading of the course."
+      : result.error;
+
     return (
       <Container>
         <Stack p="xl" gap="lg">
@@ -32,7 +46,7 @@ export default async function CourseDetails({
             </Group>
           </Link>
           <Alert color="red" title="Failed to load course">
-            {result.error}
+            {errorMessage}
           </Alert>
         </Stack>
       </Container>
@@ -40,22 +54,25 @@ export default async function CourseDetails({
   }
 
   const course = result.data;
+  const title = course.title ?? "";
   const sanitizedDescription =
-    course.description === null ? "" : getSanitizedHtml(course.description);
-  const owner =
-    course.courseInstructors.find((ci) => ci.instructorRole === OWNER_ROLE)?.instructor ?? null;
+    course.description === undefined ? "" : getSanitizedHtml(course.description);
+  const isEnrolled = course.isEnrolled ?? false;
+  const participantCount = course.participantCount ?? 0;
+  const isPublished = course.isPublished ?? false;
+  const owner = getOwner(course.courseInstructors);
 
   return (
     <>
       <CourseBannerHeader
-        title={course.title}
+        title={title}
         topic={course.topic}
         shortDescription={course.shortDescription}
-        description={course.description}
-        courseId={course.id}
-        isEnrolled={course.isEnrolled}
-        participantCount={course.participantCount}
-        isPublished={course.isPublished}
+        description={sanitizedDescription}
+        courseId={course.id!} // already checked, that ID is not undefined
+        isEnrolled={isEnrolled}
+        participantCount={participantCount}
+        isPublished={isPublished}
         backPageName={backPageName}
         backHref={backHref}
       />
@@ -70,7 +87,7 @@ export default async function CourseDetails({
           />
 
           <CourseChallengeDetailsList
-            challenges={course.courseChallenges}
+            challenges={course.courseChallenges ?? []}
             title="Course Challenges"
             showIndex={true}
           />

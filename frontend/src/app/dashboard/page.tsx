@@ -9,9 +9,13 @@ import {
   fetchEnrolledCoursesOfLoggedInUser,
   fetchPublicCourse,
 } from "@/src/features/course/actions/courses";
+import type {
+  PageListCourseResponseDto,
+  PublicCourseDetailResponseDto,
+} from "@/src/features/course/actions/courses";
 import Link from "next/link";
 import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
-import type { ActionResult, PublicCourseDetailResponseDto } from "@/src/shared/types/course";
+import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 
 const sectionLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -22,21 +26,38 @@ const sectionLabelStyle: React.CSSProperties = {
   color: "rgba(255,255,255,0.45)",
 };
 
+/**
+ * This function is a helper function used to load placeholder data.
+ */
+async function getFirstCourse(fetchCourseResult: ActionResult<PageListCourseResponseDto>) {
+  // TODO: delete this function
+  let firstCourse: ActionResult<PublicCourseDetailResponseDto> | undefined = undefined;
+  if (
+    fetchCourseResult.success &&
+    fetchCourseResult.data !== undefined &&
+    fetchCourseResult.data.content !== undefined
+  ) {
+    const firstEnrolledCourse = fetchCourseResult.data.content[0];
+    if (firstEnrolledCourse !== undefined && firstEnrolledCourse.id !== undefined) {
+      firstCourse = await fetchPublicCourse(firstEnrolledCourse.id);
+    }
+  }
+  return firstCourse;
+}
+
 function RunningChallenges({
-  hasRunningChallenges,
   fetchCourseResult,
 }: {
-  hasRunningChallenges: boolean;
-  fetchCourseResult: ActionResult<PublicCourseDetailResponseDto>;
+  fetchCourseResult: ActionResult<PublicCourseDetailResponseDto> | undefined;
 }) {
-  if (!hasRunningChallenges) {
+  if (fetchCourseResult === undefined) {
     return <Text>No currently running challenges</Text>;
   } else {
     return (
       <>
         {fetchCourseResult.success ? (
           <CourseChallengeDetailsList
-            challenges={fetchCourseResult.data.courseChallenges}
+            challenges={fetchCourseResult.data.courseChallenges ?? []}
             title=""
             showIndex={false}
           />
@@ -57,10 +78,7 @@ export default async function Home() {
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
 
   // TODO: delete when using real data
-  const firstCourse =
-    result.success && result.data.content[0] !== undefined
-      ? await fetchPublicCourse(result.data.content[0].id)
-      : null;
+  const firstCourse = await getFirstCourse(result);
 
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-GB", {
@@ -98,7 +116,7 @@ export default async function Home() {
             </Group>
             {result.success ? (
               <CourseGrid
-                courses={result.data.content}
+                courses={result.data.content ?? []}
                 totalPages={1}
                 currentPage={1}
                 coursePathPrefix="/dashboard/courses"
@@ -150,10 +168,7 @@ export default async function Home() {
         <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>
           Currently running Challenges
         </Text>
-        <RunningChallenges
-          hasRunningChallenges={firstCourse !== null}
-          fetchCourseResult={firstCourse!}
-        />
+        <RunningChallenges fetchCourseResult={firstCourse} />
       </Stack>
     </Stack>
   );

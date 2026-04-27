@@ -174,6 +174,29 @@ public class CourseController {
   }
 
   @Operation(
+      summary = "Remove a participant from a course",
+      description = "Removes a student (participant) from a course. Only accessible to the owner.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "204", description = "Participant removed successfully"),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course or participant not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @DeleteMapping("/{id}/participants/{participantId}")
+  public ResponseEntity<Void> removeParticipant(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @PathVariable UUID participantId) {
+    UUID userId = parseUserId(jwt);
+    courseService.removeParticipant(userId, id, participantId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Operation(
       summary = "Update course challenges",
       description = "Replaces the challenge list for a course. Accepts own and public challenges.")
   @ApiResponses(
@@ -203,6 +226,18 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
+  @Operation(
+      summary = "Get courses for which the user is their instructor",
+      description =
+          "Returns a paginated list of courses for which the user is their instructor (owner or collaborator).")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Courses found"),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @GetMapping
   public ResponseEntity<Page<ListCourseResponseDto>> listCourses(
       @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
@@ -211,6 +246,19 @@ public class CourseController {
     return ResponseEntity.ok(courses);
   }
 
+  // ── Public catalog endpoints ── accessible to all authenticated users (including students)
+
+  @Operation(
+      summary = "Get published courses",
+      description = "Returns a paginated list of published courses.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Courses found"),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @GetMapping("/catalog")
   public ResponseEntity<Page<ListCourseResponseDto>> listPublishedCourses(
       @RequestParam(required = false) String query, Pageable pageable) {
@@ -218,7 +266,27 @@ public class CourseController {
     return ResponseEntity.ok(courses);
   }
 
-  // ── Public catalog endpoints ── accessible to all authenticated users (including students)
+  @Operation(
+      summary = "Get a course by ID as a student",
+      description =
+          "Returns a detailed response of a course for a student. User IDs are omitted due to security concerns.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Course found",
+            content =
+                @Content(schema = @Schema(implementation = PublicCourseDetailResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description =
+                "This can indicate one of two things. First this course is private and the user is neither an instructor of the course nor enrolled in the course. Second this course is a draft and the user is not an instructor of the course.",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @GetMapping("/catalog/{id}")
   public ResponseEntity<PublicCourseDetailResponseDto> getPublicCourse(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
@@ -228,6 +296,23 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
+  @Operation(
+      summary = "Enroll in a course",
+      description =
+          "Enroll in a course and returns the course in which the student enrolled themselves.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Enrolled in course",
+            content =
+                @Content(schema = @Schema(implementation = PublicCourseDetailResponseDto.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description =
+                "Unexpected server error. Might occur, when user or course does not exist or the course is not public.",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @PostMapping("/catalog/{id}/enroll")
   public ResponseEntity<PublicCourseDetailResponseDto> enrollInPublicCourse(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
@@ -237,6 +322,17 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
+  @Operation(
+      summary = "Get enrolled courses of user (public and private)",
+      description = "Returns a paginated list of the enrolled courses of the user.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Enrollments found"),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @GetMapping("/my-enrollments")
   public ResponseEntity<Page<ListCourseResponseDto>> listEnrollments(
       @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
@@ -245,6 +341,30 @@ public class CourseController {
     return ResponseEntity.ok(courses);
   }
 
+  @Operation(
+      summary = "Join a private course by invite code",
+      description =
+          "Enrolls the authenticated user into a private course using a 6-character invite code.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Joined course successfully",
+            content =
+                @Content(schema = @Schema(implementation = PublicCourseDetailResponseDto.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request payload or user not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Invalid or expired invite code",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @PostMapping("/catalog/join")
   public ResponseEntity<PublicCourseDetailResponseDto> joinByInviteCode(
       @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody JoinByInviteCodeRequestDto request) {
@@ -254,6 +374,29 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
+  @Operation(
+      summary = "Regenerate invite code",
+      description =
+          "Regenerates the invite code of a private course. Only the course owner can perform this action.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Invite code regenerated successfully",
+            content = @Content(schema = @Schema(implementation = CourseDetailResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied or invite code regeneration not allowed for public course",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @PostMapping("/{id}/invite-code/regenerate")
   public ResponseEntity<CourseDetailResponseDto> regenerateInviteCode(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {

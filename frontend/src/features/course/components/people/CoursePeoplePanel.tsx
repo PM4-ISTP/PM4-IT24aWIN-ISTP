@@ -5,15 +5,17 @@ import {
   Avatar,
   Badge,
   Box,
+  ActionIcon,
   Button,
   Divider,
   Group,
+  Loader,
   ScrollArea,
   Stack,
   Text,
   TextInput,
 } from "@mantine/core";
-import { IconSearch, IconUsers } from "@tabler/icons-react";
+import { IconSearch, IconUsers, IconX } from "@tabler/icons-react";
 import { getInitials } from "@/src/shared/lib/utils";
 import type { CollaboratorUserResponseDto, CourseParticipantDto } from "@/src/shared/types/course";
 
@@ -23,6 +25,10 @@ interface CoursePeoplePanelProps {
   owner: CollaboratorUserResponseDto | null;
   collaborators: CollaboratorUserResponseDto[];
   participants: CourseParticipantDto[];
+  canRemoveParticipants: boolean;
+  removingParticipantIds: string[];
+  removeParticipantError: string | null;
+  onRemoveParticipant: (participantId: string) => void;
 }
 
 function PersonCard({ user }: { user: CollaboratorUserResponseDto }) {
@@ -43,7 +49,17 @@ function PersonCard({ user }: { user: CollaboratorUserResponseDto }) {
   );
 }
 
-function ParticipantCard({ participant }: { participant: CourseParticipantDto }) {
+function ParticipantCard({
+  participant,
+  canRemove,
+  isRemoving,
+  onRemove,
+}: {
+  participant: CourseParticipantDto;
+  canRemove: boolean;
+  isRemoving: boolean;
+  onRemove: () => void;
+}) {
   return (
     <Group align="center" gap="sm" wrap="nowrap">
       <Avatar radius="xl" size="sm" color="teal" src={participant.picture ?? undefined}>
@@ -52,11 +68,32 @@ function ParticipantCard({ participant }: { participant: CourseParticipantDto })
       <Text size="sm" fw={500} style={{ flex: 1, minWidth: 0 }} lineClamp={1}>
         {participant.name}
       </Text>
+      {canRemove && (
+        <ActionIcon
+          variant="subtle"
+          color="red"
+          size="sm"
+          radius="md"
+          disabled={isRemoving}
+          onClick={onRemove}
+          aria-label={`Remove ${participant.name}`}
+        >
+          {isRemoving ? <Loader size={14} /> : <IconX size={14} />}
+        </ActionIcon>
+      )}
     </Group>
   );
 }
 
-export function CoursePeoplePanel({ owner, collaborators, participants }: CoursePeoplePanelProps) {
+export function CoursePeoplePanel({
+  owner,
+  collaborators,
+  participants,
+  canRemoveParticipants,
+  removingParticipantIds,
+  removeParticipantError,
+  onRemoveParticipant,
+}: CoursePeoplePanelProps) {
   const [search, setSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -170,10 +207,22 @@ export function CoursePeoplePanel({ owner, collaborators, participants }: Course
                   <ScrollArea.Autosize mah={visible.length >= PAGE_SIZE ? 240 : undefined}>
                     <Stack gap={8} py={4}>
                       {visible.map((p) => (
-                        <ParticipantCard key={p.id} participant={p} />
+                        <ParticipantCard
+                          key={p.id}
+                          participant={p}
+                          canRemove={canRemoveParticipants}
+                          isRemoving={removingParticipantIds.includes(p.id)}
+                          onRemove={() => onRemoveParticipant(p.id)}
+                        />
                       ))}
                     </Stack>
                   </ScrollArea.Autosize>
+
+                  {removeParticipantError && (
+                    <Text size="xs" c="red" ta="center" py={2}>
+                      {removeParticipantError}
+                    </Text>
+                  )}
 
                   {hasMore && (
                     <Button
