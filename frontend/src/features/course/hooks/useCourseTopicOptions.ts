@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 type TopicOption = { value: string; label: string };
 
@@ -18,7 +20,8 @@ export function useCourseTopicOptions() {
       try {
         const res = await fetch("/api/backend/api/v1/courses/topics", { method: "GET" });
         if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
+          const msg = toUserFriendlyBackendError(await readBackendError(res));
+          throw new Error(msg ?? "Failed to load topics");
         }
         const data = (await res.json()) as string[];
         if (!cancelled) {

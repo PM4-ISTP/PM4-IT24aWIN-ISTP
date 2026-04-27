@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionIcon,
   Affix,
@@ -28,6 +28,7 @@ import { useToast } from "@/src/shared/hooks/useToast";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/features/course/constants/challengeConstants";
 import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC";
 type ChallengeDifficulty = "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
@@ -51,7 +52,16 @@ type AdminChallengeListItem = {
 const PAGE_SIZE = 10;
 
 export default function AdminChallengeManagement() {
-  const charLimitToast = useToast();
+  const {
+    visible: toastVisible,
+    show: showToastNotification,
+    hide: hideToastNotification,
+  } = useToast();
+  const [toastConfig, setToastConfig] = useState<{
+    color: "red" | "orange";
+    title: string;
+    message: string;
+  } | null>(null);
   const {
     query,
     onQueryChange,
@@ -74,6 +84,21 @@ export default function AdminChallengeManagement() {
   const [deleteOpened, setDeleteOpened] = useState(false);
   const [selected, setSelected] = useState<AdminChallengeListItem | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const showToast = useCallback(
+    (color: "red" | "orange", title: string, message: string) => {
+      setToastConfig({ color, title, message });
+      showToastNotification();
+    },
+    [showToastNotification]
+  );
+
+  useEffect(() => {
+    if (!error) return;
+    const message = error.replace(/^Failed to load challenges\.\s*/i, "").trim();
+    showToast("red", "Failed to load challenges", message || "Please try again.");
+    setError(null);
+  }, [error, setError, showToast]);
 
   const form = useForm({
     initialValues: {
@@ -129,15 +154,17 @@ export default function AdminChallengeManagement() {
         }),
       });
       if (!res.ok) {
-        const msg = await readBackendError(res);
-        setError(`Failed to update challenge (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
+        const raw = await readBackendError(res);
+        const msg = toUserFriendlyBackendError(raw);
+        const color = res.status >= 500 ? "red" : "orange";
+        showToast(color, "Failed to update challenge", msg ?? "Please try again.");
         return;
       }
       setEditOpened(false);
       setSelected(null);
       refresh();
     } catch {
-      setError("Failed to update challenge");
+      showToast("red", "Failed to update challenge", "Please try again.");
     } finally {
       setSaving(false);
     }
@@ -152,8 +179,10 @@ export default function AdminChallengeManagement() {
         method: "DELETE",
       });
       if (!res.ok) {
-        const msg = await readBackendError(res);
-        setError(`Failed to delete challenge (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
+        const raw = await readBackendError(res);
+        const msg = toUserFriendlyBackendError(raw);
+        const color = res.status >= 500 ? "red" : "orange";
+        showToast(color, "Failed to delete challenge", msg ?? "Please try again.");
         return;
       }
       setDeleteOpened(false);
@@ -164,7 +193,7 @@ export default function AdminChallengeManagement() {
         refresh();
       }
     } catch {
-      setError("Failed to delete challenge");
+      showToast("red", "Failed to delete challenge", "Please try again.");
     } finally {
       setSaving(false);
     }
@@ -332,7 +361,11 @@ export default function AdminChallengeManagement() {
               onChange={(e) => {
                 const next = e.currentTarget.value;
                 if (next.length > CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS) {
-                  charLimitToast.show();
+                  showToast(
+                    "orange",
+                    "Character limit reached",
+                    `Short description cannot exceed ${CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters.`
+                  );
                   return;
                 }
                 form.setFieldValue("shortDescription", next);
@@ -413,20 +446,19 @@ export default function AdminChallengeManagement() {
         </Stack>
       </Modal>
 
-      <Affix position={{ bottom: 20, right: 20 }}>
-        {charLimitToast.visible && (
+      {toastVisible && toastConfig && (
+        <Affix position={{ bottom: 20, right: 20 }} style={{ zIndex: 3000 }}>
           <Notification
-            color="orange"
-            title="Character limit reached"
-            onClose={charLimitToast.hide}
+            color={toastConfig.color}
+            title={toastConfig.title}
+            onClose={hideToastNotification}
             withCloseButton
             icon={<IconX size={18} />}
           >
-            The short description cannot exceed {CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters
-            (including spaces).
+            {toastConfig.message}
           </Notification>
-        )}
-      </Affix>
+        </Affix>
+      )}
     </Stack>
   );
 }

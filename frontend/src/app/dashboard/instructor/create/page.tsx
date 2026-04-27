@@ -30,6 +30,7 @@ import { visibilityToFlags } from "@/src/features/course/utils/courseVisibility"
 import { useToast } from "@/src/shared/hooks/useToast";
 import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 import type { CourseVisibility } from "@/src/shared/types/course";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 export default function CreateCourse() {
   const router = useRouter();
@@ -84,7 +85,7 @@ export default function CreateCourse() {
     setIsSubmitting(false);
 
     if (!result.success) {
-      setFormError(result.error);
+      setFormError(toUserFriendlyBackendError(result.error) ?? result.error);
       return;
     }
 

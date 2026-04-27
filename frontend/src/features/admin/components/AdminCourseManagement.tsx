@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionIcon,
   Affix,
@@ -31,6 +31,7 @@ import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/features/course/utils/courseText";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 type AdminCourseListItem = {
   id: string;
@@ -52,7 +53,11 @@ const PAGE_SIZE = 10;
 
 export default function AdminCourseManagement() {
   const topicOptions = useCourseTopicOptions();
-  const toast = useToast();
+  const {
+    visible: toastVisible,
+    show: showToastNotification,
+    hide: hideToastNotification,
+  } = useToast();
   const [toastConfig, setToastConfig] = useState<{
     color: "red" | "orange";
     title: string;
@@ -80,10 +85,20 @@ export default function AdminCourseManagement() {
   const [selected, setSelected] = useState<AdminCourseListItem | null>(null);
   const [saving, setSaving] = useState(false);
 
-  function showToast(color: "red" | "orange", title: string, message: string) {
-    setToastConfig({ color, title, message });
-    toast.show();
-  }
+  const showToast = useCallback(
+    (color: "red" | "orange", title: string, message: string) => {
+      setToastConfig({ color, title, message });
+      showToastNotification();
+    },
+    [showToastNotification]
+  );
+
+  useEffect(() => {
+    if (!error) return;
+    const message = error.replace(/^Failed to load courses\.\s*/i, "").trim();
+    showToast("red", "Failed to load courses", message || "Please try again.");
+    setError(null);
+  }, [error, setError, showToast]);
 
   const form = useForm({
     initialValues: {
@@ -149,13 +164,15 @@ export default function AdminCourseManagement() {
         }),
       });
       if (!res.ok) {
-        const msg = await readBackendError(res);
-        const msgLower = msg?.toLowerCase() ?? "";
+        const raw = await readBackendError(res);
+        const msgLower = raw?.toLowerCase() ?? "";
         if (msgLower.includes("invalid topic")) {
           showToast("orange", "Invalid topic", "Please select a topic from the list.");
           return;
         }
-        showToast("red", "Failed to update course", `HTTP ${res.status}${msg ? `: ${msg}` : ""}`);
+        const msg = toUserFriendlyBackendError(raw);
+        const color = res.status >= 500 ? "red" : "orange";
+        showToast(color, "Failed to update course", msg ?? "Please try again.");
         return;
       }
       setEditOpened(false);
@@ -177,8 +194,10 @@ export default function AdminCourseManagement() {
         method: "DELETE",
       });
       if (!res.ok) {
-        const msg = await readBackendError(res);
-        showToast("red", "Failed to delete course", `HTTP ${res.status}${msg ? `: ${msg}` : ""}`);
+        const raw = await readBackendError(res);
+        const msg = toUserFriendlyBackendError(raw);
+        const color = res.status >= 500 ? "red" : "orange";
+        showToast(color, "Failed to delete course", msg ?? "Please try again.");
         return;
       }
       setDeleteOpened(false);
@@ -441,12 +460,12 @@ export default function AdminCourseManagement() {
         </Stack>
       </Modal>
 
-      {toast.visible && toastConfig && (
+      {toastVisible && toastConfig && (
         <Affix position={{ bottom: 20, right: 20 }} style={{ zIndex: 3000 }}>
           <Notification
             color={toastConfig.color}
             title={toastConfig.title}
-            onClose={toast.hide}
+            onClose={hideToastNotification}
             withCloseButton
             icon={<IconX size={18} />}
           >

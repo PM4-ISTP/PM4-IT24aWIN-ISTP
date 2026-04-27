@@ -24,6 +24,7 @@ import { normalizeShortDescription } from "@/src/features/course/utils/courseTex
 import { toRequestSubTasks, validateSubTasks } from "@/src/features/course/utils/subTasks";
 import { useToast } from "@/src/shared/hooks/useToast";
 import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/features/course/constants/challengeConstants";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 export default function CreateChallenge() {
   const router = useRouter();
@@ -92,7 +93,7 @@ export default function CreateChallenge() {
     setIsSubmitting(false);
 
     if (!result.success) {
-      setFormError(result.error);
+      setFormError(toUserFriendlyBackendError(result.error) ?? result.error);
       return;
     }
 

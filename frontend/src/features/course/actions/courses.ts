@@ -47,7 +47,7 @@ export async function createCourse(
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
 
     const data = (await res.json()) as CourseResponseDto;
@@ -93,7 +93,7 @@ export async function fetchCourse(id: string): Promise<ActionResult<OldCourseDet
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
 
     const data = (await res.json()) as OldCourseDetailResponseDto;
@@ -133,7 +133,7 @@ export async function updateCourse(
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
 
     const data = (await res.json()) as OldCourseDetailResponseDto;
@@ -155,7 +155,7 @@ export async function deleteCourse(id: string): Promise<ActionResult<void>> {
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
 
     return { success: true, data: undefined };
@@ -179,7 +179,7 @@ export async function removeCourseParticipant(
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
 
     return { success: true, data: undefined };
@@ -264,7 +264,7 @@ export async function fetchPublishedCourses(
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
 
     const data = (await res.json()) as PageListCourseResponseDto;
@@ -283,7 +283,7 @@ export async function fetchCourseTopics(): Promise<ActionResult<string[]>> {
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
     const data = (await res.json()) as string[];
     return { success: true, data: Array.isArray(data) ? data : [] };

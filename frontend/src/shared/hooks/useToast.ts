@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export interface ToastControls {
   visible: boolean;
@@ -19,19 +19,19 @@ export function useToast(durationMs = 3500): ToastControls {
 
   useEffect(() => clearToastTimeout, []);
 
-  function hide() {
+  const hide = useCallback(() => {
     clearToastTimeout();
     setVisible(false);
-  }
+  }, []);
 
-  function show() {
+  const show = useCallback(() => {
     clearToastTimeout();
     setVisible(true);
     timeoutRef.current = setTimeout(() => {
       setVisible(false);
       timeoutRef.current = null;
     }, durationMs);
-  }
+  }, [durationMs]);
 
-  return { visible, show, hide };
+  return useMemo(() => ({ visible, show, hide }), [visible, show, hide]);
 }

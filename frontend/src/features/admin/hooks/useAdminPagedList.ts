@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 type PageResponse<T> = {
   content?: T[];
@@ -63,8 +64,8 @@ export function useAdminPagedList<T>({
 
         const res = await fetch(url.toString(), { method: "GET", signal: controller.signal });
         if (!res.ok) {
-          const msg = await readBackendError(res);
-          setError(`Failed to load ${label} (HTTP ${res.status})${msg ? ` — ${msg}` : ""}`);
+          const msg = toUserFriendlyBackendError(await readBackendError(res));
+          setError(`Failed to load ${label}.${msg ? ` ${msg}` : ""}`);
           return;
         }
         const data = (await res.json()) as PageResponse<T>;

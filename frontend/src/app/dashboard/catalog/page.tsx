@@ -1,5 +1,4 @@
 import {
-  Alert,
   Box,
   Button,
   Group,
@@ -13,6 +12,8 @@ import Link from "next/link";
 import { fetchCourseTopics, fetchPublishedCourses } from "@/src/features/course/actions/courses";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
+import ToastOnMount from "@/src/shared/components/ToastOnMount";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 export default async function CatalogPage(props: {
   searchParams: Promise<{ page?: string; query?: string; topic?: string }>;
@@ -112,9 +113,11 @@ export default async function CatalogPage(props: {
           coursePathPrefix="/dashboard/catalog"
         />
       ) : (
-        <Alert color="red" title="Failed to load catalog">
-          {result.error}
-        </Alert>
+        <ToastOnMount
+          color="red"
+          title="Failed to load catalog"
+          message={toUserFriendlyBackendError(result.error) ?? "Please try again."}
+        />
       )}
     </Stack>
   );

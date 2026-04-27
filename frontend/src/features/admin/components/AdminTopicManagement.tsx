@@ -17,6 +17,7 @@ import {
 import { IconCheck, IconPlus, IconTrash, IconX } from "@tabler/icons-react";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { useToast } from "@/src/shared/hooks/useToast";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 const MIN_TOPIC_LENGTH = 3;
 const MAX_TOPIC_LENGTH = 24;
@@ -33,7 +34,11 @@ export default function AdminTopicManagement() {
   const [deleteOpened, setDeleteOpened] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
 
-  const toast = useToast();
+  const {
+    visible: toastVisible,
+    show: showToastNotification,
+    hide: hideToastNotification,
+  } = useToast();
   const [toastConfig, setToastConfig] = useState<{
     color: "green" | "red" | "orange";
     title: string;
@@ -60,8 +65,8 @@ export default function AdminTopicManagement() {
     try {
       const res = await fetch("/api/backend/api/admin/topics", { method: "GET" });
       if (!res.ok) {
-        const msg = await readBackendError(res);
-        setError(`Failed to load topics (HTTP ${res.status})${msg ? ` - ${msg}` : ""}`);
+        const msg = toUserFriendlyBackendError(await readBackendError(res));
+        setError(`Failed to load topics.${msg ? ` ${msg}` : ""}`);
         return;
       }
       const data = (await res.json()) as string[];
@@ -77,10 +82,19 @@ export default function AdminTopicManagement() {
     void loadTopics();
   }, [loadTopics]);
 
-  function showToast(color: "green" | "red" | "orange", title: string, message: string) {
-    setToastConfig({ color, title, message });
-    toast.show();
-  }
+  const showToast = useCallback(
+    (color: "green" | "red" | "orange", title: string, message: string) => {
+      setToastConfig({ color, title, message });
+      showToastNotification();
+    },
+    [showToastNotification]
+  );
+
+  useEffect(() => {
+    if (!error) return;
+    showToast("red", "Error", error);
+    setError(null);
+  }, [error, showToast]);
 
   async function addTopic() {
     const value = trimmedTopic;
@@ -158,7 +172,7 @@ export default function AdminTopicManagement() {
           );
           return;
         }
-        setError(`Failed to add topic (HTTP ${res.status})${msg ? ` - ${msg}` : ""}`);
+        showToast("red", "Failed to add topic", toUserFriendlyBackendError(msg) ?? "Please try again.");
         return;
       }
       setNewTopic("");
@@ -186,7 +200,7 @@ export default function AdminTopicManagement() {
       });
       if (!res.ok) {
         const msg = await readBackendError(res);
-        setError(`Failed to delete topic (HTTP ${res.status})${msg ? ` - ${msg}` : ""}`);
+        showToast("red", "Failed to delete topic", toUserFriendlyBackendError(msg) ?? "Please try again.");
         return;
       }
       setDeleteOpened(false);
@@ -317,12 +331,12 @@ export default function AdminTopicManagement() {
         </Stack>
       </Modal>
 
-      {toast.visible && toastConfig && (
+      {toastVisible && toastConfig && (
         <Affix position={{ bottom: 20, right: 20 }} style={{ zIndex: 3000 }}>
           <Notification
             color={toastConfig.color}
             title={toastConfig.title}
-            onClose={toast.hide}
+            onClose={hideToastNotification}
             withCloseButton
             icon={toastConfig.color === "green" ? <IconCheck size={18} /> : <IconX size={18} />}
           >
