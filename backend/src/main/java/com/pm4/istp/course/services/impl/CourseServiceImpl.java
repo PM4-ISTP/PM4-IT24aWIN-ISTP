@@ -414,7 +414,8 @@ public class CourseServiceImpl implements CourseService {
                             "Participant with ID '%s' is not enrolled in course '%s'",
                             participantId, courseId)));
 
-    courseEnrollmentRepository.delete(enrollment);
+    course.removeCourseEnrollment(enrollment);
+    courseRepository.save(course);
   }
 
   private void verifyOwner(Course course, UUID userId) {

@@ -533,7 +533,8 @@ class CourseServiceImplTest {
 
     courseService.removeParticipant(ownerId, courseId, participantId);
 
-    verify(courseEnrollmentRepository).delete(enrollment);
+    verify(courseRepository).save(course);
+    verify(courseEnrollmentRepository, never()).delete(any(CourseEnrollment.class));
   }
 
   @Test
