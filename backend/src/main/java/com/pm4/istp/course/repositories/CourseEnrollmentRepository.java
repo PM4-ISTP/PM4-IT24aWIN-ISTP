@@ -2,6 +2,7 @@ package com.pm4.istp.course.repositories;
 
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CourseEnrollmentRepository extends JpaRepository<CourseEnrollment, UUID> {
   boolean existsByCourseIdAndParticipantId(UUID courseId, UUID participantId);
+
+  Optional<CourseEnrollment> findByCourseIdAndParticipantId(UUID courseId, UUID participantId);
 
   long countByCourseId(UUID courseId);
 

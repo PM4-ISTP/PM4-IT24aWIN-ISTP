@@ -38,6 +38,7 @@ import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
+import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseChallengeException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
@@ -449,6 +450,91 @@ class CourseServiceImplTest {
         .isInstanceOf(CourseNotFoundException.class);
 
     verify(courseRepository, never()).delete(any(Course.class));
+  }
+
+  @Test
+  void removeParticipant_whenNotOwner_throwsCourseAccessDeniedException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID nonOwnerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.removeParticipant(nonOwnerId, courseId, participantId))
+        .isInstanceOf(CourseAccessDeniedException.class);
+
+    verify(courseEnrollmentRepository, never()).findByCourseIdAndParticipantId(any(), any());
+    verify(courseEnrollmentRepository, never()).delete(any(CourseEnrollment.class));
+  }
+
+  @Test
+  void removeParticipant_whenEnrollmentMissing_throwsCourseParticipantNotFoundException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.findByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> courseService.removeParticipant(ownerId, courseId, participantId))
+        .isInstanceOf(CourseParticipantNotFoundException.class);
+
+    verify(courseEnrollmentRepository, never()).delete(any(CourseEnrollment.class));
+  }
+
+  @Test
+  void removeParticipant_whenOwnerAndEnrolled_deletesEnrollment() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID enrollmentId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = new Course();
+    course.setId(courseId);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    CourseEnrollment enrollment = new CourseEnrollment();
+    enrollment.setId(enrollmentId);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.findByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(Optional.of(enrollment));
+
+    courseService.removeParticipant(ownerId, courseId, participantId);
+
+    verify(courseRepository).save(course);
+    verify(courseEnrollmentRepository, never()).delete(any(CourseEnrollment.class));
   }
 
   @Test

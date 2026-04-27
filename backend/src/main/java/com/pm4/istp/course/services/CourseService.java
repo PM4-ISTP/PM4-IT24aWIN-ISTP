@@ -33,4 +33,6 @@ public interface CourseService {
   Course joinByInviteCode(String code, UUID studentId);
 
   Course regenerateInviteCode(UUID courseId, UUID userId);
+
+  void removeParticipant(UUID ownerId, UUID courseId, UUID participantId);
 }

@@ -174,6 +174,29 @@ public class CourseController {
   }
 
   @Operation(
+      summary = "Remove a participant from a course",
+      description = "Removes a student (participant) from a course. Only accessible to the owner.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "204", description = "Participant removed successfully"),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course or participant not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @DeleteMapping("/{id}/participants/{participantId}")
+  public ResponseEntity<Void> removeParticipant(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @PathVariable UUID participantId) {
+    UUID userId = parseUserId(jwt);
+    courseService.removeParticipant(userId, id, participantId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Operation(
       summary = "Update course challenges",
       description = "Replaces the challenge list for a course. Accepts own and public challenges.")
   @ApiResponses(
