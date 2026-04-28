@@ -45,7 +45,7 @@ public class AdminTopicServiceImpl implements AdminTopicService {
       return;
     }
 
-    if (courseTopicRepository.count() >= maxTopicCount) {
+    if (courseTopicRepository.findAllByActiveTrueOrderByTopicAsc().size() >= maxTopicCount) {
       throw new IllegalArgumentException("Topic limit reached");
     }
 
