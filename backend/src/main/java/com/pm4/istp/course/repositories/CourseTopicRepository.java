@@ -9,5 +9,7 @@ import org.springframework.stereotype.Repository;
 public interface CourseTopicRepository extends JpaRepository<CourseTopic, String> {
   List<CourseTopic> findAllByActiveTrueOrderByTopicAsc();
 
+  long countByActiveTrue();
+
   boolean existsByTopicAndActiveTrue(String topic);
 }

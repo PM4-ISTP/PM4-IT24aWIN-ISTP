@@ -20,8 +20,8 @@ public class AdminTopicServiceImpl implements AdminTopicService {
   private final CourseTopicRepository courseTopicRepository;
   private final CourseRepository courseRepository;
 
-  @Value("${istp.topics.max-count:200}")
-  private long maxTopicCount;
+  @Value("${istp.topics.max-count:50}")
+  private int maxTopicCount;
 
   @Override
   @Transactional(readOnly = true)
@@ -45,7 +45,7 @@ public class AdminTopicServiceImpl implements AdminTopicService {
       return;
     }
 
-    if (courseTopicRepository.findAllByActiveTrueOrderByTopicAsc().size() >= maxTopicCount) {
+    if (courseTopicRepository.countByActiveTrue() >= maxTopicCount) {
       throw new IllegalArgumentException("Topic limit reached");
     }
 
