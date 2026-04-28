@@ -1,4 +1,4 @@
-import { ActionIcon, Alert, Button, Group, Stack, Text, Title } from "@mantine/core";
+import { ActionIcon, Alert, Group, Stack, Text, Title } from "@mantine/core";
 import Link from "next/link";
 
 import { fetchChallengeStatisticsOfCourse } from "@/src/features/course/actions/courses";
