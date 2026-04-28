@@ -266,7 +266,10 @@ public class ChallengeServiceImpl implements ChallengeService {
       boolean isInstructorOfCourseWithChallenge =
           courseChallengeRepository.existsByChallengeIdAndCourseInstructorId(
               challenge.getId(), userId);
-      if (!isInstructorOfCourseWithChallenge) {
+      boolean isEnrolledInCourseWithChallenge =
+          courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(
+              challenge.getId(), userId);
+      if (!isInstructorOfCourseWithChallenge && !isEnrolledInCourseWithChallenge) {
         throw new ChallengeAccessDeniedException(
             String.format(
                 "User with ID '%s' cannot access private challenge '%s'",

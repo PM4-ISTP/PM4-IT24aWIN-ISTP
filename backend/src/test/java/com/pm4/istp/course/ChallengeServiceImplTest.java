@@ -216,7 +216,26 @@ class ChallengeServiceImplTest {
   }
 
   @Test
-  void getChallenge_whenPrivateAndCallerIsNotInstructor_throwsAccessDenied() {
+  void getChallenge_whenPrivateAndCallerIsEnrolledInCourseWithChallenge_returnsChallenge() {
+    UUID creatorId = UUID.randomUUID();
+    UUID studentId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    User creator = buildUser(creatorId);
+    Challenge challenge = buildChallenge(challengeId, creator, ChallengeStatusEnum.PRIVATE);
+
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(courseChallengeRepository.existsByChallengeIdAndCourseInstructorId(challengeId, studentId))
+        .thenReturn(false);
+    when(courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challengeId, studentId))
+        .thenReturn(true);
+
+    Challenge result = challengeService.getChallenge(studentId, challengeId);
+
+    assertThat(result).isSameAs(challenge);
+  }
+
+  @Test
+  void getChallenge_whenPrivateAndCallerIsNotInstructorAndNotEnrolled_throwsAccessDenied() {
     UUID creatorId = UUID.randomUUID();
     UUID otherId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
@@ -225,6 +244,8 @@ class ChallengeServiceImplTest {
 
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
     when(courseChallengeRepository.existsByChallengeIdAndCourseInstructorId(challengeId, otherId))
+        .thenReturn(false);
+    when(courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challengeId, otherId))
         .thenReturn(false);
 
     assertThatThrownBy(() -> challengeService.getChallenge(otherId, challengeId))
