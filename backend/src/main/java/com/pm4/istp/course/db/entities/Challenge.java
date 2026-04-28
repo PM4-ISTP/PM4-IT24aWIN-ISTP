@@ -43,6 +43,12 @@ public class Challenge {
   @Enumerated(EnumType.STRING)
   private ChallengeDifficultyEnum difficulty;
 
+  @Column(name = "docker_image", nullable = false)
+  private String dockerImage;
+
+  // This field wil be filled by the SubTasks which will come later, for now we
+  // will set it manually
+  // to 0
   @Column(name = "max_score", nullable = false)
   private int maxScore;
 

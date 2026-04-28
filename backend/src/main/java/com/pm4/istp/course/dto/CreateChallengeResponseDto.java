@@ -20,6 +20,7 @@ public class CreateChallengeResponseDto {
   private ChallengeStatusEnum status;
   private ChallengeDifficultyEnum difficulty;
   private int maxScore;
+  private String dockerImage;
   private UUID creatorId;
   private List<SubTaskResponseDto> subTasks;
   private LocalDateTime createdAt;

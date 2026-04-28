@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,13 @@ public class UpdateChallengeRequestDto {
 
   @NotNull(message = "Challenge difficulty is required")
   private ChallengeDifficultyEnum difficulty;
+
+  @NotBlank(message = "Docker image is required")
+  @Pattern(
+      regexp = "^[\\w.\\-/]+(:[\\w.\\-]+)?$",
+      message =
+          "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)")
+  private String dockerImage;
 
   @NotEmpty(message = "At least one sub task is required")
   @Valid

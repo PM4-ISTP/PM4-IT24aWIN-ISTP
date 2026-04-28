@@ -52,6 +52,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     challenge.setDescription(request.getDescription());
     challenge.setStatus(request.getStatus());
     challenge.setDifficulty(request.getDifficulty());
+    challenge.setDockerImage(request.getDockerImage());
     challenge.setCreator(creator);
 
     List<SubTask> subTasks = buildSubTasksForCreate(request.getSubTasks(), challenge);
@@ -97,6 +98,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     challenge.setDescription(request.getDescription());
     challenge.setStatus(newStatus);
     challenge.setDifficulty(request.getDifficulty());
+    challenge.setDockerImage(request.getDockerImage());
 
     applySubTaskUpdates(challenge, request.getSubTasks());
     challenge.setMaxScore(challenge.getSubTasks().size());
