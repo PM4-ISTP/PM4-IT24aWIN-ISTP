@@ -23,7 +23,10 @@ import { createChallenge } from "@/src/features/course/actions/challenges";
 import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
 import { toRequestSubTasks, validateSubTasks } from "@/src/features/course/utils/subTasks";
 import { useToast } from "@/src/shared/hooks/useToast";
-import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/features/course/constants/challengeConstants";
+import {
+  CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
+  DOCKER_IMAGE_PATTERN,
+} from "@/src/features/course/constants/challengeConstants";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 export default function CreateChallenge() {
@@ -35,6 +38,7 @@ export default function CreateChallenge() {
     description: "<p>Add a description...</p>",
     status: "DRAFT",
     difficulty: "MEDIUM",
+    dockerImage: "",
     subTasks: [
       {
         title: "",
@@ -47,6 +51,7 @@ export default function CreateChallenge() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
+  const [dockerImageError, setDockerImageError] = useState<string | null>(null);
   const [subTaskErrors, setSubTaskErrors] = useState<
     Array<Partial<Record<"title" | "description" | "flag", string>>>
   >([]);
@@ -56,6 +61,7 @@ export default function CreateChallenge() {
   async function handleSubmit() {
     setTitleError(null);
     setShortDescriptionError(null);
+    setDockerImageError(null);
     setSubTaskErrors([]);
     setFormError(null);
 
@@ -67,6 +73,18 @@ export default function CreateChallenge() {
     const normalizedShortDescription = normalizeShortDescription(formValues.shortDescription);
     if (!normalizedShortDescription) {
       setShortDescriptionError("Short description is required");
+      return;
+    }
+
+    const trimmedDockerImage = formValues.dockerImage.trim();
+    if (!trimmedDockerImage) {
+      setDockerImageError("Docker image is required");
+      return;
+    }
+    if (!DOCKER_IMAGE_PATTERN.test(trimmedDockerImage)) {
+      setDockerImageError(
+        "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)"
+      );
       return;
     }
 
@@ -87,6 +105,7 @@ export default function CreateChallenge() {
       description: formValues.description,
       status: formValues.status,
       difficulty: formValues.difficulty,
+      dockerImage: trimmedDockerImage,
       subTasks: toRequestSubTasks(formValues.subTasks),
     });
 
@@ -131,10 +150,12 @@ export default function CreateChallenge() {
             onChange={setFormValues}
             titleError={titleError}
             shortDescriptionError={shortDescriptionError}
+            dockerImageError={dockerImageError}
             subTaskErrors={subTaskErrors}
             defaultExpandedSubTaskIndex={0}
             onCharLimitExceeded={() => charLimitToast.show()}
             onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
+            onDockerImageErrorClear={() => setDockerImageError(null)}
           />
 
           {formError && (

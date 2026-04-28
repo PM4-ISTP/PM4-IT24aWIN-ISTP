@@ -26,6 +26,7 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
             c.status,
             c.difficulty,
             c.maxScore,
+            c.dockerImage,
             c.creator.name,
             (select count(cc) from CourseChallenge cc where cc.challenge = c),
             c.updatedAt
@@ -52,6 +53,7 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
             c.status,
             c.difficulty,
             c.maxScore,
+            c.dockerImage,
             c.creator.name,
             (select count(cc) from CourseChallenge cc where cc.challenge = c),
             c.updatedAt

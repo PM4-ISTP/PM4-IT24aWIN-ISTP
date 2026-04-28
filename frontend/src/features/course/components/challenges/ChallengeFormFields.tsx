@@ -26,6 +26,7 @@ export interface ChallengeFormValues {
   description: string;
   status: ChallengeStatusEnum;
   difficulty: ChallengeDifficultyEnum;
+  dockerImage: string;
   subTasks: SubTaskFormValues[];
 }
 
@@ -34,10 +35,12 @@ export interface ChallengeFormFieldsProps {
   onChange: (values: ChallengeFormValues) => void;
   titleError?: string | null;
   shortDescriptionError?: string | null;
+  dockerImageError?: string | null;
   subTaskErrors?: Array<Partial<Record<"title" | "description" | "flag", string>>>;
   defaultExpandedSubTaskIndex?: number | null;
   onCharLimitExceeded?: () => void;
   onShortDescriptionErrorClear?: () => void;
+  onDockerImageErrorClear?: () => void;
 }
 
 export function ChallengeFormFields({
@@ -45,10 +48,12 @@ export function ChallengeFormFields({
   onChange,
   titleError,
   shortDescriptionError,
+  dockerImageError,
   subTaskErrors,
   defaultExpandedSubTaskIndex,
   onCharLimitExceeded,
   onShortDescriptionErrorClear,
+  onDockerImageErrorClear,
 }: ChallengeFormFieldsProps) {
   const shortDescriptionCharCount = values.shortDescription.length;
 
@@ -88,6 +93,20 @@ export function ChallengeFormFields({
       <MyEditor
         description={values.description}
         setDescription={(desc) => onChange({ ...values, description: desc })}
+      />
+
+      <TextInput
+        label="Docker Image"
+        placeholder="e.g. registry/image:tag"
+        value={values.dockerImage}
+        onChange={(e) => {
+          onChange({ ...values, dockerImage: e.currentTarget.value });
+          if (dockerImageError) {
+            onDockerImageErrorClear?.();
+          }
+        }}
+        error={dockerImageError}
+        required
       />
 
       <Stack gap={4}>

@@ -44,6 +44,8 @@ import com.pm4.istp.user.repositories.UserRepository;
 @ExtendWith(MockitoExtension.class)
 class ChallengeServiceImplTest {
 
+  private static final String DEFAULT_DOCKER_IMAGE = "registry/default:latest";
+
   @Mock private UserRepository userRepository;
   @Mock private ChallengeRepository challengeRepository;
   @Mock private CourseChallengeRepository courseChallengeRepository;
@@ -78,7 +80,18 @@ class ChallengeServiceImplTest {
       String desc,
       ChallengeStatusEnum status,
       ChallengeDifficultyEnum difficulty) {
-    return new CreateChallengeRequest(title, shortDesc, desc, status, difficulty, oneSubTask());
+    return new CreateChallengeRequest(
+        title, shortDesc, desc, status, difficulty, DEFAULT_DOCKER_IMAGE, oneSubTask());
+  }
+
+  private CreateChallengeRequest createRequest(
+      String title,
+      String shortDesc,
+      String desc,
+      ChallengeStatusEnum status,
+      ChallengeDifficultyEnum difficulty,
+      String dockerImage) {
+    return new CreateChallengeRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneSubTask());
   }
 
   private UpdateChallengeRequest updateRequest(
@@ -87,7 +100,18 @@ class ChallengeServiceImplTest {
       String desc,
       ChallengeStatusEnum status,
       ChallengeDifficultyEnum difficulty) {
-    return new UpdateChallengeRequest(title, shortDesc, desc, status, difficulty, oneSubTask());
+    return new UpdateChallengeRequest(
+        title, shortDesc, desc, status, difficulty, DEFAULT_DOCKER_IMAGE, oneSubTask());
+  }
+
+  private UpdateChallengeRequest updateRequest(
+      String title,
+      String shortDesc,
+      String desc,
+      ChallengeStatusEnum status,
+      ChallengeDifficultyEnum difficulty,
+      String dockerImage) {
+    return new UpdateChallengeRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneSubTask());
   }
 
   @Test
@@ -106,6 +130,7 @@ class ChallengeServiceImplTest {
             "Long description",
             ChallengeStatusEnum.DRAFT,
             ChallengeDifficultyEnum.HARD,
+            "registry/buffer-overflow:latest",
             new ArrayList<>(
                 List.of(
                     new SubTaskRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0),
@@ -118,6 +143,7 @@ class ChallengeServiceImplTest {
     assertThat(created.getDescription()).isEqualTo("Long description");
     assertThat(created.getStatus()).isEqualTo(ChallengeStatusEnum.DRAFT);
     assertThat(created.getDifficulty()).isEqualTo(ChallengeDifficultyEnum.HARD);
+    assertThat(created.getDockerImage()).isEqualTo("registry/buffer-overflow:latest");
     assertThat(created.getCreator()).isSameAs(creator);
     assertThat(created.getSubTasks()).hasSize(2);
     assertThat(created.getSubTasks().get(0).getTitle()).isEqualTo("Recon");
@@ -146,6 +172,7 @@ class ChallengeServiceImplTest {
             "D",
             ChallengeStatusEnum.DRAFT,
             ChallengeDifficultyEnum.EASY,
+            DEFAULT_DOCKER_IMAGE,
             new ArrayList<>(List.of(new SubTaskRequest(null, "Only", "Just desc", "   ", 0))));
 
     Challenge created = challengeService.createChallenge(creatorId, request);
@@ -160,7 +187,7 @@ class ChallengeServiceImplTest {
 
     CreateChallengeRequest request =
         createRequest(
-            "Title", "Short", "Desc", ChallengeStatusEnum.DRAFT, ChallengeDifficultyEnum.EASY);
+            "Title", "Short", "Desc", ChallengeStatusEnum.DRAFT, ChallengeDifficultyEnum.EASY, "image:tag");
 
     assertThatThrownBy(() -> challengeService.createChallenge(creatorId, request))
         .isInstanceOf(UserNotFoundException.class);
@@ -274,7 +301,8 @@ class ChallengeServiceImplTest {
             "Updated short",
             "Updated desc",
             ChallengeStatusEnum.PUBLIC,
-            ChallengeDifficultyEnum.EASY);
+            ChallengeDifficultyEnum.EASY,
+            "registry/updated:1.0");
 
     Challenge updated = challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -283,6 +311,7 @@ class ChallengeServiceImplTest {
     assertThat(updated.getDescription()).isEqualTo("Updated desc");
     assertThat(updated.getStatus()).isEqualTo(ChallengeStatusEnum.PUBLIC);
     assertThat(updated.getDifficulty()).isEqualTo(ChallengeDifficultyEnum.EASY);
+    assertThat(updated.getDockerImage()).isEqualTo("registry/updated:1.0");
     verify(courseChallengeRepository, never()).deleteByChallengeId(any());
     verify(courseChallengeRepository, never())
         .deleteByChallengeIdWhereCreatorNotInstructor(any(), any());
@@ -315,6 +344,7 @@ class ChallengeServiceImplTest {
             "D",
             ChallengeStatusEnum.PUBLIC,
             ChallengeDifficultyEnum.EASY,
+            DEFAULT_DOCKER_IMAGE,
             new ArrayList<>(
                 List.of(
                     new SubTaskRequest(null, "New first", "desc", null, 0),
@@ -349,7 +379,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.DRAFT,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            "image:tag");
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -375,7 +406,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PRIVATE,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            "image:tag");
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -401,7 +433,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PUBLIC,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            "image:tag");
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -426,7 +459,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PRIVATE,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            "image:tag");
 
     assertThatThrownBy(() -> challengeService.updateChallenge(otherId, challengeId, request))
         .isInstanceOf(ChallengeAccessDeniedException.class);
@@ -448,7 +482,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PUBLIC,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            "image:tag");
 
     assertThatThrownBy(() -> challengeService.updateChallenge(creatorId, challengeId, request))
         .isInstanceOf(ChallengeNotFoundException.class);

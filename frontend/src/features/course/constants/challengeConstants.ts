@@ -5,6 +5,8 @@ import type {
 
 export const CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS = 200;
 
+export const DOCKER_IMAGE_PATTERN = /^[\w.\-/]+(:[\w.\-]+)?$/;
+
 export const STATUS_OPTIONS: { value: ChallengeStatusEnum; label: string }[] = [
   { value: "DRAFT", label: "Draft" },
   { value: "PRIVATE", label: "Private" },

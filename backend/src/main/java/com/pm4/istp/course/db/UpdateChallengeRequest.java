@@ -16,5 +16,6 @@ public class UpdateChallengeRequest {
   private String description;
   private ChallengeStatusEnum status;
   private ChallengeDifficultyEnum difficulty;
+  private String dockerImage;
   private List<SubTaskRequest> subTasks;
 }
