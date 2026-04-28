@@ -1,15 +1,11 @@
-package com.pm4.istp.admin.services;
+package com.pm4.istp.admin.services.impl;
 
-import com.pm4.istp.admin.dto.AdminChallengeListItemDto;
 import com.pm4.istp.admin.dto.AdminCourseListItemDto;
-import com.pm4.istp.admin.dto.AdminUpdateChallengeRequestDto;
 import com.pm4.istp.admin.dto.AdminUpdateCourseRequestDto;
-import com.pm4.istp.course.db.entities.Challenge;
+import com.pm4.istp.admin.services.AdminCourseService;
 import com.pm4.istp.course.db.entities.Course;
-import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
-import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.services.CourseTopicService;
 import java.security.SecureRandom;
@@ -23,18 +19,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class AdminCourseChallengeService {
+public class AdminCourseServiceImpl implements AdminCourseService {
   private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
-  private static final String CHALLENGE_NOT_FOUND_MSG = "Challenge with ID '%s' not found";
 
   private static final String INVITE_CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   private static final int INVITE_CODE_LENGTH = 6;
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   private final CourseRepository courseRepository;
-  private final ChallengeRepository challengeRepository;
   private final CourseTopicService courseTopicService;
 
+  @Override
   @Transactional(readOnly = true)
   public Page<AdminCourseListItemDto> listCourses(String query, Pageable pageable) {
     String normalizedQuery = normalizeQuery(query);
@@ -46,7 +41,8 @@ public class AdminCourseChallengeService {
     return courseRepository.findAllCoursesForAdminByQuery(normalizedQuery, pageable);
   }
 
-  public Course updateCourse(UUID courseId, AdminUpdateCourseRequestDto request) {
+  @Override
+  public void updateCourse(UUID courseId, AdminUpdateCourseRequestDto request) {
     Course course =
         courseRepository
             .findById(courseId)
@@ -75,9 +71,10 @@ public class AdminCourseChallengeService {
       course.setInviteCode(null);
     }
 
-    return courseRepository.save(course);
+    courseRepository.save(course);
   }
 
+  @Override
   public void deleteCourse(UUID courseId) {
     Course course =
         courseRepository
@@ -87,52 +84,8 @@ public class AdminCourseChallengeService {
     courseRepository.delete(course);
   }
 
-  @Transactional(readOnly = true)
-  public Page<AdminChallengeListItemDto> listChallenges(String query, Pageable pageable) {
-    String normalizedQuery = normalizeQuery(query);
-
-    if (normalizedQuery == null) {
-      return challengeRepository.findAllChallengesForAdmin(pageable);
-    }
-
-    return challengeRepository.findAllChallengesForAdminByQuery(normalizedQuery, pageable);
-  }
-
-  public Challenge updateChallenge(UUID challengeId, AdminUpdateChallengeRequestDto request) {
-    Challenge challenge =
-        challengeRepository
-            .findById(challengeId)
-            .orElseThrow(
-                () ->
-                    new ChallengeNotFoundException(
-                        String.format(CHALLENGE_NOT_FOUND_MSG, challengeId)));
-
-    challenge.setTitle(request.getTitle());
-    challenge.setShortDescription(normalizeBlankToNull(request.getShortDescription()));
-    challenge.setDescription(request.getDescription());
-    challenge.setStatus(request.getStatus());
-    challenge.setDifficulty(request.getDifficulty());
-    if (request.getMaxScore() != null) {
-      challenge.setMaxScore(request.getMaxScore());
-    }
-
-    return challengeRepository.save(challenge);
-  }
-
-  public void deleteChallenge(UUID challengeId) {
-    Challenge challenge =
-        challengeRepository
-            .findById(challengeId)
-            .orElseThrow(
-                () ->
-                    new ChallengeNotFoundException(
-                        String.format(CHALLENGE_NOT_FOUND_MSG, challengeId)));
-    challengeRepository.delete(challenge);
-  }
-
   private String normalizeQuery(String value) {
-    String trimmed = normalizeBlankToNull(value);
-    return trimmed == null ? null : trimmed.trim();
+    return normalizeBlankToNull(value);
   }
 
   private String normalizeBlankToNull(String value) {
@@ -168,3 +121,4 @@ public class AdminCourseChallengeService {
     return sb.toString();
   }
 }
+

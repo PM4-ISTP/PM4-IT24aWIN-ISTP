@@ -2,7 +2,7 @@ package com.pm4.istp.admin.controllers;
 
 import com.pm4.istp.admin.dto.AdminChallengeListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateChallengeRequestDto;
-import com.pm4.istp.admin.services.AdminCourseChallengeService;
+import com.pm4.istp.admin.services.AdminChallengeService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -22,24 +22,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/admin/challenges")
 @RequiredArgsConstructor
 public class AdminChallengeController {
-  private final AdminCourseChallengeService adminCourseChallengeService;
+  private final AdminChallengeService adminChallengeService;
 
   @GetMapping
   public ResponseEntity<Page<AdminChallengeListItemDto>> listChallenges(
       @RequestParam(name = "q", required = false) String query, Pageable pageable) {
-    return ResponseEntity.ok(adminCourseChallengeService.listChallenges(query, pageable));
+    return ResponseEntity.ok(adminChallengeService.listChallenges(query, pageable));
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<Void> updateChallenge(
       @PathVariable UUID id, @Valid @RequestBody AdminUpdateChallengeRequestDto request) {
-    adminCourseChallengeService.updateChallenge(id, request);
+    adminChallengeService.updateChallenge(id, request);
     return ResponseEntity.noContent().build();
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteChallenge(@PathVariable UUID id) {
-    adminCourseChallengeService.deleteChallenge(id);
+    adminChallengeService.deleteChallenge(id);
     return ResponseEntity.noContent().build();
   }
 }
