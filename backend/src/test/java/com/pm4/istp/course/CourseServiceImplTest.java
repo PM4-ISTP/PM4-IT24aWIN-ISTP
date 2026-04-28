@@ -270,6 +270,34 @@ class CourseServiceImplTest {
   }
 
   @Test
+  void listPublishedCourses_withTopicOnly_delegatesToTopicRepository() {
+    Pageable pageable = PageRequest.of(0, 12);
+    Page<ListCourseResponseDto> expected = new PageImpl<>(List.of());
+
+    when(courseRepository.findPublishedCoursesByTopic("Security", pageable)).thenReturn(expected);
+
+    Page<ListCourseResponseDto> result = courseService.listPublishedCourses(null, "Security", pageable);
+
+    assertThat(result).isSameAs(expected);
+    verify(courseRepository).findPublishedCoursesByTopic("Security", pageable);
+  }
+
+  @Test
+  void listPublishedCourses_withQueryAndTopic_delegatesToQueryAndTopicRepository() {
+    Pageable pageable = PageRequest.of(0, 12);
+    Page<ListCourseResponseDto> expected = new PageImpl<>(List.of());
+
+    when(courseRepository.findPublishedCoursesByQueryAndTopic("sql", "Security", pageable))
+        .thenReturn(expected);
+
+    Page<ListCourseResponseDto> result =
+        courseService.listPublishedCourses("  sql  ", "  Security  ", pageable);
+
+    assertThat(result).isSameAs(expected);
+    verify(courseRepository).findPublishedCoursesByQueryAndTopic("sql", "Security", pageable);
+  }
+
+  @Test
   void createCourse_withTooManyShortDescriptionChars_throwsValidationException() {
     UUID ownerId = UUID.randomUUID();
 
