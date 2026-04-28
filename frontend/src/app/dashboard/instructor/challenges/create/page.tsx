@@ -27,6 +27,7 @@ import {
   CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
   DOCKER_IMAGE_PATTERN,
 } from "@/src/features/course/constants/challengeConstants";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 export default function CreateChallenge() {
   const router = useRouter();
@@ -111,7 +112,7 @@ export default function CreateChallenge() {
     setIsSubmitting(false);
 
     if (!result.success) {
-      setFormError(result.error);
+      setFormError(toUserFriendlyBackendError(result.error) ?? result.error);
       return;
     }
 

@@ -47,7 +47,7 @@ export async function createCourse(
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
 
     const data = (await res.json()) as CourseResponseDto;
@@ -93,7 +93,7 @@ export async function fetchCourse(id: string): Promise<ActionResult<OldCourseDet
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
 
     const data = (await res.json()) as OldCourseDetailResponseDto;
@@ -133,7 +133,7 @@ export async function updateCourse(
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
 
     const data = (await res.json()) as OldCourseDetailResponseDto;
@@ -155,7 +155,7 @@ export async function deleteCourse(id: string): Promise<ActionResult<void>> {
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
 
     return { success: true, data: undefined };
@@ -179,7 +179,7 @@ export async function removeCourseParticipant(
     if (!res.ok) {
       const text = await res.text();
       const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: `${res.status}: ${message}` };
+      return { success: false, error: message };
     }
 
     return { success: true, data: undefined };
@@ -246,14 +246,51 @@ export async function regenerateInviteCode(
 export async function fetchPublishedCourses(
   query = "",
   page = 0,
-  size = 12
+  size = 12,
+  topic = ""
 ): Promise<ActionResult<PageListCourseResponseDto>> {
-  return await withActionResult(
-    (client) =>
-      client.GET("/api/v1/courses/catalog", {
-        params: { query: { query, pageable: { page, size } } },
-        querySerializer: springPageableSerializer,
-      }),
-    "Failed to load published courses"
-  );
+  try {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      size: size.toString(),
+      ...(query.trim() ? { query: query.trim() } : {}),
+      ...(topic.trim() ? { topic: topic.trim() } : {}),
+    });
+
+    const res = await fetchBackend(`/api/v1/courses/catalog?${params}`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      const message = extractErrorMessage(text, res.statusText);
+      return { success: false, error: message };
+    }
+
+    const data = (await res.json()) as PageListCourseResponseDto;
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+export async function fetchCourseTopics(): Promise<ActionResult<string[]>> {
+  try {
+    const res = await fetchBackend("/api/v1/courses/topics", { cache: "no-store" });
+    if (!res.ok) {
+      const text = await res.text();
+      const message = extractErrorMessage(text, res.statusText);
+      return { success: false, error: message };
+    }
+    const data = (await res.json()) as string[];
+    return { success: true, data: Array.isArray(data) ? data : [] };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
 }

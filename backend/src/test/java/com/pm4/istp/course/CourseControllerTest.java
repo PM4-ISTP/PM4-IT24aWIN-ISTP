@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
@@ -48,6 +49,7 @@ import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.mappers.CourseMapper;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.services.CourseService;
+import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.shared.util.GlobalExceptionHandler;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.dto.UserDto;
@@ -88,6 +90,8 @@ class CourseControllerTest {
     private CourseService courseService;
     @Mock
     private CourseEnrollmentRepository courseEnrollmentRepository;
+    @Mock
+    private CourseTopicService courseTopicService;
 
     @InjectMocks
     private CourseController courseController;
@@ -104,6 +108,15 @@ class CourseControllerTest {
                 .header("alg", "none")
                 .subject(userId.toString())
                 .build();
+
+        lenient().when(courseTopicService.normalizeAndValidate(any()))
+            .thenAnswer(invocation -> {
+                String value = invocation.getArgument(0);
+                if (value == null || value.trim().isBlank()) {
+                    return null;
+                }
+                return value.trim();
+            });
 
         HandlerMethodArgumentResolver jwtResolver = new HandlerMethodArgumentResolver() {
             @Override
@@ -370,7 +383,7 @@ class CourseControllerTest {
     void listPublishedCourses_withoutQuery_returnsOkWithPage() throws Exception {
         Page<ListCourseResponseDto> page = new PageImpl<>(List.of());
 
-        when(courseService.listPublishedCourses(eq(null), any())).thenReturn(page);
+        when(courseService.listPublishedCourses(eq(null), eq(null), any())).thenReturn(page);
 
         mockMvc
                 .perform(get("/api/v1/courses/catalog"))
@@ -382,7 +395,7 @@ class CourseControllerTest {
     void listPublishedCourses_withQuery_returnsOkWithPage() throws Exception {
         Page<ListCourseResponseDto> page = new PageImpl<>(List.of());
 
-        when(courseService.listPublishedCourses(eq("security"), any())).thenReturn(page);
+        when(courseService.listPublishedCourses(eq("security"), eq(null), any())).thenReturn(page);
 
         mockMvc
                 .perform(get("/api/v1/courses/catalog").param("query", "security"))

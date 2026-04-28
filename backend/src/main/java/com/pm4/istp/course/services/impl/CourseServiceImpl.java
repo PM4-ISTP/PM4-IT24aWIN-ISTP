@@ -25,6 +25,7 @@ import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseService;
+import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.repositories.UserRepository;
@@ -53,6 +54,7 @@ public class CourseServiceImpl implements CourseService {
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final ChallengeRepository challengeRepository;
   private final CourseInviteCodeHelper courseInviteCodeHelper;
+  private final CourseTopicService courseTopicService;
 
   @Override
   @Transactional
@@ -71,7 +73,7 @@ public class CourseServiceImpl implements CourseService {
     courseToCreate.setPrivate(course.isPrivate());
     validateVisibilityState(course.isPublished(), course.isPrivate());
     courseToCreate.setImageUrl(course.getImageUrl());
-    courseToCreate.setTopic(course.getTopic());
+    courseToCreate.setTopic(courseTopicService.normalizeAndValidate(course.getTopic()));
 
     // Owner = the user making the request
     CourseInstructor owner = new CourseInstructor();
@@ -193,7 +195,7 @@ public class CourseServiceImpl implements CourseService {
     course.setDescription(request.getDescription());
     course.setShortDescription(normalizeShortDescription(request.getShortDescription()));
     course.setImageUrl(request.getImageUrl());
-    course.setTopic(request.getTopic());
+    course.setTopic(courseTopicService.normalizeAndValidate(request.getTopic()));
 
     boolean wasPrivate = course.isPrivate();
     boolean willBePublished = request.isPublished();
@@ -328,12 +330,28 @@ public class CourseServiceImpl implements CourseService {
   }
 
   @Override
-  public Page<ListCourseResponseDto> listPublishedCourses(String query, Pageable pageable) {
+  public Page<ListCourseResponseDto> listPublishedCourses(
+      String query, String topic, Pageable pageable) {
     String normalizedQuery = query == null || query.trim().isEmpty() ? null : query.trim();
-    if (normalizedQuery == null) {
-      return courseRepository.findPublishedCourses(pageable);
+    // topic is trimmed but intentionally not validated against the DB here.
+    // CourseController always calls courseTopicService.normalizeAndValidate() before delegating to
+    // this method, so invalid topics are rejected at the API layer. When this method is called
+    // directly (e.g. in tests or future services) an unrecognised topic simply returns an empty
+    // page rather than throwing – an acceptable silent-ignore trade-off documented here.
+    String normalizedTopic = topic == null || topic.trim().isEmpty() ? null : topic.trim();
+
+    if (normalizedTopic == null) {
+      if (normalizedQuery == null) {
+        return courseRepository.findPublishedCourses(pageable);
+      }
+      return courseRepository.findPublishedCoursesByQuery(normalizedQuery, pageable);
     }
-    return courseRepository.findPublishedCoursesByQuery(normalizedQuery, pageable);
+
+    if (normalizedQuery == null) {
+      return courseRepository.findPublishedCoursesByTopic(normalizedTopic, pageable);
+    }
+    return courseRepository.findPublishedCoursesByQueryAndTopic(
+        normalizedQuery, normalizedTopic, pageable);
   }
 
   @Override

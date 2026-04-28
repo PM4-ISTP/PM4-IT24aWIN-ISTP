@@ -14,8 +14,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UpdateCourseRequestDto {
   @NotBlank(message = "Course title is required")
+  @Size(max = 255, message = "Course title must be at most 255 characters")
   private String title;
 
+  @Size(max = 5000, message = "Description must be at most 5000 characters")
   private String description;
 
   @NotBlank(message = "Short description is required")
@@ -31,7 +33,7 @@ public class UpdateCourseRequestDto {
   @Size(max = 2048, message = "Image URL must be at most 2048 characters")
   private String imageUrl;
 
-  @Size(max = 255, message = "Topic must be at most 255 characters")
+  @Size(max = 24, message = "Topic must be at most 24 characters")
   private String topic;
 
   @NotNull(message = "Instructor information is required")

@@ -21,6 +21,7 @@ import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.mappers.CourseMapper;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.services.CourseService;
+import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.shared.dto.ErrorDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -57,6 +58,7 @@ public class CourseController {
   private final CourseMapper courseMapper;
   private final CourseService courseService;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
+  private final CourseTopicService courseTopicService;
 
   @Operation(
       summary = "Create a course",
@@ -261,9 +263,22 @@ public class CourseController {
       })
   @GetMapping("/catalog")
   public ResponseEntity<Page<ListCourseResponseDto>> listPublishedCourses(
-      @RequestParam(required = false) String query, Pageable pageable) {
-    Page<ListCourseResponseDto> courses = courseService.listPublishedCourses(query, pageable);
+      @RequestParam(required = false) String query,
+      @RequestParam(required = false) String topic,
+      Pageable pageable) {
+    String normalizedTopic = courseTopicService.normalizeAndValidate(topic);
+    Page<ListCourseResponseDto> courses =
+        courseService.listPublishedCourses(query, normalizedTopic, pageable);
     return ResponseEntity.ok(courses);
+  }
+
+  @GetMapping("/topics")
+  @Operation(
+      operationId = "listCourseTopics",
+      summary = "List course topics",
+      description = "Returns the list of allowed course topics for topic selection UIs.")
+  public ResponseEntity<List<String>> listCourseTopics() {
+    return ResponseEntity.ok(courseTopicService.listActiveTopics());
   }
 
   @Operation(
@@ -406,9 +421,9 @@ public class CourseController {
     return ResponseEntity.ok(dto);
   }
 
-  // ── Private helpers ──
+  // -- Private helpers --
 
-  /** Full detail including participant list – for instructor/owner endpoints. */
+  /** Full detail including participant list - for instructor/owner endpoints. */
   private CourseDetailResponseDto toCourseDetailResponseDto(Course course, UUID userId) {
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(course);
     UUID courseId = course.getId();
@@ -434,7 +449,7 @@ public class CourseController {
     return dto;
   }
 
-  /** Public catalog detail – omits participant list; returns only count and enrollment status. */
+  /** Public catalog detail - omits participant list; returns only count and enrollment status. */
   private PublicCourseDetailResponseDto toPublicCourseDetailResponseDto(
       Course course, UUID userId) {
     PublicCourseDetailResponseDto dto = courseMapper.toPublicCourseDetailDto(course);

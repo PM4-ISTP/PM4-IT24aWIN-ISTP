@@ -18,11 +18,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UpdateChallengeRequestDto {
   @NotBlank(message = "Challenge title is required")
+  @Size(max = 255, message = "Challenge title must be at most 255 characters")
   private String title;
 
   @Size(max = 200, message = "Short description must not exceed 200 characters")
   private String shortDescription;
 
+  @Size(max = 5000, message = "Description must be at most 5000 characters")
   private String description;
 
   @NotNull(message = "Challenge status is required")
