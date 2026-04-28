@@ -5,10 +5,9 @@ import com.pm4.istp.admin.dto.AdminUpdateCourseRequestDto;
 import com.pm4.istp.admin.services.AdminCourseService;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
-import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
 import com.pm4.istp.course.repositories.CourseRepository;
+import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseTopicService;
-import java.security.SecureRandom;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,17 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminCourseServiceImpl implements AdminCourseService {
   private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
 
-  private static final String INVITE_CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  private static final int INVITE_CODE_LENGTH = 6;
-  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-
   private final CourseRepository courseRepository;
   private final CourseTopicService courseTopicService;
+  private final CourseInviteCodeHelper courseInviteCodeHelper;
 
   @Override
   @Transactional(readOnly = true)
   public Page<AdminCourseListItemDto> listCourses(String query, Pageable pageable) {
-    String normalizedQuery = normalizeQuery(query);
+    String normalizedQuery = normalizeBlankToNull(query);
 
     if (normalizedQuery == null) {
       return courseRepository.findAllCoursesForAdmin(pageable);
@@ -59,19 +55,20 @@ public class AdminCourseServiceImpl implements AdminCourseService {
     course.setTopic(courseTopicService.normalizeAndValidate(request.getTopic()));
     course.setImageUrl(normalizeBlankToNull(request.getImageUrl()));
 
-    // Ensure private courses have an invite code.
-    if (request.isPrivate()
-        && (course.getInviteCode() == null || course.getInviteCode().isBlank())) {
-      try {
-        course.setInviteCode(generateUniqueInviteCode());
-      } catch (IllegalStateException ex) {
-        throw new InviteCodeGenerationException("Failed to generate invite code", ex);
-      }
-    } else if (!request.isPrivate()) {
+    // Clear invite code when course is no longer private.
+    if (!request.isPrivate()) {
       course.setInviteCode(null);
     }
 
     courseRepository.save(course);
+
+    // Ensure private courses have an invite code. CourseInviteCodeHelper assigns the code in its
+    // own REQUIRES_NEW transaction so that a unique-constraint collision on a concurrent insert
+    // only rolls back that single attempt, leaving the caller's transaction intact for a retry.
+    if (request.isPrivate()
+        && (course.getInviteCode() == null || course.getInviteCode().isBlank())) {
+      courseInviteCodeHelper.generateAndAssign(courseId);
+    }
   }
 
   @Override
@@ -82,10 +79,6 @@ public class AdminCourseServiceImpl implements AdminCourseService {
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     courseRepository.delete(course);
-  }
-
-  private String normalizeQuery(String value) {
-    return normalizeBlankToNull(value);
   }
 
   private String normalizeBlankToNull(String value) {
@@ -100,24 +93,5 @@ public class AdminCourseServiceImpl implements AdminCourseService {
     if (published && privateCourse) {
       throw new IllegalArgumentException("Course cannot be published and private at the same time");
     }
-  }
-
-  private String generateUniqueInviteCode() {
-    for (int attempt = 0; attempt < 10; attempt++) {
-      String code = generateInviteCode();
-      if (!courseRepository.existsByInviteCode(code)) {
-        return code;
-      }
-    }
-    throw new IllegalStateException("Could not generate a unique invite code after 10 attempts");
-  }
-
-  private String generateInviteCode() {
-    StringBuilder sb = new StringBuilder(INVITE_CODE_LENGTH);
-    for (int i = 0; i < INVITE_CODE_LENGTH; i++) {
-      int idx = SECURE_RANDOM.nextInt(INVITE_CODE_CHARS.length());
-      sb.append(INVITE_CODE_CHARS.charAt(idx));
-    }
-    return sb.toString();
   }
 }

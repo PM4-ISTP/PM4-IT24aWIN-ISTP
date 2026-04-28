@@ -1,5 +1,6 @@
 package com.pm4.istp.course.services.impl;
 
+import com.pm4.istp.course.db.entities.CourseTopic;
 import com.pm4.istp.course.repositories.CourseTopicRepository;
 import com.pm4.istp.course.services.CourseTopicService;
 import java.util.List;
@@ -18,7 +19,7 @@ public class CourseTopicServiceImpl implements CourseTopicService {
   @Transactional(readOnly = true)
   public List<String> listActiveTopics() {
     return courseTopicRepository.findAllByActiveTrueOrderByTopicAsc().stream()
-        .map(t -> t.getTopic())
+        .map(CourseTopic::getTopic)
         .toList();
   }
 

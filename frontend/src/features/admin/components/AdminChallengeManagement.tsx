@@ -222,12 +222,6 @@ export default function AdminChallengeManagement() {
         )}
       </Group>
 
-      {error && (
-        <Text c="red" size="sm">
-          {error}
-        </Text>
-      )}
-
       <Table highlightOnHover withTableBorder striped={false} style={{ tableLayout: "fixed" }}>
         <Table.Thead>
           <Table.Tr>

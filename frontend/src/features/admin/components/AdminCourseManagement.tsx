@@ -237,12 +237,6 @@ export default function AdminCourseManagement() {
         )}
       </Group>
 
-      {error && (
-        <Text c="red" size="sm">
-          {error}
-        </Text>
-      )}
-
       <Table
         highlightOnHover
         withTableBorder
