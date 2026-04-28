@@ -172,7 +172,11 @@ export default function AdminTopicManagement() {
           );
           return;
         }
-        showToast("red", "Failed to add topic", toUserFriendlyBackendError(msg) ?? "Please try again.");
+        showToast(
+          "red",
+          "Failed to add topic",
+          toUserFriendlyBackendError(msg) ?? "Please try again."
+        );
         return;
       }
       setNewTopic("");
@@ -200,7 +204,11 @@ export default function AdminTopicManagement() {
       });
       if (!res.ok) {
         const msg = await readBackendError(res);
-        showToast("red", "Failed to delete topic", toUserFriendlyBackendError(msg) ?? "Please try again.");
+        showToast(
+          "red",
+          "Failed to delete topic",
+          toUserFriendlyBackendError(msg) ?? "Please try again."
+        );
         return;
       }
       setDeleteOpened(false);
