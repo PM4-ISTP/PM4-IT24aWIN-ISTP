@@ -20,7 +20,7 @@ export type CourseDetailInstructorResponseDto =
   components["schemas"]["CourseDetailInstructorResponseDto"];
 export type PageListCourseResponseDto = components["schemas"]["PageListCourseResponseDto"];
 export type ListCourseResponseDto = components["schemas"]["ListCourseResponseDto"];
-export type ListChallengeStatisticOfCourse = {
+export type ListChallengeStatisticOfCourseDto = {
   statistics: {
     challenge: components["schemas"]["ChallengeDetailResponseDto"];
     solvedRatio: number;
@@ -303,8 +303,8 @@ export async function fetchCourseTopics(): Promise<ActionResult<string[]>> {
 
 export async function fetchChallengeStatisticsOfCourse(
   courseId: string
-): Promise<ActionResult<ListChallengeStatisticOfCourse>> {
-  const statistics: ListChallengeStatisticOfCourse["statistics"] = [
+): Promise<ActionResult<ListChallengeStatisticOfCourseDto>> {
+  const statistics: ListChallengeStatisticOfCourseDto["statistics"] = [
     {
       challenge: {
         id: "00000000-0000-000-0000-000000000000",
