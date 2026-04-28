@@ -18,7 +18,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CourseTopic {
   @Id
-  @Column(name = "topic", nullable = false, unique = true, length = 255)
+  @Column(name = "topic", nullable = false, unique = true, length = 24)
   private String topic;
 
   @Column(name = "is_active", nullable = false)
