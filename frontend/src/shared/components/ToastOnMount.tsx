@@ -37,4 +37,3 @@ export default function ToastOnMount({ color, title, message }: ToastOnMountProp
     </Affix>
   );
 }
-

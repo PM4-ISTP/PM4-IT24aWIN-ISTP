@@ -1,13 +1,4 @@
-import {
-  Box,
-  Button,
-  Group,
-  NativeSelect,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core";
+import { Box, Button, Group, NativeSelect, Stack, Text, TextInput, Title } from "@mantine/core";
 import Link from "next/link";
 import { fetchCourseTopics, fetchPublishedCourses } from "@/src/features/course/actions/courses";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
