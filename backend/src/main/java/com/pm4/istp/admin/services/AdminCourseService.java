@@ -13,4 +13,3 @@ public interface AdminCourseService {
 
   void deleteCourse(UUID courseId);
 }
-

@@ -13,4 +13,3 @@ public interface AdminChallengeService {
 
   void deleteChallenge(UUID challengeId);
 }
-

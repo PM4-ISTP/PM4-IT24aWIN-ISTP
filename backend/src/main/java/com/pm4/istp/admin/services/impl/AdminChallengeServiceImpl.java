@@ -79,4 +79,3 @@ public class AdminChallengeServiceImpl implements AdminChallengeService {
     return trimmed.isEmpty() ? null : trimmed;
   }
 }
-
