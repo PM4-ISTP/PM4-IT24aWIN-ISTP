@@ -18,7 +18,7 @@ async function getPageTitle(courseId: string) {
     if (courseTitle !== undefined) {
       pageTitle = pageTitle + ": " + courseTitle;
     }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     // do nothing. The title is not important. It is ok, to not show it
   }
