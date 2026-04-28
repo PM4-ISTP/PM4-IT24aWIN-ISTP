@@ -267,8 +267,7 @@ public class ChallengeServiceImpl implements ChallengeService {
           courseChallengeRepository.existsByChallengeIdAndCourseInstructorId(
               challenge.getId(), userId);
       boolean isEnrolledInCourseWithChallenge =
-          courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(
-              challenge.getId(), userId);
+          courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challenge.getId(), userId);
       if (!isInstructorOfCourseWithChallenge && !isEnrolledInCourseWithChallenge) {
         throw new ChallengeAccessDeniedException(
             String.format(
