@@ -34,7 +34,7 @@ public class Course {
   @Column(name = "short_description", nullable = true, length = 200)
   private String shortDescription;
 
-  @Column(name = "is_published", nullable = false, columnDefinition = "boolean default false")
+  @Column(name = "isPublished", nullable = false, columnDefinition = "boolean default false")
   private boolean isPublished;
 
   @Column(name = "is_private", nullable = false, columnDefinition = "boolean default false")
