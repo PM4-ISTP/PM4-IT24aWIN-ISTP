@@ -1,14 +1,10 @@
-import { Badge, Group, Progress, Stack, Text, Title } from "@mantine/core";
+import { Group, Progress, Stack, Text, Title } from "@mantine/core";
 
 import {
   ChallengeDetailsCard,
   type ChallengeDetailsCardProps,
   formatText,
 } from "@/src/features/course/components/management/ChallengeDetailsCard";
-import {
-  getDifficultyColor,
-  getStatusColor,
-} from "@/src/features/course/constants/challengeConstants";
 
 function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;
@@ -53,35 +49,26 @@ export function CourseChallengeStatisticsList({
                   key={challenge.id ?? `${index}`}
                   challenge={challenge}
                   title={`${index + 1}. ${titleText}`}
-                  rightSection={
-                    <Stack gap="xs" align="flex-end" style={{ width: "100%" }}>
-                      <Group gap="xs">
-                        <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
-                          {formatText(challenge.status)}
-                        </Badge>
-                        <Badge
-                          variant="light"
-                          color={getDifficultyColor(challenge.difficulty ?? "")}
-                        >
-                          {formatText(challenge.difficulty)}
-                        </Badge>
-                      </Group>
-
-                      <Stack gap={4} style={{ width: "100%" }}>
-                        <Group justify="space-between" align="center">
-                          <Text size="sm" fw={600}>
-                            Solved
-                          </Text>
-                          <Text size="sm" fw={700} c={solvedPercentColor}>
-                            solvedPercent
-                          </Text>
-                        </Group>
-                        <Progress value={solvedRation * 100} color={solvedPercentColor} radius="xl" size="md" />
-                        <Text size="xs" c="dimmed" ta="right">
-                          {solvedPercent} of participants solved this challenge
+                  actionSection={
+                    <>
+                      <Group justify="space-between" align="center">
+                        <Text size="sm" fw={600}>
+                          Solved
                         </Text>
-                      </Stack>
-                    </Stack>
+                        <Text size="sm" fw={700} c={solvedPercentColor}>
+                          solvedPercent
+                        </Text>
+                      </Group>
+                      <Progress
+                        value={solvedRation * 100}
+                        color={solvedPercentColor}
+                        radius="xl"
+                        size="md"
+                      />
+                      <Text size="xs" c="dimmed" ta="right">
+                        {solvedPercent} of participants solved this challenge
+                      </Text>
+                    </>
                   }
                 />
               );

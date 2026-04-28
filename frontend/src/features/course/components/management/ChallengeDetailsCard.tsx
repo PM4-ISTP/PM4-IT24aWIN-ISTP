@@ -1,9 +1,22 @@
 import type { ReactNode } from "react";
-
-import { Box, Grid, GridCol, Paper, SimpleGrid, Text, Title } from "@mantine/core";
-
+import {
+  Badge,
+  Box,
+  Grid,
+  GridCol,
+  Group,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import type { ChallengeDetailResponseDto } from "@/src/features/course/actions/challenges";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
+import {
+  getDifficultyColor,
+  getStatusColor,
+} from "@/src/features/course/constants/challengeConstants";
 
 export function formatDateTime(value?: string): string {
   if (!value) return "n/a";
@@ -28,13 +41,13 @@ export function formatText(value?: string | number): string {
 export interface ChallengeDetailsCardProps {
   challenge: ChallengeDetailResponseDto;
   title: string;
-  rightSection: ReactNode;
+  actionSection: ReactNode;
 }
 
 export function ChallengeDetailsCard({
   challenge,
   title,
-  rightSection,
+  actionSection,
 }: ChallengeDetailsCardProps) {
   const sanitizedDescription =
     challenge.description === undefined ? "" : getSanitizedHtml(challenge.description);
@@ -69,7 +82,20 @@ export function ChallengeDetailsCard({
           </Box>
         </GridCol>
 
-        <GridCol span={3}>{rightSection}</GridCol>
+        <GridCol span={3}>
+          <Stack gap="xs" align="flex-end" style={{ width: "100%" }}>
+            <Group gap="xs">
+              <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
+                {formatText(challenge.status)}
+              </Badge>
+              <Badge variant="light" color={getDifficultyColor(challenge.difficulty ?? "")}>
+                {formatText(challenge.difficulty)}
+              </Badge>
+            </Group>
+
+            <Stack gap={4}>{actionSection}</Stack>
+          </Stack>
+        </GridCol>
       </Grid>
     </Paper>
   );

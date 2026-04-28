@@ -18,7 +18,9 @@ function ButtonWithInfoText({
       <Button mb={12} color={buttonColor} style={{ marginLeft: "auto" }}>
         {buttonText}
       </Button>
-      <Text size="xs">{infoText}</Text>
+      <Text size="xs" ta="right">
+        {infoText}
+      </Text>
     </Flex>
   );
 }
@@ -49,7 +51,7 @@ export default function PlayChallengeButton({ condition }: { condition: number }
           infoText="Continue playing. A pod is already running."
           buttonColor="blue"
         />
-        <Text size="xs">
+        <Text size="xs" ta="right">
           Pod started at |TODO: replace with real data| for course |TODO: replace with real data|
         </Text>
       </Box>
