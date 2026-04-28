@@ -18,7 +18,7 @@ public class CourseTopicServiceImpl implements CourseTopicService {
   @Transactional(readOnly = true)
   public List<String> listActiveTopics() {
     return courseTopicRepository.findAllByActiveTrueOrderByTopicAsc().stream()
-        .map(t -> t.getTopic())
+        .map(CourseTopic::getTopic)
         .toList();
   }
 

@@ -24,7 +24,7 @@ public class AdminChallengeServiceImpl implements AdminChallengeService {
   @Override
   @Transactional(readOnly = true)
   public Page<AdminChallengeListItemDto> listChallenges(String query, Pageable pageable) {
-    String normalizedQuery = normalizeQuery(query);
+    String normalizedQuery = normalizeBlankToNull(query);
 
     if (normalizedQuery == null) {
       return challengeRepository.findAllChallengesForAdmin(pageable);
@@ -65,10 +65,6 @@ public class AdminChallengeServiceImpl implements AdminChallengeService {
                     new ChallengeNotFoundException(
                         String.format(CHALLENGE_NOT_FOUND_MSG, challengeId)));
     challengeRepository.delete(challenge);
-  }
-
-  private String normalizeQuery(String value) {
-    return normalizeBlankToNull(value);
   }
 
   private String normalizeBlankToNull(String value) {
