@@ -34,13 +34,7 @@ export default function ToastOnMount({ color, title, message }: ToastOnMountProp
 
   return (
     <Affix position={{ bottom: 20, right: 20 }} style={{ zIndex: 3000 }}>
-      <Notification
-        color={color}
-        title={title}
-        onClose={toast.hide}
-        withCloseButton
-        icon={icon}
-      >
+      <Notification color={color} title={title} onClose={toast.hide} withCloseButton icon={icon}>
         {message}
       </Notification>
     </Affix>
