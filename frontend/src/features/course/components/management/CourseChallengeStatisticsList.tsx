@@ -19,6 +19,8 @@ interface ChallengeStatisticEntry {
   solvedRatio: number;
 }
 
+const solvedPercentColor = "#2563eb";
+
 export function CourseChallengeStatisticsList({
   statistics,
   title,
@@ -70,11 +72,11 @@ export function CourseChallengeStatisticsList({
                           <Text size="sm" fw={600}>
                             Solved
                           </Text>
-                          <Text size="sm" fw={700} c="orange">
+                          <Text size="sm" fw={700} c={solvedPercentColor}>
                             solvedPercent
                           </Text>
                         </Group>
-                        <Progress value={solvedRation * 100} color="orange" radius="xl" size="md" />
+                        <Progress value={solvedRation * 100} color={solvedPercentColor} radius="xl" size="md" />
                         <Text size="xs" c="dimmed" ta="right">
                           {solvedPercent} of participants solved this challenge
                         </Text>
