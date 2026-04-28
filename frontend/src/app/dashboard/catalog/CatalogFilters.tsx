@@ -11,7 +11,10 @@ type CatalogFiltersProps = {
 };
 
 export default function CatalogFilters({ query, topic, topics }: CatalogFiltersProps) {
-  const topicData = [{ value: "", label: "All topics" }, ...topics.map((t) => ({ value: t, label: t }))];
+  const topicData = [
+    { value: "", label: "All topics" },
+    ...topics.map((t) => ({ value: t, label: t })),
+  ];
 
   return (
     <Box
@@ -79,4 +82,3 @@ export default function CatalogFilters({ query, topic, topics }: CatalogFiltersP
     </Box>
   );
 }
-
