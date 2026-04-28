@@ -333,6 +333,11 @@ public class CourseServiceImpl implements CourseService {
   public Page<ListCourseResponseDto> listPublishedCourses(
       String query, String topic, Pageable pageable) {
     String normalizedQuery = query == null || query.trim().isEmpty() ? null : query.trim();
+    // topic is trimmed but intentionally not validated against the DB here.
+    // CourseController always calls courseTopicService.normalizeAndValidate() before delegating to
+    // this method, so invalid topics are rejected at the API layer. When this method is called
+    // directly (e.g. in tests or future services) an unrecognised topic simply returns an empty
+    // page rather than throwing – an acceptable silent-ignore trade-off documented here.
     String normalizedTopic = topic == null || topic.trim().isEmpty() ? null : topic.trim();
 
     if (normalizedTopic == null) {

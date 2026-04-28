@@ -1,5 +1,6 @@
 package com.pm4.istp.course.services.impl;
 
+import com.pm4.istp.course.db.entities.CourseTopic;
 import com.pm4.istp.course.repositories.CourseTopicRepository;
 import com.pm4.istp.course.services.CourseTopicService;
 import java.util.List;
