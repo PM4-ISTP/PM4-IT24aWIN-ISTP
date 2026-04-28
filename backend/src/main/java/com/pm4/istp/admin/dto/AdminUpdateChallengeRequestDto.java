@@ -2,11 +2,11 @@ package com.pm4.istp.admin.dto;
 
 import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 @Data
 public class AdminUpdateChallengeRequestDto {
