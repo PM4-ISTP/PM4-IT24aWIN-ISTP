@@ -40,6 +40,9 @@ public class AdminTopicServiceImpl implements AdminTopicService {
       if (existing.isActive()) {
         throw new IllegalArgumentException("Topic already exists");
       }
+      if (courseTopicRepository.countByActiveTrue() >= maxTopicCount) {
+        throw new IllegalArgumentException("Topic limit reached");
+      }
       existing.setActive(true);
       courseTopicRepository.save(existing);
       return;
