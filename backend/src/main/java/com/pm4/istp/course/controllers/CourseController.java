@@ -457,17 +457,17 @@ public class CourseController {
     dto.setParticipantCount(courseEnrollmentRepository.countByCourseId(courseId));
     dto.setEnrolled(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId));
     dto.setParticipants(null);
-    filterOutNonPublicChallenges(dto);
+    filterOutDraftChallenges(dto);
     setInstructorIdsToNull(dto.getCourseInstructors());
     setChallengeCreatorIdsToNull(dto.getCourseChallenges());
     dto.setInviteCode(null);
     return dto;
   }
 
-  private void filterOutNonPublicChallenges(PublicCourseDetailResponseDto dto) {
+  private void filterOutDraftChallenges(PublicCourseDetailResponseDto dto) {
     List<ChallengeDetailResponseDto> challenges = new ArrayList<>();
     for (ChallengeDetailResponseDto challenge : dto.getCourseChallenges()) {
-      if (challenge.getStatus() == ChallengeStatusEnum.PUBLIC) {
+      if (challenge.getStatus() != ChallengeStatusEnum.DRAFT) {
         challenges.add(challenge);
       }
     }

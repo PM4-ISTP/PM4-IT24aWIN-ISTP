@@ -408,11 +408,11 @@ class CourseControllerTest {
     @Test
     void getPublicCourse_returnsOk() throws Exception {
         ChallengeDetailResponseDto challenge1 = generateChallengeDetailResponseDto("Challenge 1",
-                ChallengeStatusEnum.DRAFT, "Creator 1");
+                ChallengeStatusEnum.PUBLIC, "Creator 1");
         ChallengeDetailResponseDto challenge2 = generateChallengeDetailResponseDto("Challenge 2",
-                ChallengeStatusEnum.PUBLIC, "Creator 2");
+                ChallengeStatusEnum.PRIVATE, "Creator 2");
         ChallengeDetailResponseDto challenge3 = generateChallengeDetailResponseDto("Challenge 3",
-                ChallengeStatusEnum.PRIVATE, "Creator 3");
+                ChallengeStatusEnum.DRAFT, "Creator 3");
         ChallengeDetailResponseDto challenge4 = generateChallengeDetailResponseDto("Challenge 4",
                 ChallengeStatusEnum.PUBLIC, "Creator 4");
 
@@ -453,10 +453,11 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.courseInstructors[*].instructor.id").value(everyItem(nullValue())))
                 .andExpect(jsonPath("$.courseInstructors[0].instructor.name").value("Instructor"))
                 .andExpect(jsonPath("$.courseChallenges").isArray())
-                .andExpect(jsonPath("$.courseChallenges", hasSize(2)))
+                .andExpect(jsonPath("$.courseChallenges", hasSize(3)))
                 .andExpect(jsonPath("$.courseChallenges[*].creator.id").value(everyItem(nullValue())))
-                .andExpect(jsonPath("$.courseChallenges[0].creator.name").value("Creator 2"))
-                .andExpect(jsonPath("$.courseChallenges[1].creator.name").value("Creator 4"))
+                .andExpect(jsonPath("$.courseChallenges[0].creator.name").value("Creator 1"))
+                .andExpect(jsonPath("$.courseChallenges[1].creator.name").value("Creator 2"))
+                .andExpect(jsonPath("$.courseChallenges[2].creator.name").value("Creator 4"))
                 .andExpect(jsonPath("$.participants").value(nullValue()));
     }
 
