@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Affix, Notification } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useToast } from "@/src/shared/hooks/useToast";
 
 type ToastOnMountProps = {
@@ -23,6 +23,15 @@ export default function ToastOnMount({ color, title, message }: ToastOnMountProp
 
   if (!toast.visible) return null;
 
+  const icon =
+    color === "green" ? (
+      <IconCheck size={18} />
+    ) : color === "orange" ? (
+      <IconAlertTriangle size={18} />
+    ) : (
+      <IconX size={18} />
+    );
+
   return (
     <Affix position={{ bottom: 20, right: 20 }} style={{ zIndex: 3000 }}>
       <Notification
@@ -30,7 +39,7 @@ export default function ToastOnMount({ color, title, message }: ToastOnMountProp
         title={title}
         onClose={toast.hide}
         withCloseButton
-        icon={<IconX size={18} />}
+        icon={icon}
       >
         {message}
       </Notification>
