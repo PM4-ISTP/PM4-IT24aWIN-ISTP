@@ -20,6 +20,12 @@ export type CourseDetailInstructorResponseDto =
   components["schemas"]["CourseDetailInstructorResponseDto"];
 export type PageListCourseResponseDto = components["schemas"]["PageListCourseResponseDto"];
 export type ListCourseResponseDto = components["schemas"]["ListCourseResponseDto"];
+export type ListChallengeStatisticOfCourse = {
+  statistics: {
+    challenge: components["schemas"]["ChallengeDetailResponseDto"];
+    solvedRatio: number;
+  }[];
+};
 
 export async function createCourse(
   dto: Omit<CreateCourseDto, "instructors"> & { collaboratorIds: string[] }
@@ -293,4 +299,95 @@ export async function fetchCourseTopics(): Promise<ActionResult<string[]>> {
       error: err instanceof Error ? err.message : "Unknown error",
     };
   }
+}
+
+export async function fetchChallengeStatisticsOfCourse(
+  courseId: string
+): Promise<ActionResult<ListChallengeStatisticOfCourse>> {
+  const statistics: ListChallengeStatisticOfCourse["statistics"] = [
+    {
+      challenge: {
+        id: "00000000-0000-000-0000-000000000000",
+        title: "Introduction Challenge",
+        shortDescription: "A gentle warm-up challenge for new participants.",
+        description: "Solve the basics and get familiar with the course workflow.",
+        status: "PUBLIC",
+        difficulty: "BEGINNER",
+        maxScore: 100,
+        courseCount: 1,
+        createdAt: "2026-04-01T08:00:00Z",
+        updatedAt: "2026-04-02T08:00:00Z",
+      },
+      solvedRatio: 0.92,
+    },
+    {
+      challenge: {
+        id: "00000000-0000-000-0000-000000000001",
+        title: "Input Validation Drill",
+        shortDescription: "Validate and sanitize incoming user data.",
+        description: "Focus on robust checks and defensive programming techniques.",
+        status: "PUBLIC",
+        difficulty: "EASY",
+        maxScore: 150,
+        courseCount: 2,
+        createdAt: "2026-04-03T08:00:00Z",
+        updatedAt: "2026-04-04T08:00:00Z",
+      },
+      solvedRatio: 0.76,
+    },
+    {
+      challenge: {
+        id: "00000000-0000-000-0000-000000000002",
+        title: "Data Model Puzzle",
+        shortDescription: "Work with a slightly more complex domain model.",
+        description: "Apply relationships and map the domain into a correct solution.",
+        status: "PRIVATE",
+        difficulty: "MEDIUM",
+        maxScore: 200,
+        courseCount: 3,
+        createdAt: "2026-04-05T08:00:00Z",
+        updatedAt: "2026-04-06T08:00:00Z",
+      },
+      solvedRatio: 0.49,
+    },
+    {
+      challenge: {
+        id: "00000000-0000-000-0000-000000000003",
+        title: "Integration Bug Hunt",
+        shortDescription: "Find and fix issues across multiple components.",
+        description: "Trace the full flow and solve bugs at integration boundaries.",
+        status: "PUBLIC",
+        difficulty: "HARD",
+        maxScore: 250,
+        courseCount: 4,
+        createdAt: "2026-04-07T08:00:00Z",
+        updatedAt: "2026-04-08T08:00:00Z",
+      },
+      solvedRatio: 0.31,
+    },
+    {
+      challenge: {
+        id: "00000000-0000-000-0000-000000000004",
+        title: "Capstone Challenge",
+        shortDescription: "The final challenge combining everything learned.",
+        description: "A comprehensive exercise that ties together the complete course content.",
+        status: "PUBLIC",
+        difficulty: "EXPERT",
+        maxScore: 300,
+        courseCount: 5,
+        createdAt: "2026-04-09T08:00:00Z",
+        updatedAt: "2026-04-10T08:00:00Z",
+      },
+      solvedRatio: 0.14,
+    },
+  ];
+
+  await Promise.resolve(); // fake async function needed for ESLint
+
+  return {
+    success: true,
+    data: {
+      statistics,
+    },
+  };
 }
