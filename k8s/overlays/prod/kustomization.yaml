@@ -27,6 +27,7 @@ configMapGenerator:
       - keycloak-client-id=interactive-security-training-platform-app
       - nextauth-url=https://istp.pm4.init-lab.ch
       - backend-url=http://backend:8080
+      - cors-allowed-origin=https://istp.pm4.init-lab.ch
 
 # ┌─────────────────────────────────────────────────────────────────────┐
 # │ Manual secrets (create once per namespace, not managed by Kustomize)│
@@ -55,8 +56,9 @@ configMapGenerator:
 # │      --from-literal=admin-password=<keycloak-password> \            │
 # │      -n istp-prod                                                   │
 # │                                                                     │
-# │ 5. nextauth-secret — NextAuth signing secret                        │
+# │ 5. nextauth-secret — NextAuth signing secret + Keycloak client      │
 # │    kubectl create secret generic nextauth-secret \                  │
 # │      --from-literal=NEXTAUTH_SECRET=<nextauth-secret> \             │
+# │      --from-literal=AUTH_KEYCLOAK_SECRET=<keycloak-client-secret> \ │
 # │      -n istp-prod                                                   │
 # └─────────────────────────────────────────────────────────────────────┘
