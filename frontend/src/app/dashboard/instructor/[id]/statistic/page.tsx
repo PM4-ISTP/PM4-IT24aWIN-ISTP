@@ -1,16 +1,34 @@
 import { ActionIcon, Alert, Group, Stack, Text, Title } from "@mantine/core";
 import Link from "next/link";
 
-import { fetchChallengeStatisticsOfCourse } from "@/src/features/course/actions/courses";
+import {
+  fetchChallengeStatisticsOfCourse,
+  fetchCourse,
+} from "@/src/features/course/actions/courses";
 import { CourseChallengeStatisticsList } from "@/src/features/course/components/management/CourseChallengeStatisticsList";
 import { IconArrowLeft } from "@tabler/icons-react";
 
 export const dynamic = "force-dynamic";
 
+async function getPageTitle(courseId: string) {
+  let pageTitle = "Course Statistics";
+  try {
+    const courseResult = await fetchCourse(courseId);
+    const courseTitle = courseResult.success ? courseResult.data.title : undefined;
+    if (courseTitle !== undefined) {
+      pageTitle = pageTitle + ": " + courseTitle;
+    }
+  } catch (error) {
+    // do nothing. The title is not important. It is ok, to not show it
+  }
+  return pageTitle;
+}
+
 export default async function CourseStatistic({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const backHref = "/dashboard/instructor/" + id;
-  const result = await fetchChallengeStatisticsOfCourse(id);
+  const challengesResult = await fetchChallengeStatisticsOfCourse(id);
+  const pageTitle = await getPageTitle(id);
 
   return (
     <Stack p="xl" gap="lg">
@@ -31,7 +49,7 @@ export default async function CourseStatistic({ params }: { params: Promise<{ id
                 fontWeight: 700,
               }}
             >
-              Course Statistics
+              {pageTitle}
             </Title>
             <Text size="sm" style={{ color: "#94a3b8" }}>
               Overview of how often each challenge has been solved.
@@ -40,14 +58,14 @@ export default async function CourseStatistic({ params }: { params: Promise<{ id
         </Group>
       </Group>
 
-      {result.success ? (
+      {challengesResult.success ? (
         <CourseChallengeStatisticsList
           title="All challenges"
-          statistics={result.data.statistics ?? []}
+          statistics={challengesResult.data.statistics ?? []}
         />
       ) : (
         <Alert color="red" title="Failed to load challenge statistics">
-          {result.error}
+          {challengesResult.error}
         </Alert>
       )}
     </Stack>
