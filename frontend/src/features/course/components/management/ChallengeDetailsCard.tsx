@@ -31,7 +31,11 @@ export interface ChallengeDetailsCardProps {
   rightSection: ReactNode;
 }
 
-export function ChallengeDetailsCard({ challenge, title, rightSection }: ChallengeDetailsCardProps) {
+export function ChallengeDetailsCard({
+  challenge,
+  title,
+  rightSection,
+}: ChallengeDetailsCardProps) {
   const sanitizedDescription =
     challenge.description === undefined ? "" : getSanitizedHtml(challenge.description);
 
