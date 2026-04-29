@@ -186,134 +186,168 @@ export function ChallengePlayView({
           style={{ background: "rgba(255,255,255,0.02)", overflow: "auto" }}
         >
           <Stack gap="lg">
-            <Stack gap={4}>
-              <Title order={2}>{challenge.title}</Title>
-              {challenge.shortDescription && (
-                <Text c="dimmed" size="sm">
-                  {challenge.shortDescription}
+            {/* ── Challenge block ── */}
+            <Stack gap="md">
+              <Stack gap={6}>
+                <Text
+                  size="xs"
+                  tt="uppercase"
+                  c="dimmed"
+                  fw={700}
+                  style={{ letterSpacing: "0.08em" }}
+                >
+                  Challenge
                 </Text>
+                <Title order={2} style={{ lineHeight: 1.2 }}>
+                  {challenge.title}
+                </Title>
+                {challenge.shortDescription && (
+                  <Text c="dimmed" size="sm">
+                    {challenge.shortDescription}
+                  </Text>
+                )}
+              </Stack>
+
+              <Stack gap={6}>
+                <Group justify="space-between" align="center">
+                  <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
+                    Progress
+                  </Text>
+                  <Text size="xs" fw={600} c={allSolved ? "teal.3" : "blue.3"}>
+                    {solvedCount} / {total} sub-tasks
+                  </Text>
+                </Group>
+                <Progress
+                  value={percent}
+                  color={allSolved ? "teal" : "blue"}
+                  radius="xl"
+                  size="sm"
+                />
+              </Stack>
+
+              {sanitizedChallengeDescription && (
+                <Box
+                  className="course-description"
+                  style={{ fontSize: "var(--mantine-font-size-sm)" }}
+                  dangerouslySetInnerHTML={{ __html: sanitizedChallengeDescription }}
+                />
               )}
             </Stack>
 
-            <Stack gap={6}>
-              <Group justify="space-between" align="center">
-                <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
-                  Progress
-                </Text>
-                <Text size="xs" fw={600} c={allSolved ? "teal.3" : "blue.3"}>
-                  {solvedCount} / {total} sub-tasks
-                </Text>
-              </Group>
-              <Progress value={percent} color={allSolved ? "teal" : "blue"} radius="xl" size="sm" />
-            </Stack>
+            <Divider />
 
-            {sanitizedChallengeDescription && (
-              <Box
-                className="course-description"
-                style={{ fontSize: "var(--mantine-font-size-sm)" }}
-                dangerouslySetInnerHTML={{ __html: sanitizedChallengeDescription }}
-              />
-            )}
-
+            {/* ── Sub-task navigation: compact, just numbers ── */}
             {total > 0 && (
-              <>
-                <Divider />
-                <Stepper
-                  active={activeStep}
-                  onStepClick={goToStep}
-                  allowNextStepsSelect={false}
-                  size="sm"
-                  iconSize={32}
-                >
-                  {subTasks.map((st, idx) => (
-                    <Stepper.Step
-                      key={st.id}
-                      label={`Sub-task ${idx + 1}`}
-                      description={st.title}
-                      completedIcon={<IconCheck size={16} />}
-                      icon={
-                        st.isSolved ? (
-                          <IconCheck size={16} />
-                        ) : idx > 0 && !subTasks[idx - 1]?.isSolved ? (
-                          <IconLock size={14} />
-                        ) : undefined
-                      }
-                    />
-                  ))}
-                </Stepper>
-              </>
+              <Stepper
+                active={activeStep}
+                onStepClick={goToStep}
+                allowNextStepsSelect={false}
+                size="xs"
+                iconSize={28}
+              >
+                {subTasks.map((st, idx) => (
+                  <Stepper.Step
+                    key={st.id}
+                    completedIcon={<IconCheck size={14} />}
+                    icon={
+                      st.isSolved ? (
+                        <IconCheck size={14} />
+                      ) : idx > 0 && !subTasks[idx - 1]?.isSolved ? (
+                        <IconLock size={12} />
+                      ) : undefined
+                    }
+                  />
+                ))}
+              </Stepper>
             )}
 
+            {/* ── Sub-task working area ── */}
             {current && (
-              <Stack gap="md">
-                <Stack gap={4}>
-                  <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
-                    Current sub-task
-                  </Text>
-                  <Title order={4}>{current.title}</Title>
-                </Stack>
+              <Paper
+                withBorder
+                radius="md"
+                p="md"
+                style={{ background: "rgba(255,255,255,0.03)" }}
+              >
+                <Stack gap="md">
+                  <Stack gap={4}>
+                    <Group gap="xs" align="center">
+                      <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
+                        Sub-task {activeStep + 1} of {total}
+                      </Text>
+                      {current.isSolved && (
+                        <Badge variant="light" color="teal" size="xs">
+                          Solved
+                        </Badge>
+                      )}
+                    </Group>
+                    <Title order={4} style={{ lineHeight: 1.3 }}>
+                      {current.title}
+                    </Title>
+                  </Stack>
 
-                {sanitizedSubTaskDescription && (
-                  <Box
-                    className="course-description"
-                    style={{ fontSize: "var(--mantine-font-size-sm)" }}
-                    dangerouslySetInnerHTML={{ __html: sanitizedSubTaskDescription }}
-                  />
-                )}
-
-                <Stack gap="xs">
-                  <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
-                    Submit Flag
-                  </Text>
-                  <Group gap="xs" align="flex-end">
-                    <TextInput
-                      value={current.isSolved ? (current.solvedFlag ?? "") : flagInput}
-                      onChange={(e) => {
-                        if (!current.isSolved) setFlagInput(e.currentTarget.value);
-                      }}
-                      placeholder="ISTP{...}"
-                      readOnly={current.isSolved}
-                      disabled={submitting}
-                      style={{ flex: 1 }}
-                      styles={{ input: { fontFamily: "var(--font-geist-mono), monospace" } }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !current.isSolved && !submitting) {
-                          e.preventDefault();
-                          void handleSubmit();
-                        }
-                      }}
-                      aria-label="Flag input"
+                  {sanitizedSubTaskDescription && (
+                    <Box
+                      className="course-description"
+                      style={{ fontSize: "var(--mantine-font-size-sm)" }}
+                      dangerouslySetInnerHTML={{ __html: sanitizedSubTaskDescription }}
                     />
+                  )}
+
+                  <Stack gap="xs">
+                    <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
+                      Submit Flag
+                    </Text>
+                    <Group gap="xs" align="flex-end">
+                      <TextInput
+                        value={current.isSolved ? (current.solvedFlag ?? "") : flagInput}
+                        onChange={(e) => {
+                          if (!current.isSolved) setFlagInput(e.currentTarget.value);
+                        }}
+                        placeholder="ISTP{...}"
+                        readOnly={current.isSolved}
+                        disabled={submitting}
+                        style={{ flex: 1 }}
+                        styles={{ input: { fontFamily: "var(--font-geist-mono), monospace" } }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !current.isSolved && !submitting) {
+                            e.preventDefault();
+                            void handleSubmit();
+                          }
+                        }}
+                        aria-label="Flag input"
+                      />
+                      <Button
+                        onClick={() => void handleSubmit()}
+                        disabled={current.isSolved}
+                        loading={submitting}
+                        color={current.isSolved ? "teal" : "blue"}
+                        leftSection={current.isSolved ? <IconCheck size={16} /> : undefined}
+                      >
+                        {current.isSolved ? "Solved" : "Submit"}
+                      </Button>
+                    </Group>
+                  </Stack>
+
+                  <Group justify="space-between">
                     <Button
-                      onClick={() => void handleSubmit()}
-                      disabled={current.isSolved}
-                      loading={submitting}
-                      color={current.isSolved ? "teal" : "blue"}
-                      leftSection={current.isSolved ? <IconCheck size={16} /> : undefined}
+                      variant="subtle"
+                      leftSection={<IconArrowLeft size={16} />}
+                      onClick={() => goToStep(activeStep - 1)}
+                      disabled={activeStep === 0}
                     >
-                      {current.isSolved ? "Solved" : "Submit"}
+                      Previous
+                    </Button>
+                    <Button
+                      rightSection={<IconArrowRight size={16} />}
+                      onClick={() => goToStep(activeStep + 1)}
+                      disabled={!current.isSolved || activeStep >= total - 1}
+                    >
+                      Next
                     </Button>
                   </Group>
                 </Stack>
-
-                <Group justify="space-between">
-                  <Button
-                    variant="subtle"
-                    leftSection={<IconArrowLeft size={16} />}
-                    onClick={() => goToStep(activeStep - 1)}
-                    disabled={activeStep === 0}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    rightSection={<IconArrowRight size={16} />}
-                    onClick={() => goToStep(activeStep + 1)}
-                    disabled={!current.isSolved || activeStep >= total - 1}
-                  >
-                    Next
-                  </Button>
-                </Group>
-              </Stack>
+              </Paper>
             )}
 
             {allSolved && (
