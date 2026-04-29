@@ -1,10 +1,11 @@
-import { Group, Progress, Stack, Text, Title } from "@mantine/core";
+import { Button, Group, Progress, Stack, Text, Title } from "@mantine/core";
 
 import {
   ChallengeDetailsCard,
   type ChallengeDetailsCardProps,
   formatText,
 } from "@/src/features/course/components/management/ChallengeDetailsCard";
+import Link from "next/link";
 
 function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;
@@ -18,9 +19,11 @@ interface ChallengeStatisticEntry {
 const solvedPercentColor = "#2563eb";
 
 export function CourseChallengeStatisticsList({
+  courseId,
   statistics,
   title,
 }: {
+  courseId: string;
   statistics: ChallengeStatisticEntry[];
   title: string;
 }) {
@@ -40,13 +43,14 @@ export function CourseChallengeStatisticsList({
           <Stack gap="sm">
             {statistics.map((entry, index) => {
               const challenge = entry.challenge;
+              const challengeId = challenge.id as string; // backend always return an ID
               const titleText = formatText(challenge.title);
               const solvedRation = entry.solvedRatio ?? 0;
               const solvedPercent = formatPercent(solvedRation);
 
               return (
                 <ChallengeDetailsCard
-                  key={challenge.id ?? `${index}`}
+                  key={challengeId}
                   challenge={challenge}
                   title={`${index + 1}. ${titleText}`}
                   actionSection={
@@ -68,6 +72,9 @@ export function CourseChallengeStatisticsList({
                       <Text size="xs" c="dimmed" ta="right">
                         {solvedPercent} of participants solved this challenge
                       </Text>
+                      <Link href={`/dashboard/instructor/${courseId}/statistic/${challengeId}`}>
+                        <Button>View Participant Progresses</Button>
+                      </Link>
                     </>
                   }
                 />

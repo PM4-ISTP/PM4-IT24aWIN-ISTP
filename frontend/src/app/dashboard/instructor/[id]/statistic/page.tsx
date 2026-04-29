@@ -61,6 +61,7 @@ export default async function CourseStatistic({ params }: { params: Promise<{ id
 
       {challengesResult.success ? (
         <CourseChallengeStatisticsList
+          courseId={id}
           title="All challenges"
           statistics={challengesResult.data.statistics ?? []}
         />
