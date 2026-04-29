@@ -263,12 +263,7 @@ export function ChallengePlayView({
 
             {/* ── Sub-task working area ── */}
             {current && (
-              <Paper
-                withBorder
-                radius="md"
-                p="md"
-                style={{ background: "rgba(255,255,255,0.03)" }}
-              >
+              <Paper withBorder radius="md" p="md" style={{ background: "rgba(255,255,255,0.03)" }}>
                 <Stack gap="md">
                   <Stack gap={4}>
                     <Group gap="xs" align="center">
