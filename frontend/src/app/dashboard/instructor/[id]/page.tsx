@@ -683,6 +683,10 @@ export default function EditCourse() {
                   </Stack>
                 </Box>
               )}
+
+              <Button onClick={() => router.push(`/dashboard/instructor/${courseId}/statistic`)}>
+                View Course Statistic
+              </Button>
             </Stack>
           </GridCol>
         </Grid>
