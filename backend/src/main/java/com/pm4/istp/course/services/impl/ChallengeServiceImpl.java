@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -313,9 +314,8 @@ public class ChallengeServiceImpl implements ChallengeService {
                         String.format(CHALLENGE_NOT_FOUND_MSG, challengeId)));
 
     boolean challengeBelongsToCourse =
-        courseChallengeRepository.existsByChallengeIdAndCourseInstructorId(challengeId, userId)
-            || challenge.getCourseChallenges().stream()
-                .anyMatch(cc -> cc.getCourse().getId().equals(courseId));
+        challenge.getCourseChallenges().stream()
+            .anyMatch(cc -> cc.getCourse().getId().equals(courseId));
     if (!challengeBelongsToCourse) {
       throw new ChallengeAccessDeniedException(
           String.format("Challenge '%s' is not part of course '%s'", challengeId, courseId));
@@ -361,7 +361,15 @@ public class ChallengeServiceImpl implements ChallengeService {
       completion.setUser(user);
       completion.setSubTask(subTask);
       completion.setSolvedAt(LocalDateTime.now());
-      subTaskCompletionRepository.save(completion);
+      try {
+        subTaskCompletionRepository.saveAndFlush(completion);
+      } catch (DataIntegrityViolationException ex) {
+        // Concurrent submission slipped past the existsByUserIdAndSubTaskId check
+        // and tripped the unique (user, sub_task) constraint. Surface as 409
+        // instead of a 500.
+        throw new SubTaskAlreadySolvedException(
+            String.format("Sub-task '%s' already solved by user '%s'", subTaskId, userId), ex);
+      }
     }
 
     List<SubTask> siblings = subTask.getChallenge().getSubTasks();
@@ -389,11 +397,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
   private void verifyEnrolledInChallengeCourse(UUID userId, Challenge challenge) {
     boolean enrolled =
-        challenge.getCourseChallenges().stream()
-            .anyMatch(
-                cc ->
-                    courseEnrollmentRepository.existsByCourseIdAndParticipantId(
-                        cc.getCourse().getId(), userId));
+        courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challenge.getId(), userId);
     if (!enrolled) {
       throw new ChallengeAccessDeniedException(
           String.format(
