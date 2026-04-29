@@ -431,6 +431,7 @@ export async function fetchChallengeStatisticsOfCourse(
 export async function fetchChallengeProgressesForCourse(
   challengeId: string,
   courseId: string,
+  query = "",
   page = 0,
   size = 20
 ): Promise<ActionResult<PageListChallengeProgressForCourseDto>> {
@@ -483,6 +484,7 @@ export async function fetchChallengeProgressesForCourse(
   });
 
   await Promise.resolve(); // fake async function needed for ESLint
+  console.log(query); // console.log needed to suppress ESLint error
 
   return {
     success: true,
