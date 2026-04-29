@@ -80,22 +80,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/admin/courses/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put: operations["updateCourse_1"];
-    post?: never;
-    delete: operations["deleteCourse_1"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/admin/config": {
     parameters: {
       query?: never;
@@ -112,22 +96,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/admin/challenges/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put: operations["updateChallenge_1"];
-    post?: never;
-    delete: operations["deleteChallenge_1"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/v1/courses": {
     parameters: {
       query?: never;
@@ -135,10 +103,6 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /**
-     * Get courses for which the user is their instructor
-     * @description Returns a paginated list of courses for which the user is their instructor (owner or collaborator).
-     */
     get: operations["listCourses"];
     put?: never;
     /**
@@ -161,10 +125,6 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /**
-     * Regenerate invite code
-     * @description Regenerates the invite code of a private course. Only the course owner can perform this action.
-     */
     post: operations["regenerateInviteCode"];
     delete?: never;
     options?: never;
@@ -197,10 +157,6 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /**
-     * Enroll in a course
-     * @description Enroll in a course and returns the course in which the student enrolled themselves.
-     */
     post: operations["enrollInPublicCourse"];
     delete?: never;
     options?: never;
@@ -217,10 +173,6 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /**
-     * Join a private course by invite code
-     * @description Enrolls the authenticated user into a private course using a 6-character invite code.
-     */
     post: operations["joinByInviteCode"];
     delete?: never;
     options?: never;
@@ -252,53 +204,17 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/submit": {
+  "/api/v1/challenge-pods/{challengeId}": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    get: operations["getPod"];
     put?: never;
-    /**
-     * Submit a flag for a sub-task
-     * @description Validates the submitted flag against the stored plaintext flag (case-sensitive). On a correct submission the sub-task is marked as solved for the authenticated user. Already-solved sub-tasks cannot be re-submitted.
-     */
-    post: operations["submitSubTaskFlag"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/k8s/pods": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post: operations["createPod"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/topics": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations["listTopics"];
-    put?: never;
-    post: operations["addTopic"];
-    delete?: never;
+    post: operations["startPod"];
+    delete: operations["stopPod"];
     options?: never;
     head?: never;
     patch?: never;
@@ -336,26 +252,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/courses/topics": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List course topics
-     * @description Returns the list of allowed course topics for topic selection UIs.
-     */
-    get: operations["listCourseTopics"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/v1/courses/my-enrollments": {
     parameters: {
       query?: never;
@@ -363,10 +259,6 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /**
-     * Get enrolled courses of user (public and private)
-     * @description Returns a paginated list of the enrolled courses of the user.
-     */
     get: operations["listEnrollments"];
     put?: never;
     post?: never;
@@ -383,10 +275,6 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /**
-     * Get published courses
-     * @description Returns a paginated list of published courses.
-     */
     get: operations["listPublishedCourses"];
     put?: never;
     post?: never;
@@ -403,10 +291,6 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /**
-     * Get a course by ID as a student
-     * @description Returns a detailed response of a course for a student. User IDs are omitted due to security concerns.
-     */
     get: operations["getPublicCourse"];
     put?: never;
     post?: never;
@@ -436,26 +320,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/challenges/{id}/play": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get a challenge in student play view
-     * @description Returns a challenge formatted for students (no sub-task flags, with per-user solved progress). Caller must be enrolled in the given course, and the challenge must belong to it.
-     */
-    get: operations["getChallengeForPlay"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/v1/challenges/search": {
     parameters: {
       query?: never;
@@ -471,90 +335,6 @@ export interface paths {
     put?: never;
     post?: never;
     delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/courses": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations["listCourses_1"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/challenges": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations["listChallenges_1"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/courses/{id}/participants/{participantId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove a participant from a course
-     * @description Removes a student (participant) from a course. Only accessible to the owner.
-     */
-    delete: operations["removeParticipant"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/k8s/pods/{instanceName}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete: operations["deletePod"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/topics/{value}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete: operations["deleteTopic"];
     options?: never;
     head?: never;
     patch?: never;
@@ -617,6 +397,8 @@ export interface components {
       participantCount?: number;
       imageUrl?: string;
       topic?: string;
+      /** @enum {string} */
+      difficulty?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
       inviteCode?: string;
       courseInstructors?: components["schemas"]["CourseDetailInstructorResponseDto"][];
       participants?: components["schemas"]["CourseParticipantResponseDto"][];
@@ -659,15 +441,6 @@ export interface components {
     UpdateCourseChallengesRequestDto: {
       challenges: components["schemas"]["CourseChallengeItemDto"][];
     };
-    SubTaskRequestDto: {
-      /** Format: uuid */
-      id?: string;
-      title: string;
-      description: string;
-      flag?: string;
-      /** Format: int32 */
-      orderIndex?: number;
-    };
     UpdateChallengeRequestDto: {
       title: string;
       shortDescription?: string;
@@ -676,8 +449,6 @@ export interface components {
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
-      dockerImage: string;
-      subTasks: components["schemas"]["SubTaskRequestDto"][];
     };
     ChallengeCreatorResponseDto: {
       /** Format: uuid */
@@ -696,35 +467,13 @@ export interface components {
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
       maxScore?: number;
-      dockerImage?: string;
       creator?: components["schemas"]["ChallengeCreatorResponseDto"];
       /** Format: int64 */
       courseCount?: number;
-      subTasks?: components["schemas"]["SubTaskResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
-    };
-    SubTaskResponseDto: {
-      /** Format: uuid */
-      id?: string;
-      title?: string;
-      description?: string;
-      flag?: string;
-      /** Format: int32 */
-      orderIndex?: number;
-    };
-    AdminUpdateCourseRequestDto: {
-      title: string;
-      description?: string;
-      shortDescription?: string;
-      topic?: string;
-      imageUrl?: string;
-      private?: boolean;
-      published?: boolean;
-      isPublished?: boolean;
-      isPrivate?: boolean;
     };
     AdminConfigRequest: {
       cpuLimit?: string;
@@ -741,17 +490,6 @@ export interface components {
       podTtlSeconds?: number;
       /** Format: date-time */
       updatedAt?: string;
-    };
-    AdminUpdateChallengeRequestDto: {
-      title: string;
-      shortDescription?: string;
-      description?: string;
-      /** @enum {string} */
-      status: "DRAFT" | "PRIVATE" | "PUBLIC";
-      /** @enum {string} */
-      difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
-      /** Format: int32 */
-      maxScore?: number;
     };
     CreateCourseInstructorRequestDto: {
       /** Format: uuid */
@@ -803,30 +541,6 @@ export interface components {
       isPublished?: boolean;
       isPrivate?: boolean;
     };
-    ChallengeStudentDto: {
-      /** Format: uuid */
-      id?: string;
-      title?: string;
-      shortDescription?: string;
-      description?: string;
-      /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
-      /** @enum {string} */
-      difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
-      /** Format: int32 */
-      maxScore?: number;
-      creator?: components["schemas"]["ChallengeCreatorResponseDto"];
-      subTasks?: components["schemas"]["SubTaskStudentDto"][];
-      /** Format: int32 */
-      solvedSubTaskCount?: number;
-      /** Format: int32 */
-      totalSubTaskCount?: number;
-      /** Format: date-time */
-      createdAt?: string;
-      /** Format: date-time */
-      updatedAt?: string;
-      isSolved?: boolean;
-    };
     PublicCourseDetailResponseDto: {
       /** Format: uuid */
       id?: string;
@@ -837,10 +551,12 @@ export interface components {
       participantCount?: number;
       imageUrl?: string;
       topic?: string;
+      /** @enum {string} */
+      difficulty?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
       inviteCode?: string;
       courseInstructors?: components["schemas"]["CourseDetailInstructorResponseDto"][];
       participants?: components["schemas"]["CourseParticipantResponseDto"][];
-      courseChallenges?: components["schemas"]["ChallengeStudentDto"][];
+      courseChallenges?: components["schemas"]["ChallengeDetailResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
@@ -849,16 +565,6 @@ export interface components {
       published?: boolean;
       isEnrolled?: boolean;
       isPublished?: boolean;
-    };
-    SubTaskStudentDto: {
-      /** Format: uuid */
-      id?: string;
-      title?: string;
-      description?: string;
-      /** Format: int32 */
-      orderIndex?: number;
-      solvedFlag?: string;
-      isSolved?: boolean;
     };
     JoinByInviteCodeRequestDto: {
       code: string;
@@ -871,8 +577,6 @@ export interface components {
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
-      dockerImage: string;
-      subTasks: components["schemas"]["SubTaskRequestDto"][];
     };
     CreateChallengeResponseDto: {
       /** Format: uuid */
@@ -886,43 +590,24 @@ export interface components {
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
       maxScore?: number;
-      dockerImage?: string;
       /** Format: uuid */
       creatorId?: string;
-      subTasks?: components["schemas"]["SubTaskResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
     };
-    SubTaskSubmissionRequestDto: {
-      flag: string;
-    };
-    SubTaskSubmissionResponseDto: {
-      /** Format: int32 */
-      solvedSubTaskCount?: number;
-      /** Format: int32 */
-      totalSubTaskCount?: number;
-      isCorrect?: boolean;
-      isChallengeSolved?: boolean;
-    };
-    PodCreationRequest: {
-      containerName?: string;
-      image: string;
-      /** Format: int32 */
-      containerPort?: number;
-    };
-    PodCreationResponse: {
-      status?: string;
+    PodStatusResponse: {
+      /** @enum {string} */
+      status?: "NOT_FOUND" | "PROVISIONING" | "RUNNING" | "FAILED" | "TERMINATING";
       podName?: string;
-      namespace?: string;
-      message?: string;
       appUrl?: string;
       terminalUrl?: string;
       terminalPassword?: string;
-    };
-    AdminTopicRequest: {
-      value: string;
+      /** Format: date-time */
+      createdAt?: string;
+      /** Format: date-time */
+      expiresAt?: string;
     };
     Pageable: {
       /** Format: int32 */
@@ -951,10 +636,10 @@ export interface components {
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
+      first?: boolean;
+      last?: boolean;
       pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
@@ -988,6 +673,8 @@ export interface components {
       updatedAt?: string;
       imageUrl?: string;
       topic?: string;
+      /** @enum {string} */
+      difficulty?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
       ownerName?: string;
       ownerPicture?: string;
       ownerTitle?: string;
@@ -1007,10 +694,10 @@ export interface components {
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
+      first?: boolean;
+      last?: boolean;
       pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
@@ -1025,7 +712,6 @@ export interface components {
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
       maxScore?: number;
-      dockerImage?: string;
       creatorName?: string;
       /** Format: int64 */
       courseCount?: number;
@@ -1043,96 +729,16 @@ export interface components {
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
+      first?: boolean;
+      last?: boolean;
       pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
     VisibilityImpactResponseDto: {
       /** Format: int32 */
       affectedCourseCount?: number;
-    };
-    AdminCourseListItemDto: {
-      /** Format: uuid */
-      id?: string;
-      title?: string;
-      description?: string;
-      shortDescription?: string;
-      /** Format: date-time */
-      createdAt?: string;
-      /** Format: date-time */
-      updatedAt?: string;
-      topic?: string;
-      imageUrl?: string;
-      /** Format: uuid */
-      ownerId?: string;
-      ownerName?: string;
-      ownerUsername?: string;
-      private?: boolean;
-      published?: boolean;
-      isPublished?: boolean;
-      isPrivate?: boolean;
-    };
-    PageAdminCourseListItemDto: {
-      /** Format: int64 */
-      totalElements?: number;
-      /** Format: int32 */
-      totalPages?: number;
-      /** Format: int32 */
-      size?: number;
-      content?: components["schemas"]["AdminCourseListItemDto"][];
-      /** Format: int32 */
-      number?: number;
-      sort?: components["schemas"]["SortObject"];
-      first?: boolean;
-      last?: boolean;
-      /** Format: int32 */
-      numberOfElements?: number;
-      pageable?: components["schemas"]["PageableObject"];
-      empty?: boolean;
-    };
-    AdminChallengeListItemDto: {
-      /** Format: uuid */
-      id?: string;
-      title?: string;
-      shortDescription?: string;
-      description?: string;
-      /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
-      /** @enum {string} */
-      difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
-      /** Format: int32 */
-      maxScore?: number;
-      /** Format: int64 */
-      courseCount?: number;
-      /** Format: date-time */
-      createdAt?: string;
-      /** Format: date-time */
-      updatedAt?: string;
-      /** Format: uuid */
-      creatorId?: string;
-      creatorName?: string;
-      creatorUsername?: string;
-    };
-    PageAdminChallengeListItemDto: {
-      /** Format: int64 */
-      totalElements?: number;
-      /** Format: int32 */
-      totalPages?: number;
-      /** Format: int32 */
-      size?: number;
-      content?: components["schemas"]["AdminChallengeListItemDto"][];
-      /** Format: int32 */
-      number?: number;
-      sort?: components["schemas"]["SortObject"];
-      first?: boolean;
-      last?: boolean;
-      /** Format: int32 */
-      numberOfElements?: number;
-      pageable?: components["schemas"]["PageableObject"];
-      empty?: boolean;
     };
   };
   responses: never;
@@ -1431,50 +1037,6 @@ export interface operations {
       };
     };
   };
-  updateCourse_1: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AdminUpdateCourseRequestDto"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  deleteCourse_1: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
   getAdminConfig: {
     parameters: {
       query?: never;
@@ -1565,50 +1127,6 @@ export interface operations {
       };
     };
   };
-  updateChallenge_1: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AdminUpdateChallengeRequestDto"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  deleteChallenge_1: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
   listCourses: {
     parameters: {
       query: {
@@ -1620,22 +1138,13 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Courses found */
+      /** @description OK */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PageListCourseResponseDto"];
-        };
-      };
-      /** @description Unexpected server error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -1693,40 +1202,13 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Invite code regenerated successfully */
+      /** @description OK */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["CourseDetailResponseDto"];
-        };
-      };
-      /** @description Access denied or invite code regeneration not allowed for public course */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-      /** @description Course not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-      /** @description Unexpected server error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -1764,22 +1246,13 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Enrolled in course */
+      /** @description OK */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PublicCourseDetailResponseDto"];
-        };
-      };
-      /** @description Unexpected server error. Might occur, when user or course does not exist or the course is not public. */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -1797,40 +1270,13 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Joined course successfully */
+      /** @description OK */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PublicCourseDetailResponseDto"];
-        };
-      };
-      /** @description Invalid request payload or user not found */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-      /** @description Invalid or expired invite code */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-      /** @description Unexpected server error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -1899,98 +1345,13 @@ export interface operations {
       };
     };
   };
-  submitSubTaskFlag: {
+  getPod: {
     parameters: {
       query?: never;
       header?: never;
       path: {
         challengeId: string;
-        subTaskId: string;
       };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SubTaskSubmissionRequestDto"];
-      };
-    };
-    responses: {
-      /** @description Submission processed */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["SubTaskSubmissionResponseDto"];
-        };
-      };
-      /** @description Invalid flag format */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-      /** @description User not enrolled in a course containing this challenge */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-      /** @description Challenge or sub-task not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-      /** @description Sub-task already solved */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-    };
-  };
-  createPod: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["PodCreationRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["PodCreationResponse"];
-        };
-      };
-    };
-  };
-  listTopics: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
       cookie?: never;
     };
     requestBody?: never;
@@ -2001,23 +1362,21 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": string[];
+          "*/*": components["schemas"]["PodStatusResponse"];
         };
       };
     };
   };
-  addTopic: {
+  startPod: {
     parameters: {
       query?: never;
       header?: never;
-      path?: never;
+      path: {
+        challengeId: string;
+      };
       cookie?: never;
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AdminTopicRequest"];
-      };
-    };
+    requestBody?: never;
     responses: {
       /** @description OK */
       200: {
@@ -2025,10 +1384,28 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": {
-            [key: string]: string;
-          };
+          "*/*": components["schemas"]["PodStatusResponse"];
         };
+      };
+    };
+  };
+  stopPod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        challengeId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -2078,9 +1455,11 @@ export interface operations {
       };
     };
   };
-  listCourseTopics: {
+  listEnrollments: {
     parameters: {
-      query?: never;
+      query: {
+        pageable: components["schemas"]["Pageable"];
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -2093,38 +1472,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": string[];
-        };
-      };
-    };
-  };
-  listEnrollments: {
-    parameters: {
-      query: {
-        pageable: components["schemas"]["Pageable"];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Enrollments found */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
           "*/*": components["schemas"]["PageListCourseResponseDto"];
-        };
-      };
-      /** @description Unexpected server error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -2133,7 +1481,6 @@ export interface operations {
     parameters: {
       query: {
         query?: string;
-        topic?: string;
         pageable: components["schemas"]["Pageable"];
       };
       header?: never;
@@ -2142,22 +1489,13 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Courses found */
+      /** @description OK */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PageListCourseResponseDto"];
-        };
-      };
-      /** @description Unexpected server error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -2173,31 +1511,13 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Course found */
+      /** @description OK */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PublicCourseDetailResponseDto"];
-        };
-      };
-      /** @description This can indicate one of two things. First this course is private and the user is neither an instructor of the course nor enrolled in the course. Second this course is a draft and the user is not an instructor of the course. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-      /** @description Unexpected server error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -2244,48 +1564,6 @@ export interface operations {
       };
     };
   };
-  getChallengeForPlay: {
-    parameters: {
-      query: {
-        courseId: string;
-      };
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Challenge retrieved successfully */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ChallengeStudentDto"];
-        };
-      };
-      /** @description Access denied */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-      /** @description Challenge not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-    };
-  };
   searchChallenges: {
     parameters: {
       query: {
@@ -2305,135 +1583,6 @@ export interface operations {
         };
         content: {
           "*/*": components["schemas"]["PageListChallengeResponseDto"];
-        };
-      };
-    };
-  };
-  listCourses_1: {
-    parameters: {
-      query: {
-        q?: string;
-        pageable: components["schemas"]["Pageable"];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["PageAdminCourseListItemDto"];
-        };
-      };
-    };
-  };
-  listChallenges_1: {
-    parameters: {
-      query: {
-        q?: string;
-        pageable: components["schemas"]["Pageable"];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["PageAdminChallengeListItemDto"];
-        };
-      };
-    };
-  };
-  removeParticipant: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        participantId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Participant removed successfully */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Access denied */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-      /** @description Course or participant not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ErrorDto"];
-        };
-      };
-    };
-  };
-  deletePod: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        instanceName: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  deleteTopic: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        value: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": {
-            [key: string]: string;
-          };
         };
       };
     };

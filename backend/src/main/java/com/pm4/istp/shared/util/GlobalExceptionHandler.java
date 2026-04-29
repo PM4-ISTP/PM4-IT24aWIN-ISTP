@@ -1,5 +1,6 @@
 package com.pm4.istp.shared.util;
 
+import com.pm4.istp.challengepod.exceptions.ChallengePodException;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
@@ -28,6 +29,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(ChallengePodException.class)
+  public ResponseEntity<ErrorDto> handleChallengePodException(ChallengePodException ex) {
+    log.error("Caught ChallengePodException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Kubernetes operation failed: " + ex.getMessage());
+    return new ResponseEntity<>(errorDto, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
 
   @ExceptionHandler(ChallengeAccessDeniedException.class)
   public ResponseEntity<ErrorDto> handleChallengeAccessDeniedException(

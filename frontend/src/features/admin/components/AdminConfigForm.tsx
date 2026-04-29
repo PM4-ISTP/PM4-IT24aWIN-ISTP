@@ -51,6 +51,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
         cpuLimit: adminConfig.cpuLimit ?? "",
         memoryLimit: hasMemorySpecification ? String(memorySpecification.value) : "",
         memoryLimitUnit: hasMemorySpecification ? memorySpecification.unit : defaultMemoryUnit,
+        podTtlSeconds: adminConfig.podTtlSeconds ?? 3600,
         kubeconfig: null as File | null,
       };
     } catch {
@@ -58,6 +59,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
         cpuLimit: "",
         memoryLimit: "",
         memoryLimitUnit: defaultMemoryUnit,
+        podTtlSeconds: 3600,
         kubeconfig: null as File | null,
       };
     }
@@ -97,14 +99,19 @@ export default function AdminConfigForm({ initialConfig }: Props) {
         : undefined;
 
     try {
+      const podTtlSeconds =
+        values.podTtlSeconds != null && values.podTtlSeconds !== ""
+          ? Number(values.podTtlSeconds)
+          : undefined;
+
       if (!config.kubeconfigUploaded) {
         const { error } = await apiClient.POST("/api/admin/config", {
-          body: { kubeconfig: kubeconfigBase64, cpuLimit, memoryLimit },
+          body: { kubeconfig: kubeconfigBase64, cpuLimit, memoryLimit, podTtlSeconds },
         });
         if (error) throw new Error(JSON.stringify(error));
       } else {
         const { error } = await apiClient.PUT("/api/admin/config", {
-          body: { kubeconfig: kubeconfigBase64, cpuLimit, memoryLimit },
+          body: { kubeconfig: kubeconfigBase64, cpuLimit, memoryLimit, podTtlSeconds },
         });
         if (error) throw new Error(JSON.stringify(error));
       }
@@ -199,6 +206,21 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                 />
               </Grid.Col>
             </Grid>
+          </Grid.Col>
+          <Grid.Col span={12}>
+            <NumberInput
+              id="pod-ttl-input"
+              label="Pod TTL (seconds)"
+              description="How long a challenge pod stays alive before it is automatically cleaned up."
+              key={form.key("podTtlSeconds")}
+              {...form.getInputProps("podTtlSeconds")}
+              min={60}
+              max={86400}
+              step={60}
+              allowNegative={false}
+              allowDecimal={false}
+              clampBehavior="strict"
+            />
           </Grid.Col>
           <Grid.Col span={12}>
             <Stack gap={4}>
