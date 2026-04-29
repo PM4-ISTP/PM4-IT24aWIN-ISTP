@@ -267,6 +267,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                         <Button
                           size="xs"
                           radius="md"
+                          aria-label="Kubeconfig"
                           style={{
                             background: "linear-gradient(90deg, #2563eb, #4f46e5)",
                             border: "none",
