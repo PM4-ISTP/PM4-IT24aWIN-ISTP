@@ -27,6 +27,21 @@ export type ListChallengeStatisticOfCourseDto = {
   }[];
 };
 
+type ChallengeProgressDto = {
+  user: components["schemas"]["UserDto"];
+  isCompleted: boolean;
+  subTasks: {
+    subTask: components["schemas"]["SubTaskResponseDto"];
+    isCompleted: boolean;
+  }[];
+};
+
+export type PageListChallengeProgressForCourseDto = {
+  totalPages?: number;
+  totalElements?: number;
+  content?: ChallengeProgressDto[];
+};
+
 export async function createCourse(
   dto: Omit<CreateCourseDto, "instructors"> & { collaboratorIds: string[] }
 ): Promise<ActionResult<CourseResponseDto>> {
@@ -409,6 +424,72 @@ export async function fetchChallengeStatisticsOfCourse(
     success: true,
     data: {
       statistics,
+    },
+  };
+}
+
+export async function fetchChallengeProgressesForCourse(
+  challengeId: string,
+  courseId: string,
+  page = 0,
+  size = 20
+): Promise<ActionResult<PageListChallengeProgressForCourseDto>> {
+  const content: ChallengeProgressDto[] = Array.from({ length: 20 }, (_, index) => {
+    const userNumber = page * size + index + 1;
+    const baseCompletion = index % 4 !== 3;
+
+    return {
+      user: {
+        id: `${courseId}-user-${userNumber}`,
+        name: `Student ${userNumber}`,
+        email: `student${userNumber}@example.com`,
+        username: `student${userNumber}`,
+        title: index % 2 === 0 ? "BSc" : "MSc",
+      },
+      isCompleted: baseCompletion,
+      subTasks: [
+        {
+          subTask: {
+            id: `${challengeId}-subtask-1`,
+            title: "Reconnaissance",
+            description: "Collect the required information for the challenge.",
+            flag: "ISTP{reconnaissance}",
+            orderIndex: 1,
+          },
+          isCompleted: true,
+        },
+        {
+          subTask: {
+            id: `${challengeId}-subtask-2`,
+            title: "Exploit",
+            description: "Use the discovered weakness to solve the task.",
+            flag: "ISTP{exploit}",
+            orderIndex: 2,
+          },
+          isCompleted: index % 3 !== 0,
+        },
+        {
+          subTask: {
+            id: `${challengeId}-subtask-3`,
+            title: "Validation",
+            description: "Verify the solution and document the result.",
+            flag: "ISTP{validation}",
+            orderIndex: 3,
+          },
+          isCompleted: index % 5 === 0,
+        },
+      ],
+    };
+  });
+
+  await Promise.resolve(); // fake async function needed for ESLint
+
+  return {
+    success: true,
+    data: {
+      totalPages: 1,
+      totalElements: 20,
+      content,
     },
   };
 }
