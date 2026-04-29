@@ -13,10 +13,14 @@ export type ChallengeDifficultyEnum = NonNullable<
   components["schemas"]["ChallengeDetailResponseDto"]["difficulty"]
 >;
 
+export type ChallengeCreatorResponseDto = components["schemas"]["ChallengeCreatorResponseDto"];
 export type CreateChallengeRequestDto = components["schemas"]["CreateChallengeRequestDto"];
 export type UpdateChallengeRequestDto = components["schemas"]["UpdateChallengeRequestDto"];
 export type CreateChallengeResponseDto = components["schemas"]["CreateChallengeResponseDto"];
 export type ChallengeDetailResponseDto = components["schemas"]["ChallengeDetailResponseDto"];
+export type ChallengeStudentDto = components["schemas"]["ChallengeStudentDto"];
+export type SubTaskSubmissionRequestDto = components["schemas"]["SubTaskSubmissionRequestDto"];
+export type SubTaskSubmissionResponseDto = components["schemas"]["SubTaskSubmissionResponseDto"];
 export type ListChallengeResponseDto = components["schemas"]["ListChallengeResponseDto"];
 export type PageListChallengeResponseDto = components["schemas"]["PageListChallengeResponseDto"];
 export type CourseChallengeItemDto = components["schemas"]["CourseChallengeItemDto"];
@@ -115,6 +119,34 @@ export async function previewVisibilityImpact(
   );
 }
 
+export async function fetchChallengeForPlay(
+  challengeId: string,
+  courseId: string
+): Promise<ActionResult<ChallengeStudentDto>> {
+  return await withActionResult(
+    (client) =>
+      client.GET("/api/v1/challenges/{id}/play", {
+        params: { path: { id: challengeId }, query: { courseId } },
+      }),
+    "Failed to load challenge"
+  );
+}
+
+export async function submitSubTaskFlag(
+  challengeId: string,
+  subTaskId: string,
+  flag: string
+): Promise<ActionResult<SubTaskSubmissionResponseDto>> {
+  return await withActionResult(
+    (client) =>
+      client.POST("/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/submit", {
+        params: { path: { challengeId, subTaskId } },
+        body: { flag },
+      }),
+    "Failed to submit flag"
+  );
+}
+
 export async function updateCourseChallenges(
   courseId: string,
   challenges: CourseChallengeItemDto[]
@@ -123,6 +155,7 @@ export async function updateCourseChallenges(
     (client) =>
       client.PUT("/api/v1/courses/{id}/challenges", {
         params: { path: { id: courseId } },
+
         body: { challenges },
       }),
     "Failed to update course challenges"

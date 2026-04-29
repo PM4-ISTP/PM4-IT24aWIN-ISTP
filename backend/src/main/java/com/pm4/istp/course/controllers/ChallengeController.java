@@ -7,9 +7,12 @@ import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
+import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CreateChallengeRequestDto;
 import com.pm4.istp.course.dto.CreateChallengeResponseDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
+import com.pm4.istp.course.dto.SubTaskSubmissionRequestDto;
+import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
 import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
 import com.pm4.istp.course.dto.VisibilityImpactResponseDto;
 import com.pm4.istp.course.mappers.ChallengeMapper;
@@ -232,5 +235,78 @@ public class ChallengeController {
     UUID userId = parseUserId(jwt);
     int affectedCourseCount = challengeService.previewVisibilityImpact(userId, id, status);
     return ResponseEntity.ok(new VisibilityImpactResponseDto(affectedCourseCount));
+  }
+
+  @Operation(
+      summary = "Get a challenge in student play view",
+      description =
+          "Returns a challenge formatted for students (no sub-task flags, with per-user solved"
+              + " progress). Caller must be enrolled in the given course, and the challenge must"
+              + " belong to it.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Challenge retrieved successfully",
+            content = @Content(schema = @Schema(implementation = ChallengeStudentDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @GetMapping("/{id}/play")
+  public ResponseEntity<ChallengeStudentDto> getChallengeForPlay(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID id,
+      @RequestParam("courseId") UUID courseId) {
+    UUID userId = parseUserId(jwt);
+    ChallengeStudentDto dto = challengeService.getChallengeForPlay(userId, courseId, id);
+    return ResponseEntity.ok(dto);
+  }
+
+  @Operation(
+      summary = "Submit a flag for a sub-task",
+      description =
+          "Validates the submitted flag against the stored plaintext flag (case-sensitive). On a"
+              + " correct submission the sub-task is marked as solved for the authenticated user."
+              + " Already-solved sub-tasks cannot be re-submitted.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Submission processed",
+            content =
+                @Content(schema = @Schema(implementation = SubTaskSubmissionResponseDto.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid flag format",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User not enrolled in a course containing this challenge",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge or sub-task not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Sub-task already solved",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PostMapping("/{challengeId}/subtasks/{subTaskId}/submit")
+  public ResponseEntity<SubTaskSubmissionResponseDto> submitSubTaskFlag(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID challengeId,
+      @PathVariable UUID subTaskId,
+      @Valid @RequestBody SubTaskSubmissionRequestDto request) {
+    UUID userId = parseUserId(jwt);
+    SubTaskSubmissionResponseDto response =
+        challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, request.getFlag());
+    return ResponseEntity.ok(response);
   }
 }

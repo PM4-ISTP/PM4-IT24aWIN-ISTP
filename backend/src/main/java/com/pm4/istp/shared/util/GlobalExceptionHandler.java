@@ -10,6 +10,8 @@ import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
+import com.pm4.istp.course.exceptions.SubTaskAlreadySolvedException;
+import com.pm4.istp.course.exceptions.SubTaskNotFoundException;
 import com.pm4.istp.shared.dto.ErrorDto;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -111,6 +113,23 @@ public class GlobalExceptionHandler {
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError(ex.getMessage());
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(SubTaskNotFoundException.class)
+  public ResponseEntity<ErrorDto> handleSubTaskNotFoundException(SubTaskNotFoundException ex) {
+    log.error("Caught SubTaskNotFoundException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Sub-task not found");
+    return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(SubTaskAlreadySolvedException.class)
+  public ResponseEntity<ErrorDto> handleSubTaskAlreadySolvedException(
+      SubTaskAlreadySolvedException ex) {
+    log.warn("Caught SubTaskAlreadySolvedException: {}", ex.getMessage());
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Sub-task already solved");
+    return new ResponseEntity<>(errorDto, HttpStatus.CONFLICT);
   }
 
   @ExceptionHandler(InviteCodeGenerationException.class)

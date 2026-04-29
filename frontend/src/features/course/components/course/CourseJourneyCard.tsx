@@ -1,6 +1,7 @@
 import {
   Avatar,
   Box,
+  Button,
   Divider,
   Group,
   Progress,
@@ -9,7 +10,15 @@ import {
   ThemeIcon,
   Tooltip,
 } from "@mantine/core";
-import { IconCheck, IconClock, IconFlame, IconLock } from "@tabler/icons-react";
+import {
+  IconArrowRight,
+  IconCheck,
+  IconClock,
+  IconFlame,
+  IconLock,
+  IconTrophy,
+} from "@tabler/icons-react";
+import Link from "next/link";
 import { getInitials } from "@/src/shared/lib/utils";
 import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
 
@@ -46,12 +55,17 @@ export interface CourseJourneyCardProps {
   lessons?: LessonsProgress;
 
   /**
-   * Challenge progress data.
-   * PLACEHOLDER — challenges are not yet implemented in the backend.
-   * When challenges are ready, pass this prop and the placeholder state
-   * will automatically be replaced with the real progress bar.
+   * Challenge progress data (aggregate sub-task progress across the course).
+   * Leave undefined to show the "coming soon" placeholder.
    */
   challenges?: ChallengesProgress;
+
+  /**
+   * Link to the next challenge the student should play. When provided, a
+   * "Start Next Challenge" button is rendered; when absent (all done or not
+   * enrolled) the button hides.
+   */
+  nextChallengeHref?: string;
 
   /**
    * When provided, renders an "Instructor" section to the right of the
@@ -169,9 +183,16 @@ function ChallengesPlaceholder() {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function CourseJourneyCard({ lessons, challenges, instructor }: CourseJourneyCardProps) {
+export function CourseJourneyCard({
+  lessons,
+  challenges,
+  nextChallengeHref,
+  instructor,
+}: CourseJourneyCardProps) {
   const lessonPercent = lessons ? calcPercent(lessons.finished, lessons.total) : 0;
   const challengePercent = challenges ? calcPercent(challenges.completed, challenges.total) : 0;
+  const allChallengesComplete =
+    challenges !== undefined && challenges.total > 0 && challenges.completed === challenges.total;
 
   return (
     <Box
@@ -233,26 +254,47 @@ export function CourseJourneyCard({ lessons, challenges, instructor }: CourseJou
           {/* ── Challenges progress (or placeholder) ── */}
           {challenges ? (
             <ProgressSection
-              label="Challenges"
+              label="Sub-tasks"
               percent={challengePercent}
               color="orange"
               statLeft={
                 <StatChip
                   icon={<IconFlame size={13} color="var(--mantine-color-orange-5)" />}
-                  label={`${challenges.completed} Challenge${challenges.completed !== 1 ? "s" : ""} Completed`}
+                  label={`${challenges.completed} Sub-task${challenges.completed !== 1 ? "s" : ""} Solved`}
                 />
               }
               statRight={
                 <StatChip
                   icon={<IconClock size={13} color="var(--mantine-color-dimmed)" />}
-                  label={`${challenges.total - challenges.completed} Remaining`}
+                  label={`${Math.max(challenges.total - challenges.completed, 0)} Remaining`}
                   dimmed
                 />
               }
             />
           ) : (
-            // PLACEHOLDER: Replace with real challenges data when backend is ready
             <ChallengesPlaceholder />
+          )}
+
+          {challenges && (
+            <Group justify="flex-end">
+              {allChallengesComplete ? (
+                <Button
+                  component="span"
+                  variant="light"
+                  color="teal"
+                  leftSection={<IconTrophy size={16} />}
+                  disabled
+                >
+                  All challenges completed
+                </Button>
+              ) : nextChallengeHref ? (
+                <Link href={nextChallengeHref} style={{ textDecoration: "none" }}>
+                  <Button component="span" color="blue" rightSection={<IconArrowRight size={16} />}>
+                    Start Next Challenge
+                  </Button>
+                </Link>
+              ) : null}
+            </Group>
           )}
         </Stack>
 
