@@ -489,8 +489,8 @@ export async function fetchChallengeProgressesForCourse(
   return {
     success: true,
     data: {
-      totalPages: 1,
-      totalElements: 20,
+      totalPages: 5,
+      totalElements: 100,
       content,
     },
   };
