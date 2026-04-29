@@ -1,4 +1,4 @@
-import { ActionIcon, Alert, Group, Stack, Text, Title } from "@mantine/core";
+import { ActionIcon, Group, Stack, Text, Title } from "@mantine/core";
 import Link from "next/link";
 
 import {
