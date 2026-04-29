@@ -7,6 +7,8 @@ import {
 } from "@/src/features/course/actions/courses";
 import { CourseChallengeStatisticsList } from "@/src/features/course/components/management/CourseChallengeStatisticsList";
 import { IconArrowLeft } from "@tabler/icons-react";
+import ToastOnMount from "@/src/shared/components/ToastOnMount";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 export const dynamic = "force-dynamic";
 
@@ -66,9 +68,11 @@ export default async function CourseStatistic({ params }: { params: Promise<{ id
           statistics={challengesResult.data.statistics ?? []}
         />
       ) : (
-        <Alert color="red" title="Failed to load challenge statistics">
-          {challengesResult.error}
-        </Alert>
+        <ToastOnMount
+          color="red"
+          title="Failed to load course statistic"
+          message={toUserFriendlyBackendError(challengesResult.error) ?? "Please try again later."}
+        />
       )}
     </Stack>
   );
