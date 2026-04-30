@@ -1,6 +1,7 @@
 "use client";
 
-import { Input, SegmentedControl, Stack, Textarea, TextInput } from "@mantine/core";
+import { Input, Loader, SegmentedControl, Stack, Textarea, TextInput } from "@mantine/core";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import MyEditor from "@/src/shared/components/MyEditor";
 import {
   SubTaskManager,
@@ -17,6 +18,7 @@ import {
   STATUS_COLORS,
   DIFFICULTY_COLORS,
 } from "@/src/features/course/constants/challengeConstants";
+import type { DockerImageCheckStatus } from "@/src/features/course/hooks/useDockerImageCheck";
 
 export type { SubTaskFormValues };
 
@@ -36,6 +38,8 @@ export interface ChallengeFormFieldsProps {
   titleError?: string | null;
   shortDescriptionError?: string | null;
   dockerImageError?: string | null;
+  dockerImageCheckStatus?: DockerImageCheckStatus;
+  dockerImageCheckMessage?: string | null;
   subTaskErrors?: Array<Partial<Record<"title" | "description" | "flag", string>>>;
   defaultExpandedSubTaskIndex?: number | null;
   onCharLimitExceeded?: () => void;
@@ -49,6 +53,8 @@ export function ChallengeFormFields({
   titleError,
   shortDescriptionError,
   dockerImageError,
+  dockerImageCheckStatus = "idle",
+  dockerImageCheckMessage,
   subTaskErrors,
   defaultExpandedSubTaskIndex,
   onCharLimitExceeded,
@@ -56,6 +62,12 @@ export function ChallengeFormFields({
   onDockerImageErrorClear,
 }: ChallengeFormFieldsProps) {
   const shortDescriptionCharCount = values.shortDescription.length;
+  const dockerImageFeedback =
+    dockerImageCheckStatus === "error" ? dockerImageCheckMessage : dockerImageError;
+  const dockerImageDescription =
+    dockerImageCheckStatus === "success" || dockerImageCheckStatus === "checking"
+      ? dockerImageCheckMessage
+      : undefined;
 
   return (
     <Stack gap="lg">
@@ -105,7 +117,17 @@ export function ChallengeFormFields({
             onDockerImageErrorClear?.();
           }
         }}
-        error={dockerImageError}
+        error={dockerImageFeedback}
+        description={dockerImageDescription}
+        rightSection={
+          dockerImageCheckStatus === "checking" ? (
+            <Loader size="xs" />
+          ) : dockerImageCheckStatus === "success" ? (
+            <IconCheck size={16} color="var(--mantine-color-green-5)" />
+          ) : dockerImageCheckStatus === "error" ? (
+            <IconX size={16} color="var(--mantine-color-red-5)" />
+          ) : undefined
+        }
         required
       />
 

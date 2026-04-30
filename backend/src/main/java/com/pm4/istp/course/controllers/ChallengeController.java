@@ -10,6 +10,7 @@ import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CreateChallengeRequestDto;
 import com.pm4.istp.course.dto.CreateChallengeResponseDto;
+import com.pm4.istp.course.dto.DockerImageCheckResponseDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
 import com.pm4.istp.course.dto.SubTaskSubmissionRequestDto;
 import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
@@ -17,6 +18,7 @@ import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
 import com.pm4.istp.course.dto.VisibilityImpactResponseDto;
 import com.pm4.istp.course.mappers.ChallengeMapper;
 import com.pm4.istp.course.services.ChallengeService;
+import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.shared.dto.ErrorDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,6 +52,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChallengeController {
   private final ChallengeMapper challengeMapper;
   private final ChallengeService challengeService;
+  private final DockerImageAvailabilityService dockerImageAvailabilityService;
 
   @Operation(
       summary = "Create a challenge",
@@ -185,6 +188,24 @@ public class ChallengeController {
     Page<ListChallengeResponseDto> challenges =
         challengeService.listChallengesForCreator(userId, pageable);
     return ResponseEntity.ok(challenges);
+  }
+
+  @Operation(
+      summary = "Check Docker image availability",
+      description = "Checks whether a supported Docker image reference is reachable.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Docker image is reachable"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Docker image is invalid or unreachable",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @GetMapping("/docker-image")
+  public ResponseEntity<DockerImageCheckResponseDto> checkDockerImage(
+      @RequestParam("image") String image) {
+    dockerImageAvailabilityService.assertImageExists(image);
+    return ResponseEntity.ok(new DockerImageCheckResponseDto(true, "Image found"));
   }
 
   @Operation(

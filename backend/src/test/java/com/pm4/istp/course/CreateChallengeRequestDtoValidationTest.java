@@ -45,13 +45,11 @@ class CreateChallengeRequestDtoValidationTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "image",
-        "registry/image",
-        "registry/image:tag",
-        "registry.io/ns/image:1.0.0",
-        "ns/image:latest",
+        "ghcr.io/pm4-istp/test",
+        "ghcr.io/pm4-istp/test:latest",
+        "ghcr.io/pm4-istp/challenges/test:1.0.0",
       })
-  void dockerImage_acceptsValidReferences(String dockerImage) {
+  void dockerImage_acceptsValidGhcrReferences(String dockerImage) {
     Set<ConstraintViolation<CreateChallengeRequestDto>> violations =
         validator.validate(dtoWithDockerImage(dockerImage));
 
@@ -64,6 +62,11 @@ class CreateChallengeRequestDtoValidationTest {
   @ValueSource(
       strings = {
         "bad image",
+        "ghcr",
+        "ghcr.io",
+        "ghcr.io/p",
+        "image",
+        "registry/image:tag",
         "image:",
         "registry:5000/image",
         "image@sha256:abc",
