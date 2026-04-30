@@ -510,8 +510,8 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
             What these actions do
           </Text>
           <Text size="sm" c="dimmed">
-            <b>Provision</b>: Creates the ISTP database user record for an existing Keycloak
-            account (idempotent). Required for profile/role management in the app.
+            <b>Provision</b>: Creates the ISTP database user record for an existing Keycloak account
+            (idempotent). Required for profile/role management in the app.
           </Text>
           <Text size="sm" c="dimmed">
             <b>Disable</b>: Temporarily disables the account (Keycloak login blocked) and marks the
