@@ -6,6 +6,7 @@ import com.pm4.istp.challengepod.dto.PodStatusEnum;
 import com.pm4.istp.challengepod.dto.PodStatusResponse;
 import com.pm4.istp.challengepod.events.KubeconfigChangedEvent;
 import com.pm4.istp.challengepod.exceptions.ChallengePodException;
+import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.services.ChallengeService;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -47,8 +48,7 @@ public class ChallengePodService {
   private static final String LABEL_CREATED_AT = "istp.pm4.ch/created-at-epoch";
   private static final String ANNOTATION_TERMINAL_PASSWORD = "istp.pm4.ch/terminal-password";
 
-  // TODO(#163): replace with Challenge.dockerImage / Challenge.containerPort
-  private static final String DEFAULT_IMAGE = "nginx:latest";
+  // TODO(#163): replace with Challenge.containerPort when the model supports it.
   private static final int DEFAULT_APP_PORT = 80;
 
   private static final int POD_NAME_HASH_LENGTH = 8;
@@ -150,7 +150,7 @@ public class ChallengePodService {
   public Pair<PodStatusResponse, Boolean> startPod(UUID userId, UUID challengeId) {
     // Visibility / existence check — throws ChallengeNotFoundException or
     // ChallengeAccessDeniedException which flow through GlobalExceptionHandler
-    challengeService.getChallenge(userId, challengeId);
+    Challenge challenge = challengeService.getChallenge(userId, challengeId);
 
     AdminConfig adminConfig =
         adminConfigurationService
@@ -178,7 +178,8 @@ public class ChallengePodService {
       }
 
       // Create new pod resources
-      return Pair.of(createResources(userId, challengeId, instanceName, adminConfig), true);
+      return Pair.of(
+          createResources(userId, challengeId, instanceName, adminConfig, challenge), true);
 
     } catch (KubernetesClientException e) {
       if (e.getCode() == 409) {
@@ -371,7 +372,11 @@ public class ChallengePodService {
   }
 
   private PodStatusResponse createResources(
-      UUID userId, UUID challengeId, String instanceName, AdminConfig adminConfig) {
+      UUID userId,
+      UUID challengeId,
+      String instanceName,
+      AdminConfig adminConfig,
+      Challenge challenge) {
 
     KubernetesClient client = getClient();
     long nowEpoch = Instant.now().getEpochSecond();
@@ -407,7 +412,7 @@ public class ChallengePodService {
             .withNewSpec()
             .addNewContainer()
             .withName("app")
-            .withImage(DEFAULT_IMAGE) // TODO(#163): challenge.getDockerImage()
+            .withImage(challenge.getDockerImage())
             .withNewResources()
             .addToLimits(
                 "cpu",
