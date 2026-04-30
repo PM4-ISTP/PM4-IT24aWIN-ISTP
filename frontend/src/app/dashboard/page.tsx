@@ -60,6 +60,7 @@ function RunningChallenges({
             challenges={fetchCourseResult.data.courseChallenges ?? []}
             title=""
             showIndex={false}
+            courseId={fetchCourseResult.data.id}
           />
         ) : (
           <Alert color="red" title="Failed to load challenges">

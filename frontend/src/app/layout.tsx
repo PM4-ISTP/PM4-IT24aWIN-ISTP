@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { ColorSchemeScript, createTheme, mantineHtmlProps, MantineProvider } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
 import { Geist, Geist_Mono, Manrope, Orbitron, Space_Grotesk } from "next/font/google";
 import NextAuthSessionProvider from "@/src/features/user/components/SessionProvider";
-import { Notifications } from "@mantine/notifications";
 import "@mantine/core/styles.css";
 import "@mantine/tiptap/styles.css";
 import "@mantine/notifications/styles.css";
@@ -101,10 +101,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} ${spaceGrotesk.variable} ${orbitron.variable} antialiased`}
       >
         <MantineProvider forceColorScheme="dark" theme={theme}>
-          <NextAuthSessionProvider>
-            <Notifications position="top-right" />
-            {children}
-          </NextAuthSessionProvider>
+          <Notifications position="top-right" />
+          <NextAuthSessionProvider>{children}</NextAuthSessionProvider>
         </MantineProvider>
       </body>
     </html>

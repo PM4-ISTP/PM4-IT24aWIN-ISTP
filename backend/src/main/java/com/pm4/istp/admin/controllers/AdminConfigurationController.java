@@ -61,13 +61,17 @@ public class AdminConfigurationController {
 
     com.pm4.istp.admin.db.AdminConfig adminConfig =
         adminConfigurationService.createConfiguration(
-            kubeconfigBytes, request.getCpuLimit(), request.getMemoryLimit());
+            kubeconfigBytes,
+            request.getCpuLimit(),
+            request.getMemoryLimit(),
+            request.getPodTtlSeconds());
 
     AdminConfigResponse response =
         new AdminConfigResponse(
             true,
             adminConfig.getCpuLimit(),
             adminConfig.getMemoryLimit(),
+            adminConfig.getPodTtlSeconds(),
             adminConfig.getUpdatedAt());
 
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -84,10 +88,11 @@ public class AdminConfigurationController {
               true,
               adminConfig.getCpuLimit(),
               adminConfig.getMemoryLimit(),
+              adminConfig.getPodTtlSeconds(),
               adminConfig.getUpdatedAt());
       return ResponseEntity.ok(response);
     } else {
-      AdminConfigResponse response = new AdminConfigResponse(false, null, null, null);
+      AdminConfigResponse response = new AdminConfigResponse(false, null, null, null, null);
       return ResponseEntity.ok(response);
     }
   }
@@ -113,13 +118,17 @@ public class AdminConfigurationController {
 
     com.pm4.istp.admin.db.AdminConfig adminConfig =
         adminConfigurationService.updateConfiguration(
-            kubeconfigBytes, request.getCpuLimit(), request.getMemoryLimit());
+            kubeconfigBytes,
+            request.getCpuLimit(),
+            request.getMemoryLimit(),
+            request.getPodTtlSeconds());
 
     AdminConfigResponse response =
         new AdminConfigResponse(
             true,
             adminConfig.getCpuLimit(),
             adminConfig.getMemoryLimit(),
+            adminConfig.getPodTtlSeconds(),
             adminConfig.getUpdatedAt());
 
     return ResponseEntity.ok(response);

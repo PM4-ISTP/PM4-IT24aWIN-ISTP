@@ -89,7 +89,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
           where
-            (c.isPublished = true and exists (
+            ((c.isPublished = true or c.isPrivate = true) and exists (
               select 1
               from CourseEnrollment eFilter
               where eFilter.course = c and eFilter.participant.id = :userId
@@ -103,7 +103,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           select count(distinct c.id)
           from Course c
           where
-            (c.isPublished = true and exists (
+            ((c.isPublished = true or c.isPrivate = true) and exists (
               select 1
               from CourseEnrollment eFilter
               where eFilter.course = c and eFilter.participant.id = :userId

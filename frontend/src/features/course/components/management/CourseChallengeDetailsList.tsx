@@ -1,136 +1,211 @@
+"use client";
+
 import {
+  Accordion,
   Badge,
   Box,
-  Grid,
-  GridCol,
+  Divider,
   Group,
-  Paper,
-  SimpleGrid,
+  Progress,
   Stack,
   Text,
+  ThemeIcon,
   Title,
 } from "@mantine/core";
+import { IconCheck, IconCircleDashed, IconListCheck } from "@tabler/icons-react";
 import {
   getDifficultyColor,
   getStatusColor,
 } from "@/src/features/course/constants/challengeConstants";
+import { ChallengePodPanel } from "@/src/features/challenge-pod/components/ChallengePodPanel";
 import PlayChallengeButton from "@/src/features/course/components/challenges/PlayChallengeButton";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
-import type { ChallengeDetailResponseDto } from "@/src/features/course/actions/challenges";
+import type { ChallengeStudentDto } from "@/src/shared/types/course";
 
-function formatDateTime(value?: string): string {
-  if (!value) return "n/a";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return date.toLocaleString("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatText(value?: string | number): string {
+function formatText(value?: string | number | null): string {
   if (value === undefined || value === null || value === "") return "n/a";
   return String(value);
+}
+
+function SubTaskRow({ title, solved, index }: { title: string; solved: boolean; index: number }) {
+  return (
+    <Group gap="xs" align="center" wrap="nowrap">
+      <ThemeIcon
+        variant="light"
+        radius="xl"
+        size="sm"
+        color={solved ? "teal" : "gray"}
+        aria-label={solved ? "Solved" : "Not solved"}
+      >
+        {solved ? <IconCheck size={12} /> : <IconCircleDashed size={12} />}
+      </ThemeIcon>
+      <Text size="sm" c={solved ? "teal.3" : undefined} td={solved ? "line-through" : undefined}>
+        {index + 1}. {title}
+      </Text>
+    </Group>
+  );
 }
 
 export function CourseChallengeDetailsList({
   challenges,
   title,
   showIndex,
+  courseId,
 }: {
-  challenges: ChallengeDetailResponseDto[];
+  challenges: ChallengeStudentDto[];
   title: string;
   showIndex: boolean;
+  /** If provided, "Play" buttons link into the play view for this course. */
+  courseId?: string;
 }) {
+  if (challenges.length === 0) return null;
+
+  const totalSolved = challenges.filter((c) => c.isSolved).length;
+
   return (
-    <>
-      {challenges.length === 0 ? (
-        <></>
-      ) : (
-        <Stack gap="md">
-          <Group justify="space-between" align="center">
-            <Title order={3}>{title}</Title>
-            <Text size="sm" c="dimmed">
-              {challenges.length} challenges
-            </Text>
-          </Group>
-          <Stack gap="sm">
-            {challenges.map((challenge, index) => {
-              const challengeTitle = showIndex
-                ? "#" + (index + 1) + " " + formatText(challenge.title)
-                : formatText(challenge.title);
-              const sanitizedDescription =
-                challenge.description === undefined ? "" : getSanitizedHtml(challenge.description);
+    <Stack gap="md">
+      <Group justify="space-between" align="center">
+        {title ? <Title order={3}>{title}</Title> : <span />}
+        <Group gap="xs">
+          <IconListCheck size={16} color="rgba(255,255,255,0.5)" />
+          <Text size="sm" c="dimmed">
+            {totalSolved}/{challenges.length} completed
+          </Text>
+        </Group>
+      </Group>
 
-              return (
-                <Paper
-                  key={challenge.id}
-                  p="md"
-                  radius="md"
-                  withBorder
-                  style={{ background: "rgba(255,255,255,0.02)" }}
-                >
-                  <Grid>
-                    <GridCol span={12}>
-                      <Title order={4} style={{ fontSize: "1rem" }}>
-                        {challengeTitle}
-                      </Title>
-                    </GridCol>
+      <Accordion variant="separated" radius="md" multiple>
+        {challenges.map((challenge, index) => {
+          if (challenge.id === undefined) return null;
+          const challengeTitle = showIndex
+            ? `#${index + 1} ${formatText(challenge.title)}`
+            : formatText(challenge.title);
+          const sanitizedDescription = challenge.description
+            ? getSanitizedHtml(challenge.description)
+            : "";
+          const subTasks = challenge.subTasks ?? [];
+          const solvedCount = challenge.solvedSubTaskCount ?? 0;
+          const totalCount = challenge.totalSubTaskCount ?? subTasks.length;
+          const percent = totalCount === 0 ? 0 : Math.round((solvedCount / totalCount) * 100);
+          const playHref = courseId
+            ? `/dashboard/courses/${courseId}/challenges/${challenge.id}/play`
+            : undefined;
 
-                    <GridCol span={9}>
-                      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
-                        <Text size="sm">
-                          Short Description: {formatText(challenge.shortDescription)}
+          return (
+            <Accordion.Item
+              key={challenge.id}
+              value={challenge.id}
+              style={{ background: "rgba(255,255,255,0.02)" }}
+            >
+              <Accordion.Control>
+                <Group justify="space-between" align="center" wrap="nowrap" pr="md">
+                  <Group gap="sm" align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+                    {challenge.isSolved ? (
+                      <ThemeIcon
+                        color="teal"
+                        variant="light"
+                        radius="xl"
+                        size="md"
+                        aria-label="Challenge solved"
+                      >
+                        <IconCheck size={16} />
+                      </ThemeIcon>
+                    ) : (
+                      <ThemeIcon
+                        color="gray"
+                        variant="light"
+                        radius="xl"
+                        size="md"
+                        aria-label="Challenge not solved"
+                      >
+                        <IconCircleDashed size={16} />
+                      </ThemeIcon>
+                    )}
+                    <Text fw={600} truncate>
+                      {challengeTitle}
+                    </Text>
+                  </Group>
+                  <Group gap="xs" wrap="nowrap">
+                    <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
+                      {formatText(challenge.status)}
+                    </Badge>
+                    <Badge variant="light" color={getDifficultyColor(challenge.difficulty ?? "")}>
+                      {formatText(challenge.difficulty)}
+                    </Badge>
+                    <Badge
+                      variant="light"
+                      color={challenge.isSolved ? "teal" : "blue"}
+                      aria-label={`${solvedCount} of ${totalCount} sub-tasks solved`}
+                    >
+                      {solvedCount}/{totalCount}
+                    </Badge>
+                  </Group>
+                </Group>
+              </Accordion.Control>
+              <Accordion.Panel>
+                <Stack gap="md">
+                  <Stack gap={4}>
+                    <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+                      Progress
+                    </Text>
+                    <Progress
+                      value={percent}
+                      color={challenge.isSolved ? "teal" : "blue"}
+                      radius="xl"
+                      size="sm"
+                    />
+                  </Stack>
+
+                  {challenge.shortDescription && (
+                    <Text size="sm" c="dimmed">
+                      {challenge.shortDescription}
+                    </Text>
+                  )}
+
+                  {sanitizedDescription && (
+                    <Box
+                      className="course-description"
+                      style={{ fontSize: "var(--mantine-font-size-sm)" }}
+                      dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+                    />
+                  )}
+
+                  {subTasks.length > 0 && (
+                    <>
+                      <Divider my={4} />
+                      <Stack gap={6}>
+                        <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+                          Sub-tasks
                         </Text>
-                        <Text size="sm">Creator: {formatText(challenge.creator?.name)}</Text>
-                        <Text size="sm">Created At: {formatDateTime(challenge.createdAt)}</Text>
-                        <Text size="sm">Updated At: {formatDateTime(challenge.updatedAt)}</Text>
-                        <Text size="sm">Max Score: {formatText(challenge.maxScore)}</Text>
-                      </SimpleGrid>
-
-                      <Box>
-                        <Text size="sm" fw={600} mt={30} mb={4}>
-                          Description:
-                        </Text>
-                        <Box
-                          className="course-description"
-                          style={{ fontSize: "var(--mantine-font-size-sm)" }}
-                          dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
-                        />
-                      </Box>
-                    </GridCol>
-
-                    <GridCol span={3}>
-                      <Stack gap="xs" align="flex-end">
-                        <Group gap="xs">
-                          <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
-                            {formatText(challenge.status)}
-                          </Badge>
-                          <Badge
-                            variant="light"
-                            color={getDifficultyColor(challenge.difficulty ?? "")}
-                          >
-                            {formatText(challenge.difficulty)}
-                          </Badge>
-                        </Group>
-
-                        <Box my={30} style={{ width: 200 }}>
-                          <PlayChallengeButton condition={2} />
-                        </Box>
+                        {subTasks.map((st, idx) => (
+                          <SubTaskRow
+                            key={st.id ?? idx}
+                            title={st.title ?? ""}
+                            solved={st.isSolved ?? false}
+                            index={idx}
+                          />
+                        ))}
                       </Stack>
-                    </GridCol>
-                  </Grid>
-                </Paper>
-              );
-            })}
-          </Stack>
-        </Stack>
-      )}
-    </>
+                    </>
+                  )}
+
+                  <ChallengePodPanel challengeId={challenge.id} />
+
+                  {playHref && (
+                    <Group justify="flex-end">
+                      <PlayChallengeButton
+                        href={playHref}
+                        solved={challenge.isSolved ?? false}
+                        inProgress={solvedCount > 0 && !challenge.isSolved}
+                      />
+                    </Group>
+                  )}
+                </Stack>
+              </Accordion.Panel>
+            </Accordion.Item>
+          );
+        })}
+      </Accordion>
+    </Stack>
   );
 }

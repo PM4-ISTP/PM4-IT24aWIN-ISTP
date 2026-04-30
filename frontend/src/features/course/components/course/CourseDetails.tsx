@@ -6,8 +6,25 @@ import { CourseChallengeDetailsList } from "@/src/features/course/components/man
 import { CourseJourneyCard } from "@/src/features/course/components/course/CourseJourneyCard";
 import { fetchPublicCourse } from "@/src/features/course/actions/courses";
 import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
-import type { InstructorRoleEnum } from "@/src/shared/types/course";
+import type { ChallengeStudentDto, InstructorRoleEnum } from "@/src/shared/types/course";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
+
+function findNextChallenge(challenges: ChallengeStudentDto[]): ChallengeStudentDto | null {
+  return challenges.find((c) => !c.isSolved) ?? null;
+}
+
+function aggregateSubTaskProgress(challenges: ChallengeStudentDto[]): {
+  completed: number;
+  total: number;
+} {
+  let completed = 0;
+  let total = 0;
+  for (const challenge of challenges) {
+    completed += challenge.solvedSubTaskCount ?? 0;
+    total += challenge.totalSubTaskCount ?? challenge.subTasks?.length ?? 0;
+  }
+  return { completed, total };
+}
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 
@@ -83,13 +100,26 @@ export default async function CourseDetails({
           <CourseJourneyCard
             instructor={owner}
             // lessons={undefined}    ← wire up when lesson API is ready
-            // challenges={undefined} ← wire up when challenge API is ready
+            challenges={
+              isEnrolled ? aggregateSubTaskProgress(course.courseChallenges ?? []) : undefined
+            }
+            nextChallengeHref={
+              isEnrolled
+                ? (() => {
+                    const next = findNextChallenge(course.courseChallenges ?? []);
+                    return next?.id
+                      ? `/dashboard/courses/${course.id}/challenges/${next.id}/play`
+                      : undefined;
+                  })()
+                : undefined
+            }
           />
 
           <CourseChallengeDetailsList
             challenges={course.courseChallenges ?? []}
             title="Course Challenges"
             showIndex={true}
+            courseId={isEnrolled ? course.id : undefined}
           />
 
           {/* About this course */}

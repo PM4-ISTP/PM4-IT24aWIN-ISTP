@@ -10,5 +10,6 @@ public class AdminConfigResponse {
   private boolean kubeconfigUploaded;
   private String cpuLimit;
   private String memoryLimit;
+  private Integer podTtlSeconds;
   private LocalDateTime updatedAt;
 }

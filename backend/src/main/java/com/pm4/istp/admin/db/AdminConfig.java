@@ -35,6 +35,12 @@ public class AdminConfig {
   @Column(name = "kubeconfig", columnDefinition = "TEXT", nullable = false)
   private String kubeconfig;
 
+  @Column(
+      name = "pod_ttl_seconds",
+      nullable = false,
+      columnDefinition = "INT NOT NULL DEFAULT 3600")
+  private int podTtlSeconds = 3600;
+
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
 

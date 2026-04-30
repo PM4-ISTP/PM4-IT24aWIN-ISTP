@@ -6,21 +6,35 @@ import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.SubTask;
+import com.pm4.istp.course.db.entities.SubTaskCompletion;
+import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
+import com.pm4.istp.course.dto.SubTaskStudentDto;
+import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.course.exceptions.SubTaskAlreadySolvedException;
+import com.pm4.istp.course.exceptions.SubTaskNotFoundException;
+import com.pm4.istp.course.mappers.ChallengeMapper;
 import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseChallengeRepository;
+import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
+import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
+import com.pm4.istp.course.repositories.SubTaskRepository;
 import com.pm4.istp.course.services.ChallengeService;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.repositories.UserRepository;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,10 +46,15 @@ public class ChallengeServiceImpl implements ChallengeService {
 
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
   private static final String CHALLENGE_NOT_FOUND_MSG = "Challenge with ID '%s' not found";
+  private static final String SUB_TASK_NOT_FOUND_MSG = "Sub-task with ID '%s' not found";
 
   private final UserRepository userRepository;
   private final ChallengeRepository challengeRepository;
   private final CourseChallengeRepository courseChallengeRepository;
+  private final SubTaskRepository subTaskRepository;
+  private final SubTaskCompletionRepository subTaskCompletionRepository;
+  private final CourseEnrollmentRepository courseEnrollmentRepository;
+  private final ChallengeMapper challengeMapper;
 
   @Override
   @Transactional
@@ -268,7 +287,9 @@ public class ChallengeServiceImpl implements ChallengeService {
       boolean isInstructorOfCourseWithChallenge =
           courseChallengeRepository.existsByChallengeIdAndCourseInstructorId(
               challenge.getId(), userId);
-      if (!isInstructorOfCourseWithChallenge) {
+      boolean isEnrolledInCourseWithChallenge =
+          courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challenge.getId(), userId);
+      if (!isInstructorOfCourseWithChallenge && !isEnrolledInCourseWithChallenge) {
         throw new ChallengeAccessDeniedException(
             String.format(
                 "User with ID '%s' cannot access private challenge '%s'",
@@ -277,5 +298,141 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     // PUBLIC: anyone can see
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public ChallengeStudentDto getChallengeForPlay(UUID userId, UUID courseId, UUID challengeId) {
+    verifyEnrollment(userId, courseId);
+
+    Challenge challenge =
+        challengeRepository
+            .findById(challengeId)
+            .orElseThrow(
+                () ->
+                    new ChallengeNotFoundException(
+                        String.format(CHALLENGE_NOT_FOUND_MSG, challengeId)));
+
+    boolean challengeBelongsToCourse =
+        challenge.getCourseChallenges().stream()
+            .anyMatch(cc -> cc.getCourse().getId().equals(courseId));
+    if (!challengeBelongsToCourse) {
+      throw new ChallengeAccessDeniedException(
+          String.format("Challenge '%s' is not part of course '%s'", challengeId, courseId));
+    }
+
+    ChallengeStudentDto dto = challengeMapper.toStudentDto(challenge);
+    populateStudentProgress(dto, userId, challenge);
+    return dto;
+  }
+
+  @Override
+  @Transactional
+  public SubTaskSubmissionResponseDto submitSubTaskFlag(
+      UUID userId, UUID challengeId, UUID subTaskId, String flag) {
+    User user =
+        userRepository
+            .findByIdAndDeletedAtIsNull(userId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+
+    SubTask subTask =
+        subTaskRepository
+            .findById(subTaskId)
+            .orElseThrow(
+                () ->
+                    new SubTaskNotFoundException(String.format(SUB_TASK_NOT_FOUND_MSG, subTaskId)));
+
+    if (!subTask.getChallenge().getId().equals(challengeId)) {
+      throw new SubTaskNotFoundException(
+          String.format("Sub-task '%s' does not belong to challenge '%s'", subTaskId, challengeId));
+    }
+
+    verifyEnrolledInChallengeCourse(userId, subTask.getChallenge());
+
+    if (subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId)) {
+      throw new SubTaskAlreadySolvedException(
+          String.format("Sub-task '%s' already solved by user '%s'", subTaskId, userId));
+    }
+
+    boolean correct = subTask.getFlag() != null && subTask.getFlag().equals(flag);
+    if (correct) {
+      SubTaskCompletion completion = new SubTaskCompletion();
+      completion.setUser(user);
+      completion.setSubTask(subTask);
+      completion.setSolvedAt(LocalDateTime.now());
+      try {
+        subTaskCompletionRepository.saveAndFlush(completion);
+      } catch (DataIntegrityViolationException ex) {
+        // Concurrent submission slipped past the existsByUserIdAndSubTaskId check
+        // and tripped the unique (user, sub_task) constraint. Surface as 409
+        // instead of a 500.
+        throw new SubTaskAlreadySolvedException(
+            String.format("Sub-task '%s' already solved by user '%s'", subTaskId, userId), ex);
+      }
+    }
+
+    List<SubTask> siblings = subTask.getChallenge().getSubTasks();
+    List<UUID> siblingIds = new ArrayList<>();
+    for (SubTask s : siblings) {
+      siblingIds.add(s.getId());
+    }
+    Set<UUID> solvedIds =
+        siblingIds.isEmpty()
+            ? Set.of()
+            : new HashSet<>(subTaskCompletionRepository.findSolvedSubTaskIds(userId, siblingIds));
+    int solvedCount = solvedIds.size();
+    int totalCount = siblings.size();
+    boolean challengeSolved = totalCount > 0 && solvedCount == totalCount;
+
+    return new SubTaskSubmissionResponseDto(correct, challengeSolved, solvedCount, totalCount);
+  }
+
+  private void verifyEnrollment(UUID userId, UUID courseId) {
+    if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)) {
+      throw new ChallengeAccessDeniedException(
+          String.format("User '%s' is not enrolled in course '%s'", userId, courseId));
+    }
+  }
+
+  private void verifyEnrolledInChallengeCourse(UUID userId, Challenge challenge) {
+    boolean enrolled =
+        courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challenge.getId(), userId);
+    if (!enrolled) {
+      throw new ChallengeAccessDeniedException(
+          String.format(
+              "User '%s' is not enrolled in any course containing challenge '%s'",
+              userId, challenge.getId()));
+    }
+  }
+
+  private void populateStudentProgress(ChallengeStudentDto dto, UUID userId, Challenge entity) {
+    List<SubTaskStudentDto> subTasks = dto.getSubTasks() == null ? List.of() : dto.getSubTasks();
+    List<UUID> subTaskIds = new ArrayList<>();
+    for (SubTaskStudentDto st : subTasks) {
+      subTaskIds.add(st.getId());
+    }
+    Set<UUID> solvedIds =
+        subTaskIds.isEmpty()
+            ? Set.of()
+            : new HashSet<>(subTaskCompletionRepository.findSolvedSubTaskIds(userId, subTaskIds));
+
+    Map<UUID, String> flagsById = new HashMap<>();
+    for (SubTask st : entity.getSubTasks()) {
+      flagsById.put(st.getId(), st.getFlag());
+    }
+
+    int solvedCount = 0;
+    for (SubTaskStudentDto st : subTasks) {
+      boolean solved = solvedIds.contains(st.getId());
+      st.setSolved(solved);
+      if (solved) {
+        st.setSolvedFlag(flagsById.get(st.getId()));
+        solvedCount++;
+      }
+    }
+    dto.setTotalSubTaskCount(subTasks.size());
+    dto.setSolvedSubTaskCount(solvedCount);
+    dto.setSolved(!subTasks.isEmpty() && solvedCount == subTasks.size());
   }
 }

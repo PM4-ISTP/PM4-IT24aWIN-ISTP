@@ -1,5 +1,6 @@
 package com.pm4.istp.shared.util;
 
+import com.pm4.istp.challengepod.exceptions.ChallengePodException;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
@@ -10,6 +11,8 @@ import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
+import com.pm4.istp.course.exceptions.SubTaskAlreadySolvedException;
+import com.pm4.istp.course.exceptions.SubTaskNotFoundException;
 import com.pm4.istp.shared.dto.ErrorDto;
 import com.pm4.istp.shared.keycloak.KeycloakAdminApiException;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
@@ -30,6 +33,14 @@ import org.springframework.web.client.RestClientResponseException;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(ChallengePodException.class)
+  public ResponseEntity<ErrorDto> handleChallengePodException(ChallengePodException ex) {
+    log.error("Caught ChallengePodException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Kubernetes operation failed: " + ex.getMessage());
+    return new ResponseEntity<>(errorDto, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
 
   @ExceptionHandler(ChallengeAccessDeniedException.class)
   public ResponseEntity<ErrorDto> handleChallengeAccessDeniedException(
@@ -164,6 +175,23 @@ public class GlobalExceptionHandler {
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError(ex.getMessage());
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(SubTaskNotFoundException.class)
+  public ResponseEntity<ErrorDto> handleSubTaskNotFoundException(SubTaskNotFoundException ex) {
+    log.error("Caught SubTaskNotFoundException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Sub-task not found");
+    return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(SubTaskAlreadySolvedException.class)
+  public ResponseEntity<ErrorDto> handleSubTaskAlreadySolvedException(
+      SubTaskAlreadySolvedException ex) {
+    log.warn("Caught SubTaskAlreadySolvedException: {}", ex.getMessage());
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Sub-task already solved");
+    return new ResponseEntity<>(errorDto, HttpStatus.CONFLICT);
   }
 
   @ExceptionHandler(InviteCodeGenerationException.class)
