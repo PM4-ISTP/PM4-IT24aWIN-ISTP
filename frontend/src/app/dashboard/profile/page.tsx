@@ -2,16 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Avatar,
-  Button,
-  Group,
-  Paper,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core";
+import { Avatar, Button, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 
@@ -39,7 +30,10 @@ export default function ProfilePage() {
   const router = useRouter();
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [statusMessage, setStatusMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
+  const [statusMessage, setStatusMessage] = useState<{
+    kind: "error" | "success";
+    text: string;
+  } | null>(null);
 
   const form = useForm<UpdateProfilePayload>({
     mode: "controlled",

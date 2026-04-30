@@ -272,14 +272,17 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
       setSettingPassword(true);
       setPasswordSuccess(null);
       passwordForm.clearFieldError("password");
-      const res = await fetch(`/api/backend/api/admin/users/${encodeURIComponent(userId)}/password`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          password: passwordForm.getValues().password.trim(),
-          temporary: passwordTemporary,
-        }),
-      });
+      const res = await fetch(
+        `/api/backend/api/admin/users/${encodeURIComponent(userId)}/password`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            password: passwordForm.getValues().password.trim(),
+            temporary: passwordTemporary,
+          }),
+        }
+      );
       if (!res.ok) {
         const raw = await safeErrorMessage(res);
         passwordForm.setFieldError("password", toFriendlyPasswordError(raw));
@@ -310,9 +313,12 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
     }
     try {
       setProvisioningUser(true);
-      const res = await fetch(`/api/backend/api/admin/users/${encodeURIComponent(userId)}/provision`, {
-        method: "POST",
-      });
+      const res = await fetch(
+        `/api/backend/api/admin/users/${encodeURIComponent(userId)}/provision`,
+        {
+          method: "POST",
+        }
+      );
       if (!res.ok) throw new Error(await safeErrorMessage(res));
       notifications.show({ title: "Done", message: "Provisioned (if needed).", color: "green" });
       await load();
@@ -330,9 +336,12 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
   const disable = async () => {
     try {
       setDisablingUser(true);
-      const res = await fetch(`/api/backend/api/admin/users/${encodeURIComponent(userId)}/disable`, {
-        method: "POST",
-      });
+      const res = await fetch(
+        `/api/backend/api/admin/users/${encodeURIComponent(userId)}/disable`,
+        {
+          method: "POST",
+        }
+      );
       if (!res.ok) throw new Error(await safeErrorMessage(res));
       notifications.show({ title: "Done", message: "User disabled.", color: "green" });
       await load();
@@ -350,9 +359,12 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
   const restore = async () => {
     try {
       setRestoringUser(true);
-      const res = await fetch(`/api/backend/api/admin/users/${encodeURIComponent(userId)}/restore`, {
-        method: "POST",
-      });
+      const res = await fetch(
+        `/api/backend/api/admin/users/${encodeURIComponent(userId)}/restore`,
+        {
+          method: "POST",
+        }
+      );
       if (!res.ok) throw new Error(await safeErrorMessage(res));
       notifications.show({ title: "Done", message: "User restored.", color: "green" });
       await load();
@@ -375,9 +387,12 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
 
     try {
       setSoftDeletingUser(true);
-      const res = await fetch(`/api/backend/api/admin/users/${encodeURIComponent(userId)}/soft-delete`, {
-        method: "POST",
-      });
+      const res = await fetch(
+        `/api/backend/api/admin/users/${encodeURIComponent(userId)}/soft-delete`,
+        {
+          method: "POST",
+        }
+      );
       if (!res.ok) throw new Error(await safeErrorMessage(res));
       notifications.show({ title: "Done", message: "User soft-deleted.", color: "green" });
       await load();
@@ -422,7 +437,11 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
             User Profile
           </Text>
           {statusBadge}
-          {user?.provisioned ? <Badge color="green">PROVISIONED</Badge> : <Badge color="yellow">NOT PROVISIONED</Badge>}
+          {user?.provisioned ? (
+            <Badge color="green">PROVISIONED</Badge>
+          ) : (
+            <Badge color="yellow">NOT PROVISIONED</Badge>
+          )}
         </Group>
         <Group gap="sm">
           {!isSoftDeleted && !isDisabled ? (
@@ -551,7 +570,8 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
           </Group>
           {!user?.provisioned ? (
             <Text size="xs" c="dimmed">
-              This user has no DB row yet. Click &quot;Provision&quot; first to enable profile editing in the app.
+              This user has no DB row yet. Click &quot;Provision&quot; first to enable profile
+              editing in the app.
             </Text>
           ) : null}
         </Stack>
@@ -570,7 +590,10 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
           <Text fw={700} style={{ color: "#e2e8f0" }}>
             Roles
           </Text>
-          <RadioGroup value={rolesForm.values.role} onChange={(v) => rolesForm.setFieldValue("role", v)}>
+          <RadioGroup
+            value={rolesForm.values.role}
+            onChange={(v) => rolesForm.setFieldValue("role", v)}
+          >
             <Group gap="md">
               {ALL_APP_ROLES.map((r) => (
                 <Radio key={r} value={r} label={r} />
@@ -578,7 +601,12 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
             </Group>
           </RadioGroup>
           <Group justify="flex-end">
-            <Button radius="md" onClick={() => void saveRoles()} loading={savingRoles} disabled={isSoftDeleted}>
+            <Button
+              radius="md"
+              onClick={() => void saveRoles()}
+              loading={savingRoles}
+              disabled={isSoftDeleted}
+            >
               Save roles
             </Button>
           </Group>
@@ -641,7 +669,12 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
             />
           </Group>
           <Group justify="flex-end">
-            <Button radius="md" onClick={() => void setPassword()} loading={settingPassword} disabled={isSoftDeleted}>
+            <Button
+              radius="md"
+              onClick={() => void setPassword()}
+              loading={settingPassword}
+              disabled={isSoftDeleted}
+            >
               Save password
             </Button>
           </Group>
@@ -678,7 +711,10 @@ function toFriendlyPasswordError(raw: string): string {
   if (lower.includes("invalidpasswordmindigitsmessage")) {
     return "Password must contain at least 1 digit.";
   }
-  if (lower.includes("invalidpasswordminlengthmessage") || lower.includes("password must be at least")) {
+  if (
+    lower.includes("invalidpasswordminlengthmessage") ||
+    lower.includes("password must be at least")
+  ) {
     const m = msg.match(/at least\s+(\d+)\s+characters?/i);
     if (m?.[1]) return `Password must be at least ${m[1]} characters long.`;
     return "Password is too short.";
