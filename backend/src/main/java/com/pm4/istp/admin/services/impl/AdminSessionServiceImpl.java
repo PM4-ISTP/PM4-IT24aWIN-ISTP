@@ -45,9 +45,13 @@ public class AdminSessionServiceImpl implements AdminSessionService {
   }
 
   private String normalize(String value) {
-    if (value == null) return null;
+    if (value == null) {
+      return null;
+    }
     String trimmed = value.trim();
-    if (trimmed.isEmpty()) return null;
+    if (trimmed.isEmpty()) {
+      return null;
+    }
     return trimmed.toLowerCase(Locale.ROOT).equals("null") ? null : trimmed;
   }
 

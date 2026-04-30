@@ -59,7 +59,9 @@ public class AuthPasswordController {
   }
 
   private String normalize(String value) {
-    if (value == null) return null;
+    if (value == null) {
+      return null;
+    }
     String trimmed = value.trim();
     return trimmed.isEmpty() ? null : trimmed;
   }
