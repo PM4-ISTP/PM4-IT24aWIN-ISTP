@@ -35,8 +35,6 @@ public class SecurityConfig {
                 authorize
                     .requestMatchers("/api/auth/**")
                     .permitAll()
-                    .requestMatchers("/api/v1/auth/**")
-                    .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml")
                     .permitAll()
                     .requestMatchers("/api/admin/**")
