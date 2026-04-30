@@ -103,8 +103,6 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
     },
   });
 
-  const passwordInputProps = passwordForm.getInputProps("password");
-
   const load = async () => {
     try {
       setLoading(true);
@@ -519,6 +517,7 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
 
           {profileForm.values.pictureUrl.trim() ? (
             <Group gap="md" align="center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={profileForm.values.pictureUrl.trim()}
                 alt="profile"
@@ -552,7 +551,7 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
           </Group>
           {!user?.provisioned ? (
             <Text size="xs" c="dimmed">
-              This user has no DB row yet. Click "Provision" first to enable profile editing in the app.
+              This user has no DB row yet. Click &quot;Provision&quot; first to enable profile editing in the app.
             </Text>
           ) : null}
         </Stack>
@@ -626,9 +625,10 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
             <PasswordInput
               label="Set password (manual)"
               placeholder="New password"
-              {...passwordInputProps}
+              value={passwordForm.values.password}
+              error={passwordForm.errors.password}
               onChange={(e) => {
-                passwordInputProps.onChange(e);
+                passwordForm.setFieldValue("password", e.currentTarget.value);
                 passwordForm.clearFieldError("password");
                 if (passwordSuccess) setPasswordSuccess(null);
               }}
