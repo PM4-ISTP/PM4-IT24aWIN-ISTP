@@ -1,16 +1,24 @@
-import { Alert, Box, Button, Group, Stack, Text, TextInput, Title } from "@mantine/core";
-import Link from "next/link";
-import { fetchPublishedCourses } from "@/src/features/course/actions/courses";
+import { Stack, Text, Title } from "@mantine/core";
+import { fetchCourseTopics, fetchPublishedCourses } from "@/src/features/course/actions/courses";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
-import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
+import ToastOnMount from "@/src/shared/components/ToastOnMount";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
+import CatalogFilters from "@/src/app/dashboard/catalog/CatalogFilters";
 
 export default async function CatalogPage(props: {
-  searchParams: Promise<{ page?: string; query?: string }>;
+  searchParams: Promise<{ page?: string; query?: string; topic?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const currentPage = Math.max(1, parseInt(searchParams.page ?? "1"));
   const query = searchParams.query ?? "";
-  const result = await fetchPublishedCourses(query, currentPage - 1, 12);
+  const topic = searchParams.topic ?? "";
+
+  const [result, topicsResult] = await Promise.all([
+    fetchPublishedCourses(query, currentPage - 1, 12, topic),
+    fetchCourseTopics(),
+  ]);
+
+  const topics = topicsResult.success ? topicsResult.data : [];
 
   return (
     <Stack p="xl" gap="lg">
@@ -23,58 +31,7 @@ export default async function CatalogPage(props: {
         </Text>
       </Stack>
 
-      <Box
-        style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 14,
-          padding: "1.25rem 1.5rem",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-        }}
-      >
-        <form action="/dashboard/catalog" method="get">
-          <Group align="flex-end">
-            <TextInput
-              name="query"
-              label="Search courses"
-              placeholder="Search by title, short description, or description"
-              defaultValue={query}
-              style={{ flex: 1 }}
-            />
-            <Group gap="sm">
-              <JoinCourseButton />
-              <Button
-                type="submit"
-                radius="md"
-                style={{
-                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                  border: "none",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 600,
-                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                }}
-              >
-                Search
-              </Button>
-              <Link href="/dashboard/catalog">
-                <Button
-                  variant="outline"
-                  radius="md"
-                  style={{
-                    borderColor: "rgba(255,255,255,0.12)",
-                    color: "#e2e8f0",
-                    background: "rgba(255,255,255,0.04)",
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
-                    fontWeight: 600,
-                  }}
-                >
-                  Reset
-                </Button>
-              </Link>
-            </Group>
-          </Group>
-        </form>
-      </Box>
+      <CatalogFilters query={query} topic={topic} topics={topics} />
 
       {result.success ? (
         <CourseGrid
@@ -84,9 +41,11 @@ export default async function CatalogPage(props: {
           coursePathPrefix="/dashboard/catalog"
         />
       ) : (
-        <Alert color="red" title="Failed to load catalog">
-          {result.error}
-        </Alert>
+        <ToastOnMount
+          color="red"
+          title="Failed to load catalog"
+          message={toUserFriendlyBackendError(result.error) ?? "Please try again."}
+        />
       )}
     </Stack>
   );

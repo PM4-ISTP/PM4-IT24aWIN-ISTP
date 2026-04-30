@@ -1,0 +1,2 @@
+export const POLL_INTERVAL_MS = 3000;
+export const RUNNING_POLL_INTERVAL_MS = 60_000;

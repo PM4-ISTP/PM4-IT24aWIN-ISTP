@@ -8,11 +8,13 @@ import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.SubTask;
 import com.pm4.istp.course.dto.ChallengeCreatorResponseDto;
 import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
+import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CourseChallengeResponseDto;
 import com.pm4.istp.course.dto.CreateChallengeRequestDto;
 import com.pm4.istp.course.dto.CreateChallengeResponseDto;
 import com.pm4.istp.course.dto.SubTaskRequestDto;
 import com.pm4.istp.course.dto.SubTaskResponseDto;
+import com.pm4.istp.course.dto.SubTaskStudentDto;
 import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
 import com.pm4.istp.user.db.entities.User;
 import org.mapstruct.Mapper;
@@ -36,6 +38,16 @@ public interface ChallengeMapper {
   ChallengeCreatorResponseDto toCreatorDto(User user);
 
   SubTaskResponseDto toSubTaskResponseDto(SubTask subTask);
+
+  @Mapping(target = "solved", ignore = true)
+  @Mapping(target = "solvedFlag", ignore = true)
+  SubTaskStudentDto toSubTaskStudentDto(SubTask subTask);
+
+  @Mapping(target = "subTasks", source = "subTasks")
+  @Mapping(target = "solved", ignore = true)
+  @Mapping(target = "solvedSubTaskCount", ignore = true)
+  @Mapping(target = "totalSubTaskCount", ignore = true)
+  ChallengeStudentDto toStudentDto(Challenge challenge);
 
   @Mapping(target = "challengeId", source = "challenge.id")
   @Mapping(target = "challengeTitle", source = "challenge.title")

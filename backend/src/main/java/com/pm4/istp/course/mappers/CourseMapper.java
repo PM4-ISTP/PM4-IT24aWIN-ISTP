@@ -8,6 +8,7 @@ import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
+import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
 import com.pm4.istp.course.dto.CreateCourseInstructorRequestDto;
 import com.pm4.istp.course.dto.CreateCourseRequestDto;
@@ -44,6 +45,12 @@ public interface CourseMapper {
 
   @Mapping(target = ".", source = "challenge")
   ChallengeDetailResponseDto toChallengeDetailResponseDto(CourseChallenge courseChallenge);
+
+  @Mapping(target = ".", source = "challenge")
+  @Mapping(target = "solved", ignore = true)
+  @Mapping(target = "solvedSubTaskCount", ignore = true)
+  @Mapping(target = "totalSubTaskCount", ignore = true)
+  ChallengeStudentDto toChallengeStudentDto(CourseChallenge courseChallenge);
 
   @Mapping(
       target = "instructorCount",

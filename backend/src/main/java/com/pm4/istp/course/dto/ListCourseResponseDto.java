@@ -32,7 +32,7 @@ public class ListCourseResponseDto {
   private String ownerPicture;
   private String ownerTitle;
 
-  // Constructor for JPQL "new" expressions — parameter order must match the queries in
+  // Constructor for JPQL "new" expressions -- parameter order must match the queries in
   // CourseRepository
   @SuppressWarnings("java:S107")
   public ListCourseResponseDto(

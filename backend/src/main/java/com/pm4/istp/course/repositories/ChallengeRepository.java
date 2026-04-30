@@ -1,5 +1,6 @@
 package com.pm4.istp.course.repositories;
 
+import com.pm4.istp.admin.dto.AdminChallengeListItemDto;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
 import java.util.UUID;
@@ -25,6 +26,7 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
             c.status,
             c.difficulty,
             c.maxScore,
+            c.dockerImage,
             c.creator.name,
             (select count(cc) from CourseChallenge cc where cc.challenge = c),
             c.updatedAt
@@ -51,6 +53,7 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
             c.status,
             c.difficulty,
             c.maxScore,
+            c.dockerImage,
             c.creator.name,
             (select count(cc) from CourseChallenge cc where cc.challenge = c),
             c.updatedAt
@@ -74,4 +77,65 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
           """)
   Page<ListChallengeResponseDto> searchAvailableChallenges(
       @Param("userId") UUID userId, @Param("search") String search, Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select new com.pm4.istp.admin.dto.AdminChallengeListItemDto(
+            c.id,
+            c.title,
+            c.shortDescription,
+            c.description,
+            c.status,
+            c.difficulty,
+            c.maxScore,
+            (select count(cc) from CourseChallenge cc where cc.challenge = c),
+            c.createdAt,
+            c.updatedAt,
+            c.creator.id,
+            c.creator.name,
+            c.creator.username
+          )
+          from Challenge c
+          """,
+      countQuery =
+          """
+          select count(c)
+          from Challenge c
+          """)
+  Page<AdminChallengeListItemDto> findAllChallengesForAdmin(Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select new com.pm4.istp.admin.dto.AdminChallengeListItemDto(
+            c.id,
+            c.title,
+            c.shortDescription,
+            c.description,
+            c.status,
+            c.difficulty,
+            c.maxScore,
+            (select count(cc) from CourseChallenge cc where cc.challenge = c),
+            c.createdAt,
+            c.updatedAt,
+            c.creator.id,
+            c.creator.name,
+            c.creator.username
+          )
+          from Challenge c
+          where lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+          """,
+      countQuery =
+          """
+          select count(c)
+          from Challenge c
+          where lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+          """)
+  Page<AdminChallengeListItemDto> findAllChallengesForAdminByQuery(
+      @Param("query") String query, Pageable pageable);
 }

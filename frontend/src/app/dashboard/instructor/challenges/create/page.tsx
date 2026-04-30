@@ -23,7 +23,13 @@ import { createChallenge } from "@/src/features/course/actions/challenges";
 import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
 import { toRequestSubTasks, validateSubTasks } from "@/src/features/course/utils/subTasks";
 import { useToast } from "@/src/shared/hooks/useToast";
-import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/features/course/constants/challengeConstants";
+import { useDockerImageCheck } from "@/src/features/course/hooks/useDockerImageCheck";
+import {
+  CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
+  DOCKER_IMAGE_ERROR,
+  DOCKER_IMAGE_PATTERN,
+} from "@/src/features/course/constants/challengeConstants";
+import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 export default function CreateChallenge() {
   const router = useRouter();
@@ -34,6 +40,7 @@ export default function CreateChallenge() {
     description: "<p>Add a description...</p>",
     status: "DRAFT",
     difficulty: "MEDIUM",
+    dockerImage: "",
     subTasks: [
       {
         title: "",
@@ -46,15 +53,18 @@ export default function CreateChallenge() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
+  const [dockerImageError, setDockerImageError] = useState<string | null>(null);
   const [subTaskErrors, setSubTaskErrors] = useState<
     Array<Partial<Record<"title" | "description" | "flag", string>>>
   >([]);
   const [formError, setFormError] = useState<string | null>(null);
   const charLimitToast = useToast();
+  const dockerImageCheck = useDockerImageCheck(formValues.dockerImage);
 
   async function handleSubmit() {
     setTitleError(null);
     setShortDescriptionError(null);
+    setDockerImageError(null);
     setSubTaskErrors([]);
     setFormError(null);
 
@@ -66,6 +76,24 @@ export default function CreateChallenge() {
     const normalizedShortDescription = normalizeShortDescription(formValues.shortDescription);
     if (!normalizedShortDescription) {
       setShortDescriptionError("Short description is required");
+      return;
+    }
+
+    const trimmedDockerImage = formValues.dockerImage.trim();
+    if (!trimmedDockerImage) {
+      setDockerImageError("Docker image is required");
+      return;
+    }
+    if (!DOCKER_IMAGE_PATTERN.test(trimmedDockerImage)) {
+      setDockerImageError(DOCKER_IMAGE_ERROR);
+      return;
+    }
+    if (dockerImageCheck.status === "checking") {
+      setDockerImageError("Please wait until the Docker image check finishes");
+      return;
+    }
+    if (dockerImageCheck.status === "error") {
+      setDockerImageError(dockerImageCheck.message ?? "Docker image is not reachable");
       return;
     }
 
@@ -86,13 +114,14 @@ export default function CreateChallenge() {
       description: formValues.description,
       status: formValues.status,
       difficulty: formValues.difficulty,
+      dockerImage: trimmedDockerImage,
       subTasks: toRequestSubTasks(formValues.subTasks),
     });
 
     setIsSubmitting(false);
 
     if (!result.success) {
-      setFormError(result.error);
+      setFormError(toUserFriendlyBackendError(result.error) ?? result.error);
       return;
     }
 
@@ -130,10 +159,14 @@ export default function CreateChallenge() {
             onChange={setFormValues}
             titleError={titleError}
             shortDescriptionError={shortDescriptionError}
+            dockerImageError={dockerImageError}
+            dockerImageCheckStatus={dockerImageCheck.status}
+            dockerImageCheckMessage={dockerImageCheck.message}
             subTaskErrors={subTaskErrors}
             defaultExpandedSubTaskIndex={0}
             onCharLimitExceeded={() => charLimitToast.show()}
             onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
+            onDockerImageErrorClear={() => setDockerImageError(null)}
           />
 
           {formError && (
@@ -146,7 +179,11 @@ export default function CreateChallenge() {
             variant="filled"
             radius="md"
             loading={isSubmitting}
-            disabled={isSubmitting}
+            disabled={
+              isSubmitting ||
+              dockerImageCheck.status === "checking" ||
+              dockerImageCheck.status === "error"
+            }
             onClick={() => {
               void handleSubmit();
             }}

@@ -1,4 +1,9 @@
-import type { ChallengeDetailResponseDto } from "@/src/features/course/actions/challenges";
+import type { components } from "@/src/shared/lib/api/schema";
+
+export type SubTaskStudentDto = components["schemas"]["SubTaskStudentDto"];
+export type ChallengeStudentDto = components["schemas"]["ChallengeStudentDto"];
+export type SubTaskSubmissionRequestDto = components["schemas"]["SubTaskSubmissionRequestDto"];
+export type SubTaskSubmissionResponseDto = components["schemas"]["SubTaskSubmissionResponseDto"];
 
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
 export type PlatformRole = "ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT";
@@ -129,7 +134,7 @@ export interface PublicCourseDetailResponseDto {
   topic?: string | null;
   courseInstructors: CourseInstructorResponseDto[];
   participants: null;
-  courseChallenges: ChallengeDetailResponseDto[];
+  courseChallenges: ChallengeStudentDto[];
   createdAt: string;
   updatedAt: string;
 }

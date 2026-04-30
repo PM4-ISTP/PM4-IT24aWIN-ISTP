@@ -133,7 +133,13 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
             href="/dashboard/admin"
             label="Dashboard"
             icon="space_dashboard"
-            active={pathname.startsWith("/dashboard/admin")}
+            active={pathname === "/dashboard/admin"}
+          />
+          <NavItem
+            href="/dashboard/admin/users"
+            label="Users"
+            icon="group"
+            active={pathname.startsWith("/dashboard/admin/users")}
           />
         </>
       )}

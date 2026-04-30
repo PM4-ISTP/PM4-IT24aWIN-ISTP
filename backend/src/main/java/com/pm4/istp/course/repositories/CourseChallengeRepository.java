@@ -24,6 +24,18 @@ public interface CourseChallengeRepository extends JpaRepository<CourseChallenge
   boolean existsByChallengeIdAndCourseInstructorId(
       @Param("challengeId") UUID challengeId, @Param("userId") UUID userId);
 
+  @Query(
+      """
+      select count(cc) > 0
+      from CourseChallenge cc
+      where cc.challenge.id = :challengeId
+      and exists (
+        select 1 from CourseEnrollment e where e.course = cc.course and e.participant.id = :userId
+      )
+      """)
+  boolean existsByChallengeIdAndEnrolledUserId(
+      @Param("challengeId") UUID challengeId, @Param("userId") UUID userId);
+
   @Modifying
   @Query("delete from CourseChallenge cc where cc.challenge.id = :challengeId")
   int deleteByChallengeId(@Param("challengeId") UUID challengeId);

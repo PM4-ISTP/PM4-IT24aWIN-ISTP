@@ -16,13 +16,18 @@ import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
+import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CreateChallengeRequestDto;
 import com.pm4.istp.course.dto.CreateChallengeResponseDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
+import com.pm4.istp.course.dto.SubTaskSubmissionRequestDto;
+import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
 import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
 import com.pm4.istp.course.dto.VisibilityImpactResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.course.exceptions.SubTaskAlreadySolvedException;
+import com.pm4.istp.course.exceptions.SubTaskNotFoundException;
 import com.pm4.istp.course.mappers.ChallengeMapper;
 import com.pm4.istp.course.services.ChallengeService;
 import com.pm4.istp.user.db.entities.User;
@@ -236,5 +241,150 @@ class ChallengeControllerTest {
         () -> challengeController.getVisibilityImpact(
             jwt, challengeId, ChallengeStatusEnum.PRIVATE))
         .isInstanceOf(ChallengeAccessDeniedException.class);
+  }
+
+  // ── getChallengeForPlay ────────────────────────────────────────────────────
+
+  @Test
+  void getChallengeForPlay_returnsStudentDto() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    Jwt jwt = jwtFor(userId);
+
+    ChallengeStudentDto dto = new ChallengeStudentDto();
+    dto.setId(challengeId);
+
+    when(challengeService.getChallengeForPlay(userId, courseId, challengeId)).thenReturn(dto);
+
+    ResponseEntity<ChallengeStudentDto> response =
+        challengeController.getChallengeForPlay(jwt, challengeId, courseId);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isSameAs(dto);
+  }
+
+  @Test
+  void getChallengeForPlay_whenNotEnrolled_propagatesAccessDenied() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    Jwt jwt = jwtFor(userId);
+
+    when(challengeService.getChallengeForPlay(userId, courseId, challengeId))
+        .thenThrow(new ChallengeAccessDeniedException("not enrolled"));
+
+    assertThatThrownBy(
+        () -> challengeController.getChallengeForPlay(jwt, challengeId, courseId))
+        .isInstanceOf(ChallengeAccessDeniedException.class);
+  }
+
+  @Test
+  void getChallengeForPlay_whenChallengeNotFound_propagatesNotFound() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    Jwt jwt = jwtFor(userId);
+
+    when(challengeService.getChallengeForPlay(userId, courseId, challengeId))
+        .thenThrow(new ChallengeNotFoundException("missing"));
+
+    assertThatThrownBy(
+        () -> challengeController.getChallengeForPlay(jwt, challengeId, courseId))
+        .isInstanceOf(ChallengeNotFoundException.class);
+  }
+
+  // ── submitSubTaskFlag ──────────────────────────────────────────────────────
+
+  @Test
+  void submitSubTaskFlag_returnsSubmissionResult() {
+    UUID userId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+    Jwt jwt = jwtFor(userId);
+
+    SubTaskSubmissionRequestDto request = new SubTaskSubmissionRequestDto("ISTP{ok}");
+    SubTaskSubmissionResponseDto result = new SubTaskSubmissionResponseDto(true, false, 1, 3);
+
+    when(challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{ok}"))
+        .thenReturn(result);
+
+    ResponseEntity<SubTaskSubmissionResponseDto> response =
+        challengeController.submitSubTaskFlag(jwt, challengeId, subTaskId, request);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isSameAs(result);
+    verify(challengeService).submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{ok}");
+  }
+
+  @Test
+  void submitSubTaskFlag_returnsIncorrectResult() {
+    UUID userId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+    Jwt jwt = jwtFor(userId);
+
+    SubTaskSubmissionRequestDto request = new SubTaskSubmissionRequestDto("ISTP{wrong}");
+    SubTaskSubmissionResponseDto result = new SubTaskSubmissionResponseDto(false, false, 0, 3);
+
+    when(challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{wrong}"))
+        .thenReturn(result);
+
+    ResponseEntity<SubTaskSubmissionResponseDto> response =
+        challengeController.submitSubTaskFlag(jwt, challengeId, subTaskId, request);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody().isCorrect()).isFalse();
+  }
+
+  @Test
+  void submitSubTaskFlag_whenNotEnrolled_propagatesAccessDenied() {
+    UUID userId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+    Jwt jwt = jwtFor(userId);
+
+    SubTaskSubmissionRequestDto request = new SubTaskSubmissionRequestDto("ISTP{x}");
+
+    when(challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{x}"))
+        .thenThrow(new ChallengeAccessDeniedException("not enrolled"));
+
+    assertThatThrownBy(
+        () -> challengeController.submitSubTaskFlag(jwt, challengeId, subTaskId, request))
+        .isInstanceOf(ChallengeAccessDeniedException.class);
+  }
+
+  @Test
+  void submitSubTaskFlag_whenSubTaskNotFound_propagatesNotFound() {
+    UUID userId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+    Jwt jwt = jwtFor(userId);
+
+    SubTaskSubmissionRequestDto request = new SubTaskSubmissionRequestDto("ISTP{x}");
+
+    when(challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{x}"))
+        .thenThrow(new SubTaskNotFoundException("missing"));
+
+    assertThatThrownBy(
+        () -> challengeController.submitSubTaskFlag(jwt, challengeId, subTaskId, request))
+        .isInstanceOf(SubTaskNotFoundException.class);
+  }
+
+  @Test
+  void submitSubTaskFlag_whenAlreadySolved_propagatesConflict() {
+    UUID userId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+    Jwt jwt = jwtFor(userId);
+
+    SubTaskSubmissionRequestDto request = new SubTaskSubmissionRequestDto("ISTP{x}");
+
+    when(challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{x}"))
+        .thenThrow(new SubTaskAlreadySolvedException("already done"));
+
+    assertThatThrownBy(
+        () -> challengeController.submitSubTaskFlag(jwt, challengeId, subTaskId, request))
+        .isInstanceOf(SubTaskAlreadySolvedException.class);
   }
 }

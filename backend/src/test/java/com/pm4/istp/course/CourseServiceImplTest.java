@@ -3,6 +3,7 @@ package com.pm4.istp.course;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -47,6 +49,7 @@ import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
+import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.course.services.impl.CourseServiceImpl;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.db.entities.UserRoleEnum;
@@ -65,9 +68,19 @@ class CourseServiceImplTest {
   private ChallengeRepository challengeRepository;
   @Mock
   private CourseInviteCodeHelper courseInviteCodeHelper;
+  @Mock
+  private CourseTopicService courseTopicService;
 
   @InjectMocks
   private CourseServiceImpl courseService;
+
+  @BeforeEach
+  void setUp() {
+    // Only some tests call create/update (which validate topics). Keep other tests strict.
+    lenient()
+        .when(courseTopicService.normalizeAndValidate(any()))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+  }
 
   @Test
   void createCourse_withCollaborator_createsOwnerAndCollaboratorRelations() {
@@ -237,7 +250,7 @@ class CourseServiceImplTest {
 
     when(courseRepository.findPublishedCoursesByQuery("secure", pageable)).thenReturn(expected);
 
-    Page<ListCourseResponseDto> result = courseService.listPublishedCourses("  secure  ", pageable);
+    Page<ListCourseResponseDto> result = courseService.listPublishedCourses("  secure  ", null, pageable);
 
     assertThat(result).isSameAs(expected);
     verify(courseRepository).findPublishedCoursesByQuery("secure", pageable);
@@ -250,10 +263,38 @@ class CourseServiceImplTest {
 
     when(courseRepository.findPublishedCourses(pageable)).thenReturn(expected);
 
-    Page<ListCourseResponseDto> result = courseService.listPublishedCourses("   ", pageable);
+    Page<ListCourseResponseDto> result = courseService.listPublishedCourses("   ", null, pageable);
 
     assertThat(result).isSameAs(expected);
     verify(courseRepository).findPublishedCourses(pageable);
+  }
+
+  @Test
+  void listPublishedCourses_withTopicOnly_delegatesToTopicRepository() {
+    Pageable pageable = PageRequest.of(0, 12);
+    Page<ListCourseResponseDto> expected = new PageImpl<>(List.of());
+
+    when(courseRepository.findPublishedCoursesByTopic("Security", pageable)).thenReturn(expected);
+
+    Page<ListCourseResponseDto> result = courseService.listPublishedCourses(null, "Security", pageable);
+
+    assertThat(result).isSameAs(expected);
+    verify(courseRepository).findPublishedCoursesByTopic("Security", pageable);
+  }
+
+  @Test
+  void listPublishedCourses_withQueryAndTopic_delegatesToQueryAndTopicRepository() {
+    Pageable pageable = PageRequest.of(0, 12);
+    Page<ListCourseResponseDto> expected = new PageImpl<>(List.of());
+
+    when(courseRepository.findPublishedCoursesByQueryAndTopic("sql", "Security", pageable))
+        .thenReturn(expected);
+
+    Page<ListCourseResponseDto> result =
+        courseService.listPublishedCourses("  sql  ", "  Security  ", pageable);
+
+    assertThat(result).isSameAs(expected);
+    verify(courseRepository).findPublishedCoursesByQueryAndTopic("sql", "Security", pageable);
   }
 
   @Test

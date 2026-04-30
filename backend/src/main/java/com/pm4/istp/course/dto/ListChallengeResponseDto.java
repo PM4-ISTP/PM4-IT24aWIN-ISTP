@@ -18,6 +18,7 @@ public class ListChallengeResponseDto {
   private ChallengeStatusEnum status;
   private ChallengeDifficultyEnum difficulty;
   private int maxScore;
+  private String dockerImage;
   private String creatorName;
   private long courseCount;
   private LocalDateTime updatedAt;

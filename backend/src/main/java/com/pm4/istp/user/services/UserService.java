@@ -13,4 +13,8 @@ public interface UserService {
   Page<User> searchCollaboratorUsersByQuery(UUID userId, String query, Pageable pageable);
 
   void softDeleteUser(UUID userId);
+
+  void restoreUser(UUID userId);
+
+  void softDeleteAndAnonymizeUser(UUID userId, String anonymizedEmail, String anonymizedUsername);
 }

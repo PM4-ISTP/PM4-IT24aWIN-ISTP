@@ -3,6 +3,7 @@ package com.pm4.istp.user.services.impl;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.db.entities.UserRoleEnum;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
+import com.pm4.istp.user.exceptions.UserSoftDeletedException;
 import com.pm4.istp.user.repositories.UserRepository;
 import com.pm4.istp.user.services.UserService;
 import java.time.LocalDateTime;
@@ -54,5 +55,69 @@ public class UserServiceImpl implements UserService {
       user.setDeletedAt(LocalDateTime.now());
       userRepository.save(user);
     }
+  }
+
+  @Override
+  @Transactional
+  public void restoreUser(UUID userId) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+
+    if (user.getAnonymizedAt() != null) {
+      throw new UserSoftDeletedException("User is soft-deleted and cannot be restored");
+    }
+
+    if (user.getDeletedAt() != null) {
+      user.setDeletedAt(null);
+      userRepository.save(user);
+    }
+  }
+
+  @Override
+  @Transactional
+  public void softDeleteAndAnonymizeUser(
+      UUID userId, String anonymizedEmail, String anonymizedUsername) {
+    if (userId == null) {
+      throw new IllegalArgumentException("userId is required");
+    }
+    if (anonymizedEmail == null || anonymizedEmail.isBlank()) {
+      throw new IllegalArgumentException("anonymizedEmail is required");
+    }
+    if (anonymizedUsername == null || anonymizedUsername.isBlank()) {
+      throw new IllegalArgumentException("anonymizedUsername is required");
+    }
+
+    LocalDateTime now = LocalDateTime.now();
+
+    User user = userRepository.findById(userId).orElse(null);
+    if (user == null) {
+      user = new User();
+      user.setId(userId);
+      user.setName("Deleted user");
+      user.setFirstName(null);
+      user.setLastName(null);
+      user.setTitle(null);
+      user.setPicture(null);
+      user.setRoles(new java.util.HashSet<>());
+      user.setCreatedAt(now);
+      user.setUpdatedAt(now);
+    }
+
+    user.setEmail(anonymizedEmail);
+    user.setUsername(anonymizedUsername);
+    if (user.getCreatedAt() == null) {
+      user.setCreatedAt(now);
+    }
+    user.setUpdatedAt(now);
+    if (user.getDeletedAt() == null) {
+      user.setDeletedAt(now);
+    }
+    if (user.getAnonymizedAt() == null) {
+      user.setAnonymizedAt(now);
+    }
+    userRepository.save(user);
   }
 }

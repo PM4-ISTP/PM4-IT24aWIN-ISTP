@@ -30,23 +30,43 @@ import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.db.entities.Course;
+import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.SubTask;
+import com.pm4.istp.course.db.entities.SubTaskCompletion;
+import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
+import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.course.exceptions.SubTaskAlreadySolvedException;
+import com.pm4.istp.course.exceptions.SubTaskNotFoundException;
+import com.pm4.istp.course.mappers.ChallengeMapper;
 import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseChallengeRepository;
+import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
+import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
+import com.pm4.istp.course.repositories.SubTaskRepository;
+import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.course.services.impl.ChallengeServiceImpl;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.repositories.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class ChallengeServiceImplTest {
 
+  private static final String DEFAULT_DOCKER_IMAGE = "ghcr.io/pm4-istp/default:latest";
+
   @Mock private UserRepository userRepository;
   @Mock private ChallengeRepository challengeRepository;
   @Mock private CourseChallengeRepository courseChallengeRepository;
+  @Mock private SubTaskRepository subTaskRepository;
+  @Mock private SubTaskCompletionRepository subTaskCompletionRepository;
+  @Mock private CourseEnrollmentRepository courseEnrollmentRepository;
+  @Mock private ChallengeMapper challengeMapper;
+  @Mock private DockerImageAvailabilityService dockerImageAvailabilityService;
 
   @InjectMocks private ChallengeServiceImpl challengeService;
 
@@ -78,7 +98,18 @@ class ChallengeServiceImplTest {
       String desc,
       ChallengeStatusEnum status,
       ChallengeDifficultyEnum difficulty) {
-    return new CreateChallengeRequest(title, shortDesc, desc, status, difficulty, oneSubTask());
+    return new CreateChallengeRequest(
+        title, shortDesc, desc, status, difficulty, DEFAULT_DOCKER_IMAGE, oneSubTask());
+  }
+
+  private CreateChallengeRequest createRequest(
+      String title,
+      String shortDesc,
+      String desc,
+      ChallengeStatusEnum status,
+      ChallengeDifficultyEnum difficulty,
+      String dockerImage) {
+    return new CreateChallengeRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneSubTask());
   }
 
   private UpdateChallengeRequest updateRequest(
@@ -87,7 +118,18 @@ class ChallengeServiceImplTest {
       String desc,
       ChallengeStatusEnum status,
       ChallengeDifficultyEnum difficulty) {
-    return new UpdateChallengeRequest(title, shortDesc, desc, status, difficulty, oneSubTask());
+    return new UpdateChallengeRequest(
+        title, shortDesc, desc, status, difficulty, DEFAULT_DOCKER_IMAGE, oneSubTask());
+  }
+
+  private UpdateChallengeRequest updateRequest(
+      String title,
+      String shortDesc,
+      String desc,
+      ChallengeStatusEnum status,
+      ChallengeDifficultyEnum difficulty,
+      String dockerImage) {
+    return new UpdateChallengeRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneSubTask());
   }
 
   @Test
@@ -106,6 +148,7 @@ class ChallengeServiceImplTest {
             "Long description",
             ChallengeStatusEnum.DRAFT,
             ChallengeDifficultyEnum.HARD,
+            "ghcr.io/pm4-istp/buffer-overflow:latest",
             new ArrayList<>(
                 List.of(
                     new SubTaskRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0),
@@ -118,6 +161,7 @@ class ChallengeServiceImplTest {
     assertThat(created.getDescription()).isEqualTo("Long description");
     assertThat(created.getStatus()).isEqualTo(ChallengeStatusEnum.DRAFT);
     assertThat(created.getDifficulty()).isEqualTo(ChallengeDifficultyEnum.HARD);
+    assertThat(created.getDockerImage()).isEqualTo("ghcr.io/pm4-istp/buffer-overflow:latest");
     assertThat(created.getCreator()).isSameAs(creator);
     assertThat(created.getSubTasks()).hasSize(2);
     assertThat(created.getSubTasks().get(0).getTitle()).isEqualTo("Recon");
@@ -127,6 +171,7 @@ class ChallengeServiceImplTest {
     assertThat(created.getSubTasks().get(1).getFlag()).isNull();
     assertThat(created.getSubTasks().get(1).getOrderIndex()).isEqualTo(1);
     assertThat(created.getMaxScore()).isEqualTo(2);
+    verify(dockerImageAvailabilityService).assertImageExists("ghcr.io/pm4-istp/buffer-overflow:latest");
     verify(challengeRepository).save(any(Challenge.class));
   }
 
@@ -146,6 +191,7 @@ class ChallengeServiceImplTest {
             "D",
             ChallengeStatusEnum.DRAFT,
             ChallengeDifficultyEnum.EASY,
+            DEFAULT_DOCKER_IMAGE,
             new ArrayList<>(List.of(new SubTaskRequest(null, "Only", "Just desc", "   ", 0))));
 
     Challenge created = challengeService.createChallenge(creatorId, request);
@@ -160,7 +206,12 @@ class ChallengeServiceImplTest {
 
     CreateChallengeRequest request =
         createRequest(
-            "Title", "Short", "Desc", ChallengeStatusEnum.DRAFT, ChallengeDifficultyEnum.EASY);
+            "Title",
+            "Short",
+            "Desc",
+            ChallengeStatusEnum.DRAFT,
+            ChallengeDifficultyEnum.EASY,
+            DEFAULT_DOCKER_IMAGE);
 
     assertThatThrownBy(() -> challengeService.createChallenge(creatorId, request))
         .isInstanceOf(UserNotFoundException.class);
@@ -216,7 +267,26 @@ class ChallengeServiceImplTest {
   }
 
   @Test
-  void getChallenge_whenPrivateAndCallerIsNotInstructor_throwsAccessDenied() {
+  void getChallenge_whenPrivateAndCallerIsEnrolledInCourseWithChallenge_returnsChallenge() {
+    UUID creatorId = UUID.randomUUID();
+    UUID studentId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    User creator = buildUser(creatorId);
+    Challenge challenge = buildChallenge(challengeId, creator, ChallengeStatusEnum.PRIVATE);
+
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(courseChallengeRepository.existsByChallengeIdAndCourseInstructorId(challengeId, studentId))
+        .thenReturn(false);
+    when(courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challengeId, studentId))
+        .thenReturn(true);
+
+    Challenge result = challengeService.getChallenge(studentId, challengeId);
+
+    assertThat(result).isSameAs(challenge);
+  }
+
+  @Test
+  void getChallenge_whenPrivateAndCallerIsNotInstructorAndNotEnrolled_throwsAccessDenied() {
     UUID creatorId = UUID.randomUUID();
     UUID otherId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
@@ -225,6 +295,8 @@ class ChallengeServiceImplTest {
 
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
     when(courseChallengeRepository.existsByChallengeIdAndCourseInstructorId(challengeId, otherId))
+        .thenReturn(false);
+    when(courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challengeId, otherId))
         .thenReturn(false);
 
     assertThatThrownBy(() -> challengeService.getChallenge(otherId, challengeId))
@@ -274,7 +346,8 @@ class ChallengeServiceImplTest {
             "Updated short",
             "Updated desc",
             ChallengeStatusEnum.PUBLIC,
-            ChallengeDifficultyEnum.EASY);
+            ChallengeDifficultyEnum.EASY,
+            "ghcr.io/pm4-istp/updated:1.0");
 
     Challenge updated = challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -283,6 +356,8 @@ class ChallengeServiceImplTest {
     assertThat(updated.getDescription()).isEqualTo("Updated desc");
     assertThat(updated.getStatus()).isEqualTo(ChallengeStatusEnum.PUBLIC);
     assertThat(updated.getDifficulty()).isEqualTo(ChallengeDifficultyEnum.EASY);
+    assertThat(updated.getDockerImage()).isEqualTo("ghcr.io/pm4-istp/updated:1.0");
+    verify(dockerImageAvailabilityService).assertImageExists("ghcr.io/pm4-istp/updated:1.0");
     verify(courseChallengeRepository, never()).deleteByChallengeId(any());
     verify(courseChallengeRepository, never())
         .deleteByChallengeIdWhereCreatorNotInstructor(any(), any());
@@ -315,6 +390,7 @@ class ChallengeServiceImplTest {
             "D",
             ChallengeStatusEnum.PUBLIC,
             ChallengeDifficultyEnum.EASY,
+            DEFAULT_DOCKER_IMAGE,
             new ArrayList<>(
                 List.of(
                     new SubTaskRequest(null, "New first", "desc", null, 0),
@@ -349,7 +425,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.DRAFT,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            DEFAULT_DOCKER_IMAGE);
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -375,7 +452,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PRIVATE,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            DEFAULT_DOCKER_IMAGE);
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -401,7 +479,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PUBLIC,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            DEFAULT_DOCKER_IMAGE);
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -426,7 +505,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PRIVATE,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            DEFAULT_DOCKER_IMAGE);
 
     assertThatThrownBy(() -> challengeService.updateChallenge(otherId, challengeId, request))
         .isInstanceOf(ChallengeAccessDeniedException.class);
@@ -448,7 +528,8 @@ class ChallengeServiceImplTest {
             "Short",
             "Desc",
             ChallengeStatusEnum.PUBLIC,
-            ChallengeDifficultyEnum.MEDIUM);
+            ChallengeDifficultyEnum.MEDIUM,
+            DEFAULT_DOCKER_IMAGE);
 
     assertThatThrownBy(() -> challengeService.updateChallenge(creatorId, challengeId, request))
         .isInstanceOf(ChallengeNotFoundException.class);
@@ -632,5 +713,259 @@ class ChallengeServiceImplTest {
 
     assertThat(result).isSameAs(expected);
     verify(challengeRepository).searchAvailableChallenges(userId, "sql", pageable);
+  }
+
+  // ── getChallengeForPlay ────────────────────────────────────────────────────
+
+  private Challenge buildChallengeWithCourses(UUID challengeId, UUID... courseIds) {
+    Challenge challenge = buildChallenge(challengeId, buildUser(UUID.randomUUID()),
+        ChallengeStatusEnum.PUBLIC);
+    List<CourseChallenge> ccs = new ArrayList<>();
+    for (UUID courseId : courseIds) {
+      Course course = new Course();
+      course.setId(courseId);
+      CourseChallenge cc = new CourseChallenge();
+      cc.setCourse(course);
+      cc.setChallenge(challenge);
+      ccs.add(cc);
+    }
+    challenge.setCourseChallenges(ccs);
+    return challenge;
+  }
+
+  @Test
+  void getChallengeForPlay_returnsStudentDto_whenEnrolledAndChallengeBelongsToCourse() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    Challenge challenge = buildChallengeWithCourses(challengeId, courseId);
+
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(true);
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    ChallengeStudentDto dto = new ChallengeStudentDto();
+    dto.setId(challengeId);
+    when(challengeMapper.toStudentDto(challenge)).thenReturn(dto);
+
+    ChallengeStudentDto result = challengeService.getChallengeForPlay(userId, courseId, challengeId);
+
+    assertThat(result).isSameAs(dto);
+  }
+
+  @Test
+  void getChallengeForPlay_whenNotEnrolled_throwsAccessDenied() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(false);
+
+    assertThatThrownBy(() -> challengeService.getChallengeForPlay(userId, courseId, challengeId))
+        .isInstanceOf(ChallengeAccessDeniedException.class);
+    verify(challengeRepository, never()).findById(any());
+  }
+
+  @Test
+  void getChallengeForPlay_whenChallengeMissing_throwsNotFound() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(true);
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> challengeService.getChallengeForPlay(userId, courseId, challengeId))
+        .isInstanceOf(ChallengeNotFoundException.class);
+  }
+
+  @Test
+  void getChallengeForPlay_whenChallengeNotInRequestedCourse_throwsAccessDenied() {
+    // Regression test for the authz-bypass: even if the user is enrolled in a course
+    // and the challenge exists in some *other* course, the requested courseId must
+    // actually contain the challenge.
+    UUID userId = UUID.randomUUID();
+    UUID requestedCourseId = UUID.randomUUID();
+    UUID otherCourseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    Challenge challenge = buildChallengeWithCourses(challengeId, otherCourseId);
+
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(requestedCourseId, userId))
+        .thenReturn(true);
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+
+    assertThatThrownBy(
+        () -> challengeService.getChallengeForPlay(userId, requestedCourseId, challengeId))
+        .isInstanceOf(ChallengeAccessDeniedException.class)
+        .hasMessageContaining("not part of course");
+  }
+
+  // ── submitSubTaskFlag ──────────────────────────────────────────────────────
+
+  private SubTask buildSubTask(UUID id, Challenge parent, String flag) {
+    SubTask st = new SubTask();
+    st.setId(id);
+    st.setChallenge(parent);
+    st.setFlag(flag);
+    parent.getSubTasks().add(st);
+    return st;
+  }
+
+  @Test
+  void submitSubTaskFlag_returnsCorrectAndPersists_whenFlagMatches() {
+    UUID userId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    User user = buildUser(userId);
+    Challenge challenge = buildChallengeWithCourses(challengeId, courseId);
+    SubTask subTask = buildSubTask(subTaskId, challenge, "ISTP{secret}");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
+    when(subTaskRepository.findById(subTaskId)).thenReturn(Optional.of(subTask));
+    when(courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challengeId, userId))
+        .thenReturn(true);
+    when(subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId))
+        .thenReturn(false);
+    when(subTaskCompletionRepository.findSolvedSubTaskIds(eq(userId), any()))
+        .thenReturn(List.of(subTaskId));
+
+    SubTaskSubmissionResponseDto result =
+        challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{secret}");
+
+    assertThat(result.isCorrect()).isTrue();
+    assertThat(result.isChallengeSolved()).isTrue();
+    verify(subTaskCompletionRepository).saveAndFlush(any(SubTaskCompletion.class));
+  }
+
+  @Test
+  void submitSubTaskFlag_returnsIncorrect_andDoesNotPersist_whenFlagMismatches() {
+    UUID userId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    User user = buildUser(userId);
+    Challenge challenge = buildChallengeWithCourses(challengeId, courseId);
+    SubTask subTask = buildSubTask(subTaskId, challenge, "ISTP{secret}");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
+    when(subTaskRepository.findById(subTaskId)).thenReturn(Optional.of(subTask));
+    when(courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challengeId, userId))
+        .thenReturn(true);
+    when(subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId))
+        .thenReturn(false);
+    when(subTaskCompletionRepository.findSolvedSubTaskIds(eq(userId), any()))
+        .thenReturn(List.of());
+
+    SubTaskSubmissionResponseDto result =
+        challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{wrong}");
+
+    assertThat(result.isCorrect()).isFalse();
+    verify(subTaskCompletionRepository, never()).saveAndFlush(any());
+  }
+
+  @Test
+  void submitSubTaskFlag_whenSubTaskNotFound_throwsNotFound() {
+    UUID userId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId))
+        .thenReturn(Optional.of(buildUser(userId)));
+    when(subTaskRepository.findById(subTaskId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(
+        () -> challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{x}"))
+        .isInstanceOf(SubTaskNotFoundException.class);
+  }
+
+  @Test
+  void submitSubTaskFlag_whenSubTaskBelongsToOtherChallenge_throwsNotFound() {
+    UUID userId = UUID.randomUUID();
+    UUID requestedChallengeId = UUID.randomUUID();
+    UUID actualChallengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    Challenge actual = buildChallengeWithCourses(actualChallengeId, courseId);
+    SubTask subTask = buildSubTask(subTaskId, actual, "ISTP{secret}");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId))
+        .thenReturn(Optional.of(buildUser(userId)));
+    when(subTaskRepository.findById(subTaskId)).thenReturn(Optional.of(subTask));
+
+    assertThatThrownBy(
+        () -> challengeService.submitSubTaskFlag(
+            userId, requestedChallengeId, subTaskId, "ISTP{secret}"))
+        .isInstanceOf(SubTaskNotFoundException.class);
+  }
+
+  @Test
+  void submitSubTaskFlag_whenNotEnrolled_throwsAccessDenied() {
+    UUID userId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    Challenge challenge = buildChallengeWithCourses(challengeId, courseId);
+    SubTask subTask = buildSubTask(subTaskId, challenge, "ISTP{secret}");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId))
+        .thenReturn(Optional.of(buildUser(userId)));
+    when(subTaskRepository.findById(subTaskId)).thenReturn(Optional.of(subTask));
+    when(courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challengeId, userId))
+        .thenReturn(false);
+
+    assertThatThrownBy(
+        () -> challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{secret}"))
+        .isInstanceOf(ChallengeAccessDeniedException.class);
+  }
+
+  @Test
+  void submitSubTaskFlag_whenAlreadySolved_throws409() {
+    UUID userId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    Challenge challenge = buildChallengeWithCourses(challengeId, courseId);
+    SubTask subTask = buildSubTask(subTaskId, challenge, "ISTP{secret}");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId))
+        .thenReturn(Optional.of(buildUser(userId)));
+    when(subTaskRepository.findById(subTaskId)).thenReturn(Optional.of(subTask));
+    when(courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challengeId, userId))
+        .thenReturn(true);
+    when(subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId))
+        .thenReturn(true);
+
+    assertThatThrownBy(
+        () -> challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{secret}"))
+        .isInstanceOf(SubTaskAlreadySolvedException.class);
+  }
+
+  @Test
+  void submitSubTaskFlag_whenConcurrentInsertHitsUniqueConstraint_throws409() {
+    // Race condition: two concurrent correct submissions both pass the
+    // existsByUserIdAndSubTaskId check, then one trips the unique constraint
+    // on insert. We must surface that as 409, not 500.
+    UUID userId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID subTaskId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    Challenge challenge = buildChallengeWithCourses(challengeId, courseId);
+    SubTask subTask = buildSubTask(subTaskId, challenge, "ISTP{secret}");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId))
+        .thenReturn(Optional.of(buildUser(userId)));
+    when(subTaskRepository.findById(subTaskId)).thenReturn(Optional.of(subTask));
+    when(courseChallengeRepository.existsByChallengeIdAndEnrolledUserId(challengeId, userId))
+        .thenReturn(true);
+    when(subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId))
+        .thenReturn(false);
+    when(subTaskCompletionRepository.saveAndFlush(any(SubTaskCompletion.class)))
+        .thenThrow(new DataIntegrityViolationException("unique violation"));
+
+    assertThatThrownBy(
+        () -> challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{secret}"))
+        .isInstanceOf(SubTaskAlreadySolvedException.class);
   }
 }

@@ -48,6 +48,15 @@ cd backend
 
 The Spring Boot application starts on `http://localhost:8080`.
 
+**Keycloak Admin API (required for profile sync + admin features):**
+
+The backend calls the Keycloak **Admin REST API** using a service account client (`istp-backend`).
+For local development you must provide the client secret via an env var:
+
+```powershell
+$env:KEYCLOAK_ADMIN_CLIENT_SECRET="<<client secret from Keycloak client istp-backend>>"
+```
+
 **Before committing**, always run code formatting:
 
 ```bash
@@ -112,6 +121,9 @@ docker compose up -d db adminer
 
 Then start the backend and frontend as usual.
 
+> If you point your backend at staging Keycloak (issuer-uri), you also need the staging `istp-backend`
+> client secret for `KEYCLOAK_ADMIN_CLIENT_SECRET` so Admin API calls work.
+
 #### Connect to Staging Backend (frontend-only development)
 
 To use the deployed staging backend instead of a local one, change `BACKEND_URL` in `frontend/.env.local`:
@@ -153,6 +165,10 @@ If you want to use kubectl on Windows, you need to go to the file `.kube/config`
 #### Download and Configure Kubeconfig
 
 Once the cluster is created, export the kubeconfig to the backend.
+
+> **Backend Keycloak Admin API secret (Kubernetes):**
+> Create a secret named `keycloak-admin-api-client` with key `client-secret` in your namespace.
+> Template: `k8s/secrets/keycloak-admin-api-client.secret.example.yaml`
 
 **Linux:**
 
