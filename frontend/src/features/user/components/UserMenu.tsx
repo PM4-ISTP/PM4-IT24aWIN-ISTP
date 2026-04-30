@@ -29,10 +29,9 @@ interface UserMenuProps {
   name: string;
   roles: string[];
   image?: string | null;
-  accountUrl?: string;
 }
 
-export default function UserMenu({ name, roles, image, accountUrl }: UserMenuProps) {
+export default function UserMenu({ name, roles, image }: UserMenuProps) {
   const { label: roleLabel, color: roleColor } = getRoleConfig(roles);
   const initials = getInitials(name);
 
@@ -66,32 +65,27 @@ export default function UserMenu({ name, roles, image, accountUrl }: UserMenuPro
           </Text>
         </Menu.Label>
 
-        {accountUrl ? (
-          <>
-            <Menu.Divider />
-            <Menu.Item
-              component="a"
-              href={accountUrl}
-              target="_blank"
-              rel="noreferrer"
-              data-testid="edit-profile-link"
-              leftSection={
-                <span
-                  className="material-symbols-outlined"
-                  style={{
-                    fontSize: "1.1rem",
-                    lineHeight: 1,
-                    fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
-                  }}
-                >
-                  manage_accounts
-                </span>
-              }
+        <Menu.Divider />
+        <Menu.Item
+          component={Link}
+          href="/dashboard/profile"
+          prefetch={false}
+          data-testid="edit-profile-link"
+          leftSection={
+            <span
+              className="material-symbols-outlined"
+              style={{
+                fontSize: "1.1rem",
+                lineHeight: 1,
+                fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
+              }}
             >
-              Edit profile
-            </Menu.Item>
-          </>
-        ) : null}
+              manage_accounts
+            </span>
+          }
+        >
+          Edit profile
+        </Menu.Item>
 
         <Menu.Divider />
 

@@ -1,0 +1,11 @@
+# Local-only secrets (DO NOT COMMIT real secrets)
+#
+# Usage:
+# - Copy to `application-local.properties`
+# - Fill in `keycloak.admin.client-secret`
+#
+# This file is safe to commit; the real `application-local.properties` is gitignored.
+
+# Keycloak Admin API service account secret for client `istp-backend`
+keycloak.admin.client-secret=
+

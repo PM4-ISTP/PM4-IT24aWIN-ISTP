@@ -29,11 +29,11 @@ export default async function AdminDashboard() {
           Admin Dashboard
         </Title>
         <Text style={{ color: "#94a3b8" }} mt={4}>
-          Manage your platform settings and users.
+          Manage your platform settings and content.
         </Text>
       </div>
 
-      <AdminTabs initialConfig={config} keycloakAdminUrl={process.env.KEYCLOAK_ADMIN_URL} />
+      <AdminTabs initialConfig={config} />
     </Stack>
   );
 }

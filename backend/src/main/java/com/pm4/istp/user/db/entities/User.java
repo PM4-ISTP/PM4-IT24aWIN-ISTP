@@ -50,6 +50,12 @@ public class User {
   @Column(name = "username", length = 255)
   private String username;
 
+  @Column(name = "first_name", length = 255)
+  private String firstName;
+
+  @Column(name = "last_name", length = 255)
+  private String lastName;
+
   @Column(name = "picture", columnDefinition = "TEXT")
   private String picture;
 
@@ -85,6 +91,10 @@ public class User {
   @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
 
+  // Marks an irreversible soft-delete where identifiers were anonymized to free email/username for reuse.
+  @Column(name = "anonymized_at")
+  private LocalDateTime anonymizedAt;
+
   public boolean isDeleted() {
     return deletedAt != null;
   }
@@ -99,15 +109,20 @@ public class User {
         && Objects.equals(name, user.name)
         && Objects.equals(email, user.email)
         && Objects.equals(username, user.username)
+        && Objects.equals(firstName, user.firstName)
+        && Objects.equals(lastName, user.lastName)
         && Objects.equals(picture, user.picture)
         && Objects.equals(title, user.title)
         && Objects.equals(createdAt, user.createdAt)
         && Objects.equals(updatedAt, user.updatedAt)
-        && Objects.equals(deletedAt, user.deletedAt);
+        && Objects.equals(deletedAt, user.deletedAt)
+        && Objects.equals(anonymizedAt, user.anonymizedAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, email, username, picture, title, createdAt, updatedAt, deletedAt);
+    return Objects.hash(
+        id, name, email, username, firstName, lastName, picture, title, createdAt, updatedAt,
+        deletedAt, anonymizedAt);
   }
 }

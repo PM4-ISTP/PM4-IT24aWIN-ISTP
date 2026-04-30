@@ -12,8 +12,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const name = session?.user?.name ?? "Unknown";
   const image = session?.user?.image ?? null;
   const roles = (session?.roles as string[]) ?? [];
-  const keycloakIssuer = process.env.AUTH_KEYCLOAK_ISSUER;
-  const accountUrl = keycloakIssuer ? `${keycloakIssuer.replace(/\/$/, "")}/account` : undefined;
 
   return (
     <AppShell header={{ height: 60 }} navbar={{ width: 220, breakpoint: "sm" }} padding="md">
@@ -53,7 +51,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
           <Group gap="sm">
             {roles.includes(ROLES.STUDENT) && <JoinCourseButton />}
-            <UserMenu name={name} roles={roles} image={image} accountUrl={accountUrl} />
+            <UserMenu name={name} roles={roles} image={image} />
           </Group>
         </Group>
       </AppShellHeader>

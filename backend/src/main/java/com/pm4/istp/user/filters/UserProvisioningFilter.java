@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -38,6 +39,11 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
   private static final int MAX_COLUMN_LENGTH = 255;
   private static final int MAX_PICTURE_LENGTH = 2048;
+  private static final String USER_NOT_PROVISIONED_ERROR =
+      "{\"error\":\"User not provisioned. Contact an administrator.\"}";
+  private static final String USER_DISABLED_ERROR = "{\"error\":\"User account is disabled.\"}";
+  private static final String USER_MISSING_ROLE_ERROR =
+      "{\"error\":\"User is missing required application role.\"}";
 
   private final UserRepository userRepository;
 
@@ -166,10 +172,21 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               .map(Optional::get)
               .collect(Collectors.toSet());
 
+      // Defense-in-depth:
+      // Never allow access to the application domain unless the user has a known app role.
+      boolean hasAppRole =
+          roles.contains(UserRoleEnum.ROLE_STUDENT)
+              || roles.contains(UserRoleEnum.ROLE_INSTRUCTOR)
+              || roles.contains(UserRoleEnum.ROLE_ADMINISTRATOR);
+      if (!hasAppRole) {
+        respondForbiddenJson(response, USER_MISSING_ROLE_ERROR);
+        return;
+      }
+
       existingUser.ifPresentOrElse(
           user -> {
             if (user.isDeleted()) {
-              // Account was soft-deleted due to a conflict. Once deleted, always gone.
+              respondForbiddenJson(response, USER_DISABLED_ERROR);
               return;
             }
             softDeleteConflicts(keycloakId, email, username);
@@ -177,6 +194,8 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
                 !Objects.equals(user.getName(), displayName)
                     || !Objects.equals(user.getEmail(), email)
                     || !Objects.equals(user.getUsername(), username)
+                    || !Objects.equals(user.getFirstName(), givenName)
+                    || !Objects.equals(user.getLastName(), familyName)
                     || !Objects.equals(user.getPicture(), picture)
                     || !Objects.equals(user.getTitle(), title)
                     || !Objects.equals(user.getRoles(), roles);
@@ -184,6 +203,8 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               user.setName(displayName);
               user.setEmail(email);
               user.setUsername(username);
+              user.setFirstName(givenName);
+              user.setLastName(familyName);
               user.setPicture(picture);
               user.setTitle(title);
               user.setRoles(roles);
@@ -191,24 +212,56 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
             }
           },
           () -> {
-            // Soft-delete any active account that shares the same email or username but belongs
-            // to a different Keycloak UUID (the old account was deleted in Keycloak and a new
-            // one was created with the same credentials).
-            softDeleteConflicts(keycloakId, email, username);
+            // Just-in-time provisioning:
+            // If a self-registered user has the STUDENT role, create the shadow DB row on first
+            // request.
+            if (roles.contains(UserRoleEnum.ROLE_STUDENT)) {
+              softDeleteConflicts(keycloakId, email, username);
 
-            User newUser = new User();
-            newUser.setId(keycloakId);
-            newUser.setName(displayName);
-            newUser.setEmail(email);
-            newUser.setUsername(username);
-            newUser.setPicture(picture);
-            newUser.setTitle(title);
-            newUser.setRoles(roles);
-            userRepository.save(newUser);
+              User newUser = new User();
+              newUser.setId(keycloakId);
+              newUser.setName(displayName);
+              newUser.setEmail(email);
+              newUser.setUsername(username);
+              newUser.setFirstName(givenName);
+              newUser.setLastName(familyName);
+              newUser.setPicture(picture);
+              newUser.setTitle(title);
+              newUser.setRoles(roles);
+              userRepository.save(newUser);
+              return;
+            }
+
+            // Non-students (e.g. admins/instructors) must be provisioned explicitly.
+            respondUserNotProvisioned(response);
           });
+      if (response.isCommitted()) {
+        return;
+      }
     }
 
     filterChain.doFilter(request, response);
+  }
+
+  private void respondUserNotProvisioned(HttpServletResponse response) {
+    respondForbiddenJson(response, USER_NOT_PROVISIONED_ERROR);
+  }
+
+  private void respondForbiddenJson(HttpServletResponse response, String json) {
+    try {
+      response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+      response.setCharacterEncoding("UTF-8");
+      response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+      response.getWriter().write(json);
+      response.flushBuffer();
+    } catch (IOException ex) {
+      log.warn("Failed to write 403 JSON response body", ex);
+      try {
+        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+      } catch (IOException ignored) {
+        // nothing else we can do
+      }
+    }
   }
 
   private boolean shouldFetchUserInfo(
