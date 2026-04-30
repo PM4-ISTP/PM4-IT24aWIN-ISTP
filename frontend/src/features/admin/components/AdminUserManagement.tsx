@@ -300,6 +300,12 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
                   placeholder="Name, email, username..."
                   value={listQuery}
                   onChange={(e) => setListQuery(e.currentTarget.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !loadingUsers) {
+                      e.preventDefault();
+                      void loadUsers();
+                    }
+                  }}
                   disabled={loadingUsers}
                 />
                 <Button onClick={() => void loadUsers()} radius="md" loading={loadingUsers}>
