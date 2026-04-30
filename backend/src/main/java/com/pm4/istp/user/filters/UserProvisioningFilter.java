@@ -174,13 +174,14 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
                       keycloakId),
                   existingTitle);
 
-      Set<UserRoleEnum> roles =
+      Set<UserRoleEnum> rawRoles =
           authentication.getAuthorities().stream()
               .map(GrantedAuthority::getAuthority)
               .map(UserRoleEnum::fromString)
               .filter(Optional::isPresent)
               .map(Optional::get)
               .collect(Collectors.toSet());
+      Set<UserRoleEnum> roles = reduceToSingleAppRole(rawRoles);
 
       // Defense-in-depth:
       // Never allow access to the application domain unless the user has a known app role.
@@ -428,6 +429,22 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       return true;
     }
     return false;
+  }
+
+  private Set<UserRoleEnum> reduceToSingleAppRole(Set<UserRoleEnum> roles) {
+    if (roles == null || roles.isEmpty()) {
+      return Set.of();
+    }
+    if (roles.contains(UserRoleEnum.ROLE_ADMINISTRATOR)) {
+      return Set.of(UserRoleEnum.ROLE_ADMINISTRATOR);
+    }
+    if (roles.contains(UserRoleEnum.ROLE_INSTRUCTOR)) {
+      return Set.of(UserRoleEnum.ROLE_INSTRUCTOR);
+    }
+    if (roles.contains(UserRoleEnum.ROLE_STUDENT)) {
+      return Set.of(UserRoleEnum.ROLE_STUDENT);
+    }
+    return Set.of();
   }
 
   private record UserInfoProfile(String name, String email, String picture, String title) {}

@@ -269,4 +269,39 @@ class UserProvisioningFilterTest {
     verify(userRepository, never()).save(any(User.class));
     assertThat(existing.getPicture()).isNull();
   }
+
+  @Test
+  void doFilterInternal_userProvisioned_multipleAppRoles_reducesToSingleHighestRole()
+      throws Exception {
+    User existing = new User();
+    existing.setId(USER_ID);
+    existing.setEmail("test@example.com");
+    existing.setUsername("testuser");
+    existing.setFirstName("Test");
+    existing.setLastName("User");
+    existing.setName("Test User");
+    existing.setRoles(Set.of(UserRoleEnum.ROLE_STUDENT));
+
+    when(jwt.getClaimAsString("preferred_username")).thenReturn("testuser");
+    when(jwt.getClaimAsString("email")).thenReturn("test@example.com");
+    when(jwt.getClaimAsString("given_name")).thenReturn("Test");
+    when(jwt.getClaimAsString("family_name")).thenReturn("User");
+    when(authentication.getAuthorities())
+        .thenReturn(
+            (java.util.Collection)
+                List.of(
+                    new SimpleGrantedAuthority("ROLE_STUDENT"),
+                    new SimpleGrantedAuthority("ROLE_ADMINISTRATOR")));
+    when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existing));
+    when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/courses/catalog");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+
+    filter.doFilterInternal(request, response, filterChain);
+
+    verify(filterChain).doFilter(any(), any());
+    verify(userRepository).save(any(User.class));
+    assertThat(existing.getRoles()).containsExactly(UserRoleEnum.ROLE_ADMINISTRATOR);
+  }
 }
