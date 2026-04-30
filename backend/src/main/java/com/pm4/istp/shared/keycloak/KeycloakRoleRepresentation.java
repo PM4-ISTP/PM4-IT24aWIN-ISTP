@@ -9,4 +9,3 @@ public class KeycloakRoleRepresentation {
   private String id;
   private String name;
 }
-

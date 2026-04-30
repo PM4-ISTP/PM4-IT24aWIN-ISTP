@@ -87,9 +87,12 @@ public class UserProfileServiceImpl implements UserProfileService {
         keycloakAdminClient.updateUser(targetUserId, before);
       } catch (RuntimeException rollbackEx) {
         log.error(
-            "Failed to rollback Keycloak user profile update for user {}", targetUserId, rollbackEx);
+            "Failed to rollback Keycloak user profile update for user {}",
+            targetUserId,
+            rollbackEx);
       }
-      throw new UserProfileSyncException("Failed to update user profile in application database", ex);
+      throw new UserProfileSyncException(
+          "Failed to update user profile in application database", ex);
     }
   }
 

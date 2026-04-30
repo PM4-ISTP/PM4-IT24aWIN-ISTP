@@ -6,8 +6,6 @@ import java.util.Base64;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -15,6 +13,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Component
@@ -90,8 +90,7 @@ public class KeycloakServiceAccountTokenProvider {
         return;
       }
       byte[] decoded = Base64.getUrlDecoder().decode(parts[1]);
-      Map<String, Object> claims =
-          objectMapper.readValue(decoded, new TypeReference<>() {});
+      Map<String, Object> claims = objectMapper.readValue(decoded, new TypeReference<>() {});
       Object azp = claims.get("azp");
       Object realmAccess = claims.get("realm_access");
       Object resourceAccess = claims.get("resource_access");

@@ -16,4 +16,3 @@ public class KeycloakUserSessionRepresentation {
   private String userId;
   private Map<String, String> clients;
 }
-

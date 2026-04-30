@@ -9,4 +9,3 @@ public class KeycloakAdminApiException extends RuntimeException {
     super(message, cause);
   }
 }
-

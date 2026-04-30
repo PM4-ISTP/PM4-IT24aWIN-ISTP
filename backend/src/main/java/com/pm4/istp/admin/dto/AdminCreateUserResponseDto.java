@@ -10,4 +10,3 @@ public class AdminCreateUserResponseDto {
   private UUID userId;
   private String temporaryPassword;
 }
-

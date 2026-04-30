@@ -25,4 +25,3 @@ public class UpdateUserProfileRequestDto {
       flags = Pattern.Flag.CASE_INSENSITIVE)
   private String pictureUrl;
 }
-

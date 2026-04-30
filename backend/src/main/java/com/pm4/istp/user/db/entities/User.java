@@ -91,7 +91,8 @@ public class User {
   @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
 
-  // Marks an irreversible soft-delete where identifiers were anonymized to free email/username for reuse.
+  // Marks an irreversible soft-delete where identifiers were anonymized to free email/username for
+  // reuse.
   @Column(name = "anonymized_at")
   private LocalDateTime anonymizedAt;
 
@@ -122,7 +123,17 @@ public class User {
   @Override
   public int hashCode() {
     return Objects.hash(
-        id, name, email, username, firstName, lastName, picture, title, createdAt, updatedAt,
-        deletedAt, anonymizedAt);
+        id,
+        name,
+        email,
+        username,
+        firstName,
+        lastName,
+        picture,
+        title,
+        createdAt,
+        updatedAt,
+        deletedAt,
+        anonymizedAt);
   }
 }

@@ -12,4 +12,3 @@ public class AdminSetUserPasswordRequestDto {
 
   private boolean temporary = true;
 }
-

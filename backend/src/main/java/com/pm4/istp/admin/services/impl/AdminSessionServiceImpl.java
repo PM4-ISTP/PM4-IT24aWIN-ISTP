@@ -28,7 +28,8 @@ public class AdminSessionServiceImpl implements AdminSessionService {
     try {
       return listActiveSessionsViaClientUserSessions(clientId);
     } catch (RuntimeException ex) {
-      // Some Keycloak setups require extra permissions (e.g. view-clients) for /clients/* endpoints.
+      // Some Keycloak setups require extra permissions (e.g. view-clients) for /clients/*
+      // endpoints.
       // Fallback: iterate users and aggregate /users/{id}/sessions (requires manage-users).
       return listActiveSessionsViaUserSessions(clientId);
     }

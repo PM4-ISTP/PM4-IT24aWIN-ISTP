@@ -22,4 +22,3 @@ public class KeycloakUserRepresentation {
 
   private Map<String, List<String>> attributes;
 }
-

@@ -4,13 +4,13 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @RequiredArgsConstructor
@@ -61,7 +61,8 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
       URI location = response == null ? null : response.getHeaders().getLocation();
       UUID createdId = parseCreatedUserId(location);
       if (createdId == null) {
-        throw new KeycloakAdminApiException("Keycloak did not return a Location header for created user");
+        throw new KeycloakAdminApiException(
+            "Keycloak did not return a Location header for created user");
       }
       return createdId;
     } catch (RestClientException ex) {

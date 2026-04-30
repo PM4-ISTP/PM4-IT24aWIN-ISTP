@@ -3,12 +3,12 @@ package com.pm4.istp.admin.services.impl;
 import com.pm4.istp.admin.dto.AdminCreateUserRequestDto;
 import com.pm4.istp.admin.dto.AdminCreateUserResponseDto;
 import com.pm4.istp.admin.dto.AdminProvisionUserResponseDto;
-import com.pm4.istp.admin.dto.AdminUserDirectoryItemDto;
-import com.pm4.istp.admin.dto.AdminUserDetailDto;
-import com.pm4.istp.admin.dto.AdminUserListItemDto;
-import com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto;
-import com.pm4.istp.admin.services.AdminUserService;
 import com.pm4.istp.admin.dto.AdminSetUserPasswordRequestDto;
+import com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto;
+import com.pm4.istp.admin.dto.AdminUserDetailDto;
+import com.pm4.istp.admin.dto.AdminUserDirectoryItemDto;
+import com.pm4.istp.admin.dto.AdminUserListItemDto;
+import com.pm4.istp.admin.services.AdminUserService;
 import com.pm4.istp.shared.keycloak.KeycloakAdminClient;
 import com.pm4.istp.shared.keycloak.KeycloakRoleRepresentation;
 import com.pm4.istp.shared.keycloak.KeycloakUserRepresentation;
@@ -22,7 +22,6 @@ import com.pm4.istp.user.repositories.UserRepository;
 import com.pm4.istp.user.services.UserService;
 import java.security.SecureRandom;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -61,7 +60,8 @@ public class AdminUserServiceImpl implements AdminUserService {
   private final UserService userService;
 
   @Override
-  public List<AdminUserDirectoryItemDto> listUserDirectory(String search, Integer first, Integer max) {
+  public List<AdminUserDirectoryItemDto> listUserDirectory(
+      String search, Integer first, Integer max) {
     String normalizedSearch = normalizeOptional(search);
     int safeFirst = first == null || first < 0 ? 0 : first;
     int safeMax = max == null || max <= 0 ? 50 : Math.min(max, 200);
@@ -98,7 +98,9 @@ public class AdminUserServiceImpl implements AdminUserService {
     String title =
         user != null ? user.getTitle() : getSingleAttribute(keycloakUser.getAttributes(), "title");
     String picture =
-        user != null ? user.getPicture() : getSingleAttribute(keycloakUser.getAttributes(), "picture");
+        user != null
+            ? user.getPicture()
+            : getSingleAttribute(keycloakUser.getAttributes(), "picture");
 
     Set<String> roles =
         user != null
@@ -108,14 +110,15 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .filter(r -> r != null && MANAGED_APP_ROLES.contains(r))
                 .collect(Collectors.toSet());
 
-    String firstName = user != null ? user.getFirstName() : normalizeOptional(keycloakUser.getFirstName());
-    String lastName = user != null ? user.getLastName() : normalizeOptional(keycloakUser.getLastName());
-    String username = user != null ? user.getUsername() : normalizeOptional(keycloakUser.getUsername());
+    String firstName =
+        user != null ? user.getFirstName() : normalizeOptional(keycloakUser.getFirstName());
+    String lastName =
+        user != null ? user.getLastName() : normalizeOptional(keycloakUser.getLastName());
+    String username =
+        user != null ? user.getUsername() : normalizeOptional(keycloakUser.getUsername());
     String email = user != null ? user.getEmail() : normalizeOptional(keycloakUser.getEmail());
     String name =
-        user != null
-            ? user.getName()
-            : buildDisplayName(firstName, lastName, username, email);
+        user != null ? user.getName() : buildDisplayName(firstName, lastName, username, email);
 
     return new AdminUserDetailDto(
         userId,
@@ -154,7 +157,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     // Keycloak is source of truth for roles. Snapshot current app roles for rollback.
-    List<KeycloakRoleRepresentation> currentRoleReps = keycloakAdminClient.listUserRealmRoles(userId);
+    List<KeycloakRoleRepresentation> currentRoleReps =
+        keycloakAdminClient.listUserRealmRoles(userId);
     Set<String> current =
         currentRoleReps.stream()
             .map(KeycloakRoleRepresentation::getName)
@@ -200,7 +204,10 @@ public class AdminUserServiceImpl implements AdminUserService {
       dbUser.setLastName(normalizeOptional(keycloakUser.getLastName()));
       dbUser.setName(
           buildDisplayName(
-              dbUser.getFirstName(), dbUser.getLastName(), dbUser.getUsername(), dbUser.getEmail()));
+              dbUser.getFirstName(),
+              dbUser.getLastName(),
+              dbUser.getUsername(),
+              dbUser.getEmail()));
       dbUser.setTitle(getSingleAttribute(keycloakUser.getAttributes(), "title"));
       dbUser.setPicture(getSingleAttribute(keycloakUser.getAttributes(), "picture"));
     }
@@ -286,7 +293,9 @@ public class AdminUserServiceImpl implements AdminUserService {
       try {
         keycloakAdminClient.deleteUser(createdUserId);
       } catch (RuntimeException cleanupEx) {
-        log.error("Failed to cleanup Keycloak user {} after provisioning failure", createdUserId,
+        log.error(
+            "Failed to cleanup Keycloak user {} after provisioning failure",
+            createdUserId,
             cleanupEx);
       }
       throw ex;
@@ -306,7 +315,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         throw new UserSoftDeletedException("User is soft-deleted and cannot be provisioned");
       }
       if (existing.getDeletedAt() != null) {
-        throw new UserSoftDeletedException("User is disabled/deleted. Restore the user instead of provisioning.");
+        throw new UserSoftDeletedException(
+            "User is disabled/deleted. Restore the user instead of provisioning.");
       }
       return new AdminProvisionUserResponseDto(userId, false);
     }
@@ -318,7 +328,8 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     // Provisioning means: shadow DB row + app roles in Keycloak
     try {
-      KeycloakRoleRepresentation role = keycloakAdminClient.getRealmRoleByName(DEFAULT_NEW_USER_ROLE);
+      KeycloakRoleRepresentation role =
+          keycloakAdminClient.getRealmRoleByName(DEFAULT_NEW_USER_ROLE);
       if (role != null) {
         keycloakAdminClient.addRealmRoles(userId, List.of(role));
       }
@@ -441,7 +452,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     try {
       userService.softDeleteAndAnonymizeUser(userId, anonymizedEmail, anonymizedUsername);
     } catch (RuntimeException ex) {
-      // best-effort rollback: Keycloak identifiers are hard to revert safely; do not attempt to restore original email/username
+      // best-effort rollback: Keycloak identifiers are hard to revert safely; do not attempt to
+      // restore original email/username
       throw new UserProfileSyncException("Failed to soft-delete user in application database", ex);
     }
   }
@@ -504,7 +516,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     return normalizeOptional(value);
   }
 
-  private String buildDisplayName(String firstName, String lastName, String username, String email) {
+  private String buildDisplayName(
+      String firstName, String lastName, String username, String email) {
     String full = normalizeOptional(firstName);
     String last = normalizeOptional(lastName);
     if (full != null && last != null) {
@@ -534,7 +547,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     password[2] = randomChar(TEMP_PASSWORD_DIGIT);
     password[3] = randomChar(TEMP_PASSWORD_SPECIAL);
 
-    String all = TEMP_PASSWORD_LOWER + TEMP_PASSWORD_UPPER + TEMP_PASSWORD_DIGIT + TEMP_PASSWORD_SPECIAL;
+    String all =
+        TEMP_PASSWORD_LOWER + TEMP_PASSWORD_UPPER + TEMP_PASSWORD_DIGIT + TEMP_PASSWORD_SPECIAL;
     for (int i = 4; i < length; i++) {
       password[i] = randomChar(all);
     }
@@ -606,7 +620,9 @@ public class AdminUserServiceImpl implements AdminUserService {
   private String toSoftDeletedEmail(String originalEmail, String timestamp, UUID userId) {
     String normalized = normalizeOptional(originalEmail);
     String token =
-        normalized == null ? "unknown" : normalized.toLowerCase().replace("@", "_at_").replace("+", "_");
+        normalized == null
+            ? "unknown"
+            : normalized.toLowerCase().replace("@", "_at_").replace("+", "_");
 
     String prefix = "deleted+" + timestamp + "+";
     String suffix = "@invalid.local";
@@ -617,7 +633,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     int maxTokenLen = 255 - prefix.length() - suffix.length();
-    String truncated = maxTokenLen > 0 ? token.substring(0, Math.min(token.length(), maxTokenLen)) : "unknown";
+    String truncated =
+        maxTokenLen > 0 ? token.substring(0, Math.min(token.length(), maxTokenLen)) : "unknown";
     if (truncated.isBlank()) {
       truncated = "unknown";
     }
@@ -633,7 +650,8 @@ public class AdminUserServiceImpl implements AdminUserService {
       return candidate;
     }
     int maxBaseLen = 255 - prefix.length();
-    String truncated = maxBaseLen > 0 ? base.substring(0, Math.min(base.length(), maxBaseLen)) : "user";
+    String truncated =
+        maxBaseLen > 0 ? base.substring(0, Math.min(base.length(), maxBaseLen)) : "user";
     if (truncated.isBlank()) {
       truncated = "user";
     }

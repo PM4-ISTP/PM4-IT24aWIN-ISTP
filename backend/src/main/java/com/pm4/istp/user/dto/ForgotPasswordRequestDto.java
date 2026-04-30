@@ -10,4 +10,3 @@ public class ForgotPasswordRequestDto {
   @Size(min = 3, max = 255)
   private String identifier;
 }
-

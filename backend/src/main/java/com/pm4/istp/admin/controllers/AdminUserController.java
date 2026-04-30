@@ -4,10 +4,10 @@ import com.pm4.istp.admin.dto.AdminCreateUserRequestDto;
 import com.pm4.istp.admin.dto.AdminCreateUserResponseDto;
 import com.pm4.istp.admin.dto.AdminProvisionUserResponseDto;
 import com.pm4.istp.admin.dto.AdminSetUserPasswordRequestDto;
-import com.pm4.istp.admin.dto.AdminUserDirectoryItemDto;
-import com.pm4.istp.admin.dto.AdminUserDetailDto;
-import com.pm4.istp.admin.dto.AdminUserListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto;
+import com.pm4.istp.admin.dto.AdminUserDetailDto;
+import com.pm4.istp.admin.dto.AdminUserDirectoryItemDto;
+import com.pm4.istp.admin.dto.AdminUserListItemDto;
 import com.pm4.istp.admin.services.AdminUserService;
 import com.pm4.istp.shared.keycloak.KeycloakUserSessionRepresentation;
 import jakarta.validation.Valid;
@@ -88,7 +88,8 @@ public class AdminUserController {
   }
 
   @GetMapping("/{userId}/sessions")
-  public ResponseEntity<List<KeycloakUserSessionRepresentation>> listUserSessions(@PathVariable UUID userId) {
+  public ResponseEntity<List<KeycloakUserSessionRepresentation>> listUserSessions(
+      @PathVariable UUID userId) {
     return ResponseEntity.ok(adminUserService.listUserSessions(userId));
   }
 

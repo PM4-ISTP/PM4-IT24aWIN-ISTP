@@ -1,6 +1,6 @@
 .idea
 backend/src/main/resources/Kubeconfig
-backend/src/main/resources/application-local.properties
+
 .gradle
 backend/build/
 
