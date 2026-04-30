@@ -9,7 +9,8 @@ The **backend** is the only component allowed to synchronize between Keycloak an
 **Keycloak**
 - Login / Password
 - User ID (`sub` / UUID)
-- Roles / Groups
+- Roles (app authorization)
+- Groups (optional; not used for app authorization)
 - Base profile: `email`, `username`, `firstName`, `lastName`
 - Custom profile attributes (stored on the Keycloak user):
   - `title` (attribute)
@@ -36,6 +37,13 @@ On the first request after login, the backend:
 5. Checks if `users.id = token.sub` exists in Postgres
 6. If missing **and** the user is a `ROLE_STUDENT`, the backend auto-creates the shadow `users` row
 7. If `users.deletedAt` is set, access is denied
+
+### Roles policy (important)
+- The app treats roles as **Keycloak realm roles** (`ROLE_*`), not groups.
+- Policy: **exactly one** of `ROLE_STUDENT`, `ROLE_INSTRUCTOR`, `ROLE_ADMINISTRATOR` per user.
+  - The admin dashboard role change replaces roles (removes old, adds new).
+  - If Keycloak groups also grant roles via role-mapping, users may appear to have multiple roles.
+    In that case, remove role-mappings from groups and use realm roles only.
 
 ### 3) Profile editing (via app, not Keycloak Account UI)
 Users update their profile through the app. The backend keeps both systems consistent:
