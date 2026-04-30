@@ -97,6 +97,15 @@ In `backend/src/main/resources/application.properties`:
 Secrets:
 - `keycloak.admin.client-secret` should be provided via env var `KEYCLOAK_ADMIN_CLIENT_SECRET` (recommended).
 
+### Configuration (Kubernetes / Rancher)
+
+The backend deployment reads the Keycloak Admin API secret from a Kubernetes Secret:
+- Secret name: `keycloak-admin-api-client`
+- Key: `client-secret`
+- Env var in the backend pod: `KEYCLOAK_ADMIN_CLIENT_SECRET`
+
+Example template: `k8s/secrets/keycloak-admin-api-client.secret.example.yaml`
+
 ## How to test (manual)
 
 1. Start infra (Postgres + Keycloak) from `infra/` and start backend + frontend.
@@ -107,4 +116,3 @@ Secrets:
    - Should update Keycloak + Postgres.
 5. As admin, open Admin → User Management:
    - Create user, change roles, send reset email, set password, disable/restore/soft-delete.
-
