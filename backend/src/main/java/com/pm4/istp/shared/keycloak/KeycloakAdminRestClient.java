@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
@@ -26,6 +27,11 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
           .uri("/users/{id}", userId)
           .retrieve()
           .body(KeycloakUserRepresentation.class);
+    } catch (RestClientResponseException ex) {
+      if (ex.getStatusCode().value() == 404) {
+        return null;
+      }
+      throw new KeycloakAdminApiException("Failed to read user from Keycloak Admin API", ex);
     } catch (RestClientException ex) {
       throw new KeycloakAdminApiException("Failed to read user from Keycloak Admin API", ex);
     }
@@ -106,6 +112,11 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
           .uri("/roles/{roleName}", roleName)
           .retrieve()
           .body(KeycloakRoleRepresentation.class);
+    } catch (RestClientResponseException ex) {
+      if (ex.getStatusCode().value() == 404) {
+        return null;
+      }
+      throw new KeycloakAdminApiException("Failed to read Keycloak realm role", ex);
     } catch (RestClientException ex) {
       throw new KeycloakAdminApiException("Failed to read Keycloak realm role", ex);
     }
