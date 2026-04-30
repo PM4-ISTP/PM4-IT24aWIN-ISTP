@@ -1,81 +1,134 @@
-# Keycloak Profile Sync (Admin API)
+# Keycloak ↔ Postgres User Sync (Keycloak Admin API)
 
 ## Goal
-Allow users to update profile data in the web app while keeping **Keycloak** and the **application database** consistent, using the **Keycloak Admin REST API** (no direct DB access to Keycloak).
+Manage users and profile data **through the ISTP app** while keeping **Keycloak** and the **application database (Postgres)** consistent.
 
-## Source Of Truth
-**Keycloak is the source of truth** for the editable profile fields:
+All writes to Keycloak happen via the **Keycloak Admin REST API** (no direct DB access to Keycloak).
 
-- `firstName` (Keycloak user field)
-- `lastName` (Keycloak user field)
-- `title` (Keycloak user attribute + OIDC claim mapper)
-- `picture` (Keycloak user attribute + OIDC claim mapper; stores only a URL/reference)
+## Source of Truth
+**Keycloak is the source of truth** for:
+- Login / password
+- User ID (`sub` / Keycloak UUID)
+- Realm roles / groups (authorization)
+- Base profile: `email`, `username`, `firstName`, `lastName`
 
-The application database stores a **denormalized copy** for fast reads/search and domain joins. It is updated by:
+**Postgres is the source of truth** for:
+- App/domain data (courses, enrollments, joins)
+- Shadow/projection table `users` (id = Keycloak user id)
+- Disable state (`deletedAt`)
+- Irreversible soft-delete marker (`anonymizedAt`)
 
-- `UserProvisioningFilter` (Just-in-Time provisioning for students + sync on requests from JWT/userinfo)
-- The profile update flow (writes Keycloak first, then writes the app DB)
-- Admin provisioning flows (create/provision/disable)
+The backend is the only component allowed to synchronize both systems.
 
-## Keycloak Self-Registration vs App Access
+## Identity & ID Mapping
+- `users.id` in Postgres is **exactly** the Keycloak user id (UUID), taken from `token.sub`.
+- The backend does **not** allow access based on “valid token only”; it checks **app roles** + **deletedAt**.
+
+## Self-registration and Just-in-Time Provisioning
 Self-registration in Keycloak is allowed. New users get `ROLE_STUDENT` automatically (Keycloak configuration).
 
-Flow:
-1. User registers in Keycloak
-2. User logs in
-3. Backend validates JWT and checks the user has an application role (`ROLE_STUDENT`, `ROLE_INSTRUCTOR`, `ROLE_ADMINISTRATOR`)
-4. Backend checks `users.id == token.sub` in Postgres
-5. If missing and the user has `ROLE_STUDENT`: backend **auto-creates** the shadow DB row (Just-in-Time provisioning)
-6. If missing and the user is not a student (e.g. admin/instructor): backend returns **403** with `{"error":"User not provisioned. Contact an administrator."}`
+On the first API request after login:
+1. Backend validates the JWT (`issuer-uri`).
+2. Backend reads Keycloak user id from `token.sub`.
+3. Backend reads app roles from the JWT (`ROLE_STUDENT`, `ROLE_INSTRUCTOR`, `ROLE_ADMINISTRATOR`).
+4. Backend checks if `users.id = sub` exists in Postgres.
+5. If missing **and** user has `ROLE_STUDENT`, the backend creates the shadow DB row (Just-in-Time provisioning).
+6. If missing and user is not `ROLE_STUDENT`, backend returns **403**:
+   - `{"error":"User not provisioned. Contact an administrator."}`
+7. If `users.deletedAt` is set, access is denied.
 
-If `users.deletedAt` is set, access is always denied.
+## Profile Field Mapping (Keycloak → DB projection)
+- `firstName` → `users.first_name`
+- `lastName` → `users.last_name`
+- `attributes.title[0]` → `users.title`
+- `attributes.picture[0]` → `users.picture` (URL only)
+- `users.name` is derived as `firstName + " " + lastName` (fallbacks to username/email if missing)
 
-## Keycloak Field Mapping
-- `firstName` → `User.firstName`
-- `lastName` → `User.lastName`
-- `title` → Keycloak user `attributes.title[0]` → `User.title`
-- `picture` → Keycloak user `attributes.picture[0]` → `User.picture`
+## Profile Update Flow (Consistency)
+Users update profile data via the app (not the Keycloak account UI).
 
-`User.name` is derived as `"firstName lastName"` when updating via the app.
+Flow (write Keycloak first, then DB):
+1. Read current Keycloak user representation (snapshot)
+2. Update Keycloak via Admin API
+3. Update the `users` row in Postgres
+4. If (3) fails, attempt to rollback Keycloak back to the snapshot
 
-## Backend API Endpoints
+HTTP behavior:
+- Keycloak Admin API failures → `502 Bad Gateway` (`Keycloak update failed: ...`)
+- Local DB sync failures → `500 Internal Server Error` (after rollback attempt)
+
+## User Lifecycle Admin Actions
+The app supports two separate admin actions:
+
+### 1) Disable (reversible)
+- Keycloak: `enabled = false`
+- DB: `deletedAt = now()`
+- Can be reversed with **Restore**
+  - Keycloak: `enabled = true`
+  - DB: `deletedAt = NULL`
+
+### 2) Soft-delete (irreversible, frees identifiers)
+- Keycloak:
+  - email and username are anonymized (timestamped)
+  - `enabled = false`
+- DB:
+  - same anonymized email/username
+  - `deletedAt = now()`
+  - `anonymizedAt = now()`
+- No restore and no provisioning/editing allowed afterwards.
+
+This is used when the original email/username should be reusable for a new registration (Keycloak typically blocks duplicates while the original user still exists).
+
+## Backend Endpoints (current)
+User:
 - `GET /api/v1/users/me/profile`
 - `PUT /api/v1/users/me/profile`
-- `PUT /api/v1/users/{userId}/profile` (admin-only via app authorization logic)
+- `PUT /api/v1/users/{userId}/profile` (admin only)
 
-Admin endpoints:
-- `POST /api/admin/users` (create in Keycloak + provision DB row; returns temporary password)
-- `POST /api/admin/users/{userId}/provision` (approve/provision existing Keycloak user)
-- `POST /api/admin/users/{userId}/disable` (disable in Keycloak + soft-delete in DB)
+Admin users:
+- `GET /api/admin/users/directory` (list/search Keycloak users with provisioned status)
+- `GET /api/admin/users/{userId}` (combined Keycloak + DB view)
+- `PUT /api/admin/users/{userId}/roles` (normalize to 1 managed realm role)
+- `POST /api/admin/users` (create user in Keycloak + create DB row; returns temporary password once)
+- `POST /api/admin/users/{userId}/provision` (provision an existing Keycloak user into the app DB; blocked for soft-deleted users)
+- `POST /api/admin/users/{userId}/disable` (reversible disable)
+- `POST /api/admin/users/{userId}/restore` (re-enable + restore DB)
+- `POST /api/admin/users/{userId}/soft-delete` (irreversible anonymize + disable)
+- `POST /api/admin/users/{userId}/password-reset-email` (triggers Keycloak email action `UPDATE_PASSWORD`)
+- `PUT /api/admin/users/{userId}/password` (manual reset via Admin API, supports `temporary=true`)
+
+Admin sessions:
+- `GET /api/admin/sessions` (active sessions for the configured app client)
+- `DELETE /api/admin/sessions/{sessionId}` (logout a specific session)
 
 ## Authorization Rules
 - A user may only update their **own** profile.
-- A user with `ROLE_ADMINISTRATOR` may update other users’ profiles.
-
-## Consistency & Error Handling
-The update flow is designed to avoid partial writes:
-
-1. Read current Keycloak user representation (used as rollback snapshot)
-2. Update Keycloak via Admin API
-3. Update application DB user row
-4. If step (3) fails, **attempt to rollback** Keycloak to the snapshot
-
-HTTP behavior:
-- Keycloak Admin API failures return `502 Bad Gateway`
-- Local DB sync failures return `500 Internal Server Error` (after rollback attempt)
+- Only `ROLE_ADMINISTRATOR` can manage other users (admin endpoints).
+- `ROLE_ADMINISTRATOR` / `ROLE_INSTRUCTOR` are never auto-granted to self-registered users.
 
 ## Profile Pictures
-The backend only stores a **URL/reference** (`pictureUrl`). The actual file should live in object/file storage (e.g. S3/MinIO, Azure Blob, etc.).
+The backend stores only a **URL/reference** (`pictureUrl`). The actual image should live in object storage (S3/MinIO/Azure Blob/etc.).
 
 ## Configuration
-Backend properties (`backend/src/main/resources/application.properties`):
+Backend config: `backend/src/main/resources/application.properties`
 
-- `keycloak.admin.base-url` (e.g. `http://localhost:9090`)
-- `keycloak.admin.realm`
-- `keycloak.admin.client-id`
-- `keycloak.admin.client-secret`
+- JWT validation:
+  - `spring.security.oauth2.resourceserver.jwt.issuer-uri`
+- Keycloak Admin API (service account):
+  - `keycloak.admin.base-url`
+  - `keycloak.admin.realm`
+  - `keycloak.admin.client-id`
+  - `keycloak.admin.client-secret` (use `KEYCLOAK_ADMIN_CLIENT_SECRET` or `application-local.properties`)
+- Keycloak app client (sessions listing):
+  - `keycloak.app.client-id` (defaults to `interactive-security-training-platform-app`)
+
+Local secrets:
+- Copy `backend/src/main/resources/application-local.properties.example` to `backend/src/main/resources/application-local.properties`
+- Fill `keycloak.admin.client-secret=...`
 
 Keycloak requirements:
 - Create a confidential client for backend service-to-service calls
 - Enable **Service Accounts**
-- Grant the service account sufficient permissions to read/update users (e.g. realm-management roles such as `manage-users` / `view-users` depending on your setup)
+- Grant the service account sufficient permissions (realm-management), typically:
+  - `view-users`, `query-users`, `manage-users` (plus what your setup requires for role mapping and sessions)
+
