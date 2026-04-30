@@ -8,4 +8,3 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class KeycloakAppProperties {
   private String clientId;
 }
-

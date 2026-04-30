@@ -29,12 +29,10 @@ public class AuthPasswordController {
     }
 
     try {
-      List<KeycloakUserRepresentation> candidates = keycloakAdminClient.listUsers(identifier, 0, 20);
+      List<KeycloakUserRepresentation> candidates =
+          keycloakAdminClient.listUsers(identifier, 0, 20);
       KeycloakUserRepresentation match =
-          candidates.stream()
-              .filter(u -> isMatch(u, identifier))
-              .findFirst()
-              .orElse(null);
+          candidates.stream().filter(u -> isMatch(u, identifier)).findFirst().orElse(null);
       if (match != null && match.getId() != null) {
         keycloakAdminClient.executeActionsEmail(
             java.util.UUID.fromString(match.getId()), List.of("UPDATE_PASSWORD"));
@@ -71,4 +69,3 @@ public class AuthPasswordController {
     return normalized == null ? null : normalized.toLowerCase(Locale.ROOT);
   }
 }
-

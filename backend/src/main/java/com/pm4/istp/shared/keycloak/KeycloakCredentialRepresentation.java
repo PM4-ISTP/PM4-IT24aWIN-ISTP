@@ -8,4 +8,3 @@ public class KeycloakCredentialRepresentation {
   private String value;
   private Boolean temporary;
 }
-

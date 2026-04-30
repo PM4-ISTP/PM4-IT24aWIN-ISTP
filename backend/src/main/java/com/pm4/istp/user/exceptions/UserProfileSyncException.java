@@ -9,4 +9,3 @@ public class UserProfileSyncException extends RuntimeException {
     super(message, cause);
   }
 }
-

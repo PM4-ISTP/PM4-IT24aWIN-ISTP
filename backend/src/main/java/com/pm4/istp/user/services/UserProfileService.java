@@ -15,4 +15,3 @@ public interface UserProfileService {
       UUID targetUserId,
       UpdateUserProfileRequestDto request);
 }
-

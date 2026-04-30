@@ -10,4 +10,3 @@ public class KeycloakClientRepresentation {
   private String clientId;
   private String name;
 }
-

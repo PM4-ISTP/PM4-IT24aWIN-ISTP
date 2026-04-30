@@ -78,7 +78,8 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
-  public void softDeleteAndAnonymizeUser(UUID userId, String anonymizedEmail, String anonymizedUsername) {
+  public void softDeleteAndAnonymizeUser(
+      UUID userId, String anonymizedEmail, String anonymizedUsername) {
     if (userId == null) {
       throw new IllegalArgumentException("userId is required");
     }

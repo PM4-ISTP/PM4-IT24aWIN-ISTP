@@ -24,4 +24,3 @@ public class UserPasswordController {
     return ResponseEntity.noContent().build();
   }
 }
-

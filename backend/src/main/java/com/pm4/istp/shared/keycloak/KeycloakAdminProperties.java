@@ -11,4 +11,3 @@ public class KeycloakAdminProperties {
   private String clientId;
   private String clientSecret;
 }
-

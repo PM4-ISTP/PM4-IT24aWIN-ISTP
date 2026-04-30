@@ -13,4 +13,3 @@ public class AdminActiveSessionDto {
   private Long start;
   private Long lastAccess;
 }
-

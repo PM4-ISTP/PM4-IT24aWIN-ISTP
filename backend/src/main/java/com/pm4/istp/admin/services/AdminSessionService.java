@@ -8,4 +8,3 @@ public interface AdminSessionService {
 
   void logoutSession(String sessionId);
 }
-

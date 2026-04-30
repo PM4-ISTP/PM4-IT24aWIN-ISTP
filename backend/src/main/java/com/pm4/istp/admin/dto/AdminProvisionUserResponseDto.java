@@ -10,4 +10,3 @@ public class AdminProvisionUserResponseDto {
   private UUID userId;
   private boolean created;
 }
-

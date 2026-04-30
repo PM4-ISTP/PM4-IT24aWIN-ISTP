@@ -5,4 +5,3 @@ public class UserSoftDeletedException extends RuntimeException {
     super(message);
   }
 }
-

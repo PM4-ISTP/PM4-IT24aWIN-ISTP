@@ -28,4 +28,3 @@ public class AdminSessionController {
     return ResponseEntity.noContent().build();
   }
 }
-

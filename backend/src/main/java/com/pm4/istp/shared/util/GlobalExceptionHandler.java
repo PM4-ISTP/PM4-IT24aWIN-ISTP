@@ -10,8 +10,8 @@ import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
-import com.pm4.istp.shared.keycloak.KeycloakAdminApiException;
 import com.pm4.istp.shared.dto.ErrorDto;
+import com.pm4.istp.shared.keycloak.KeycloakAdminApiException;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.exceptions.UserProfileSyncException;
 import com.pm4.istp.user.exceptions.UserSoftDeletedException;
@@ -87,7 +87,8 @@ public class GlobalExceptionHandler {
     log.error("Caught KeycloakAdminApiException", ex);
     ErrorDto errorDto = new ErrorDto();
     String details = extractKeycloakDetails(ex);
-    errorDto.setError(details == null ? "Keycloak update failed" : "Keycloak update failed: " + details);
+    errorDto.setError(
+        details == null ? "Keycloak update failed" : "Keycloak update failed: " + details);
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_GATEWAY);
   }
 

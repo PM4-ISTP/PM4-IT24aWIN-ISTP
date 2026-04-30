@@ -35,4 +35,3 @@ public class AdminCreateUserRequestDto {
       flags = Pattern.Flag.CASE_INSENSITIVE)
   private String pictureUrl;
 }
-
