@@ -66,6 +66,7 @@ export default function AdminCourseManagement() {
   const {
     query,
     onQueryChange,
+    applyQueryNow,
     page,
     setPage,
     items: courses,
@@ -224,6 +225,12 @@ export default function AdminCourseManagement() {
             leftSection={<IconSearch size={16} />}
             value={query}
             onChange={(e) => onQueryChange(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                applyQueryNow();
+              }
+            }}
             w={420}
           />
         </Group>

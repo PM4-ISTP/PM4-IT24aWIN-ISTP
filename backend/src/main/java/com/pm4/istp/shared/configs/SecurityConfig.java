@@ -43,6 +43,8 @@ public class SecurityConfig {
                     .authenticated()
                     .requestMatchers("/api/v1/courses/catalog/**")
                     .authenticated()
+                    .requestMatchers("/api/v1/courses/topics")
+                    .authenticated()
                     .requestMatchers("/api/v1/challenge-pods/**")
                     .hasAnyRole("STUDENT", "INSTRUCTOR", "ADMINISTRATOR")
                     .requestMatchers("/api/v1/courses/**", "/api/v1/challenges/**")

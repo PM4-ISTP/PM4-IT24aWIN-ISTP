@@ -11,8 +11,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
-    "test": "playwright test --ui",
+    "test": "playwright test",
     "test:e2e": "playwright test",
+    "test:ui": "playwright test --ui",
     "generate:api": "openapi-typescript http://localhost:8080/v3/api-docs -o src/shared/lib/api/schema.d.ts"
   },
   "lint-staged": {

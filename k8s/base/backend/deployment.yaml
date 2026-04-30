@@ -41,6 +41,31 @@ spec:
                 configMapKeyRef:
                   name: istp-config
                   key: keycloak-issuer-uri
+            - name: KEYCLOAK_ADMIN_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-admin-base-url
+            - name: KEYCLOAK_ADMIN_REALM
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-realm
+            - name: KEYCLOAK_ADMIN_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-admin-client-id
+            - name: KEYCLOAK_ADMIN_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin-api-client
+                  key: client-secret
+            - name: KEYCLOAK_APP_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-client-id
             - name: K8S_DEFAULT_NAMESPACE
               valueFrom:
                 configMapKeyRef:
@@ -63,4 +88,3 @@ spec:
             limits:
               cpu: "1"
               memory: 1Gi
-

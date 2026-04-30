@@ -59,10 +59,11 @@ export function useChallengePodStatus(
 
   // Set up polling interval based on the *resolved* status, not stale closure state
   useEffect(() => {
+    const status = data?.status;
     if (!enabled) return;
-    if (!data || data.status === "NOT_FOUND" || data.status === "FAILED") return;
+    if (!status || status === "NOT_FOUND" || status === "FAILED") return;
 
-    const intervalMs = data.status === "RUNNING" ? RUNNING_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
+    const intervalMs = status === "RUNNING" ? RUNNING_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
     const id = setInterval(() => void fetchOnce(), intervalMs);
     return () => clearInterval(id);
   }, [enabled, data, fetchOnce]);
