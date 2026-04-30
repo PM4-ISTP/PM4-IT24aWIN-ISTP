@@ -73,6 +73,7 @@ export default function EditChallenge() {
     dockerImage: "",
     subTasks: [],
   });
+  const [savedDockerImage, setSavedDockerImage] = useState<string | null>(null);
   const [initialStatus, setInitialStatus] = useState<ChallengeStatusEnum>("DRAFT");
   const [courseCount, setCourseCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,15 +103,17 @@ export default function EditChallenge() {
 
       const challenge = result.data;
       const loadedStatus = challenge.status ?? "DRAFT";
+      const loadedDockerImage = challenge.dockerImage ?? "";
       setFormValues({
         title: challenge.title ?? "",
         shortDescription: challenge.shortDescription ?? "",
         description: challenge.description ?? "",
         status: loadedStatus,
         difficulty: challenge.difficulty ?? "MEDIUM",
-        dockerImage: challenge.dockerImage ?? "",
+        dockerImage: loadedDockerImage,
         subTasks: toFormSubTasks(challenge.subTasks),
       });
+      setSavedDockerImage(loadedDockerImage);
       setInitialStatus(loadedStatus);
       setCourseCount(challenge.courseCount ?? 0);
 
@@ -406,7 +409,7 @@ export default function EditChallenge() {
                   Start a pod to preview the challenge before publishing.
                 </Text>
               </Box>
-              <ChallengePodPanel challengeId={challengeId} />
+              <ChallengePodPanel challengeId={challengeId} dockerImage={savedDockerImage} />
             </Group>
           </Paper>
 

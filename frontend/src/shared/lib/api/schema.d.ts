@@ -710,6 +710,7 @@ export interface components {
       status?: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
+      dockerImage?: string;
       /** Format: int32 */
       maxScore?: number;
       dockerImage?: string;

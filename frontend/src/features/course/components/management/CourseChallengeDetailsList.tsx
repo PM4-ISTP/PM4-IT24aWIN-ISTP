@@ -189,7 +189,10 @@ export function CourseChallengeDetailsList({
                     </>
                   )}
 
-                  <ChallengePodPanel challengeId={challenge.id} />
+                  <ChallengePodPanel
+                    challengeId={challenge.id}
+                    dockerImage={challenge.dockerImage}
+                  />
 
                   {playHref && (
                     <Group justify="flex-end">

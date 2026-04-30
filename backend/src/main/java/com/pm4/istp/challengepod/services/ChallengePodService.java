@@ -7,6 +7,7 @@ import com.pm4.istp.challengepod.dto.PodStatusResponse;
 import com.pm4.istp.challengepod.events.KubeconfigChangedEvent;
 import com.pm4.istp.challengepod.exceptions.ChallengePodException;
 import com.pm4.istp.course.db.entities.Challenge;
+import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.course.services.ChallengeService;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -55,6 +56,7 @@ public class ChallengePodService {
 
   private final AdminConfigurationService adminConfigurationService;
   private final ChallengeService challengeService;
+  private final DockerImageAvailabilityService dockerImageAvailabilityService;
   private final String defaultNamespace;
   private final String domain;
   private final boolean tls;
@@ -64,11 +66,13 @@ public class ChallengePodService {
   public ChallengePodService(
       @NonNull AdminConfigurationService adminConfigurationService,
       @NonNull ChallengeService challengeService,
+      @NonNull DockerImageAvailabilityService dockerImageAvailabilityService,
       @Value("${k8s.default.namespace}") String defaultNamespace,
       @Value("${istp.domain}") String domain,
       @Value("${istp.tls}") boolean tls) {
     this.adminConfigurationService = adminConfigurationService;
     this.challengeService = challengeService;
+    this.dockerImageAvailabilityService = dockerImageAvailabilityService;
     this.defaultNamespace = defaultNamespace;
     this.domain = domain;
     this.tls = tls;
@@ -151,6 +155,7 @@ public class ChallengePodService {
     // Visibility / existence check — throws ChallengeNotFoundException or
     // ChallengeAccessDeniedException which flow through GlobalExceptionHandler
     Challenge challenge = challengeService.getChallenge(userId, challengeId);
+    dockerImageAvailabilityService.assertImageExists(challenge.getDockerImage());
 
     AdminConfig adminConfig =
         adminConfigurationService

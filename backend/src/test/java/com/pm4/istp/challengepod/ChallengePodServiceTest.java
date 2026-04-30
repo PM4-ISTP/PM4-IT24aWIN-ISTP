@@ -10,8 +10,10 @@ import com.pm4.istp.admin.services.AdminConfigurationService;
 import com.pm4.istp.challengepod.exceptions.ChallengePodException;
 import com.pm4.istp.challengepod.events.KubeconfigChangedEvent;
 import com.pm4.istp.challengepod.services.ChallengePodService;
+import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.course.services.ChallengeService;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
@@ -34,13 +36,23 @@ class ChallengePodServiceTest {
     @Mock
     private ChallengeService challengeService;
 
+    @Mock
+    private DockerImageAvailabilityService dockerImageAvailabilityService;
+
     private ChallengePodService service;
+
+    private Challenge buildChallenge() {
+        Challenge challenge = new Challenge();
+        challenge.setDockerImage("ghcr.io/pm4-istp/test:latest");
+        return challenge;
+    }
 
     @BeforeEach
     void setUp() {
         service = new ChallengePodService(
                 adminConfigurationService,
                 challengeService,
+                dockerImageAvailabilityService,
                 "default",
                 "test.domain",
                 false);
@@ -78,7 +90,7 @@ class ChallengePodServiceTest {
         UUID challengeId = UUID.randomUUID();
 
         // challenge check passes
-        when(challengeService.getChallenge(userId, challengeId)).thenReturn(null);
+        when(challengeService.getChallenge(userId, challengeId)).thenReturn(buildChallenge());
         // admin config missing
         when(adminConfigurationService.getAdminConfiguration()).thenReturn(Optional.empty());
 
