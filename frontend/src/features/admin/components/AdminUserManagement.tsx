@@ -672,6 +672,30 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
               Normally you manage users through this app. The Keycloak admin console is useful for
               realm/client setup and troubleshooting.
             </Text>
+            <Paper
+              p="sm"
+              radius="md"
+              style={{
+                background: "rgba(239, 68, 68, 0.08)",
+                border: "1px solid rgba(239, 68, 68, 0.25)",
+              }}
+            >
+              <Stack gap={4}>
+                <Group gap="xs">
+                  <Badge color="red" variant="light">
+                    Sensitive
+                  </Badge>
+                  <Text size="sm" style={{ color: "#e2e8f0" }}>
+                    Keycloak changes can break authentication for everyone.
+                  </Text>
+                </Group>
+                <Text size="sm" c="dimmed">
+                  Only project owners should use the Keycloak admin console. Having the app role
+                  `ROLE_ADMINISTRATOR` is not enough — you also need the Keycloak admin group / admin
+                  permissions.
+                </Text>
+              </Stack>
+            </Paper>
             {keycloakAdminUrl ? (
               <Button
                 component="a"
