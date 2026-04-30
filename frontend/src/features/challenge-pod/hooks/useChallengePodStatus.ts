@@ -29,6 +29,7 @@ export function useChallengePodStatus(
   const [data, setData] = useState<PodStatusResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const status = data?.status;
 
   const fetchOnce = useCallback(async () => {
     try {
@@ -60,12 +61,12 @@ export function useChallengePodStatus(
   // Set up polling interval based on the *resolved* status, not stale closure state
   useEffect(() => {
     if (!enabled) return;
-    if (!data || data.status === "NOT_FOUND" || data.status === "FAILED") return;
+    if (!status || status === "NOT_FOUND" || status === "FAILED") return;
 
-    const intervalMs = data.status === "RUNNING" ? RUNNING_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
+    const intervalMs = status === "RUNNING" ? RUNNING_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
     const id = setInterval(() => void fetchOnce(), intervalMs);
     return () => clearInterval(id);
-  }, [enabled, data, fetchOnce]);
+  }, [enabled, status, fetchOnce]);
 
   return { data, error, loading, refetch: fetchOnce };
 }
