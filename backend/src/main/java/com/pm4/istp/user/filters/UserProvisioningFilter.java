@@ -145,24 +145,34 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               MAX_COLUMN_LENGTH,
               "displayName",
               keycloakId);
+      String existingPicture = existingUser.map(User::getPicture).map(this::normalize).orElse(null);
+      String existingTitle = existingUser.map(User::getTitle).map(this::normalize).orElse(null);
+
+      // Profile fields like picture/title are managed by the ISTP app (admin/user profile pages).
+      // Once a user is provisioned, do not overwrite these fields from token claims/userinfo, so
+      // admin changes (including clearing values) persist.
       String picture =
-          firstNonBlank(
-              pictureClaim,
-              discardIfTooLong(
-                  userInfoProfile.map(UserInfoProfile::picture).orElse(null),
-                  MAX_PICTURE_LENGTH,
-                  "picture",
-                  keycloakId),
-              existingUser.map(User::getPicture).map(this::normalize).orElse(null));
+          existingUser.isPresent()
+              ? existingPicture
+              : firstNonBlank(
+                  pictureClaim,
+                  discardIfTooLong(
+                      userInfoProfile.map(UserInfoProfile::picture).orElse(null),
+                      MAX_PICTURE_LENGTH,
+                      "picture",
+                      keycloakId),
+                  existingPicture);
       String title =
-          firstNonBlank(
-              titleClaim,
-              discardIfTooLong(
-                  userInfoProfile.map(UserInfoProfile::title).orElse(null),
-                  MAX_COLUMN_LENGTH,
-                  "title",
-                  keycloakId),
-              existingUser.map(User::getTitle).map(this::normalize).orElse(null));
+          existingUser.isPresent()
+              ? existingTitle
+              : firstNonBlank(
+                  titleClaim,
+                  discardIfTooLong(
+                      userInfoProfile.map(UserInfoProfile::title).orElse(null),
+                      MAX_COLUMN_LENGTH,
+                      "title",
+                      keycloakId),
+                  existingTitle);
 
       Set<UserRoleEnum> roles =
           authentication.getAuthorities().stream()

@@ -204,4 +204,69 @@ class UserProvisioningFilterTest {
     assertThat(existing.getName()).isEqualTo("New Name");
     verify(filterChain).doFilter(any(), any());
   }
+
+  @Test
+  void doFilterInternal_userProvisioned_pictureFromToken_doesNotOverwriteDbValue() throws Exception {
+    User existing = new User();
+    existing.setId(USER_ID);
+    existing.setEmail("test@example.com");
+    existing.setUsername("testuser");
+    existing.setFirstName("Test");
+    existing.setLastName("User");
+    existing.setName("Test User");
+    existing.setPicture("https://db.example.com/p.png");
+    existing.setRoles(Set.of(UserRoleEnum.ROLE_STUDENT));
+
+    when(jwt.getClaimAsString("preferred_username")).thenReturn("testuser");
+    when(jwt.getClaimAsString("email")).thenReturn("test@example.com");
+    when(jwt.getClaimAsString("given_name")).thenReturn("Test");
+    when(jwt.getClaimAsString("family_name")).thenReturn("User");
+    when(jwt.getClaimAsString("picture")).thenReturn("https://token.example.com/p.png");
+    when(authentication.getAuthorities())
+        .thenReturn(
+            (java.util.Collection) List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
+    when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existing));
+
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/courses/catalog");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+
+    filter.doFilterInternal(request, response, filterChain);
+
+    verify(filterChain).doFilter(any(), any());
+    verify(userRepository, never()).save(any(User.class));
+    assertThat(existing.getPicture()).isEqualTo("https://db.example.com/p.png");
+  }
+
+  @Test
+  void doFilterInternal_userProvisioned_pictureClearedInDb_isNotReEnrichedFromToken()
+      throws Exception {
+    User existing = new User();
+    existing.setId(USER_ID);
+    existing.setEmail("test@example.com");
+    existing.setUsername("testuser");
+    existing.setFirstName("Test");
+    existing.setLastName("User");
+    existing.setName("Test User");
+    existing.setPicture(null);
+    existing.setRoles(Set.of(UserRoleEnum.ROLE_STUDENT));
+
+    when(jwt.getClaimAsString("preferred_username")).thenReturn("testuser");
+    when(jwt.getClaimAsString("email")).thenReturn("test@example.com");
+    when(jwt.getClaimAsString("given_name")).thenReturn("Test");
+    when(jwt.getClaimAsString("family_name")).thenReturn("User");
+    when(jwt.getClaimAsString("picture")).thenReturn("https://token.example.com/p.png");
+    when(authentication.getAuthorities())
+        .thenReturn(
+            (java.util.Collection) List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
+    when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existing));
+
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/courses/catalog");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+
+    filter.doFilterInternal(request, response, filterChain);
+
+    verify(filterChain).doFilter(any(), any());
+    verify(userRepository, never()).save(any(User.class));
+    assertThat(existing.getPicture()).isNull();
+  }
 }
