@@ -168,9 +168,9 @@ export const authOptions: AuthOptions = {
       return refreshAccessToken(token);
     },
     async session({ session, token }) {
-      // Access token is intentionally NOT exposed to the client.
-      // Use getServerSession() + fetchBackend() for backend calls.
-      // Roles used for server-side authorization checks.
+      // Access token is exposed on the session for use by the client-side
+      // openapi-fetch wrapper (useApiClient) when calling the /api/backend
+      // proxy. Roles are used for server-side authorization checks.
       session.accessToken = token.accessToken;
       session.roles = token.roles as string[];
       session.error = token.error;
