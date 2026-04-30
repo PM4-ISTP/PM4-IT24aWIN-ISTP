@@ -5,25 +5,26 @@ import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { DOCKER_IMAGE_PATTERN } from "@/src/features/course/constants/challengeConstants";
 
 export type DockerImageCheckStatus = "idle" | "checking" | "success" | "error";
+type DockerImageCheckResult = {
+  image: string;
+  status: "success" | "error";
+  message: string;
+};
 
 export function useDockerImageCheck(image: string): {
   status: DockerImageCheckStatus;
   message: string | null;
 } {
-  const [status, setStatus] = useState<DockerImageCheckStatus>("idle");
-  const [message, setMessage] = useState<string | null>(null);
+  const trimmed = image.trim();
+  const isCheckable = DOCKER_IMAGE_PATTERN.test(trimmed);
+  const [result, setResult] = useState<DockerImageCheckResult | null>(null);
 
   useEffect(() => {
-    const trimmed = image.trim();
-    if (!trimmed || !DOCKER_IMAGE_PATTERN.test(trimmed)) {
-      setStatus("idle");
-      setMessage(null);
+    if (!isCheckable) {
       return;
     }
 
     const controller = new AbortController();
-    setStatus("checking");
-    setMessage("Checking image...");
     const timeout = window.setTimeout(() => {
       void fetch(
         `/api/backend/api/v1/challenges/docker-image?image=${encodeURIComponent(trimmed)}`,
@@ -38,13 +39,19 @@ export function useDockerImageCheck(image: string): {
             throw new Error(error ?? "Docker image is not reachable");
           }
           const json = (await res.json().catch(() => null)) as { message?: unknown } | null;
-          setStatus("success");
-          setMessage(typeof json?.message === "string" ? json.message : "Image found");
+          setResult({
+            image: trimmed,
+            status: "success",
+            message: typeof json?.message === "string" ? json.message : "Image found",
+          });
         })
         .catch((error: unknown) => {
           if (controller.signal.aborted) return;
-          setStatus("error");
-          setMessage(error instanceof Error ? error.message : "Docker image is not reachable");
+          setResult({
+            image: trimmed,
+            status: "error",
+            message: error instanceof Error ? error.message : "Docker image is not reachable",
+          });
         });
     }, 600);
 
@@ -52,7 +59,13 @@ export function useDockerImageCheck(image: string): {
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [image]);
+  }, [isCheckable, trimmed]);
 
-  return { status, message };
+  if (!trimmed || !isCheckable) {
+    return { status: "idle", message: null };
+  }
+  if (result?.image === trimmed) {
+    return { status: result.status, message: result.message };
+  }
+  return { status: "checking", message: "Checking image..." };
 }

@@ -65,7 +65,7 @@ export function useChallengePodStatus(
     const intervalMs = data.status === "RUNNING" ? RUNNING_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
     const id = setInterval(() => void fetchOnce(), intervalMs);
     return () => clearInterval(id);
-  }, [enabled, data?.status, fetchOnce]);
+  }, [enabled, data, fetchOnce]);
 
   return { data, error, loading, refetch: fetchOnce };
 }
