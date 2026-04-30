@@ -99,9 +99,10 @@ export default function AdminConfigForm({ initialConfig }: Props) {
         : undefined;
 
     try {
+      const rawPodTtlSeconds = values.podTtlSeconds;
       const podTtlSeconds =
-        values.podTtlSeconds != null && values.podTtlSeconds !== ""
-          ? Number(values.podTtlSeconds)
+        rawPodTtlSeconds != null && String(rawPodTtlSeconds).trim() !== ""
+          ? Number(rawPodTtlSeconds)
           : undefined;
 
       if (!config.kubeconfigUploaded) {

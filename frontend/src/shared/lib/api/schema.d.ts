@@ -252,6 +252,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/challenge-pods/{challengeId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getPod"];
+    put?: never;
+    post: operations["startPod"];
+    delete: operations["stopPod"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/submit": {
     parameters: {
       query?: never;
@@ -920,6 +936,18 @@ export interface components {
       appUrl?: string;
       terminalUrl?: string;
       terminalPassword?: string;
+    };
+    PodStatusResponse: {
+      /** @enum {string} */
+      status?: "NOT_FOUND" | "PROVISIONING" | "RUNNING" | "FAILED" | "TERMINATING";
+      podName?: string;
+      appUrl?: string;
+      terminalUrl?: string;
+      terminalPassword?: string;
+      /** Format: date-time */
+      createdAt?: string;
+      /** Format: date-time */
+      expiresAt?: string;
     };
     AdminTopicRequest: {
       value: string;
@@ -1959,6 +1987,70 @@ export interface operations {
         content: {
           "*/*": components["schemas"]["ErrorDto"];
         };
+      };
+    };
+  };
+  getPod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        challengeId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["PodStatusResponse"];
+        };
+      };
+    };
+  };
+  startPod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        challengeId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["PodStatusResponse"];
+        };
+      };
+    };
+  };
+  stopPod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        challengeId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
