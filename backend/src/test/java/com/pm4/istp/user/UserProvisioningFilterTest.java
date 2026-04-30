@@ -58,14 +58,10 @@ class UserProvisioningFilterTest {
     lenient().when(jwt.getTokenValue()).thenReturn(null);
 
     // Avoid NPEs in conflict detection.
-    lenient().when(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(anyString()))
-        .thenReturn(List.of());
-    lenient().when(userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull(anyString()))
-        .thenReturn(List.of());
-    lenient().when(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNotNull(anyString()))
-        .thenReturn(List.of());
-    lenient().when(userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNotNull(anyString()))
-        .thenReturn(List.of());
+    lenient().when(userRepository.findByEmailIgnoreCaseAndIdNot(anyString(), any(UUID.class)))
+        .thenReturn(Optional.empty());
+    lenient().when(userRepository.findByUsernameIgnoreCaseAndIdNot(anyString(), any(UUID.class)))
+        .thenReturn(Optional.empty());
   }
 
   @AfterEach
@@ -114,6 +110,35 @@ class UserProvisioningFilterTest {
     verify(userRepository).save(any(User.class));
     verify(filterChain).doFilter(any(), any());
     assertThat(response.getStatus()).isEqualTo(200);
+  }
+
+  @Test
+  void doFilterInternal_studentWithoutDbRow_withIdentifierConflict_returns409AndDoesNotInsert()
+      throws Exception {
+    when(jwt.getClaimAsString("preferred_username")).thenReturn("testuser");
+    when(jwt.getClaimAsString("email")).thenReturn("test@example.com");
+    when(authentication.getAuthorities())
+        .thenReturn(
+            (java.util.Collection)
+                List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
+    when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+
+    User conflicting = new User();
+    conflicting.setId(UUID.randomUUID());
+    when(userRepository.findByEmailIgnoreCaseAndIdNot("test@example.com", USER_ID))
+        .thenReturn(Optional.of(conflicting));
+
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/courses/catalog");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+
+    filter.doFilterInternal(request, response, filterChain);
+
+    assertThat(response.getStatus()).isEqualTo(409);
+    assertThat(response.getContentType()).startsWith("application/json");
+    assertThat(response.getContentAsString()).contains("Account conflict detected");
+
+    verify(userRepository, never()).save(any(User.class));
+    verify(filterChain, never()).doFilter(any(), any());
   }
 
   @Test
