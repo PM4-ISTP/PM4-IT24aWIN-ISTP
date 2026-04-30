@@ -65,6 +65,7 @@ export default function AdminChallengeManagement() {
   const {
     query,
     onQueryChange,
+    applyQueryNow,
     page,
     setPage,
     items: challenges,
@@ -209,6 +210,12 @@ export default function AdminChallengeManagement() {
             leftSection={<IconSearch size={16} />}
             value={query}
             onChange={(e) => onQueryChange(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                applyQueryNow();
+              }
+            }}
             w={420}
           />
         </Group>
