@@ -145,6 +145,9 @@ public class AdminUserServiceImpl implements AdminUserService {
     if (request == null || request.getRoles() == null || request.getRoles().isEmpty()) {
       throw new IllegalArgumentException("roles is required");
     }
+    if (request.getRoles().size() != 1) {
+      throw new IllegalArgumentException("Exactly one role must be provided");
+    }
 
     Set<String> desired =
         request.getRoles().stream()
@@ -152,6 +155,9 @@ public class AdminUserServiceImpl implements AdminUserService {
             .filter(java.util.Objects::nonNull)
             .collect(Collectors.toSet());
 
+    if (desired.size() != 1) {
+      throw new IllegalArgumentException("Exactly one role must be provided");
+    }
     if (desired.isEmpty() || !MANAGED_APP_ROLES.containsAll(desired)) {
       throw new IllegalArgumentException("Invalid app roles");
     }

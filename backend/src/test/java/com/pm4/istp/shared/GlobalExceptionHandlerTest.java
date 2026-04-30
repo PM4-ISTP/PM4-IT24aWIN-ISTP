@@ -54,10 +54,10 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
-  void handleUserNotFoundException_returnsBadRequest() {
+  void handleUserNotFoundException_returnsNotFound() {
     ResponseEntity<ErrorDto> response = handler.handleUserNotFoundException(new UserNotFoundException("unknown user"));
 
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getError()).isEqualTo("User not found");
   }

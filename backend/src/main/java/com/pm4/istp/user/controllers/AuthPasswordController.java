@@ -41,7 +41,8 @@ public class AuthPasswordController {
       return ResponseEntity.noContent().build();
     } catch (RuntimeException ex) {
       log.warn("Failed to request password reset email via Keycloak", ex);
-      return ResponseEntity.status(502).build();
+      // Still return 204 to avoid leaking whether the user exists or backend is configured.
+      return ResponseEntity.noContent().build();
     }
   }
 

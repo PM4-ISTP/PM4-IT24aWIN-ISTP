@@ -90,7 +90,7 @@ public class GlobalExceptionHandler {
     log.error("Caught UserNotFoundException", ex);
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError("User not found");
-    return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
+    return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
   }
 
   @ExceptionHandler(KeycloakAdminApiException.class)
@@ -98,8 +98,10 @@ public class GlobalExceptionHandler {
     log.error("Caught KeycloakAdminApiException", ex);
     ErrorDto errorDto = new ErrorDto();
     String details = extractKeycloakDetails(ex);
-    errorDto.setError(
-        details == null ? "Keycloak update failed" : "Keycloak update failed: " + details);
+    if (details != null) {
+      log.debug("Keycloak Admin API failure details: {}", details);
+    }
+    errorDto.setError("Keycloak update failed");
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_GATEWAY);
   }
 

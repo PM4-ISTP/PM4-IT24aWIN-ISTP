@@ -23,8 +23,8 @@ public class KeycloakServiceAccountTokenProvider {
   private static final long REFRESH_SAFETY_SECONDS = 10;
 
   private final KeycloakAdminProperties properties;
+  private final ObjectMapper objectMapper;
   private final Clock clock = Clock.systemUTC();
-  private final ObjectMapper objectMapper = new ObjectMapper();
 
   private volatile CachedToken cachedToken;
 
@@ -84,6 +84,9 @@ public class KeycloakServiceAccountTokenProvider {
   }
 
   private void logServiceAccountTokenClaims(String accessToken) {
+    if (!log.isDebugEnabled()) {
+      return;
+    }
     try {
       String[] parts = accessToken == null ? new String[0] : accessToken.split("\\.");
       if (parts.length < 2) {
@@ -94,7 +97,7 @@ public class KeycloakServiceAccountTokenProvider {
       Object azp = claims.get("azp");
       Object realmAccess = claims.get("realm_access");
       Object resourceAccess = claims.get("resource_access");
-      log.info(
+      log.debug(
           "Keycloak service account token acquired (azp={}, realm_access={}, resource_access={})",
           azp,
           realmAccess,
