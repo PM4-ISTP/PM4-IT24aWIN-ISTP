@@ -1,4 +1,4 @@
-# Keycloak ↔ Postgres User Sync (Keycloak Admin API)
+# Keycloak <-> Postgres User Sync (Keycloak Admin API)
 
 ## Goal
 Manage users and profile data **through the ISTP app** while keeping **Keycloak** and the **application database (Postgres)** consistent.
@@ -22,7 +22,7 @@ The backend is the only component allowed to synchronize both systems.
 
 ## Identity & ID Mapping
 - `users.id` in Postgres is **exactly** the Keycloak user id (UUID), taken from `token.sub`.
-- The backend does **not** allow access based on “valid token only”; it checks **app roles** + **deletedAt**.
+- The backend does **not** allow access based on "valid token only"; it checks **app roles** + **deletedAt**.
 
 ## Self-registration and Just-in-Time Provisioning
 Self-registration in Keycloak is allowed. New users get `ROLE_STUDENT` automatically (Keycloak configuration).
@@ -37,11 +37,11 @@ On the first API request after login:
    - `{"error":"User not provisioned. Contact an administrator."}`
 7. If `users.deletedAt` is set, access is denied.
 
-## Profile Field Mapping (Keycloak → DB projection)
-- `firstName` → `users.first_name`
-- `lastName` → `users.last_name`
-- `attributes.title[0]` → `users.title`
-- `attributes.picture[0]` → `users.picture` (URL only)
+## Profile Field Mapping (Keycloak -> DB projection)
+- `firstName` -> `users.first_name`
+- `lastName` -> `users.last_name`
+- `attributes.title[0]` -> `users.title`
+- `attributes.picture[0]` -> `users.picture` (URL only)
 - `users.name` is derived as `firstName + " " + lastName` (fallbacks to username/email if missing)
 
 ## Profile Update Flow (Consistency)
@@ -54,8 +54,8 @@ Flow (write Keycloak first, then DB):
 4. If (3) fails, attempt to rollback Keycloak back to the snapshot
 
 HTTP behavior:
-- Keycloak Admin API failures → `502 Bad Gateway` (`Keycloak update failed: ...`)
-- Local DB sync failures → `500 Internal Server Error` (after rollback attempt)
+- Keycloak Admin API failures -> `502 Bad Gateway` (`Keycloak update failed: ...`)
+- Local DB sync failures -> `500 Internal Server Error` (after rollback attempt)
 
 ## User Lifecycle Admin Actions
 The app supports two separate admin actions:
@@ -118,13 +118,9 @@ Backend config: `backend/src/main/resources/application.properties`
   - `keycloak.admin.base-url`
   - `keycloak.admin.realm`
   - `keycloak.admin.client-id`
-  - `keycloak.admin.client-secret` (use `KEYCLOAK_ADMIN_CLIENT_SECRET` or `application-local.properties`)
+  - `keycloak.admin.client-secret` (use `KEYCLOAK_ADMIN_CLIENT_SECRET`)
 - Keycloak app client (sessions listing):
-  - `keycloak.app.client-id` (defaults to `interactive-security-training-platform-app`)
-
-Local secrets:
-- Copy `backend/src/main/resources/application-local.properties.example` to `backend/src/main/resources/application-local.properties`
-- Fill `keycloak.admin.client-secret=...`
+  - `keycloak.app.client-id`
 
 Keycloak requirements:
 - Create a confidential client for backend service-to-service calls
