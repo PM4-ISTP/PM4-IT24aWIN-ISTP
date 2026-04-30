@@ -47,6 +47,7 @@ import com.pm4.istp.course.repositories.CourseChallengeRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.course.repositories.SubTaskRepository;
+import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.course.services.impl.ChallengeServiceImpl;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
@@ -56,7 +57,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 @ExtendWith(MockitoExtension.class)
 class ChallengeServiceImplTest {
 
-  private static final String DEFAULT_DOCKER_IMAGE = "registry/default:latest";
+  private static final String DEFAULT_DOCKER_IMAGE = "ghcr.io/pm4-istp/default:latest";
 
   @Mock private UserRepository userRepository;
   @Mock private ChallengeRepository challengeRepository;
@@ -65,6 +66,7 @@ class ChallengeServiceImplTest {
   @Mock private SubTaskCompletionRepository subTaskCompletionRepository;
   @Mock private CourseEnrollmentRepository courseEnrollmentRepository;
   @Mock private ChallengeMapper challengeMapper;
+  @Mock private DockerImageAvailabilityService dockerImageAvailabilityService;
 
   @InjectMocks private ChallengeServiceImpl challengeService;
 
@@ -146,7 +148,7 @@ class ChallengeServiceImplTest {
             "Long description",
             ChallengeStatusEnum.DRAFT,
             ChallengeDifficultyEnum.HARD,
-            "registry/buffer-overflow:latest",
+            "ghcr.io/pm4-istp/buffer-overflow:latest",
             new ArrayList<>(
                 List.of(
                     new SubTaskRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0),
@@ -159,7 +161,7 @@ class ChallengeServiceImplTest {
     assertThat(created.getDescription()).isEqualTo("Long description");
     assertThat(created.getStatus()).isEqualTo(ChallengeStatusEnum.DRAFT);
     assertThat(created.getDifficulty()).isEqualTo(ChallengeDifficultyEnum.HARD);
-    assertThat(created.getDockerImage()).isEqualTo("registry/buffer-overflow:latest");
+    assertThat(created.getDockerImage()).isEqualTo("ghcr.io/pm4-istp/buffer-overflow:latest");
     assertThat(created.getCreator()).isSameAs(creator);
     assertThat(created.getSubTasks()).hasSize(2);
     assertThat(created.getSubTasks().get(0).getTitle()).isEqualTo("Recon");
@@ -169,6 +171,7 @@ class ChallengeServiceImplTest {
     assertThat(created.getSubTasks().get(1).getFlag()).isNull();
     assertThat(created.getSubTasks().get(1).getOrderIndex()).isEqualTo(1);
     assertThat(created.getMaxScore()).isEqualTo(2);
+    verify(dockerImageAvailabilityService).assertImageExists("ghcr.io/pm4-istp/buffer-overflow:latest");
     verify(challengeRepository).save(any(Challenge.class));
   }
 
@@ -203,7 +206,12 @@ class ChallengeServiceImplTest {
 
     CreateChallengeRequest request =
         createRequest(
-            "Title", "Short", "Desc", ChallengeStatusEnum.DRAFT, ChallengeDifficultyEnum.EASY, "image:tag");
+            "Title",
+            "Short",
+            "Desc",
+            ChallengeStatusEnum.DRAFT,
+            ChallengeDifficultyEnum.EASY,
+            DEFAULT_DOCKER_IMAGE);
 
     assertThatThrownBy(() -> challengeService.createChallenge(creatorId, request))
         .isInstanceOf(UserNotFoundException.class);
@@ -339,7 +347,7 @@ class ChallengeServiceImplTest {
             "Updated desc",
             ChallengeStatusEnum.PUBLIC,
             ChallengeDifficultyEnum.EASY,
-            "registry/updated:1.0");
+            "ghcr.io/pm4-istp/updated:1.0");
 
     Challenge updated = challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -348,7 +356,8 @@ class ChallengeServiceImplTest {
     assertThat(updated.getDescription()).isEqualTo("Updated desc");
     assertThat(updated.getStatus()).isEqualTo(ChallengeStatusEnum.PUBLIC);
     assertThat(updated.getDifficulty()).isEqualTo(ChallengeDifficultyEnum.EASY);
-    assertThat(updated.getDockerImage()).isEqualTo("registry/updated:1.0");
+    assertThat(updated.getDockerImage()).isEqualTo("ghcr.io/pm4-istp/updated:1.0");
+    verify(dockerImageAvailabilityService).assertImageExists("ghcr.io/pm4-istp/updated:1.0");
     verify(courseChallengeRepository, never()).deleteByChallengeId(any());
     verify(courseChallengeRepository, never())
         .deleteByChallengeIdWhereCreatorNotInstructor(any(), any());
@@ -417,7 +426,7 @@ class ChallengeServiceImplTest {
             "Desc",
             ChallengeStatusEnum.DRAFT,
             ChallengeDifficultyEnum.MEDIUM,
-            "image:tag");
+            DEFAULT_DOCKER_IMAGE);
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -444,7 +453,7 @@ class ChallengeServiceImplTest {
             "Desc",
             ChallengeStatusEnum.PRIVATE,
             ChallengeDifficultyEnum.MEDIUM,
-            "image:tag");
+            DEFAULT_DOCKER_IMAGE);
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -471,7 +480,7 @@ class ChallengeServiceImplTest {
             "Desc",
             ChallengeStatusEnum.PUBLIC,
             ChallengeDifficultyEnum.MEDIUM,
-            "image:tag");
+            DEFAULT_DOCKER_IMAGE);
 
     challengeService.updateChallenge(creatorId, challengeId, request);
 
@@ -497,7 +506,7 @@ class ChallengeServiceImplTest {
             "Desc",
             ChallengeStatusEnum.PRIVATE,
             ChallengeDifficultyEnum.MEDIUM,
-            "image:tag");
+            DEFAULT_DOCKER_IMAGE);
 
     assertThatThrownBy(() -> challengeService.updateChallenge(otherId, challengeId, request))
         .isInstanceOf(ChallengeAccessDeniedException.class);
@@ -520,7 +529,7 @@ class ChallengeServiceImplTest {
             "Desc",
             ChallengeStatusEnum.PUBLIC,
             ChallengeDifficultyEnum.MEDIUM,
-            "image:tag");
+            DEFAULT_DOCKER_IMAGE);
 
     assertThatThrownBy(() -> challengeService.updateChallenge(creatorId, challengeId, request))
         .isInstanceOf(ChallengeNotFoundException.class);

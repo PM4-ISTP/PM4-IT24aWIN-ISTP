@@ -22,6 +22,7 @@ import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.course.repositories.SubTaskRepository;
 import com.pm4.istp.course.services.ChallengeService;
+import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.repositories.UserRepository;
@@ -55,6 +56,7 @@ public class ChallengeServiceImpl implements ChallengeService {
   private final SubTaskCompletionRepository subTaskCompletionRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final ChallengeMapper challengeMapper;
+  private final DockerImageAvailabilityService dockerImageAvailabilityService;
 
   @Override
   @Transactional
@@ -66,6 +68,8 @@ public class ChallengeServiceImpl implements ChallengeService {
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
     Challenge challenge = new Challenge();
+    dockerImageAvailabilityService.assertImageExists(request.getDockerImage());
+
     challenge.setTitle(request.getTitle());
     challenge.setShortDescription(request.getShortDescription());
     challenge.setDescription(request.getDescription());
@@ -111,6 +115,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     ChallengeStatusEnum oldStatus = challenge.getStatus();
     ChallengeStatusEnum newStatus = request.getStatus();
+    dockerImageAvailabilityService.assertImageExists(request.getDockerImage());
 
     challenge.setTitle(request.getTitle());
     challenge.setShortDescription(request.getShortDescription());

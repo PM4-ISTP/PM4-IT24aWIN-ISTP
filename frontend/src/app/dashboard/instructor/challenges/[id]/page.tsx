@@ -39,8 +39,10 @@ import {
   validateSubTasks,
 } from "@/src/features/course/utils/subTasks";
 import { useToast } from "@/src/shared/hooks/useToast";
+import { useDockerImageCheck } from "@/src/features/course/hooks/useDockerImageCheck";
 import {
   CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
+  DOCKER_IMAGE_ERROR,
   DOCKER_IMAGE_PATTERN,
 } from "@/src/features/course/constants/challengeConstants";
 
@@ -87,6 +89,7 @@ export default function EditChallenge() {
   >([]);
   const [formError, setFormError] = useState<string | null>(null);
   const charLimitToast = useToast();
+  const dockerImageCheck = useDockerImageCheck(formValues.dockerImage);
 
   useEffect(() => {
     async function load() {
@@ -180,9 +183,15 @@ export default function EditChallenge() {
       return;
     }
     if (!DOCKER_IMAGE_PATTERN.test(trimmedDockerImage)) {
-      setDockerImageError(
-        "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)"
-      );
+      setDockerImageError(DOCKER_IMAGE_ERROR);
+      return;
+    }
+    if (dockerImageCheck.status === "checking") {
+      setDockerImageError("Please wait until the Docker image check finishes");
+      return;
+    }
+    if (dockerImageCheck.status === "error") {
+      setDockerImageError(dockerImageCheck.message ?? "Docker image is not reachable");
       return;
     }
 
@@ -379,6 +388,8 @@ export default function EditChallenge() {
             titleError={titleError}
             shortDescriptionError={shortDescriptionError}
             dockerImageError={dockerImageError}
+            dockerImageCheckStatus={dockerImageCheck.status}
+            dockerImageCheckMessage={dockerImageCheck.message}
             subTaskErrors={subTaskErrors}
             onCharLimitExceeded={() => charLimitToast.show()}
             onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
@@ -409,7 +420,12 @@ export default function EditChallenge() {
             variant="filled"
             radius="md"
             loading={isSubmitting}
-            disabled={isSubmitting || isDeleting}
+            disabled={
+              isSubmitting ||
+              isDeleting ||
+              dockerImageCheck.status === "checking" ||
+              dockerImageCheck.status === "error"
+            }
             onClick={() => {
               void handleSubmit();
             }}
