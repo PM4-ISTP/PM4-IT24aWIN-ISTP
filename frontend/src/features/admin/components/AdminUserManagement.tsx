@@ -697,8 +697,8 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
                 </Group>
                 <Text size="sm" c="dimmed">
                   Only project owners should use the Keycloak admin console. Having the app role
-                  `ROLE_ADMINISTRATOR` is not enough — you also need the Keycloak admin group / admin
-                  permissions.
+                  `ROLE_ADMINISTRATOR` is not enough — you also need the Keycloak admin group /
+                  admin permissions.
                 </Text>
               </Stack>
             </Paper>
