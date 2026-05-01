@@ -24,6 +24,8 @@ import {
   IconArrowLeft,
   IconArrowRight,
   IconCheck,
+  IconChevronLeft,
+  IconChevronRight,
   IconCopy,
   IconExternalLink,
   IconLock,
@@ -210,6 +212,7 @@ export function ChallengePlayView({
   );
   const [flagInput, setFlagInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [labCollapsed, setLabCollapsed] = useState(false);
   const [podActionLoading, setPodActionLoading] = useState(false);
   const [podActionError, setPodActionError] = useState<string | null>(null);
   const autoStartAttempted = useRef(false);
@@ -242,6 +245,8 @@ export function ChallengePlayView({
     dockerImageCheck.status === "success" ||
     (dockerImageCheck.status === "idle" && !dockerImage.trim());
   const startDisabled = podActionLoading || dockerImageCheck.status === "checking" || !canStartPod;
+  const showLabPanel = isNarrow || !labCollapsed;
+  const labPanelId = "challenge-play-lab-panel";
   const labIsStarting =
     podStatusLoading ||
     podStatus === "PROVISIONING" ||
@@ -390,6 +395,18 @@ export function ChallengePlayView({
           </Group>
         </Link>
         <Group gap="xs">
+          {!showLabPanel && (
+            <Button
+              size="xs"
+              variant="light"
+              leftSection={<IconChevronLeft size={14} />}
+              onClick={() => setLabCollapsed(false)}
+              aria-controls={labPanelId}
+              aria-expanded={showLabPanel}
+            >
+              Show lab
+            </Button>
+          )}
           <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
             {challenge.status}
           </Badge>
@@ -407,12 +424,17 @@ export function ChallengePlayView({
       <Box
         style={{
           display: "grid",
-          gridTemplateColumns: isNarrow ? "1fr" : "minmax(0, 1.12fr) minmax(340px, 0.88fr)",
-          gap: "1rem",
+          gridTemplateColumns: showLabPanel
+            ? isNarrow
+              ? "1fr"
+              : "minmax(0, 1.12fr) minmax(340px, 0.88fr)"
+            : "minmax(0, 1fr) minmax(0, 0fr)",
+          gap: showLabPanel ? "1rem" : 0,
           padding: "0 1rem 1rem",
           flex: 1,
           minHeight: 0,
           overflow: isNarrow ? "visible" : "hidden",
+          transition: "grid-template-columns 220ms ease, gap 220ms ease",
         }}
       >
         <Paper
@@ -603,125 +625,157 @@ export function ChallengePlayView({
           </Stack>
         </Paper>
 
-        <Paper
-          withBorder
-          radius="md"
-          p={0}
+        <Box
+          id={labPanelId}
+          aria-hidden={!showLabPanel}
           style={{
-            background: "rgba(255,255,255,0.02)",
-            display: "flex",
-            flexDirection: "column",
-            minHeight: isNarrow ? undefined : 0,
+            minWidth: 0,
             overflow: "hidden",
+            pointerEvents: showLabPanel ? "auto" : "none",
           }}
         >
-          <Group
-            justify="space-between"
-            align="center"
-            px="md"
-            py="xs"
-            style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}
+          <Paper
+            withBorder
+            radius="md"
+            p={0}
+            style={{
+              background: "rgba(255,255,255,0.02)",
+              display: "flex",
+              flexDirection: "column",
+              minHeight: isNarrow ? undefined : 0,
+              overflow: "hidden",
+              opacity: showLabPanel ? 1 : 0,
+              transform: showLabPanel ? "translateX(0)" : "translateX(14px)",
+              transition: "opacity 180ms ease, transform 220ms ease",
+            }}
           >
-            <Group gap="xs">
-              <Text size="sm" fw={600}>
-                Lab
-              </Text>
-              <ChallengePodStatusBadge status={podStatus} />
-            </Group>
-            <Group gap="xs" wrap="nowrap">
-              {podStatus === "RUNNING" || podStatus === "PROVISIONING" ? (
-                <Tooltip label="Stop lab">
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    loading={podActionLoading}
-                    onClick={() => void handleStopPod()}
-                    aria-label="Stop lab"
+            <Group
+              justify="space-between"
+              align="center"
+              px="md"
+              py="xs"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}
+            >
+              <Group gap="xs">
+                <Text size="sm" fw={600}>
+                  Lab
+                </Text>
+                <ChallengePodStatusBadge status={podStatus} />
+              </Group>
+              <Group gap="xs" wrap="nowrap">
+                {podStatus === "RUNNING" || podStatus === "PROVISIONING" ? (
+                  <Tooltip label="Stop lab">
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      loading={podActionLoading}
+                      onClick={() => void handleStopPod()}
+                      aria-label="Stop lab"
+                    >
+                      <IconPlayerStop size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                ) : (
+                  <Tooltip
+                    label={
+                      startDisabledReason ?? (podStatus === "FAILED" ? "Retry lab" : "Start lab")
+                    }
                   >
-                    <IconPlayerStop size={16} />
-                  </ActionIcon>
-                </Tooltip>
-              ) : (
-                <Tooltip
-                  label={
-                    startDisabledReason ?? (podStatus === "FAILED" ? "Retry lab" : "Start lab")
-                  }
+                    <ActionIcon
+                      variant="subtle"
+                      color="blue"
+                      loading={podActionLoading}
+                      disabled={startDisabled}
+                      onClick={() => void handleStartPod()}
+                      aria-label={podStatus === "FAILED" ? "Retry lab" : "Start lab"}
+                    >
+                      {podStatus === "FAILED" ? (
+                        <IconRefresh size={16} />
+                      ) : (
+                        <IconPlayerPlay size={16} />
+                      )}
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+                {!isNarrow && (
+                  <Tooltip label="Hide lab panel">
+                    <ActionIcon
+                      variant="subtle"
+                      onClick={() => setLabCollapsed(true)}
+                      aria-label="Hide lab panel"
+                      aria-controls={labPanelId}
+                      aria-expanded={showLabPanel}
+                    >
+                      <IconChevronRight size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+              </Group>
+            </Group>
+
+            <Stack gap="sm" p="md" style={{ flex: 1, overflow: isNarrow ? "visible" : "auto" }}>
+              {startDisabledReason && (
+                <Paper
+                  withBorder
+                  radius="md"
+                  p="md"
+                  style={{ background: "rgba(248,113,113,0.08)" }}
                 >
-                  <ActionIcon
-                    variant="subtle"
-                    color="blue"
-                    loading={podActionLoading}
-                    disabled={startDisabled}
-                    onClick={() => void handleStartPod()}
-                    aria-label={podStatus === "FAILED" ? "Retry lab" : "Start lab"}
-                  >
-                    {podStatus === "FAILED" ? (
-                      <IconRefresh size={16} />
-                    ) : (
-                      <IconPlayerPlay size={16} />
-                    )}
-                  </ActionIcon>
-                </Tooltip>
+                  <Text size="sm" c="red.3">
+                    {startDisabledReason}
+                  </Text>
+                </Paper>
               )}
-            </Group>
-          </Group>
 
-          <Stack gap="sm" p="md" style={{ flex: 1, overflow: isNarrow ? "visible" : "auto" }}>
-            {startDisabledReason && (
-              <Paper withBorder radius="md" p="md" style={{ background: "rgba(248,113,113,0.08)" }}>
-                <Text size="sm" c="red.3">
-                  {startDisabledReason}
-                </Text>
-              </Paper>
-            )}
+              <LabLaunchCard
+                title="Challenge app"
+                description={
+                  podStatus === "RUNNING" && pod?.appUrl
+                    ? "Web service ready."
+                    : labIsStarting
+                      ? "Starting web service."
+                      : "Start the lab to get app access."
+                }
+                icon={<IconWorld size={22} />}
+                url={podStatus === "RUNNING" ? pod?.appUrl : null}
+                buttonLabel="Open app"
+                disabledLabel={labIsStarting ? "Starting..." : "App not ready"}
+              />
 
-            <LabLaunchCard
-              title="Challenge app"
-              description={
-                podStatus === "RUNNING" && pod?.appUrl
-                  ? "Web service ready."
-                  : labIsStarting
-                    ? "Starting web service."
-                    : "Start the lab to get app access."
-              }
-              icon={<IconWorld size={22} />}
-              url={podStatus === "RUNNING" ? pod?.appUrl : null}
-              buttonLabel="Open app"
-              disabledLabel={labIsStarting ? "Starting..." : "App not ready"}
-            />
+              <LabLaunchCard
+                title="Console"
+                description={
+                  podStatus === "RUNNING" && pod?.terminalUrl
+                    ? "Terminal access ready."
+                    : labIsStarting
+                      ? "Starting terminal access."
+                      : "Start the lab to get console access."
+                }
+                icon={<IconTerminal2 size={22} />}
+                url={podStatus === "RUNNING" ? pod?.terminalUrl : null}
+                buttonLabel="Open console"
+                disabledLabel={labIsStarting ? "Starting..." : "Console not ready"}
+              />
 
-            <LabLaunchCard
-              title="Console"
-              description={
-                podStatus === "RUNNING" && pod?.terminalUrl
-                  ? "Terminal access ready."
-                  : labIsStarting
-                    ? "Starting terminal access."
-                    : "Start the lab to get console access."
-              }
-              icon={<IconTerminal2 size={22} />}
-              url={podStatus === "RUNNING" ? pod?.terminalUrl : null}
-              buttonLabel="Open console"
-              disabledLabel={labIsStarting ? "Starting..." : "Console not ready"}
-            />
+              {(podActionError || podStatusError) && (
+                <Paper
+                  withBorder
+                  radius="md"
+                  p="md"
+                  style={{ background: "rgba(248,113,113,0.08)" }}
+                >
+                  <Text size="sm" c="red.3">
+                    {podActionError ?? podStatusError}
+                  </Text>
+                </Paper>
+              )}
 
-            {(podActionError || podStatusError) && (
-              <Paper
-                withBorder
-                radius="md"
-                p="md"
-                style={{ background: "rgba(248,113,113,0.08)" }}
-              >
-                <Text size="sm" c="red.3">
-                  {podActionError ?? podStatusError}
-                </Text>
-              </Paper>
-            )}
-
-            <ConsoleCredentials password={pod?.terminalPassword} expiresAt={terminalExpiry} />
-          </Stack>
-        </Paper>
+              <ConsoleCredentials password={pod?.terminalPassword} expiresAt={terminalExpiry} />
+            </Stack>
+          </Paper>
+        </Box>
       </Box>
+
     </Box>
   );
 }
