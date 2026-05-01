@@ -13,17 +13,37 @@ export default async function InstructorChallenges(props: {
 
   return (
     <Stack p="xl" gap="lg">
-      <Group justify="space-between" align="flex-end">
-        <Stack gap={4}>
-          <Title order={1} size="h2">
+      <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
+        <div>
+          <Title
+            order={1}
+            size="h2"
+            style={{
+              color: "#f1f5f9",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 700,
+            }}
+          >
             Challenges
           </Title>
-          <Text size="sm" c="dimmed">
-            Manage or create your challenges here.
+          <Text size="sm" style={{ color: "#94a3b8" }} mt={4}>
+            Manage or create your reusable challenges here.
           </Text>
-        </Stack>
+        </div>
         <Link href="/dashboard/instructor/challenges/create">
-          <Button leftSection={<IconPlus size={16} />}>New Challenge</Button>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            radius="md"
+            style={{
+              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+              border: "none",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 600,
+              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+            }}
+          >
+            New Challenge
+          </Button>
         </Link>
       </Group>
 
@@ -43,8 +63,8 @@ export default async function InstructorChallenges(props: {
           currentPage={currentPage}
         />
       ) : (
-        <Alert color="red" title="Failed to load challenges">
-          {result.error}
+        <Alert color="red" title="Could not load challenges" variant="light">
+          Something went wrong loading your challenges. Please refresh the page.
         </Alert>
       )}
     </Stack>

@@ -243,9 +243,17 @@ export default function AdminTopicManagement() {
           <Button
             leftSection={<IconPlus size={16} />}
             mt={22}
+            radius="md"
             onClick={() => void addTopic()}
             loading={saving}
             disabled={!trimmedTopic || topicTooShort || topicTooLong || topicInvalidFormat}
+            style={{
+              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+              border: "none",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 600,
+              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+            }}
           >
             Add
           </Button>
@@ -329,10 +337,15 @@ export default function AdminTopicManagement() {
             ? This will also clear the topic from any courses using it.
           </Text>
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => setDeleteOpened(false)} disabled={saving}>
+            <Button
+              variant="default"
+              radius="md"
+              onClick={() => setDeleteOpened(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
-            <Button color="red" onClick={() => void confirmDelete()} loading={saving}>
+            <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
               Delete
             </Button>
           </Group>

@@ -339,7 +339,12 @@ export default function AdminChallengeManagement() {
 
       {totalPages > 1 && (
         <Group justify="center">
-          <Pagination total={totalPages} value={page + 1} onChange={(v) => setPage(v - 1)} />
+          <Pagination
+            radius="md"
+            total={totalPages}
+            value={page + 1}
+            onChange={(v) => setPage(v - 1)}
+          />
         </Group>
       )}
 
@@ -411,10 +416,26 @@ export default function AdminChallengeManagement() {
             />
 
             <Group justify="flex-end" mt="xs">
-              <Button variant="default" onClick={() => setEditOpened(false)} disabled={saving}>
+              <Button
+                variant="default"
+                radius="md"
+                onClick={() => setEditOpened(false)}
+                disabled={saving}
+              >
                 Cancel
               </Button>
-              <Button type="submit" loading={saving}>
+              <Button
+                type="submit"
+                radius="md"
+                loading={saving}
+                style={{
+                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                  border: "none",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  fontWeight: 600,
+                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+                }}
+              >
                 Save
               </Button>
             </Group>
@@ -437,10 +458,15 @@ export default function AdminChallengeManagement() {
             ? This cannot be undone.
           </Text>
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => setDeleteOpened(false)} disabled={saving}>
+            <Button
+              variant="default"
+              radius="md"
+              onClick={() => setDeleteOpened(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
-            <Button color="red" onClick={() => void confirmDelete()} loading={saving}>
+            <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
               Delete
             </Button>
           </Group>

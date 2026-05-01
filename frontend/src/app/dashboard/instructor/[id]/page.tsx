@@ -349,8 +349,8 @@ export default function EditCourse() {
               <IconArrowLeft size={20} />
             </ActionIcon>
           </Group>
-          <Alert color="red" title="Failed to load course">
-            {loadError}
+          <Alert color="red" title="Could not load course" variant="light">
+            Something went wrong loading this course. Please go back and try again.
           </Alert>
         </Stack>
       </Container>
@@ -365,8 +365,8 @@ export default function EditCourse() {
             Are you sure you want to delete <strong>{title}</strong>? This action cannot be undone.
           </Text>
           {deleteError && (
-            <Alert color="red" title="Failed to delete course">
-              {deleteError}
+            <Alert color="red" title="Could not delete course" variant="light">
+              Something went wrong. Please try again.
             </Alert>
           )}
           <Group justify="flex-end" gap="sm">
@@ -540,7 +540,7 @@ export default function EditCourse() {
                 />
 
                 {formError && (
-                  <Alert color="red" title="Failed to update course">
+                  <Alert color="red" title="Could not save changes" variant="light">
                     {formError}
                   </Alert>
                 )}
