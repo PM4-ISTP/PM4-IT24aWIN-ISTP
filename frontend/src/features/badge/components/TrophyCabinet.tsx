@@ -109,17 +109,16 @@ function printCertificate(badge: UserBadge, userName: string) {
 }
 
 export default function TrophyCabinet({ opened, onClose, userName = "Student" }: Props) {
-  const [badges, setBadges] = useState<UserBadge[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [badges, setBadges] = useState<UserBadge[] | null>(null);
+  const isLoading = opened && badges === null;
+  const badgeList = badges ?? [];
 
   useEffect(() => {
     if (!opened) return;
-    setLoading(true);
     void fetch("/api/backend/api/v1/users/me/badges")
       .then((r) => (r.ok ? r.json() : []))
       .then((data: UserBadge[]) => setBadges(data))
-      .catch(() => setBadges([]))
-      .finally(() => setLoading(false));
+      .catch(() => setBadges([]));
   }, [opened]);
 
   return (
@@ -142,12 +141,12 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
         close: { color: "#94a3b8" },
       }}
     >
-      {loading ? (
+      {isLoading ? (
         <Stack align="center" py="xl">
           <Loader color="indigo" />
           <Text size="sm" c="dimmed">Loading your badges…</Text>
         </Stack>
-      ) : badges.length === 0 ? (
+      ) : badgeList.length === 0 ? (
         <Stack align="center" py="xl" gap="sm">
           <Text style={{ fontSize: 48 }}>🎯</Text>
           <Text fw={600} style={{ color: "#e2e8f0" }}>No badges yet</Text>
@@ -157,9 +156,9 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
         </Stack>
       ) : (
         <Stack gap="xl" py="sm">
-          <Text size="sm" c="dimmed">{badges.length} badge{badges.length !== 1 ? "s" : ""} earned</Text>
+          <Text size="sm" c="dimmed">{badgeList.length} badge{badgeList.length !== 1 ? "s" : ""} earned</Text>
           <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="lg">
-            {badges.map((b) => (
+            {badgeList.map((b) => (
               <Stack key={b.badgeId} align="center" gap="xs">
                 <Tooltip
                   label={new Date(b.earnedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
