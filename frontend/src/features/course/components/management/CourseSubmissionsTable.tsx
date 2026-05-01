@@ -45,9 +45,12 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`/api/backend/api/v1/courses/${encodeURIComponent(courseId)}/submissions`, {
-          cache: "no-store",
-        });
+        const res = await fetch(
+          `/api/backend/api/v1/courses/${encodeURIComponent(courseId)}/submissions`,
+          {
+            cache: "no-store",
+          }
+        );
         if (!res.ok) {
           const msg = await res.text();
           throw new Error(msg || res.statusText);
@@ -71,7 +74,9 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
     for (const s of data.submissions ?? []) {
       byKey.set(`${s.participantId}:${s.challengeId}`, s);
     }
-    const challenges = [...(data.challenges ?? [])].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+    const challenges = [...(data.challenges ?? [])].sort(
+      (a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
+    );
     const participants = data.participants ?? [];
     return { byKey, challenges, participants };
   }, [data]);
@@ -142,7 +147,9 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
                       const s = matrix.byKey.get(`${p.id}:${c.challengeId}`);
                       const status = s?.status ?? "NOT_SUBMITTED";
                       const progress =
-                        s && s.totalSubTaskCount > 0 ? `${s.solvedSubTaskCount}/${s.totalSubTaskCount}` : "—";
+                        s && s.totalSubTaskCount > 0
+                          ? `${s.solvedSubTaskCount}/${s.totalSubTaskCount}`
+                          : "—";
                       return (
                         <Table.Td key={`${p.id}:${c.challengeId}`}>
                           <Group gap="xs" wrap="nowrap">
@@ -166,4 +173,3 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
     </Box>
   );
 }
-
