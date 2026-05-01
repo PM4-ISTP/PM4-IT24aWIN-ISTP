@@ -438,7 +438,9 @@ public class CourseServiceImpl implements CourseService {
       UUID challengeId = (UUID) row[2];
       String challengeTitle = (String) row[3];
       LocalDateTime dueAt = (LocalDateTime) row[4];
-      if (courseId == null || challengeId == null || dueAt == null) continue;
+      if (courseId == null || challengeId == null || dueAt == null) {
+        continue;
+      }
       result.add(
           new CourseChallengeDeadlineDto(
               courseId, courseTitle, challengeId, challengeTitle, dueAt));

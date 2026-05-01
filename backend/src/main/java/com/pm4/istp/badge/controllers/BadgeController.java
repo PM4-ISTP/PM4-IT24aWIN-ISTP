@@ -61,7 +61,9 @@ public class BadgeController {
     String textColor = config.textColor();
     String icon = config.badgeIcon() != null ? config.badgeIcon() : "🏆";
     String title = config.courseTitle() != null ? config.courseTitle() : "";
-    if (title.length() > 20) title = title.substring(0, 20) + "…";
+    if (title.length() > 20) {
+      title = title.substring(0, 20) + "…";
+    }
     int template = config.template();
     return switch (template) {
       case 2 -> buildHexSvg(color, textColor, icon, title);
@@ -217,7 +219,9 @@ public class BadgeController {
   }
 
   private String escapeXml(String s) {
-    if (s == null) return "";
+    if (s == null) {
+      return "";
+    }
     return s.replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
