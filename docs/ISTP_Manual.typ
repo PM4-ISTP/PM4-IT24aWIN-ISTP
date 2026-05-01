@@ -177,7 +177,7 @@ https://istp-staging.pm4.init-lab.ch/*   (staging)
 
 == Setting Up Keycloak from Scratch
 
-The realm config export is stored in `infra/keycloak-export/interactive-security-training-platform-realm.json.json` in the repository. To restore it:
+The realm config export is stored in `infra/keycloak-export/interactive-security-training-platform-realm.json` in the repository. To restore it:
 
 + Open the Keycloak Admin Console at `https://<host>/admin`.
 + Click *Create realm* and upload the realm export JSON.
@@ -217,7 +217,7 @@ KEYCLOAK_APP_CLIENT_ID=interactive-security-training-platform-app
 - `nextauth-secret`: contains `NEXTAUTH_SECRET` and `AUTH_KEYCLOAK_SECRET`
 - `keycloak-admin-api-client`: contains `client-secret` (used as `KEYCLOAK_ADMIN_CLIENT_SECRET` in the backend pod)
 
-== Keycloak ↔ PostgreSQL Synchronization
+== Keycloak / PostgreSQL Synchronization
 
 Keycloak is the source of truth for authentication and base user identity. PostgreSQL stores a *shadow/projection* user row to support fast reads and joins with domain data (courses, enrollments).
 
@@ -312,7 +312,7 @@ The terminal does not run in the same container as the app. But they run in the 
   stroke: none,
   inset: (x: 4pt, y: 5pt),
   [#check], [Keycloak 26.x running and reachable],
-  [#check], [Realm imported from `infra/keycloak-export/interactive-security-training-platform-realm.json.json`],
+  [#check], [Realm imported from `infra/keycloak-export/interactive-security-training-platform-realm.json`],
   [#check], [Client secrets regenerated for `interactive-security-training-platform-app` and `istp-backend`],
   [#check], [Secrets stored in Kubernetes Secrets],
   [#check], [Environment variables set for Next.js and Spring Boot],
