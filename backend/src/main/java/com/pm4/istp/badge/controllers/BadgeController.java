@@ -98,21 +98,39 @@ public class BadgeController {
     return ("<svg viewBox=\"0 0 300 300\" xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"300\">"
         + "<defs>"
         + "<linearGradient id=\"bg\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">"
-        + "<stop offset=\"0%%\" stop-color=\"" + light + "\"/>"
-        + "<stop offset=\"100%%\" stop-color=\"" + dark + "\"/>"
+        + "<stop offset=\"0%%\" stop-color=\""
+        + light
+        + "\"/>"
+        + "<stop offset=\"100%%\" stop-color=\""
+        + dark
+        + "\"/>"
         + "</linearGradient>"
         + "<radialGradient id=\"fade\" cx=\"50%%\" cy=\"72%%\" r=\"52%%\">"
-        + "<stop offset=\"0%%\" stop-color=\"" + dark + "\" stop-opacity=\"0.85\"/>"
-        + "<stop offset=\"100%%\" stop-color=\"" + dark + "\" stop-opacity=\"0\"/>"
+        + "<stop offset=\"0%%\" stop-color=\""
+        + dark
+        + "\" stop-opacity=\"0.85\"/>"
+        + "<stop offset=\"100%%\" stop-color=\""
+        + dark
+        + "\" stop-opacity=\"0\"/>"
         + "</radialGradient>"
         + "<clipPath id=\"cclip\"><circle cx=\"150\" cy=\"150\" r=\"130\"/></clipPath>"
         + "</defs>"
         + "<circle cx=\"150\" cy=\"150\" r=\"130\" fill=\"url(#bg)\"/>"
-        + "<circle cx=\"150\" cy=\"150\" r=\"120\" fill=\"none\" stroke=\"" + textColor + "\" stroke-width=\"2\" stroke-opacity=\"0.25\"/>"
-        + "<circle cx=\"150\" cy=\"150\" r=\"108\" fill=\"none\" stroke=\"" + textColor + "\" stroke-width=\"1\" stroke-opacity=\"0.15\"/>"
+        + "<circle cx=\"150\" cy=\"150\" r=\"120\" fill=\"none\" stroke=\""
+        + textColor
+        + "\" stroke-width=\"2\" stroke-opacity=\"0.25\"/>"
+        + "<circle cx=\"150\" cy=\"150\" r=\"108\" fill=\"none\" stroke=\""
+        + textColor
+        + "\" stroke-width=\"1\" stroke-opacity=\"0.15\"/>"
         + "<rect x=\"20\" y=\"195\" width=\"260\" height=\"90\" fill=\"url(#fade)\" clip-path=\"url(#cclip)\"/>"
-        + "<text x=\"150\" y=\"158\" text-anchor=\"middle\" font-size=\"72\" dominant-baseline=\"middle\">" + icon + "</text>"
-        + "<text x=\"150\" y=\"245\" text-anchor=\"middle\" font-size=\"18\" fill=\"" + textColor + "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">" + escapeXml(title) + "</text>"
+        + "<text x=\"150\" y=\"158\" text-anchor=\"middle\" font-size=\"72\" dominant-baseline=\"middle\">"
+        + icon
+        + "</text>"
+        + "<text x=\"150\" y=\"245\" text-anchor=\"middle\" font-size=\"18\" fill=\""
+        + textColor
+        + "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">"
+        + escapeXml(title)
+        + "</text>"
         + "</svg>");
   }
 
@@ -122,15 +140,29 @@ public class BadgeController {
     return ("<svg viewBox=\"0 0 300 310\" xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"310\">"
         + "<defs>"
         + "<linearGradient id=\"hbg\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">"
-        + "<stop offset=\"0%%\" stop-color=\"" + light + "\"/>"
-        + "<stop offset=\"100%%\" stop-color=\"" + dark + "\"/>"
+        + "<stop offset=\"0%%\" stop-color=\""
+        + light
+        + "\"/>"
+        + "<stop offset=\"100%%\" stop-color=\""
+        + dark
+        + "\"/>"
         + "</linearGradient>"
         + "</defs>"
         + "<polygon points=\"150,10 270,75 270,235 150,300 30,235 30,75\" fill=\"url(#hbg)\"/>"
-        + "<polygon points=\"150,25 255,83 255,227 150,285 45,227 45,83\" fill=\"none\" stroke=\"" + textColor + "\" stroke-width=\"2\" stroke-opacity=\"0.25\"/>"
-        + "<polygon points=\"150,40 240,91 240,219 150,270 60,219 60,91\" fill=\"none\" stroke=\"" + textColor + "\" stroke-width=\"1\" stroke-opacity=\"0.15\"/>"
-        + "<text x=\"150\" y=\"170\" text-anchor=\"middle\" font-size=\"72\" dominant-baseline=\"middle\">" + icon + "</text>"
-        + "<text x=\"150\" y=\"248\" text-anchor=\"middle\" font-size=\"18\" fill=\"" + textColor + "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">" + escapeXml(title) + "</text>"
+        + "<polygon points=\"150,25 255,83 255,227 150,285 45,227 45,83\" fill=\"none\" stroke=\""
+        + textColor
+        + "\" stroke-width=\"2\" stroke-opacity=\"0.25\"/>"
+        + "<polygon points=\"150,40 240,91 240,219 150,270 60,219 60,91\" fill=\"none\" stroke=\""
+        + textColor
+        + "\" stroke-width=\"1\" stroke-opacity=\"0.15\"/>"
+        + "<text x=\"150\" y=\"170\" text-anchor=\"middle\" font-size=\"72\" dominant-baseline=\"middle\">"
+        + icon
+        + "</text>"
+        + "<text x=\"150\" y=\"248\" text-anchor=\"middle\" font-size=\"18\" fill=\""
+        + textColor
+        + "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">"
+        + escapeXml(title)
+        + "</text>"
         + "</svg>");
   }
 
@@ -140,32 +172,55 @@ public class BadgeController {
     return ("<svg viewBox=\"0 0 300 300\" xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"300\">"
         + "<defs>"
         + "<linearGradient id=\"mbg\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">"
-        + "<stop offset=\"0%%\" stop-color=\"" + light + "\"/>"
-        + "<stop offset=\"100%%\" stop-color=\"" + dark + "\"/>"
+        + "<stop offset=\"0%%\" stop-color=\""
+        + light
+        + "\"/>"
+        + "<stop offset=\"100%%\" stop-color=\""
+        + dark
+        + "\"/>"
         + "</linearGradient>"
         + "<radialGradient id=\"shine\" cx=\"38%%\" cy=\"35%%\" r=\"50%%\">"
         + "<stop offset=\"0%%\" stop-color=\"white\" stop-opacity=\"0.22\"/>"
         + "<stop offset=\"100%%\" stop-color=\"white\" stop-opacity=\"0\"/>"
         + "</radialGradient>"
         + "<radialGradient id=\"mfade\" cx=\"50%%\" cy=\"72%%\" r=\"52%%\">"
-        + "<stop offset=\"0%%\" stop-color=\"" + dark + "\" stop-opacity=\"0.82\"/>"
-        + "<stop offset=\"100%%\" stop-color=\"" + dark + "\" stop-opacity=\"0\"/>"
+        + "<stop offset=\"0%%\" stop-color=\""
+        + dark
+        + "\" stop-opacity=\"0.82\"/>"
+        + "<stop offset=\"100%%\" stop-color=\""
+        + dark
+        + "\" stop-opacity=\"0\"/>"
         + "</radialGradient>"
         + "<clipPath id=\"mclip\"><circle cx=\"150\" cy=\"150\" r=\"130\"/></clipPath>"
         + "</defs>"
         + "<circle cx=\"150\" cy=\"150\" r=\"130\" fill=\"url(#mbg)\"/>"
-        + "<circle cx=\"150\" cy=\"150\" r=\"128\" fill=\"none\" stroke=\"" + textColor + "\" stroke-width=\"3\" stroke-dasharray=\"8 5\" stroke-opacity=\"0.45\"/>"
-        + "<circle cx=\"150\" cy=\"150\" r=\"116\" fill=\"none\" stroke=\"" + textColor + "\" stroke-width=\"1.5\" stroke-opacity=\"0.2\"/>"
-        + "<circle cx=\"150\" cy=\"150\" r=\"104\" fill=\"none\" stroke=\"" + textColor + "\" stroke-width=\"1\" stroke-opacity=\"0.12\"/>"
+        + "<circle cx=\"150\" cy=\"150\" r=\"128\" fill=\"none\" stroke=\""
+        + textColor
+        + "\" stroke-width=\"3\" stroke-dasharray=\"8 5\" stroke-opacity=\"0.45\"/>"
+        + "<circle cx=\"150\" cy=\"150\" r=\"116\" fill=\"none\" stroke=\""
+        + textColor
+        + "\" stroke-width=\"1.5\" stroke-opacity=\"0.2\"/>"
+        + "<circle cx=\"150\" cy=\"150\" r=\"104\" fill=\"none\" stroke=\""
+        + textColor
+        + "\" stroke-width=\"1\" stroke-opacity=\"0.12\"/>"
         + "<circle cx=\"150\" cy=\"150\" r=\"130\" fill=\"url(#shine)\"/>"
         + "<rect x=\"20\" y=\"195\" width=\"260\" height=\"90\" fill=\"url(#mfade)\" clip-path=\"url(#mclip)\"/>"
-        + "<text x=\"150\" y=\"155\" text-anchor=\"middle\" font-size=\"76\" dominant-baseline=\"middle\">" + icon + "</text>"
-        + "<text x=\"150\" y=\"245\" text-anchor=\"middle\" font-size=\"18\" fill=\"" + textColor + "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">" + escapeXml(title) + "</text>"
+        + "<text x=\"150\" y=\"155\" text-anchor=\"middle\" font-size=\"76\" dominant-baseline=\"middle\">"
+        + icon
+        + "</text>"
+        + "<text x=\"150\" y=\"245\" text-anchor=\"middle\" font-size=\"18\" fill=\""
+        + textColor
+        + "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">"
+        + escapeXml(title)
+        + "</text>"
         + "</svg>");
   }
 
   private String escapeXml(String s) {
     if (s == null) return "";
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+    return s.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;");
   }
 }

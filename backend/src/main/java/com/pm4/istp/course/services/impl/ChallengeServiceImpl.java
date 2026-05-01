@@ -1,5 +1,6 @@
 package com.pm4.istp.course.services.impl;
 
+import com.pm4.istp.badge.services.BadgeService;
 import com.pm4.istp.course.db.CreateChallengeRequest;
 import com.pm4.istp.course.db.SubTaskRequest;
 import com.pm4.istp.course.db.UpdateChallengeRequest;
@@ -21,7 +22,6 @@ import com.pm4.istp.course.repositories.CourseChallengeRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.course.repositories.SubTaskRepository;
-import com.pm4.istp.badge.services.BadgeService;
 import com.pm4.istp.course.services.ChallengeService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.user.db.entities.User;
