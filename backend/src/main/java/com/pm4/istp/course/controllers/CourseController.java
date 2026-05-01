@@ -8,6 +8,7 @@ import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
@@ -28,6 +29,7 @@ import com.pm4.istp.course.services.CourseService;
 import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.shared.dto.ErrorDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -265,6 +267,27 @@ public class CourseController {
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     return ResponseEntity.ok(courseService.getCourseChallengeSubmissions(userId, id));
+  }
+
+  @Operation(
+      summary = "Get upcoming challenge deadlines for current user",
+      description =
+          "Returns challenge assignments (course + challenge + dueAt) for courses where the user is enrolled or an instructor. Only entries with a dueAt deadline are returned.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Deadlines loaded successfully",
+            content =
+                @Content(
+                    array =
+                        @ArraySchema(schema = @Schema(implementation = CourseChallengeDeadlineDto.class))))
+      })
+  @GetMapping("/my-deadlines")
+  public ResponseEntity<List<CourseChallengeDeadlineDto>> listMyDeadlines(
+      @AuthenticationPrincipal Jwt jwt) {
+    UUID userId = parseUserId(jwt);
+    return ResponseEntity.ok(courseService.listUpcomingDeadlines(userId));
   }
 
   @Operation(

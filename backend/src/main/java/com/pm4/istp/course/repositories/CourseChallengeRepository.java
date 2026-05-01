@@ -65,4 +65,21 @@ public interface CourseChallengeRepository extends JpaRepository<CourseChallenge
       """)
   long countByChallengeIdWhereCreatorNotInstructor(
       @Param("challengeId") UUID challengeId, @Param("creatorId") UUID creatorId);
+
+  @Query(
+      """
+      select cc.course.id, cc.course.title, cc.challenge.id, cc.challenge.title, cc.dueAt
+      from CourseChallenge cc
+      where cc.dueAt is not null
+      and (
+        exists (
+          select 1 from CourseEnrollment e where e.course = cc.course and e.participant.id = :userId
+        )
+        or exists (
+          select 1 from CourseInstructor ci where ci.course = cc.course and ci.instructor.id = :userId
+        )
+      )
+      order by cc.dueAt asc
+      """)
+  List<Object[]> findDeadlinesForUser(@Param("userId") UUID userId);
 }

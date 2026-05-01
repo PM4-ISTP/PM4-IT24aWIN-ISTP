@@ -12,6 +12,7 @@ import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.dto.CourseChallengeItemDto;
+import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
 import com.pm4.istp.course.dto.CourseChallengeResponseDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionStatusEnum;
@@ -26,6 +27,7 @@ import com.pm4.istp.course.exceptions.InvalidCourseChallengeException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.repositories.ChallengeRepository;
+import com.pm4.istp.course.repositories.CourseChallengeRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
@@ -62,6 +64,7 @@ public class CourseServiceImpl implements CourseService {
   private final UserRepository userRepository;
   private final CourseRepository courseRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
+  private final CourseChallengeRepository courseChallengeRepository;
   private final ChallengeRepository challengeRepository;
   private final SubTaskRepository subTaskRepository;
   private final SubTaskCompletionRepository subTaskCompletionRepository;
@@ -422,6 +425,23 @@ public class CourseServiceImpl implements CourseService {
 
     return new CourseChallengeSubmissionsResponseDto(
         courseId, participants, challengesDto, entries);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<CourseChallengeDeadlineDto> listUpcomingDeadlines(UUID userId) {
+    List<Object[]> rows = courseChallengeRepository.findDeadlinesForUser(userId);
+    List<CourseChallengeDeadlineDto> result = new ArrayList<>(rows.size());
+    for (Object[] row : rows) {
+      UUID courseId = (UUID) row[0];
+      String courseTitle = (String) row[1];
+      UUID challengeId = (UUID) row[2];
+      String challengeTitle = (String) row[3];
+      LocalDateTime dueAt = (LocalDateTime) row[4];
+      if (courseId == null || challengeId == null || dueAt == null) continue;
+      result.add(new CourseChallengeDeadlineDto(courseId, courseTitle, challengeId, challengeTitle, dueAt));
+    }
+    return result;
   }
 
   @Override
