@@ -572,6 +572,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
               onClick={() => void saveProfile()}
               loading={savingProfile}
               disabled={isSoftDeleted}
+              style={{
+                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                border: "none",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                fontWeight: 600,
+                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+              }}
             >
               Save profile
             </Button>
@@ -614,6 +621,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
               onClick={() => void saveRoles()}
               loading={savingRoles}
               disabled={isSoftDeleted}
+              style={{
+                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                border: "none",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                fontWeight: 600,
+                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+              }}
             >
               Save roles
             </Button>
@@ -682,6 +696,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
               onClick={() => void setPassword()}
               loading={settingPassword}
               disabled={isSoftDeleted}
+              style={{
+                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                border: "none",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                fontWeight: 600,
+                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+              }}
             >
               Save password
             </Button>

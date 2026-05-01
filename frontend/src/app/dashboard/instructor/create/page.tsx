@@ -210,7 +210,7 @@ export default function CreateCourse() {
             />
 
             {formError && (
-              <Alert color="red" title="Failed to create course">
+              <Alert color="red" title="Could not create course" variant="light">
                 {formError}
               </Alert>
             )}

@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/shared/lib/auth";
-import { Grid, GridCol, Group, RingProgress, Stack, Text, Box, Alert } from "@mantine/core";
-import { IconArrowRight } from "@tabler/icons-react";
+import { Grid, GridCol, Group, Stack, Text, Box, Alert, ThemeIcon } from "@mantine/core";
+import { IconArrowRight, IconBolt } from "@tabler/icons-react";
 import DashboardStyles from "@/src/shared/components/DashboardStyles";
 import DashboardHero from "@/src/shared/components/DashboardHero";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
@@ -51,25 +51,38 @@ function RunningChallenges({
   fetchCourseResult: ActionResult<PublicCourseDetailResponseDto> | undefined;
 }) {
   if (fetchCourseResult === undefined) {
-    return <Text>No currently running challenges</Text>;
-  } else {
     return (
-      <>
-        {fetchCourseResult.success ? (
-          <CourseChallengeDetailsList
-            challenges={fetchCourseResult.data.courseChallenges ?? []}
-            title=""
-            showIndex={false}
-            courseId={fetchCourseResult.data.id}
-          />
-        ) : (
-          <Alert color="red" title="Failed to load challenges">
-            {fetchCourseResult.error}
-          </Alert>
-        )}
-      </>
+      <div className="ds-empty-state" style={{ padding: "2rem", width: "100%" }}>
+        <ThemeIcon size={44} radius="xl" variant="light" color="gray">
+          <IconBolt size={22} />
+        </ThemeIcon>
+        <Stack gap={4} align="center">
+          <Text fw={600} style={{ color: "#e2e8f0" }}>
+            No active challenges
+          </Text>
+          <Text size="sm" c="dimmed">
+            Enroll in a course to start working on challenges.
+          </Text>
+        </Stack>
+      </div>
     );
   }
+  return (
+    <>
+      {fetchCourseResult.success ? (
+        <CourseChallengeDetailsList
+          challenges={fetchCourseResult.data.courseChallenges ?? []}
+          title=""
+          showIndex={false}
+          courseId={fetchCourseResult.data.id}
+        />
+      ) : (
+        <Alert color="red" title="Could not load challenges" variant="light">
+          Something went wrong loading your challenges. Please refresh the page.
+        </Alert>
+      )}
+    </>
+  );
 }
 
 export default async function Home() {
@@ -102,18 +115,22 @@ export default async function Home() {
           <Stack gap="sm">
             <Group justify="space-between" align="center">
               <Text style={sectionLabelStyle}>Continue Learning</Text>
-              <Group gap={4} style={{ cursor: "pointer" }}>
-                <Link
-                  href="/dashboard/courses"
-                  style={{
-                    color: "#60a5fa",
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
-                  }}
-                >
-                  View all
-                </Link>
-                <IconArrowRight size={15} color="#60a5fa" />
-              </Group>
+              <Link
+                href="/dashboard/courses"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  color: "#60a5fa",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
+              >
+                View all
+                <IconArrowRight size={14} />
+              </Link>
             </Group>
             {result.success ? (
               <CourseGrid
@@ -123,8 +140,8 @@ export default async function Home() {
                 coursePathPrefix="/dashboard/courses"
               />
             ) : (
-              <Alert color="red" title="Failed to load courses">
-                {result.error}
+              <Alert color="red" title="Could not load your courses" variant="light">
+                Something went wrong. Please try refreshing the page.
               </Alert>
             )}
           </Stack>
@@ -133,7 +150,7 @@ export default async function Home() {
         {/* Right column */}
         <GridCol span={{ base: 12, md: 4 }}>
           <Stack gap="md">
-            {/* Overall progress */}
+            {/* Quick stats card */}
             <Box
               style={{
                 background: "rgba(255,255,255,0.04)",
@@ -143,32 +160,35 @@ export default async function Home() {
                 boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
               }}
             >
-              <Stack gap="sm" align="center">
-                <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>
-                  Overall Progress
-                </Text>
-                <RingProgress
-                  size={130}
-                  thickness={13}
-                  sections={[{ value: 33, color: "#2563eb" }]}
-                  label={
-                    <Text size="md" fw={700} ta="center" style={{ color: "#60a5fa" }}>
-                      33%
-                    </Text>
-                  }
-                />
-                <Text size="sm" ta="center" style={{ color: "#64748b" }}>
-                  Placeholder — 2 of 6 courses completed
-                </Text>
+              <Stack gap="sm">
+                <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>Quick Stats</Text>
+                <Box
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 10,
+                    padding: "1rem",
+                    textAlign: "center",
+                  }}
+                >
+                  <Text style={{ ...sectionLabelStyle, marginBottom: "0.5rem" }}>
+                    Enrolled Courses
+                  </Text>
+                  <Text fw={700} size="xl" style={{ color: "#e2e8f0", lineHeight: 1.2 }}>
+                    {result.success ? (result.data.totalElements ?? 0) : "—"}
+                  </Text>
+                  <Text size="xs" c="dimmed" mt={4}>
+                    courses in progress
+                  </Text>
+                </Box>
               </Stack>
             </Box>
           </Stack>
         </GridCol>
       </Grid>
+
       <Stack gap="sm" align="flex-start">
-        <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>
-          Currently running Challenges
-        </Text>
+        <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>Active Challenges</Text>
         <RunningChallenges fetchCourseResult={firstCourse} />
       </Stack>
     </Stack>

@@ -22,14 +22,22 @@ export default async function CatalogPage(props: {
 
   return (
     <Stack p="xl" gap="lg">
-      <Stack gap={4}>
-        <Title order={1} size="h2" style={{ color: "#f1f5f9" }}>
-          Browse / Catalog
+      <div>
+        <Title
+          order={1}
+          size="h2"
+          style={{
+            color: "#f1f5f9",
+            fontFamily: "var(--font-space-grotesk), sans-serif",
+            fontWeight: 700,
+          }}
+        >
+          Browse Catalog
         </Title>
-        <Text size="sm" style={{ color: "#94a3b8" }}>
-          Explore all published courses and search by title, short description, or description.
+        <Text size="sm" style={{ color: "#94a3b8" }} mt={4}>
+          Explore all published courses. Search by title or topic.
         </Text>
-      </Stack>
+      </div>
 
       <CatalogFilters query={query} topic={topic} topics={topics} />
 
@@ -43,8 +51,8 @@ export default async function CatalogPage(props: {
       ) : (
         <ToastOnMount
           color="red"
-          title="Failed to load catalog"
-          message={toUserFriendlyBackendError(result.error) ?? "Please try again."}
+          title="Could not load catalog"
+          message={toUserFriendlyBackendError(result.error) ?? "Something went wrong loading the catalog. Please try again."}
         />
       )}
     </Stack>

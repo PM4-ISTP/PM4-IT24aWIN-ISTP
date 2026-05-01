@@ -6,6 +6,7 @@ import {
   ActionIcon,
   Affix,
   Alert,
+  Box,
   Button,
   Container,
   Group,
@@ -128,54 +129,79 @@ export default function CreateChallenge() {
             <ActionIcon
               variant="subtle"
               size="lg"
+              radius="md"
               onClick={() => router.push("/dashboard/instructor/challenges")}
               aria-label="Back to challenges"
             >
               <IconArrowLeft size={20} />
             </ActionIcon>
             <Stack gap={4}>
-              <Title order={1} size="h2">
+              <Title
+                order={1}
+                size="h2"
+                style={{
+                  color: "#f1f5f9",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  fontWeight: 700,
+                }}
+              >
                 Create Challenge
               </Title>
-              <Text size="sm" c="dimmed">
+              <Text size="sm" style={{ color: "#94a3b8" }}>
                 Fill in the details to create a new challenge.
               </Text>
             </Stack>
           </Group>
         </Group>
 
-        <Stack gap="lg">
-          <ChallengeFormFields
-            values={formValues}
-            onChange={setFormValues}
-            titleError={titleError}
-            shortDescriptionError={shortDescriptionError}
-            dockerImageError={dockerImageError}
-            subTaskErrors={subTaskErrors}
-            defaultExpandedSubTaskIndex={0}
-            onCharLimitExceeded={() => charLimitToast.show()}
-            onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
-            onDockerImageErrorClear={() => setDockerImageError(null)}
-          />
+        <Box
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 14,
+            padding: "2rem",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+          }}
+        >
+          <Stack gap="lg">
+            <ChallengeFormFields
+              values={formValues}
+              onChange={setFormValues}
+              titleError={titleError}
+              shortDescriptionError={shortDescriptionError}
+              dockerImageError={dockerImageError}
+              subTaskErrors={subTaskErrors}
+              defaultExpandedSubTaskIndex={0}
+              onCharLimitExceeded={() => charLimitToast.show()}
+              onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
+              onDockerImageErrorClear={() => setDockerImageError(null)}
+            />
 
-          {formError && (
-            <Alert color="red" title="Failed to create challenge">
-              {formError}
-            </Alert>
-          )}
+            {formError && (
+              <Alert color="red" title="Could not create challenge" variant="light">
+                {formError}
+              </Alert>
+            )}
 
-          <Button
-            variant="filled"
-            radius="md"
-            loading={isSubmitting}
-            disabled={isSubmitting}
-            onClick={() => {
-              void handleSubmit();
-            }}
-          >
-            Create Challenge
-          </Button>
-        </Stack>
+            <Button
+              radius="md"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+              onClick={() => {
+                void handleSubmit();
+              }}
+              style={{
+                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                border: "none",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                fontWeight: 600,
+                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+              }}
+            >
+              Create Challenge
+            </Button>
+          </Stack>
+        </Box>
       </Stack>
 
       <Affix position={{ bottom: 20, right: 20 }}>

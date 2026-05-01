@@ -10,22 +10,30 @@ export default function ActivityItem({
   color: string;
 }) {
   return (
-    <Group className="dashboard-activity-item" justify="space-between" wrap="nowrap">
-      <Group gap="sm" wrap="nowrap">
+    <Group
+      justify="space-between"
+      wrap="nowrap"
+      style={{
+        padding: "0.6rem 0",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+      }}
+    >
+      <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
         <Box
           style={{
-            width: 8,
-            height: 8,
+            width: 7,
+            height: 7,
             borderRadius: "50%",
             background: color,
             flexShrink: 0,
+            boxShadow: `0 0 6px ${color}66`,
           }}
         />
-        <Text size="md" c="dimmed">
+        <Text size="sm" c="dimmed" truncate>
           {label}
         </Text>
       </Group>
-      <Text size="sm" c="dimmed" style={{ flexShrink: 0 }}>
+      <Text size="xs" c="dimmed" style={{ flexShrink: 0, paddingLeft: "0.5rem" }}>
         {time}
       </Text>
     </Group>

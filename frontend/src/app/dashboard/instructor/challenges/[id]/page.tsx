@@ -263,8 +263,8 @@ export default function EditChallenge() {
               <IconArrowLeft size={20} />
             </ActionIcon>
           </Group>
-          <Alert color="red" title="Failed to load challenge">
-            {loadError}
+          <Alert color="red" title="Could not load challenge" variant="light">
+            Something went wrong loading this challenge. Please go back and try again.
           </Alert>
         </Stack>
       </Container>
@@ -319,8 +319,8 @@ export default function EditChallenge() {
             This action cannot be undone.
           </Text>
           {deleteError && (
-            <Alert color="red" title="Failed to delete challenge">
-              {deleteError}
+            <Alert color="red" title="Could not delete challenge" variant="light">
+              Something went wrong. Please try again.
             </Alert>
           )}
           <Group justify="flex-end" gap="sm">
@@ -353,10 +353,18 @@ export default function EditChallenge() {
               <IconArrowLeft size={20} />
             </ActionIcon>
             <Stack gap={4}>
-              <Title order={1} size="h2">
+              <Title
+                order={1}
+                size="h2"
+                style={{
+                  color: "#f1f5f9",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  fontWeight: 700,
+                }}
+              >
                 Edit Challenge
               </Title>
-              <Text size="sm" c="dimmed">
+              <Text size="sm" style={{ color: "#94a3b8" }}>
                 Update the challenge details.
               </Text>
             </Stack>
@@ -400,18 +408,24 @@ export default function EditChallenge() {
           </Paper>
 
           {formError && (
-            <Alert color="red" title="Failed to update challenge">
+            <Alert color="red" title="Could not save changes" variant="light">
               {formError}
             </Alert>
           )}
 
           <Button
-            variant="filled"
             radius="md"
             loading={isSubmitting}
             disabled={isSubmitting || isDeleting}
             onClick={() => {
               void handleSubmit();
+            }}
+            style={{
+              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+              border: "none",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontWeight: 600,
+              boxShadow: "02px 12px rgba(79,70,229,0.3)",
             }}
           >
             Save Changes
