@@ -37,8 +37,12 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml")
                     .permitAll()
+                    .requestMatchers("/api/v1/courses/*/badge/svg")
+                    .permitAll()
                     .requestMatchers("/api/admin/**")
                     .hasRole("ADMINISTRATOR")
+                    .requestMatchers("/api/v1/users/me/badges")
+                    .authenticated()
                     .requestMatchers("/api/v1/courses/my-enrollments", "/api/v1/courses/catalog")
                     .authenticated()
                     .requestMatchers("/api/v1/courses/catalog/**")
@@ -70,10 +74,3 @@ public class SecurityConfig {
     config.setAllowedOrigins(List.of(allowedOrigin));
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
     config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-    config.setAllowCredentials(true);
-
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", config);
-    return source;
-  }
-}

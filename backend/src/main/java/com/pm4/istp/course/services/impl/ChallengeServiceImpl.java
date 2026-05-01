@@ -21,6 +21,7 @@ import com.pm4.istp.course.repositories.CourseChallengeRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.course.repositories.SubTaskRepository;
+import com.pm4.istp.badge.services.BadgeService;
 import com.pm4.istp.course.services.ChallengeService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.user.db.entities.User;
@@ -57,6 +58,7 @@ public class ChallengeServiceImpl implements ChallengeService {
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final ChallengeMapper challengeMapper;
   private final DockerImageAvailabilityService dockerImageAvailabilityService;
+  private final BadgeService badgeService;
 
   @Override
   @Transactional
@@ -390,6 +392,10 @@ public class ChallengeServiceImpl implements ChallengeService {
     int totalCount = siblings.size();
     boolean challengeSolved = totalCount > 0 && solvedCount == totalCount;
 
+    if (correct && challengeSolved) {
+      badgeService.tryAwardBadgesForChallenge(userId, challengeId);
+    }
+
     return new SubTaskSubmissionResponseDto(correct, challengeSolved, solvedCount, totalCount);
   }
 
@@ -433,11 +439,4 @@ public class ChallengeServiceImpl implements ChallengeService {
       st.setSolved(solved);
       if (solved) {
         st.setSolvedFlag(flagsById.get(st.getId()));
-        solvedCount++;
-      }
-    }
-    dto.setTotalSubTaskCount(subTasks.size());
-    dto.setSolvedSubTaskCount(solvedCount);
-    dto.setSolved(!subTasks.isEmpty() && solvedCount == subTasks.size());
-  }
-}
+   

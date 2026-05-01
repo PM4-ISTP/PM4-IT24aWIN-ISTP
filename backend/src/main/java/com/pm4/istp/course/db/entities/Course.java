@@ -91,11 +91,10 @@ public class Course {
     courseChallenge.setCourse(null);
   }
 
-  @CreatedDate
-  @Column(name = "created_at", nullable = false, updatable = false)
-  private LocalDateTime createdAt;
+  @Column(name = "badge_primary_color", nullable = true, length = 7)
+  private String badgePrimaryColor;
 
-  @LastModifiedDate
-  @Column(name = "updated_at", nullable = false)
-  private LocalDateTime updatedAt;
-}
+  @Column(name = "badge_text_color", nullable = true, length = 7)
+  private String badgeTextColor;
+
+  @Column(name = "b
