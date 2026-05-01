@@ -339,7 +339,12 @@ export default function AdminChallengeManagement() {
 
       {totalPages > 1 && (
         <Group justify="center">
-          <Pagination radius="md" total={totalPages} value={page + 1} onChange={(v) => setPage(v - 1)} />
+          <Pagination
+            radius="md"
+            total={totalPages}
+            value={page + 1}
+            onChange={(v) => setPage(v - 1)}
+          />
         </Group>
       )}
 
@@ -411,7 +416,12 @@ export default function AdminChallengeManagement() {
             />
 
             <Group justify="flex-end" mt="xs">
-              <Button variant="default" radius="md" onClick={() => setEditOpened(false)} disabled={saving}>
+              <Button
+                variant="default"
+                radius="md"
+                onClick={() => setEditOpened(false)}
+                disabled={saving}
+              >
                 Cancel
               </Button>
               <Button
@@ -448,7 +458,12 @@ export default function AdminChallengeManagement() {
             ? This cannot be undone.
           </Text>
           <Group justify="flex-end">
-            <Button variant="default" radius="md" onClick={() => setDeleteOpened(false)} disabled={saving}>
+            <Button
+              variant="default"
+              radius="md"
+              onClick={() => setDeleteOpened(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
             <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>

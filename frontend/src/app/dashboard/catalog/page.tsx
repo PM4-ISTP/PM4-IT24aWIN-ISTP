@@ -52,7 +52,10 @@ export default async function CatalogPage(props: {
         <ToastOnMount
           color="red"
           title="Could not load catalog"
-          message={toUserFriendlyBackendError(result.error) ?? "Something went wrong loading the catalog. Please try again."}
+          message={
+            toUserFriendlyBackendError(result.error) ??
+            "Something went wrong loading the catalog. Please try again."
+          }
         />
       )}
     </Stack>

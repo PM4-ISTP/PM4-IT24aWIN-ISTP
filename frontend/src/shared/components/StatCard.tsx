@@ -46,13 +46,7 @@ export default function StatCard({
             </Text>
           )}
         </Stack>
-        <ThemeIcon
-          size={42}
-          radius="md"
-          color={color}
-          variant="light"
-          style={{ flexShrink: 0 }}
-        >
+        <ThemeIcon size={42} radius="md" color={color} variant="light" style={{ flexShrink: 0 }}>
           {icon}
         </ThemeIcon>
       </Group>

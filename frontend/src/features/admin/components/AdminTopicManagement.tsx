@@ -337,7 +337,12 @@ export default function AdminTopicManagement() {
             ? This will also clear the topic from any courses using it.
           </Text>
           <Group justify="flex-end">
-            <Button variant="default" radius="md" onClick={() => setDeleteOpened(false)} disabled={saving}>
+            <Button
+              variant="default"
+              radius="md"
+              onClick={() => setDeleteOpened(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
             <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
