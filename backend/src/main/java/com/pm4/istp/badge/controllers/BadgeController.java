@@ -157,4 +157,15 @@ public class BadgeController {
         + "<circle cx=\"150\" cy=\"150\" r=\"128\" fill=\"none\" stroke=\"" + textColor + "\" stroke-width=\"3\" stroke-dasharray=\"8 5\" stroke-opacity=\"0.45\"/>"
         + "<circle cx=\"150\" cy=\"150\" r=\"116\" fill=\"none\" stroke=\"" + textColor + "\" stroke-width=\"1.5\" stroke-opacity=\"0.2\"/>"
         + "<circle cx=\"150\" cy=\"150\" r=\"104\" fill=\"none\" stroke=\"" + textColor + "\" stroke-width=\"1\" stroke-opacity=\"0.12\"/>"
-        + "<circle cx
+        + "<circle cx=\"150\" cy=\"150\" r=\"130\" fill=\"url(#shine)\"/>"
+        + "<rect x=\"20\" y=\"195\" width=\"260\" height=\"90\" fill=\"url(#mfade)\" clip-path=\"url(#mclip)\"/>"
+        + "<text x=\"150\" y=\"155\" text-anchor=\"middle\" font-size=\"76\" dominant-baseline=\"middle\">" + icon + "</text>"
+        + "<text x=\"150\" y=\"245\" text-anchor=\"middle\" font-size=\"18\" fill=\"" + textColor + "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">" + escapeXml(title) + "</text>"
+        + "</svg>");
+  }
+
+  private String escapeXml(String s) {
+    if (s == null) return "";
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+  }
+}

@@ -138,4 +138,30 @@ export default function DashboardHero({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: "#60a5fa
+                      color: "#60a5fa",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {icon}
+                  </Box>
+                  <Stack gap={1}>
+                    <Text style={statLabelStyle}>{label}</Text>
+                    <Text fw={700} size="lg" style={{ color: "#f1f5f9", lineHeight: 1.1 }}>
+                      {value}
+                    </Text>
+                  </Stack>
+                </Group>
+              </Box>
+            ))}
+          </Stack>
+        </Group>
+      </Box>
+
+      <TrophyCabinet
+        opened={cabinetOpen}
+        onClose={() => setCabinetOpen(false)}
+        userName={firstName}
+      />
+    </>
+  );
+}

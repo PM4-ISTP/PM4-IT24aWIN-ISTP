@@ -713,3 +713,40 @@ export default function EditCourse() {
                       >
                         Regenerate code
                       </Button>
+                    )}
+                  </Stack>
+                </Box>
+              )}
+            </Stack>
+          </GridCol>
+        </Grid>
+      </Stack>
+
+      <Affix position={{ bottom: 20, right: 20 }}>
+        {ownerToast.visible && (
+          <Notification
+            color="orange"
+            title="Can't add owner as collaborator"
+            onClose={ownerToast.hide}
+            withCloseButton
+            icon={<IconX size={18} />}
+          >
+            The course owner is already managing this course and cannot be added as a collaborator.
+          </Notification>
+        )}
+        {charLimitToast.visible && (
+          <Notification
+            color="orange"
+            title="Character limit reached"
+            onClose={charLimitToast.hide}
+            withCloseButton
+            icon={<IconX size={18} />}
+          >
+            The short description cannot exceed {COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters
+            (including spaces).
+          </Notification>
+        )}
+      </Affix>
+    </Container>
+  );
+}

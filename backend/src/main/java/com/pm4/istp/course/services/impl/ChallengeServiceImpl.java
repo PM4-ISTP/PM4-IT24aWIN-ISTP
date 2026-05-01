@@ -439,4 +439,11 @@ public class ChallengeServiceImpl implements ChallengeService {
       st.setSolved(solved);
       if (solved) {
         st.setSolvedFlag(flagsById.get(st.getId()));
-   
+        solvedCount++;
+      }
+    }
+    dto.setTotalSubTaskCount(subTasks.size());
+    dto.setSolvedSubTaskCount(solvedCount);
+    dto.setSolved(!subTasks.isEmpty() && solvedCount == subTasks.size());
+  }
+}

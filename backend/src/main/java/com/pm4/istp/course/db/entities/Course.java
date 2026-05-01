@@ -97,4 +97,17 @@ public class Course {
   @Column(name = "badge_text_color", nullable = true, length = 7)
   private String badgeTextColor;
 
-  @Column(name = "b
+  @Column(name = "badge_template", nullable = true)
+  private Integer badgeTemplate;
+
+  @Column(name = "badge_icon", nullable = true, length = 16)
+  private String badgeIcon;
+
+  @CreatedDate
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private LocalDateTime createdAt;
+
+  @LastModifiedDate
+  @Column(name = "updated_at", nullable = false)
+  private LocalDateTime updatedAt;
+}

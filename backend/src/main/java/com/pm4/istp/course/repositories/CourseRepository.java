@@ -354,4 +354,5 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
       where cc.challenge.id = :challengeId and ce.participant.id = :userId
       """)
   List<Course> findCoursesByChallengeIdAndEnrolledUserId(
-      @Par
+      @Param("challengeId") UUID challengeId, @Param("userId") UUID userId);
+}
