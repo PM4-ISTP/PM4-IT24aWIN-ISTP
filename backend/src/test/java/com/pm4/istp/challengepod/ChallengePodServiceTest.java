@@ -55,7 +55,8 @@ class ChallengePodServiceTest {
                 dockerImageAvailabilityService,
                 "default",
                 "test.domain",
-                false);
+                false,
+                "");
     }
 
     // ── startPod: early-exit paths ───────────────────────────────────────────

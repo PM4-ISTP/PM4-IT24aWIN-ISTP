@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.NonNull;
@@ -60,6 +61,7 @@ public class ChallengePodService {
   private final String defaultNamespace;
   private final String domain;
   private final boolean tls;
+  private final String labHostPrefix;
 
   private final AtomicReference<KubernetesClient> clientRef = new AtomicReference<>();
 
@@ -69,13 +71,15 @@ public class ChallengePodService {
       @NonNull DockerImageAvailabilityService dockerImageAvailabilityService,
       @Value("${k8s.default.namespace}") String defaultNamespace,
       @Value("${istp.domain}") String domain,
-      @Value("${istp.tls}") boolean tls) {
+      @Value("${istp.tls}") boolean tls,
+      @Value("${istp.lab-host-prefix:}") String labHostPrefix) {
     this.adminConfigurationService = adminConfigurationService;
     this.challengeService = challengeService;
     this.dockerImageAvailabilityService = dockerImageAvailabilityService;
     this.defaultNamespace = defaultNamespace;
     this.domain = domain;
     this.tls = tls;
+    this.labHostPrefix = normalizeHostPrefix(labHostPrefix);
   }
 
   // -------------------------------------------------------------------------
@@ -341,8 +345,14 @@ public class ChallengePodService {
     }
 
     String scheme = tls ? "https" : "http";
-    String appUrl = scheme + "://app-" + hash + "." + domain;
-    String terminalUrl = scheme + "://term-" + hash + "." + domain;
+    String appUrl =
+        scheme
+            + "://"
+            + findIngressHost(instanceName, 80).orElseGet(() -> buildLabHost("app", hash));
+    String terminalUrl =
+        scheme
+            + "://"
+            + findIngressHost(instanceName, 8081).orElseGet(() -> buildLabHost("term", hash));
 
     PodStatusEnum status = mapDeploymentStatus(deployment);
 
@@ -476,8 +486,8 @@ public class ChallengePodService {
     client.services().inNamespace(defaultNamespace).resource(service).create();
 
     // 3. Ingress
-    String appHost = "app-" + hash + "." + domain;
-    String termHost = "term-" + hash + "." + domain;
+    String appHost = buildLabHost("app", hash);
+    String termHost = buildLabHost("term", hash);
 
     io.fabric8.kubernetes.api.model.networking.v1.Ingress ingress =
         new IngressBuilder()
@@ -540,6 +550,56 @@ public class ChallengePodService {
         terminalPassword,
         createdAt,
         expiresAt);
+  }
+
+  private String buildLabHost(String service, String hash) {
+    String hostPrefix =
+        labHostPrefix.isBlank() ? service + "-" + hash : service + "-" + labHostPrefix + "-" + hash;
+    return hostPrefix + "." + domain;
+  }
+
+  private String normalizeHostPrefix(String prefix) {
+    if (prefix == null) {
+      return "";
+    }
+    return prefix.trim().toLowerCase().replaceAll("[^a-z0-9-]", "-").replaceAll("^-+|-+$", "");
+  }
+
+  private Optional<String> findIngressHost(String instanceName, int servicePort) {
+    try {
+      var ingress =
+          getClient()
+              .network()
+              .v1()
+              .ingresses()
+              .inNamespace(defaultNamespace)
+              .withName(instanceName + "-ingress")
+              .get();
+
+      if (ingress == null || ingress.getSpec() == null || ingress.getSpec().getRules() == null) {
+        return Optional.empty();
+      }
+
+      return ingress.getSpec().getRules().stream()
+          .filter(rule -> rule.getHttp() != null && rule.getHttp().getPaths() != null)
+          .filter(
+              rule ->
+                  rule.getHttp().getPaths().stream()
+                      .anyMatch(
+                          path ->
+                              path.getBackend() != null
+                                  && path.getBackend().getService() != null
+                                  && path.getBackend().getService().getPort() != null
+                                  && Integer.valueOf(servicePort)
+                                      .equals(
+                                          path.getBackend().getService().getPort().getNumber())))
+          .map(rule -> rule.getHost())
+          .filter(host -> host != null && !host.isBlank())
+          .findFirst();
+    } catch (Exception e) {
+      log.debug("Could not inspect ingress host for {}", instanceName, e);
+      return Optional.empty();
+    }
   }
 
   private void deleteByName(String instanceName) {
