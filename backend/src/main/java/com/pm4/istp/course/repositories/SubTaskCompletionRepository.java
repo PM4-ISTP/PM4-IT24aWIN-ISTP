@@ -31,4 +31,15 @@ public interface SubTaskCompletionRepository extends JpaRepository<SubTaskComple
       """)
   List<UUID> findSolvedSubTaskIdsForChallenges(
       @Param("userId") UUID userId, @Param("challengeIds") Collection<UUID> challengeIds);
+
+  @Query(
+      """
+      select c.user.id, c.subTask.challenge.id, count(c), max(c.solvedAt)
+      from SubTaskCompletion c
+      where c.user.id in :userIds and c.subTask.challenge.id in :challengeIds
+      group by c.user.id, c.subTask.challenge.id
+      """)
+  List<Object[]> aggregateSolvedCountsForUsersAndChallenges(
+      @Param("userIds") Collection<UUID> userIds,
+      @Param("challengeIds") Collection<UUID> challengeIds);
 }

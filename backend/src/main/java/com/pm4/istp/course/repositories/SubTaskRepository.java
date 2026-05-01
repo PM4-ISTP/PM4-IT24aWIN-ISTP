@@ -15,4 +15,13 @@ public interface SubTaskRepository extends JpaRepository<SubTask, UUID> {
 
   @Query("select s.id, s.flag from SubTask s where s.id in :ids")
   List<Object[]> findFlagsByIds(@Param("ids") Collection<UUID> ids);
+
+  @Query(
+      """
+      select s.challenge.id, count(s)
+      from SubTask s
+      where s.challenge.id in :challengeIds
+      group by s.challenge.id
+      """)
+  List<Object[]> countByChallengeIds(@Param("challengeIds") Collection<UUID> challengeIds);
 }

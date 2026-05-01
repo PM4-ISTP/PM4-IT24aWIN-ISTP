@@ -8,6 +8,7 @@ import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
@@ -235,6 +236,35 @@ public class CourseController {
         courseService.updateCourseChallenges(userId, id, request.getChallenges());
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(updatedCourse);
     return ResponseEntity.ok(dto);
+  }
+
+  @Operation(
+      summary = "Get course challenge submissions",
+      description =
+          "Returns a per-student/per-challenge submission matrix including ON_TIME/LATE status based on the optional dueAt deadline.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Submissions loaded successfully",
+            content =
+                @Content(
+                    schema =
+                        @Schema(implementation = CourseChallengeSubmissionsResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @GetMapping("/{id}/submissions")
+  public ResponseEntity<CourseChallengeSubmissionsResponseDto> getCourseSubmissions(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    return ResponseEntity.ok(courseService.getCourseChallengeSubmissions(userId, id));
   }
 
   @Operation(

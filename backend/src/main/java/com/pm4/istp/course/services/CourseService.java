@@ -4,6 +4,7 @@ import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.dto.CourseChallengeItemDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +24,8 @@ public interface CourseService {
 
   Course updateCourseChallenges(
       UUID userId, UUID courseId, List<CourseChallengeItemDto> challenges);
+
+  CourseChallengeSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId);
 
   Page<ListCourseResponseDto> listCoursesForInstructors(UUID instructorId, Pageable pageable);
 

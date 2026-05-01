@@ -606,6 +606,8 @@ export interface components {
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
       orderIndex?: number;
+      /** Format: date-time */
+      dueAt?: string;
     };
     CourseDetailInstructorResponseDto: {
       /** Format: uuid */
@@ -671,6 +673,8 @@ export interface components {
       challengeId: string;
       /** Format: int32 */
       orderIndex: number;
+      /** Format: date-time */
+      dueAt?: string;
     };
     UpdateCourseChallengesRequestDto: {
       challenges: components["schemas"]["CourseChallengeItemDto"][];

@@ -51,7 +51,8 @@ import { useApiClient } from "@/src/shared/lib/api/client";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
 import type { ChallengeStudentDto, SubTaskStudentDto } from "@/src/shared/types/course";
 
-const FLAG_PATTERN = /^ISTP\{[A-Za-z0-9_]+\}$/;
+const FLAG_WRAPPED_PATTERN = /^ISTP\{[A-Za-z0-9_]+\}$/;
+const FLAG_INNER_PATTERN = /^[A-Za-z0-9_]+$/;
 const SPLIT_STORAGE_KEY = "istp.challengePlay.splitPercent";
 const DEFAULT_SPLIT_PERCENT = 48;
 const MIN_TASK_PANEL_PX = 360;
@@ -540,7 +541,14 @@ export function ChallengePlayView({
 
   async function handleSubmit() {
     if (!current || !current.id || !challenge.id) return;
-    if (!FLAG_PATTERN.test(flagInput)) {
+    const trimmedFlag = flagInput.trim();
+    const normalizedFlag = FLAG_WRAPPED_PATTERN.test(trimmedFlag)
+      ? trimmedFlag
+      : FLAG_INNER_PATTERN.test(trimmedFlag)
+        ? `ISTP{${trimmedFlag}}`
+        : null;
+
+    if (!normalizedFlag) {
       notifications.show({
         color: "red",
         title: "Invalid flag format",
@@ -550,7 +558,7 @@ export function ChallengePlayView({
     }
 
     setSubmitting(true);
-    const result = await submitSubTaskFlag(challenge.id, current.id, flagInput);
+    const result = await submitSubTaskFlag(challenge.id, current.id, normalizedFlag);
     setSubmitting(false);
 
     if (!result.success) {
@@ -563,7 +571,7 @@ export function ChallengePlayView({
     }
 
     if (result.data.isCorrect && current.id) {
-      updateSubTaskSolved(current.id, flagInput);
+      updateSubTaskSolved(current.id, normalizedFlag);
       notifications.show({
         color: "teal",
         title: "Correct flag!",
