@@ -39,8 +39,10 @@ import {
   validateSubTasks,
 } from "@/src/features/course/utils/subTasks";
 import { useToast } from "@/src/shared/hooks/useToast";
+import { useDockerImageCheck } from "@/src/features/course/hooks/useDockerImageCheck";
 import {
   CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
+  DOCKER_IMAGE_ERROR,
   DOCKER_IMAGE_PATTERN,
 } from "@/src/features/course/constants/challengeConstants";
 
@@ -71,6 +73,7 @@ export default function EditChallenge() {
     dockerImage: "",
     subTasks: [],
   });
+  const [savedDockerImage, setSavedDockerImage] = useState<string | null>(null);
   const [initialStatus, setInitialStatus] = useState<ChallengeStatusEnum>("DRAFT");
   const [courseCount, setCourseCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,6 +90,7 @@ export default function EditChallenge() {
   >([]);
   const [formError, setFormError] = useState<string | null>(null);
   const charLimitToast = useToast();
+  const dockerImageCheck = useDockerImageCheck(formValues.dockerImage);
 
   useEffect(() => {
     async function load() {
@@ -99,15 +103,17 @@ export default function EditChallenge() {
 
       const challenge = result.data;
       const loadedStatus = challenge.status ?? "DRAFT";
+      const loadedDockerImage = challenge.dockerImage ?? "";
       setFormValues({
         title: challenge.title ?? "",
         shortDescription: challenge.shortDescription ?? "",
         description: challenge.description ?? "",
         status: loadedStatus,
         difficulty: challenge.difficulty ?? "MEDIUM",
-        dockerImage: challenge.dockerImage ?? "",
+        dockerImage: loadedDockerImage,
         subTasks: toFormSubTasks(challenge.subTasks),
       });
+      setSavedDockerImage(loadedDockerImage);
       setInitialStatus(loadedStatus);
       setCourseCount(challenge.courseCount ?? 0);
 
@@ -180,9 +186,15 @@ export default function EditChallenge() {
       return;
     }
     if (!DOCKER_IMAGE_PATTERN.test(trimmedDockerImage)) {
-      setDockerImageError(
-        "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)"
-      );
+      setDockerImageError(DOCKER_IMAGE_ERROR);
+      return;
+    }
+    if (dockerImageCheck.status === "checking") {
+      setDockerImageError("Please wait until the Docker image check finishes");
+      return;
+    }
+    if (dockerImageCheck.status === "error") {
+      setDockerImageError(dockerImageCheck.message ?? "Docker image is not reachable");
       return;
     }
 
@@ -387,6 +399,8 @@ export default function EditChallenge() {
             titleError={titleError}
             shortDescriptionError={shortDescriptionError}
             dockerImageError={dockerImageError}
+            dockerImageCheckStatus={dockerImageCheck.status}
+            dockerImageCheckMessage={dockerImageCheck.message}
             subTaskErrors={subTaskErrors}
             onCharLimitExceeded={() => charLimitToast.show()}
             onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
@@ -403,7 +417,7 @@ export default function EditChallenge() {
                   Start a pod to preview the challenge before publishing.
                 </Text>
               </Box>
-              <ChallengePodPanel challengeId={challengeId} />
+              <ChallengePodPanel challengeId={challengeId} dockerImage={savedDockerImage} />
             </Group>
           </Paper>
 
@@ -416,7 +430,12 @@ export default function EditChallenge() {
           <Button
             radius="md"
             loading={isSubmitting}
-            disabled={isSubmitting || isDeleting}
+            disabled={
+              isSubmitting ||
+              isDeleting ||
+              dockerImageCheck.status === "checking" ||
+              dockerImageCheck.status === "error"
+            }
             onClick={() => {
               void handleSubmit();
             }}

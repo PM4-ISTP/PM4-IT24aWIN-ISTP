@@ -17,7 +17,6 @@ import {
   getDifficultyColor,
   getStatusColor,
 } from "@/src/features/course/constants/challengeConstants";
-import { ChallengePodPanel } from "@/src/features/challenge-pod/components/ChallengePodPanel";
 import PlayChallengeButton from "@/src/features/course/components/challenges/PlayChallengeButton";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
 import type { ChallengeStudentDto } from "@/src/shared/types/course";
@@ -188,8 +187,6 @@ export function CourseChallengeDetailsList({
                       </Stack>
                     </>
                   )}
-
-                  <ChallengePodPanel challengeId={challenge.id} />
 
                   {playHref && (
                     <Group justify="flex-end">

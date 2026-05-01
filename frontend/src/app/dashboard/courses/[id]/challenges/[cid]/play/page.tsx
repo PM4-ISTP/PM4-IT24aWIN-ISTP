@@ -31,5 +31,11 @@ export default async function PlayChallengePage({
     );
   }
 
-  return <ChallengePlayView courseId={courseId} initialChallenge={result.data} />;
+  return (
+    <ChallengePlayView
+      courseId={courseId}
+      challengeId={challengeId}
+      initialChallenge={result.data}
+    />
+  );
 }

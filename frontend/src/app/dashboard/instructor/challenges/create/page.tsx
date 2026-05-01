@@ -24,8 +24,10 @@ import { createChallenge } from "@/src/features/course/actions/challenges";
 import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
 import { toRequestSubTasks, validateSubTasks } from "@/src/features/course/utils/subTasks";
 import { useToast } from "@/src/shared/hooks/useToast";
+import { useDockerImageCheck } from "@/src/features/course/hooks/useDockerImageCheck";
 import {
   CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
+  DOCKER_IMAGE_ERROR,
   DOCKER_IMAGE_PATTERN,
 } from "@/src/features/course/constants/challengeConstants";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
@@ -58,6 +60,7 @@ export default function CreateChallenge() {
   >([]);
   const [formError, setFormError] = useState<string | null>(null);
   const charLimitToast = useToast();
+  const dockerImageCheck = useDockerImageCheck(formValues.dockerImage);
 
   async function handleSubmit() {
     setTitleError(null);
@@ -83,9 +86,15 @@ export default function CreateChallenge() {
       return;
     }
     if (!DOCKER_IMAGE_PATTERN.test(trimmedDockerImage)) {
-      setDockerImageError(
-        "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)"
-      );
+      setDockerImageError(DOCKER_IMAGE_ERROR);
+      return;
+    }
+    if (dockerImageCheck.status === "checking") {
+      setDockerImageError("Please wait until the Docker image check finishes");
+      return;
+    }
+    if (dockerImageCheck.status === "error") {
+      setDockerImageError(dockerImageCheck.message ?? "Docker image is not reachable");
       return;
     }
 
@@ -170,6 +179,8 @@ export default function CreateChallenge() {
               titleError={titleError}
               shortDescriptionError={shortDescriptionError}
               dockerImageError={dockerImageError}
+              dockerImageCheckStatus={dockerImageCheck.status}
+              dockerImageCheckMessage={dockerImageCheck.message}
               subTaskErrors={subTaskErrors}
               defaultExpandedSubTaskIndex={0}
               onCharLimitExceeded={() => charLimitToast.show()}
@@ -186,7 +197,11 @@ export default function CreateChallenge() {
             <Button
               radius="md"
               loading={isSubmitting}
-              disabled={isSubmitting}
+              disabled={
+                isSubmitting ||
+                dockerImageCheck.status === "checking" ||
+                dockerImageCheck.status === "error"
+              }
               onClick={() => {
                 void handleSubmit();
               }}

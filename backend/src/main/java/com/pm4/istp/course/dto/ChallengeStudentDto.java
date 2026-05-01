@@ -25,6 +25,7 @@ public class ChallengeStudentDto {
   private String description;
   private ChallengeStatusEnum status;
   private ChallengeDifficultyEnum difficulty;
+  private String dockerImage;
   private int maxScore;
   private ChallengeCreatorResponseDto creator;
   private List<SubTaskStudentDto> subTasks;

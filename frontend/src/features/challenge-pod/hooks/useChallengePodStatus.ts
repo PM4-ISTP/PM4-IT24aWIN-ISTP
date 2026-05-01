@@ -29,6 +29,7 @@ export function useChallengePodStatus(
   const [data, setData] = useState<PodStatusResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const status = data?.status;
 
   const fetchOnce = useCallback(async () => {
     try {
@@ -66,7 +67,7 @@ export function useChallengePodStatus(
     const intervalMs = status === "RUNNING" ? RUNNING_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
     const id = setInterval(() => void fetchOnce(), intervalMs);
     return () => clearInterval(id);
-  }, [enabled, data?.status, fetchOnce]);
+  }, [enabled, status, fetchOnce]);
 
   return { data, error, loading, refetch: fetchOnce };
 }
