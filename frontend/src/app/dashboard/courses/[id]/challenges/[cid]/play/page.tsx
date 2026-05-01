@@ -23,7 +23,7 @@ export default async function PlayChallengePage({
               <span>Back to course</span>
             </Group>
           </Link>
-          <Alert color="red" title="Unable to load challenge">
+          <Alert color="red" title="Unable to load lab">
             {result.error}
           </Alert>
         </Stack>

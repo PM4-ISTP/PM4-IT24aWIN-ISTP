@@ -60,7 +60,6 @@ export function useChallengePodStatus(
 
   // Set up polling interval based on the *resolved* status, not stale closure state
   useEffect(() => {
-    const status = data?.status;
     if (!enabled) return;
     if (!status || status === "NOT_FOUND" || status === "FAILED") return;
 

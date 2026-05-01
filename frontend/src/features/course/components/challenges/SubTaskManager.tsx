@@ -150,9 +150,9 @@ export function SubTaskManager({
     <Stack gap="md">
       <Group justify="space-between" align="center">
         <Stack gap={2}>
-          <Title order={4}>Sub Tasks</Title>
+          <Title order={4}>Challenges</Title>
           <Text size="sm" c="dimmed">
-            Each sub task is worth one point. A sub task without a flag is just a description.
+            Each challenge is worth one point. A challenge without a flag is just a description.
           </Text>
         </Stack>
         <Badge size="lg" variant="light">
@@ -160,7 +160,7 @@ export function SubTaskManager({
         </Badge>
       </Group>
 
-      {subTasks.length === 0 && <Alert color="orange">At least one sub task is required.</Alert>}
+      {subTasks.length === 0 && <Alert color="orange">At least one challenge is required.</Alert>}
 
       {subTasks.length > 0 && (
         <Stack gap="sm">
@@ -169,7 +169,7 @@ export function SubTaskManager({
             const isExpanded = expandedIndex === index;
             const shouldRenderBody = isExpanded || closingIndex === index;
             const hasError = Boolean(err.title || err.description || err.flag);
-            const displayTitle = st.title.trim() || `Sub Task ${index + 1}`;
+            const displayTitle = st.title.trim() || `Challenge ${index + 1}`;
             const hasFlag = st.flag.trim().length > 0;
 
             return (
@@ -241,7 +241,7 @@ export function SubTaskManager({
                           size="sm"
                           color="red"
                           onClick={() => handleRemove(index)}
-                          aria-label="Remove sub task"
+                          aria-label="Remove challenge"
                         >
                           <IconTrash size={14} />
                         </ActionIcon>
@@ -280,7 +280,7 @@ export function SubTaskManager({
 
                         <TextInput
                           label="Flag"
-                          description="Leave empty if this sub task has no flag to submit."
+                          description="Leave empty if this challenge has no flag to submit."
                           placeholder="flag_content_here"
                           leftSection={<Text size="sm">ISTP&#123;</Text>}
                           leftSectionWidth={52}
@@ -303,9 +303,9 @@ export function SubTaskManager({
         variant="light"
         leftSection={<IconPlus size={14} />}
         onClick={handleAdd}
-        aria-label="Add sub task"
+        aria-label="Add challenge"
       >
-        Add Sub Task
+        Add Challenge
       </Button>
     </Stack>
   );

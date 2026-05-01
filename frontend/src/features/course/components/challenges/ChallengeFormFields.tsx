@@ -1,6 +1,6 @@
 "use client";
 
-import { Input, Loader, SegmentedControl, Stack, Textarea, TextInput } from "@mantine/core";
+import { Input, Loader, SegmentedControl, Stack, TextInput } from "@mantine/core";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import MyEditor from "@/src/shared/components/MyEditor";
 import {
@@ -12,7 +12,6 @@ import type {
   ChallengeDifficultyEnum,
 } from "@/src/features/course/actions/challenges";
 import {
-  CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
   STATUS_OPTIONS,
   DIFFICULTY_OPTIONS,
   STATUS_COLORS,
@@ -24,7 +23,6 @@ export type { SubTaskFormValues };
 
 export interface ChallengeFormValues {
   title: string;
-  shortDescription: string;
   description: string;
   status: ChallengeStatusEnum;
   difficulty: ChallengeDifficultyEnum;
@@ -36,14 +34,11 @@ export interface ChallengeFormFieldsProps {
   values: ChallengeFormValues;
   onChange: (values: ChallengeFormValues) => void;
   titleError?: string | null;
-  shortDescriptionError?: string | null;
   dockerImageError?: string | null;
   dockerImageCheckStatus?: DockerImageCheckStatus;
   dockerImageCheckMessage?: string | null;
   subTaskErrors?: Array<Partial<Record<"title" | "description" | "flag", string>>>;
   defaultExpandedSubTaskIndex?: number | null;
-  onCharLimitExceeded?: () => void;
-  onShortDescriptionErrorClear?: () => void;
   onDockerImageErrorClear?: () => void;
 }
 
@@ -51,17 +46,13 @@ export function ChallengeFormFields({
   values,
   onChange,
   titleError,
-  shortDescriptionError,
   dockerImageError,
   dockerImageCheckStatus = "idle",
   dockerImageCheckMessage,
   subTaskErrors,
   defaultExpandedSubTaskIndex,
-  onCharLimitExceeded,
-  onShortDescriptionErrorClear,
   onDockerImageErrorClear,
 }: ChallengeFormFieldsProps) {
-  const shortDescriptionCharCount = values.shortDescription.length;
   const dockerImageFeedback =
     dockerImageCheckStatus === "error" ? dockerImageCheckMessage : dockerImageError;
   const dockerImageDescription =
@@ -72,34 +63,12 @@ export function ChallengeFormFields({
   return (
     <Stack gap="lg">
       <TextInput
-        label="Challenge Title"
-        placeholder="Enter challenge title"
+        label="Lab Title"
+        placeholder="Enter lab title"
         value={values.title}
         onChange={(e) => onChange({ ...values, title: e.currentTarget.value })}
         error={titleError}
         required
-      />
-
-      <Textarea
-        label="Short Description"
-        placeholder="Write a short summary for this challenge"
-        value={values.shortDescription}
-        onChange={(e) => {
-          const newVal = e.currentTarget.value;
-          if (newVal.length > CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS) {
-            onCharLimitExceeded?.();
-            return;
-          }
-          onChange({ ...values, shortDescription: newVal });
-          if (shortDescriptionError) {
-            onShortDescriptionErrorClear?.();
-          }
-        }}
-        error={shortDescriptionError}
-        description={`${shortDescriptionCharCount}/${CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
-        autosize
-        minRows={2}
-        maxRows={4}
       />
 
       <MyEditor

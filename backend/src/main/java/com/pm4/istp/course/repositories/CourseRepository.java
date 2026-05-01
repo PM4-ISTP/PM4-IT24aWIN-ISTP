@@ -3,6 +3,7 @@ package com.pm4.istp.course.repositories;
 import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -342,4 +343,16 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
   @Query(
       "update Course c set c.topic = null, c.updatedAt = CURRENT_TIMESTAMP where c.topic = :topic")
   int clearTopic(@Param("topic") String topic);
+
+  @Query(
+      """
+      select distinct c from Course c
+      join fetch c.courseChallenges cc
+      join fetch cc.challenge ch
+      join fetch ch.subTasks
+      join c.courseEnrollments ce
+      where cc.challenge.id = :challengeId and ce.participant.id = :userId
+      """)
+  List<Course> findCoursesByChallengeIdAndEnrolledUserId(
+      @Param("challengeId") UUID challengeId, @Param("userId") UUID userId);
 }

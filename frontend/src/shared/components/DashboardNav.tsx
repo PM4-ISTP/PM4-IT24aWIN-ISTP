@@ -122,7 +122,7 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
           />
           <NavItem
             href="/dashboard/instructor/challenges"
-            label="Challenges"
+            label="Labs"
             icon="flag"
             active={pathname.startsWith("/dashboard/instructor/challenges")}
           />

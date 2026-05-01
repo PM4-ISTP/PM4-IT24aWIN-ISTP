@@ -57,6 +57,7 @@ import {
 } from "@/src/features/course/components/management/CourseChallengeManager";
 import { CourseSubmissionsTable } from "@/src/features/course/components/management/CourseSubmissionsTable";
 import { updateCourseChallenges } from "@/src/features/course/actions/challenges";
+import BadgeDesigner, { type BadgeConfig } from "@/src/features/badge/components/BadgeDesigner";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 const COLLABORATOR_ROLE: InstructorRoleEnum = "COLLABORATOR";
@@ -112,6 +113,7 @@ export default function EditCourse() {
 
   const [removeParticipantError, setRemoveParticipantError] = useState<string | null>(null);
   const [removingParticipantIds, setRemovingParticipantIds] = useState<string[]>([]);
+  const [badgeConfig, setBadgeConfig] = useState<BadgeConfig | null>(null);
 
   function handleCollaboratorChange(newValue: string[]) {
     const ownerId = owner?.id;
@@ -234,6 +236,19 @@ export default function EditCourse() {
     if (!challengeResult.success) {
       setFormError(challengeResult.error);
       return;
+    }
+
+    if (badgeConfig) {
+      await fetch(`/api/backend/api/v1/courses/${courseId}/badge`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          primaryColor: badgeConfig.primaryColor,
+          textColor: badgeConfig.textColor,
+          template: badgeConfig.template,
+          badgeIcon: badgeConfig.badgeIcon,
+        }),
+      }).catch(() => {});
     }
 
     setInviteCode(result.data.inviteCode ?? null);
@@ -544,6 +559,19 @@ export default function EditCourse() {
                 />
 
                 <CourseSubmissionsTable courseId={courseId} />
+
+                {isOwner && (
+                  <Box
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: 14,
+                      padding: "1.5rem",
+                    }}
+                  >
+                    <BadgeDesigner courseId={courseId} onChange={setBadgeConfig} />
+                  </Box>
+                )}
 
                 {formError && (
                   <Alert color="red" title="Could not save changes" variant="light">

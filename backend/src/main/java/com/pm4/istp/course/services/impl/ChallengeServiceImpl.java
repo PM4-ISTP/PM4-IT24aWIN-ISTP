@@ -1,5 +1,6 @@
 package com.pm4.istp.course.services.impl;
 
+import com.pm4.istp.badge.services.BadgeService;
 import com.pm4.istp.course.db.CreateChallengeRequest;
 import com.pm4.istp.course.db.SubTaskRequest;
 import com.pm4.istp.course.db.UpdateChallengeRequest;
@@ -57,6 +58,7 @@ public class ChallengeServiceImpl implements ChallengeService {
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final ChallengeMapper challengeMapper;
   private final DockerImageAvailabilityService dockerImageAvailabilityService;
+  private final BadgeService badgeService;
 
   @Override
   @Transactional
@@ -389,6 +391,10 @@ public class ChallengeServiceImpl implements ChallengeService {
     int solvedCount = solvedIds.size();
     int totalCount = siblings.size();
     boolean challengeSolved = totalCount > 0 && solvedCount == totalCount;
+
+    if (correct && challengeSolved) {
+      badgeService.tryAwardBadgesForChallenge(userId, challengeId);
+    }
 
     return new SubTaskSubmissionResponseDto(correct, challengeSolved, solvedCount, totalCount);
   }

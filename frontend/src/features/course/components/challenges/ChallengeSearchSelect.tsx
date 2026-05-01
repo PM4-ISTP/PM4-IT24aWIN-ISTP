@@ -18,7 +18,7 @@ export function ChallengeSearchSelect({ excludeIds, onSelect }: ChallengeSearchS
   return (
     <>
       <TextInput
-        placeholder="Search challenges to add..."
+        placeholder="Search labs to add..."
         leftSection={<IconSearch size={16} />}
         readOnly
         onClick={() => setOpened(true)}

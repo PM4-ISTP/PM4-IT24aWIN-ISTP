@@ -24,10 +24,10 @@ export default async function InstructorChallenges(props: {
               fontWeight: 700,
             }}
           >
-            Challenges
+            Labs
           </Title>
           <Text size="sm" style={{ color: "#94a3b8" }} mt={4}>
-            Manage or create your reusable challenges here.
+            Manage or create your reusable labs here.
           </Text>
         </div>
         <Link href="/dashboard/instructor/challenges/create">
@@ -42,7 +42,7 @@ export default async function InstructorChallenges(props: {
               boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
             }}
           >
-            New Challenge
+            New Lab
           </Button>
         </Link>
       </Group>
@@ -63,8 +63,8 @@ export default async function InstructorChallenges(props: {
           currentPage={currentPage}
         />
       ) : (
-        <Alert color="red" title="Could not load challenges" variant="light">
-          Something went wrong loading your challenges. Please refresh the page.
+        <Alert color="red" title="Could not load labs" variant="light">
+          Something went wrong loading your labs. Please refresh the page.
         </Alert>
       )}
     </Stack>

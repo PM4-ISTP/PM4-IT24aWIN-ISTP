@@ -59,7 +59,7 @@ export function ChallengePickerModal({
       setChallenges(result.data.content ?? []);
       setTotalPages(result.data.totalPages ?? 0);
     } catch {
-      setError("Failed to load challenges");
+      setError("Failed to load labs");
     } finally {
       setLoading(false);
     }
@@ -91,10 +91,10 @@ export function ChallengePickerModal({
   }
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Add Challenge to Course" size="lg" centered>
+    <Modal opened={opened} onClose={onClose} title="Add Lab to Course" size="lg" centered>
       <Stack gap="md">
         <TextInput
-          placeholder="Search challenges..."
+          placeholder="Search labs..."
           leftSection={<IconSearch size={16} />}
           value={query}
           onChange={(e) => handleSearchChange(e.currentTarget.value)}
@@ -111,7 +111,7 @@ export function ChallengePickerModal({
           </Text>
         ) : challenges.length === 0 ? (
           <Text c="dimmed" size="sm" ta="center" p="md">
-            No challenges found.
+            No labs found.
           </Text>
         ) : (
           <Stack gap="xs">
@@ -136,12 +136,6 @@ export function ChallengePickerModal({
                         </Text>
                         {isAdded && <IconCheck size={16} color="var(--mantine-color-teal-5)" />}
                       </Group>
-
-                      {challenge.shortDescription && (
-                        <Text size="xs" c="dimmed" lineClamp={1}>
-                          {challenge.shortDescription}
-                        </Text>
-                      )}
 
                       <Group gap="xs">
                         <Badge

@@ -91,6 +91,18 @@ public class Course {
     courseChallenge.setCourse(null);
   }
 
+  @Column(name = "badge_primary_color", nullable = true, length = 7)
+  private String badgePrimaryColor;
+
+  @Column(name = "badge_text_color", nullable = true, length = 7)
+  private String badgeTextColor;
+
+  @Column(name = "badge_template", nullable = true)
+  private Integer badgeTemplate;
+
+  @Column(name = "badge_icon", nullable = true, length = 16)
+  private String badgeIcon;
+
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
