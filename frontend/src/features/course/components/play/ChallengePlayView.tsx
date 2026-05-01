@@ -18,6 +18,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
   IconArrowLeft,
@@ -93,33 +94,37 @@ function ConsoleCredentials({
   if (!password && !expiresAt) return null;
 
   return (
-    <Group justify="space-between" gap="xs">
-      {password ? (
-        <Group gap={4} wrap="nowrap">
+    <Paper withBorder radius="md" p="sm" style={{ background: "rgba(255,255,255,0.025)" }}>
+      <Group justify="space-between" gap="xs" align="center">
+        {password ? (
+          <Stack gap={4}>
+            <Text size="xs" c="dimmed" fw={700} tt="uppercase">
+              Console login
+            </Text>
+            <Group gap={4} wrap="nowrap">
+              <Text component="span" ff="monospace" size="xs">
+                student
+              </Text>
+              <CopyIconButton value="student" label="Copy console username" />
+              <Text size="xs" c="dimmed">
+                /
+              </Text>
+              <Text component="span" ff="monospace" size="xs">
+                {password}
+              </Text>
+              <CopyIconButton value={password} label="Copy console password" />
+            </Group>
+          </Stack>
+        ) : (
+          <span />
+        )}
+        {expiresAt && (
           <Text size="xs" c="dimmed">
-            Console login:
+            Expires: {expiresAt}
           </Text>
-          <Text component="span" ff="monospace" size="xs">
-            student
-          </Text>
-          <CopyIconButton value="student" label="Copy console username" />
-          <Text size="xs" c="dimmed">
-            /
-          </Text>
-          <Text component="span" ff="monospace" size="xs">
-            {password}
-          </Text>
-          <CopyIconButton value={password} label="Copy console password" />
-        </Group>
-      ) : (
-        <span />
-      )}
-      {expiresAt && (
-        <Text size="xs" c="dimmed">
-          Expires: {expiresAt}
-        </Text>
-      )}
-    </Group>
+        )}
+      </Group>
+    </Paper>
   );
 }
 
@@ -142,17 +147,17 @@ function LabLaunchCard({
     <Paper
       withBorder
       radius="md"
-      p="md"
+      p="sm"
       style={{
         background: url
           ? "linear-gradient(135deg, rgba(59,130,246,0.14), rgba(20,184,166,0.08))"
           : "rgba(255,255,255,0.03)",
       }}
     >
-      <Stack gap="md">
-        <Group justify="space-between" align="flex-start" gap="md" wrap="nowrap">
+      <Stack gap="sm">
+        <Group justify="space-between" align="flex-start" gap="sm" wrap="nowrap">
           <Group gap="sm" align="flex-start" wrap="nowrap">
-            <ThemeIcon variant="light" radius="md" size={42}>
+            <ThemeIcon variant="light" radius="md" size={38}>
               {icon}
             </ThemeIcon>
             <Stack gap={3}>
@@ -197,6 +202,7 @@ export function ChallengePlayView({
   challengeId: string;
   initialChallenge: ChallengeStudentDto;
 }) {
+  const isNarrow = useMediaQuery("(max-width: 900px)");
   const apiClient = useApiClient();
   const [challenge, setChallenge] = useState<ChallengeStudentDto>(initialChallenge);
   const [activeStep, setActiveStep] = useState<number>(() =>
@@ -236,6 +242,11 @@ export function ChallengePlayView({
     dockerImageCheck.status === "success" ||
     (dockerImageCheck.status === "idle" && !dockerImage.trim());
   const startDisabled = podActionLoading || dockerImageCheck.status === "checking" || !canStartPod;
+  const labIsStarting =
+    podStatusLoading ||
+    podStatus === "PROVISIONING" ||
+    podActionLoading ||
+    podStatus === "TERMINATING";
   let startDisabledReason: string | null = null;
   if (dockerImageCheck.status === "checking") {
     startDisabledReason = "Checking Docker image...";
@@ -366,9 +377,9 @@ export function ChallengePlayView({
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 60px - var(--app-shell-padding) * 2)",
+        height: isNarrow ? "auto" : "calc(100vh - 60px - var(--app-shell-padding) * 2)",
         minHeight: 0,
-        overflow: "hidden",
+        overflow: isNarrow ? "visible" : "hidden",
       }}
     >
       <Group justify="space-between" align="center" px="lg" pb="md" style={{ flexShrink: 0 }}>
@@ -396,12 +407,12 @@ export function ChallengePlayView({
       <Box
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(0, 1.12fr) minmax(360px, 0.88fr)",
+          gridTemplateColumns: isNarrow ? "1fr" : "minmax(0, 1.12fr) minmax(340px, 0.88fr)",
           gap: "1rem",
           padding: "0 1rem 1rem",
           flex: 1,
           minHeight: 0,
-          overflow: "hidden",
+          overflow: isNarrow ? "visible" : "hidden",
         }}
       >
         <Paper
@@ -411,7 +422,7 @@ export function ChallengePlayView({
           style={{
             background: "rgba(255,255,255,0.02)",
             overflow: "auto",
-            minHeight: 0,
+            minHeight: isNarrow ? undefined : 0,
           }}
         >
           <Stack gap="lg">
@@ -600,7 +611,7 @@ export function ChallengePlayView({
             background: "rgba(255,255,255,0.02)",
             display: "flex",
             flexDirection: "column",
-            minHeight: 0,
+            minHeight: isNarrow ? undefined : 0,
             overflow: "hidden",
           }}
         >
@@ -613,7 +624,7 @@ export function ChallengePlayView({
           >
             <Group gap="xs">
               <Text size="sm" fw={600}>
-                Lab Environment
+                Lab
               </Text>
               <ChallengePodStatusBadge status={podStatus} />
             </Group>
@@ -655,7 +666,7 @@ export function ChallengePlayView({
             </Group>
           </Group>
 
-          <Stack gap="md" p="lg" style={{ flex: 1, overflow: "auto" }}>
+          <Stack gap="sm" p="md" style={{ flex: 1, overflow: isNarrow ? "visible" : "auto" }}>
             {startDisabledReason && (
               <Paper
                 withBorder
@@ -672,31 +683,40 @@ export function ChallengePlayView({
             <LabLaunchCard
               title="Challenge app"
               description={
-                podStatus === "RUNNING"
-                  ? "Open the running web service in its own browser tab."
-                  : "The app link appears once the lab is running."
+                podStatus === "RUNNING" && pod?.appUrl
+                  ? "Web service ready."
+                  : labIsStarting
+                    ? "Starting web service."
+                    : "Start the lab to get app access."
               }
               icon={<IconWorld size={22} />}
               url={podStatus === "RUNNING" ? pod?.appUrl : null}
               buttonLabel="Open app"
-              disabledLabel="App not ready"
+              disabledLabel={labIsStarting ? "Starting..." : "App not ready"}
             />
 
             <LabLaunchCard
               title="Console"
               description={
-                podStatus === "RUNNING"
-                  ? "Open terminal access in a separate browser tab."
-                  : "The console link appears once the lab is running."
+                podStatus === "RUNNING" && pod?.terminalUrl
+                  ? "Terminal access ready."
+                  : labIsStarting
+                    ? "Starting terminal access."
+                    : "Start the lab to get console access."
               }
               icon={<IconTerminal2 size={22} />}
               url={podStatus === "RUNNING" ? pod?.terminalUrl : null}
               buttonLabel="Open console"
-              disabledLabel="Console not ready"
+              disabledLabel={labIsStarting ? "Starting..." : "Console not ready"}
             />
 
             {(podActionError || podStatusError) && (
-              <Paper withBorder radius="md" p="md" style={{ background: "rgba(248,113,113,0.08)" }}>
+              <Paper
+                withBorder
+                radius="md"
+                p="md"
+                style={{ background: "rgba(248,113,113,0.08)" }}
+              >
                 <Text size="sm" c="red.3">
                   {podActionError ?? podStatusError}
                 </Text>
