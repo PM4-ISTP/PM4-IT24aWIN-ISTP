@@ -349,7 +349,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
       select distinct c from Course c
       join fetch c.courseChallenges cc
       join fetch cc.challenge ch
-      join fetch ch.subTasks
       join c.courseEnrollments ce
       where cc.challenge.id = :challengeId and ce.participant.id = :userId
       """)
