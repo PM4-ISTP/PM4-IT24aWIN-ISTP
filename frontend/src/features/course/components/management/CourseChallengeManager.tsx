@@ -16,6 +16,7 @@ import {
   Loader,
   Stack,
   Text,
+  TextInput,
   Title,
 } from "@mantine/core";
 import {
@@ -45,6 +46,8 @@ export interface CourseChallengeEntry {
   challengeTitle: string;
   difficulty: string;
   orderIndex: number;
+  /** ISO local datetime string (e.g. 2026-05-01T12:00:00) or null when no deadline is set. */
+  dueAt?: string | null;
   shortDescription?: string;
   creatorName?: string;
   creatorId?: string;
@@ -233,6 +236,21 @@ function ChallengeDetailView({ detail }: { detail: ChallengeDetailResponseDto })
   );
 }
 
+function toDateTimeLocalValue(value?: string | null): string {
+  if (!value) return "";
+  // backend uses LocalDateTime -> ISO_LOCAL_DATE_TIME (no timezone), typically with seconds
+  // datetime-local expects YYYY-MM-DDTHH:mm
+  if (value.length >= 16) return value.slice(0, 16);
+  return value;
+}
+
+function fromDateTimeLocalValue(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  // normalize to include seconds
+  return trimmed.length === 16 ? `${trimmed}:00` : trimmed;
+}
+
 export function CourseChallengeManager({ challenges, onChange }: CourseChallengeManagerProps) {
   const { data: session } = useSession();
   const currentUserId = (session as { userId?: string } | null)?.userId;
@@ -250,6 +268,7 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
       challengeTitle: challenge.title ?? "",
       difficulty: challenge.difficulty ?? "MEDIUM",
       orderIndex: challenges.length,
+      dueAt: null,
       shortDescription: challenge.shortDescription ?? undefined,
       creatorName: challenge.creatorName ?? undefined,
       status: challenge.status ?? undefined,
@@ -486,6 +505,20 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
                       align="center"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      <TextInput
+                        label="Due date & time"
+                        type="datetime-local"
+                        size="xs"
+                        w={210}
+                        value={toDateTimeLocalValue(challenge.dueAt)}
+                        onChange={(e) => {
+                          const next = fromDateTimeLocalValue(e.currentTarget.value);
+                          const updated = [...challenges];
+                          updated[index] = { ...updated[index], dueAt: next };
+                          onChange(updated);
+                        }}
+                        placeholder="Optional"
+                      />
                       {challenge.status && (
                         <Badge size="xs" variant="light" color={getStatusColor(challenge.status)}>
                           {challenge.status}

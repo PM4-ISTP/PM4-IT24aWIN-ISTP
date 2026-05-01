@@ -55,6 +55,7 @@ import {
   CourseChallengeManager,
   type CourseChallengeEntry,
 } from "@/src/features/course/components/management/CourseChallengeManager";
+import { CourseSubmissionsTable } from "@/src/features/course/components/management/CourseSubmissionsTable";
 import { updateCourseChallenges } from "@/src/features/course/actions/challenges";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
@@ -162,6 +163,7 @@ export default function EditCourse() {
             challengeTitle: string;
             difficulty: string;
             orderIndex: number;
+            dueAt?: string | null;
           },
           i: number
         ) => ({
@@ -169,6 +171,7 @@ export default function EditCourse() {
           challengeTitle: c.challengeTitle,
           difficulty: c.difficulty,
           orderIndex: c.orderIndex ?? i,
+          dueAt: c.dueAt ?? null,
         })
       );
       setCourseChallenges(cc);
@@ -222,6 +225,7 @@ export default function EditCourse() {
       courseChallenges.map((c) => ({
         challengeId: c.challengeId,
         orderIndex: c.orderIndex,
+        dueAt: c.dueAt ?? undefined,
       }))
     );
 
@@ -538,6 +542,8 @@ export default function EditCourse() {
                   challenges={courseChallenges}
                   onChange={setCourseChallenges}
                 />
+
+                <CourseSubmissionsTable courseId={courseId} />
 
                 {formError && (
                   <Alert color="red" title="Failed to update course">

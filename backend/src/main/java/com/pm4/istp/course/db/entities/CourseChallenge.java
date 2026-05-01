@@ -33,6 +33,9 @@ public class CourseChallenge {
   @Column(name = "order_index", nullable = false)
   private int orderIndex;
 
+  @Column(name = "due_at", nullable = true)
+  private LocalDateTime dueAt;
+
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;

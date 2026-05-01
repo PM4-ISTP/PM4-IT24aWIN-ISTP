@@ -101,6 +101,7 @@ export interface CourseChallengeResponseDto {
   challengeTitle: string;
   difficulty: string;
   orderIndex: number;
+  dueAt?: string | null;
 }
 
 export interface CourseDetailResponseDto {
@@ -120,6 +121,28 @@ export interface CourseDetailResponseDto {
   courseChallenges: CourseChallengeResponseDto[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type CourseChallengeSubmissionStatusEnum =
+  | "NOT_SUBMITTED"
+  | "IN_PROGRESS"
+  | "ON_TIME"
+  | "LATE";
+
+export interface CourseChallengeSubmissionEntryDto {
+  participantId: string;
+  challengeId: string;
+  solvedSubTaskCount: number;
+  totalSubTaskCount: number;
+  completedAt: string | null;
+  status: CourseChallengeSubmissionStatusEnum;
+}
+
+export interface CourseChallengeSubmissionsResponseDto {
+  courseId: string;
+  participants: CourseParticipantDto[];
+  challenges: CourseChallengeResponseDto[];
+  submissions: CourseChallengeSubmissionEntryDto[];
 }
 
 export interface PublicCourseDetailResponseDto {
