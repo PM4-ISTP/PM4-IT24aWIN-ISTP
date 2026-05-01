@@ -14,4 +14,3 @@ public class CourseChallengeDeadlineDto {
   private String challengeTitle;
   private LocalDateTime dueAt;
 }
-

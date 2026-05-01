@@ -281,7 +281,8 @@ public class CourseController {
             content =
                 @Content(
                     array =
-                        @ArraySchema(schema = @Schema(implementation = CourseChallengeDeadlineDto.class))))
+                        @ArraySchema(
+                            schema = @Schema(implementation = CourseChallengeDeadlineDto.class))))
       })
   @GetMapping("/my-deadlines")
   public ResponseEntity<List<CourseChallengeDeadlineDto>> listMyDeadlines(
