@@ -181,4 +181,3 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
     </Box>
   );
 }
-
