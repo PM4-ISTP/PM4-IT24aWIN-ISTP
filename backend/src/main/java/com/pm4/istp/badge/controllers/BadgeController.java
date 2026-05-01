@@ -49,7 +49,7 @@ public class BadgeController {
     return ResponseEntity.ok(badgeService.getUserBadges(userId));
   }
 
-  @GetMapping(value = "/courses/{courseId}/badge/svg", produces = MediaType.IMAGE_SVG_VALUE)
+  @GetMapping(value = "/courses/{courseId}/badge/svg", produces = "image/svg+xml")
   public ResponseEntity<String> getCourseBadgeSvg(@PathVariable UUID courseId) {
     CourseBadgeConfigDto config = badgeService.getCourseBadgeConfig(courseId);
     String svg = generateSvg(config);
