@@ -6,6 +6,8 @@ plugins {
 	id 'checkstyle'
 	id 'pmd'
 	id 'com.github.spotbugs' version '6.0.27'
+	id 'jacoco'
+	id 'org.sonarqube' version '7.2.3.7755'
 }
 
 group = 'com.pm4'
@@ -37,6 +39,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-scalar:2.8.16'
 	implementation 'org.mapstruct:mapstruct:1.6.3'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'org.postgresql:postgresql'
@@ -54,8 +57,30 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs << '-parameters'
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		xml.outputLocation = layout.buildDirectory.file('reports/jacoco/test/jacocoTestReport.xml')
+	}
+}
+
+// ─── SonarQube ────────────────────────────────────────────────────────────────
+sonar {
+	properties {
+		property 'sonar.projectKey', 'pm4-it24awin-istp'
+		property 'sonar.host.url', 'https://sonarqube.pm4.init-lab.ch'
+		property 'sonar.coverage.jacoco.xmlReportPaths', 'build/reports/jacoco/test/jacocoTestReport.xml'
+	}
 }
 
 // ─── Spotless (google-java-format) ────────────────────────────────────────────

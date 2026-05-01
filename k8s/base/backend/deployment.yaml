@@ -41,17 +41,46 @@ spec:
                 configMapKeyRef:
                   name: istp-config
                   key: keycloak-issuer-uri
-            - name: K8S_KUBECONFIG_PATH
-              value: /etc/kubeconfig/kubeconfig
+            - name: KEYCLOAK_ADMIN_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-admin-base-url
+            - name: KEYCLOAK_ADMIN_REALM
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-realm
+            - name: KEYCLOAK_ADMIN_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-admin-client-id
+            - name: KEYCLOAK_ADMIN_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin-api-client
+                  key: client-secret
+            - name: KEYCLOAK_APP_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: keycloak-client-id
             - name: K8S_DEFAULT_NAMESPACE
               valueFrom:
                 configMapKeyRef:
                   name: istp-config
                   key: app-namespace
-          volumeMounts:
-            - name: kubeconfig
-              mountPath: /etc/kubeconfig
-              readOnly: true
+            - name: ISTP_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: istp-domain
+            - name: ISTP_TLS
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: istp-tls
           resources:
             requests:
               cpu: 250m
@@ -59,7 +88,3 @@ spec:
             limits:
               cpu: "1"
               memory: 1Gi
-      volumes:
-        - name: kubeconfig
-          secret:
-            secretName: kubeconfig # created manually, see README

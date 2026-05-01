@@ -8,9 +8,13 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ── CI checks (run on every branch and pull request) ───────────────────────
+
   lint-and-format:
-    name: Lint & Format Check
+    name: Lint & Format Frontend
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: frontend
@@ -18,6 +22,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -29,15 +37,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Prettier check
-        run: npm run format:check
+      - name: Prettier auto-fix
+        run: npm run format
 
-      - name: ESLint check
-        run: npm run lint
+      - name: ESLint auto-fix
+        run: npm run lint:fix
+
+      - name: Commit lint/format fixes
+        working-directory: .
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add frontend/
+          git diff --staged --quiet || git commit -m "ci: auto-fix frontend lint and format [skip ci]"
+          for i in 1 2 3; do git pull --rebase && git push && break || sleep 5; done
 
   backend-lint-and-format:
     name: Backend Lint & Format
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: backend
@@ -45,6 +64,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -56,8 +79,17 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Spotless format check
-        run: ./gradlew spotlessCheck
+      - name: Spotless auto-fix
+        run: ./gradlew spotlessApply
+
+      - name: Commit lint/format fixes
+        working-directory: .
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backend/
+          git diff --staged --quiet || git commit -m "ci: auto-fix backend spotless format [skip ci]"
+          for i in 1 2 3; do git pull --rebase && git push && break || sleep 5; done
 
       - name: Checkstyle
         run: ./gradlew checkstyleMain
@@ -79,11 +111,51 @@ jobs:
             backend/build/reports/spotbugs/
           retention-days: 7
 
+  backend-test-and-sonar:
+    name: Backend Tests & SonarQube
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, backend-lint-and-format]
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Run tests and generate JaCoCo coverage report
+        run: ./gradlew test jacocoTestReport
+
+      - name: Run SonarQube analysis
+        run: ./gradlew sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── Image builds (dev and main branches only) ──────────────────────────────
+
   build-push-backend:
     name: Build & Push Backend Image
     runs-on: ubuntu-latest
-    needs: backend-lint-and-format
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    needs: [backend-lint-and-format, backend-test-and-sonar]
+    if: |
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
     outputs:
       sha_short: ${{ steps.vars.outputs.sha_short }}
     permissions:
@@ -130,7 +202,9 @@ jobs:
     name: Build & Push Frontend Image
     runs-on: ubuntu-latest
     needs: lint-and-format
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    if: |
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
     permissions:
       contents: read
       packages: write
@@ -167,42 +241,39 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # ── Staging deployment (dev branch) ────────────────────────────────────────
+  # Merge into dev → build images → deploy to staging → run E2E tests
+
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     needs: [build-push-backend, build-push-frontend]
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
-    permissions:
-      contents: read
+    if: |
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/dev'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
 
-      - name: Write kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.STAGING_KUBECONFIG }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
+      - name: Set kubeconfig
+        run: echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
 
-      - name: Set image tags and apply
+      - name: Update image tags and deploy to staging
         run: |
           SHA="${{ needs.build-push-backend.outputs.sha_short }}"
           sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/staging/kustomization.yaml
-          kubectl apply -k k8s/overlays/staging/
+          kubectl --kubeconfig=kubeconfig.yaml apply -k k8s/overlays/staging
 
-      - name: Wait for rollout
-        run: |
-          kubectl -n istp-staging rollout status deployment/backend --timeout=120s
-          kubectl -n istp-staging rollout status deployment/frontend --timeout=120s
-
-  cypress-e2e:
-    name: Cypress E2E Tests (Staging)
+  playwright-e2e:
+    name: Playwright E2E Tests (Staging)
     runs-on: ubuntu-latest
     needs: deploy-staging
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    if: |
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/dev'
     permissions:
       contents: read
     defaults:
@@ -222,6 +293,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
 
       - name: Build Next.js app
         run: npm run build
@@ -250,27 +324,47 @@ jobs:
           timeout 60 bash -c 'until curl -sf http://localhost:3000 > /dev/null 2>&1; do sleep 2; done'
           echo "Next.js is ready"
 
-      - name: Run Cypress E2E tests
-        run: npm run test:e2e
+      - name: Run Playwright E2E tests
+        run: npm run test:e2e -- --project=chromium
         env:
-          CYPRESS_KEYCLOAK_ORIGIN: https://istp-staging-auth.pm4.init-lab.ch
+          BASE_URL: http://localhost:3000
           CYPRESS_ADMIN_USERNAME: ${{ secrets.CYPRESS_ADMIN_USERNAME }}
           CYPRESS_ADMIN_PASSWORD: ${{ secrets.CYPRESS_ADMIN_PASSWORD }}
-          CYPRESS_USER_USERNAME: ${{ secrets.CYPRESS_USER_USERNAME }}
-          CYPRESS_USER_PASSWORD: ${{ secrets.CYPRESS_USER_PASSWORD }}
 
-      - name: Upload Cypress screenshots
-        if: failure()
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-screenshots
-          path: frontend/cypress/screenshots
+          name: playwright-report
+          path: frontend/playwright-report/
           retention-days: 7
 
-      - name: Upload Cypress videos
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-videos
-          path: frontend/cypress/videos
-          retention-days: 7
+  # ── Production deployment (main branch) ────────────────────────────────────
+  # Merge dev → main → build images → deploy to production
+  #
+  # Prerequisite: add a KUBECONFIG_PROD secret in GitHub repository settings
+  # containing the kubeconfig for the production cluster. If staging and
+  # production share a cluster, KUBECONFIG_PROD can point to the same cluster.
+
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-push-backend, build-push-frontend]
+    if: |
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Set kubeconfig
+        run: echo "${{ secrets.KUBECONFIG_PROD }}" > kubeconfig.yaml
+
+      - name: Update image tags and deploy to production
+        run: |
+          SHA="${{ needs.build-push-backend.outputs.sha_short }}"
+          sed -i "s/newTag: .*/newTag: $SHA/" k8s/overlays/prod/kustomization.yaml
+          kubectl --kubeconfig=kubeconfig.yaml apply -k k8s/overlays/prod

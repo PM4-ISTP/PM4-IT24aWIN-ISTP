@@ -1,4 +1,5 @@
 # PM4-IT24aWIN-ISTP
+
 Interactive Security Training Platform
 
 ---
@@ -8,13 +9,14 @@ Interactive Security Training Platform
 ### Prerequisites
 
 Ensure you have the following installed:
+
 - **Docker** — for PostgreSQL, Keycloak, and Adminer
 - **Java 21+** — for the Spring Boot backend
 - **Node.js 22+** — for the Next.js frontend
-- **k3d** — for local Kubernetes cluster 
+- **k3d** — for local Kubernetes cluster
 - **kubectl** — for interacting with Kubernetes (optional)
 
-> **Windows users:** Docker Desktop must be **started and running** before you execute any `docker compose` command. Look for the Docker whale icon in the system tray — if it isn't there (or shows "Docker Desktop is starting"), wait for it to finish starting before continuing. Make sure Docker Desktop is set to use **Linux containers** (right-click the tray icon → *Switch to Linux containers* if the option appears).
+> **Windows users:** Docker Desktop must be **started and running** before you execute any `docker compose` command. Look for the Docker whale icon in the system tray — if it isn't there (or shows "Docker Desktop is starting"), wait for it to finish starting before continuing. Make sure Docker Desktop is set to use **Linux containers** (right-click the tray icon → _Switch to Linux containers_ if the option appears).
 
 ### Quick Start
 
@@ -28,9 +30,11 @@ docker compose up -d
 ```
 
 To stop services:
+
 ```bash
 docker compose down
 ```
+
 ---
 
 #### 2. Start the Backend
@@ -44,7 +48,17 @@ cd backend
 
 The Spring Boot application starts on `http://localhost:8080`.
 
+**Keycloak Admin API (required for profile sync + admin features):**
+
+The backend calls the Keycloak **Admin REST API** using a service account client (`istp-backend`).
+For local development you must provide the client secret via an env var:
+
+```powershell
+$env:KEYCLOAK_ADMIN_CLIENT_SECRET="<<client secret from Keycloak client istp-backend>>"
+```
+
 **Before committing**, always run code formatting:
+
 ```bash
 ./gradlew spotlessApply
 ```
@@ -71,9 +85,9 @@ You can skip running Keycloak (and optionally the backend) locally by pointing y
 
 #### Staging URLs
 
-| Service | URL |
-|---|---|
-| **App** (Next.js frontend + backend) | https://istp-staging.pm4.init-lab.ch |
+| Service                                           | URL                                                                                             |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **App** (Next.js frontend + backend)              | https://istp-staging.pm4.init-lab.ch                                                            |
 | **Keycloak Admin Console** (manage users & roles) | https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/ |
 
 When users sign in to the app they are redirected to the Keycloak OIDC login page at:
@@ -90,9 +104,9 @@ cp .env.local.example .env.local
 
 Open `frontend/.env.local` and set:
 
-| Variable | Where to get it |
-|---|---|
-| `NEXTAUTH_SECRET` | Generate with `openssl rand -base64 32` |
+| Variable               | Where to get it                                                                                                                                                                                          |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXTAUTH_SECRET`      | Generate with `openssl rand -base64 32`                                                                                                                                                                  |
 | `AUTH_KEYCLOAK_SECRET` | [Keycloak Admin Console](https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/) → **Clients** → `interactive-security-training-platform-app` → **Credentials** |
 
 #### Connect to Staging Keycloak (skip local Docker Compose)
@@ -106,6 +120,9 @@ docker compose up -d db adminer
 ```
 
 Then start the backend and frontend as usual.
+
+> If you point your backend at staging Keycloak (issuer-uri), you also need the staging `istp-backend`
+> client secret for `KEYCLOAK_ADMIN_CLIENT_SECRET` so Admin API calls work.
 
 #### Connect to Staging Backend (frontend-only development)
 
@@ -131,30 +148,60 @@ npm run dev
 k3d is a lightweight Kubernetes distribution perfect for local development.
 
 ```bash
-k3d cluster create istp
+k3d cluster create istp --port "80:80@loadbalancer" --port "443:443@loadbalancer"
 ```
 
 **Verify the cluster is running:**
+
 ```bash
 k3d cluster list
 kubectl cluster-info
 ```
 
+#### kubectl on Windows 11
+
+If you want to use kubectl on Windows, you need to go to the file `.kube/config` in your local user folder. There you need to replace `server: https://host.docker.internal:62824` with `server: https://127.0.0.1:62824`. The port might differ. Just use the port that is specified by the `config` file.
+
 #### Download and Configure Kubeconfig
 
-Once the cluster is created, export the kubeconfig to the backend:
+Once the cluster is created, export the kubeconfig to the backend.
+
+> **Backend Keycloak Admin API secret (Kubernetes):**
+> Create a secret named `keycloak-admin-api-client` with key `client-secret` in your namespace.
+> Template: `k8s/secrets/keycloak-admin-api-client.secret.example.yaml`
+
+**Linux:**
+
+On Linux you can run the following command:
 
 ```bash
 # From the project root (pm4/)
 mkdir -p backend/src/main/resources
+k3d kubeconfig get istp | sed 's/0\.0\.0\.0/127.0.0.1/g' > backend/src/main/resources/Kubeconfig
+```
+
+> **Note:** The `sed` command replaces `0.0.0.0` with `127.0.0.1` in the server address. k3d generates kubeconfigs with `0.0.0.0` as the host, which is a valid bind address for a server but not a valid destination for client connections — the Java Kubernetes client will fail with "Host is down" without this substitution.
+
+**Windows 11:**
+
+If you are on Windows 11, you need to run the following command (in Powershell):
+
+```powershell
+# From the project root (pm4/)
+New-Item -ItemType Directory -Path backend/src/main/resources -Force
 k3d kubeconfig get istp > backend/src/main/resources/Kubeconfig
 ```
 
+After running the command, please open the Kubeconfig file in `backend/src/main/resources/Kubeconfig` and replace `server: https://host.docker.internal:62824` with `server: https://127.0.0.1:62824`. The port might differ. Just use the port that is specified by your Kubeconfig.
+
 **Key points:**
+
 - The Kubeconfig file is required by the backend to communicate with the Kubernetes cluster
 - The file is already `.gitignored` (contains sensitive cluster credentials)
+- Re-run this command after every cluster restart — k3d assigns a new random port each time
 
 **Verify the kubeconfig was created:**
+
 ```bash
 ls -la backend/src/main/resources/Kubeconfig
 ```
@@ -163,14 +210,15 @@ ls -la backend/src/main/resources/Kubeconfig
 
 All branches must use one of the following prefixes:
 
-| Prefix | Use for |
-|---|---|
-| `feature/` | New features or enhancements |
-| `bugfix/` | Bug fixes |
-| `docs/` | Documentation changes |
+| Prefix      | Use for                                   |
+| ----------- | ----------------------------------------- |
+| `feature/`  | New features or enhancements              |
+| `bugfix/`   | Bug fixes                                 |
+| `docs/`     | Documentation changes                     |
 | `refactor/` | Code refactoring without behavior changes |
 
 **Examples:**
+
 ```
 feature/user-authentication
 bugfix/login-redirect-loop
@@ -183,7 +231,6 @@ refactor/extract-auth-service
 ## Backend Code Quality
 
 The backend uses four tools to enforce consistent formatting, style, and code quality. All tools are integrated into Gradle and run automatically in CI on every push and pull request.
-
 
 ### Daily Workflow
 
@@ -209,35 +256,45 @@ To check everything is clean without modifying files (e.g. in a pre-push hook):
 All commands must be run from the `backend/` directory.
 
 **Format code (rewrites files):**
+
 ```bash
 ./gradlew spotlessApply
 ```
 
 **Check formatting without changing files:**
+
 ```bash
 ./gradlew spotlessCheck
 ```
+
 Fails if any file is not formatted. This is what CI runs.
 
 **Checkstyle (style & naming):**
+
 ```bash
 ./gradlew checkstyleMain
 ```
+
 Fails on violations. Human-readable report: `build/reports/checkstyle/main.html`.
 
 **PMD (code smells):**
+
 ```bash
 ./gradlew pmdMain
 ```
+
 Warns only — does not fail the build. Violations print to the terminal. Report: `build/reports/pmd/main.html`.
 
 **SpotBugs (bug patterns):**
+
 ```bash
 ./gradlew spotbugsMain
 ```
+
 Warns only — does not fail the build. Report: `build/reports/spotbugs/main.html`.
 
 **Run all tools at once:**
+
 ```bash
 ./gradlew spotlessCheck checkstyleMain pmdMain spotbugsMain
 ```
@@ -269,6 +326,7 @@ If the same false positive appears across **many files** (e.g. a framework-speci
 - Checkstyle → `backend/config/checkstyle/suppressions.xml` (add a `<suppress>` entry)
 
 ---
+
 ### CI Pipeline
 
 The `backend-lint-and-format` GitHub Actions job runs in parallel with the frontend lint job on every push and pull request.
@@ -282,7 +340,6 @@ backend-lint-and-format
 ```
 
 HTML reports for all four tools are uploaded as a GitHub Actions artifact named **`backend-analysis-reports`** and retained for 7 days. Download them from the "Artifacts" section of any workflow run to investigate PMD or SpotBugs findings.
-
 
 ---
 
@@ -314,29 +371,37 @@ npm run format:check && npm run lint
 All commands must be run from the `frontend/` directory.
 
 **Format code (rewrites files):**
+
 ```bash
 npm run format
 ```
 
 **Check formatting without changing files:**
+
 ```bash
 npm run format:check
 ```
+
 Fails if any file is not formatted. This is what CI runs.
 
 **ESLint (code quality & style):**
+
 ```bash
 npm run lint
 ```
+
 Fails on violations. Errors print to the terminal.
 
 **Fix ESLint issues automatically:**
+
 ```bash
 npm run lint:fix
 ```
+
 Automatically fixes auto-fixable violations. Some violations require manual intervention.
 
 **Run all tools at once:**
+
 ```bash
 npm run format:check && npm run lint
 ```
@@ -377,61 +442,40 @@ frontend-lint
 
 ---
 
-## Cypress E2E Tests
+## Playwright E2E Tests
 
-End-to-end tests live in `frontend/cypress/e2e/` and run against a live Next.js app + Keycloak.
+End-to-end tests live in `frontend/tests/` and run against a live Next.js app + Keycloak.
 
 See [Staging URLs](#staging-urls) for the list of staging service URLs.
 
-### KEYCLOAK_ORIGIN
-
-`KEYCLOAK_ORIGIN` is the **origin (scheme + host + port) of the Keycloak server**. Cypress uses it in `cy.origin()` to fill in the Keycloak login form during the OAuth redirect.
-
-| Environment | `KEYCLOAK_ORIGIN` value |
-|---|---|
-| **Local** (Docker Compose `infra/docker-compose.yaml`) | `http://localhost:9090` |
-| **Staging** | `https://istp-staging-auth.pm4.init-lab.ch` |
-
 ### Running the tests locally
 
-#### 1. Create `cypress.env.json`
-
-```bash
-cd frontend
-cp cypress.env.json.example cypress.env.json
-```
-
-Open `frontend/cypress.env.json` and fill in the values:
-
-| Variable | Value |
-|---|---|
-| `KEYCLOAK_ORIGIN` | `http://localhost:9090` (local) or `https://istp-staging-auth.pm4.init-lab.ch` (staging) |
-| `ADMIN_USERNAME` | Username of a Keycloak user with the `admin` role |
-| `ADMIN_PASSWORD` | Password for that user |
-| `USER_USERNAME` | Username of a Keycloak user without the `admin` role |
-| `USER_PASSWORD` | Password for that user |
-
-#### 2. Start the app
+#### 1. Start the app
 
 Make sure the Next.js app is running on `http://localhost:3000` (see [Quick Start](#quick-start)).
 
-#### 3. Open / run Cypress
+#### 2. Install Playwright browsers (first time only)
 
 ```bash
-# Interactive mode (recommended during development)
 cd frontend
-npx cypress open
+npx playwright install
+```
+
+#### 3. Run the tests
+
+```bash
+# Interactive UI mode (recommended during development)
+cd frontend
+npm run test
 
 # Headless mode (CI-style)
-npx cypress run
+npm run test:e2e
 ```
 
 #### Running against staging
 
-Set `KEYCLOAK_ORIGIN` to `https://istp-staging-auth.pm4.init-lab.ch` in `cypress.env.json` and pass the staging base URL:
+Pass the staging base URL via the `BASE_URL` environment variable:
 
 ```bash
-npx cypress run --config baseUrl=https://istp-staging.pm4.init-lab.ch
+BASE_URL=https://istp-staging.pm4.init-lab.ch npm run test:e2e
 ```
-
-> `cypress.env.json` is gitignored and must never be committed.

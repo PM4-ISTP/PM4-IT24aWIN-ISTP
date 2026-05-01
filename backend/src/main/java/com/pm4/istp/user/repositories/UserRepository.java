@@ -1,0 +1,89 @@
+package com.pm4.istp.user.repositories;
+
+import com.pm4.istp.user.db.entities.User;
+import com.pm4.istp.user.db.entities.UserRoleEnum;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, UUID> {
+
+  Optional<User> findByIdAndDeletedAtIsNull(UUID id);
+
+  @Query(
+      """
+      select u
+      from User u
+      where (:q is null
+          or lower(u.name) like lower(concat('%', :q, '%'))
+          or lower(u.username) like lower(concat('%', :q, '%'))
+          or lower(u.email) like lower(concat('%', :q, '%')))
+      """)
+  Page<User> searchUsers(@Param("q") String query, Pageable pageable);
+
+  List<User> findAllByEmailIgnoreCaseAndDeletedAtIsNull(String email);
+
+  List<User> findAllByUsernameIgnoreCaseAndDeletedAtIsNull(String username);
+
+  List<User> findAllByEmailIgnoreCaseAndDeletedAtIsNotNull(String email);
+
+  List<User> findAllByUsernameIgnoreCaseAndDeletedAtIsNotNull(String username);
+
+  Optional<User> findByEmailIgnoreCaseAndIdNot(String email, UUID id);
+
+  Optional<User> findByUsernameIgnoreCaseAndIdNot(String username, UUID id);
+
+  @Query(
+      """
+      select distinct u
+      from User u
+      join u.roles r
+      where r in :roles
+        and u.id <> :userId
+        and u.deletedAt is null
+      """)
+  Page<User> findDistinctByAnyRoleAndIdNot(
+      @Param("roles") Set<UserRoleEnum> roles, @Param("userId") UUID userId, Pageable pageable);
+
+  @Query(
+      """
+      select distinct u
+      from User u
+      join u.roles r
+      where r in :roles
+        and lower(u.name) like lower(concat('%', :name, '%'))
+        and u.id <> :userId
+        and u.deletedAt is null
+      """)
+  Page<User> findDistinctByAnyRoleAndNameContainingIgnoreCaseAndIdNot(
+      @Param("roles") Set<UserRoleEnum> roles,
+      @Param("name") String name,
+      @Param("userId") UUID userId,
+      Pageable pageable);
+
+  @Query(
+      """
+      select distinct u
+      from User u
+      join u.roles r
+      where r in :roles
+        and (lower(u.name) like lower(concat('%', :query, '%'))
+          or lower(u.username) like lower(concat('%', :query, '%'))
+          or lower(u.email) like lower(concat('%', :query, '%')))
+        and u.id <> :userId
+        and u.deletedAt is null
+      """)
+  Page<User> findDistinctByAnyRoleAndNameOrUsernameOrEmailContainingIgnoreCaseAndIdNot(
+      @Param("roles") Set<UserRoleEnum> roles,
+      @Param("query") String query,
+      @Param("userId") UUID userId,
+      Pageable pageable);
+}

@@ -10,18 +10,27 @@ resources:
 images:
   - name: istp-backend
     newName: ghcr.io/pm4-istp/istp-backend
-    newTag: latest
+    newTag: sha-e50d657
   - name: istp-frontend
     newName: ghcr.io/pm4-istp/istp-frontend
-    newTag: latest
+    newTag: sha-e50d657
 
 configMapGenerator:
   - name: istp-config
     literals:
       - keycloak-hostname=istp-auth.pm4.init-lab.ch
       - keycloak-issuer-uri=https://istp-auth.pm4.init-lab.ch/realms/interactive-security-training-platform
+      - keycloak-admin-base-url=https://istp-auth.pm4.init-lab.ch
+      - keycloak-realm=interactive-security-training-platform
+      - keycloak-admin-client-id=istp-backend
       - app-namespace=istp-prod
       - keycloak-admin-url=https://istp-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/
+      - istp-domain=pm4.init-lab.ch
+      - istp-tls=true
+      - keycloak-client-id=interactive-security-training-platform-app
+      - nextauth-url=https://istp.pm4.init-lab.ch
+      - backend-url=http://backend:8080
+      - cors-allowed-origin=https://istp.pm4.init-lab.ch
 
 # ┌─────────────────────────────────────────────────────────────────────┐
 # │ Manual secrets (create once per namespace, not managed by Kustomize)│
@@ -50,8 +59,9 @@ configMapGenerator:
 # │      --from-literal=admin-password=<keycloak-password> \            │
 # │      -n istp-prod                                                   │
 # │                                                                     │
-# │ 5. nextauth-secret — NextAuth signing secret                        │
+# │ 5. nextauth-secret — NextAuth signing secret + Keycloak client      │
 # │    kubectl create secret generic nextauth-secret \                  │
 # │      --from-literal=NEXTAUTH_SECRET=<nextauth-secret> \             │
+# │      --from-literal=AUTH_KEYCLOAK_SECRET=<keycloak-client-secret> \ │
 # │      -n istp-prod                                                   │
 # └─────────────────────────────────────────────────────────────────────┘

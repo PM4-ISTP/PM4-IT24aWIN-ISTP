@@ -21,6 +21,21 @@ spec:
                 name: frontend
                 port:
                   number: 3000
+          # Next.js API proxy routes must be handled by the frontend — must come before /api
+          - path: /api/backend
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+          - path: /api/users
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
           - path: /api
             pathType: Prefix
             backend:
@@ -44,5 +59,16 @@ spec:
             backend:
               service:
                 name: keycloak
+                port:
+                  number: 8080
+    # Adminer on separate subdomain — staging only, not available in prod
+    - host: istp-staging-adminer.pm4.init-lab.ch
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: adminer
                 port:
                   number: 8080
