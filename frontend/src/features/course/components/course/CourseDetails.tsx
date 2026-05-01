@@ -84,8 +84,8 @@ export default async function CourseDetails({
       <CourseBannerHeader
         title={title}
         topic={course.topic}
-        shortDescription={course.shortDescription}
-        description={sanitizedDescription}
+        shortDescription={null}
+        description={null}
         courseId={course.id!} // already checked, that ID is not undefined
         isEnrolled={isEnrolled}
         participantCount={participantCount}
@@ -115,14 +115,7 @@ export default async function CourseDetails({
             }
           />
 
-          <CourseChallengeDetailsList
-            challenges={course.courseChallenges ?? []}
-            title="Course Challenges"
-            showIndex={true}
-            courseId={isEnrolled ? course.id : undefined}
-          />
-
-          {/* About this course */}
+          {/* Course description */}
           {sanitizedDescription && (
             <Box
               style={{
@@ -145,7 +138,7 @@ export default async function CourseDetails({
                       fontSize: "1.1rem",
                     }}
                   >
-                    About this Course
+                    Course Description
                   </Title>
                 </Group>
                 <div
@@ -156,6 +149,13 @@ export default async function CourseDetails({
               </Stack>
             </Box>
           )}
+
+          <CourseChallengeDetailsList
+            challenges={course.courseChallenges ?? []}
+            title="Course Challenges"
+            showIndex={true}
+            courseId={isEnrolled ? course.id : undefined}
+          />
         </Stack>
       </Container>
     </>
