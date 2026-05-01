@@ -1,6 +1,17 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/shared/lib/auth";
-import { Grid, GridCol, Group, Stack, Text, Box, Alert, ThemeIcon, Badge, Divider } from "@mantine/core";
+import {
+  Grid,
+  GridCol,
+  Group,
+  Stack,
+  Text,
+  Box,
+  Alert,
+  ThemeIcon,
+  Badge,
+  Divider,
+} from "@mantine/core";
 import { IconArrowRight, IconBolt, IconClock } from "@tabler/icons-react";
 import DashboardStyles from "@/src/shared/components/DashboardStyles";
 import DashboardHero from "@/src/shared/components/DashboardHero";
