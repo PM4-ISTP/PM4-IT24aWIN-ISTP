@@ -668,12 +668,7 @@ export function ChallengePlayView({
 
           <Stack gap="sm" p="md" style={{ flex: 1, overflow: isNarrow ? "visible" : "auto" }}>
             {startDisabledReason && (
-              <Paper
-                withBorder
-                radius="md"
-                p="md"
-                style={{ background: "rgba(248,113,113,0.08)" }}
-              >
+              <Paper withBorder radius="md" p="md" style={{ background: "rgba(248,113,113,0.08)" }}>
                 <Text size="sm" c="red.3">
                   {startDisabledReason}
                 </Text>
