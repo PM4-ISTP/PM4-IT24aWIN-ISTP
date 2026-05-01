@@ -151,17 +151,23 @@ Three custom roles control what users can do on the platform:
   caption: [Custom realm roles],
 )
 
-New users who self-register receive no role by default. An admin must manually assign `ROLE_STUDENT` before they can access content. Roles are included in the JWT under `realm_access.roles`.
+*Role policy:* Each user must have *exactly one* of these roles.
+
+*Self-registration:* New users who self-register automatically receive `ROLE_STUDENT` (configured as a default realm role in Keycloak).
+
+Roles are included in the JWT under `realm_access.roles`.
+
+Note: Keycloak *groups* are not used for authorization in the ISTP backend. Avoid mapping `ROLE_*` via group role-mappings, otherwise users can end up with multiple roles.
 
 == Clients
 
 Two custom clients are configured. All other clients (`account`, `broker`, etc.) are Keycloak built-ins and should not be touched.
 
-*`nextjs`* is used by the Next.js frontend. It uses the Authorization Code Flow (via NextAuth.js) so the user is redirected to Keycloak to log in, then back to the app. It is a confidential client, meaning it has a client secret stored in a Kubernetes Secret.
+*`interactive-security-training-platform-app`* is used by the Next.js frontend (NextAuth). It uses the Authorization Code Flow so the user is redirected to Keycloak to log in, then back to the app. It is a confidential client, meaning it has a client secret stored in a Kubernetes Secret.
 
-*`interactive-security-training-platform-app`* is used by the Spring Boot backend. It has a service account enabled so the backend can authenticate itself against Keycloak (Client Credentials Flow) to call the Admin API if needed.
+*`istp-backend`* is used by the Spring Boot backend for service-to-service calls to the Keycloak *Admin REST API* (Client Credentials Flow). It is a confidential client with *Service Accounts* enabled. The service account needs `realm-management` roles such as `manage-users` (and usually `view-users` / `query-users`; `view-clients` is optional for session listing).
 
-Both clients share the same allowed redirect URIs and CORS origins:
+The frontend client uses the following allowed redirect URIs and web origins:
 
 ```
 http://localhost:3000/*                   (local dev)
@@ -171,35 +177,71 @@ https://istp-staging.pm4.init-lab.ch/*   (staging)
 
 == Setting Up Keycloak from Scratch
 
-The entire realm config is stored in `realm-export.json` in the repository. To restore it:
+The realm config export is stored in `infra/keycloak-export/interactive-security-training-platform-realm.json` in the repository. To restore it:
 
 + Open the Keycloak Admin Console at `https://<host>/admin`.
-+ Click *Create realm* and upload `realm-export.json`.
++ Click *Create realm* and upload the realm export JSON.
 + Click *Create*.
 
 After importing, regenerate the client secrets (they are not stored in the export):
 
-+ Go to *Clients* > `nextjs` > *Credentials* > *Regenerate*.
-+ Repeat for `interactive-security-training-platform-app`.
++ Go to *Clients* > `interactive-security-training-platform-app` > *Credentials* > *Regenerate*.
++ Repeat for `istp-backend`.
 + Store both secrets in the Kubernetes Secrets (see @sec-env).
 
 == Required Environment Variables <sec-env>
 
 *Next.js:*
 ```bash
-KEYCLOAK_CLIENT_ID=nextjs
-KEYCLOAK_CLIENT_SECRET=<secret>
-KEYCLOAK_ISSUER=https://<keycloak-host>/realms/interactive-security-training-platform
+AUTH_KEYCLOAK_ID=interactive-security-training-platform-app
+AUTH_KEYCLOAK_SECRET=<secret>
+AUTH_KEYCLOAK_ISSUER=https://<keycloak-host>/realms/interactive-security-training-platform
 NEXTAUTH_URL=https://istp.pm4.init-lab.ch
 NEXTAUTH_SECRET=<random-string>
 ```
 
 *Spring Boot:*
 ```bash
-KEYCLOAK_CLIENT_ID=interactive-security-training-platform-app
-KEYCLOAK_CLIENT_SECRET=<secret>
-KEYCLOAK_ISSUER_URI=https://<keycloak-host>/realms/interactive-security-training-platform
+SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=https://<keycloak-host>/realms/interactive-security-training-platform
+
+KEYCLOAK_ADMIN_BASE_URL=https://<keycloak-host>
+KEYCLOAK_ADMIN_REALM=interactive-security-training-platform
+KEYCLOAK_ADMIN_CLIENT_ID=istp-backend
+KEYCLOAK_ADMIN_CLIENT_SECRET=<secret>
+
+# Used for session listing in the admin dashboard
+KEYCLOAK_APP_CLIENT_ID=interactive-security-training-platform-app
 ```
+
+*Kubernetes Secrets (recommended):*
+- `nextauth-secret`: contains `NEXTAUTH_SECRET` and `AUTH_KEYCLOAK_SECRET`
+- `keycloak-admin-api-client`: contains `client-secret` (used as `KEYCLOAK_ADMIN_CLIENT_SECRET` in the backend pod)
+
+== Keycloak / PostgreSQL Synchronization
+
+Keycloak is the source of truth for authentication and base user identity. PostgreSQL stores a *shadow/projection* user row to support fast reads and joins with domain data (courses, enrollments).
+
+*Source of truth:*
+- *Keycloak:* password/login, user id (`sub`), realm roles, base profile (`email`, `username`, `firstName`, `lastName`), attributes (`title`, `picture` URL)
+- *PostgreSQL:* app domain data + `users` projection + `deletedAt` (soft delete)
+
+*Just-in-time provisioning (first API request after login):*
++ Backend validates JWT and reads `sub` (Keycloak user id).
++ Backend reads roles from `realm_access.roles` and requires an app role (`ROLE_*`).
++ Backend checks if a `users` row exists in Postgres.
++ If missing and the user is `ROLE_STUDENT`, the backend automatically creates the shadow row.
++ If `deletedAt` is set, access is denied.
+
+*Profile updates (via app, not Keycloak Account UI):*
+- Endpoint: `PUT /api/v1/users/me/profile`
+- Backend updates Keycloak first (Admin API), then updates the Postgres `users` row.
+- If the DB update fails, the backend attempts to rollback Keycloak to the previous snapshot.
+
+*Admin user management (via app, not Keycloak console):*
+- Create/provision users, change roles (single-role policy), password reset email, set password, list/logout sessions.
+- *Disable (reversible):* disables Keycloak user and sets `deletedAt`
+- *Restore (reversible):* re-enables Keycloak user and clears `deletedAt`
+- *Soft-delete (irreversible):* anonymizes email/username in Keycloak+DB, disables user, sets `deletedAt` (frees up the original email/username for reuse)
 
 == Mail Server
 
@@ -270,8 +312,8 @@ The terminal does not run in the same container as the app. But they run in the 
   stroke: none,
   inset: (x: 4pt, y: 5pt),
   [#check], [Keycloak 26.x running and reachable],
-  [#check], [Realm imported from `realm-export.json`],
-  [#check], [Client secrets regenerated for both clients],
+  [#check], [Realm imported from `infra/keycloak-export/interactive-security-training-platform-realm.json`],
+  [#check], [Client secrets regenerated for `interactive-security-training-platform-app` and `istp-backend`],
   [#check], [Secrets stored in Kubernetes Secrets],
   [#check], [Environment variables set for Next.js and Spring Boot],
   [#check], [Redirect URIs updated if using a new domain],
