@@ -56,6 +56,7 @@ const SPLIT_STORAGE_KEY = "istp.challengePlay.splitPercent";
 const DEFAULT_SPLIT_PERCENT = 48;
 const MIN_TASK_PANEL_PX = 360;
 const MIN_LAB_PANEL_PX = 420;
+const INITIAL_APP_RELOAD_DELAYS_MS = [1200, 3000, 6000];
 type LabViewMode = "app" | "console";
 
 function pickInitialStep(subTasks: SubTaskStudentDto[]): number {
@@ -76,7 +77,11 @@ function formatExpiry(expiresAt?: string | null): string {
   });
 }
 
-function resolveLabUrl(input: string, baseUrl?: string | null): string | null {
+function resolveLabUrl(
+  input: string,
+  baseUrl?: string | null,
+  currentUrl?: string | null
+): string | null {
   if (!baseUrl) return null;
   const trimmed = input.trim();
   if (!trimmed) return baseUrl;
@@ -87,8 +92,11 @@ function resolveLabUrl(input: string, baseUrl?: string | null): string | null {
     }
 
     const base = new URL(baseUrl);
-    const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
-    return new URL(path, base.origin).toString();
+    if (trimmed.startsWith("/")) {
+      return new URL(trimmed, base.origin).toString();
+    }
+
+    return new URL(trimmed, currentUrl || baseUrl).toString();
   } catch {
     return null;
   }
@@ -329,6 +337,7 @@ export function ChallengePlayView({
   const [podActionLoading, setPodActionLoading] = useState(false);
   const [podActionError, setPodActionError] = useState<string | null>(null);
   const splitContainerRef = useRef<HTMLDivElement | null>(null);
+  const appIframeRef = useRef<HTMLIFrameElement | null>(null);
   const autoStartAttempted = useRef(false);
   const autoReloadedAppUrl = useRef<string | null>(null);
   const {
@@ -480,15 +489,17 @@ export function ChallengePlayView({
     if (autoReloadedAppUrl.current === pod.appUrl) return;
 
     autoReloadedAppUrl.current = pod.appUrl;
-    const id = window.setTimeout(() => {
-      setAppFrameKey((key) => key + 1);
-    }, 1200);
+    const timeoutIds = INITIAL_APP_RELOAD_DELAYS_MS.map((delay) =>
+      window.setTimeout(() => {
+        setAppFrameKey((key) => key + 1);
+      }, delay)
+    );
 
-    return () => window.clearTimeout(id);
+    return () => timeoutIds.forEach((id) => window.clearTimeout(id));
   }, [appFrameUrl, pod?.appUrl, podStatus]);
 
   function navigateAppFrame(nextInput = appUrlInput) {
-    const nextUrl = resolveLabUrl(nextInput, pod?.appUrl);
+    const nextUrl = resolveLabUrl(nextInput, pod?.appUrl, appFrameUrl);
     if (!nextUrl) {
       setAppUrlError("Enter a valid URL or path.");
       return;
@@ -503,6 +514,13 @@ export function ChallengePlayView({
   function reloadAppFrame() {
     if (!appFrameUrl) return;
     setAppFrameKey((key) => key + 1);
+  }
+
+  function syncAppFrameUrlFromIframe() {
+    const href = appIframeRef.current?.contentWindow?.location.href;
+    if (!href || href === appFrameUrl) return;
+    setAppFrameUrl(href);
+    setAppUrlInput(href);
   }
 
   function updateSubTaskSolved(subTaskId: string, submittedFlag: string) {
@@ -992,10 +1010,18 @@ export function ChallengePlayView({
               {podStatus === "RUNNING" && activeLabUrl ? (
                 <>
                   <iframe
+                    ref={labMode === "app" ? appIframeRef : undefined}
                     key={labMode === "app" ? appFrameKey : undefined}
                     src={activeLabUrl}
                     title={`Challenge lab ${activeLabLabel}`}
                     allow="clipboard-read; clipboard-write"
+                    onLoad={() => {
+                      try {
+                        if (labMode === "app") syncAppFrameUrlFromIframe();
+                      } catch {
+                        // Cross-origin lab frames cannot expose their inner URL to the platform.
+                      }
+                    }}
                     style={{
                       position: "absolute",
                       inset: 0,
