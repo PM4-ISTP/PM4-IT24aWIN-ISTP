@@ -27,12 +27,28 @@ function buildInlineSvgContent(badge: UserBadge): string {
   const icon = badge.badgeIcon ?? "🏆";
 
   const lighten = (hex: string, f: number) => {
-    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-    return `#${Math.min(255,Math.round(r+(255-r)*f)).toString(16).padStart(2,"0")}${Math.min(255,Math.round(g+(255-g)*f)).toString(16).padStart(2,"0")}${Math.min(255,Math.round(b+(255-b)*f)).toString(16).padStart(2,"0")}`;
+    const r = parseInt(hex.slice(1, 3), 16),
+      g = parseInt(hex.slice(3, 5), 16),
+      b = parseInt(hex.slice(5, 7), 16);
+    return `#${Math.min(255, Math.round(r + (255 - r) * f))
+      .toString(16)
+      .padStart(2, "0")}${Math.min(255, Math.round(g + (255 - g) * f))
+      .toString(16)
+      .padStart(2, "0")}${Math.min(255, Math.round(b + (255 - b) * f))
+      .toString(16)
+      .padStart(2, "0")}`;
   };
   const darken = (hex: string, f: number) => {
-    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-    return `#${Math.max(0,Math.round(r*(1-f))).toString(16).padStart(2,"0")}${Math.max(0,Math.round(g*(1-f))).toString(16).padStart(2,"0")}${Math.max(0,Math.round(b*(1-f))).toString(16).padStart(2,"0")}`;
+    const r = parseInt(hex.slice(1, 3), 16),
+      g = parseInt(hex.slice(3, 5), 16),
+      b = parseInt(hex.slice(5, 7), 16);
+    return `#${Math.max(0, Math.round(r * (1 - f)))
+      .toString(16)
+      .padStart(2, "0")}${Math.max(0, Math.round(g * (1 - f)))
+      .toString(16)
+      .padStart(2, "0")}${Math.max(0, Math.round(b * (1 - f)))
+      .toString(16)
+      .padStart(2, "0")}`;
   };
 
   const light = lighten(c, 0.3);
@@ -57,7 +73,9 @@ function buildInlineSvgContent(badge: UserBadge): string {
 
 function printCertificate(badge: UserBadge, userName: string) {
   const earned = new Date(badge.earnedAt).toLocaleDateString("en-GB", {
-    day: "numeric", month: "long", year: "numeric",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
 
   const html = `<!DOCTYPE html>
@@ -105,7 +123,10 @@ function printCertificate(badge: UserBadge, userName: string) {
 </html>`;
 
   const win = window.open("", "_blank");
-  if (win) { win.document.write(html); win.document.close(); }
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
 }
 
 export default function TrophyCabinet({ opened, onClose, userName = "Student" }: Props) {
@@ -128,7 +149,11 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
       title={
         <Group gap="sm">
           <span style={{ fontSize: 22 }}>🏆</span>
-          <Text fw={700} size="lg" style={{ color: "#f1f5f9", fontFamily: "var(--font-space-grotesk), sans-serif" }}>
+          <Text
+            fw={700}
+            size="lg"
+            style={{ color: "#f1f5f9", fontFamily: "var(--font-space-grotesk), sans-serif" }}
+          >
             Trophy Cabinet
           </Text>
         </Group>
@@ -144,28 +169,45 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
       {isLoading ? (
         <Stack align="center" py="xl">
           <Loader color="indigo" />
-          <Text size="sm" c="dimmed">Loading your badges…</Text>
+          <Text size="sm" c="dimmed">
+            Loading your badges…
+          </Text>
         </Stack>
       ) : badgeList.length === 0 ? (
         <Stack align="center" py="xl" gap="sm">
           <Text style={{ fontSize: 48 }}>🎯</Text>
-          <Text fw={600} style={{ color: "#e2e8f0" }}>No badges yet</Text>
+          <Text fw={600} style={{ color: "#e2e8f0" }}>
+            No badges yet
+          </Text>
           <Text size="sm" c="dimmed" ta="center" maw={360}>
             Complete all challenges in a course to earn your first badge!
           </Text>
         </Stack>
       ) : (
         <Stack gap="xl" py="sm">
-          <Text size="sm" c="dimmed">{badgeList.length} badge{badgeList.length !== 1 ? "s" : ""} earned</Text>
+          <Text size="sm" c="dimmed">
+            {badgeList.length} badge{badgeList.length !== 1 ? "s" : ""} earned
+          </Text>
           <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="lg">
             {badgeList.map((b) => (
               <Stack key={b.badgeId} align="center" gap="xs">
                 <Tooltip
-                  label={new Date(b.earnedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                  label={new Date(b.earnedAt).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
                   withArrow
                 >
                   <div style={{ cursor: "default" }}>
-                    <BadgeSvg color={b.primaryColor} textColor={b.textColor} template={b.template} icon={b.badgeIcon} title={b.courseTitle} size={130} />
+                    <BadgeSvg
+                      color={b.primaryColor}
+                      textColor={b.textColor}
+                      template={b.template}
+                      icon={b.badgeIcon}
+                      title={b.courseTitle}
+                      size={130}
+                    />
                   </div>
                 </Tooltip>
                 <Button

@@ -5,14 +5,29 @@ import { ColorInput, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core
 import BadgeSvg from "./BadgeSvg";
 
 const BG_SWATCHES = [
-  "#4f46e5", "#2563eb", "#0891b2", "#059669", "#16a34a",
-  "#ca8a04", "#ea580c", "#dc2626", "#9333ea", "#db2777",
-  "#1e293b", "#334155",
+  "#4f46e5",
+  "#2563eb",
+  "#0891b2",
+  "#059669",
+  "#16a34a",
+  "#ca8a04",
+  "#ea580c",
+  "#dc2626",
+  "#9333ea",
+  "#db2777",
+  "#1e293b",
+  "#334155",
 ];
 
 const TEXT_SWATCHES = [
-  "#ffffff", "#f8fafc", "#f1f5f9", "#fef9c3", "#fef3c7",
-  "#000000", "#1e293b", "#0f172a",
+  "#ffffff",
+  "#f8fafc",
+  "#f1f5f9",
+  "#fef9c3",
+  "#fef3c7",
+  "#000000",
+  "#1e293b",
+  "#0f172a",
 ];
 
 const ICONS = ["🏆", "⭐", "🎖️", "🚀", "🔥", "💎", "🎯", "🧠", "🌟", "⚡", "🏅", "🎓"];
@@ -30,7 +45,17 @@ interface Props {
   onChange: (config: BadgeConfig) => void;
 }
 
-function TemplateCard({ templateId, selected, config, onSelect }: { templateId: number; selected: boolean; config: BadgeConfig; onSelect: () => void }) {
+function TemplateCard({
+  templateId,
+  selected,
+  config,
+  onSelect,
+}: {
+  templateId: number;
+  selected: boolean;
+  config: BadgeConfig;
+  onSelect: () => void;
+}) {
   const labels: Record<number, string> = { 1: "Circle", 2: "Hexagon", 3: "Medal" };
   return (
     <div
@@ -48,7 +73,14 @@ function TemplateCard({ templateId, selected, config, onSelect }: { templateId: 
         transition: "border-color 0.15s, background 0.15s",
       }}
     >
-      <BadgeSvg color={config.primaryColor} textColor={config.textColor} template={templateId} icon={config.badgeIcon} title={config.courseTitle ?? ""} size={80} />
+      <BadgeSvg
+        color={config.primaryColor}
+        textColor={config.textColor}
+        template={templateId}
+        icon={config.badgeIcon}
+        title={config.courseTitle ?? ""}
+        size={80}
+      />
       <Text size="xs" style={{ color: selected ? "#a5b4fc" : "#94a3b8" }} fw={selected ? 600 : 400}>
         {labels[templateId]}
       </Text>
@@ -94,7 +126,10 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
   return (
     <Stack gap="md">
       <div>
-        <Title order={3} style={{ color: "#f1f5f9", fontFamily: "var(--font-space-grotesk), sans-serif" }}>
+        <Title
+          order={3}
+          style={{ color: "#f1f5f9", fontFamily: "var(--font-space-grotesk), sans-serif" }}
+        >
           Course Badge
         </Title>
         <Text size="sm" style={{ color: "#94a3b8" }} mt={2}>
@@ -104,7 +139,14 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
 
       <Group align="flex-start" gap="xl">
         <div style={{ flexShrink: 0 }}>
-          <BadgeSvg color={config.primaryColor} textColor={config.textColor} template={config.template} icon={config.badgeIcon} title={config.courseTitle ?? ""} size={200} />
+          <BadgeSvg
+            color={config.primaryColor}
+            textColor={config.textColor}
+            template={config.template}
+            icon={config.badgeIcon}
+            title={config.courseTitle ?? ""}
+            size={200}
+          />
         </div>
 
         <Stack gap="md" style={{ flex: 1, minWidth: 260 }}>
@@ -117,7 +159,13 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
               swatches={BG_SWATCHES}
               swatchesPerRow={6}
               format="hex"
-              styles={{ input: { background: "rgba(255,255,255,0.05)", color: "#f1f5f9", border: "1px solid rgba(255,255,255,0.12)" } }}
+              styles={{
+                input: {
+                  background: "rgba(255,255,255,0.05)",
+                  color: "#f1f5f9",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                },
+              }}
             />
             <ColorInput
               label="Text color"
@@ -127,12 +175,20 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
               swatches={TEXT_SWATCHES}
               swatchesPerRow={4}
               format="hex"
-              styles={{ input: { background: "rgba(255,255,255,0.05)", color: "#f1f5f9", border: "1px solid rgba(255,255,255,0.12)" } }}
+              styles={{
+                input: {
+                  background: "rgba(255,255,255,0.05)",
+                  color: "#f1f5f9",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                },
+              }}
             />
           </Group>
 
           <div>
-            <Text size="sm" fw={500} style={{ color: "#cbd5e1" }} mb={6}>Icon</Text>
+            <Text size="sm" fw={500} style={{ color: "#cbd5e1" }} mb={6}>
+              Icon
+            </Text>
             <Group gap={6}>
               {ICONS.map((ic) => (
                 <button
@@ -140,7 +196,8 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
                   onClick={() => update({ badgeIcon: ic })}
                   style={{
                     fontSize: 22,
-                    background: config.badgeIcon === ic ? "rgba(79,70,229,0.3)" : "rgba(255,255,255,0.05)",
+                    background:
+                      config.badgeIcon === ic ? "rgba(79,70,229,0.3)" : "rgba(255,255,255,0.05)",
                     border: config.badgeIcon === ic ? "2px solid #4f46e5" : "2px solid transparent",
                     borderRadius: 8,
                     width: 40,
@@ -156,10 +213,18 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
           </div>
 
           <div>
-            <Text size="sm" fw={500} style={{ color: "#cbd5e1" }} mb={6}>Shape</Text>
+            <Text size="sm" fw={500} style={{ color: "#cbd5e1" }} mb={6}>
+              Shape
+            </Text>
             <SimpleGrid cols={3} spacing="xs">
               {[1, 2, 3].map((t) => (
-                <TemplateCard key={t} templateId={t} selected={config.template === t} config={config} onSelect={() => update({ template: t })} />
+                <TemplateCard
+                  key={t}
+                  templateId={t}
+                  selected={config.template === t}
+                  config={config}
+                  onSelect={() => update({ template: t })}
+                />
               ))}
             </SimpleGrid>
           </div>
