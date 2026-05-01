@@ -11,8 +11,8 @@ import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
-import com.pm4.istp.course.dto.CourseChallengeItemDto;
 import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
+import com.pm4.istp.course.dto.CourseChallengeItemDto;
 import com.pm4.istp.course.dto.CourseChallengeResponseDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionStatusEnum;
@@ -439,7 +439,9 @@ public class CourseServiceImpl implements CourseService {
       String challengeTitle = (String) row[3];
       LocalDateTime dueAt = (LocalDateTime) row[4];
       if (courseId == null || challengeId == null || dueAt == null) continue;
-      result.add(new CourseChallengeDeadlineDto(courseId, courseTitle, challengeId, challengeTitle, dueAt));
+      result.add(
+          new CourseChallengeDeadlineDto(
+              courseId, courseTitle, challengeId, challengeTitle, dueAt));
     }
     return result;
   }
