@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import com.pm4.istp.badge.services.BadgeService;
 import com.pm4.istp.course.db.CreateChallengeRequest;
 import com.pm4.istp.course.db.SubTaskRequest;
 import com.pm4.istp.course.db.UpdateChallengeRequest;
@@ -67,6 +68,7 @@ class ChallengeServiceImplTest {
   @Mock private CourseEnrollmentRepository courseEnrollmentRepository;
   @Mock private ChallengeMapper challengeMapper;
   @Mock private DockerImageAvailabilityService dockerImageAvailabilityService;
+  @Mock private BadgeService badgeService;
 
   @InjectMocks private ChallengeServiceImpl challengeService;
 
