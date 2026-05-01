@@ -554,9 +554,7 @@ public class ChallengePodService {
 
   private String buildLabHost(String service, String hash) {
     String hostPrefix =
-        labHostPrefix.isBlank()
-            ? service + "-" + hash
-            : service + "-" + labHostPrefix + "-" + hash;
+        labHostPrefix.isBlank() ? service + "-" + hash : service + "-" + labHostPrefix + "-" + hash;
     return hostPrefix + "." + domain;
   }
 
@@ -564,11 +562,7 @@ public class ChallengePodService {
     if (prefix == null) {
       return "";
     }
-    return prefix
-        .trim()
-        .toLowerCase()
-        .replaceAll("[^a-z0-9-]", "-")
-        .replaceAll("^-+|-+$", "");
+    return prefix.trim().toLowerCase().replaceAll("[^a-z0-9-]", "-").replaceAll("^-+|-+$", "");
   }
 
   private Optional<String> findIngressHost(String instanceName, int servicePort) {
@@ -597,7 +591,8 @@ public class ChallengePodService {
                                   && path.getBackend().getService() != null
                                   && path.getBackend().getService().getPort() != null
                                   && Integer.valueOf(servicePort)
-                                      .equals(path.getBackend().getService().getPort().getNumber())))
+                                      .equals(
+                                          path.getBackend().getService().getPort().getNumber())))
           .map(rule -> rule.getHost())
           .filter(host -> host != null && !host.isBlank())
           .findFirst();
