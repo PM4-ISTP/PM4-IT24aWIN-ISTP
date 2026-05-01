@@ -11,11 +11,11 @@ import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
+import com.pm4.istp.course.dto.CourseChallengeItemDto;
 import com.pm4.istp.course.dto.CourseChallengeResponseDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionStatusEnum;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
-import com.pm4.istp.course.dto.CourseChallengeItemDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
@@ -326,10 +326,12 @@ public class CourseServiceImpl implements CourseService {
     Course course =
         courseRepository
             .findById(courseId)
-            .orElseThrow(() -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
-    List<CourseEnrollment> enrollments = courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId);
+    List<CourseEnrollment> enrollments =
+        courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId);
     List<CourseParticipantResponseDto> participants =
         enrollments.stream()
             .map(
@@ -339,14 +341,19 @@ public class CourseServiceImpl implements CourseService {
                 })
             .toList();
 
-    List<CourseChallenge> assigned = course.getCourseChallenges() == null ? List.of() : course.getCourseChallenges();
+    List<CourseChallenge> assigned =
+        course.getCourseChallenges() == null ? List.of() : course.getCourseChallenges();
     List<CourseChallengeResponseDto> challengesDto =
         assigned.stream()
             .map(
                 cc -> {
                   var ch = cc.getChallenge();
                   return new CourseChallengeResponseDto(
-                      ch.getId(), ch.getTitle(), ch.getDifficulty(), cc.getOrderIndex(), cc.getDueAt());
+                      ch.getId(),
+                      ch.getTitle(),
+                      ch.getDifficulty(),
+                      cc.getOrderIndex(),
+                      cc.getDueAt());
                 })
             .toList();
 
@@ -367,7 +374,8 @@ public class CourseServiceImpl implements CourseService {
     Map<Key, LocalDateTime> completedAtByKey = new HashMap<>();
     if (!userIds.isEmpty() && !challengeIds.isEmpty()) {
       for (Object[] row :
-          subTaskCompletionRepository.aggregateSolvedCountsForUsersAndChallenges(userIds, challengeIds)) {
+          subTaskCompletionRepository.aggregateSolvedCountsForUsersAndChallenges(
+              userIds, challengeIds)) {
         UUID u = (UUID) row[0];
         UUID c = (UUID) row[1];
         Long solved = (Long) row[2];
@@ -412,7 +420,8 @@ public class CourseServiceImpl implements CourseService {
       }
     }
 
-    return new CourseChallengeSubmissionsResponseDto(courseId, participants, challengesDto, entries);
+    return new CourseChallengeSubmissionsResponseDto(
+        courseId, participants, challengesDto, entries);
   }
 
   @Override

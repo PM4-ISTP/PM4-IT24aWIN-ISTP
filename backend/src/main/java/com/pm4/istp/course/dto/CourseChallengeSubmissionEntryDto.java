@@ -17,4 +17,3 @@ public class CourseChallengeSubmissionEntryDto {
   private LocalDateTime completedAt;
   private CourseChallengeSubmissionStatusEnum status;
 }
-

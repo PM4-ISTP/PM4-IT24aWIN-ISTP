@@ -8,10 +8,10 @@ import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
-import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CreateCourseRequestDto;
 import com.pm4.istp.course.dto.CreateCourseResponseDto;
 import com.pm4.istp.course.dto.JoinByInviteCodeRequestDto;
@@ -249,7 +249,8 @@ public class CourseController {
             description = "Submissions loaded successfully",
             content =
                 @Content(
-                    schema = @Schema(implementation = CourseChallengeSubmissionsResponseDto.class))),
+                    schema =
+                        @Schema(implementation = CourseChallengeSubmissionsResponseDto.class))),
         @ApiResponse(
             responseCode = "403",
             description = "Access denied",

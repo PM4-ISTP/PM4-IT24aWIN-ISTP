@@ -6,4 +6,3 @@ public enum CourseChallengeSubmissionStatusEnum {
   ON_TIME,
   LATE
 }
-

@@ -15,4 +15,3 @@ public class CourseChallengeSubmissionsResponseDto {
   private List<CourseChallengeResponseDto> challenges;
   private List<CourseChallengeSubmissionEntryDto> submissions;
 }
-
