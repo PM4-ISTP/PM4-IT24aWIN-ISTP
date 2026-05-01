@@ -171,7 +171,8 @@ public class BadgeController {
   private String buildMedalSvg(String color, String textColor, String icon, String title) {
     String dark = darken(color, 0.4);
     String light = lighten(color, 0.3);
-    return ("<svg viewBox=\"0 0 300 300\" xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"300\">"
+    String ribbonMid = lighten(color, 0.15);
+    return ("<svg viewBox=\"0 0 300 360\" xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"360\">"
         + "<defs>"
         + "<linearGradient id=\"mbg\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">"
         + "<stop offset=\"0%%\" stop-color=\""
@@ -181,11 +182,22 @@ public class BadgeController {
         + dark
         + "\"/>"
         + "</linearGradient>"
-        + "<radialGradient id=\"shine\" cx=\"38%%\" cy=\"35%%\" r=\"50%%\">"
+        + "<linearGradient id=\"mribbon\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\">"
+        + "<stop offset=\"0%%\" stop-color=\""
+        + dark
+        + "\"/>"
+        + "<stop offset=\"50%%\" stop-color=\""
+        + ribbonMid
+        + "\"/>"
+        + "<stop offset=\"100%%\" stop-color=\""
+        + dark
+        + "\"/>"
+        + "</linearGradient>"
+        + "<radialGradient id=\"mshine\" cx=\"38%%\" cy=\"35%%\" r=\"50%%\">"
         + "<stop offset=\"0%%\" stop-color=\"white\" stop-opacity=\"0.22\"/>"
         + "<stop offset=\"100%%\" stop-color=\"white\" stop-opacity=\"0\"/>"
         + "</radialGradient>"
-        + "<radialGradient id=\"mfade\" cx=\"50%%\" cy=\"72%%\" r=\"52%%\">"
+        + "<radialGradient id=\"mfade\" cx=\"50%%\" cy=\"78%%\" r=\"45%%\">"
         + "<stop offset=\"0%%\" stop-color=\""
         + dark
         + "\" stop-opacity=\"0.82\"/>"
@@ -193,24 +205,37 @@ public class BadgeController {
         + dark
         + "\" stop-opacity=\"0\"/>"
         + "</radialGradient>"
-        + "<clipPath id=\"mclip\"><circle cx=\"150\" cy=\"150\" r=\"130\"/></clipPath>"
+        + "<clipPath id=\"mclip\"><circle cx=\"150\" cy=\"215\" r=\"120\"/></clipPath>"
         + "</defs>"
-        + "<circle cx=\"150\" cy=\"150\" r=\"130\" fill=\"url(#mbg)\"/>"
-        + "<circle cx=\"150\" cy=\"150\" r=\"128\" fill=\"none\" stroke=\""
+        + "<polygon points=\"122,28 150,28 148,95 124,95\" fill=\"url(#mribbon)\"/>"
+        + "<polygon points=\"150,28 178,28 176,95 152,95\" fill=\"url(#mribbon)\"/>"
+        + "<line x1=\"150\" y1=\"28\" x2=\"150\" y2=\"95\" stroke=\""
+        + textColor
+        + "\" stroke-width=\"0.5\" stroke-opacity=\"0.2\"/>"
+        + "<rect x=\"113\" y=\"12\" width=\"74\" height=\"18\" rx=\"5\" fill=\""
+        + ribbonMid
+        + "\" stroke=\""
+        + textColor
+        + "\" stroke-width=\"1\" stroke-opacity=\"0.3\"/>"
+        + "<rect x=\"118\" y=\"16\" width=\"64\" height=\"10\" rx=\"3\" fill=\"none\" stroke=\""
+        + textColor
+        + "\" stroke-width=\"0.5\" stroke-opacity=\"0.2\"/>"
+        + "<circle cx=\"150\" cy=\"215\" r=\"120\" fill=\"url(#mbg)\"/>"
+        + "<circle cx=\"150\" cy=\"215\" r=\"118\" fill=\"none\" stroke=\""
         + textColor
         + "\" stroke-width=\"3\" stroke-dasharray=\"8 5\" stroke-opacity=\"0.45\"/>"
-        + "<circle cx=\"150\" cy=\"150\" r=\"116\" fill=\"none\" stroke=\""
+        + "<circle cx=\"150\" cy=\"215\" r=\"106\" fill=\"none\" stroke=\""
         + textColor
         + "\" stroke-width=\"1.5\" stroke-opacity=\"0.2\"/>"
-        + "<circle cx=\"150\" cy=\"150\" r=\"104\" fill=\"none\" stroke=\""
+        + "<circle cx=\"150\" cy=\"215\" r=\"94\" fill=\"none\" stroke=\""
         + textColor
         + "\" stroke-width=\"1\" stroke-opacity=\"0.12\"/>"
-        + "<circle cx=\"150\" cy=\"150\" r=\"130\" fill=\"url(#shine)\"/>"
-        + "<rect x=\"20\" y=\"195\" width=\"260\" height=\"90\" fill=\"url(#mfade)\" clip-path=\"url(#mclip)\"/>"
-        + "<text x=\"150\" y=\"155\" text-anchor=\"middle\" font-size=\"76\" dominant-baseline=\"middle\">"
+        + "<circle cx=\"150\" cy=\"215\" r=\"120\" fill=\"url(#mshine)\"/>"
+        + "<rect x=\"20\" y=\"258\" width=\"260\" height=\"80\" fill=\"url(#mfade)\" clip-path=\"url(#mclip)\"/>"
+        + "<text x=\"150\" y=\"220\" text-anchor=\"middle\" font-size=\"72\" dominant-baseline=\"middle\">"
         + icon
         + "</text>"
-        + "<text x=\"150\" y=\"245\" text-anchor=\"middle\" font-size=\"18\" fill=\""
+        + "<text x=\"150\" y=\"305\" text-anchor=\"middle\" font-size=\"17\" fill=\""
         + textColor
         + "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">"
         + escapeXml(title)

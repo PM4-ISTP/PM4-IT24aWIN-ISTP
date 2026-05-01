@@ -101,33 +101,47 @@ function HexBadge({ color, textColor, icon, title, size }: { color: string; text
 function MedalBadge({ color, textColor, icon, title, size }: { color: string; textColor: string; icon: string; title: string; size: number }) {
   const light = lighten(color, 0.3);
   const dark = darken(color, 0.4);
+  const ribbonMid = lighten(color, 0.15);
   return (
-    <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" width={size} height={size}>
+    <svg viewBox="0 0 300 360" xmlns="http://www.w3.org/2000/svg" width={size} height={Math.round((size * 360) / 300)}>
       <defs>
         <linearGradient id="mbg" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor={light} />
+          <stop offset="100%" stopColor={dark} />
+        </linearGradient>
+        <linearGradient id="mribbon" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={dark} />
+          <stop offset="50%" stopColor={ribbonMid} />
           <stop offset="100%" stopColor={dark} />
         </linearGradient>
         <radialGradient id="mshine" cx="38%" cy="35%" r="50%">
           <stop offset="0%" stopColor="white" stopOpacity="0.22" />
           <stop offset="100%" stopColor="white" stopOpacity="0" />
         </radialGradient>
-        <radialGradient id="mfade" cx="50%" cy="72%" r="52%">
+        <radialGradient id="mfade" cx="50%" cy="78%" r="45%">
           <stop offset="0%" stopColor={dark} stopOpacity="0.82" />
           <stop offset="100%" stopColor={dark} stopOpacity="0" />
         </radialGradient>
         <clipPath id="mclip">
-          <circle cx="150" cy="150" r="130" />
+          <circle cx="150" cy="215" r="120" />
         </clipPath>
       </defs>
-      <circle cx="150" cy="150" r="130" fill="url(#mbg)" />
-      <circle cx="150" cy="150" r="128" fill="none" stroke={textColor} strokeWidth="3" strokeDasharray="8 5" strokeOpacity="0.45" />
-      <circle cx="150" cy="150" r="116" fill="none" stroke={textColor} strokeWidth="1.5" strokeOpacity="0.2" />
-      <circle cx="150" cy="150" r="104" fill="none" stroke={textColor} strokeWidth="1" strokeOpacity="0.12" />
-      <circle cx="150" cy="150" r="130" fill="url(#mshine)" />
-      <rect x="20" y="195" width="260" height="90" fill="url(#mfade)" clipPath="url(#mclip)" />
-      <text x="150" y="155" textAnchor="middle" fontSize="76" dominantBaseline="middle">{icon}</text>
-      <text x="150" y="245" textAnchor="middle" fontSize="18" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">{title}</text>
+      {/* Ribbon strips */}
+      <polygon points="122,28 150,28 148,95 124,95" fill="url(#mribbon)" />
+      <polygon points="150,28 178,28 176,95 152,95" fill="url(#mribbon)" />
+      <line x1="150" y1="28" x2="150" y2="95" stroke={textColor} strokeWidth="0.5" strokeOpacity="0.2" />
+      {/* Clasp bar */}
+      <rect x="113" y="12" width="74" height="18" rx="5" fill={ribbonMid} stroke={textColor} strokeWidth="1" strokeOpacity="0.3" />
+      <rect x="118" y="16" width="64" height="10" rx="3" fill="none" stroke={textColor} strokeWidth="0.5" strokeOpacity="0.2" />
+      {/* Medal circle */}
+      <circle cx="150" cy="215" r="120" fill="url(#mbg)" />
+      <circle cx="150" cy="215" r="118" fill="none" stroke={textColor} strokeWidth="3" strokeDasharray="8 5" strokeOpacity="0.45" />
+      <circle cx="150" cy="215" r="106" fill="none" stroke={textColor} strokeWidth="1.5" strokeOpacity="0.2" />
+      <circle cx="150" cy="215" r="94" fill="none" stroke={textColor} strokeWidth="1" strokeOpacity="0.12" />
+      <circle cx="150" cy="215" r="120" fill="url(#mshine)" />
+      <rect x="20" y="258" width="260" height="80" fill="url(#mfade)" clipPath="url(#mclip)" />
+      <text x="150" y="220" textAnchor="middle" fontSize="72" dominantBaseline="middle">{icon}</text>
+      <text x="150" y="305" textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">{title}</text>
     </svg>
   );
 }
