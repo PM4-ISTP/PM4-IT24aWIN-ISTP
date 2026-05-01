@@ -12,6 +12,10 @@ public class KeycloakUserRepresentation {
   private String id;
   private String username;
   private String email;
+
+  @JsonProperty("emailVerified")
+  private Boolean emailVerified;
+
   private Boolean enabled;
 
   @JsonProperty("firstName")

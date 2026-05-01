@@ -3,11 +3,13 @@ package com.pm4.istp.user.filters;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.db.entities.UserRoleEnum;
 import com.pm4.istp.user.repositories.UserRepository;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -49,6 +52,26 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
   @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}")
   private String issuerUri;
+
+  @Value("${istp.userinfo.enabled:true}")
+  private boolean userInfoEnabled = true;
+
+  @Value("${istp.userinfo.timeout:2s}")
+  private Duration userInfoTimeout = Duration.ofSeconds(2);
+
+  private RestClient userInfoRestClient;
+
+  @PostConstruct
+  void init() {
+    Duration timeout = userInfoTimeout == null ? Duration.ofSeconds(2) : userInfoTimeout;
+    int timeoutMs = (int) Math.max(1, Math.min(Integer.MAX_VALUE, timeout.toMillis()));
+
+    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+    requestFactory.setConnectTimeout(timeoutMs);
+    requestFactory.setReadTimeout(timeoutMs);
+
+    userInfoRestClient = RestClient.builder().requestFactory(requestFactory).build();
+  }
 
   @Override
   public void doFilterInternal(
@@ -145,32 +168,43 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
               MAX_COLUMN_LENGTH,
               "displayName",
               keycloakId);
-      String picture =
-          firstNonBlank(
-              pictureClaim,
-              discardIfTooLong(
-                  userInfoProfile.map(UserInfoProfile::picture).orElse(null),
-                  MAX_PICTURE_LENGTH,
-                  "picture",
-                  keycloakId),
-              existingUser.map(User::getPicture).map(this::normalize).orElse(null));
-      String title =
-          firstNonBlank(
-              titleClaim,
-              discardIfTooLong(
-                  userInfoProfile.map(UserInfoProfile::title).orElse(null),
-                  MAX_COLUMN_LENGTH,
-                  "title",
-                  keycloakId),
-              existingUser.map(User::getTitle).map(this::normalize).orElse(null));
+      String existingPicture = existingUser.map(User::getPicture).map(this::normalize).orElse(null);
+      String existingTitle = existingUser.map(User::getTitle).map(this::normalize).orElse(null);
 
-      Set<UserRoleEnum> roles =
+      // Profile fields like picture/title are managed by the ISTP app (admin/user profile pages).
+      // Once a user is provisioned, do not overwrite these fields from token claims/userinfo, so
+      // admin changes (including clearing values) persist.
+      String picture =
+          existingUser.isPresent()
+              ? existingPicture
+              : firstNonBlank(
+                  pictureClaim,
+                  discardIfTooLong(
+                      userInfoProfile.map(UserInfoProfile::picture).orElse(null),
+                      MAX_PICTURE_LENGTH,
+                      "picture",
+                      keycloakId),
+                  existingPicture);
+      String title =
+          existingUser.isPresent()
+              ? existingTitle
+              : firstNonBlank(
+                  titleClaim,
+                  discardIfTooLong(
+                      userInfoProfile.map(UserInfoProfile::title).orElse(null),
+                      MAX_COLUMN_LENGTH,
+                      "title",
+                      keycloakId),
+                  existingTitle);
+
+      Set<UserRoleEnum> rawRoles =
           authentication.getAuthorities().stream()
               .map(GrantedAuthority::getAuthority)
               .map(UserRoleEnum::fromString)
               .filter(Optional::isPresent)
               .map(Optional::get)
               .collect(Collectors.toSet());
+      Set<UserRoleEnum> roles = reduceToSingleAppRole(rawRoles);
 
       // Defense-in-depth:
       // Never allow access to the application domain unless the user has a known app role.
@@ -315,6 +349,10 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
   }
 
   private Optional<UserInfoProfile> fetchUserInfoProfile(Jwt jwt) {
+    if (!userInfoEnabled) {
+      return Optional.empty();
+    }
+
     String tokenValue = normalize(jwt.getTokenValue());
     String normalizedIssuerUri = normalize(issuerUri);
 
@@ -324,7 +362,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
     try {
       UserInfoProfile profile =
-          RestClient.create()
+          userInfoRestClient
               .get()
               .uri(normalizedIssuerUri + "/protocol/openid-connect/userinfo")
               .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenValue)
@@ -418,6 +456,22 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       return true;
     }
     return false;
+  }
+
+  private Set<UserRoleEnum> reduceToSingleAppRole(Set<UserRoleEnum> roles) {
+    if (roles == null || roles.isEmpty()) {
+      return Set.of();
+    }
+    if (roles.contains(UserRoleEnum.ROLE_ADMINISTRATOR)) {
+      return Set.of(UserRoleEnum.ROLE_ADMINISTRATOR);
+    }
+    if (roles.contains(UserRoleEnum.ROLE_INSTRUCTOR)) {
+      return Set.of(UserRoleEnum.ROLE_INSTRUCTOR);
+    }
+    if (roles.contains(UserRoleEnum.ROLE_STUDENT)) {
+      return Set.of(UserRoleEnum.ROLE_STUDENT);
+    }
+    return Set.of();
   }
 
   private record UserInfoProfile(String name, String email, String picture, String title) {}

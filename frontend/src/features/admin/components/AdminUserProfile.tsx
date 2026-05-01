@@ -35,6 +35,7 @@ type AdminUserDetailResponse = {
   provisioned?: boolean;
   keycloak?: {
     enabled?: boolean;
+    emailVerified?: boolean;
   } | null;
 };
 
@@ -419,6 +420,12 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
   const isSoftDeleted = Boolean(user?.anonymizedAt);
   const isDisabled = Boolean(user?.deletedAt) || user?.keycloak?.enabled === false;
   const canRestore = !isSoftDeleted && isDisabled;
+  const emailVerifiedBadge =
+    user?.keycloak?.emailVerified === true ? (
+      <Badge color="green">EMAIL VERIFIED</Badge>
+    ) : user?.keycloak?.emailVerified === false ? (
+      <Badge color="yellow">EMAIL NOT VERIFIED</Badge>
+    ) : null;
   const statusBadge = (() => {
     if (isSoftDeleted) return <Badge color="red">SOFT DELETED</Badge>;
     if (user?.deletedAt) return <Badge color="red">DELETED</Badge>;
@@ -442,6 +449,7 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
           ) : (
             <Badge color="yellow">NOT PROVISIONED</Badge>
           )}
+          {emailVerifiedBadge}
         </Group>
         <Group gap="sm">
           {!isSoftDeleted && !isDisabled ? (
