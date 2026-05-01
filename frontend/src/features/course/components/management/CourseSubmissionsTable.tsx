@@ -19,7 +19,7 @@ function badgeColor(status: string): string {
 }
 
 function formatDue(value?: string | null): string {
-  if (!value) return "—";
+  if (!value) return "â€”";
   try {
     const d = new Date(value);
     return d.toLocaleString("de-CH", {
@@ -149,17 +149,25 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
                       const progress =
                         s && s.totalSubTaskCount > 0
                           ? `${s.solvedSubTaskCount}/${s.totalSubTaskCount}`
-                          : "—";
+                          : "â€”";
+                      const completedAt = s?.completedAt ?? null;
                       return (
                         <Table.Td key={`${p.id}:${c.challengeId}`}>
-                          <Group gap="xs" wrap="nowrap">
-                            <Badge variant="light" color={badgeColor(status)}>
-                              {status}
-                            </Badge>
-                            <Text size="xs" c="dimmed">
-                              {progress}
-                            </Text>
-                          </Group>
+                          <Stack gap={2}>
+                            <Group gap="xs" wrap="nowrap">
+                              <Badge variant="light" color={badgeColor(status)}>
+                                {status}
+                              </Badge>
+                              <Text size="xs" c="dimmed">
+                                {progress}
+                              </Text>
+                            </Group>
+                            {status === "LATE" && completedAt ? (
+                              <Text size="xs" c="dimmed">
+                                Submitted: {formatDue(completedAt)}
+                              </Text>
+                            ) : null}
+                          </Stack>
                         </Table.Td>
                       );
                     })}
@@ -173,3 +181,4 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
     </Box>
   );
 }
+
