@@ -252,6 +252,7 @@ export function ChallengePlayView({
     podStatus === "PROVISIONING" ||
     podActionLoading ||
     podStatus === "TERMINATING";
+
   let startDisabledReason: string | null = null;
   if (dockerImageCheck.status === "checking") {
     startDisabledReason = "Checking Docker image...";
@@ -266,8 +267,10 @@ export function ChallengePlayView({
       setPodActionError(startDisabledReason ?? "Lab cannot be started with this Docker image.");
       return;
     }
+
     setPodActionLoading(true);
     setPodActionError(null);
+
     try {
       await apiClient.POST("/api/v1/challenge-pods/{challengeId}", {
         params: { path: { challengeId } },
@@ -283,6 +286,7 @@ export function ChallengePlayView({
   const handleStopPod = useCallback(async () => {
     setPodActionLoading(true);
     setPodActionError(null);
+
     try {
       await apiClient.DELETE("/api/v1/challenge-pods/{challengeId}", {
         params: { path: { challengeId } },
@@ -299,6 +303,7 @@ export function ChallengePlayView({
     if (podStatusLoading || autoStartAttempted.current) return;
     if (podStatus !== "NOT_FOUND" && podStatus !== "FAILED") return;
     if (dockerImageCheck.status === "checking") return;
+
     autoStartAttempted.current = true;
     void handleStartPod();
   }, [dockerImageCheck.status, handleStartPod, podStatus, podStatusLoading]);
@@ -309,6 +314,7 @@ export function ChallengePlayView({
         st.id === subTaskId ? { ...st, isSolved: true, solvedFlag: submittedFlag } : st
       );
       const newSolved = updatedSubTasks.filter((st) => st.isSolved).length;
+
       return {
         ...prev,
         subTasks: updatedSubTasks,
@@ -320,6 +326,7 @@ export function ChallengePlayView({
 
   async function handleSubmit() {
     if (!current || !current.id || !challenge.id) return;
+
     const trimmedFlag = flagInput.trim();
     const normalizedFlag = FLAG_WRAPPED_PATTERN.test(trimmedFlag)
       ? trimmedFlag
@@ -362,17 +369,19 @@ export function ChallengePlayView({
       notifications.show({
         color: "red",
         title: "Incorrect flag",
-        message: "Not quite — double-check and try again.",
+        message: "Not quite - double-check and try again.",
       });
     }
   }
 
   function goToStep(step: number) {
     if (step < 0 || step >= total) return;
-    // Allow navigating only to solved steps or the first unsolved one.
+
     const firstUnsolved = subTasks.findIndex((st) => !st.isSolved);
     const maxReachable = firstUnsolved === -1 ? total - 1 : firstUnsolved;
+
     if (step > maxReachable) return;
+
     setActiveStep(step);
     setFlagInput("");
   }
@@ -394,6 +403,7 @@ export function ChallengePlayView({
             <Text size="sm">Back to course</Text>
           </Group>
         </Link>
+
         <Group gap="xs">
           {!showLabPanel && (
             <Button
@@ -407,6 +417,7 @@ export function ChallengePlayView({
               Show lab
             </Button>
           )}
+
           <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
             {challenge.status}
           </Badge>
@@ -662,6 +673,7 @@ export function ChallengePlayView({
                 </Text>
                 <ChallengePodStatusBadge status={podStatus} />
               </Group>
+
               <Group gap="xs" wrap="nowrap">
                 {podStatus === "RUNNING" || podStatus === "PROVISIONING" ? (
                   <Tooltip label="Stop lab">
@@ -697,6 +709,7 @@ export function ChallengePlayView({
                     </ActionIcon>
                   </Tooltip>
                 )}
+
                 {!isNarrow && (
                   <Tooltip label="Hide lab panel">
                     <ActionIcon
@@ -775,7 +788,6 @@ export function ChallengePlayView({
           </Paper>
         </Box>
       </Box>
-
     </Box>
   );
 }
