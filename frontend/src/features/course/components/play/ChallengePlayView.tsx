@@ -8,27 +8,27 @@ import {
   CopyButton,
   Divider,
   Group,
-  Loader,
   Paper,
   Progress,
-  SegmentedControl,
   Stack,
   Stepper,
   Text,
   TextInput,
+  ThemeIcon,
   Title,
   Tooltip,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
   IconArrowLeft,
   IconArrowRight,
   IconCheck,
+  IconChevronLeft,
+  IconChevronRight,
   IconCopy,
   IconExternalLink,
   IconLock,
-  IconMaximize,
-  IconMinimize,
   IconPlayerPlay,
   IconPlayerStop,
   IconRefresh,
@@ -37,7 +37,7 @@ import {
   IconWorld,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChallengePodStatusBadge } from "@/src/features/challenge-pod/components/ChallengePodStatusBadge";
 import { useChallengePodStatus } from "@/src/features/challenge-pod/hooks/useChallengePodStatus";
 import { submitSubTaskFlag } from "@/src/features/course/actions/challenges";
@@ -53,12 +53,6 @@ import type { ChallengeStudentDto, SubTaskStudentDto } from "@/src/shared/types/
 
 const FLAG_WRAPPED_PATTERN = /^ISTP\{[A-Za-z0-9_]+\}$/;
 const FLAG_INNER_PATTERN = /^[A-Za-z0-9_]+$/;
-const SPLIT_STORAGE_KEY = "istp.challengePlay.splitPercent";
-const DEFAULT_SPLIT_PERCENT = 48;
-const MIN_TASK_PANEL_PX = 360;
-const MIN_LAB_PANEL_PX = 420;
-const INITIAL_APP_RELOAD_DELAYS_MS = [1200, 3000, 6000];
-type LabViewMode = "app" | "console";
 
 function pickInitialStep(subTasks: SubTaskStudentDto[]): number {
   const firstUnsolved = subTasks.findIndex((st) => !st.isSolved);
@@ -76,130 +70,6 @@ function formatExpiry(expiresAt?: string | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function resolveLabUrl(
-  input: string,
-  baseUrl?: string | null,
-  currentUrl?: string | null
-): string | null {
-  if (!baseUrl) return null;
-  const trimmed = input.trim();
-  if (!trimmed) return baseUrl;
-
-  try {
-    if (/^https?:\/\//i.test(trimmed)) {
-      return new URL(trimmed).toString();
-    }
-
-    const base = new URL(baseUrl);
-    if (trimmed.startsWith("/")) {
-      return new URL(trimmed, base.origin).toString();
-    }
-
-    return new URL(trimmed, currentUrl || baseUrl).toString();
-  } catch {
-    return null;
-  }
-}
-
-function clampSplitPercent(value: number): number {
-  return Math.min(70, Math.max(30, value));
-}
-
-function SplitPresetControls({
-  onFocusTask,
-  onReset,
-  onFocusLab,
-}: {
-  onFocusTask: () => void;
-  onReset: () => void;
-  onFocusLab: () => void;
-}) {
-  return (
-    <Button.Group>
-      <Tooltip label="Focus task">
-        <Button size="compact-xs" variant="subtle" onClick={onFocusTask}>
-          Task
-        </Button>
-      </Tooltip>
-      <Tooltip label="Balanced split">
-        <Button size="compact-xs" variant="subtle" onClick={onReset}>
-          50/50
-        </Button>
-      </Tooltip>
-      <Tooltip label="Focus lab">
-        <Button size="compact-xs" variant="subtle" onClick={onFocusLab}>
-          Lab
-        </Button>
-      </Tooltip>
-    </Button.Group>
-  );
-}
-
-function SplitResizeHandle({
-  isResizing,
-  onStartResize,
-  onSetSplit,
-}: {
-  isResizing: boolean;
-  onStartResize: () => void;
-  onSetSplit: (value: number | ((current: number) => number)) => void;
-}) {
-  return (
-    <Box
-      role="separator"
-      aria-orientation="vertical"
-      aria-label="Resize task and lab panels"
-      tabIndex={0}
-      onPointerDown={(event) => {
-        event.preventDefault();
-        onStartResize();
-      }}
-      onDoubleClick={() => onSetSplit(DEFAULT_SPLIT_PERCENT)}
-      onKeyDown={(event) => {
-        if (event.key === "ArrowLeft") {
-          event.preventDefault();
-          onSetSplit((value) => clampSplitPercent(value - 5));
-        }
-        if (event.key === "ArrowRight") {
-          event.preventDefault();
-          onSetSplit((value) => clampSplitPercent(value + 5));
-        }
-        if (event.key === "Home") {
-          event.preventDefault();
-          onSetSplit(30);
-        }
-        if (event.key === "End") {
-          event.preventDefault();
-          onSetSplit(70);
-        }
-        if (event.key === "Enter") {
-          event.preventDefault();
-          onSetSplit(DEFAULT_SPLIT_PERCENT);
-        }
-      }}
-      style={{
-        cursor: "col-resize",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: 420,
-        outline: "none",
-        touchAction: "none",
-      }}
-    >
-      <Box
-        style={{
-          width: 4,
-          height: 64,
-          borderRadius: 999,
-          background: isResizing ? "var(--mantine-color-blue-5)" : "rgba(148,163,184,0.35)",
-          transition: "background 120ms ease",
-        }}
-      />
-    </Box>
-  );
 }
 
 function CopyIconButton({ value, label }: { value: string; label: string }) {
@@ -226,88 +96,102 @@ function ConsoleCredentials({
   if (!password && !expiresAt) return null;
 
   return (
-    <Group
-      justify="space-between"
-      gap="xs"
-      px="md"
-      py={8}
-      style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
-    >
-      {password ? (
-        <Group gap={4} wrap="nowrap">
+    <Paper withBorder radius="md" p="sm" style={{ background: "rgba(255,255,255,0.025)" }}>
+      <Group justify="space-between" gap="xs" align="center">
+        {password ? (
+          <Stack gap={4}>
+            <Text size="xs" c="dimmed" fw={700} tt="uppercase">
+              Console login
+            </Text>
+            <Group gap={4} wrap="nowrap">
+              <Text component="span" ff="monospace" size="xs">
+                student
+              </Text>
+              <CopyIconButton value="student" label="Copy console username" />
+              <Text size="xs" c="dimmed">
+                /
+              </Text>
+              <Text component="span" ff="monospace" size="xs">
+                {password}
+              </Text>
+              <CopyIconButton value={password} label="Copy console password" />
+            </Group>
+          </Stack>
+        ) : (
+          <span />
+        )}
+        {expiresAt && (
           <Text size="xs" c="dimmed">
-            Console login:
+            Expires: {expiresAt}
           </Text>
-          <Text component="span" ff="monospace" size="xs">
-            student
-          </Text>
-          <CopyIconButton value="student" label="Copy console username" />
-          <Text size="xs" c="dimmed">
-            /
-          </Text>
-          <Text component="span" ff="monospace" size="xs">
-            {password}
-          </Text>
-          <CopyIconButton value={password} label="Copy console password" />
-        </Group>
-      ) : (
-        <span />
-      )}
-      {expiresAt && (
-        <Text size="xs" c="dimmed">
-          Expires: {expiresAt}
-        </Text>
-      )}
-    </Group>
+        )}
+      </Group>
+    </Paper>
   );
 }
 
-function LabFrameFallback({
-  activeLabUrl,
-  onReload,
+function LabLaunchCard({
+  title,
+  description,
+  icon,
+  url,
+  buttonLabel,
+  disabledLabel,
 }: {
-  activeLabUrl: string;
-  onReload: () => void;
+  title: string;
+  description: string;
+  icon: ReactNode;
+  url?: string | null;
+  buttonLabel: string;
+  disabledLabel: string;
 }) {
   return (
-    <Box
+    <Paper
+      withBorder
+      radius="md"
+      p="sm"
       style={{
-        position: "absolute",
-        right: 12,
-        bottom: 12,
-        maxWidth: 360,
-        border: "1px solid rgba(148,163,184,0.2)",
-        borderRadius: 8,
-        background: "rgba(2,6,23,0.86)",
-        padding: "0.55rem 0.7rem",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+        background: url
+          ? "linear-gradient(135deg, rgba(59,130,246,0.14), rgba(20,184,166,0.08))"
+          : "rgba(255,255,255,0.03)",
       }}
     >
-      <Group gap="xs" justify="space-between" wrap="nowrap">
-        <Text size="xs" c="dimmed">
-          Blank or blocked?
-        </Text>
+      <Stack gap="sm">
+        <Group justify="space-between" align="flex-start" gap="sm" wrap="nowrap">
+          <Group gap="sm" align="flex-start" wrap="nowrap">
+            <ThemeIcon variant="light" radius="md" size={38}>
+              {icon}
+            </ThemeIcon>
+            <Stack gap={3}>
+              <Text fw={700}>{title}</Text>
+              <Text size="sm" c="dimmed">
+                {description}
+              </Text>
+            </Stack>
+          </Group>
+          {url ? (
+            <Badge variant="light" color="teal">
+              Ready
+            </Badge>
+          ) : (
+            <Badge variant="light" color="gray">
+              Pending
+            </Badge>
+          )}
+        </Group>
         <Button
-          size="compact-xs"
-          variant="subtle"
-          onClick={onReload}
-          rightSection={<IconRefresh size={12} />}
-        >
-          Reload
-        </Button>
-        <Button
-          size="compact-xs"
-          variant="subtle"
           component="a"
-          href={activeLabUrl}
+          href={url ?? undefined}
           target="_blank"
           rel="noreferrer"
-          rightSection={<IconExternalLink size={12} />}
+          disabled={!url}
+          rightSection={<IconExternalLink size={16} />}
+          fullWidth
         >
-          Open
+          {url ? buttonLabel : disabledLabel}
         </Button>
-      </Group>
-    </Box>
+      </Stack>
+    </Paper>
   );
 }
 
@@ -320,6 +204,7 @@ export function ChallengePlayView({
   challengeId: string;
   initialChallenge: ChallengeStudentDto;
 }) {
+  const isNarrow = useMediaQuery("(max-width: 900px)");
   const apiClient = useApiClient();
   const [challenge, setChallenge] = useState<ChallengeStudentDto>(initialChallenge);
   const [activeStep, setActiveStep] = useState<number>(() =>
@@ -327,20 +212,10 @@ export function ChallengePlayView({
   );
   const [flagInput, setFlagInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [labFullscreen, setLabFullscreen] = useState(false);
-  const [labMode, setLabMode] = useState<LabViewMode>("app");
-  const [appUrlInput, setAppUrlInput] = useState("");
-  const [appFrameUrl, setAppFrameUrl] = useState<string | null>(null);
-  const [appFrameKey, setAppFrameKey] = useState(0);
-  const [appUrlError, setAppUrlError] = useState<string | null>(null);
-  const [splitPercent, setSplitPercent] = useState(DEFAULT_SPLIT_PERCENT);
-  const [isResizingSplit, setIsResizingSplit] = useState(false);
+  const [labCollapsed, setLabCollapsed] = useState(false);
   const [podActionLoading, setPodActionLoading] = useState(false);
   const [podActionError, setPodActionError] = useState<string | null>(null);
-  const splitContainerRef = useRef<HTMLDivElement | null>(null);
-  const appIframeRef = useRef<HTMLIFrameElement | null>(null);
   const autoStartAttempted = useRef(false);
-  const autoReloadedAppUrl = useRef<string | null>(null);
   const {
     data: pod,
     error: podStatusError,
@@ -365,13 +240,19 @@ export function ChallengePlayView({
     [current]
   );
   const podStatus = pod?.status ?? "NOT_FOUND";
-  const activeLabUrl = labMode === "app" ? appFrameUrl : pod?.terminalUrl;
-  const activeLabLabel = labMode === "app" ? "app" : "console";
   const terminalExpiry = formatExpiry(pod?.expiresAt);
   const canStartPod =
     dockerImageCheck.status === "success" ||
     (dockerImageCheck.status === "idle" && !dockerImage.trim());
   const startDisabled = podActionLoading || dockerImageCheck.status === "checking" || !canStartPod;
+  const showLabPanel = isNarrow || !labCollapsed;
+  const labPanelId = "challenge-play-lab-panel";
+  const labIsStarting =
+    podStatusLoading ||
+    podStatus === "PROVISIONING" ||
+    podActionLoading ||
+    podStatus === "TERMINATING";
+
   let startDisabledReason: string | null = null;
   if (dockerImageCheck.status === "checking") {
     startDisabledReason = "Checking Docker image...";
@@ -386,8 +267,10 @@ export function ChallengePlayView({
       setPodActionError(startDisabledReason ?? "Lab cannot be started with this Docker image.");
       return;
     }
+
     setPodActionLoading(true);
     setPodActionError(null);
+
     try {
       await apiClient.POST("/api/v1/challenge-pods/{challengeId}", {
         params: { path: { challengeId } },
@@ -403,6 +286,7 @@ export function ChallengePlayView({
   const handleStopPod = useCallback(async () => {
     setPodActionLoading(true);
     setPodActionError(null);
+
     try {
       await apiClient.DELETE("/api/v1/challenge-pods/{challengeId}", {
         params: { path: { challengeId } },
@@ -419,110 +303,10 @@ export function ChallengePlayView({
     if (podStatusLoading || autoStartAttempted.current) return;
     if (podStatus !== "NOT_FOUND" && podStatus !== "FAILED") return;
     if (dockerImageCheck.status === "checking") return;
+
     autoStartAttempted.current = true;
     void handleStartPod();
   }, [dockerImageCheck.status, handleStartPod, podStatus, podStatusLoading]);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem(SPLIT_STORAGE_KEY);
-    if (!saved) return;
-
-    const next = Number(saved);
-    if (Number.isFinite(next)) {
-      setSplitPercent(clampSplitPercent(next));
-    }
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(SPLIT_STORAGE_KEY, String(Math.round(splitPercent)));
-  }, [splitPercent]);
-
-  useEffect(() => {
-    if (!isResizingSplit) return;
-
-    const previousCursor = document.body.style.cursor;
-    const previousUserSelect = document.body.style.userSelect;
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-
-    function handlePointerMove(event: PointerEvent) {
-      const container = splitContainerRef.current;
-      if (!container) return;
-
-      const rect = container.getBoundingClientRect();
-      const availableWidth = rect.width - 12;
-      const minLeftPercent = (MIN_TASK_PANEL_PX / availableWidth) * 100;
-      const maxLeftPercent = 100 - (MIN_LAB_PANEL_PX / availableWidth) * 100;
-      const rawPercent = ((event.clientX - rect.left) / availableWidth) * 100;
-      const boundedPercent = Math.min(maxLeftPercent, Math.max(minLeftPercent, rawPercent));
-      setSplitPercent(clampSplitPercent(boundedPercent));
-    }
-
-    function handlePointerUp() {
-      setIsResizingSplit(false);
-    }
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp, { once: true });
-
-    return () => {
-      document.body.style.cursor = previousCursor;
-      document.body.style.userSelect = previousUserSelect;
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-    };
-  }, [isResizingSplit]);
-
-  useEffect(() => {
-    if (labMode === "console" && podStatus === "RUNNING" && !pod?.terminalUrl && pod?.appUrl) {
-      setLabMode("app");
-    }
-  }, [labMode, pod?.appUrl, pod?.terminalUrl, podStatus]);
-
-  useEffect(() => {
-    if (!pod?.appUrl) return;
-    setAppFrameUrl((current) => current ?? pod.appUrl ?? null);
-    setAppUrlInput((current) => current || pod.appUrl || "");
-  }, [pod?.appUrl]);
-
-  useEffect(() => {
-    if (podStatus !== "RUNNING" || !pod?.appUrl || appFrameUrl !== pod.appUrl) return;
-    if (autoReloadedAppUrl.current === pod.appUrl) return;
-
-    autoReloadedAppUrl.current = pod.appUrl;
-    const timeoutIds = INITIAL_APP_RELOAD_DELAYS_MS.map((delay) =>
-      window.setTimeout(() => {
-        setAppFrameKey((key) => key + 1);
-      }, delay)
-    );
-
-    return () => timeoutIds.forEach((id) => window.clearTimeout(id));
-  }, [appFrameUrl, pod?.appUrl, podStatus]);
-
-  function navigateAppFrame(nextInput = appUrlInput) {
-    const nextUrl = resolveLabUrl(nextInput, pod?.appUrl, appFrameUrl);
-    if (!nextUrl) {
-      setAppUrlError("Enter a valid URL or path.");
-      return;
-    }
-
-    setAppUrlError(null);
-    setAppFrameUrl(nextUrl);
-    setAppUrlInput(nextUrl);
-    setAppFrameKey((key) => key + 1);
-  }
-
-  function reloadAppFrame() {
-    if (!appFrameUrl) return;
-    setAppFrameKey((key) => key + 1);
-  }
-
-  function syncAppFrameUrlFromIframe() {
-    const href = appIframeRef.current?.contentWindow?.location.href;
-    if (!href || href === appFrameUrl) return;
-    setAppFrameUrl(href);
-    setAppUrlInput(href);
-  }
 
   function updateSubTaskSolved(subTaskId: string, submittedFlag: string) {
     setChallenge((prev) => {
@@ -530,6 +314,7 @@ export function ChallengePlayView({
         st.id === subTaskId ? { ...st, isSolved: true, solvedFlag: submittedFlag } : st
       );
       const newSolved = updatedSubTasks.filter((st) => st.isSolved).length;
+
       return {
         ...prev,
         subTasks: updatedSubTasks,
@@ -541,6 +326,7 @@ export function ChallengePlayView({
 
   async function handleSubmit() {
     if (!current || !current.id || !challenge.id) return;
+
     const trimmedFlag = flagInput.trim();
     const normalizedFlag = FLAG_WRAPPED_PATTERN.test(trimmedFlag)
       ? trimmedFlag
@@ -583,17 +369,19 @@ export function ChallengePlayView({
       notifications.show({
         color: "red",
         title: "Incorrect flag",
-        message: "Not quite — double-check and try again.",
+        message: "Not quite - double-check and try again.",
       });
     }
   }
 
   function goToStep(step: number) {
     if (step < 0 || step >= total) return;
-    // Allow navigating only to solved steps or the first unsolved one.
+
     const firstUnsolved = subTasks.findIndex((st) => !st.isSolved);
     const maxReachable = firstUnsolved === -1 ? total - 1 : firstUnsolved;
+
     if (step > maxReachable) return;
+
     setActiveStep(step);
     setFlagInput("");
   }
@@ -603,9 +391,9 @@ export function ChallengePlayView({
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 60px - var(--app-shell-padding) * 2)",
+        height: isNarrow ? "auto" : "calc(100vh - 60px - var(--app-shell-padding) * 2)",
         minHeight: 0,
-        overflow: "hidden",
+        overflow: isNarrow ? "visible" : "hidden",
       }}
     >
       <Group justify="space-between" align="center" px="lg" pb="md" style={{ flexShrink: 0 }}>
@@ -615,7 +403,21 @@ export function ChallengePlayView({
             <Text size="sm">Back to course</Text>
           </Group>
         </Link>
+
         <Group gap="xs">
+          {!showLabPanel && (
+            <Button
+              size="xs"
+              variant="light"
+              leftSection={<IconChevronLeft size={14} />}
+              onClick={() => setLabCollapsed(false)}
+              aria-controls={labPanelId}
+              aria-expanded={showLabPanel}
+            >
+              Show lab
+            </Button>
+          )}
+
           <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
             {challenge.status}
           </Badge>
@@ -631,17 +433,19 @@ export function ChallengePlayView({
       </Group>
 
       <Box
-        ref={splitContainerRef}
         style={{
           display: "grid",
-          gridTemplateColumns: labFullscreen
-            ? "1fr"
-            : `minmax(${MIN_TASK_PANEL_PX}px, ${splitPercent}%) 12px minmax(${MIN_LAB_PANEL_PX}px, 1fr)`,
-          columnGap: labFullscreen ? "1rem" : 0,
+          gridTemplateColumns: showLabPanel
+            ? isNarrow
+              ? "1fr"
+              : "minmax(0, 1.12fr) minmax(340px, 0.88fr)"
+            : "minmax(0, 1fr) minmax(0, 0fr)",
+          gap: showLabPanel ? "1rem" : 0,
           padding: "0 1rem 1rem",
           flex: 1,
           minHeight: 0,
-          overflow: "hidden",
+          overflow: isNarrow ? "visible" : "hidden",
+          transition: "grid-template-columns 220ms ease, gap 220ms ease",
         }}
       >
         <Paper
@@ -651,7 +455,7 @@ export function ChallengePlayView({
           style={{
             background: "rgba(255,255,255,0.02)",
             overflow: "auto",
-            minHeight: 0,
+            minHeight: isNarrow ? undefined : 0,
           }}
         >
           <Stack gap="lg">
@@ -827,15 +631,15 @@ export function ChallengePlayView({
           </Stack>
         </Paper>
 
-        {!labFullscreen && (
-          <SplitResizeHandle
-            isResizing={isResizingSplit}
-            onStartResize={() => setIsResizingSplit(true)}
-            onSetSplit={setSplitPercent}
-          />
-        )}
-
-        {!labFullscreen && (
+        <Box
+          id={labPanelId}
+          aria-hidden={!showLabPanel}
+          style={{
+            minWidth: 0,
+            overflow: "hidden",
+            pointerEvents: showLabPanel ? "auto" : "none",
+          }}
+        >
           <Paper
             withBorder
             radius="md"
@@ -844,8 +648,11 @@ export function ChallengePlayView({
               background: "rgba(255,255,255,0.02)",
               display: "flex",
               flexDirection: "column",
-              minHeight: 0,
+              minHeight: isNarrow ? undefined : 0,
               overflow: "hidden",
+              opacity: showLabPanel ? 1 : 0,
+              transform: showLabPanel ? "translateX(0)" : "translateX(14px)",
+              transition: "opacity 180ms ease, transform 220ms ease",
             }}
           >
             <Group
@@ -853,46 +660,16 @@ export function ChallengePlayView({
               align="center"
               px="md"
               py="xs"
-              style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}
             >
               <Group gap="xs">
                 <Text size="sm" fw={600}>
-                  Lab Environment
+                  Lab
                 </Text>
                 <ChallengePodStatusBadge status={podStatus} />
               </Group>
+
               <Group gap="xs" wrap="nowrap">
-                <SplitPresetControls
-                  onFocusTask={() => setSplitPercent(65)}
-                  onReset={() => setSplitPercent(DEFAULT_SPLIT_PERCENT)}
-                  onFocusLab={() => setSplitPercent(35)}
-                />
-                <SegmentedControl
-                  size="xs"
-                  value={labMode}
-                  onChange={(value) => setLabMode(value as LabViewMode)}
-                  data={[
-                    {
-                      value: "app",
-                      label: (
-                        <Group gap={4} wrap="nowrap">
-                          <IconWorld size={12} />
-                          <span>App</span>
-                        </Group>
-                      ),
-                    },
-                    {
-                      value: "console",
-                      label: (
-                        <Group gap={4} wrap="nowrap">
-                          <IconTerminal2 size={12} />
-                          <span>Console</span>
-                        </Group>
-                      ),
-                      disabled: !pod?.terminalUrl,
-                    },
-                  ]}
-                />
                 {podStatus === "RUNNING" || podStatus === "PROVISIONING" ? (
                   <Tooltip label="Stop lab">
                     <ActionIcon
@@ -927,184 +704,85 @@ export function ChallengePlayView({
                     </ActionIcon>
                   </Tooltip>
                 )}
-                {activeLabUrl && (
-                  <Tooltip label={`Open ${activeLabLabel} in new tab`}>
+
+                {!isNarrow && (
+                  <Tooltip label="Hide lab panel">
                     <ActionIcon
-                      component="a"
-                      href={activeLabUrl}
-                      target="_blank"
-                      rel="noreferrer"
                       variant="subtle"
-                      aria-label={`Open ${activeLabLabel} in new tab`}
+                      onClick={() => setLabCollapsed(true)}
+                      aria-label="Hide lab panel"
+                      aria-controls={labPanelId}
+                      aria-expanded={showLabPanel}
                     >
-                      <IconExternalLink size={16} />
+                      <IconChevronRight size={16} />
                     </ActionIcon>
                   </Tooltip>
                 )}
-                <Tooltip label="Focus instructions">
-                  <ActionIcon
-                    variant="subtle"
-                    onClick={() => setLabFullscreen(true)}
-                    aria-label="Hide lab pane"
-                  >
-                    <IconMaximize size={16} />
-                  </ActionIcon>
-                </Tooltip>
               </Group>
             </Group>
-            {labMode === "app" && podStatus === "RUNNING" && pod?.appUrl && (
-              <Box
-                component="form"
-                px="md"
-                py="xs"
-                style={{
-                  borderBottom: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(2,6,23,0.35)",
-                }}
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  navigateAppFrame();
-                }}
-              >
-                <Group gap="xs" wrap="nowrap">
-                  <TextInput
-                    size="xs"
-                    value={appUrlInput}
-                    onChange={(event) => {
-                      setAppUrlInput(event.currentTarget.value);
-                      if (appUrlError) setAppUrlError(null);
-                    }}
-                    onBlur={() => {
-                      if (!appUrlInput.trim() && pod.appUrl) {
-                        setAppUrlInput(pod.appUrl);
-                      }
-                    }}
-                    placeholder={pod.appUrl}
-                    error={appUrlError}
-                    aria-label="Lab app URL"
-                    style={{ flex: 1 }}
-                    styles={{
-                      input: {
-                        fontFamily: "var(--font-geist-mono), monospace",
-                        minHeight: 30,
-                      },
-                      error: { marginTop: 2 },
-                    }}
-                  />
-                  <Tooltip label="Go">
-                    <ActionIcon type="submit" variant="light" aria-label="Go to URL">
-                      <IconArrowRight size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label="Reload">
-                    <ActionIcon
-                      variant="subtle"
-                      onClick={reloadAppFrame}
-                      aria-label="Reload app frame"
-                      disabled={!appFrameUrl}
-                    >
-                      <IconRefresh size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-              </Box>
-            )}
-            <Box style={{ position: "relative", flex: 1 }}>
-              {podStatus === "RUNNING" && activeLabUrl ? (
-                <>
-                  <iframe
-                    ref={labMode === "app" ? appIframeRef : undefined}
-                    key={labMode === "app" ? appFrameKey : undefined}
-                    src={activeLabUrl}
-                    title={`Lab ${activeLabLabel}`}
-                    allow="clipboard-read; clipboard-write"
-                    onLoad={() => {
-                      try {
-                        if (labMode === "app") syncAppFrameUrlFromIframe();
-                      } catch {
-                        // Cross-origin lab frames cannot expose their inner URL to the platform.
-                      }
-                    }}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      border: 0,
-                      background: "#050914",
-                      pointerEvents: isResizingSplit ? "none" : undefined,
-                    }}
-                  />
-                  {labMode === "app" && (
-                    <LabFrameFallback activeLabUrl={activeLabUrl} onReload={reloadAppFrame} />
-                  )}
-                </>
-              ) : (
-                <Stack
-                  align="center"
-                  justify="center"
-                  gap="sm"
-                  style={{ position: "absolute", inset: 0, padding: "1.5rem", textAlign: "center" }}
-                >
-                  {podStatusLoading ||
-                  podStatus === "PROVISIONING" ||
-                  podActionLoading ||
-                  dockerImageCheck.status === "checking" ? (
-                    <Loader size="sm" />
-                  ) : null}
-                  <Text fw={600}>
-                    {startDisabledReason
-                      ? "Lab cannot start yet"
-                      : podStatus === "FAILED"
-                        ? "Lab failed to start"
-                        : podStatus === "TERMINATING"
-                          ? "Stopping lab..."
-                          : podStatus === "RUNNING"
-                            ? `No ${activeLabLabel} URL available`
-                            : "Starting lab..."}
-                  </Text>
-                  <Text size="sm" c="dimmed" maw={360}>
-                    {startDisabledReason
-                      ? startDisabledReason
-                      : podStatus === "FAILED"
-                        ? "Try restarting the lab from the toolbar."
-                        : "The app will appear here as soon as the pod is ready."}
-                  </Text>
-                  {(podActionError || podStatusError) && (
-                    <Text size="xs" c="red.3">
-                      {podActionError ?? podStatusError}
-                    </Text>
-                  )}
-                </Stack>
-              )}
-            </Box>
-            <ConsoleCredentials password={pod?.terminalPassword} expiresAt={terminalExpiry} />
-          </Paper>
-        )}
-      </Box>
 
-      {labFullscreen && (
-        <Group justify="flex-end" px="lg" pb="md" style={{ flexShrink: 0 }}>
-          <Button
-            variant="subtle"
-            leftSection={<IconExternalLink size={16} />}
-            component="a"
-            href={activeLabUrl ?? undefined}
-            target="_blank"
-            rel="noreferrer"
-            disabled={!activeLabUrl}
-          >
-            Open lab in new tab
-          </Button>
-          <Button
-            variant="light"
-            leftSection={<IconMinimize size={16} />}
-            onClick={() => setLabFullscreen(false)}
-          >
-            Show lab pane
-          </Button>
-        </Group>
-      )}
+            <Stack gap="sm" p="md" style={{ flex: 1, overflow: isNarrow ? "visible" : "auto" }}>
+              {startDisabledReason && (
+                <Paper
+                  withBorder
+                  radius="md"
+                  p="md"
+                  style={{ background: "rgba(248,113,113,0.08)" }}
+                >
+                  <Text size="sm" c="red.3">
+                    {startDisabledReason}
+                  </Text>
+                </Paper>
+              )}
+
+              <LabLaunchCard
+                title="Challenge app"
+                description={
+                  podStatus === "RUNNING" && pod?.appUrl
+                    ? "Web service ready."
+                    : labIsStarting
+                      ? "Starting web service."
+                      : "Start the lab to get app access."
+                }
+                icon={<IconWorld size={22} />}
+                url={podStatus === "RUNNING" ? pod?.appUrl : null}
+                buttonLabel="Open app"
+                disabledLabel={labIsStarting ? "Starting..." : "App not ready"}
+              />
+
+              <LabLaunchCard
+                title="Console"
+                description={
+                  podStatus === "RUNNING" && pod?.terminalUrl
+                    ? "Terminal access ready."
+                    : labIsStarting
+                      ? "Starting terminal access."
+                      : "Start the lab to get console access."
+                }
+                icon={<IconTerminal2 size={22} />}
+                url={podStatus === "RUNNING" ? pod?.terminalUrl : null}
+                buttonLabel="Open console"
+                disabledLabel={labIsStarting ? "Starting..." : "Console not ready"}
+              />
+
+              {(podActionError || podStatusError) && (
+                <Paper
+                  withBorder
+                  radius="md"
+                  p="md"
+                  style={{ background: "rgba(248,113,113,0.08)" }}
+                >
+                  <Text size="sm" c="red.3">
+                    {podActionError ?? podStatusError}
+                  </Text>
+                </Paper>
+              )}
+
+              <ConsoleCredentials password={pod?.terminalPassword} expiresAt={terminalExpiry} />
+            </Stack>
+          </Paper>
+        </Box>
+      </Box>
     </Box>
   );
 }
