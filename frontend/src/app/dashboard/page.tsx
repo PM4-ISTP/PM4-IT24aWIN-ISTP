@@ -93,7 +93,7 @@ async function getFirstCourse(fetchCourseResult: ActionResult<PageListCourseResp
   return firstCourse;
 }
 
-function RunningChallenges({
+function RunningLabs({
   fetchCourseResult,
 }: {
   fetchCourseResult: ActionResult<PublicCourseDetailResponseDto> | undefined;
@@ -106,10 +106,10 @@ function RunningChallenges({
         </ThemeIcon>
         <Stack gap={4} align="center">
           <Text fw={600} style={{ color: "#e2e8f0" }}>
-            No active challenges
+            No active labs
           </Text>
           <Text size="sm" c="dimmed">
-            Enroll in a course to start working on challenges.
+            Enroll in a course to start working on labs.
           </Text>
         </Stack>
       </div>
@@ -125,8 +125,8 @@ function RunningChallenges({
           courseId={fetchCourseResult.data.id}
         />
       ) : (
-        <Alert color="red" title="Could not load challenges" variant="light">
-          Something went wrong loading your challenges. Please refresh the page.
+        <Alert color="red" title="Could not load labs" variant="light">
+          Something went wrong loading your labs. Please refresh the page.
         </Alert>
       )}
     </>
@@ -254,8 +254,9 @@ export default async function Home() {
                 {deadlines.length > 0 ? (
                   <Stack gap="xs">
                     {deadlines.map((it, idx) => {
+                      const now = new Date();
                       const due = new Date(it.dueAt);
-                      const overdue = due.getTime() < Date.now();
+                      const overdue = due.getTime() < now.getTime();
                       return (
                         <Box key={`${it.courseId}:${it.challengeId}:${idx}`}>
                           {idx > 0 ? <Divider my={8} style={{ opacity: 0.35 }} /> : null}
@@ -309,8 +310,8 @@ export default async function Home() {
       </Grid>
 
       <Stack gap="sm" align="flex-start">
-        <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>Active Challenges</Text>
-        <RunningChallenges fetchCourseResult={firstCourse} />
+        <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>Active Labs</Text>
+        <RunningLabs fetchCourseResult={firstCourse} />
       </Stack>
     </Stack>
   );

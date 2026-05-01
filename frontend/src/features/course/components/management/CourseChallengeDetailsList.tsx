@@ -105,7 +105,7 @@ export function CourseChallengeDetailsList({
                         variant="light"
                         radius="xl"
                         size="md"
-                        aria-label="Challenge solved"
+                        aria-label="Lab solved"
                       >
                         <IconCheck size={16} />
                       </ThemeIcon>
@@ -115,7 +115,7 @@ export function CourseChallengeDetailsList({
                         variant="light"
                         radius="xl"
                         size="md"
-                        aria-label="Challenge not solved"
+                        aria-label="Lab not solved"
                       >
                         <IconCircleDashed size={16} />
                       </ThemeIcon>
@@ -134,7 +134,7 @@ export function CourseChallengeDetailsList({
                     <Badge
                       variant="light"
                       color={challenge.isSolved ? "teal" : "blue"}
-                      aria-label={`${solvedCount} of ${totalCount} sub-tasks solved`}
+                      aria-label={`${solvedCount} of ${totalCount} challenges solved`}
                     >
                       {solvedCount}/{totalCount}
                     </Badge>
@@ -155,12 +155,6 @@ export function CourseChallengeDetailsList({
                     />
                   </Stack>
 
-                  {challenge.shortDescription && (
-                    <Text size="sm" c="dimmed">
-                      {challenge.shortDescription}
-                    </Text>
-                  )}
-
                   {sanitizedDescription && (
                     <Box
                       className="course-description"
@@ -174,7 +168,7 @@ export function CourseChallengeDetailsList({
                       <Divider my={4} />
                       <Stack gap={6}>
                         <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                          Sub-tasks
+                          Challenges
                         </Text>
                         {subTasks.map((st, idx) => (
                           <SubTaskRow

@@ -37,7 +37,7 @@ export async function createChallenge(
       client.POST("/api/v1/challenges", {
         body: dto,
       }),
-    "Failed to create challenge"
+    "Failed to create lab"
   );
 }
 
@@ -49,7 +49,7 @@ export async function fetchChallenge(
       client.GET("/api/v1/challenges/{id}", {
         params: { path: { id } },
       }),
-    "Failed to load challenge"
+    "Failed to load lab"
   );
 }
 
@@ -63,7 +63,7 @@ export async function updateChallenge(
         params: { path: { id } },
         body: dto,
       }),
-    "Failed to update challenge"
+    "Failed to update lab"
   );
 }
 
@@ -73,7 +73,7 @@ export async function deleteChallenge(id: string): Promise<ActionResult<void>> {
       client.DELETE("/api/v1/challenges/{id}", {
         params: { path: { id } },
       }),
-    "Failed to delete challenge"
+    "Failed to delete lab"
   );
 }
 
@@ -87,7 +87,7 @@ export async function fetchInstructorChallenges(
         params: { query: { pageable: { page, size } } },
         querySerializer: springPageableSerializer,
       }),
-    "Failed to load challenges"
+    "Failed to load labs"
   );
 }
 
@@ -102,7 +102,7 @@ export async function searchChallenges(
         params: { query: { q: query, pageable: { page, size } } },
         querySerializer: springPageableSerializer,
       }),
-    "Failed to search challenges"
+    "Failed to search labs"
   );
 }
 
@@ -128,7 +128,7 @@ export async function fetchChallengeForPlay(
       client.GET("/api/v1/challenges/{id}/play", {
         params: { path: { id: challengeId }, query: { courseId } },
       }),
-    "Failed to load challenge"
+    "Failed to load lab"
   );
 }
 
@@ -158,6 +158,6 @@ export async function updateCourseChallenges(
 
         body: { challenges },
       }),
-    "Failed to update course challenges"
+    "Failed to update course labs"
   );
 }

@@ -17,7 +17,6 @@ import {
   Table,
   Text,
   TextInput,
-  Textarea,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconPencil, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
@@ -26,8 +25,6 @@ import { cleanText, formatDate, wrapTextStyle } from "@/src/features/admin/lib/a
 import MyEditor from "@/src/shared/components/MyEditor";
 import { useToast } from "@/src/shared/hooks/useToast";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
-import { CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS } from "@/src/features/course/constants/challengeConstants";
-import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -36,7 +33,6 @@ type ChallengeDifficulty = "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
 type AdminChallengeListItem = {
   id: string;
   title: string;
-  shortDescription: string | null;
   description: string | null;
   status: ChallengeStatus;
   difficulty: ChallengeDifficulty;
@@ -76,7 +72,7 @@ export default function AdminChallengeManagement() {
     refresh,
   } = useAdminPagedList<AdminChallengeListItem>({
     endpoint: "/api/backend/api/admin/challenges",
-    label: "challenges",
+    label: "labs",
     pageSize: PAGE_SIZE,
     sort: "updatedAt,desc",
   });
@@ -96,15 +92,14 @@ export default function AdminChallengeManagement() {
 
   useEffect(() => {
     if (!error) return;
-    const message = error.replace(/^Failed to load challenges\.\s*/i, "").trim();
-    showToast("red", "Failed to load challenges", message || "Please try again.");
+    const message = error.replace(/^Failed to load labs\.\s*/i, "").trim();
+    showToast("red", "Failed to load labs", message || "Please try again.");
     setError(null);
   }, [error, setError, showToast]);
 
   const form = useForm({
     initialValues: {
       title: "",
-      shortDescription: "",
       description: "<p>Add a description...</p>",
       status: "DRAFT" as ChallengeStatus,
       difficulty: "BEGINNER" as ChallengeDifficulty,
@@ -122,7 +117,6 @@ export default function AdminChallengeManagement() {
     setSelected(challenge);
     form.setValues({
       title: challenge.title ?? "",
-      shortDescription: challenge.shortDescription ?? "",
       description: challenge.description ?? "<p>Add a description...</p>",
       status: challenge.status ?? "DRAFT",
       difficulty: challenge.difficulty ?? "BEGINNER",
@@ -141,13 +135,11 @@ export default function AdminChallengeManagement() {
     setSaving(true);
     setError(null);
     try {
-      const normalizedShortDescription = normalizeShortDescription(values.shortDescription);
       const res = await fetch(`/api/backend/api/admin/challenges/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: values.title.trim(),
-          shortDescription: cleanText(normalizedShortDescription),
           description: cleanText(values.description),
           status: values.status,
           difficulty: values.difficulty,
@@ -158,14 +150,14 @@ export default function AdminChallengeManagement() {
         const raw = await readBackendError(res);
         const msg = toUserFriendlyBackendError(raw);
         const color = res.status >= 500 ? "red" : "orange";
-        showToast(color, "Failed to update challenge", msg ?? "Please try again.");
+        showToast(color, "Failed to update lab", msg ?? "Please try again.");
         return;
       }
       setEditOpened(false);
       setSelected(null);
       refresh();
     } catch {
-      showToast("red", "Failed to update challenge", "Please try again.");
+      showToast("red", "Failed to update lab", "Please try again.");
     } finally {
       setSaving(false);
     }
@@ -183,7 +175,7 @@ export default function AdminChallengeManagement() {
         const raw = await readBackendError(res);
         const msg = toUserFriendlyBackendError(raw);
         const color = res.status >= 500 ? "red" : "orange";
-        showToast(color, "Failed to delete challenge", msg ?? "Please try again.");
+        showToast(color, "Failed to delete lab", msg ?? "Please try again.");
         return;
       }
       setDeleteOpened(false);
@@ -194,7 +186,7 @@ export default function AdminChallengeManagement() {
         refresh();
       }
     } catch {
-      showToast("red", "Failed to delete challenge", "Please try again.");
+      showToast("red", "Failed to delete lab", "Please try again.");
     } finally {
       setSaving(false);
     }
@@ -244,7 +236,7 @@ export default function AdminChallengeManagement() {
             <Table.Tr>
               <Table.Td colSpan={5}>
                 <Text size="sm" c="dimmed" ta="center" py="md">
-                  No challenges found.
+                  No labs found.
                 </Text>
               </Table.Td>
             </Table.Tr>
@@ -252,22 +244,9 @@ export default function AdminChallengeManagement() {
             challenges.map((c) => (
               <Table.Tr key={c.id}>
                 <Table.Td>
-                  <Stack gap={2}>
-                    <Text fw={600} size="sm" lineClamp={1} style={wrapTextStyle} title={c.title}>
-                      {c.title}
-                    </Text>
-                    {c.shortDescription ? (
-                      <Text
-                        size="xs"
-                        c="dimmed"
-                        lineClamp={2}
-                        style={wrapTextStyle}
-                        title={c.shortDescription}
-                      >
-                        {c.shortDescription}
-                      </Text>
-                    ) : null}
-                  </Stack>
+                  <Text fw={600} size="sm" lineClamp={2} style={wrapTextStyle} title={c.title}>
+                    {c.title}
+                  </Text>
                 </Table.Td>
                 <Table.Td>
                   <Stack gap={2}>
@@ -316,7 +295,7 @@ export default function AdminChallengeManagement() {
                     <ActionIcon
                       variant="subtle"
                       color="gray"
-                      aria-label="Edit challenge"
+                      aria-label="Edit lab"
                       onClick={() => openEdit(c)}
                     >
                       <IconPencil size={16} />
@@ -324,7 +303,7 @@ export default function AdminChallengeManagement() {
                     <ActionIcon
                       variant="subtle"
                       color="red"
-                      aria-label="Delete challenge"
+                      aria-label="Delete lab"
                       onClick={() => openDelete(c)}
                     >
                       <IconTrash size={16} />
@@ -351,33 +330,13 @@ export default function AdminChallengeManagement() {
       <Modal
         opened={editOpened}
         onClose={() => setEditOpened(false)}
-        title={`Edit Challenge: ${selectedTitle}`}
+        title={`Edit Lab: ${selectedTitle}`}
         centered
         size="lg"
       >
         <form onSubmit={form.onSubmit((values) => void submitEdit(values))}>
           <Stack gap="sm">
             <TextInput label="Title" required {...form.getInputProps("title")} />
-            <Textarea
-              label="Short description"
-              autosize
-              minRows={2}
-              maxRows={4}
-              value={form.values.shortDescription}
-              onChange={(e) => {
-                const next = e.currentTarget.value;
-                if (next.length > CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS) {
-                  showToast(
-                    "orange",
-                    "Character limit reached",
-                    `Short description cannot exceed ${CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters.`
-                  );
-                  return;
-                }
-                form.setFieldValue("shortDescription", next);
-              }}
-              description={`${form.values.shortDescription.length}/${CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
-            />
             <MyEditor
               description={form.values.description}
               setDescription={(value) => form.setFieldValue("description", value)}
@@ -446,7 +405,7 @@ export default function AdminChallengeManagement() {
       <Modal
         opened={deleteOpened}
         onClose={() => setDeleteOpened(false)}
-        title="Delete Challenge"
+        title="Delete Lab"
         centered
       >
         <Stack gap="md">

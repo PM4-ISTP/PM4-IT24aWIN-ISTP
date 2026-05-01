@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ActionIcon,
-  Affix,
   Alert,
   Box,
   Button,
@@ -12,14 +11,13 @@ import {
   Group,
   Loader,
   Modal,
-  Notification,
   Paper,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft, IconTrash, IconX } from "@tabler/icons-react";
+import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
 import {
   ChallengeFormFields,
   type ChallengeFormValues,
@@ -32,16 +30,13 @@ import {
   previewVisibilityImpact,
   type ChallengeStatusEnum,
 } from "@/src/features/course/actions/challenges";
-import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
 import {
   toFormSubTasks,
   toRequestSubTasks,
   validateSubTasks,
 } from "@/src/features/course/utils/subTasks";
-import { useToast } from "@/src/shared/hooks/useToast";
 import { useDockerImageCheck } from "@/src/features/course/hooks/useDockerImageCheck";
 import {
-  CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
   DOCKER_IMAGE_ERROR,
   DOCKER_IMAGE_PATTERN,
 } from "@/src/features/course/constants/challengeConstants";
@@ -66,7 +61,6 @@ export default function EditChallenge() {
 
   const [formValues, setFormValues] = useState<ChallengeFormValues>({
     title: "",
-    shortDescription: "",
     description: "",
     status: "DRAFT",
     difficulty: "MEDIUM",
@@ -83,13 +77,11 @@ export default function EditChallenge() {
   const [visibilityOpened, { open: openVisibility, close: closeVisibility }] = useDisclosure(false);
   const [visibilityImpactCount, setVisibilityImpactCount] = useState(0);
   const [titleError, setTitleError] = useState<string | null>(null);
-  const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [dockerImageError, setDockerImageError] = useState<string | null>(null);
   const [subTaskErrors, setSubTaskErrors] = useState<
     Array<Partial<Record<"title" | "description" | "flag", string>>>
   >([]);
   const [formError, setFormError] = useState<string | null>(null);
-  const charLimitToast = useToast();
   const dockerImageCheck = useDockerImageCheck(formValues.dockerImage);
 
   useEffect(() => {
@@ -106,7 +98,6 @@ export default function EditChallenge() {
       const loadedDockerImage = challenge.dockerImage ?? "";
       setFormValues({
         title: challenge.title ?? "",
-        shortDescription: challenge.shortDescription ?? "",
         description: challenge.description ?? "",
         status: loadedStatus,
         difficulty: challenge.difficulty ?? "MEDIUM",
@@ -124,12 +115,6 @@ export default function EditChallenge() {
   }, [challengeId]);
 
   async function performUpdate() {
-    const normalizedShortDescription = normalizeShortDescription(formValues.shortDescription);
-    if (!normalizedShortDescription) {
-      setShortDescriptionError("Short description is required");
-      return;
-    }
-
     const trimmedDockerImage = formValues.dockerImage.trim();
     const subTaskValidation = validateSubTasks(formValues.subTasks);
     if (!subTaskValidation.valid) {
@@ -144,7 +129,6 @@ export default function EditChallenge() {
 
     const result = await updateChallenge(challengeId, {
       title: formValues.title.trim(),
-      shortDescription: normalizedShortDescription,
       description: formValues.description,
       status: formValues.status,
       difficulty: formValues.difficulty,
@@ -165,18 +149,12 @@ export default function EditChallenge() {
 
   async function handleSubmit() {
     setTitleError(null);
-    setShortDescriptionError(null);
     setDockerImageError(null);
     setSubTaskErrors([]);
     setFormError(null);
 
     if (!formValues.title.trim()) {
-      setTitleError("Challenge title is required");
-      return;
-    }
-
-    if (!normalizeShortDescription(formValues.shortDescription)) {
-      setShortDescriptionError("Short description is required");
+      setTitleError("Lab title is required");
       return;
     }
 
@@ -270,13 +248,13 @@ export default function EditChallenge() {
               variant="subtle"
               size="lg"
               onClick={() => router.push("/dashboard/instructor/challenges")}
-              aria-label="Back to challenges"
+              aria-label="Back to labs"
             >
               <IconArrowLeft size={20} />
             </ActionIcon>
           </Group>
-          <Alert color="red" title="Could not load challenge" variant="light">
-            Something went wrong loading this challenge. Please go back and try again.
+          <Alert color="red" title="Could not load lab" variant="light">
+            Something went wrong loading this lab. Please go back and try again.
           </Alert>
         </Stack>
       </Container>
@@ -317,21 +295,21 @@ export default function EditChallenge() {
         </Stack>
       </Modal>
 
-      <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Challenge" centered>
+      <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Lab" centered>
         <Stack gap="md">
           <Text size="sm">
             Are you sure you want to delete <strong>{formValues.title}</strong>?
           </Text>
           {courseCount > 0 && (
             <Text size="sm" c="orange">
-              This challenge is connected to {courseCount} course{courseCount !== 1 ? "s" : ""}.
+              This lab is connected to {courseCount} course{courseCount !== 1 ? "s" : ""}.
             </Text>
           )}
           <Text size="sm" c="dimmed">
             This action cannot be undone.
           </Text>
           {deleteError && (
-            <Alert color="red" title="Could not delete challenge" variant="light">
+            <Alert color="red" title="Could not delete lab" variant="light">
               Something went wrong. Please try again.
             </Alert>
           )}
@@ -347,7 +325,7 @@ export default function EditChallenge() {
                 void handleDelete();
               }}
             >
-              Delete Challenge
+              Delete Lab
             </Button>
           </Group>
         </Stack>
@@ -360,7 +338,7 @@ export default function EditChallenge() {
               variant="subtle"
               size="lg"
               onClick={() => router.push("/dashboard/instructor/challenges")}
-              aria-label="Back to challenges"
+              aria-label="Back to labs"
             >
               <IconArrowLeft size={20} />
             </ActionIcon>
@@ -374,10 +352,10 @@ export default function EditChallenge() {
                   fontWeight: 700,
                 }}
               >
-                Edit Challenge
+                Edit Lab
               </Title>
               <Text size="sm" style={{ color: "#94a3b8" }}>
-                Update the challenge details.
+                Update the lab details.
               </Text>
             </Stack>
           </Group>
@@ -388,7 +366,7 @@ export default function EditChallenge() {
             onClick={openDelete}
             radius="md"
           >
-            Delete Challenge
+            Delete Lab
           </Button>
         </Group>
 
@@ -397,13 +375,10 @@ export default function EditChallenge() {
             values={formValues}
             onChange={setFormValues}
             titleError={titleError}
-            shortDescriptionError={shortDescriptionError}
             dockerImageError={dockerImageError}
             dockerImageCheckStatus={dockerImageCheck.status}
             dockerImageCheckMessage={dockerImageCheck.message}
             subTaskErrors={subTaskErrors}
-            onCharLimitExceeded={() => charLimitToast.show()}
-            onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
             onDockerImageErrorClear={() => setDockerImageError(null)}
           />
 
@@ -411,10 +386,10 @@ export default function EditChallenge() {
             <Group justify="space-between" align="center">
               <Box>
                 <Text size="sm" fw={600}>
-                  Test this challenge
+                  Test this lab
                 </Text>
                 <Text size="xs" c="dimmed">
-                  Start a pod to preview the challenge before publishing.
+                  Start a pod to preview the lab before publishing.
                 </Text>
               </Box>
               <ChallengePodPanel challengeId={challengeId} dockerImage={savedDockerImage} />
@@ -451,21 +426,6 @@ export default function EditChallenge() {
           </Button>
         </Stack>
       </Stack>
-
-      <Affix position={{ bottom: 20, right: 20 }}>
-        {charLimitToast.visible && (
-          <Notification
-            color="orange"
-            title="Character limit reached"
-            onClose={charLimitToast.hide}
-            withCloseButton
-            icon={<IconX size={18} />}
-          >
-            The short description cannot exceed {CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters
-            (including spaces).
-          </Notification>
-        )}
-      </Affix>
     </Container>
   );
 }

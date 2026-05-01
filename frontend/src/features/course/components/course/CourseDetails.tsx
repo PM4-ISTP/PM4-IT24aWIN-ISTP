@@ -152,7 +152,7 @@ export default async function CourseDetails({
 
           <CourseChallengeDetailsList
             challenges={course.courseChallenges ?? []}
-            title="Course Challenges"
+            title="Course Labs"
             showIndex={true}
             courseId={isEnrolled ? course.id : undefined}
           />

@@ -254,13 +254,13 @@ export function CourseJourneyCard({
           {/* ── Challenges progress (or placeholder) ── */}
           {challenges ? (
             <ProgressSection
-              label="Sub-tasks"
+              label="Challenges"
               percent={challengePercent}
               color="orange"
               statLeft={
                 <StatChip
                   icon={<IconFlame size={13} color="var(--mantine-color-orange-5)" />}
-                  label={`${challenges.completed} Sub-task${challenges.completed !== 1 ? "s" : ""} Solved`}
+                  label={`${challenges.completed} Challenge${challenges.completed !== 1 ? "s" : ""} Solved`}
                 />
               }
               statRight={
@@ -285,12 +285,12 @@ export function CourseJourneyCard({
                   leftSection={<IconTrophy size={16} />}
                   disabled
                 >
-                  All challenges completed
+                  All labs completed
                 </Button>
               ) : nextChallengeHref ? (
                 <Link href={nextChallengeHref} style={{ textDecoration: "none" }}>
                   <Button component="span" color="blue" rightSection={<IconArrowRight size={16} />}>
-                    Start Next Challenge
+                    Start Next Lab
                   </Button>
                 </Link>
               ) : null}

@@ -9,7 +9,6 @@ import {
 export interface ChallengeCardProps {
   id: string;
   title: string;
-  shortDescription?: string;
   status: string;
   difficulty: string;
   maxScore: number;
@@ -21,7 +20,6 @@ export interface ChallengeCardProps {
 export function ChallengeCard({
   id,
   title,
-  shortDescription,
   status,
   difficulty,
   maxScore,
@@ -47,19 +45,7 @@ export function ChallengeCard({
           </Badge>
         </Group>
 
-        {/* Short description */}
-        <Box style={{ flex: 1 }}>
-          {shortDescription && (
-            <Text
-              size="xs"
-              c="dimmed"
-              lineClamp={2}
-              style={{ lineHeight: 1.5, overflowWrap: "anywhere", wordBreak: "break-word" }}
-            >
-              {shortDescription}
-            </Text>
-          )}
-        </Box>
+        <Box style={{ flex: 1 }} />
 
         {/* Difficulty — pinned above footer */}
         <Group justify="flex-start" mb={4}>

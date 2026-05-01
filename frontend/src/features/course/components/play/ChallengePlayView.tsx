@@ -576,8 +576,8 @@ export function ChallengePlayView({
         color: "teal",
         title: "Correct flag!",
         message: result.data.isChallengeSolved
-          ? "Challenge completed. Nice work!"
-          : "Sub-task solved. Continue to the next one.",
+          ? "Lab completed. Nice work!"
+          : "Challenge solved. Continue to the next one.",
       });
     } else {
       notifications.show({
@@ -664,16 +664,11 @@ export function ChallengePlayView({
                   fw={700}
                   style={{ letterSpacing: "0.08em" }}
                 >
-                  Challenge
+                  Lab
                 </Text>
                 <Title order={2} style={{ lineHeight: 1.2 }}>
                   {challenge.title}
                 </Title>
-                {challenge.shortDescription && (
-                  <Text c="dimmed" size="sm">
-                    {challenge.shortDescription}
-                  </Text>
-                )}
               </Stack>
 
               <Stack gap={6}>
@@ -682,7 +677,7 @@ export function ChallengePlayView({
                     Progress
                   </Text>
                   <Text size="xs" fw={600} c={allSolved ? "teal.3" : "blue.3"}>
-                    {solvedCount} / {total} sub-tasks
+                    {solvedCount} / {total} challenges
                   </Text>
                 </Group>
                 <Progress
@@ -734,7 +729,7 @@ export function ChallengePlayView({
                   <Stack gap={4}>
                     <Group gap="xs" align="center">
                       <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
-                        Sub-task {activeStep + 1} of {total}
+                        Challenge {activeStep + 1} of {total}
                       </Text>
                       {current.isSolved && (
                         <Badge variant="light" color="teal" size="xs">
@@ -821,9 +816,9 @@ export function ChallengePlayView({
                 <Group gap="sm">
                   <IconTrophy size={20} color="var(--mantine-color-teal-4)" />
                   <Stack gap={2}>
-                    <Text fw={600}>Challenge completed</Text>
+                    <Text fw={600}>Lab completed</Text>
                     <Text size="sm" c="dimmed">
-                      You solved every sub-task. Well done!
+                      You solved every challenge. Well done!
                     </Text>
                   </Stack>
                 </Group>
@@ -1021,7 +1016,7 @@ export function ChallengePlayView({
                     ref={labMode === "app" ? appIframeRef : undefined}
                     key={labMode === "app" ? appFrameKey : undefined}
                     src={activeLabUrl}
-                    title={`Challenge lab ${activeLabLabel}`}
+                    title={`Lab ${activeLabLabel}`}
                     allow="clipboard-read; clipboard-write"
                     onLoad={() => {
                       try {

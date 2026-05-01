@@ -4,40 +4,34 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ActionIcon,
-  Affix,
   Alert,
   Box,
   Button,
   Container,
   Group,
-  Notification,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { IconArrowLeft, IconX } from "@tabler/icons-react";
+import { IconArrowLeft } from "@tabler/icons-react";
 import {
   ChallengeFormFields,
   type ChallengeFormValues,
 } from "@/src/features/course/components/challenges/ChallengeFormFields";
 import { createChallenge } from "@/src/features/course/actions/challenges";
-import { normalizeShortDescription } from "@/src/features/course/utils/courseText";
 import { toRequestSubTasks, validateSubTasks } from "@/src/features/course/utils/subTasks";
-import { useToast } from "@/src/shared/hooks/useToast";
 import { useDockerImageCheck } from "@/src/features/course/hooks/useDockerImageCheck";
 import {
-  CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS,
   DOCKER_IMAGE_ERROR,
   DOCKER_IMAGE_PATTERN,
 } from "@/src/features/course/constants/challengeConstants";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
-export default function CreateChallenge() {
+export default function CreateLab() {
   const router = useRouter();
 
   const [formValues, setFormValues] = useState<ChallengeFormValues>({
     title: "",
-    shortDescription: "",
     description: "<p>Add a description...</p>",
     status: "DRAFT",
     difficulty: "MEDIUM",
@@ -53,30 +47,21 @@ export default function CreateChallenge() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
-  const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [dockerImageError, setDockerImageError] = useState<string | null>(null);
   const [subTaskErrors, setSubTaskErrors] = useState<
     Array<Partial<Record<"title" | "description" | "flag", string>>>
   >([]);
   const [formError, setFormError] = useState<string | null>(null);
-  const charLimitToast = useToast();
   const dockerImageCheck = useDockerImageCheck(formValues.dockerImage);
 
   async function handleSubmit() {
     setTitleError(null);
-    setShortDescriptionError(null);
     setDockerImageError(null);
     setSubTaskErrors([]);
     setFormError(null);
 
     if (!formValues.title.trim()) {
-      setTitleError("Challenge title is required");
-      return;
-    }
-
-    const normalizedShortDescription = normalizeShortDescription(formValues.shortDescription);
-    if (!normalizedShortDescription) {
-      setShortDescriptionError("Short description is required");
+      setTitleError("Lab title is required");
       return;
     }
 
@@ -111,7 +96,6 @@ export default function CreateChallenge() {
 
     const result = await createChallenge({
       title: formValues.title.trim(),
-      shortDescription: normalizedShortDescription,
       description: formValues.description,
       status: formValues.status,
       difficulty: formValues.difficulty,
@@ -140,7 +124,7 @@ export default function CreateChallenge() {
               size="lg"
               radius="md"
               onClick={() => router.push("/dashboard/instructor/challenges")}
-              aria-label="Back to challenges"
+              aria-label="Back to labs"
             >
               <IconArrowLeft size={20} />
             </ActionIcon>
@@ -154,10 +138,10 @@ export default function CreateChallenge() {
                   fontWeight: 700,
                 }}
               >
-                Create Challenge
+                Create Lab
               </Title>
               <Text size="sm" style={{ color: "#94a3b8" }}>
-                Fill in the details to create a new challenge.
+                Fill in the details to create a new lab.
               </Text>
             </Stack>
           </Group>
@@ -177,19 +161,16 @@ export default function CreateChallenge() {
               values={formValues}
               onChange={setFormValues}
               titleError={titleError}
-              shortDescriptionError={shortDescriptionError}
               dockerImageError={dockerImageError}
               dockerImageCheckStatus={dockerImageCheck.status}
               dockerImageCheckMessage={dockerImageCheck.message}
               subTaskErrors={subTaskErrors}
               defaultExpandedSubTaskIndex={0}
-              onCharLimitExceeded={() => charLimitToast.show()}
-              onShortDescriptionErrorClear={() => setShortDescriptionError(null)}
               onDockerImageErrorClear={() => setDockerImageError(null)}
             />
 
             {formError && (
-              <Alert color="red" title="Could not create challenge" variant="light">
+              <Alert color="red" title="Could not create lab" variant="light">
                 {formError}
               </Alert>
             )}
@@ -213,26 +194,11 @@ export default function CreateChallenge() {
                 boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
               }}
             >
-              Create Challenge
+              Create Lab
             </Button>
           </Stack>
         </Box>
       </Stack>
-
-      <Affix position={{ bottom: 20, right: 20 }}>
-        {charLimitToast.visible && (
-          <Notification
-            color="orange"
-            title="Character limit reached"
-            onClose={charLimitToast.hide}
-            withCloseButton
-            icon={<IconX size={18} />}
-          >
-            The short description cannot exceed {CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS} characters
-            (including spaces).
-          </Notification>
-        )}
-      </Affix>
     </Container>
   );
 }

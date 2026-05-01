@@ -53,10 +53,10 @@ export function ChallengeGrid({ challenges, totalPages, currentPage }: Challenge
         </ThemeIcon>
         <Stack gap={6} align="center">
           <Text fw={600} style={{ color: "#e2e8f0" }}>
-            No challenges found
+            No labs found
           </Text>
           <Text size="sm" c="dimmed">
-            Create your first challenge to get started.
+            Create your first lab to get started.
           </Text>
         </Stack>
       </div>

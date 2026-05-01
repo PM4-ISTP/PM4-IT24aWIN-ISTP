@@ -50,7 +50,7 @@ export function validateSubTasks(subTasks: SubTaskFormValues[]): SubTaskValidati
     return {
       valid: false,
       errors: [],
-      formError: "At least one sub task is required",
+      formError: "At least one challenge is required",
     };
   }
 
