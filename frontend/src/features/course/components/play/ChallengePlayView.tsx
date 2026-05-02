@@ -182,7 +182,7 @@ export function ChallengePlayView({
   if (dockerImageCheck.status === "checking") {
     startDisabledReason = "Checking Docker image...";
   } else if (dockerImageCheck.status === "error") {
-    startDisabledReason = dockerImageCheck.message ?? "Docker image is not reachable";
+    startDisabledReason = dockerImageCheck.message ?? "Public GHCR image is not reachable";
   } else if (dockerImage.trim() && dockerImageCheck.status === "idle") {
     startDisabledReason = DOCKER_IMAGE_ERROR;
   }

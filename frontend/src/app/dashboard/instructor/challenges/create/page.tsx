@@ -79,7 +79,7 @@ export default function CreateLab() {
       return;
     }
     if (dockerImageCheck.status === "error") {
-      setDockerImageError(dockerImageCheck.message ?? "Docker image is not reachable");
+      setDockerImageError(dockerImageCheck.message ?? "Public GHCR image is not reachable");
       return;
     }
 

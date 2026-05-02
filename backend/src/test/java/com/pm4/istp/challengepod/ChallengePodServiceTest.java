@@ -139,6 +139,7 @@ class ChallengePodServiceTest {
         AdminConfig cfg = adminConfigWith("kubeconfig", 1800);
         cfg.setCpuLimit("500m");
         cfg.setMemoryLimit("256Mi");
+        cfg.setImagePullSecretName("ghcr-pull-secret");
 
         PodStatusResponse response =
                 ReflectionTestUtils.invokeMethod(
@@ -170,6 +171,9 @@ class ChallengePodServiceTest {
                         });
         assertThat(deployment.getSpec().getTemplate().getSpec().getAutomountServiceAccountToken())
                 .isFalse();
+        assertThat(deployment.getSpec().getTemplate().getSpec().getImagePullSecrets())
+                .singleElement()
+                .satisfies(secret -> assertThat(secret.getName()).isEqualTo("ghcr-pull-secret"));
         assertThat(deployment.getMetadata().getAnnotations()).isNullOrEmpty();
 
         ArgumentCaptor<Service> serviceCaptor = ArgumentCaptor.forClass(Service.class);
