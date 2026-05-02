@@ -81,11 +81,13 @@ export function getTotalSecondsOnline(): number {
 }
 
 export function formatTimeOnline(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  const remainingMin = minutes % 60;
-  if (remainingMin === 0) return `${hours}h`;
-  return `${hours}h ${remainingMin}m`;
+  const hours = seconds / 3600;
+  if (hours < 1) {
+    // 0.1h increments — like Steam for < 1h
+    const tenths = Math.round(hours * 10) / 10;
+    if (tenths >= 1) return "1h"; // rounding edge case (e.g. 3570s)
+    return `${tenths.toFixed(1)}h`;
+  }
+  // 1h and above: round to nearest whole hour (1.2→1h, 1.5→2h)
+  return `${Math.round(hours)}h`;
 }
