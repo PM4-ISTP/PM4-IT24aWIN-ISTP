@@ -330,17 +330,19 @@ export function ChallengePlayView({
         message: result.data.isChallengeSolved ? "Lab completed. Nice work!" : "Challenge solved.",
       });
     } else {
-      // Record which option was picked so re-opening the challenge shows it
+      // Record which option was picked and the correct option
       setChallenge((prev) => ({
         ...prev,
         subTasks: (prev.subTasks ?? []).map((st) =>
-          st.id === current.id ? { ...st, selectedOptionId: selectedOption } : st
+          st.id === current.id
+            ? { ...st, selectedOptionId: selectedOption, correctOptionId: result.data.correctOptionId }
+            : st
         ),
       }));
       notifications.show({
         color: "red",
         title: "Incorrect answer",
-        message: "Not quite — try another option.",
+        message: "That was wrong — the correct answer is highlighted below.",
       });
     }
   }
@@ -374,6 +376,8 @@ export function ChallengePlayView({
   const displaySelectedOption = current?.isSolved
     ? (current.selectedOptionId ?? selectedOption)
     : selectedOption;
+  const correctOptionId = current?.correctOptionId ?? null;
+  const hasWrongAnswer = Boolean(!current?.isSolved && current?.selectedOptionId);
 
   return (
     <Box
@@ -645,6 +649,27 @@ export function ChallengePlayView({
                         <Stack gap="xs">
                           {(current.options ?? []).map((opt) => {
                             const isSelected = displaySelectedOption === opt.id;
+                            const isCorrectOpt = correctOptionId === opt.id;
+                            const isWrongSelected = hasWrongAnswer && isSelected && !isCorrectOpt;
+
+                            let bg = "rgba(255,255,255,0.02)";
+                            let border: string | undefined = undefined;
+                            if (current.isSolved && isSelected) {
+                              bg = "rgba(20,184,166,0.12)";
+                              border = "rgba(20,184,166,0.4)";
+                            } else if (isCorrectOpt) {
+                              bg = "rgba(20,184,166,0.10)";
+                              border = "rgba(20,184,166,0.35)";
+                            } else if (isWrongSelected) {
+                              bg = "rgba(248,113,113,0.10)";
+                              border = "rgba(248,113,113,0.35)";
+                            } else if (!hasWrongAnswer && isSelected) {
+                              bg = "rgba(59,130,246,0.10)";
+                              border = "rgba(59,130,246,0.4)";
+                            }
+
+                            const locked = current.isSolved || hasWrongAnswer;
+
                             return (
                               <Paper
                                 key={opt.id}
@@ -652,39 +677,33 @@ export function ChallengePlayView({
                                 radius="md"
                                 p="sm"
                                 style={{
-                                  background: isSelected
-                                    ? current.isSolved
-                                      ? "rgba(20,184,166,0.12)"
-                                      : "rgba(59,130,246,0.1)"
-                                    : "rgba(255,255,255,0.02)",
-                                  borderColor: isSelected
-                                    ? current.isSolved
-                                      ? "rgba(20,184,166,0.4)"
-                                      : "rgba(59,130,246,0.4)"
-                                    : undefined,
-                                  cursor: current.isSolved ? "default" : "pointer",
-                                  opacity: current.isSolved && !isSelected ? 0.55 : 1,
+                                  background: bg,
+                                  borderColor: border,
+                                  cursor: locked ? "default" : "pointer",
+                                  opacity: locked && !isSelected && !isCorrectOpt ? 0.45 : 1,
                                   transition: "background 140ms, border-color 140ms",
                                 }}
                                 onClick={() => {
-                                  if (!current.isSolved && opt.id) setSelectedOption(opt.id);
+                                  if (!locked && opt.id) setSelectedOption(opt.id);
                                 }}
                               >
                                 <Group gap="sm" wrap="nowrap">
                                   <Radio
                                     value={opt.id ?? ""}
-                                    disabled={current.isSolved}
+                                    disabled={locked}
                                     style={{ flexShrink: 0 }}
                                   />
                                   <Text size="sm" style={{ flex: 1 }}>
                                     {opt.text}
                                   </Text>
                                   {current.isSolved && isSelected && (
-                                    <IconCheck
-                                      size={15}
-                                      color="var(--mantine-color-teal-4)"
-                                      style={{ flexShrink: 0 }}
-                                    />
+                                    <IconCheck size={15} color="var(--mantine-color-teal-4)" style={{ flexShrink: 0 }} />
+                                  )}
+                                  {isCorrectOpt && !current.isSolved && (
+                                    <IconCheck size={15} color="var(--mantine-color-teal-4)" style={{ flexShrink: 0 }} />
+                                  )}
+                                  {isWrongSelected && (
+                                    <Text size="xs" c="red.4" fw={600} style={{ flexShrink: 0 }}>✗</Text>
                                   )}
                                 </Group>
                               </Paper>
@@ -694,7 +713,7 @@ export function ChallengePlayView({
                       </Radio.Group>
                       <Button
                         onClick={() => void handleSubmitChoice()}
-                        disabled={current.isSolved || !selectedOption}
+                        disabled={current.isSolved || hasWrongAnswer || !selectedOption}
                         loading={submitting}
                         color={current.isSolved ? "teal" : "blue"}
                         leftSection={current.isSolved ? <IconCheck size={16} /> : undefined}

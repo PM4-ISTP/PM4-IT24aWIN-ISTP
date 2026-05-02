@@ -478,7 +478,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         studentOptionSubmissionRepository.findByUserIdAndSubTaskId(userId, subTaskId);
     if (existing.isPresent()) {
       StudentOptionSubmission prev = existing.get();
-      return buildChoiceResponse(prev.isCorrect(), userId, subTask.getChallenge(), challengeId);
+      return buildChoiceResponse(prev.isCorrect(), userId, subTask.getChallenge(), challengeId, prev.isCorrect() ? null : subTask);
     }
 
     SubTaskOption selectedOption =
@@ -504,7 +504,7 @@ public class ChallengeServiceImpl implements ChallengeService {
       studentOptionSubmissionRepository.saveAndFlush(submission);
     } catch (DataIntegrityViolationException ex) {
       // Concurrent submission — just return current state
-      return buildChoiceResponse(correct, userId, subTask.getChallenge(), challengeId);
+      return buildChoiceResponse(correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
     }
 
     // Award completion when correct (reuse the same SubTaskCompletion mechanism)
@@ -521,7 +521,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     ChoiceSubmissionResponseDto response =
-        buildChoiceResponse(correct, userId, subTask.getChallenge(), challengeId);
+        buildChoiceResponse(correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
 
     if (correct && response.isChallengeSolved()) {
       badgeService.tryAwardBadgesForChallenge(userId, challengeId);
@@ -531,14 +531,23 @@ public class ChallengeServiceImpl implements ChallengeService {
   }
 
   private ChoiceSubmissionResponseDto buildChoiceResponse(
-      boolean correct, UUID userId, Challenge challenge, UUID challengeId) {
+      boolean correct, UUID userId, Challenge challenge, UUID challengeId, SubTask subTask) {
     List<SubTask> siblings = challenge.getSubTasks();
     List<UUID> siblingIds = siblingsIds(siblings);
     Set<UUID> solvedIds = solvedSubTaskIds(userId, siblingIds);
     int solvedCount = solvedIds.size();
     int totalCount = siblings.size();
     boolean challengeSolved = totalCount > 0 && solvedCount == totalCount;
-    return new ChoiceSubmissionResponseDto(correct, challengeSolved, solvedCount, totalCount);
+    UUID correctOptionId = null;
+    if (!correct && subTask != null) {
+      correctOptionId =
+          subTask.getOptions().stream()
+              .filter(SubTaskOption::isCorrect)
+              .map(SubTaskOption::getId)
+              .findFirst()
+              .orElse(null);
+    }
+    return new ChoiceSubmissionResponseDto(correct, challengeSolved, solvedCount, totalCount, correctOptionId);
   }
 
   // -------------------------------------------------------------------------
@@ -585,12 +594,23 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     // Load MC submissions for this user in one pass
     Map<UUID, UUID> selectedOptionBySubTask = new HashMap<>();
+    Map<UUID, UUID> correctOptionBySubTask = new HashMap<>();
     for (SubTask st : entity.getSubTasks()) {
       if (st.getType() == SubTaskType.MULTIPLE_CHOICE) {
         studentOptionSubmissionRepository
             .findByUserIdAndSubTaskId(userId, st.getId())
             .ifPresent(
-                sub -> selectedOptionBySubTask.put(st.getId(), sub.getSelectedOption().getId()));
+                sub -> {
+                  selectedOptionBySubTask.put(st.getId(), sub.getSelectedOption().getId());
+                  // Expose correct option only when the student got it wrong
+                  if (!sub.isCorrect()) {
+                    st.getOptions().stream()
+                        .filter(SubTaskOption::isCorrect)
+                        .map(SubTaskOption::getId)
+                        .findFirst()
+                        .ifPresent(cid -> correctOptionBySubTask.put(st.getId(), cid));
+                  }
+                });
       }
     }
 
@@ -606,6 +626,9 @@ public class ChallengeServiceImpl implements ChallengeService {
       }
       if (selectedOptionBySubTask.containsKey(st.getId())) {
         st.setSelectedOptionId(selectedOptionBySubTask.get(st.getId()));
+      }
+      if (correctOptionBySubTask.containsKey(st.getId())) {
+        st.setCorrectOptionId(correctOptionBySubTask.get(st.getId()));
       }
     }
     dto.setTotalSubTaskCount(subTasks.size());
