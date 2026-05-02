@@ -10,7 +10,6 @@ import {
   Loader,
   Modal,
   Notification,
-  NumberInput,
   Pagination,
   Select,
   Stack,

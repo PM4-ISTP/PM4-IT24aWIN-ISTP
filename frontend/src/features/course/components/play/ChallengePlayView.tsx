@@ -5,7 +5,6 @@ import {
   Badge,
   Box,
   Button,
-  Collapse,
   CopyButton,
   Divider,
   Group,
