@@ -39,4 +39,7 @@ public interface ChallengeService {
    */
   SubTaskSubmissionResponseDto submitSubTaskFlag(
       UUID userId, UUID challengeId, UUID subTaskId, String flag);
+
+  /** Returns the number of challenges the user has fully completed (all sub-tasks solved). */
+  long countCompletedChallenges(UUID userId);
 }

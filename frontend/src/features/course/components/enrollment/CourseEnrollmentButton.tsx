@@ -11,6 +11,7 @@ interface CourseEnrollmentButtonProps {
   isEnrolled: boolean;
   participantCount: number;
   isPublished: boolean;
+  isPrivate?: boolean;
 }
 
 export function CourseEnrollmentButton({
@@ -18,6 +19,7 @@ export function CourseEnrollmentButton({
   isEnrolled,
   participantCount,
   isPublished,
+  isPrivate = false,
 }: CourseEnrollmentButtonProps) {
   const router = useRouter();
   const client = useApiClient();
@@ -61,7 +63,9 @@ export function CourseEnrollmentButton({
     }
   }
 
-  if (!isPublished) {
+  // Show nothing only for draft courses (not published, not private).
+  // Private courses: accessible via invite code — enroll button should still appear.
+  if (!isPublished && !isPrivate) {
     return null;
   }
 

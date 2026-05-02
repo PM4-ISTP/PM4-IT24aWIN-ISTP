@@ -167,12 +167,10 @@ public class CourseServiceImpl implements CourseService {
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
-    if (course.isPrivate()) {
-      throw new CourseAccessDeniedException(
-          String.format("Course '%s' is private and can only be joined via invite code", courseId));
-    }
-
-    if (!course.isPublished()) {
+    // Private courses are accessible without invite code once the user has the course link.
+    // The catalog/discovery protection is enforced by getCourse (403 for non-enrolled,
+    // non-instructors). Draft courses (not published, not private) remain closed.
+    if (!course.isPublished() && !course.isPrivate()) {
       throw new CourseAccessDeniedException(
           String.format("Course '%s' is not open for enrollment", courseId));
     }

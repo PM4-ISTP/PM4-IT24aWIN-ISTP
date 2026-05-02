@@ -77,6 +77,7 @@ export default async function CourseDetails({
   const isEnrolled = course.isEnrolled ?? false;
   const participantCount = course.participantCount ?? 0;
   const isPublished = course.isPublished ?? false;
+  const isPrivate = (course as { isPrivate?: boolean }).isPrivate ?? false;
   const owner = getOwner(course.courseInstructors);
 
   return (
@@ -90,6 +91,7 @@ export default async function CourseDetails({
         isEnrolled={isEnrolled}
         participantCount={participantCount}
         isPublished={isPublished}
+        isPrivate={isPrivate}
         backPageName={backPageName}
         backHref={backHref}
       />

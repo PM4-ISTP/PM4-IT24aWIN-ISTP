@@ -11,6 +11,7 @@ import {
   ThemeIcon,
 } from "@mantine/core";
 import { IconArrowRight, IconBolt, IconClock } from "@tabler/icons-react";
+// IconBolt used in RunningLabs, IconClock in deadline section
 import DashboardStyles from "@/src/shared/components/DashboardStyles";
 import DashboardHero from "@/src/shared/components/DashboardHero";
 import { DeadlineWidget } from "@/src/shared/components/DeadlineWidget";
@@ -37,6 +38,24 @@ type DeadlineItem = {
   challengeTitle: string;
   dueAt: string;
 };
+
+async function fetchCompletedLabsCount(): Promise<number | null> {
+  try {
+    const session = await getServerSession(authOptions);
+    const accessToken = session?.accessToken;
+    if (!accessToken) return null;
+
+    const res = await fetch(`${BACKEND_URL}/api/v1/challenges/my-completed-count`, {
+      cache: "no-store",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { count?: number };
+    return typeof json.count === "number" ? json.count : null;
+  } catch {
+    return null;
+  }
+}
 
 async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
   try {
@@ -146,7 +165,10 @@ export default async function Home() {
   const firstName = name.split(" ")[0];
   const userId = (session?.user as { id?: string } | undefined)?.id ?? session?.user?.email ?? undefined;
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
-  const deadlines = await fetchMyDeadlines();
+  const [deadlines, completedLabsCount] = await Promise.all([
+    fetchMyDeadlines(),
+    fetchCompletedLabsCount(),
+  ]);
 
   // TODO: delete when using real data
   const firstCourse = await getFirstCourse(result);
@@ -167,6 +189,7 @@ export default async function Home() {
         firstName={firstName}
         dateStr={dateStr}
         enrolledCoursesCount={result.success ? (result.data.totalElements ?? 0) : null}
+        completedLabsCount={completedLabsCount}
       />
 
       {/* Main content row */}

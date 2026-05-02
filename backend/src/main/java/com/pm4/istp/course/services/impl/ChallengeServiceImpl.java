@@ -446,4 +446,9 @@ public class ChallengeServiceImpl implements ChallengeService {
     dto.setSolvedSubTaskCount(solvedCount);
     dto.setSolved(!subTasks.isEmpty() && solvedCount == subTasks.size());
   }
+
+  @Override
+  public long countCompletedChallenges(UUID userId) {
+    return subTaskCompletionRepository.countCompletedChallenges(userId);
+  }
 }
