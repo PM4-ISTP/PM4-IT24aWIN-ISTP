@@ -350,9 +350,7 @@ export function SubTaskManager({
                             <Input.Label>Type</Input.Label>
                             <SegmentedControl
                               value={st.type}
-                              onChange={(val) =>
-                                handleTypeChange(index, val)
-                              }
+                              onChange={(val) => handleTypeChange(index, val)}
                               data={[
                                 { label: "Flag", value: "FLAG" },
                                 { label: "Multiple Choice", value: "MULTIPLE_CHOICE" },

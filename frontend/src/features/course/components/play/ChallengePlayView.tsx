@@ -41,7 +41,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChallengePodStatusBadge } from "@/src/features/challenge-pod/components/ChallengePodStatusBadge";
 import { useChallengePodStatus } from "@/src/features/challenge-pod/hooks/useChallengePodStatus";
-import { submitSubTaskFlag, submitSubTaskChoice, completeTheorySubTask } from "@/src/features/course/actions/challenges";
+import {
+  submitSubTaskFlag,
+  submitSubTaskChoice,
+  completeTheorySubTask,
+} from "@/src/features/course/actions/challenges";
 import {
   DOCKER_IMAGE_ERROR,
   getDifficultyColor,
