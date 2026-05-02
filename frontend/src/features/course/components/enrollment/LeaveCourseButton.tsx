@@ -7,9 +7,10 @@ import { leaveCourse } from "@/src/features/course/actions/courses";
 
 interface LeaveCourseButtonProps {
   courseId: string;
+  onLeave?: () => void;
 }
 
-export function LeaveCourseButton({ courseId }: LeaveCourseButtonProps) {
+export function LeaveCourseButton({ courseId, onLeave }: LeaveCourseButtonProps) {
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,6 +30,7 @@ export function LeaveCourseButton({ courseId }: LeaveCourseButtonProps) {
     }
 
     setModalOpen(false);
+    onLeave?.();
     router.refresh();
   }
 
