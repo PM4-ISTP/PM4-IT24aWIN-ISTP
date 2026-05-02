@@ -61,7 +61,6 @@ function pickInitialStep(subTasks: SubTaskStudentDto[]): number {
   return firstUnsolved === -1 ? Math.max(subTasks.length - 1, 0) : firstUnsolved;
 }
 
-
 function LabLaunchCard({
   title,
   description,
