@@ -5,6 +5,7 @@ import { Alert, Button, Group, Stack, Text } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useApiClient } from "@/src/shared/lib/api/client";
+import { LeaveCourseButton } from "./LeaveCourseButton";
 
 interface CourseEnrollmentButtonProps {
   courseId: string;
@@ -113,6 +114,7 @@ export function CourseEnrollmentButton({
       <Text size="xs" c="dimmed">
         {currentParticipantCount} participant{currentParticipantCount === 1 ? "" : "s"}
       </Text>
+      {hasJoined && <LeaveCourseButton courseId={courseId} />}
       {joinError && (
         <Alert color="red" variant="light" title="Enrollment failed">
           {joinError}

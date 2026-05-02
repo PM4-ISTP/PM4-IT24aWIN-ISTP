@@ -576,6 +576,28 @@ public class CourseServiceImpl implements CourseService {
     courseRepository.save(course);
   }
 
+  @Override
+  @Transactional
+  public void leaveCourse(UUID userId, UUID courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+
+    CourseEnrollment enrollment =
+        courseEnrollmentRepository
+            .findByCourseIdAndParticipantId(courseId, userId)
+            .orElseThrow(
+                () ->
+                    new CourseParticipantNotFoundException(
+                        String.format(
+                            "User '%s' is not enrolled in course '%s'", userId, courseId)));
+
+    course.removeCourseEnrollment(enrollment);
+    courseRepository.save(course);
+  }
+
   private void verifyOwner(Course course, UUID userId) {
     boolean isOwner =
         course.getCourseInstructors().stream()

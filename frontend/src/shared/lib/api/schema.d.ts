@@ -188,6 +188,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/courses/catalog/{id}/leave": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Leave a course
+     * @description Allows the authenticated student to remove themselves from a course they are enrolled in.
+     */
+    delete: operations["leaveCourse"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/courses/catalog/{id}/enroll": {
     parameters: {
       query?: never;
@@ -2532,6 +2552,31 @@ export interface operations {
           "*/*": {
             [key: string]: string;
           };
+        };
+      };
+    };
+  };
+  leaveCourse: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successfully left the course */
+      204: {
+        headers: { [name: string]: unknown };
+        content?: never;
+      };
+      /** @description Course not found or user not enrolled */
+      404: {
+        headers: { [name: string]: unknown };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
