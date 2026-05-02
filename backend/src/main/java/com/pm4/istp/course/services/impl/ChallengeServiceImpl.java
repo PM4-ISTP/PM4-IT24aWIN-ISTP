@@ -478,8 +478,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         studentOptionSubmissionRepository.findByUserIdAndSubTaskId(userId, subTaskId);
     if (existing.isPresent()) {
       StudentOptionSubmission prev = existing.get();
-      return buildChoiceResponse(
-          prev.isCorrect(), userId, subTask.getChallenge(), challengeId);
+      return buildChoiceResponse(prev.isCorrect(), userId, subTask.getChallenge(), challengeId);
     }
 
     SubTaskOption selectedOption =
@@ -590,7 +589,8 @@ public class ChallengeServiceImpl implements ChallengeService {
       if (st.getType() == SubTaskType.MULTIPLE_CHOICE) {
         studentOptionSubmissionRepository
             .findByUserIdAndSubTaskId(userId, st.getId())
-            .ifPresent(sub -> selectedOptionBySubTask.put(st.getId(), sub.getSelectedOption().getId()));
+            .ifPresent(
+                sub -> selectedOptionBySubTask.put(st.getId(), sub.getSelectedOption().getId()));
       }
     }
 

@@ -52,7 +52,11 @@ public class SubTask {
   @Column(name = "hint", nullable = true, length = 1000)
   private String hint;
 
-  @OneToMany(mappedBy = "subTask", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @OneToMany(
+      mappedBy = "subTask",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
   @OrderBy("orderIndex ASC")
   private List<SubTaskOption> options = new ArrayList<>();
 

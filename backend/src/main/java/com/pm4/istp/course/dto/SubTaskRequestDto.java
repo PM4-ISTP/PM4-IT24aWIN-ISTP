@@ -39,6 +39,5 @@ public class SubTaskRequestDto {
   @Size(max = 1000, message = "Hint must not exceed 1000 characters")
   private String hint;
 
-  @Valid
-  private List<SubTaskOptionRequestDto> options;
+  @Valid private List<SubTaskOptionRequestDto> options;
 }

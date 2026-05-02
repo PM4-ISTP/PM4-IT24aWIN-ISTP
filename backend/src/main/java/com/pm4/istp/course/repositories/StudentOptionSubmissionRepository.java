@@ -7,7 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface StudentOptionSubmissionRepository extends JpaRepository<StudentOptionSubmission, UUID> {
+public interface StudentOptionSubmissionRepository
+    extends JpaRepository<StudentOptionSubmission, UUID> {
 
   boolean existsByUserIdAndSubTaskId(UUID userId, UUID subTaskId);
 
