@@ -5,7 +5,6 @@ import {
   Badge,
   Box,
   Button,
-  CopyButton,
   Divider,
   Group,
   Paper,
@@ -26,13 +25,11 @@ import {
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
-  IconCopy,
   IconExternalLink,
   IconLock,
   IconPlayerPlay,
   IconPlayerStop,
   IconRefresh,
-  IconTerminal2,
   IconTrophy,
   IconWorld,
 } from "@tabler/icons-react";
@@ -57,77 +54,6 @@ const FLAG_INNER_PATTERN = /^[A-Za-z0-9_]+$/;
 function pickInitialStep(subTasks: SubTaskStudentDto[]): number {
   const firstUnsolved = subTasks.findIndex((st) => !st.isSolved);
   return firstUnsolved === -1 ? Math.max(subTasks.length - 1, 0) : firstUnsolved;
-}
-
-function formatExpiry(expiresAt?: string | null): string {
-  if (!expiresAt) return "";
-  const date = new Date(expiresAt);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function CopyIconButton({ value, label }: { value: string; label: string }) {
-  return (
-    <CopyButton value={value}>
-      {({ copied, copy }) => (
-        <Tooltip label={copied ? "Copied" : label}>
-          <ActionIcon size="xs" variant="subtle" onClick={copy} aria-label={label}>
-            {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
-          </ActionIcon>
-        </Tooltip>
-      )}
-    </CopyButton>
-  );
-}
-
-function ConsoleCredentials({
-  password,
-  expiresAt,
-}: {
-  password?: string | null;
-  expiresAt: string;
-}) {
-  if (!password && !expiresAt) return null;
-
-  return (
-    <Paper withBorder radius="md" p="sm" style={{ background: "rgba(255,255,255,0.025)" }}>
-      <Group justify="space-between" gap="xs" align="center">
-        {password ? (
-          <Stack gap={4}>
-            <Text size="xs" c="dimmed" fw={700} tt="uppercase">
-              Console login
-            </Text>
-            <Group gap={4} wrap="nowrap">
-              <Text component="span" ff="monospace" size="xs">
-                student
-              </Text>
-              <CopyIconButton value="student" label="Copy console username" />
-              <Text size="xs" c="dimmed">
-                /
-              </Text>
-              <Text component="span" ff="monospace" size="xs">
-                {password}
-              </Text>
-              <CopyIconButton value={password} label="Copy console password" />
-            </Group>
-          </Stack>
-        ) : (
-          <span />
-        )}
-        {expiresAt && (
-          <Text size="xs" c="dimmed">
-            Expires: {expiresAt}
-          </Text>
-        )}
-      </Group>
-    </Paper>
-  );
 }
 
 function LabLaunchCard({
@@ -240,7 +166,6 @@ export function ChallengePlayView({
     [current]
   );
   const podStatus = pod?.status ?? "NOT_FOUND";
-  const terminalExpiry = formatExpiry(pod?.expiresAt);
   const canStartPod =
     dockerImageCheck.status === "success" ||
     (dockerImageCheck.status === "idle" && !dockerImage.trim());
@@ -750,21 +675,6 @@ export function ChallengePlayView({
                 disabledLabel={labIsStarting ? "Starting..." : "App not ready"}
               />
 
-              <LabLaunchCard
-                title="Console"
-                description={
-                  podStatus === "RUNNING" && pod?.terminalUrl
-                    ? "Terminal access ready."
-                    : labIsStarting
-                      ? "Starting terminal access."
-                      : "Start the lab to get console access."
-                }
-                icon={<IconTerminal2 size={22} />}
-                url={podStatus === "RUNNING" ? pod?.terminalUrl : null}
-                buttonLabel="Open console"
-                disabledLabel={labIsStarting ? "Starting..." : "Console not ready"}
-              />
-
               {(podActionError || podStatusError) && (
                 <Paper
                   withBorder
@@ -777,8 +687,6 @@ export function ChallengePlayView({
                   </Text>
                 </Paper>
               )}
-
-              <ConsoleCredentials password={pod?.terminalPassword} expiresAt={terminalExpiry} />
             </Stack>
           </Paper>
         </Box>

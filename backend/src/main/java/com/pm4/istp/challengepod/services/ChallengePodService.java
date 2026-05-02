@@ -48,7 +48,6 @@ public class ChallengePodService {
   private static final String LABEL_USER_ID = "istp.pm4.ch/user-id";
   private static final String LABEL_CHALLENGE_ID = "istp.pm4.ch/challenge-id";
   private static final String LABEL_CREATED_AT = "istp.pm4.ch/created-at-epoch";
-  private static final String ANNOTATION_TERMINAL_PASSWORD = "istp.pm4.ch/terminal-password";
 
   // TODO(#163): replace with Challenge.containerPort when the model supports it.
   private static final int DEFAULT_APP_PORT = 80;
@@ -329,12 +328,9 @@ public class ChallengePodService {
 
   private PodStatusResponse buildResponse(Deployment deployment, int ttlSeconds) {
     Map<String, String> labels = deployment.getMetadata().getLabels();
-    Map<String, String> annotations = deployment.getMetadata().getAnnotations();
 
     String instanceName = deployment.getMetadata().getName();
     String hash = instanceName.substring("pod-".length());
-
-    String password = annotations != null ? annotations.get(ANNOTATION_TERMINAL_PASSWORD) : null;
 
     Instant createdAt = null;
     Instant expiresAt = null;
@@ -349,15 +345,10 @@ public class ChallengePodService {
         scheme
             + "://"
             + findIngressHost(instanceName, 80).orElseGet(() -> buildLabHost("app", hash));
-    String terminalUrl =
-        scheme
-            + "://"
-            + findIngressHost(instanceName, 8081).orElseGet(() -> buildLabHost("term", hash));
 
     PodStatusEnum status = mapDeploymentStatus(deployment);
 
-    return new PodStatusResponse(
-        status, instanceName, appUrl, terminalUrl, password, createdAt, expiresAt);
+    return new PodStatusResponse(status, instanceName, appUrl, null, null, createdAt, expiresAt);
   }
 
   private PodStatusEnum mapDeploymentStatus(Deployment d) {
@@ -396,15 +387,12 @@ public class ChallengePodService {
     KubernetesClient client = getClient();
     long nowEpoch = Instant.now().getEpochSecond();
     String hash = instanceName.substring("pod-".length());
-    String terminalPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
 
     Map<String, String> labels = new HashMap<>();
     labels.put("app", LABEL_APP);
     labels.put(LABEL_USER_ID, userId.toString());
     labels.put(LABEL_CHALLENGE_ID, challengeId.toString());
     labels.put(LABEL_CREATED_AT, String.valueOf(nowEpoch));
-
-    Map<String, String> annotations = Map.of(ANNOTATION_TERMINAL_PASSWORD, terminalPassword);
 
     // 1. Deployment
     Deployment deployment =
@@ -413,7 +401,6 @@ public class ChallengePodService {
             .withName(instanceName)
             .withNamespace(defaultNamespace)
             .withLabels(labels)
-            .withAnnotations(annotations)
             .endMetadata()
             .withNewSpec()
             .withReplicas(1)
@@ -425,6 +412,7 @@ public class ChallengePodService {
             .withLabels(labels)
             .endMetadata()
             .withNewSpec()
+            .withAutomountServiceAccountToken(false)
             .addNewContainer()
             .withName("app")
             .withImage(challenge.getDockerImage())
@@ -441,15 +429,14 @@ public class ChallengePodService {
             .addNewPort()
             .withContainerPort(DEFAULT_APP_PORT) // TODO(#163): challenge.getContainerPort()
             .endPort()
+            .withNewSecurityContext()
+            .withAllowPrivilegeEscalation(false)
+            .withNewCapabilities()
+            .withDrop("ALL")
+            .endCapabilities()
+            .endSecurityContext()
             .endContainer()
-            .addNewContainer()
-            .withName("terminal")
-            .withImage("tsl0922/ttyd:1.7.7")
-            .withArgs("ttyd", "-W", "-c", "student:" + terminalPassword, "sh")
-            .addNewPort()
-            .withContainerPort(7681)
-            .endPort()
-            .endContainer()
+            // TODO: Consider runAsNonRoot(true) once all challenge images are verified compatible.
             .endSpec()
             .endTemplate()
             .endSpec()
@@ -473,12 +460,6 @@ public class ChallengePodService {
             .withPort(80)
             .withTargetPort(new IntOrString(DEFAULT_APP_PORT))
             .endPort()
-            .addNewPort()
-            .withName("term-port")
-            .withProtocol("TCP")
-            .withPort(8081)
-            .withTargetPort(new IntOrString(7681))
-            .endPort()
             .withType("ClusterIP")
             .endSpec()
             .build();
@@ -487,7 +468,6 @@ public class ChallengePodService {
 
     // 3. Ingress
     String appHost = buildLabHost("app", hash);
-    String termHost = buildLabHost("term", hash);
 
     io.fabric8.kubernetes.api.model.networking.v1.Ingress ingress =
         new IngressBuilder()
@@ -514,23 +494,6 @@ public class ChallengePodService {
             .endPath()
             .endHttp()
             .endRule()
-            .addNewRule()
-            .withHost(termHost)
-            .withNewHttp()
-            .addNewPath()
-            .withPath("/")
-            .withPathType("Prefix")
-            .withNewBackend()
-            .withNewService()
-            .withName(service.getMetadata().getName())
-            .withNewPort()
-            .withNumber(8081)
-            .endPort()
-            .endService()
-            .endBackend()
-            .endPath()
-            .endHttp()
-            .endRule()
             .endSpec()
             .build();
 
@@ -546,8 +509,8 @@ public class ChallengePodService {
         PodStatusEnum.PROVISIONING,
         instanceName,
         scheme + "://" + appHost,
-        scheme + "://" + termHost,
-        terminalPassword,
+        null,
+        null,
         createdAt,
         expiresAt);
   }

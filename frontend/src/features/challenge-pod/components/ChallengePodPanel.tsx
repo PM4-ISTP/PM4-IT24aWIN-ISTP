@@ -1,31 +1,13 @@
 "use client";
 
-import { Anchor, Box, Button, Flex, Loader, Stack, Text } from "@mantine/core";
-import {
-  IconExternalLink,
-  IconPlayerPlay,
-  IconPlayerStop,
-  IconTerminal2,
-} from "@tabler/icons-react";
+import { Anchor, Button, Flex, Loader, Stack, Text } from "@mantine/core";
+import { IconExternalLink, IconPlayerPlay, IconPlayerStop } from "@tabler/icons-react";
 import { useState } from "react";
 import { useApiClient } from "@/src/shared/lib/api/client";
 import { DOCKER_IMAGE_ERROR } from "@/src/features/course/constants/challengeConstants";
 import { useDockerImageCheck } from "@/src/features/course/hooks/useDockerImageCheck";
 import { useChallengePodStatus } from "../hooks/useChallengePodStatus";
 import { ChallengePodStatusBadge } from "./ChallengePodStatusBadge";
-
-function formatExpiry(expiresAt?: string | null): string {
-  if (!expiresAt) return "";
-  const date = new Date(expiresAt);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export function ChallengePodPanel({
   challengeId,
@@ -136,35 +118,6 @@ export function ChallengePodPanel({
                 Open app
               </Flex>
             </Anchor>
-          )}
-          {data.terminalUrl && (
-            <Anchor href={data.terminalUrl} target="_blank" size="xs">
-              <Flex align="center" gap={4}>
-                <IconTerminal2 size={12} />
-                Open terminal
-              </Flex>
-            </Anchor>
-          )}
-          {data.terminalPassword && (
-            <Box>
-              <Text size="xs" c="dimmed">
-                Username:{" "}
-                <Text component="span" ff="monospace" size="xs">
-                  student
-                </Text>
-              </Text>
-              <Text size="xs" c="dimmed">
-                Password:{" "}
-                <Text component="span" ff="monospace" size="xs">
-                  {data.terminalPassword}
-                </Text>
-              </Text>
-            </Box>
-          )}
-          {data.expiresAt && (
-            <Text size="xs" c="dimmed">
-              Expires: {formatExpiry(data.expiresAt)}
-            </Text>
           )}
         </Stack>
       )}
