@@ -131,9 +131,7 @@ export function SubTaskManager({
   }
 
   function handleRemove(index: number) {
-    const next = subTasks
-      .filter((_, i) => i !== index)
-      .map((st, i) => ({ ...st, orderIndex: i }));
+    const next = subTasks.filter((_, i) => i !== index).map((st, i) => ({ ...st, orderIndex: i }));
     onChange(next);
     clearClosing();
     if (expandedIndex === index) {
@@ -353,7 +351,7 @@ export function SubTaskManager({
                             <SegmentedControl
                               value={st.type}
                               onChange={(val) =>
-                                handleTypeChange(index, val as "FLAG" | "MULTIPLE_CHOICE")
+                                handleTypeChange(index, val)
                               }
                               data={[
                                 { label: "Flag", value: "FLAG" },
@@ -415,9 +413,7 @@ export function SubTaskManager({
                             )}
                             <Radio.Group
                               value={String(st.options.findIndex((o) => o.isCorrect))}
-                              onChange={(val) =>
-                                handleCorrectOptionChange(index, Number(val))
-                              }
+                              onChange={(val) => handleCorrectOptionChange(index, Number(val))}
                             >
                               <Stack gap="xs">
                                 {st.options.map((opt, optIdx) => (
@@ -427,11 +423,7 @@ export function SubTaskManager({
                                       placeholder={`Option ${optIdx + 1}`}
                                       value={opt.text}
                                       onChange={(e) =>
-                                        handleOptionTextChange(
-                                          index,
-                                          optIdx,
-                                          e.currentTarget.value
-                                        )
+                                        handleOptionTextChange(index, optIdx, e.currentTarget.value)
                                       }
                                       style={{ flex: 1 }}
                                     />

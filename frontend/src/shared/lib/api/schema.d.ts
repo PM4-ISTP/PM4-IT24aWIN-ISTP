@@ -2500,7 +2500,7 @@ export interface operations {
       };
     };
   };
-    searchChallenges: {
+  searchChallenges: {
     parameters: {
       query: {
         q?: string;

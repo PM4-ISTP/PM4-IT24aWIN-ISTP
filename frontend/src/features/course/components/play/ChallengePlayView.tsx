@@ -105,17 +105,27 @@ function ConsoleCredentials({
               Console login
             </Text>
             <Group gap={4} wrap="nowrap">
-              <Text component="span" ff="monospace" size="xs">student</Text>
+              <Text component="span" ff="monospace" size="xs">
+                student
+              </Text>
               <CopyIconButton value="student" label="Copy console username" />
-              <Text size="xs" c="dimmed">/</Text>
-              <Text component="span" ff="monospace" size="xs">{password}</Text>
+              <Text size="xs" c="dimmed">
+                /
+              </Text>
+              <Text component="span" ff="monospace" size="xs">
+                {password}
+              </Text>
               <CopyIconButton value={password} label="Copy console password" />
             </Group>
           </Stack>
         ) : (
           <span />
         )}
-        {expiresAt && <Text size="xs" c="dimmed">Expires: {expiresAt}</Text>}
+        {expiresAt && (
+          <Text size="xs" c="dimmed">
+            Expires: {expiresAt}
+          </Text>
+        )}
       </Group>
     </Paper>
   );
@@ -150,16 +160,24 @@ function LabLaunchCard({
       <Stack gap="sm">
         <Group justify="space-between" align="flex-start" gap="sm" wrap="nowrap">
           <Group gap="sm" align="flex-start" wrap="nowrap">
-            <ThemeIcon variant="light" radius="md" size={38}>{icon}</ThemeIcon>
+            <ThemeIcon variant="light" radius="md" size={38}>
+              {icon}
+            </ThemeIcon>
             <Stack gap={3}>
               <Text fw={700}>{title}</Text>
-              <Text size="sm" c="dimmed">{description}</Text>
+              <Text size="sm" c="dimmed">
+                {description}
+              </Text>
             </Stack>
           </Group>
           {url ? (
-            <Badge variant="light" color="teal">Ready</Badge>
+            <Badge variant="light" color="teal">
+              Ready
+            </Badge>
           ) : (
-            <Badge variant="light" color="gray">Pending</Badge>
+            <Badge variant="light" color="gray">
+              Pending
+            </Badge>
           )}
         </Group>
         <Button
@@ -354,7 +372,11 @@ export function ChallengePlayView({
         message: result.data.isChallengeSolved ? "Lab completed. Nice work!" : "Challenge solved.",
       });
     } else {
-      notifications.show({ color: "red", title: "Incorrect flag", message: "Not quite — try again." });
+      notifications.show({
+        color: "red",
+        title: "Incorrect flag",
+        message: "Not quite — try again.",
+      });
     }
   }
 
@@ -478,20 +500,35 @@ export function ChallengePlayView({
           <Stack gap="lg">
             <Stack gap="md">
               <Stack gap={6}>
-                <Text size="xs" tt="uppercase" c="dimmed" fw={700} style={{ letterSpacing: "0.08em" }}>
+                <Text
+                  size="xs"
+                  tt="uppercase"
+                  c="dimmed"
+                  fw={700}
+                  style={{ letterSpacing: "0.08em" }}
+                >
                   Lab
                 </Text>
-                <Title order={2} style={{ lineHeight: 1.2 }}>{challenge.title}</Title>
+                <Title order={2} style={{ lineHeight: 1.2 }}>
+                  {challenge.title}
+                </Title>
               </Stack>
 
               <Stack gap={6}>
                 <Group justify="space-between" align="center">
-                  <Text size="xs" tt="uppercase" c="dimmed" fw={700}>Progress</Text>
+                  <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
+                    Progress
+                  </Text>
                   <Text size="xs" fw={600} c={allSolved ? "teal.3" : "blue.3"}>
                     {solvedCount} / {total} challenges
                   </Text>
                 </Group>
-                <Progress value={percent} color={allSolved ? "teal" : "blue"} radius="xl" size="sm" />
+                <Progress
+                  value={percent}
+                  color={allSolved ? "teal" : "blue"}
+                  radius="xl"
+                  size="sm"
+                />
               </Stack>
 
               {sanitizedChallengeDescription && (
@@ -533,16 +570,24 @@ export function ChallengePlayView({
                         Challenge {activeStep + 1} of {total}
                       </Text>
                       {current.isSolved && (
-                        <Badge variant="light" color="teal" size="xs">Solved</Badge>
+                        <Badge variant="light" color="teal" size="xs">
+                          Solved
+                        </Badge>
                       )}
                       {isMC && (
-                        <Badge variant="light" color="violet" size="xs">Multiple Choice</Badge>
+                        <Badge variant="light" color="violet" size="xs">
+                          Multiple Choice
+                        </Badge>
                       )}
                       {(current.points ?? 0) > 0 && (
-                        <Badge variant="light" color="blue" size="xs">{current.points}pt</Badge>
+                        <Badge variant="light" color="blue" size="xs">
+                          {current.points}pt
+                        </Badge>
                       )}
                     </Group>
-                    <Title order={4} style={{ lineHeight: 1.3 }}>{current.title}</Title>
+                    <Title order={4} style={{ lineHeight: 1.3 }}>
+                      {current.title}
+                    </Title>
                   </Stack>
 
                   {sanitizedSubTaskDescription && (
@@ -576,7 +621,9 @@ export function ChallengePlayView({
                             borderColor: "rgba(234,179,8,0.25)",
                           }}
                         >
-                          <Text size="sm" c="yellow.3">{current.hint}</Text>
+                          <Text size="sm" c="yellow.3">
+                            {current.hint}
+                          </Text>
                         </Paper>
                       </Collapse>
                     </Box>
@@ -585,7 +632,9 @@ export function ChallengePlayView({
                   {/* FLAG submission */}
                   {!isMC && (
                     <Stack gap="xs">
-                      <Text size="xs" tt="uppercase" c="dimmed" fw={700}>Submit Flag</Text>
+                      <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
+                        Submit Flag
+                      </Text>
                       <Group gap="xs" align="flex-end">
                         <TextInput
                           value={current.isSolved ? (current.solvedFlag ?? "") : flagInput}
@@ -621,7 +670,9 @@ export function ChallengePlayView({
                   {/* MULTIPLE CHOICE submission */}
                   {isMC && (
                     <Stack gap="sm">
-                      <Text size="xs" tt="uppercase" c="dimmed" fw={700}>Choose your answer</Text>
+                      <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
+                        Choose your answer
+                      </Text>
                       <Radio.Group
                         value={displaySelectedOption}
                         onChange={(val) => {
@@ -662,7 +713,9 @@ export function ChallengePlayView({
                                     disabled={current.isSolved}
                                     style={{ flexShrink: 0 }}
                                   />
-                                  <Text size="sm" style={{ flex: 1 }}>{opt.text}</Text>
+                                  <Text size="sm" style={{ flex: 1 }}>
+                                    {opt.text}
+                                  </Text>
                                   {current.isSolved && isSelected && (
                                     <IconCheck
                                       size={15}
@@ -710,12 +763,19 @@ export function ChallengePlayView({
             )}
 
             {allSolved && (
-              <Paper withBorder radius="md" p="md" style={{ background: "rgba(20, 184, 166, 0.08)" }}>
+              <Paper
+                withBorder
+                radius="md"
+                p="md"
+                style={{ background: "rgba(20, 184, 166, 0.08)" }}
+              >
                 <Group gap="sm">
                   <IconTrophy size={20} color="var(--mantine-color-teal-4)" />
                   <Stack gap={2}>
                     <Text fw={600}>Lab completed</Text>
-                    <Text size="sm" c="dimmed">You solved every challenge. Well done!</Text>
+                    <Text size="sm" c="dimmed">
+                      You solved every challenge. Well done!
+                    </Text>
                   </Stack>
                 </Group>
               </Paper>
@@ -756,7 +816,9 @@ export function ChallengePlayView({
               style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}
             >
               <Group gap="xs">
-                <Text size="sm" fw={600}>Lab</Text>
+                <Text size="sm" fw={600}>
+                  Lab
+                </Text>
                 <ChallengePodStatusBadge status={podStatus} />
               </Group>
 
@@ -774,7 +836,11 @@ export function ChallengePlayView({
                     </ActionIcon>
                   </Tooltip>
                 ) : (
-                  <Tooltip label={startDisabledReason ?? (podStatus === "FAILED" ? "Retry lab" : "Start lab")}>
+                  <Tooltip
+                    label={
+                      startDisabledReason ?? (podStatus === "FAILED" ? "Retry lab" : "Start lab")
+                    }
+                  >
                     <ActionIcon
                       variant="subtle"
                       color="blue"
@@ -783,7 +849,11 @@ export function ChallengePlayView({
                       onClick={() => void handleStartPod()}
                       aria-label={podStatus === "FAILED" ? "Retry lab" : "Start lab"}
                     >
-                      {podStatus === "FAILED" ? <IconRefresh size={16} /> : <IconPlayerPlay size={16} />}
+                      {podStatus === "FAILED" ? (
+                        <IconRefresh size={16} />
+                      ) : (
+                        <IconPlayerPlay size={16} />
+                      )}
                     </ActionIcon>
                   </Tooltip>
                 )}
@@ -806,8 +876,15 @@ export function ChallengePlayView({
 
             <Stack gap="sm" p="md" style={{ flex: 1, overflow: isNarrow ? "visible" : "auto" }}>
               {startDisabledReason && (
-                <Paper withBorder radius="md" p="md" style={{ background: "rgba(248,113,113,0.08)" }}>
-                  <Text size="sm" c="red.3">{startDisabledReason}</Text>
+                <Paper
+                  withBorder
+                  radius="md"
+                  p="md"
+                  style={{ background: "rgba(248,113,113,0.08)" }}
+                >
+                  <Text size="sm" c="red.3">
+                    {startDisabledReason}
+                  </Text>
                 </Paper>
               )}
 
@@ -842,8 +919,15 @@ export function ChallengePlayView({
               />
 
               {(podActionError || podStatusError) && (
-                <Paper withBorder radius="md" p="md" style={{ background: "rgba(248,113,113,0.08)" }}>
-                  <Text size="sm" c="red.3">{podActionError ?? podStatusError}</Text>
+                <Paper
+                  withBorder
+                  radius="md"
+                  p="md"
+                  style={{ background: "rgba(248,113,113,0.08)" }}
+                >
+                  <Text size="sm" c="red.3">
+                    {podActionError ?? podStatusError}
+                  </Text>
                 </Paper>
               )}
 

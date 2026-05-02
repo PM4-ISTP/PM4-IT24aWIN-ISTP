@@ -22,7 +22,17 @@ export function toFormSubTasks(subTasks: SubTaskResponseDto[] | undefined): SubT
     .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
     .map((st, i) => {
       const type = (st.type as "FLAG" | "MULTIPLE_CHOICE" | undefined) ?? "FLAG";
-      const rawOptions = (st as { options?: Array<{ id?: string; text?: string; isCorrect?: boolean; orderIndex?: number }> }).options ?? [];
+      const rawOptions =
+        (
+          st as {
+            options?: Array<{
+              id?: string;
+              text?: string;
+              isCorrect?: boolean;
+              orderIndex?: number;
+            }>;
+          }
+        ).options ?? [];
       const options: SubTaskOptionFormValues[] =
         rawOptions.length > 0
           ? rawOptions.map((o, oi) => ({
@@ -88,15 +98,25 @@ export function validateSubTasks(subTasks: SubTaskFormValues[]): SubTaskValidati
     subTasks.map(() => ({}));
   let valid = true;
   subTasks.forEach((st, i) => {
-    if (!st.title.trim()) { errors[i].title = "Title is required"; valid = false; }
+    if (!st.title.trim()) {
+      errors[i].title = "Title is required";
+      valid = false;
+    }
     if (!st.description.replace(/<[^>]*>/g, "").trim()) {
-      errors[i].description = "Description is required"; valid = false;
+      errors[i].description = "Description is required";
+      valid = false;
     }
     if (st.type === "MULTIPLE_CHOICE") {
       const hasEmptyOption = st.options.some((o) => !o.text.trim());
-      if (hasEmptyOption) { errors[i].options = "All options must have text"; valid = false; }
+      if (hasEmptyOption) {
+        errors[i].options = "All options must have text";
+        valid = false;
+      }
       const hasCorrect = st.options.some((o) => o.isCorrect);
-      if (!hasCorrect) { errors[i].options = "One option must be marked as correct"; valid = false; }
+      if (!hasCorrect) {
+        errors[i].options = "One option must be marked as correct";
+        valid = false;
+      }
     }
   });
   return { valid, errors };
