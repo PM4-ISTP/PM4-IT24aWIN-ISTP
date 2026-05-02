@@ -206,6 +206,43 @@ After running the command, please open the Kubeconfig file in `backend/src/main/
 ls -la backend/src/main/resources/Kubeconfig
 ```
 
+### Challenge Docker Images
+
+Challenge labs use container images from GitHub Container Registry (GHCR). Instructors should
+publish images in their own GitHub user or organization namespace, for example:
+
+```text
+ghcr.io/school-org/sql-injection-lab:1.0.0
+```
+
+The platform intentionally accepts GHCR images from any owner, not only packages from this
+repository. This keeps image ownership with the instructor or school that created the lab.
+
+Current policy:
+
+- Images must be public and anonymously readable.
+- Private GHCR images are supported when the Kubernetes namespace has a pull secret and the admin
+  configuration contains that secret name.
+- Tags are supported, but digest references are preferred for reproducible labs, for example
+  `ghcr.io/school-org/sql-injection-lab@sha256:<digest>`.
+- Examples may live under the project namespace, but production course images should be owned by
+  the instructor or school running the course.
+
+To use private GHCR images, create one pull secret in the namespace where challenge pods run:
+
+```bash
+kubectl create secret docker-registry ghcr-pull-secret \
+  --docker-server=ghcr.io \
+  --docker-username=<github-user-or-bot> \
+  --docker-password=<personal-access-token> \
+  --docker-email=<email>
+```
+
+Then enter `ghcr-pull-secret` as the image pull secret in the admin configuration. The GitHub user
+or bot behind the token must have `read:packages` access to each private package. For new
+instructor-owned private repositories or organizations, the instructor must grant that pull account
+access before the lab can start.
+
 ## Branch Naming
 
 All branches must use one of the following prefixes:

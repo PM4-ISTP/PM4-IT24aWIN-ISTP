@@ -10,6 +10,7 @@ import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.services.ChallengeService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -441,6 +442,16 @@ public class ChallengePodService {
             .endTemplate()
             .endSpec()
             .build();
+
+    String imagePullSecretName = adminConfig.getImagePullSecretName();
+    if (imagePullSecretName != null && !imagePullSecretName.isBlank()) {
+      deployment
+          .getSpec()
+          .getTemplate()
+          .getSpec()
+          .setImagePullSecrets(
+              List.of(new LocalObjectReferenceBuilder().withName(imagePullSecretName).build()));
+    }
 
     client.apps().deployments().inNamespace(defaultNamespace).resource(deployment).create();
 

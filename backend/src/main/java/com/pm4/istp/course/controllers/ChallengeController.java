@@ -19,6 +19,7 @@ import com.pm4.istp.course.dto.VisibilityImpactResponseDto;
 import com.pm4.istp.course.mappers.ChallengeMapper;
 import com.pm4.istp.course.services.ChallengeService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
+import com.pm4.istp.course.services.DockerImageAvailabilityService.DockerImageAvailabilityResult;
 import com.pm4.istp.shared.dto.ErrorDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -192,7 +193,7 @@ public class ChallengeController {
 
   @Operation(
       summary = "Check Docker image availability",
-      description = "Checks whether a supported Docker image reference is reachable.")
+      description = "Checks whether a public GHCR image reference is reachable.")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "200", description = "Docker image is reachable"),
@@ -204,8 +205,13 @@ public class ChallengeController {
   @GetMapping("/docker-image")
   public ResponseEntity<DockerImageCheckResponseDto> checkDockerImage(
       @RequestParam("image") String image) {
-    dockerImageAvailabilityService.assertImageExists(image);
-    return ResponseEntity.ok(new DockerImageCheckResponseDto(true, "Image found"));
+    DockerImageAvailabilityResult result =
+        dockerImageAvailabilityService.checkImageAvailability(image);
+    String message =
+        result.privateImage()
+            ? "Private GHCR image accepted; Kubernetes will use the configured image pull secret"
+            : "Public GHCR image found";
+    return ResponseEntity.ok(new DockerImageCheckResponseDto(true, message));
   }
 
   @Operation(

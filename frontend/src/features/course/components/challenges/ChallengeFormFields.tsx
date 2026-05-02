@@ -78,7 +78,7 @@ export function ChallengeFormFields({
 
       <TextInput
         label="Docker Image"
-        placeholder="e.g. registry/image:tag"
+        placeholder="e.g. ghcr.io/school-org/challenge:1.0.0"
         value={values.dockerImage}
         onChange={(e) => {
           onChange({ ...values, dockerImage: e.currentTarget.value });

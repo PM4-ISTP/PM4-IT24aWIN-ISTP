@@ -36,13 +36,13 @@ export function useDockerImageCheck(image: string): {
         .then(async (res) => {
           if (!res.ok) {
             const error = await readBackendError(res);
-            throw new Error(error ?? "Docker image is not reachable");
+            throw new Error(error ?? "Public GHCR image is not reachable");
           }
           const json = (await res.json().catch(() => null)) as { message?: unknown } | null;
           setResult({
             image: trimmed,
             status: "success",
-            message: typeof json?.message === "string" ? json.message : "Image found",
+            message: typeof json?.message === "string" ? json.message : "Public GHCR image found",
           });
         })
         .catch((error: unknown) => {
@@ -50,7 +50,7 @@ export function useDockerImageCheck(image: string): {
           setResult({
             image: trimmed,
             status: "error",
-            message: error instanceof Error ? error.message : "Docker image is not reachable",
+            message: error instanceof Error ? error.message : "Public GHCR image is not reachable",
           });
         });
     }, 600);

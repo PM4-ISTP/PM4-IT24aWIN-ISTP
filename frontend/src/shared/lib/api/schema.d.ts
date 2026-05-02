@@ -770,6 +770,7 @@ export interface components {
     AdminConfigRequest: {
       cpuLimit?: string;
       memoryLimit?: string;
+      imagePullSecretName?: string;
       kubeconfig?: string;
       /** Format: int32 */
       podTtlSeconds?: number;
@@ -778,6 +779,7 @@ export interface components {
       kubeconfigUploaded?: boolean;
       cpuLimit?: string;
       memoryLimit?: string;
+      imagePullSecretName?: string;
       /** Format: int32 */
       podTtlSeconds?: number;
       /** Format: date-time */
