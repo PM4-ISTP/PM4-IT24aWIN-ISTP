@@ -5,9 +5,10 @@ import type {
 
 export const CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS = 200;
 
-export const DOCKER_IMAGE_PATTERN = /^ghcr\.io\/[\w.-]+\/[\w./-]+(:[\w.-]+)?$/;
+export const DOCKER_IMAGE_PATTERN =
+  /^ghcr\.io\/[\w.-]+\/[\w./-]+((:[\w.-]+)|(@sha256:[A-Fa-f0-9]{64}))?$/;
 export const DOCKER_IMAGE_ERROR =
-  "Docker image must be a valid GHCR reference (e.g. ghcr.io/pm4-istp/test:latest)";
+  "Docker image must be a public GHCR reference (e.g. ghcr.io/school-org/challenge:1.0.0)";
 
 export const STATUS_OPTIONS: { value: ChallengeStatusEnum; label: string }[] = [
   { value: "DRAFT", label: "Draft" },

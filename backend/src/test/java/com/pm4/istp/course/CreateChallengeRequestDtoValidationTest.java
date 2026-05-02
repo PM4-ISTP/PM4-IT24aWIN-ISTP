@@ -48,6 +48,8 @@ class CreateChallengeRequestDtoValidationTest {
         "ghcr.io/pm4-istp/test",
         "ghcr.io/pm4-istp/test:latest",
         "ghcr.io/pm4-istp/challenges/test:1.0.0",
+        "ghcr.io/school-org/challenge@sha256:"
+            + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       })
   void dockerImage_acceptsValidGhcrReferences(String dockerImage) {
     Set<ConstraintViolation<CreateChallengeRequestDto>> violations =
@@ -70,6 +72,9 @@ class CreateChallengeRequestDtoValidationTest {
         "image:",
         "registry:5000/image",
         "image@sha256:abc",
+        "ghcr.io/pm4-istp/test@sha256:abc",
+        "ghcr.io/pm4-istp/test:latest@sha256:"
+            + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "image!",
       })
   void dockerImage_rejectsInvalidReferences(String dockerImage) {

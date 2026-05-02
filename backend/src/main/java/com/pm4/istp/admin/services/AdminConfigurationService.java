@@ -37,6 +37,15 @@ public class AdminConfigurationService {
 
   public AdminConfig createConfiguration(
       byte[] kubeconfig, String cpuLimit, String memoryLimit, Integer podTtlSeconds) {
+    return createConfiguration(kubeconfig, cpuLimit, memoryLimit, null, podTtlSeconds);
+  }
+
+  public AdminConfig createConfiguration(
+      byte[] kubeconfig,
+      String cpuLimit,
+      String memoryLimit,
+      String imagePullSecretName,
+      Integer podTtlSeconds) {
 
     if (adminConfigRepository.existsById(SINGLETON_ID)) {
       throw new IllegalStateException("Admin configuration already exists");
@@ -45,7 +54,8 @@ public class AdminConfigurationService {
     AdminConfig adminConfig = new AdminConfig();
     adminConfig.setId(SINGLETON_ID);
 
-    applyUpdates(adminConfig, kubeconfig, cpuLimit, memoryLimit, podTtlSeconds);
+    applyUpdates(
+        adminConfig, kubeconfig, cpuLimit, memoryLimit, imagePullSecretName, podTtlSeconds);
 
     AdminConfig savedConfig = adminConfigRepository.save(adminConfig);
     log.info("Created admin configuration with ID {}", savedConfig.getId());
@@ -59,6 +69,15 @@ public class AdminConfigurationService {
 
   public AdminConfig updateConfiguration(
       byte[] kubeconfig, String cpuLimit, String memoryLimit, Integer podTtlSeconds) {
+    return updateConfiguration(kubeconfig, cpuLimit, memoryLimit, null, podTtlSeconds);
+  }
+
+  public AdminConfig updateConfiguration(
+      byte[] kubeconfig,
+      String cpuLimit,
+      String memoryLimit,
+      String imagePullSecretName,
+      Integer podTtlSeconds) {
 
     AdminConfig adminConfig =
         adminConfigRepository
@@ -70,7 +89,8 @@ public class AdminConfigurationService {
 
     boolean kubeconfigChanged = kubeconfig != null && kubeconfig.length > 0;
 
-    applyUpdates(adminConfig, kubeconfig, cpuLimit, memoryLimit, podTtlSeconds);
+    applyUpdates(
+        adminConfig, kubeconfig, cpuLimit, memoryLimit, imagePullSecretName, podTtlSeconds);
 
     AdminConfig savedConfig = adminConfigRepository.save(adminConfig);
     log.info("Updated admin configuration with ID {}", savedConfig.getId());
@@ -97,6 +117,7 @@ public class AdminConfigurationService {
       byte[] kubeconfig,
       String cpuLimit,
       String memoryLimit,
+      String imagePullSecretName,
       Integer podTtlSeconds) {
     if (kubeconfig != null && kubeconfig.length > 0) {
       adminConfig.setKubeconfig(new String(kubeconfig, StandardCharsets.UTF_8));
@@ -108,6 +129,11 @@ public class AdminConfigurationService {
 
     if (memoryLimit != null && !memoryLimit.isBlank()) {
       adminConfig.setMemoryLimit(memoryLimit);
+    }
+
+    if (imagePullSecretName != null) {
+      adminConfig.setImagePullSecretName(
+          imagePullSecretName.isBlank() ? null : imagePullSecretName.trim());
     }
 
     if (podTtlSeconds != null) {
