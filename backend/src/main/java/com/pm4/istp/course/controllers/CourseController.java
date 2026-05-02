@@ -212,7 +212,8 @@ public class CourseController {
 
   @Operation(
       summary = "Leave a course",
-      description = "Allows the authenticated student to remove themselves from a course they are enrolled in.")
+      description =
+          "Allows the authenticated student to remove themselves from a course they are enrolled in.")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "204", description = "Successfully left the course"),
@@ -222,8 +223,7 @@ public class CourseController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @DeleteMapping("/catalog/{id}/leave")
-  public ResponseEntity<Void> leaveCourse(
-      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+  public ResponseEntity<Void> leaveCourse(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     courseService.leaveCourse(userId, id);
     return ResponseEntity.noContent().build();
