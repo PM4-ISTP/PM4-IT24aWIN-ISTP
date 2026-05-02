@@ -4,6 +4,8 @@ import Link from "next/link";
 import { fetchChallengeForPlay } from "@/src/features/course/actions/challenges";
 import { ChallengePlayView } from "@/src/features/course/components/play/ChallengePlayView";
 
+export const dynamic = "force-dynamic";
+
 export default async function PlayChallengePage({
   params,
 }: {
