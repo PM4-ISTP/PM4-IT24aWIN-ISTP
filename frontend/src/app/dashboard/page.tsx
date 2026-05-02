@@ -181,6 +181,7 @@ export default async function Home() {
         dateStr={dateStr}
         enrolledCoursesCount={result.success ? (result.data.totalElements ?? 0) : null}
         completedLabsCount={completedLabsCount}
+        userId={userId ?? null}
       />
 
       {/* Main content row */}
