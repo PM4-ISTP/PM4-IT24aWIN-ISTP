@@ -328,6 +328,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: { challengeId: string; subTaskId: string };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Complete a theory sub-task
+     * @description Marks a FLAG sub-task with no flag as completed without requiring a submission.
+     */
+    post: operations["completeTheorySubTask"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/k8s/pods": {
     parameters: {
       query?: never;
@@ -940,6 +960,8 @@ export interface components {
       options?: components["schemas"]["SubTaskOptionStudentDto"][];
       solvedFlag?: string;
       isSolved?: boolean;
+      /** True when this is a theory sub-task (no flag required — complete by clicking Next) */
+      isTheory?: boolean;
       /** Format: uuid */
       selectedOptionId?: string;
     };
@@ -2106,6 +2128,42 @@ export interface operations {
         content: { "*/*": components["schemas"]["ErrorDto"] };
       };
       /** @description Challenge, sub-task or option not found */
+      404: {
+        headers: { [name: string]: unknown };
+        content: { "*/*": components["schemas"]["ErrorDto"] };
+      };
+    };
+  };
+  completeTheorySubTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        challengeId: string;
+        subTaskId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Theory sub-task marked as completed */
+      200: {
+        headers: { [name: string]: unknown };
+        content: {
+          "*/*": components["schemas"]["SubTaskSubmissionResponseDto"];
+        };
+      };
+      /** @description Sub-task has a flag and cannot be auto-completed */
+      400: {
+        headers: { [name: string]: unknown };
+        content: { "*/*": components["schemas"]["ErrorDto"] };
+      };
+      /** @description User not enrolled */
+      403: {
+        headers: { [name: string]: unknown };
+        content: { "*/*": components["schemas"]["ErrorDto"] };
+      };
+      /** @description Challenge or sub-task not found */
       404: {
         headers: { [name: string]: unknown };
         content: { "*/*": components["schemas"]["ErrorDto"] };

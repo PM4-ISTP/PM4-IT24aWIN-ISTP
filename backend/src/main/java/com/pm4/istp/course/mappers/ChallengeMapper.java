@@ -51,6 +51,7 @@ public interface ChallengeMapper {
   @Mapping(target = "solvedFlag", ignore = true)
   @Mapping(target = "selectedOptionId", ignore = true)
   @Mapping(target = "options", source = "options")
+  @Mapping(target = "theory", expression = "java(subTask.getFlag() == null || subTask.getFlag().isBlank())")
   SubTaskStudentDto toSubTaskStudentDto(SubTask subTask);
 
   @Mapping(target = "subTasks", source = "subTasks")

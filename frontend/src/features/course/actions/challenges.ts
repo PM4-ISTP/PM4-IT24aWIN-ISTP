@@ -165,6 +165,19 @@ export async function submitSubTaskChoice(
   );
 }
 
+export async function completeTheorySubTask(
+  challengeId: string,
+  subTaskId: string
+): Promise<ActionResult<SubTaskSubmissionResponseDto>> {
+  return await withActionResult(
+    (client) =>
+      client.POST("/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/complete", {
+        params: { path: { challengeId, subTaskId } },
+      }),
+    "Failed to complete task"
+  );
+}
+
 export async function updateCourseChallenges(
   courseId: string,
   challenges: CourseChallengeItemDto[]

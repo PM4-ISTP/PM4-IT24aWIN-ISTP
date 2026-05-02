@@ -42,7 +42,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChallengePodStatusBadge } from "@/src/features/challenge-pod/components/ChallengePodStatusBadge";
 import { useChallengePodStatus } from "@/src/features/challenge-pod/hooks/useChallengePodStatus";
-import { submitSubTaskFlag, submitSubTaskChoice } from "@/src/features/course/actions/challenges";
+import { submitSubTaskFlag, submitSubTaskChoice, completeTheorySubTask } from "@/src/features/course/actions/challenges";
 import {
   DOCKER_IMAGE_ERROR,
   getDifficultyColor,
@@ -270,7 +270,8 @@ export function ChallengePlayView({
   }
 
   const isMC = current?.type === "MULTIPLE_CHOICE";
-  const hasHint = Boolean(current?.hint);
+  const isTheory = Boolean(current?.isTheory);
+  const hasHint = Boolean(current?.hint?.trim());
 
   // Reset per-subtask UI when navigating between challenges
   useEffect(() => {
@@ -412,6 +413,26 @@ export function ChallengePlayView({
         title: "Incorrect answer",
         message: "Not quite — try another option.",
       });
+    }
+  }
+
+  async function handleCompleteTheory() {
+    if (!current || !current.id || !challenge.id || current.isSolved) return;
+    setSubmitting(true);
+    const result = await completeTheorySubTask(challenge.id, current.id);
+    setSubmitting(false);
+    if (!result.success) {
+      notifications.show({ color: "red", title: "Could not complete task", message: result.error });
+      return;
+    }
+    updateSubTaskSolved(current.id, {});
+    notifications.show({
+      color: "teal",
+      title: "Task completed!",
+      message: result.data.isChallengeSolved ? "Lab completed. Nice work!" : "Moving on.",
+    });
+    if (activeStep < total - 1) {
+      goToStep(activeStep + 1);
     }
   }
 
@@ -610,7 +631,7 @@ export function ChallengePlayView({
                       >
                         {hintOpen ? "Hide hint" : "Show hint"}
                       </Button>
-                      <Collapse in={hintOpen}>
+                      {hintOpen && (
                         <Paper
                           withBorder
                           radius="md"
@@ -622,15 +643,28 @@ export function ChallengePlayView({
                           }}
                         >
                           <Text size="sm" c="yellow.3">
-                            {current.hint}
+                            {current?.hint}
                           </Text>
                         </Paper>
-                      </Collapse>
+                      )}
                     </Box>
                   )}
 
+                  {/* THEORY task — no submission needed */}
+                  {isTheory && !isMC && (
+                    <Button
+                      onClick={() => void handleCompleteTheory()}
+                      disabled={current.isSolved || submitting}
+                      loading={submitting}
+                      color={current.isSolved ? "teal" : "blue"}
+                      leftSection={current.isSolved ? <IconCheck size={16} /> : undefined}
+                    >
+                      {current.isSolved ? "Completed" : "Mark as done"}
+                    </Button>
+                  )}
+
                   {/* FLAG submission */}
-                  {!isMC && (
+                  {!isMC && !isTheory && (
                     <Stack gap="xs">
                       <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
                         Submit Flag

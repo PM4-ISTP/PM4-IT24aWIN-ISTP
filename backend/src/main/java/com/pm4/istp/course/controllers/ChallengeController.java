@@ -369,6 +369,38 @@ public class ChallengeController {
   }
 
   @Operation(
+      summary = "Complete a theory sub-task",
+      description =
+          "Marks a FLAG sub-task with no flag as completed (theory/reading task). "
+              + "Fails if the sub-task has a flag set.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Theory sub-task marked as completed"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Sub-task has a flag and cannot be auto-completed",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User not enrolled",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge or sub-task not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PostMapping("/{challengeId}/subtasks/{subTaskId}/complete")
+  public ResponseEntity<SubTaskSubmissionResponseDto> completeTheorySubTask(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID challengeId,
+      @PathVariable UUID subTaskId) {
+    UUID userId = parseUserId(jwt);
+    SubTaskSubmissionResponseDto response =
+        challengeService.completeTheorySubTask(userId, challengeId, subTaskId);
+    return ResponseEntity.ok(response);
+  }
+
+  @Operation(
       summary = "Count completed labs for current user",
       description =
           "Returns the number of challenges where the authenticated user has solved all sub-tasks.")

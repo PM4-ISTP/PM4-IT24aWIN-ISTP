@@ -634,4 +634,59 @@ public class ChallengeServiceImpl implements ChallengeService {
   public long countCompletedChallenges(UUID userId) {
     return subTaskCompletionRepository.countCompletedChallenges(userId);
   }
+
+  @Override
+  @Transactional
+  public SubTaskSubmissionResponseDto completeTheorySubTask(
+      UUID userId, UUID challengeId, UUID subTaskId) {
+    User user =
+        userRepository
+            .findByIdAndDeletedAtIsNull(userId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+
+    SubTask subTask =
+        subTaskRepository
+            .findById(subTaskId)
+            .orElseThrow(
+                () ->
+                    new SubTaskNotFoundException(String.format(SUB_TASK_NOT_FOUND_MSG, subTaskId)));
+
+    if (!subTask.getChallenge().getId().equals(challengeId)) {
+      throw new SubTaskNotFoundException(
+          String.format("Sub-task '%s' does not belong to challenge '%s'", subTaskId, challengeId));
+    }
+
+    if (subTask.getFlag() != null && !subTask.getFlag().isBlank()) {
+      throw new IllegalArgumentException(
+          "This sub-task requires a flag submission and cannot be auto-completed.");
+    }
+
+    verifyEnrolledInChallengeCourse(userId, subTask.getChallenge());
+
+    if (!subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId)) {
+      SubTaskCompletion completion = new SubTaskCompletion();
+      completion.setUser(user);
+      completion.setSubTask(subTask);
+      completion.setSolvedAt(LocalDateTime.now());
+      try {
+        subTaskCompletionRepository.saveAndFlush(completion);
+      } catch (DataIntegrityViolationException ex) {
+        // already solved by concurrent request — that's fine
+      }
+    }
+
+    List<SubTask> siblings = subTask.getChallenge().getSubTasks();
+    List<UUID> siblingIds = siblingsIds(siblings);
+    Set<UUID> solvedIds = solvedSubTaskIds(userId, siblingIds);
+    int solvedCount = solvedIds.size();
+    int totalCount = siblings.size();
+    boolean challengeSolved = totalCount > 0 && solvedCount == totalCount;
+
+    if (challengeSolved) {
+      badgeService.tryAwardBadgesForChallenge(userId, challengeId);
+    }
+
+    return new SubTaskSubmissionResponseDto(true, challengeSolved, solvedCount, totalCount);
+  }
 }

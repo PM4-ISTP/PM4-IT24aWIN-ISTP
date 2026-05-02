@@ -48,6 +48,13 @@ public interface ChallengeService {
   ChoiceSubmissionResponseDto submitSubTaskChoice(
       UUID userId, UUID challengeId, UUID subTaskId, UUID selectedOptionId);
 
+  /**
+   * Completes a theory sub-task (FLAG type with no flag set) without requiring a flag submission.
+   * The sub-task is marked as solved immediately.
+   */
+  SubTaskSubmissionResponseDto completeTheorySubTask(
+      UUID userId, UUID challengeId, UUID subTaskId);
+
   /** Returns the number of challenges the user has fully completed (all sub-tasks solved). */
   long countCompletedChallenges(UUID userId);
 }

@@ -27,6 +27,13 @@ public class SubTaskStudentDto {
   /** Options for MULTIPLE_CHOICE sub-tasks. Empty / null for FLAG type. */
   private List<SubTaskOptionStudentDto> options;
 
+  /**
+   * True when this is a theory sub-task (FLAG type with no flag set). The student can complete it
+   * by simply reading and clicking Next — no submission required.
+   */
+  @JsonProperty("isTheory")
+  private boolean theory;
+
   @JsonProperty("isSolved")
   private boolean solved;
 
