@@ -1,15 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/shared/lib/auth";
-import {
-  Grid,
-  GridCol,
-  Group,
-  Stack,
-  Text,
-  Box,
-  Alert,
-  ThemeIcon,
-} from "@mantine/core";
+import { Grid, GridCol, Group, Stack, Text, Box, Alert, ThemeIcon } from "@mantine/core";
 import { IconArrowRight, IconBolt, IconClock } from "@tabler/icons-react";
 // IconBolt used in RunningLabs, IconClock in deadline section
 import DashboardStyles from "@/src/shared/components/DashboardStyles";
@@ -29,7 +20,6 @@ import { CourseChallengeDetailsList } from "@/src/features/course/components/man
 import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
-
 
 type DeadlineItem = {
   courseId: string;
@@ -163,7 +153,8 @@ export default async function Home() {
   const session = await getServerSession(authOptions);
   const name = session?.user?.name ?? "there";
   const firstName = name.split(" ")[0];
-  const userId = (session?.user as { id?: string } | undefined)?.id ?? session?.user?.email ?? undefined;
+  const userId =
+    (session?.user as { id?: string } | undefined)?.id ?? session?.user?.email ?? undefined;
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
   const [deadlines, completedLabsCount] = await Promise.all([
     fetchMyDeadlines(),
