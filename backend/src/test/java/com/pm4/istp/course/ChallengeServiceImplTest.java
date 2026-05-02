@@ -34,6 +34,7 @@ import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.SubTask;
+import com.pm4.istp.course.db.entities.SubTaskType;
 import com.pm4.istp.course.db.entities.SubTaskCompletion;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
@@ -91,7 +92,7 @@ class ChallengeServiceImplTest {
 
   private List<SubTaskRequest> oneSubTask() {
     return new ArrayList<>(
-        List.of(new SubTaskRequest(null, "Task 1", "Find the flag", "ISTP{demo}", 0)));
+        List.of(new SubTaskRequest(null, "Task 1", "Find the flag", "ISTP{demo}", 0, SubTaskType.FLAG, 1, null, null)));
   }
 
   private CreateChallengeRequest createRequest(
@@ -153,8 +154,8 @@ class ChallengeServiceImplTest {
             "ghcr.io/pm4-istp/buffer-overflow:latest",
             new ArrayList<>(
                 List.of(
-                    new SubTaskRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0),
-                    new SubTaskRequest(null, "Exploit", "Pop a shell", null, 1))));
+                    new SubTaskRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0, SubTaskType.FLAG, 1, null, null),
+                    new SubTaskRequest(null, "Exploit", "Pop a shell", null, 1, SubTaskType.FLAG, 1, null, null))));
 
     Challenge created = challengeService.createChallenge(creatorId, request);
 
@@ -194,7 +195,7 @@ class ChallengeServiceImplTest {
             ChallengeStatusEnum.DRAFT,
             ChallengeDifficultyEnum.EASY,
             DEFAULT_DOCKER_IMAGE,
-            new ArrayList<>(List.of(new SubTaskRequest(null, "Only", "Just desc", "   ", 0))));
+            new ArrayList<>(List.of(new SubTaskRequest(null, "Only", "Just desc", "   ", 0, SubTaskType.FLAG, 1, null, null))));
 
     Challenge created = challengeService.createChallenge(creatorId, request);
 
@@ -395,8 +396,8 @@ class ChallengeServiceImplTest {
             DEFAULT_DOCKER_IMAGE,
             new ArrayList<>(
                 List.of(
-                    new SubTaskRequest(null, "New first", "desc", null, 0),
-                    new SubTaskRequest(existingId, "Renamed", "updated desc", "ISTP{x}", 1))));
+                    new SubTaskRequest(null, "New first", "desc", null, 0, SubTaskType.FLAG, 1, null, null),
+                    new SubTaskRequest(existingId, "Renamed", "updated desc", "ISTP{x}", 1, SubTaskType.FLAG, 1, null, null))));
 
     Challenge updated = challengeService.updateChallenge(creatorId, challengeId, request);
 
