@@ -11,21 +11,6 @@ const TICK_INTERVAL_MS = 10_000; // save every 10 seconds
  */
 export default function TimeTracker() {
   useEffect(() => {
-    const startedAt = Date.now();
-
-    const tick = () => {
-      try {
-        const elapsed = Math.floor((Date.now() - startedAt) / 1000);
-        const prev = Number(localStorage.getItem(STORAGE_KEY) ?? "0");
-        localStorage.setItem(STORAGE_KEY, String(prev + elapsed));
-        // reset startedAt baseline via closure — store running delta separately
-      } catch {
-        // ignore
-      }
-    };
-
-    // Accumulate time continuously
-    let accumulated = 0;
     let lastTick = Date.now();
 
     const interval = setInterval(() => {
@@ -33,7 +18,6 @@ export default function TimeTracker() {
         const now = Date.now();
         const delta = Math.floor((now - lastTick) / 1000);
         lastTick = now;
-        accumulated += delta;
         const prev = Number(localStorage.getItem(STORAGE_KEY) ?? "0");
         localStorage.setItem(STORAGE_KEY, String(prev + delta));
       } catch {
@@ -65,7 +49,13 @@ export default function TimeTracker() {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       // Final save on unmount
-      tick();
+      try {
+        const delta = Math.floor((Date.now() - lastTick) / 1000);
+        const prev = Number(localStorage.getItem(STORAGE_KEY) ?? "0");
+        localStorage.setItem(STORAGE_KEY, String(prev + delta));
+      } catch {
+        // ignore
+      }
     };
   }, []);
 
