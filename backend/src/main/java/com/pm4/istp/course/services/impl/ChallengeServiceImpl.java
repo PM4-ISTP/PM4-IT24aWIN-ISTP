@@ -478,7 +478,12 @@ public class ChallengeServiceImpl implements ChallengeService {
         studentOptionSubmissionRepository.findByUserIdAndSubTaskId(userId, subTaskId);
     if (existing.isPresent()) {
       StudentOptionSubmission prev = existing.get();
-      return buildChoiceResponse(prev.isCorrect(), userId, subTask.getChallenge(), challengeId, prev.isCorrect() ? null : subTask);
+      return buildChoiceResponse(
+          prev.isCorrect(),
+          userId,
+          subTask.getChallenge(),
+          challengeId,
+          prev.isCorrect() ? null : subTask);
     }
 
     SubTaskOption selectedOption =
@@ -504,7 +509,8 @@ public class ChallengeServiceImpl implements ChallengeService {
       studentOptionSubmissionRepository.saveAndFlush(submission);
     } catch (DataIntegrityViolationException ex) {
       // Concurrent submission — just return current state
-      return buildChoiceResponse(correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
+      return buildChoiceResponse(
+          correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
     }
 
     // Award completion when correct (reuse the same SubTaskCompletion mechanism)
@@ -521,7 +527,8 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     ChoiceSubmissionResponseDto response =
-        buildChoiceResponse(correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
+        buildChoiceResponse(
+            correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
 
     if (correct && response.isChallengeSolved()) {
       badgeService.tryAwardBadgesForChallenge(userId, challengeId);
@@ -547,7 +554,8 @@ public class ChallengeServiceImpl implements ChallengeService {
               .findFirst()
               .orElse(null);
     }
-    return new ChoiceSubmissionResponseDto(correct, challengeSolved, solvedCount, totalCount, correctOptionId);
+    return new ChoiceSubmissionResponseDto(
+        correct, challengeSolved, solvedCount, totalCount, correctOptionId);
   }
 
   // -------------------------------------------------------------------------
