@@ -114,7 +114,15 @@ export function CourseEnrollmentButton({
       <Text size="xs" c="dimmed">
         {currentParticipantCount} participant{currentParticipantCount === 1 ? "" : "s"}
       </Text>
-      {hasJoined && <LeaveCourseButton courseId={courseId} />}
+      {hasJoined && (
+        <LeaveCourseButton
+          courseId={courseId}
+          onLeave={() => {
+            setHasJoined(false);
+            setCurrentParticipantCount((c) => c - 1);
+          }}
+        />
+      )}
       {joinError && (
         <Alert color="red" variant="light" title="Enrollment failed">
           {joinError}
