@@ -41,4 +41,7 @@ public interface CourseService {
   Course regenerateInviteCode(UUID courseId, UUID userId);
 
   void removeParticipant(UUID ownerId, UUID courseId, UUID participantId);
+
+  /** Allows a student to remove themselves from a course they are enrolled in. */
+  void leaveCourse(UUID userId, UUID courseId);
 }

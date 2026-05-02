@@ -330,4 +330,18 @@ public class ChallengeController {
         challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, request.getFlag());
     return ResponseEntity.ok(response);
   }
+
+  @Operation(
+      summary = "Count completed labs for current user",
+      description =
+          "Returns the number of challenges where the authenticated user has solved all sub-tasks.")
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Count returned successfully")})
+  @GetMapping("/my-completed-count")
+  public ResponseEntity<java.util.Map<String, Long>> countMyCompletedChallenges(
+      @AuthenticationPrincipal Jwt jwt) {
+    UUID userId = parseUserId(jwt);
+    long count = challengeService.countCompletedChallenges(userId);
+    return ResponseEntity.ok(java.util.Map.of("count", count));
+  }
 }

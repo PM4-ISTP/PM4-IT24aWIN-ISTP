@@ -211,6 +211,25 @@ public class CourseController {
   }
 
   @Operation(
+      summary = "Leave a course",
+      description =
+          "Allows the authenticated student to remove themselves from a course they are enrolled in.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "204", description = "Successfully left the course"),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found or user not enrolled",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @DeleteMapping("/catalog/{id}/leave")
+  public ResponseEntity<Void> leaveCourse(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    courseService.leaveCourse(userId, id);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Operation(
       summary = "Update course challenges",
       description = "Replaces the challenge list for a course. Accepts own and public challenges.")
   @ApiResponses(

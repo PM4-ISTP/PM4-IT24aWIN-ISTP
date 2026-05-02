@@ -180,6 +180,16 @@ export async function joinCourseByCode(
   );
 }
 
+export async function leaveCourse(id: string): Promise<ActionResult<void>> {
+  return await withActionResultNoContent(
+    (client) =>
+      client.DELETE("/api/v1/courses/catalog/{id}/leave", {
+        params: { path: { id } },
+      }),
+    "Failed to leave course"
+  );
+}
+
 export async function regenerateInviteCode(
   id: string
 ): Promise<ActionResult<CourseDetailResponseDto>> {

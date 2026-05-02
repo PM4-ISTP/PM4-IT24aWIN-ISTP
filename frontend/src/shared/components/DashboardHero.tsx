@@ -1,17 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, Button, Group, Stack, Text } from "@mantine/core";
-import { IconBook2, IconBolt, IconTrophy, IconChevronRight } from "@tabler/icons-react";
+import { IconBook2, IconClock, IconTrophy, IconChevronRight } from "@tabler/icons-react";
 import WelcomeTitle from "./WelcomeTitle";
 import { useRouter } from "next/navigation";
 import TrophyCabinet from "@/src/features/badge/components/TrophyCabinet";
-
-const heroStats = [
-  { icon: <IconBook2 size={18} />, label: "Enrolled Courses", value: "—" },
-  { icon: <IconTrophy size={18} />, label: "Completed", value: "—" },
-  { icon: <IconBolt size={18} />, label: "Current Streak", value: "—" },
-];
+import { getTotalSecondsOnline, formatTimeOnline } from "./TimeTracker";
 
 const statLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -25,12 +20,49 @@ const statLabelStyle: React.CSSProperties = {
 export default function DashboardHero({
   firstName,
   dateStr,
+  enrolledCoursesCount,
+  completedLabsCount,
 }: {
   firstName: string;
   dateStr: string;
+  enrolledCoursesCount?: number | null;
+  completedLabsCount?: number | null;
 }) {
   const router = useRouter();
   const [cabinetOpen, setCabinetOpen] = useState(false);
+  const [timeOnline, setTimeOnline] = useState<string>("—");
+
+  // Read time from localStorage after hydration, update every minute
+  useEffect(() => {
+    const update = () => setTimeOnline(formatTimeOnline(getTotalSecondsOnline()));
+    update();
+    const interval = setInterval(update, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const heroStats = [
+    {
+      icon: <IconBook2 size={18} />,
+      label: "Enrolled Courses",
+      value:
+        typeof enrolledCoursesCount === "number" && Number.isFinite(enrolledCoursesCount)
+          ? String(enrolledCoursesCount)
+          : "—",
+    },
+    {
+      icon: <IconTrophy size={18} />,
+      label: "Completed Labs",
+      value:
+        typeof completedLabsCount === "number" && Number.isFinite(completedLabsCount)
+          ? String(completedLabsCount)
+          : "—",
+    },
+    {
+      icon: <IconClock size={18} />,
+      label: "Time Online",
+      value: timeOnline,
+    },
+  ];
 
   return (
     <>
