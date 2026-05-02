@@ -793,6 +793,14 @@ export interface components {
       /** Format: date-time */
       updatedAt?: string;
     };
+    SubTaskOptionResponseDto: {
+      /** Format: uuid */
+      id?: string;
+      text?: string;
+      isCorrect?: boolean;
+      /** Format: int32 */
+      orderIndex?: number;
+    };
     SubTaskResponseDto: {
       /** Format: uuid */
       id?: string;
@@ -801,6 +809,12 @@ export interface components {
       flag?: string;
       /** Format: int32 */
       orderIndex?: number;
+      /** @enum {string} */
+      type?: "FLAG" | "MULTIPLE_CHOICE";
+      /** Format: int32 */
+      points?: number;
+      hint?: string;
+      options?: components["schemas"]["SubTaskOptionResponseDto"][];
     };
     AdminUpdateCourseRequestDto: {
       title: string;
