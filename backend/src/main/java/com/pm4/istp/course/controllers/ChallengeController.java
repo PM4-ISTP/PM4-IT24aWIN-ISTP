@@ -8,6 +8,8 @@ import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionRequestDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.dto.CreateChallengeRequestDto;
 import com.pm4.istp.course.dto.CreateChallengeResponseDto;
 import com.pm4.istp.course.dto.DockerImageCheckResponseDto;
@@ -334,6 +336,73 @@ public class ChallengeController {
     UUID userId = parseUserId(jwt);
     SubTaskSubmissionResponseDto response =
         challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, request.getFlag());
+    return ResponseEntity.ok(response);
+  }
+
+  @Operation(
+      summary = "Submit a multiple-choice answer for a sub-task",
+      description =
+          "Records the student's selected option for a MULTIPLE_CHOICE sub-task. Points are awarded"
+              + " automatically when the correct option is chosen. Re-submission returns the"
+              + " existing result without changing it.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Submission processed",
+            content =
+                @Content(schema = @Schema(implementation = ChoiceSubmissionResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User not enrolled",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge, sub-task or option not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PostMapping("/{challengeId}/subtasks/{subTaskId}/submit-choice")
+  public ResponseEntity<ChoiceSubmissionResponseDto> submitSubTaskChoice(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID challengeId,
+      @PathVariable UUID subTaskId,
+      @Valid @RequestBody ChoiceSubmissionRequestDto request) {
+    UUID userId = parseUserId(jwt);
+    ChoiceSubmissionResponseDto response =
+        challengeService.submitSubTaskChoice(
+            userId, challengeId, subTaskId, request.getSelectedOptionId());
+    return ResponseEntity.ok(response);
+  }
+
+  @Operation(
+      summary = "Complete a theory sub-task",
+      description =
+          "Marks a FLAG sub-task with no flag as completed (theory/reading task). "
+              + "Fails if the sub-task has a flag set.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Theory sub-task marked as completed"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Sub-task has a flag and cannot be auto-completed",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User not enrolled",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge or sub-task not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PostMapping("/{challengeId}/subtasks/{subTaskId}/complete")
+  public ResponseEntity<SubTaskSubmissionResponseDto> completeTheorySubTask(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID challengeId,
+      @PathVariable UUID subTaskId) {
+    UUID userId = parseUserId(jwt);
+    SubTaskSubmissionResponseDto response =
+        challengeService.completeTheorySubTask(userId, challengeId, subTaskId);
     return ResponseEntity.ok(response);
   }
 

@@ -42,6 +42,13 @@ export default function CreateLab() {
         description: "",
         flag: "",
         orderIndex: 0,
+        type: "FLAG",
+        points: 1,
+        hint: "",
+        options: [
+          { text: "", isCorrect: true, orderIndex: 0 },
+          { text: "", isCorrect: false, orderIndex: 1 },
+        ],
       },
     ],
   });
@@ -49,7 +56,7 @@ export default function CreateLab() {
   const [titleError, setTitleError] = useState<string | null>(null);
   const [dockerImageError, setDockerImageError] = useState<string | null>(null);
   const [subTaskErrors, setSubTaskErrors] = useState<
-    Array<Partial<Record<"title" | "description" | "flag", string>>>
+    Array<Partial<Record<"title" | "description" | "flag" | "options", string>>>
   >([]);
   const [formError, setFormError] = useState<string | null>(null);
   const dockerImageCheck = useDockerImageCheck(formValues.dockerImage);

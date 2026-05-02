@@ -1,17 +1,21 @@
 package com.pm4.istp.course.mappers;
 
 import com.pm4.istp.course.db.CreateChallengeRequest;
+import com.pm4.istp.course.db.SubTaskOptionRequest;
 import com.pm4.istp.course.db.SubTaskRequest;
 import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.SubTask;
+import com.pm4.istp.course.db.entities.SubTaskOption;
 import com.pm4.istp.course.dto.ChallengeCreatorResponseDto;
 import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CourseChallengeResponseDto;
 import com.pm4.istp.course.dto.CreateChallengeRequestDto;
 import com.pm4.istp.course.dto.CreateChallengeResponseDto;
+import com.pm4.istp.course.dto.SubTaskOptionRequestDto;
+import com.pm4.istp.course.dto.SubTaskOptionStudentDto;
 import com.pm4.istp.course.dto.SubTaskRequestDto;
 import com.pm4.istp.course.dto.SubTaskResponseDto;
 import com.pm4.istp.course.dto.SubTaskStudentDto;
@@ -30,6 +34,8 @@ public interface ChallengeMapper {
 
   SubTaskRequest fromDto(SubTaskRequestDto dto);
 
+  SubTaskOptionRequest fromDto(SubTaskOptionRequestDto dto);
+
   @Mapping(target = "creatorId", source = "creator.id")
   CreateChallengeResponseDto toCreateResponseDto(Challenge challenge);
 
@@ -39,8 +45,15 @@ public interface ChallengeMapper {
 
   SubTaskResponseDto toSubTaskResponseDto(SubTask subTask);
 
+  SubTaskOptionStudentDto toOptionStudentDto(SubTaskOption option);
+
   @Mapping(target = "solved", ignore = true)
   @Mapping(target = "solvedFlag", ignore = true)
+  @Mapping(target = "selectedOptionId", ignore = true)
+  @Mapping(target = "options", source = "options")
+  @Mapping(
+      target = "theory",
+      expression = "java(subTask.getFlag() == null || subTask.getFlag().isBlank())")
   SubTaskStudentDto toSubTaskStudentDto(SubTask subTask);
 
   @Mapping(target = "subTasks", source = "subTasks")

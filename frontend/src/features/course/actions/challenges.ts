@@ -19,8 +19,11 @@ export type UpdateChallengeRequestDto = components["schemas"]["UpdateChallengeRe
 export type CreateChallengeResponseDto = components["schemas"]["CreateChallengeResponseDto"];
 export type ChallengeDetailResponseDto = components["schemas"]["ChallengeDetailResponseDto"];
 export type ChallengeStudentDto = components["schemas"]["ChallengeStudentDto"];
+export type SubTaskStudentDto = components["schemas"]["SubTaskStudentDto"];
+export type SubTaskOptionStudentDto = components["schemas"]["SubTaskOptionStudentDto"];
 export type SubTaskSubmissionRequestDto = components["schemas"]["SubTaskSubmissionRequestDto"];
 export type SubTaskSubmissionResponseDto = components["schemas"]["SubTaskSubmissionResponseDto"];
+export type ChoiceSubmissionResponseDto = components["schemas"]["ChoiceSubmissionResponseDto"];
 export type ListChallengeResponseDto = components["schemas"]["ListChallengeResponseDto"];
 export type PageListChallengeResponseDto = components["schemas"]["PageListChallengeResponseDto"];
 export type CourseChallengeItemDto = components["schemas"]["CourseChallengeItemDto"];
@@ -147,6 +150,34 @@ export async function submitSubTaskFlag(
   );
 }
 
+export async function submitSubTaskChoice(
+  challengeId: string,
+  subTaskId: string,
+  selectedOptionId: string
+): Promise<ActionResult<ChoiceSubmissionResponseDto>> {
+  return await withActionResult(
+    (client) =>
+      client.POST("/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/submit-choice", {
+        params: { path: { challengeId, subTaskId } },
+        body: { selectedOptionId },
+      }),
+    "Failed to submit answer"
+  );
+}
+
+export async function completeTheorySubTask(
+  challengeId: string,
+  subTaskId: string
+): Promise<ActionResult<SubTaskSubmissionResponseDto>> {
+  return await withActionResult(
+    (client) =>
+      client.POST("/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/complete", {
+        params: { path: { challengeId, subTaskId } },
+      }),
+    "Failed to complete task"
+  );
+}
+
 export async function updateCourseChallenges(
   courseId: string,
   challenges: CourseChallengeItemDto[]
@@ -155,7 +186,6 @@ export async function updateCourseChallenges(
     (client) =>
       client.PUT("/api/v1/courses/{id}/challenges", {
         params: { path: { id: courseId } },
-
         body: { challenges },
       }),
     "Failed to update course labs"

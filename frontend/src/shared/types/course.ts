@@ -1,9 +1,11 @@
 import type { components } from "@/src/shared/lib/api/schema";
 
 export type SubTaskStudentDto = components["schemas"]["SubTaskStudentDto"];
+export type SubTaskOptionStudentDto = components["schemas"]["SubTaskOptionStudentDto"];
 export type ChallengeStudentDto = components["schemas"]["ChallengeStudentDto"];
 export type SubTaskSubmissionRequestDto = components["schemas"]["SubTaskSubmissionRequestDto"];
 export type SubTaskSubmissionResponseDto = components["schemas"]["SubTaskSubmissionResponseDto"];
+export type ChoiceSubmissionResponseDto = components["schemas"]["ChoiceSubmissionResponseDto"];
 
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
 export type PlatformRole = "ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT";

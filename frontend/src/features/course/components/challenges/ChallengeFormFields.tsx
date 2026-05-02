@@ -37,7 +37,7 @@ export interface ChallengeFormFieldsProps {
   dockerImageError?: string | null;
   dockerImageCheckStatus?: DockerImageCheckStatus;
   dockerImageCheckMessage?: string | null;
-  subTaskErrors?: Array<Partial<Record<"title" | "description" | "flag", string>>>;
+  subTaskErrors?: Array<Partial<Record<"title" | "description" | "flag" | "options", string>>>;
   defaultExpandedSubTaskIndex?: number | null;
   onDockerImageErrorClear?: () => void;
 }

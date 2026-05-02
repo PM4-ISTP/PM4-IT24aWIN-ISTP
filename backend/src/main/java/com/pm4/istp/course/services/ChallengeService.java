@@ -5,6 +5,7 @@ import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
 import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
 import java.util.UUID;
@@ -39,6 +40,19 @@ public interface ChallengeService {
    */
   SubTaskSubmissionResponseDto submitSubTaskFlag(
       UUID userId, UUID challengeId, UUID subTaskId, String flag);
+
+  /**
+   * Submits a multiple-choice option for a sub-task. Automatically awards points when correct. A
+   * student may only submit once; re-submission returns the existing result.
+   */
+  ChoiceSubmissionResponseDto submitSubTaskChoice(
+      UUID userId, UUID challengeId, UUID subTaskId, UUID selectedOptionId);
+
+  /**
+   * Completes a theory sub-task (FLAG type with no flag set) without requiring a flag submission.
+   * The sub-task is marked as solved immediately.
+   */
+  SubTaskSubmissionResponseDto completeTheorySubTask(UUID userId, UUID challengeId, UUID subTaskId);
 
   /** Returns the number of challenges the user has fully completed (all sub-tasks solved). */
   long countCompletedChallenges(UUID userId);

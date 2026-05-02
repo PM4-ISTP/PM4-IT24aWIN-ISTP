@@ -10,7 +10,6 @@ import {
   Loader,
   Modal,
   Notification,
-  NumberInput,
   Pagination,
   Select,
   Stack,
@@ -36,7 +35,6 @@ type AdminChallengeListItem = {
   description: string | null;
   status: ChallengeStatus;
   difficulty: ChallengeDifficulty;
-  maxScore: number;
   courseCount: number;
   createdAt: string;
   updatedAt: string;
@@ -103,11 +101,9 @@ export default function AdminChallengeManagement() {
       description: "<p>Add a description...</p>",
       status: "DRAFT" as ChallengeStatus,
       difficulty: "BEGINNER" as ChallengeDifficulty,
-      maxScore: 0,
     },
     validate: {
       title: (v) => (v.trim().length === 0 ? "Title is required" : null),
-      maxScore: (v) => (v < 0 ? "Max score must be >= 0" : null),
     },
   });
 
@@ -120,7 +116,6 @@ export default function AdminChallengeManagement() {
       description: challenge.description ?? "<p>Add a description...</p>",
       status: challenge.status ?? "DRAFT",
       difficulty: challenge.difficulty ?? "BEGINNER",
-      maxScore: challenge.maxScore ?? 0,
     });
     setEditOpened(true);
   }
@@ -143,7 +138,6 @@ export default function AdminChallengeManagement() {
           description: cleanText(values.description),
           status: values.status,
           difficulty: values.difficulty,
-          maxScore: values.maxScore,
         }),
       });
       if (!res.ok) {
@@ -367,13 +361,6 @@ export default function AdminChallengeManagement() {
                 }
               />
             </Group>
-            <NumberInput
-              label="Max score"
-              min={0}
-              value={form.values.maxScore}
-              onChange={(v) => form.setFieldValue("maxScore", Number(v ?? 0))}
-            />
-
             <Group justify="flex-end" mt="xs">
               <Button
                 variant="default"

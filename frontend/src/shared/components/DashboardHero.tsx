@@ -22,11 +22,13 @@ export default function DashboardHero({
   dateStr,
   enrolledCoursesCount,
   completedLabsCount,
+  userId,
 }: {
   firstName: string;
   dateStr: string;
   enrolledCoursesCount?: number | null;
   completedLabsCount?: number | null;
+  userId?: string | null;
 }) {
   const router = useRouter();
   const [cabinetOpen, setCabinetOpen] = useState(false);
@@ -34,11 +36,11 @@ export default function DashboardHero({
 
   // Read time from localStorage after hydration, update every minute
   useEffect(() => {
-    const update = () => setTimeOnline(formatTimeOnline(getTotalSecondsOnline()));
+    const update = () => setTimeOnline(formatTimeOnline(getTotalSecondsOnline(userId ?? null)));
     update();
     const interval = setInterval(update, 60_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [userId]);
 
   const heroStats = [
     {

@@ -308,6 +308,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/submit-choice": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit a multiple-choice answer for a sub-task
+     * @description Records the student's selected option. Points awarded automatically when correct.
+     */
+    post: operations["submitSubTaskChoice"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: { challengeId: string; subTaskId: string };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Complete a theory sub-task
+     * @description Marks a FLAG sub-task with no flag as completed without requiring a submission.
+     */
+    post: operations["completeTheorySubTask"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/k8s/pods": {
     parameters: {
       query?: never;
@@ -707,6 +747,12 @@ export interface components {
       flag?: string;
       /** Format: int32 */
       orderIndex?: number;
+      /** @enum {string} */
+      type?: "FLAG" | "MULTIPLE_CHOICE";
+      /** Format: int32 */
+      points?: number;
+      hint?: string;
+      options?: components["schemas"]["SubTaskOptionRequestDto"][];
     };
     UpdateChallengeRequestDto: {
       title: string;
@@ -894,6 +940,13 @@ export interface components {
       isEnrolled?: boolean;
       isPublished?: boolean;
     };
+    SubTaskOptionStudentDto: {
+      /** Format: uuid */
+      id?: string;
+      text?: string;
+      /** Format: int32 */
+      orderIndex?: number;
+    };
     SubTaskStudentDto: {
       /** Format: uuid */
       id?: string;
@@ -901,8 +954,38 @@ export interface components {
       description?: string;
       /** Format: int32 */
       orderIndex?: number;
+      /** @enum {string} */
+      type?: "FLAG" | "MULTIPLE_CHOICE";
+      /** Format: int32 */
+      points?: number;
+      hint?: string;
+      options?: components["schemas"]["SubTaskOptionStudentDto"][];
       solvedFlag?: string;
       isSolved?: boolean;
+      /** True when this is a theory sub-task (no flag required — complete by clicking Next) */
+      isTheory?: boolean;
+      /** Format: uuid */
+      selectedOptionId?: string;
+    };
+    ChoiceSubmissionRequestDto: {
+      /** Format: uuid */
+      selectedOptionId: string;
+    };
+    ChoiceSubmissionResponseDto: {
+      isCorrect?: boolean;
+      isChallengeSolved?: boolean;
+      /** Format: int32 */
+      solvedCount?: number;
+      /** Format: int32 */
+      totalCount?: number;
+    };
+    SubTaskOptionRequestDto: {
+      /** Format: uuid */
+      id?: string;
+      text: string;
+      isCorrect?: boolean;
+      /** Format: int32 */
+      orderIndex?: number;
     };
     JoinByInviteCodeRequestDto: {
       code: string;
@@ -2015,6 +2098,77 @@ export interface operations {
         content: {
           "*/*": components["schemas"]["ErrorDto"];
         };
+      };
+    };
+  };
+  submitSubTaskChoice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        challengeId: string;
+        subTaskId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChoiceSubmissionRequestDto"];
+      };
+    };
+    responses: {
+      /** @description Submission processed */
+      200: {
+        headers: { [name: string]: unknown };
+        content: {
+          "*/*": components["schemas"]["ChoiceSubmissionResponseDto"];
+        };
+      };
+      /** @description User not enrolled */
+      403: {
+        headers: { [name: string]: unknown };
+        content: { "*/*": components["schemas"]["ErrorDto"] };
+      };
+      /** @description Challenge, sub-task or option not found */
+      404: {
+        headers: { [name: string]: unknown };
+        content: { "*/*": components["schemas"]["ErrorDto"] };
+      };
+    };
+  };
+  completeTheorySubTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        challengeId: string;
+        subTaskId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Theory sub-task marked as completed */
+      200: {
+        headers: { [name: string]: unknown };
+        content: {
+          "*/*": components["schemas"]["SubTaskSubmissionResponseDto"];
+        };
+      };
+      /** @description Sub-task has a flag and cannot be auto-completed */
+      400: {
+        headers: { [name: string]: unknown };
+        content: { "*/*": components["schemas"]["ErrorDto"] };
+      };
+      /** @description User not enrolled */
+      403: {
+        headers: { [name: string]: unknown };
+        content: { "*/*": components["schemas"]["ErrorDto"] };
+      };
+      /** @description Challenge or sub-task not found */
+      404: {
+        headers: { [name: string]: unknown };
+        content: { "*/*": components["schemas"]["ErrorDto"] };
       };
     };
   };

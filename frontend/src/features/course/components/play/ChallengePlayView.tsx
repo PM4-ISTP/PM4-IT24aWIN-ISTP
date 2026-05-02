@@ -9,6 +9,7 @@ import {
   Group,
   Paper,
   Progress,
+  Radio,
   Stack,
   Stepper,
   Text,
@@ -22,11 +23,11 @@ import { notifications } from "@mantine/notifications";
 import {
   IconArrowLeft,
   IconArrowRight,
+  IconBulb,
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
   IconExternalLink,
-  IconLock,
   IconPlayerPlay,
   IconPlayerStop,
   IconRefresh,
@@ -37,7 +38,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChallengePodStatusBadge } from "@/src/features/challenge-pod/components/ChallengePodStatusBadge";
 import { useChallengePodStatus } from "@/src/features/challenge-pod/hooks/useChallengePodStatus";
-import { submitSubTaskFlag } from "@/src/features/course/actions/challenges";
+import {
+  submitSubTaskFlag,
+  submitSubTaskChoice,
+  completeTheorySubTask,
+} from "@/src/features/course/actions/challenges";
 import {
   DOCKER_IMAGE_ERROR,
   getDifficultyColor,
@@ -137,17 +142,21 @@ export function ChallengePlayView({
     pickInitialStep(initialChallenge.subTasks ?? [])
   );
   const [flagInput, setFlagInput] = useState("");
+  const [selectedOption, setSelectedOption] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  const [hintOpen, setHintOpen] = useState(false);
   const [labCollapsed, setLabCollapsed] = useState(false);
   const [podActionLoading, setPodActionLoading] = useState(false);
   const [podActionError, setPodActionError] = useState<string | null>(null);
   const autoStartAttempted = useRef(false);
+
   const {
     data: pod,
     error: podStatusError,
     loading: podStatusLoading,
     refetch: refetchPodStatus,
   } = useChallengePodStatus(challengeId);
+
   const dockerImage = challenge.dockerImage ?? "";
   const dockerImageCheck = useDockerImageCheck(dockerImage);
 
@@ -157,6 +166,7 @@ export function ChallengePlayView({
   const percent = total === 0 ? 0 : Math.round((solvedCount / total) * 100);
   const current = subTasks[activeStep] ?? null;
   const allSolved = challenge.isSolved ?? false;
+
   const sanitizedChallengeDescription = useMemo(
     () => (challenge.description ? getSanitizedHtml(challenge.description) : ""),
     [challenge.description]
@@ -165,6 +175,7 @@ export function ChallengePlayView({
     () => (current?.description ? getSanitizedHtml(current.description) : ""),
     [current]
   );
+
   const podStatus = pod?.status ?? "NOT_FOUND";
   const canStartPod =
     dockerImageCheck.status === "success" ||
@@ -187,15 +198,24 @@ export function ChallengePlayView({
     startDisabledReason = DOCKER_IMAGE_ERROR;
   }
 
+  const isMC = current?.type === "MULTIPLE_CHOICE";
+  const isTheory = Boolean(current?.isTheory);
+  const hasHint = Boolean(current?.hint?.trim());
+
+  // Reset per-subtask UI when navigating between challenges
+  useEffect(() => {
+    setFlagInput("");
+    setSelectedOption(current?.selectedOptionId ?? "");
+    setHintOpen(false);
+  }, [activeStep, current?.selectedOptionId]);
+
   const handleStartPod = useCallback(async () => {
     if (!canStartPod) {
       setPodActionError(startDisabledReason ?? "Lab cannot be started with this Docker image.");
       return;
     }
-
     setPodActionLoading(true);
     setPodActionError(null);
-
     try {
       await apiClient.POST("/api/v1/challenge-pods/{challengeId}", {
         params: { path: { challengeId } },
@@ -211,7 +231,6 @@ export function ChallengePlayView({
   const handleStopPod = useCallback(async () => {
     setPodActionLoading(true);
     setPodActionError(null);
-
     try {
       await apiClient.DELETE("/api/v1/challenge-pods/{challengeId}", {
         params: { path: { challengeId } },
@@ -228,18 +247,16 @@ export function ChallengePlayView({
     if (podStatusLoading || autoStartAttempted.current) return;
     if (podStatus !== "NOT_FOUND" && podStatus !== "FAILED") return;
     if (dockerImageCheck.status === "checking") return;
-
     autoStartAttempted.current = true;
     void handleStartPod();
   }, [dockerImageCheck.status, handleStartPod, podStatus, podStatusLoading]);
 
-  function updateSubTaskSolved(subTaskId: string, submittedFlag: string) {
+  function updateSubTaskSolved(subTaskId: string, patch: Partial<SubTaskStudentDto>) {
     setChallenge((prev) => {
       const updatedSubTasks = (prev.subTasks ?? []).map((st) =>
-        st.id === subTaskId ? { ...st, isSolved: true, solvedFlag: submittedFlag } : st
+        st.id === subTaskId ? { ...st, ...patch, isSolved: true } : st
       );
       const newSolved = updatedSubTasks.filter((st) => st.isSolved).length;
-
       return {
         ...prev,
         subTasks: updatedSubTasks,
@@ -249,7 +266,7 @@ export function ChallengePlayView({
     });
   }
 
-  async function handleSubmit() {
+  async function handleSubmitFlag() {
     if (!current || !current.id || !challenge.id) return;
 
     const trimmedFlag = flagInput.trim();
@@ -273,43 +290,90 @@ export function ChallengePlayView({
     setSubmitting(false);
 
     if (!result.success) {
-      notifications.show({
-        color: "red",
-        title: "Submission failed",
-        message: result.error,
-      });
+      notifications.show({ color: "red", title: "Submission failed", message: result.error });
       return;
     }
 
     if (result.data.isCorrect && current.id) {
-      updateSubTaskSolved(current.id, normalizedFlag);
+      updateSubTaskSolved(current.id, { solvedFlag: normalizedFlag });
       notifications.show({
         color: "teal",
         title: "Correct flag!",
-        message: result.data.isChallengeSolved
-          ? "Lab completed. Nice work!"
-          : "Challenge solved. Continue to the next one.",
+        message: result.data.isChallengeSolved ? "Lab completed. Nice work!" : "Challenge solved.",
       });
     } else {
       notifications.show({
         color: "red",
         title: "Incorrect flag",
-        message: "Not quite - double-check and try again.",
+        message: "Not quite — try again.",
       });
     }
   }
 
+  async function handleSubmitChoice() {
+    if (!current || !current.id || !challenge.id || !selectedOption) return;
+
+    setSubmitting(true);
+    const result = await submitSubTaskChoice(challenge.id, current.id, selectedOption);
+    setSubmitting(false);
+
+    if (!result.success) {
+      notifications.show({ color: "red", title: "Submission failed", message: result.error });
+      return;
+    }
+
+    if (result.data.isCorrect) {
+      updateSubTaskSolved(current.id, { selectedOptionId: selectedOption });
+      notifications.show({
+        color: "teal",
+        title: "Correct answer!",
+        message: result.data.isChallengeSolved ? "Lab completed. Nice work!" : "Challenge solved.",
+      });
+    } else {
+      // Record which option was picked so re-opening the challenge shows it
+      setChallenge((prev) => ({
+        ...prev,
+        subTasks: (prev.subTasks ?? []).map((st) =>
+          st.id === current.id ? { ...st, selectedOptionId: selectedOption } : st
+        ),
+      }));
+      notifications.show({
+        color: "red",
+        title: "Incorrect answer",
+        message: "Not quite — try another option.",
+      });
+    }
+  }
+
+  async function handleCompleteTheory() {
+    if (!current || !current.id || !challenge.id || current.isSolved) return;
+    setSubmitting(true);
+    const result = await completeTheorySubTask(challenge.id, current.id);
+    setSubmitting(false);
+    if (!result.success) {
+      notifications.show({ color: "red", title: "Could not complete task", message: result.error });
+      return;
+    }
+    updateSubTaskSolved(current.id, {});
+    notifications.show({
+      color: "teal",
+      title: "Task completed!",
+      message: result.data.isChallengeSolved ? "Lab completed. Nice work!" : "Moving on.",
+    });
+    if (activeStep < total - 1) {
+      goToStep(activeStep + 1);
+    }
+  }
+
+  // Free-order navigation — any step is reachable at any time
   function goToStep(step: number) {
     if (step < 0 || step >= total) return;
-
-    const firstUnsolved = subTasks.findIndex((st) => !st.isSolved);
-    const maxReachable = firstUnsolved === -1 ? total - 1 : firstUnsolved;
-
-    if (step > maxReachable) return;
-
     setActiveStep(step);
-    setFlagInput("");
   }
+
+  const displaySelectedOption = current?.isSolved
+    ? (current.selectedOptionId ?? selectedOption)
+    : selectedOption;
 
   return (
     <Box
@@ -342,7 +406,6 @@ export function ChallengePlayView({
               Show lab
             </Button>
           )}
-
           <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
             {challenge.status}
           </Badge>
@@ -373,6 +436,7 @@ export function ChallengePlayView({
           transition: "grid-template-columns 220ms ease, gap 220ms ease",
         }}
       >
+        {/* Left panel */}
         <Paper
           withBorder
           radius="md"
@@ -428,25 +492,20 @@ export function ChallengePlayView({
 
             <Divider />
 
+            {/* Stepper — all steps freely clickable */}
             {total > 0 && (
               <Stepper
                 active={activeStep}
                 onStepClick={goToStep}
-                allowNextStepsSelect={false}
+                allowNextStepsSelect={true}
                 size="xs"
                 iconSize={28}
               >
-                {subTasks.map((st, idx) => (
+                {subTasks.map((st) => (
                   <Stepper.Step
                     key={st.id}
                     completedIcon={<IconCheck size={14} />}
-                    icon={
-                      st.isSolved ? (
-                        <IconCheck size={14} />
-                      ) : idx > 0 && !subTasks[idx - 1]?.isSolved ? (
-                        <IconLock size={12} />
-                      ) : undefined
-                    }
+                    icon={st.isSolved ? <IconCheck size={14} /> : undefined}
                   />
                 ))}
               </Stepper>
@@ -465,6 +524,16 @@ export function ChallengePlayView({
                           Solved
                         </Badge>
                       )}
+                      {isMC && (
+                        <Badge variant="light" color="violet" size="xs">
+                          Multiple Choice
+                        </Badge>
+                      )}
+                      {(current.points ?? 0) > 0 && (
+                        <Badge variant="light" color="blue" size="xs">
+                          {current.points}pt
+                        </Badge>
+                      )}
                     </Group>
                     <Title order={4} style={{ lineHeight: 1.3 }}>
                       {current.title}
@@ -479,40 +548,161 @@ export function ChallengePlayView({
                     />
                   )}
 
-                  <Stack gap="xs">
-                    <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
-                      Submit Flag
-                    </Text>
-                    <Group gap="xs" align="flex-end">
-                      <TextInput
-                        value={current.isSolved ? (current.solvedFlag ?? "") : flagInput}
-                        onChange={(e) => {
-                          if (!current.isSolved) setFlagInput(e.currentTarget.value);
-                        }}
-                        placeholder="ISTP{...}"
-                        readOnly={current.isSolved}
-                        disabled={submitting}
-                        style={{ flex: 1 }}
-                        styles={{ input: { fontFamily: "var(--font-geist-mono), monospace" } }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !current.isSolved && !submitting) {
-                            e.preventDefault();
-                            void handleSubmit();
-                          }
-                        }}
-                        aria-label="Flag input"
-                      />
+                  {/* Hint */}
+                  {hasHint && (
+                    <Box>
                       <Button
-                        onClick={() => void handleSubmit()}
-                        disabled={current.isSolved}
+                        variant="subtle"
+                        size="xs"
+                        color="yellow"
+                        leftSection={<IconBulb size={14} />}
+                        onClick={() => setHintOpen((o) => !o)}
+                      >
+                        {hintOpen ? "Hide hint" : "Show hint"}
+                      </Button>
+                      {hintOpen && (
+                        <Paper
+                          withBorder
+                          radius="md"
+                          p="sm"
+                          mt="xs"
+                          style={{
+                            background: "rgba(234,179,8,0.07)",
+                            borderColor: "rgba(234,179,8,0.25)",
+                          }}
+                        >
+                          <Text size="sm" c="yellow.3">
+                            {current?.hint}
+                          </Text>
+                        </Paper>
+                      )}
+                    </Box>
+                  )}
+
+                  {/* THEORY task — no submission needed */}
+                  {isTheory && !isMC && (
+                    <Button
+                      onClick={() => void handleCompleteTheory()}
+                      disabled={current.isSolved || submitting}
+                      loading={submitting}
+                      color={current.isSolved ? "teal" : "blue"}
+                      leftSection={current.isSolved ? <IconCheck size={16} /> : undefined}
+                    >
+                      {current.isSolved ? "Completed" : "Mark as done"}
+                    </Button>
+                  )}
+
+                  {/* FLAG submission */}
+                  {!isMC && !isTheory && (
+                    <Stack gap="xs">
+                      <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
+                        Submit Flag
+                      </Text>
+                      <Group gap="xs" align="flex-end">
+                        <TextInput
+                          value={current.isSolved ? (current.solvedFlag ?? "") : flagInput}
+                          onChange={(e) => {
+                            if (!current.isSolved) setFlagInput(e.currentTarget.value);
+                          }}
+                          placeholder="ISTP{...}"
+                          readOnly={current.isSolved}
+                          disabled={submitting}
+                          style={{ flex: 1 }}
+                          styles={{ input: { fontFamily: "var(--font-geist-mono), monospace" } }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !current.isSolved && !submitting) {
+                              e.preventDefault();
+                              void handleSubmitFlag();
+                            }
+                          }}
+                          aria-label="Flag input"
+                        />
+                        <Button
+                          onClick={() => void handleSubmitFlag()}
+                          disabled={current.isSolved}
+                          loading={submitting}
+                          color={current.isSolved ? "teal" : "blue"}
+                          leftSection={current.isSolved ? <IconCheck size={16} /> : undefined}
+                        >
+                          {current.isSolved ? "Solved" : "Submit"}
+                        </Button>
+                      </Group>
+                    </Stack>
+                  )}
+
+                  {/* MULTIPLE CHOICE submission */}
+                  {isMC && (
+                    <Stack gap="sm">
+                      <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
+                        Choose your answer
+                      </Text>
+                      <Radio.Group
+                        value={displaySelectedOption}
+                        onChange={(val) => {
+                          if (!current.isSolved) setSelectedOption(val);
+                        }}
+                      >
+                        <Stack gap="xs">
+                          {(current.options ?? []).map((opt) => {
+                            const isSelected = displaySelectedOption === opt.id;
+                            return (
+                              <Paper
+                                key={opt.id}
+                                withBorder
+                                radius="md"
+                                p="sm"
+                                style={{
+                                  background: isSelected
+                                    ? current.isSolved
+                                      ? "rgba(20,184,166,0.12)"
+                                      : "rgba(59,130,246,0.1)"
+                                    : "rgba(255,255,255,0.02)",
+                                  borderColor: isSelected
+                                    ? current.isSolved
+                                      ? "rgba(20,184,166,0.4)"
+                                      : "rgba(59,130,246,0.4)"
+                                    : undefined,
+                                  cursor: current.isSolved ? "default" : "pointer",
+                                  opacity: current.isSolved && !isSelected ? 0.55 : 1,
+                                  transition: "background 140ms, border-color 140ms",
+                                }}
+                                onClick={() => {
+                                  if (!current.isSolved && opt.id) setSelectedOption(opt.id);
+                                }}
+                              >
+                                <Group gap="sm" wrap="nowrap">
+                                  <Radio
+                                    value={opt.id ?? ""}
+                                    disabled={current.isSolved}
+                                    style={{ flexShrink: 0 }}
+                                  />
+                                  <Text size="sm" style={{ flex: 1 }}>
+                                    {opt.text}
+                                  </Text>
+                                  {current.isSolved && isSelected && (
+                                    <IconCheck
+                                      size={15}
+                                      color="var(--mantine-color-teal-4)"
+                                      style={{ flexShrink: 0 }}
+                                    />
+                                  )}
+                                </Group>
+                              </Paper>
+                            );
+                          })}
+                        </Stack>
+                      </Radio.Group>
+                      <Button
+                        onClick={() => void handleSubmitChoice()}
+                        disabled={current.isSolved || !selectedOption}
                         loading={submitting}
                         color={current.isSolved ? "teal" : "blue"}
                         leftSection={current.isSolved ? <IconCheck size={16} /> : undefined}
                       >
-                        {current.isSolved ? "Solved" : "Submit"}
+                        {current.isSolved ? "Answered" : "Submit answer"}
                       </Button>
-                    </Group>
-                  </Stack>
+                    </Stack>
+                  )}
 
                   <Group justify="space-between">
                     <Button
@@ -526,7 +716,7 @@ export function ChallengePlayView({
                     <Button
                       rightSection={<IconArrowRight size={16} />}
                       onClick={() => goToStep(activeStep + 1)}
-                      disabled={!current.isSolved || activeStep >= total - 1}
+                      disabled={activeStep >= total - 1}
                     >
                       Next
                     </Button>
@@ -556,6 +746,7 @@ export function ChallengePlayView({
           </Stack>
         </Paper>
 
+        {/* Right panel — lab environment */}
         <Box
           id={labPanelId}
           aria-hidden={!showLabPanel}
