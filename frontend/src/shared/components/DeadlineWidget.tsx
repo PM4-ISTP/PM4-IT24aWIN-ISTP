@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Stack,
-  Group,
-  Text,
-  Badge,
-  Box,
-  Divider,
-  ActionIcon,
-} from "@mantine/core";
+import { Stack, Group, Text, Badge, Box, Divider, ActionIcon } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import Link from "next/link";
 
