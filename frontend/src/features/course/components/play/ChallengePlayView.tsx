@@ -335,7 +335,11 @@ export function ChallengePlayView({
         ...prev,
         subTasks: (prev.subTasks ?? []).map((st) =>
           st.id === current.id
-            ? { ...st, selectedOptionId: selectedOption, correctOptionId: result.data.correctOptionId }
+            ? {
+                ...st,
+                selectedOptionId: selectedOption,
+                correctOptionId: result.data.correctOptionId,
+              }
             : st
         ),
       }));
@@ -697,13 +701,23 @@ export function ChallengePlayView({
                                     {opt.text}
                                   </Text>
                                   {current.isSolved && isSelected && (
-                                    <IconCheck size={15} color="var(--mantine-color-teal-4)" style={{ flexShrink: 0 }} />
+                                    <IconCheck
+                                      size={15}
+                                      color="var(--mantine-color-teal-4)"
+                                      style={{ flexShrink: 0 }}
+                                    />
                                   )}
                                   {isCorrectOpt && !current.isSolved && (
-                                    <IconCheck size={15} color="var(--mantine-color-teal-4)" style={{ flexShrink: 0 }} />
+                                    <IconCheck
+                                      size={15}
+                                      color="var(--mantine-color-teal-4)"
+                                      style={{ flexShrink: 0 }}
+                                    />
                                   )}
                                   {isWrongSelected && (
-                                    <Text size="xs" c="red.4" fw={600} style={{ flexShrink: 0 }}>✗</Text>
+                                    <Text size="xs" c="red.4" fw={600} style={{ flexShrink: 0 }}>
+                                      ✗
+                                    </Text>
                                   )}
                                 </Group>
                               </Paper>
