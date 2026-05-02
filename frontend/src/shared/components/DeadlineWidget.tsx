@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Stack,
   Group,
@@ -44,18 +44,16 @@ function getStorageKey(userId?: string) {
 }
 
 export function DeadlineWidget({ deadlines, userId }: Props) {
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
+  const [dismissed, setDismissed] = useState<Set<string>>(() => {
+    // Lazy initializer: runs only on client (server returns empty set)
+    if (typeof window === "undefined") return new Set<string>();
     try {
       const raw = localStorage.getItem(getStorageKey(userId));
-      if (raw) {
-        setDismissed(new Set(JSON.parse(raw) as string[]));
-      }
+      return raw ? new Set<string>(JSON.parse(raw) as string[]) : new Set<string>();
     } catch {
-      // ignore
+      return new Set<string>();
     }
-  }, [userId]);
+  });
 
   function dismiss(courseId: string, challengeId: string) {
     const key = `${courseId}:${challengeId}`;
