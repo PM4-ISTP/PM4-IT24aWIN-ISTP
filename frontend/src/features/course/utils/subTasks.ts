@@ -21,7 +21,7 @@ export function toFormSubTasks(subTasks: SubTaskResponseDto[] | undefined): SubT
     .slice()
     .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
     .map((st, i) => {
-      const type = (st.type as "FLAG" | "MULTIPLE_CHOICE" | undefined) ?? "FLAG";
+      const type = (st as { type?: "FLAG" | "MULTIPLE_CHOICE" }).type ?? "FLAG";
       const rawOptions =
         (
           st as {

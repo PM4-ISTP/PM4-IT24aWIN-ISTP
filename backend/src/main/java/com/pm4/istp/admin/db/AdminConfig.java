@@ -31,6 +31,9 @@ public class AdminConfig {
   @Column(name = "memory_limit")
   private String memoryLimit;
 
+  @Column(name = "image_pull_secret_name")
+  private String imagePullSecretName;
+
   @Lob
   @Column(name = "kubeconfig", columnDefinition = "TEXT", nullable = false)
   private String kubeconfig;
@@ -43,6 +46,16 @@ public class AdminConfig {
 
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
+
+  public AdminConfig(
+      UUID id,
+      String cpuLimit,
+      String memoryLimit,
+      String kubeconfig,
+      int podTtlSeconds,
+      LocalDateTime updatedAt) {
+    this(id, cpuLimit, memoryLimit, null, kubeconfig, podTtlSeconds, updatedAt);
+  }
 
   @Override
   public boolean equals(Object o) {

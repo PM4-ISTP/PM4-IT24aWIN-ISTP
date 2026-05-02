@@ -64,6 +64,7 @@ public class AdminConfigurationController {
             kubeconfigBytes,
             request.getCpuLimit(),
             request.getMemoryLimit(),
+            request.getImagePullSecretName(),
             request.getPodTtlSeconds());
 
     AdminConfigResponse response =
@@ -71,6 +72,7 @@ public class AdminConfigurationController {
             true,
             adminConfig.getCpuLimit(),
             adminConfig.getMemoryLimit(),
+            adminConfig.getImagePullSecretName(),
             adminConfig.getPodTtlSeconds(),
             adminConfig.getUpdatedAt());
 
@@ -88,11 +90,12 @@ public class AdminConfigurationController {
               true,
               adminConfig.getCpuLimit(),
               adminConfig.getMemoryLimit(),
+              adminConfig.getImagePullSecretName(),
               adminConfig.getPodTtlSeconds(),
               adminConfig.getUpdatedAt());
       return ResponseEntity.ok(response);
     } else {
-      AdminConfigResponse response = new AdminConfigResponse(false, null, null, null, null);
+      AdminConfigResponse response = new AdminConfigResponse(false, null, null, null, null, null);
       return ResponseEntity.ok(response);
     }
   }
@@ -121,6 +124,7 @@ public class AdminConfigurationController {
             kubeconfigBytes,
             request.getCpuLimit(),
             request.getMemoryLimit(),
+            request.getImagePullSecretName(),
             request.getPodTtlSeconds());
 
     AdminConfigResponse response =
@@ -128,6 +132,7 @@ public class AdminConfigurationController {
             true,
             adminConfig.getCpuLimit(),
             adminConfig.getMemoryLimit(),
+            adminConfig.getImagePullSecretName(),
             adminConfig.getPodTtlSeconds(),
             adminConfig.getUpdatedAt());
 

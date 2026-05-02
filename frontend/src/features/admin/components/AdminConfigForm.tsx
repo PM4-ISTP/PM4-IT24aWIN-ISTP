@@ -12,6 +12,7 @@ import {
   Select,
   Stack,
   Text,
+  TextInput,
 } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { useForm } from "@mantine/form";
@@ -51,6 +52,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
         cpuLimit: adminConfig.cpuLimit ?? "",
         memoryLimit: hasMemorySpecification ? String(memorySpecification.value) : "",
         memoryLimitUnit: hasMemorySpecification ? memorySpecification.unit : defaultMemoryUnit,
+        imagePullSecretName: adminConfig.imagePullSecretName ?? "",
         podTtlSeconds: adminConfig.podTtlSeconds ?? 3600,
         kubeconfig: null as File | null,
       };
@@ -59,6 +61,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
         cpuLimit: "",
         memoryLimit: "",
         memoryLimitUnit: defaultMemoryUnit,
+        imagePullSecretName: "",
         podTtlSeconds: 3600,
         kubeconfig: null as File | null,
       };
@@ -97,6 +100,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
             unit: values.memoryLimitUnit,
           })
         : undefined;
+    const imagePullSecretName = values.imagePullSecretName.trim();
 
     try {
       const rawPodTtlSeconds = values.podTtlSeconds;
@@ -107,12 +111,24 @@ export default function AdminConfigForm({ initialConfig }: Props) {
 
       if (!config.kubeconfigUploaded) {
         const { error } = await apiClient.POST("/api/admin/config", {
-          body: { kubeconfig: kubeconfigBase64, cpuLimit, memoryLimit, podTtlSeconds },
+          body: {
+            kubeconfig: kubeconfigBase64,
+            cpuLimit,
+            memoryLimit,
+            imagePullSecretName,
+            podTtlSeconds,
+          },
         });
         if (error) throw new Error(JSON.stringify(error));
       } else {
         const { error } = await apiClient.PUT("/api/admin/config", {
-          body: { kubeconfig: kubeconfigBase64, cpuLimit, memoryLimit, podTtlSeconds },
+          body: {
+            kubeconfig: kubeconfigBase64,
+            cpuLimit,
+            memoryLimit,
+            imagePullSecretName,
+            podTtlSeconds,
+          },
         });
         if (error) throw new Error(JSON.stringify(error));
       }
@@ -207,6 +223,16 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                 />
               </Grid.Col>
             </Grid>
+          </Grid.Col>
+          <Grid.Col span={12}>
+            <TextInput
+              id="image-pull-secret-input"
+              label="Image pull secret"
+              description="Optional Kubernetes secret name for private GHCR challenge images."
+              placeholder="ghcr-pull-secret"
+              key={form.key("imagePullSecretName")}
+              {...form.getInputProps("imagePullSecretName")}
+            />
           </Grid.Col>
           <Grid.Col span={12}>
             <NumberInput

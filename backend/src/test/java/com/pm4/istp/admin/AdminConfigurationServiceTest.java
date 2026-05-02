@@ -78,12 +78,15 @@ class AdminConfigurationServiceTest {
         when(adminConfigRepository.save(any(AdminConfig.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AdminConfig result = adminConfigurationService.createConfiguration(kubeconfig, "1", "1Gi", null);
+        AdminConfig result =
+                adminConfigurationService.createConfiguration(
+                        kubeconfig, "1", "1Gi", "ghcr-pull-secret", null);
 
         assertNotNull(result);
         assertEquals(SINGLETON_ID, result.getId());
         assertEquals("1", result.getCpuLimit());
         assertEquals("1Gi", result.getMemoryLimit());
+        assertEquals("ghcr-pull-secret", result.getImagePullSecretName());
         assertEquals("kube-content", result.getKubeconfig());
         assertNotNull(result.getUpdatedAt());
 
@@ -223,6 +226,7 @@ class AdminConfigurationServiceTest {
         existing.setId(SINGLETON_ID);
         existing.setCpuLimit("2");
         existing.setMemoryLimit("2Gi");
+        existing.setImagePullSecretName("ghcr-pull-secret");
         existing.setKubeconfig("existing-kube-content");
         existing.setUpdatedAt(LocalDateTime.of(2025, 1, 1, 10, 0));
 
@@ -234,9 +238,26 @@ class AdminConfigurationServiceTest {
 
         assertEquals("2", result.getCpuLimit());
         assertEquals("2Gi", result.getMemoryLimit());
+        assertEquals("ghcr-pull-secret", result.getImagePullSecretName());
         assertEquals("existing-kube-content", result.getKubeconfig());
         assertNotNull(result.getUpdatedAt());
 
+        verify(adminConfigRepository).save(existing);
+    }
+
+    @Test
+    void testUpdateConfiguration_WithBlankImagePullSecret_ClearsImagePullSecret() {
+        AdminConfig existing = new AdminConfig();
+        existing.setId(SINGLETON_ID);
+        existing.setImagePullSecretName("ghcr-pull-secret");
+
+        when(adminConfigRepository.findById(SINGLETON_ID)).thenReturn(Optional.of(existing));
+        when(adminConfigRepository.save(any(AdminConfig.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AdminConfig result = adminConfigurationService.updateConfiguration(null, null, null, " ", null);
+
+        assertNull(result.getImagePullSecretName());
         verify(adminConfigRepository).save(existing);
     }
 
