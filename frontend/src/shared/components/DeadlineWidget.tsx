@@ -45,10 +45,8 @@ function getStorageKey(userId?: string) {
 
 export function DeadlineWidget({ deadlines, userId }: Props) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     try {
       const raw = localStorage.getItem(getStorageKey(userId));
       if (raw) {
@@ -76,7 +74,6 @@ export function DeadlineWidget({ deadlines, userId }: Props) {
   const now = new Date();
 
   const visible = deadlines.filter((it) => {
-    if (!mounted) return true; // SSR: show all, filter after hydration
     const key = `${it.courseId}:${it.challengeId}`;
     return !dismissed.has(key);
   });
@@ -148,7 +145,7 @@ export function DeadlineWidget({ deadlines, userId }: Props) {
                   <Badge variant="light" color={isOverdue ? "red" : "blue"} size="sm">
                     {isOverdue ? "OVERDUE" : "DUE"}
                   </Badge>
-                  {isOverdue && mounted && (
+                  {isOverdue && (
                     <ActionIcon
                       size="xs"
                       variant="subtle"
