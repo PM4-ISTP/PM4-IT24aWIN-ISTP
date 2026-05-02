@@ -25,12 +25,19 @@ const statLabelStyle: React.CSSProperties = {
 export default function DashboardHero({
   firstName,
   dateStr,
+  enrolledCoursesCount,
 }: {
   firstName: string;
   dateStr: string;
+  enrolledCoursesCount?: number | null;
 }) {
   const router = useRouter();
   const [cabinetOpen, setCabinetOpen] = useState(false);
+  const heroStatsWithValues = heroStats.map((stat) => {
+    if (stat.label !== "Enrolled Courses") return stat;
+    if (typeof enrolledCoursesCount !== "number" || !Number.isFinite(enrolledCoursesCount)) return stat;
+    return { ...stat, value: String(enrolledCoursesCount) };
+  });
 
   return (
     <>
@@ -118,7 +125,7 @@ export default function DashboardHero({
 
           {/* Right: inline hero stats */}
           <Stack gap="sm" className="dashboard-hero-stats" style={{ flexShrink: 0, minWidth: 220 }}>
-            {heroStats.map(({ icon, label, value }) => (
+            {heroStatsWithValues.map(({ icon, label, value }) => (
               <Box
                 key={label}
                 style={{
