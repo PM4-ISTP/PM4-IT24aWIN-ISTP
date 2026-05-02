@@ -118,15 +118,15 @@ async function doRefreshAccessToken(token: JWT): Promise<JWT> {
     }
   );
 
+  if (!response.ok) {
+    throw new Error("Failed to refresh access token");
+  }
+
   const refreshedTokens = (await response.json()) as {
     access_token: string;
     expires_in: number;
     refresh_token?: string;
   };
-
-  if (!response.ok) {
-    throw new Error("Failed to refresh access token");
-  }
 
   const refreshedClaims = extractProfileClaims(refreshedTokens.access_token);
 
@@ -169,6 +169,8 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
       refreshInProgress.delete(key);
     });
 
+  // Register the in-flight Promise before any await so that concurrent calls
+  // that arrive synchronously (before the first microtask tick) find it.
   refreshInProgress.set(key, refreshPromise);
   return refreshPromise;
 }
