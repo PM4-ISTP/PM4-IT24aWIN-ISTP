@@ -83,11 +83,11 @@ export function getTotalSecondsOnline(): number {
 export function formatTimeOnline(seconds: number): string {
   const hours = seconds / 3600;
   if (hours < 1) {
-    // 0.1h increments — like Steam for < 1h
+    // Under 1h: show one decimal place (0.1h steps)
     const tenths = Math.round(hours * 10) / 10;
-    if (tenths >= 1) return "1h"; // rounding edge case (e.g. 3570s)
+    if (tenths >= 1) return "1h"; // edge case: rounds up to exactly 1h
     return `${tenths.toFixed(1)}h`;
   }
-  // 1h and above: round to nearest whole hour (1.2→1h, 1.5→2h)
+  // 1h and above: round to nearest whole hour
   return `${Math.round(hours)}h`;
 }
