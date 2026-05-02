@@ -15,6 +15,7 @@ import com.pm4.istp.course.dto.CourseChallengeResponseDto;
 import com.pm4.istp.course.dto.CreateChallengeRequestDto;
 import com.pm4.istp.course.dto.CreateChallengeResponseDto;
 import com.pm4.istp.course.dto.SubTaskOptionRequestDto;
+import com.pm4.istp.course.dto.SubTaskOptionResponseDto;
 import com.pm4.istp.course.dto.SubTaskOptionStudentDto;
 import com.pm4.istp.course.dto.SubTaskRequestDto;
 import com.pm4.istp.course.dto.SubTaskResponseDto;
@@ -46,6 +47,8 @@ public interface ChallengeMapper {
   SubTaskResponseDto toSubTaskResponseDto(SubTask subTask);
 
   SubTaskOptionStudentDto toOptionStudentDto(SubTaskOption option);
+
+  SubTaskOptionResponseDto toOptionResponseDto(SubTaskOption option);
 
   @Mapping(target = "solved", ignore = true)
   @Mapping(target = "solvedFlag", ignore = true)

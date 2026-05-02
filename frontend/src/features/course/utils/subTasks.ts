@@ -21,18 +21,8 @@ export function toFormSubTasks(subTasks: SubTaskResponseDto[] | undefined): SubT
     .slice()
     .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
     .map((st, i) => {
-      const type = (st as { type?: "FLAG" | "MULTIPLE_CHOICE" }).type ?? "FLAG";
-      const rawOptions =
-        (
-          st as {
-            options?: Array<{
-              id?: string;
-              text?: string;
-              isCorrect?: boolean;
-              orderIndex?: number;
-            }>;
-          }
-        ).options ?? [];
+      const type = st.type ?? "FLAG";
+      const rawOptions = st.options ?? [];
       const options: SubTaskOptionFormValues[] =
         rawOptions.length > 0
           ? rawOptions.map((o, oi) => ({
@@ -52,8 +42,8 @@ export function toFormSubTasks(subTasks: SubTaskResponseDto[] | undefined): SubT
         flag: parseFlagInner(st.flag),
         orderIndex: st.orderIndex ?? i,
         type,
-        points: (st as { points?: number }).points ?? 1,
-        hint: (st as { hint?: string }).hint ?? "",
+        points: st.points ?? 1,
+        hint: st.hint ?? "",
         options,
       };
     });
