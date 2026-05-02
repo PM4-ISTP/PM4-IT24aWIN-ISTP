@@ -12,6 +12,8 @@ import com.pm4.istp.course.dto.CreateChallengeRequestDto;
 import com.pm4.istp.course.dto.CreateChallengeResponseDto;
 import com.pm4.istp.course.dto.DockerImageCheckResponseDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionRequestDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.dto.SubTaskSubmissionRequestDto;
 import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
 import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
@@ -328,6 +330,41 @@ public class ChallengeController {
     UUID userId = parseUserId(jwt);
     SubTaskSubmissionResponseDto response =
         challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, request.getFlag());
+    return ResponseEntity.ok(response);
+  }
+
+  @Operation(
+      summary = "Submit a multiple-choice answer for a sub-task",
+      description =
+          "Records the student's selected option for a MULTIPLE_CHOICE sub-task. Points are awarded"
+              + " automatically when the correct option is chosen. Re-submission returns the"
+              + " existing result without changing it.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Submission processed",
+            content =
+                @Content(schema = @Schema(implementation = ChoiceSubmissionResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User not enrolled",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge, sub-task or option not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PostMapping("/{challengeId}/subtasks/{subTaskId}/submit-choice")
+  public ResponseEntity<ChoiceSubmissionResponseDto> submitSubTaskChoice(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID challengeId,
+      @PathVariable UUID subTaskId,
+      @Valid @RequestBody ChoiceSubmissionRequestDto request) {
+    UUID userId = parseUserId(jwt);
+    ChoiceSubmissionResponseDto response =
+        challengeService.submitSubTaskChoice(
+            userId, challengeId, subTaskId, request.getSelectedOptionId());
     return ResponseEntity.ok(response);
   }
 

@@ -79,7 +79,7 @@ export default function EditChallenge() {
   const [titleError, setTitleError] = useState<string | null>(null);
   const [dockerImageError, setDockerImageError] = useState<string | null>(null);
   const [subTaskErrors, setSubTaskErrors] = useState<
-    Array<Partial<Record<"title" | "description" | "flag", string>>>
+    Array<Partial<Record<"title" | "description" | "flag" | "options", string>>>
   >([]);
   const [formError, setFormError] = useState<string | null>(null);
   const dockerImageCheck = useDockerImageCheck(formValues.dockerImage);
