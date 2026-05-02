@@ -626,7 +626,9 @@ public class ChallengeServiceImpl implements ChallengeService {
   }
 
   private Set<UUID> solvedSubTaskIds(UUID userId, List<UUID> subTaskIds) {
-    if (subTaskIds.isEmpty()) return Set.of();
+    if (subTaskIds.isEmpty()) {
+      return Set.of();
+    }
     return new HashSet<>(subTaskCompletionRepository.findSolvedSubTaskIds(userId, subTaskIds));
   }
 
