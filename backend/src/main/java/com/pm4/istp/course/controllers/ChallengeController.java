@@ -336,9 +336,7 @@ public class ChallengeController {
       description =
           "Returns the number of challenges where the authenticated user has solved all sub-tasks.")
   @ApiResponses(
-      value = {
-        @ApiResponse(responseCode = "200", description = "Count returned successfully")
-      })
+      value = {@ApiResponse(responseCode = "200", description = "Count returned successfully")})
   @GetMapping("/my-completed-count")
   public ResponseEntity<java.util.Map<String, Long>> countMyCompletedChallenges(
       @AuthenticationPrincipal Jwt jwt) {
