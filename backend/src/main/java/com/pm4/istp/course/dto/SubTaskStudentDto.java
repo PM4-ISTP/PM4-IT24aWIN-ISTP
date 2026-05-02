@@ -47,4 +47,10 @@ public class SubTaskStudentDto {
    * ID of the option the student selected (MULTIPLE_CHOICE type). Populated only after submission.
    */
   private UUID selectedOptionId;
+
+  /**
+   * ID of the correct option (MULTIPLE_CHOICE type). Only populated when the student has submitted
+   * a wrong answer, so they can see which option was correct.
+   */
+  private UUID correctOptionId;
 }

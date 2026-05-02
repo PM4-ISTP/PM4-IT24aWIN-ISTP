@@ -966,6 +966,8 @@ export interface components {
       isTheory?: boolean;
       /** Format: uuid */
       selectedOptionId?: string;
+      /** Format: uuid — only set when the student answered wrong */
+      correctOptionId?: string;
     };
     ChoiceSubmissionRequestDto: {
       /** Format: uuid */
@@ -978,6 +980,8 @@ export interface components {
       solvedCount?: number;
       /** Format: int32 */
       totalCount?: number;
+      /** Format: uuid — only set when isCorrect is false */
+      correctOptionId?: string;
     };
     SubTaskOptionRequestDto: {
       /** Format: uuid */
