@@ -57,6 +57,7 @@ public class ChallengePodService {
   private static final int DEFAULT_APP_PORT = 80;
 
   private static final int POD_NAME_HASH_LENGTH = 8;
+  private static final String INGRESS_NAME_SUFFIX = "-ingress";
 
   private final AdminConfigurationService adminConfigurationService;
   private final ChallengeService challengeService;
@@ -531,7 +532,7 @@ public class ChallengePodService {
     io.fabric8.kubernetes.api.model.networking.v1.Ingress ingress =
         new IngressBuilder()
             .withNewMetadata()
-            .withName(instanceName + "-ingress")
+            .withName(instanceName + INGRESS_NAME_SUFFIX)
             .withNamespace(defaultNamespace)
             .withLabels(labels)
             .endMetadata()
@@ -595,7 +596,7 @@ public class ChallengePodService {
               .v1()
               .ingresses()
               .inNamespace(defaultNamespace)
-              .withName(instanceName + "-ingress")
+              .withName(instanceName + INGRESS_NAME_SUFFIX)
               .get();
 
       if (ingress == null || ingress.getSpec() == null || ingress.getSpec().getRules() == null) {
@@ -633,7 +634,7 @@ public class ChallengePodService {
         .v1()
         .ingresses()
         .inNamespace(defaultNamespace)
-        .withName(instanceName + "-ingress")
+        .withName(instanceName + INGRESS_NAME_SUFFIX)
         .delete();
   }
 }

@@ -302,9 +302,7 @@ public class CourseServiceImpl implements CourseService {
         courseRepository
             .findById(courseId)
             .orElseThrow(
-                () ->
-                    new CourseNotFoundException(
-                        String.format("Course with ID '%s' not found", courseId)));
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
     // Clear existing challenge assignments
@@ -357,44 +355,15 @@ public class CourseServiceImpl implements CourseService {
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
-    List<CourseEnrollment> enrollments =
-        courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId);
-    List<CourseParticipantResponseDto> participants =
-        enrollments.stream()
-            .map(
-                e -> {
-                  User p = e.getParticipant();
-                  return new CourseParticipantResponseDto(p.getId(), p.getName(), p.getPicture());
-                })
-            .toList();
-
+    List<CourseParticipantResponseDto> participants = loadParticipants(courseId);
     List<CourseChallenge> assigned =
         course.getCourseChallenges() == null ? List.of() : course.getCourseChallenges();
-    List<CourseChallengeResponseDto> challengesDto =
-        assigned.stream()
-            .map(
-                cc -> {
-                  var ch = cc.getChallenge();
-                  return new CourseChallengeResponseDto(
-                      ch.getId(),
-                      ch.getTitle(),
-                      ch.getDifficulty(),
-                      cc.getOrderIndex(),
-                      cc.getDueAt());
-                })
-            .toList();
+    List<CourseChallengeResponseDto> challengesDto = toChallengeSubmissionDtos(assigned);
 
     List<UUID> userIds = participants.stream().map(CourseParticipantResponseDto::getId).toList();
     List<UUID> challengeIds = assigned.stream().map(cc -> cc.getChallenge().getId()).toList();
 
-    Map<UUID, Integer> totalByChallenge = new HashMap<>();
-    if (!challengeIds.isEmpty()) {
-      for (Object[] row : subTaskRepository.countByChallengeIds(challengeIds)) {
-        UUID challengeId = (UUID) row[0];
-        Long count = (Long) row[1];
-        totalByChallenge.put(challengeId, count == null ? 0 : count.intValue());
-      }
-    }
+    Map<UUID, Integer> totalByChallenge = loadSubTaskTotals(challengeIds);
 
     record Key(UUID userId, UUID challengeId) {}
     Map<Key, Integer> solvedCountByKey = new HashMap<>();
@@ -427,19 +396,9 @@ public class CourseServiceImpl implements CourseService {
         LocalDateTime completedAt =
             totalCount > 0 && solvedCount == totalCount ? completedAtByKey.get(key) : null;
 
-        CourseChallengeSubmissionStatusEnum status;
-        if (totalCount <= 0 || solvedCount <= 0) {
-          status = CourseChallengeSubmissionStatusEnum.NOT_SUBMITTED;
-        } else if (solvedCount < totalCount) {
-          status = CourseChallengeSubmissionStatusEnum.IN_PROGRESS;
-        } else {
-          LocalDateTime dueAt = dueAtByChallenge.get(challengeId);
-          if (dueAt == null || completedAt == null || !completedAt.isAfter(dueAt)) {
-            status = CourseChallengeSubmissionStatusEnum.ON_TIME;
-          } else {
-            status = CourseChallengeSubmissionStatusEnum.LATE;
-          }
-        }
+        CourseChallengeSubmissionStatusEnum status =
+            resolveSubmissionStatus(
+                solvedCount, totalCount, completedAt, dueAtByChallenge.get(challengeId));
 
         entries.add(
             new CourseChallengeSubmissionEntryDto(
@@ -449,6 +408,60 @@ public class CourseServiceImpl implements CourseService {
 
     return new CourseChallengeSubmissionsResponseDto(
         courseId, participants, challengesDto, entries);
+  }
+
+  private List<CourseParticipantResponseDto> loadParticipants(UUID courseId) {
+    return courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId).stream()
+        .map(
+            enrollment -> {
+              User participant = enrollment.getParticipant();
+              return new CourseParticipantResponseDto(
+                  participant.getId(), participant.getName(), participant.getPicture());
+            })
+        .toList();
+  }
+
+  private List<CourseChallengeResponseDto> toChallengeSubmissionDtos(
+      List<CourseChallenge> assigned) {
+    return assigned.stream()
+        .map(
+            courseChallenge -> {
+              Challenge challenge = courseChallenge.getChallenge();
+              return new CourseChallengeResponseDto(
+                  challenge.getId(),
+                  challenge.getTitle(),
+                  challenge.getDifficulty(),
+                  courseChallenge.getOrderIndex(),
+                  courseChallenge.getDueAt());
+            })
+        .toList();
+  }
+
+  private Map<UUID, Integer> loadSubTaskTotals(List<UUID> challengeIds) {
+    Map<UUID, Integer> totalByChallenge = new HashMap<>();
+    if (challengeIds.isEmpty()) {
+      return totalByChallenge;
+    }
+    for (Object[] row : subTaskRepository.countByChallengeIds(challengeIds)) {
+      UUID challengeId = (UUID) row[0];
+      Long count = (Long) row[1];
+      totalByChallenge.put(challengeId, count == null ? 0 : count.intValue());
+    }
+    return totalByChallenge;
+  }
+
+  private CourseChallengeSubmissionStatusEnum resolveSubmissionStatus(
+      int solvedCount, int totalCount, LocalDateTime completedAt, LocalDateTime dueAt) {
+    if (totalCount <= 0 || solvedCount <= 0) {
+      return CourseChallengeSubmissionStatusEnum.NOT_SUBMITTED;
+    }
+    if (solvedCount < totalCount) {
+      return CourseChallengeSubmissionStatusEnum.IN_PROGRESS;
+    }
+    if (dueAt == null || completedAt == null || !completedAt.isAfter(dueAt)) {
+      return CourseChallengeSubmissionStatusEnum.ON_TIME;
+    }
+    return CourseChallengeSubmissionStatusEnum.LATE;
   }
 
   @Override

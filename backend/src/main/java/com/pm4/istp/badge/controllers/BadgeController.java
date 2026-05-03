@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class BadgeController {
+  private static final String BADGE_TEXT_STYLE =
+      "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">";
 
   private final BadgeService badgeService;
 
@@ -130,7 +132,7 @@ public class BadgeController {
         + "</text>"
         + "<text x=\"150\" y=\"245\" text-anchor=\"middle\" font-size=\"18\" fill=\""
         + textColor
-        + "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">"
+        + BADGE_TEXT_STYLE
         + escapeXml(title)
         + "</text>"
         + "</svg>");
@@ -162,7 +164,7 @@ public class BadgeController {
         + "</text>"
         + "<text x=\"150\" y=\"248\" text-anchor=\"middle\" font-size=\"18\" fill=\""
         + textColor
-        + "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">"
+        + BADGE_TEXT_STYLE
         + escapeXml(title)
         + "</text>"
         + "</svg>");
@@ -237,7 +239,7 @@ public class BadgeController {
         + "</text>"
         + "<text x=\"150\" y=\"305\" text-anchor=\"middle\" font-size=\"17\" fill=\""
         + textColor
-        + "\" font-weight=\"bold\" font-family=\"system-ui,sans-serif\">"
+        + BADGE_TEXT_STYLE
         + escapeXml(title)
         + "</text>"
         + "</svg>");

@@ -566,16 +566,7 @@ public class CourseController {
     if (challenges == null || challenges.isEmpty()) {
       return;
     }
-    List<UUID> subTaskIds = new ArrayList<>();
-    for (ChallengeStudentDto challenge : challenges) {
-      List<SubTaskStudentDto> subTasks = challenge.getSubTasks();
-      if (subTasks == null) {
-        continue;
-      }
-      for (SubTaskStudentDto st : subTasks) {
-        subTaskIds.add(st.getId());
-      }
-    }
+    List<UUID> subTaskIds = collectSubTaskIds(challenges);
     Set<UUID> solvedIds =
         subTaskIds.isEmpty()
             ? Set.of()
@@ -584,21 +575,39 @@ public class CourseController {
     Map<UUID, String> flagsBySolvedId = loadFlagsForSolved(solvedIds);
 
     for (ChallengeStudentDto challenge : challenges) {
-      List<SubTaskStudentDto> subTasks =
-          challenge.getSubTasks() == null ? List.of() : challenge.getSubTasks();
-      int solvedCount = 0;
-      for (SubTaskStudentDto st : subTasks) {
-        boolean solved = solvedIds.contains(st.getId());
-        st.setSolved(solved);
-        if (solved) {
-          st.setSolvedFlag(flagsBySolvedId.get(st.getId()));
-          solvedCount++;
-        }
-      }
-      challenge.setTotalSubTaskCount(subTasks.size());
-      challenge.setSolvedSubTaskCount(solvedCount);
-      challenge.setSolved(!subTasks.isEmpty() && solvedCount == subTasks.size());
+      applyStudentProgress(challenge, solvedIds, flagsBySolvedId);
     }
+  }
+
+  private List<UUID> collectSubTaskIds(List<ChallengeStudentDto> challenges) {
+    List<UUID> subTaskIds = new ArrayList<>();
+    for (ChallengeStudentDto challenge : challenges) {
+      for (SubTaskStudentDto subTask : safeSubTasks(challenge)) {
+        subTaskIds.add(subTask.getId());
+      }
+    }
+    return subTaskIds;
+  }
+
+  private void applyStudentProgress(
+      ChallengeStudentDto challenge, Set<UUID> solvedIds, Map<UUID, String> flagsBySolvedId) {
+    List<SubTaskStudentDto> subTasks = safeSubTasks(challenge);
+    int solvedCount = 0;
+    for (SubTaskStudentDto subTask : subTasks) {
+      boolean solved = solvedIds.contains(subTask.getId());
+      subTask.setSolved(solved);
+      if (solved) {
+        subTask.setSolvedFlag(flagsBySolvedId.get(subTask.getId()));
+        solvedCount++;
+      }
+    }
+    challenge.setTotalSubTaskCount(subTasks.size());
+    challenge.setSolvedSubTaskCount(solvedCount);
+    challenge.setSolved(!subTasks.isEmpty() && solvedCount == subTasks.size());
+  }
+
+  private List<SubTaskStudentDto> safeSubTasks(ChallengeStudentDto challenge) {
+    return challenge.getSubTasks() == null ? List.of() : challenge.getSubTasks();
   }
 
   /**
