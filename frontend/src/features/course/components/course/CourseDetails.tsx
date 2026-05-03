@@ -79,6 +79,12 @@ export default async function CourseDetails({
   const isPublished = course.isPublished ?? false;
   const isPrivate = (course as { isPrivate?: boolean }).isPrivate ?? false;
   const owner = getOwner(course.courseInstructors);
+  const nextChallengeHref = isEnrolled
+    ? (() => {
+        const next = findNextChallenge(course.courseChallenges ?? []);
+        return next?.id ? `/dashboard/courses/${course.id}/challenges/${next.id}/play` : undefined;
+      })()
+    : undefined;
 
   return (
     <>
@@ -92,6 +98,7 @@ export default async function CourseDetails({
         participantCount={participantCount}
         isPublished={isPublished}
         isPrivate={isPrivate}
+        nextChallengeHref={nextChallengeHref}
         backPageName={backPageName}
         backHref={backHref}
       />
@@ -104,16 +111,6 @@ export default async function CourseDetails({
             // lessons={undefined}    ← wire up when lesson API is ready
             challenges={
               isEnrolled ? aggregateSubTaskProgress(course.courseChallenges ?? []) : undefined
-            }
-            nextChallengeHref={
-              isEnrolled
-                ? (() => {
-                    const next = findNextChallenge(course.courseChallenges ?? []);
-                    return next?.id
-                      ? `/dashboard/courses/${course.id}/challenges/${next.id}/play`
-                      : undefined;
-                  })()
-                : undefined
             }
           />
 
