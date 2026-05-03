@@ -4,13 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ActionIcon,
-  Affix,
   Alert,
   Box,
   Button,
   Container,
   Group,
-  Notification,
   Select,
   Stack,
   Text,
@@ -18,7 +16,8 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { IconArrowLeft, IconX } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
+import { IconArrowLeft } from "@tabler/icons-react";
 import MyEditor from "@/src/shared/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
 import { createCourse } from "@/src/features/course/actions/courses";
@@ -27,7 +26,6 @@ import {
   normalizeShortDescription,
 } from "@/src/features/course/utils/courseText";
 import { visibilityToFlags } from "@/src/features/course/utils/courseVisibility";
-import { useToast } from "@/src/shared/hooks/useToast";
 import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 import type { CourseVisibility } from "@/src/shared/types/course";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
@@ -47,7 +45,6 @@ export default function CreateCourse() {
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const charLimitToast = useToast();
   const topicOptions = useCourseTopicOptions();
 
   const shortDescriptionCharCount = shortDescription.length;
@@ -153,7 +150,11 @@ export default function CreateCourse() {
               onChange={(e) => {
                 const newVal = e.currentTarget.value;
                 if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
-                  charLimitToast.show();
+                  notifications.show({
+                    color: "orange",
+                    title: "Character limit reached",
+                    message: `The short description cannot exceed ${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters (including spaces).`,
+                  });
                   return;
                 }
                 setShortDescription(newVal);
@@ -254,21 +255,6 @@ export default function CreateCourse() {
           </Stack>
         </Box>
       </Stack>
-
-      <Affix position={{ bottom: 20, right: 20 }}>
-        {charLimitToast.visible && (
-          <Notification
-            color="orange"
-            title="Character limit reached"
-            onClose={charLimitToast.hide}
-            withCloseButton
-            icon={<IconX size={18} />}
-          >
-            The short description cannot exceed {COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters
-            (including spaces).
-          </Notification>
-        )}
-      </Affix>
     </Container>
   );
 }

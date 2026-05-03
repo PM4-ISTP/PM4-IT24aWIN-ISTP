@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   ActionIcon,
-  Affix,
   Alert,
   Box,
   Button,
@@ -15,7 +14,6 @@ import {
   Group,
   Loader,
   Modal,
-  Notification,
   Select,
   Stack,
   Text,
@@ -24,7 +22,8 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft, IconTrash, IconX } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
+import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
 import { CoursePeoplePanel } from "@/src/features/course/components/people/CoursePeoplePanel";
 import MyEditor from "@/src/shared/components/MyEditor";
 import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
@@ -43,7 +42,6 @@ import {
   regenerateInviteCode,
   updateCourse,
 } from "@/src/features/course/actions/courses";
-import { useToast } from "@/src/shared/hooks/useToast";
 import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 import type {
   CollaboratorUserResponseDto,
@@ -100,8 +98,6 @@ export default function EditCourse() {
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const ownerToast = useToast();
-  const charLimitToast = useToast();
   const topicOptions = useCourseTopicOptions();
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const shortDescriptionCharCount = shortDescription.length;
@@ -119,7 +115,12 @@ export default function EditCourse() {
   function handleCollaboratorChange(newValue: string[]) {
     const ownerId = owner?.id;
     if (ownerId && newValue.includes(ownerId)) {
-      ownerToast.show();
+      notifications.show({
+        color: "orange",
+        title: "Can't add owner as collaborator",
+        message:
+          "The course owner is already managing this course and cannot be added as a collaborator.",
+      });
       setSelectedInstructors(newValue.filter((id) => id !== ownerId));
       return;
     }
@@ -489,7 +490,11 @@ export default function EditCourse() {
                   onChange={(e) => {
                     const newVal = e.currentTarget.value;
                     if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
-                      charLimitToast.show();
+                      notifications.show({
+                        color: "orange",
+                        title: "Character limit reached",
+                        message: `The short description cannot exceed ${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters (including spaces).`,
+                      });
                       return;
                     }
                     setShortDescription(newVal);
@@ -745,32 +750,6 @@ export default function EditCourse() {
           </GridCol>
         </Grid>
       </Stack>
-
-      <Affix position={{ bottom: 20, right: 20 }}>
-        {ownerToast.visible && (
-          <Notification
-            color="orange"
-            title="Can't add owner as collaborator"
-            onClose={ownerToast.hide}
-            withCloseButton
-            icon={<IconX size={18} />}
-          >
-            The course owner is already managing this course and cannot be added as a collaborator.
-          </Notification>
-        )}
-        {charLimitToast.visible && (
-          <Notification
-            color="orange"
-            title="Character limit reached"
-            onClose={charLimitToast.hide}
-            withCloseButton
-            icon={<IconX size={18} />}
-          >
-            The short description cannot exceed {COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters
-            (including spaces).
-          </Notification>
-        )}
-      </Affix>
     </Container>
   );
 }
