@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -175,6 +176,7 @@ public class UserProfileServiceImpl implements UserProfileService {
   }
 
   @Override
+  @Transactional
   public long addOnlineTime(UUID userId, long seconds) {
     User user =
         userRepository
