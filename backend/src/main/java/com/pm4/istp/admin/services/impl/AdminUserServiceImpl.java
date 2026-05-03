@@ -47,11 +47,11 @@ public class AdminUserServiceImpl implements AdminUserService {
       Set.of("ROLE_STUDENT", "ROLE_INSTRUCTOR", "ROLE_ADMINISTRATOR");
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-  private static final String TEMP_CREDENTIAL_LOWER = "abcdefghjkmnpqrstuvwxyz";
-  private static final String TEMP_CREDENTIAL_UPPER = "ABCDEFGHJKMNPQRSTUVWXYZ";
-  private static final String TEMP_CREDENTIAL_DIGIT = "23456789";
+  private static final String LOWERCASE_CHARS = "abcdefghjkmnpqrstuvwxyz";
+  private static final String UPPERCASE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ";
+  private static final String DIGIT_CHARS = "23456789";
   // avoid ambiguous/shell-problematic chars; still counts as "special" for most policies
-  private static final String TEMP_CREDENTIAL_SPECIAL = "!@$%*_-+";
+  private static final String SYMBOL_CHARS = "!@$%*_-+";
   private static final DateTimeFormatter SOFT_DELETE_TS_FORMAT =
       DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -548,16 +548,12 @@ public class AdminUserServiceImpl implements AdminUserService {
     int length = 18;
     char[] password = new char[length];
 
-    password[0] = randomChar(TEMP_CREDENTIAL_LOWER);
-    password[1] = randomChar(TEMP_CREDENTIAL_UPPER);
-    password[2] = randomChar(TEMP_CREDENTIAL_DIGIT);
-    password[3] = randomChar(TEMP_CREDENTIAL_SPECIAL);
+    password[0] = randomChar(LOWERCASE_CHARS);
+    password[1] = randomChar(UPPERCASE_CHARS);
+    password[2] = randomChar(DIGIT_CHARS);
+    password[3] = randomChar(SYMBOL_CHARS);
 
-    String all =
-        TEMP_CREDENTIAL_LOWER
-            + TEMP_CREDENTIAL_UPPER
-            + TEMP_CREDENTIAL_DIGIT
-            + TEMP_CREDENTIAL_SPECIAL;
+    String all = LOWERCASE_CHARS + UPPERCASE_CHARS + DIGIT_CHARS + SYMBOL_CHARS;
     for (int i = 4; i < length; i++) {
       password[i] = randomChar(all);
     }
