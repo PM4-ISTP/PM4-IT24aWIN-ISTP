@@ -6,6 +6,7 @@ const BASE_STORAGE_KEY = "istp_total_seconds_online";
 const SYNCED_STORAGE_KEY = "istp_synced_seconds_online";
 const TICK_INTERVAL_MS = 10_000; // accumulate locally every 10 seconds
 const SYNC_INTERVAL_MS = 60_000; // sync to backend every 60 seconds
+const MAX_SYNC_SECONDS = 3600; // must match AddOnlineTimeRequestDto @Max
 
 function storageKey(userId: string | null): string {
   return userId ? `${BASE_STORAGE_KEY}_${userId}` : BASE_STORAGE_KEY;
@@ -26,7 +27,7 @@ async function syncToBackend(userId: string | null): Promise<void> {
     const res = await fetch("/api/backend/api/v1/users/me/online-time", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ seconds: Math.min(delta, 3600) }),
+      body: JSON.stringify({ seconds: Math.min(delta, MAX_SYNC_SECONDS) }),
     });
     if (res.ok) {
       localStorage.setItem(syncedKey(userId), String(current));
@@ -50,7 +51,7 @@ async function seedFromServer(userId: string | null): Promise<void> {
       localStorage.setItem(storageKey(userId), String(serverTotal));
       localStorage.setItem(syncedKey(userId), String(serverTotal));
     } else {
-      // Local has unsynchronised delta — record what the server knows as the sync baseline
+      // Local has unsynced delta — record what the server knows as the sync baseline
       localStorage.setItem(syncedKey(userId), String(serverTotal));
     }
   } catch {

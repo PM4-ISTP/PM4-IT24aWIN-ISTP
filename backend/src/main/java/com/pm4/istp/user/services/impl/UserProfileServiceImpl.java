@@ -183,7 +183,7 @@ public class UserProfileServiceImpl implements UserProfileService {
             .findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
-    if (seconds <= 0) {
+    if (seconds == 0) {
       return user.getTotalSecondsOnline();
     }
     user.setTotalSecondsOnline(user.getTotalSecondsOnline() + seconds);
