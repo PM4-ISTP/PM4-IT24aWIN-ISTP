@@ -1,6 +1,7 @@
 package com.pm4.istp.challengepod;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -212,7 +213,8 @@ class ChallengePodServiceTest {
         KubernetesClient mockClient = mock(KubernetesClient.class);
         setClientRef(mockClient);
 
-        service.onKubeconfigChanged(new KubeconfigChangedEvent());
+        assertThatCode(() -> service.onKubeconfigChanged(new KubeconfigChangedEvent()))
+                .doesNotThrowAnyException();
 
         verify(mockClient).close();
         assertClientRefIsNull();
@@ -221,7 +223,8 @@ class ChallengePodServiceTest {
     @Test
     void onKubeconfigChanged_doesNotThrow_whenNoClientCached() {
         // clientRef is null by default — should be a no-op
-        service.onKubeconfigChanged(new KubeconfigChangedEvent());
+        assertThatCode(() -> service.onKubeconfigChanged(new KubeconfigChangedEvent()))
+                .doesNotThrowAnyException();
     }
 
     // ── Client cache: shutdown ───────────────────────────────────────────────
@@ -231,7 +234,7 @@ class ChallengePodServiceTest {
         KubernetesClient mockClient = mock(KubernetesClient.class);
         setClientRef(mockClient);
 
-        service.shutdown();
+        assertThatCode(() -> service.shutdown()).doesNotThrowAnyException();
 
         verify(mockClient).close();
         assertClientRefIsNull();
@@ -239,7 +242,7 @@ class ChallengePodServiceTest {
 
     @Test
     void shutdown_doesNotThrow_whenNoClientCached() {
-        service.shutdown();
+        assertThatCode(() -> service.shutdown()).doesNotThrowAnyException();
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
