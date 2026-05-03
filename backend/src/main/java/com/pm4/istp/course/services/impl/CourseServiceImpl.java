@@ -345,7 +345,7 @@ public class CourseServiceImpl implements CourseService {
             .map(
                 e -> {
                   User p = e.getParticipant();
-                  return new CourseParticipantResponseDto(p.getId(), p.getName(), p.getPicture());
+                  return new CourseParticipantResponseDto(p.getId(), p.getName(), p.getPicture(), p.getEmail());
                 })
             .toList();
 
@@ -399,6 +399,18 @@ public class CourseServiceImpl implements CourseService {
       dueAtByChallenge.put(cc.getChallenge().getId(), cc.getDueAt());
     }
 
+    Map<Key, Integer> solvedBeforeDeadlineByKey = new HashMap<>();
+    if (!userIds.isEmpty() && !challengeIds.isEmpty()) {
+      for (Object[] row :
+          subTaskCompletionRepository.aggregateSolvedCountsBeforeDeadline(
+              courseId, userIds, challengeIds)) {
+        UUID u = (UUID) row[0];
+        UUID c = (UUID) row[1];
+        Long count = (Long) row[2];
+        solvedBeforeDeadlineByKey.put(new Key(u, c), count == null ? 0 : count.intValue());
+      }
+    }
+
     List<CourseChallengeSubmissionEntryDto> entries = new ArrayList<>();
     for (UUID participantId : userIds) {
       for (UUID challengeId : challengeIds) {
@@ -422,9 +434,12 @@ public class CourseServiceImpl implements CourseService {
           }
         }
 
+        int solvedBefore = status == CourseChallengeSubmissionStatusEnum.LATE
+            ? solvedBeforeDeadlineByKey.getOrDefault(key, 0)
+            : 0;
         entries.add(
             new CourseChallengeSubmissionEntryDto(
-                participantId, challengeId, solvedCount, totalCount, completedAt, status));
+                participantId, challengeId, solvedCount, totalCount, solvedBefore, completedAt, status));
       }
     }
 

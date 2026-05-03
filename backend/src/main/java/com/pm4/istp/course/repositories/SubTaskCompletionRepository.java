@@ -1,5 +1,6 @@
 package com.pm4.istp.course.repositories;
 
+import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.SubTaskCompletion;
 import java.util.Collection;
 import java.util.List;
@@ -40,6 +41,22 @@ public interface SubTaskCompletionRepository extends JpaRepository<SubTaskComple
       group by c.user.id, c.subTask.challenge.id
       """)
   List<Object[]> aggregateSolvedCountsForUsersAndChallenges(
+      @Param("userIds") Collection<UUID> userIds,
+      @Param("challengeIds") Collection<UUID> challengeIds);
+
+  @Query(
+      """
+      select stc.user.id, stc.subTask.challenge.id, count(stc)
+      from SubTaskCompletion stc
+      join CourseChallenge cc on cc.challenge.id = stc.subTask.challenge.id and cc.course.id = :courseId
+      where stc.user.id in :userIds
+        and stc.subTask.challenge.id in :challengeIds
+        and cc.dueAt is not null
+        and stc.solvedAt <= cc.dueAt
+      group by stc.user.id, stc.subTask.challenge.id
+      """)
+  List<Object[]> aggregateSolvedCountsBeforeDeadline(
+      @Param("courseId") UUID courseId,
       @Param("userIds") Collection<UUID> userIds,
       @Param("challengeIds") Collection<UUID> challengeIds);
 

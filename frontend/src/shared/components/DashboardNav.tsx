@@ -117,7 +117,9 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
             active={
               pathname === "/dashboard/instructor" ||
               (pathname.startsWith("/dashboard/instructor/") &&
-                !pathname.startsWith("/dashboard/instructor/challenges"))
+                !pathname.startsWith("/dashboard/instructor/challenges") &&
+                !pathname.startsWith("/dashboard/instructor/results") &&
+                !pathname.endsWith("/results"))
             }
           />
           <NavItem
@@ -125,6 +127,15 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
             label="Labs"
             icon="flag"
             active={pathname.startsWith("/dashboard/instructor/challenges")}
+          />
+          <NavItem
+            href="/dashboard/instructor/results"
+            label="Results Overview"
+            icon="group"
+            active={
+              pathname === "/dashboard/instructor/results" ||
+              pathname.endsWith("/results")
+            }
           />
         </>
       )}

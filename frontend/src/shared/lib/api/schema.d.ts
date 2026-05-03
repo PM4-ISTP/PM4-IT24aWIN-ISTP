@@ -716,6 +716,7 @@ export interface components {
       id?: string;
       name?: string;
       picture?: string;
+      email?: string;
     };
     UserDto: {
       /** Format: uuid */
@@ -1155,6 +1156,7 @@ export interface components {
       published?: boolean;
       isPublished?: boolean;
       isPrivate?: boolean;
+      mcAttemptsMode?: string;
     };
     PageListCourseResponseDto: {
       /** Format: int64 */

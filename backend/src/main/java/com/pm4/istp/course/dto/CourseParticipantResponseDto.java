@@ -12,4 +12,5 @@ public class CourseParticipantResponseDto {
   private UUID id;
   private String name;
   private String picture;
+  private String email;
 }
