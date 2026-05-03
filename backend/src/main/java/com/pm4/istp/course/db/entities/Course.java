@@ -92,8 +92,8 @@ public class Course {
   }
 
   /**
-   * Controls how many attempts students get for MULTIPLE_CHOICE sub-tasks in this course.
-   * Defaults to UNLIMITED (self-learning). Set to ONCE for graded / Praktikum courses.
+   * Controls how many attempts students get for MULTIPLE_CHOICE sub-tasks in this course. Defaults
+   * to UNLIMITED (self-learning). Set to ONCE for graded / Praktikum courses.
    */
   @Column(
       name = "mc_attempts_mode",

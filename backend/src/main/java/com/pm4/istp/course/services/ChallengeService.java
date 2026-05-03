@@ -45,6 +45,7 @@ public interface ChallengeService {
    * Submits a multiple-choice option for a sub-task.
    *
    * <p>Behaviour depends on the course's {@code mcAttemptsMode}:
+   *
    * <ul>
    *   <li>{@code ONCE} – the submission is recorded and the sub-task is marked completed regardless
    *       of correctness. Points are awarded only when the answer is correct.

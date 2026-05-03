@@ -21,10 +21,10 @@ import com.pm4.istp.course.dto.SubTaskStudentDto;
 import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.SubTaskAlreadySolvedException;
 import com.pm4.istp.course.exceptions.SubTaskNotFoundException;
 import com.pm4.istp.course.mappers.ChallengeMapper;
-import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseChallengeRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
@@ -541,8 +541,8 @@ public class ChallengeServiceImpl implements ChallengeService {
         studentOptionSubmissionRepository.saveAndFlush(submission);
       } catch (DataIntegrityViolationException ex) {
         // Concurrent submission — return current state
-        return buildChoiceResponse(correct, userId, subTask.getChallenge(), challengeId,
-            correct ? null : subTask);
+        return buildChoiceResponse(
+            correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
       }
 
       // Mark as completed regardless of correctness (ONCE = attempted = done)
@@ -559,8 +559,8 @@ public class ChallengeServiceImpl implements ChallengeService {
       }
 
       ChoiceSubmissionResponseDto response =
-          buildChoiceResponse(correct, userId, subTask.getChallenge(), challengeId,
-              correct ? null : subTask);
+          buildChoiceResponse(
+              correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
       if (response.isChallengeSolved()) {
         badgeService.tryAwardBadgesForChallenge(userId, challengeId);
       }
