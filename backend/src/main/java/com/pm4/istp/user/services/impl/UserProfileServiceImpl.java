@@ -173,4 +173,23 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
     return normalizedFirst + " " + normalizedLast;
   }
+
+  @Override
+  public long addOnlineTime(UUID userId, long seconds) {
+    if (seconds <= 0) {
+      User user =
+          userRepository
+              .findByIdAndDeletedAtIsNull(userId)
+              .orElseThrow(
+                  () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+      return user.getTotalSecondsOnline();
+    }
+    User user =
+        userRepository
+            .findByIdAndDeletedAtIsNull(userId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+    user.setTotalSecondsOnline(user.getTotalSecondsOnline() + seconds);
+    return userRepository.save(user).getTotalSecondsOnline();
+  }
 }

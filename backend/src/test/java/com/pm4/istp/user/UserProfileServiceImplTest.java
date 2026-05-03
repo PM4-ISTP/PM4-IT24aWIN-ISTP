@@ -193,4 +193,38 @@ class UserProfileServiceImplTest {
 
     verify(keycloakAdminClient, times(2)).updateUser(eq(userId), any(KeycloakUserRepresentation.class));
   }
+
+  @Test
+  void addOnlineTime_accumulates() {
+    UUID userId = UUID.randomUUID();
+
+    User dbUser = new User();
+    dbUser.setId(userId);
+    dbUser.setTotalSecondsOnline(100L);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(dbUser));
+    when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    long result = userProfileService.addOnlineTime(userId, 50L);
+
+    assertThat(result).isEqualTo(150L);
+    assertThat(dbUser.getTotalSecondsOnline()).isEqualTo(150L);
+    verify(userRepository).save(dbUser);
+  }
+
+  @Test
+  void addOnlineTime_zeroSeconds_doesNotSave() {
+    UUID userId = UUID.randomUUID();
+
+    User dbUser = new User();
+    dbUser.setId(userId);
+    dbUser.setTotalSecondsOnline(200L);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(dbUser));
+
+    long result = userProfileService.addOnlineTime(userId, 0L);
+
+    assertThat(result).isEqualTo(200L);
+    verify(userRepository, never()).save(any());
+  }
 }
