@@ -147,4 +147,3 @@ export function formatTimeOnline(seconds: number): string {
   // 1h and above: round to nearest whole hour
   return `${Math.round(hours)}h`;
 }
-
