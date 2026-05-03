@@ -345,7 +345,8 @@ public class CourseServiceImpl implements CourseService {
             .map(
                 e -> {
                   User p = e.getParticipant();
-                  return new CourseParticipantResponseDto(p.getId(), p.getName(), p.getPicture(), p.getEmail());
+                  return new CourseParticipantResponseDto(
+                      p.getId(), p.getName(), p.getPicture(), p.getEmail());
                 })
             .toList();
 
@@ -434,12 +435,19 @@ public class CourseServiceImpl implements CourseService {
           }
         }
 
-        int solvedBefore = status == CourseChallengeSubmissionStatusEnum.LATE
-            ? solvedBeforeDeadlineByKey.getOrDefault(key, 0)
-            : 0;
+        int solvedBefore =
+            status == CourseChallengeSubmissionStatusEnum.LATE
+                ? solvedBeforeDeadlineByKey.getOrDefault(key, 0)
+                : 0;
         entries.add(
             new CourseChallengeSubmissionEntryDto(
-                participantId, challengeId, solvedCount, totalCount, solvedBefore, completedAt, status));
+                participantId,
+                challengeId,
+                solvedCount,
+                totalCount,
+                solvedBefore,
+                completedAt,
+                status));
       }
     }
 

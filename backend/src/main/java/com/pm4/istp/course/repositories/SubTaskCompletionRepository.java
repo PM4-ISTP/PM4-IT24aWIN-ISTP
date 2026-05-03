@@ -1,6 +1,5 @@
 package com.pm4.istp.course.repositories;
 
-import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.SubTaskCompletion;
 import java.util.Collection;
 import java.util.List;

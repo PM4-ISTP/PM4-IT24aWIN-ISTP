@@ -518,7 +518,8 @@ public class CourseController {
             .map(
                 e -> {
                   var p = e.getParticipant();
-                  return new CourseParticipantResponseDto(p.getId(), p.getName(), p.getPicture(), p.getEmail());
+                  return new CourseParticipantResponseDto(
+                      p.getId(), p.getName(), p.getPicture(), p.getEmail());
                 })
             .toList();
     dto.setParticipants(participants);
