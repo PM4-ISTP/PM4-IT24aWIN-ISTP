@@ -101,6 +101,8 @@ public class CourseServiceImpl implements CourseService {
     owner.setAcceptedAt(LocalDateTime.now());
     courseToCreate.addCourseInstructor(owner);
 
+    addEnrollmentIfMissing(courseToCreate, instructorUser);
+
     // Collaborators from the request payload
     if (!course.getInstructors().isEmpty()) {
       for (CreateCourseInstructorRequest req : course.getInstructors()) {
@@ -124,6 +126,23 @@ public class CourseServiceImpl implements CourseService {
       return courseInviteCodeHelper.saveNewCourseWithInviteCode(courseToCreate);
     }
     return courseRepository.save(courseToCreate);
+  }
+
+  private void addEnrollmentIfMissing(Course course, User participant) {
+    boolean alreadyEnrolled =
+        course.getCourseEnrollments().stream()
+            .anyMatch(
+                enrollment ->
+                    enrollment.getParticipant() != null
+                        && participant.getId().equals(enrollment.getParticipant().getId()));
+
+    if (alreadyEnrolled) {
+      return;
+    }
+
+    CourseEnrollment courseEnrollment = new CourseEnrollment();
+    courseEnrollment.setParticipant(participant);
+    course.addCourseEnrollment(courseEnrollment);
   }
 
   @Override

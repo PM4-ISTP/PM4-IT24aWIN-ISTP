@@ -126,6 +126,11 @@ class CourseServiceImplTest {
     assertThat(result.getTitle()).isEqualTo("Secure Coding");
     assertThat(result.getShortDescription()).isEqualTo("Learn the secure coding basics.");
     assertThat(result.getCourseInstructors()).hasSize(2);
+    assertThat(result.getCourseEnrollments()).hasSize(1);
+
+    CourseEnrollment ownerEnrollment = result.getCourseEnrollments().getFirst();
+    assertThat(ownerEnrollment.getParticipant().getId()).isEqualTo(ownerId);
+    assertThat(ownerEnrollment.getCourse()).isSameAs(result);
 
     CourseInstructor ownerRelation = result.getCourseInstructors().stream()
         .filter(ci -> ci.getInstructorRole() == InstructorRoleEnum.OWNER)
@@ -145,6 +150,44 @@ class CourseServiceImplTest {
     assertThat(collaboratorRelation.getCourse()).isSameAs(result);
 
     verify(courseRepository).save(any(Course.class));
+  }
+
+  @Test
+  void createCourse_whenPrivate_autoEnrollsOwnerAndUsesInviteCodeHelper() {
+    UUID ownerId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    owner.setName("Owner");
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
+
+    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
+    when(courseInviteCodeHelper.saveNewCourseWithInviteCode(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    CreateCourseRequest request = new CreateCourseRequest(
+        "Private Secure Coding",
+        "Intro",
+        "Private practice course.",
+        false,
+        true,
+        null,
+        null,
+        List.of(),
+        McAttemptsMode.UNLIMITED);
+
+    Course result = courseService.createCourse(ownerId, request);
+
+    assertThat(result.isPrivate()).isTrue();
+    assertThat(result.getCourseInstructors()).hasSize(1);
+    assertThat(result.getCourseEnrollments()).hasSize(1);
+
+    CourseEnrollment ownerEnrollment = result.getCourseEnrollments().getFirst();
+    assertThat(ownerEnrollment.getParticipant().getId()).isEqualTo(ownerId);
+    assertThat(ownerEnrollment.getCourse()).isSameAs(result);
+
+    verify(courseInviteCodeHelper).saveNewCourseWithInviteCode(any(Course.class));
+    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
