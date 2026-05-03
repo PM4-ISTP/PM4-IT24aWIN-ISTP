@@ -34,6 +34,7 @@ import org.springframework.web.client.RestClientResponseException;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+  private static final String ACCESS_DENIED_ERROR = "Access denied";
 
   @ExceptionHandler(ChallengePodException.class)
   public ResponseEntity<ErrorDto> handleChallengePodException(ChallengePodException ex) {
@@ -48,7 +49,7 @@ public class GlobalExceptionHandler {
       ChallengeAccessDeniedException ex) {
     log.error("Caught ChallengeAccessDeniedException", ex);
     ErrorDto errorDto = new ErrorDto();
-    errorDto.setError("Access denied");
+    errorDto.setError(ACCESS_DENIED_ERROR);
     return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
   }
 
@@ -56,7 +57,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorDto> handleAccessDeniedException(AccessDeniedException ex) {
     log.warn("Caught AccessDeniedException: {}", ex.getMessage());
     ErrorDto errorDto = new ErrorDto();
-    errorDto.setError("Access denied");
+    errorDto.setError(ACCESS_DENIED_ERROR);
     return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
   }
 
@@ -73,7 +74,7 @@ public class GlobalExceptionHandler {
       CourseAccessDeniedException ex) {
     log.error("Caught CourseAccessDeniedException", ex);
     ErrorDto errorDto = new ErrorDto();
-    errorDto.setError("Access denied");
+    errorDto.setError(ACCESS_DENIED_ERROR);
     return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
   }
 

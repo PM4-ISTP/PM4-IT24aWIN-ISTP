@@ -198,12 +198,18 @@ class CourseInviteCodeHelperTest {
 
     @Override
     protected void doBegin(Object transaction, org.springframework.transaction.TransactionDefinition definition)
-        throws TransactionException {}
+        throws TransactionException {
+      // No resources are opened by this unit-test transaction manager.
+    }
 
     @Override
-    protected void doCommit(DefaultTransactionStatus status) throws TransactionException {}
+    protected void doCommit(DefaultTransactionStatus status) throws TransactionException {
+      // Nothing is persisted by this unit-test transaction manager.
+    }
 
     @Override
-    protected void doRollback(DefaultTransactionStatus status) throws TransactionException {}
+    protected void doRollback(DefaultTransactionStatus status) throws TransactionException {
+      // Nothing is persisted by this unit-test transaction manager.
+    }
   }
 }

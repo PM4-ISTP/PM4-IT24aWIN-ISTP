@@ -61,6 +61,8 @@ public class ChallengeServiceImpl implements ChallengeService {
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
   private static final String CHALLENGE_NOT_FOUND_MSG = "Challenge with ID '%s' not found";
   private static final String SUB_TASK_NOT_FOUND_MSG = "Sub-task with ID '%s' not found";
+  private static final String SUB_TASK_NOT_IN_CHALLENGE_MSG =
+      "Sub-task '%s' does not belong to challenge '%s'";
 
   private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
 
@@ -410,11 +412,7 @@ public class ChallengeServiceImpl implements ChallengeService {
   @Transactional
   public SubTaskSubmissionResponseDto submitSubTaskFlag(
       UUID userId, UUID challengeId, UUID subTaskId, String flag) {
-    User user =
-        userRepository
-            .findByIdAndDeletedAtIsNull(userId)
-            .orElseThrow(
-                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+    User user = findActiveUser(userId);
 
     SubTask subTask =
         subTaskRepository
@@ -425,7 +423,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     if (!subTask.getChallenge().getId().equals(challengeId)) {
       throw new SubTaskNotFoundException(
-          String.format("Sub-task '%s' does not belong to challenge '%s'", subTaskId, challengeId));
+          String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, subTaskId, challengeId));
     }
 
     verifyEnrolledInChallengeCourse(userId, subTask.getChallenge());
@@ -471,142 +469,149 @@ public class ChallengeServiceImpl implements ChallengeService {
   @Transactional
   public ChoiceSubmissionResponseDto submitSubTaskChoice(
       UUID userId, UUID courseId, UUID challengeId, UUID subTaskId, UUID selectedOptionId) {
-    User user =
-        userRepository
-            .findByIdAndDeletedAtIsNull(userId)
-            .orElseThrow(
-                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+    User user = findActiveUser(userId);
+    SubTask subTask = findSubTaskInChallenge(subTaskId, challengeId);
+    verifyEnrolledInChallengeCourse(userId, subTask.getChallenge());
 
+    McAttemptsMode mode = getCourseMcAttemptsMode(courseId);
+    Optional<StudentOptionSubmission> existing =
+        studentOptionSubmissionRepository.findByUserIdAndSubTaskId(userId, subTaskId);
+    if (existing.isPresent()) {
+      return buildChoiceResponseForExistingSubmission(existing.get(), userId, challengeId, subTask);
+    }
+
+    SubTaskOption selectedOption = findSelectedOption(subTask, selectedOptionId);
+    boolean correct = selectedOption.isCorrect();
+
+    if (mode == McAttemptsMode.ONCE) {
+      return handleOnceChoiceSubmission(
+          user, userId, challengeId, subTask, selectedOption, correct);
+    }
+    if (!correct) {
+      return buildChoiceResponse(false, userId, subTask.getChallenge(), challengeId, subTask);
+    }
+    return handleCorrectUnlimitedChoiceSubmission(
+        user, userId, challengeId, subTask, selectedOption);
+  }
+
+  private ChoiceSubmissionResponseDto buildChoiceResponseForExistingSubmission(
+      StudentOptionSubmission submission, UUID userId, UUID challengeId, SubTask subTask) {
+    return buildChoiceResponse(
+        submission.isCorrect(),
+        userId,
+        subTask.getChallenge(),
+        challengeId,
+        submission.isCorrect() ? null : subTask);
+  }
+
+  private User findActiveUser(UUID userId) {
+    return userRepository
+        .findByIdAndDeletedAtIsNull(userId)
+        .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+  }
+
+  private SubTask findSubTaskInChallenge(UUID subTaskId, UUID challengeId) {
     SubTask subTask =
         subTaskRepository
             .findById(subTaskId)
             .orElseThrow(
                 () ->
                     new SubTaskNotFoundException(String.format(SUB_TASK_NOT_FOUND_MSG, subTaskId)));
-
     if (!subTask.getChallenge().getId().equals(challengeId)) {
       throw new SubTaskNotFoundException(
-          String.format("Sub-task '%s' does not belong to challenge '%s'", subTaskId, challengeId));
+          String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, subTaskId, challengeId));
     }
+    return subTask;
+  }
 
-    verifyEnrolledInChallengeCourse(userId, subTask.getChallenge());
-
-    // Determine which attempt mode this course uses
+  private McAttemptsMode getCourseMcAttemptsMode(UUID courseId) {
     Course course =
         courseRepository
             .findById(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
-    McAttemptsMode mode =
-        course.getMcAttemptsMode() != null ? course.getMcAttemptsMode() : McAttemptsMode.UNLIMITED;
+    return course.getMcAttemptsMode() != null
+        ? course.getMcAttemptsMode()
+        : McAttemptsMode.UNLIMITED;
+  }
 
-    // Return existing submission if already saved (applies to ONCE mode and correct UNLIMITED)
-    Optional<StudentOptionSubmission> existing =
-        studentOptionSubmissionRepository.findByUserIdAndSubTaskId(userId, subTaskId);
-    if (existing.isPresent()) {
-      StudentOptionSubmission prev = existing.get();
+  private SubTaskOption findSelectedOption(SubTask subTask, UUID selectedOptionId) {
+    return subTask.getOptions().stream()
+        .filter(option -> option.getId().equals(selectedOptionId))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new SubTaskNotFoundException(
+                    String.format(
+                        "Option '%s' does not belong to sub-task '%s'",
+                        selectedOptionId, subTask.getId())));
+  }
+
+  private ChoiceSubmissionResponseDto handleOnceChoiceSubmission(
+      User user,
+      UUID userId,
+      UUID challengeId,
+      SubTask subTask,
+      SubTaskOption selectedOption,
+      boolean correct) {
+    try {
+      saveChoiceSubmission(user, subTask, selectedOption, correct);
+    } catch (DataIntegrityViolationException ex) {
       return buildChoiceResponse(
-          prev.isCorrect(),
-          userId,
-          subTask.getChallenge(),
-          challengeId,
-          prev.isCorrect() ? null : subTask);
+          correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
     }
-
-    SubTaskOption selectedOption =
-        subTask.getOptions().stream()
-            .filter(o -> o.getId().equals(selectedOptionId))
-            .findFirst()
-            .orElseThrow(
-                () ->
-                    new SubTaskNotFoundException(
-                        String.format(
-                            "Option '%s' does not belong to sub-task '%s'",
-                            selectedOptionId, subTaskId)));
-
-    boolean correct = selectedOption.isCorrect();
-
-    if (mode == McAttemptsMode.ONCE) {
-      // -----------------------------------------------------------------------
-      // ONCE mode: always persist the submission (even if wrong) and always mark
-      // the sub-task as completed so progress is counted.
-      // -----------------------------------------------------------------------
-      StudentOptionSubmission submission = new StudentOptionSubmission();
-      submission.setUser(user);
-      submission.setSubTask(subTask);
-      submission.setSelectedOption(selectedOption);
-      submission.setCorrect(correct);
-      submission.setSubmittedAt(LocalDateTime.now());
-      try {
-        studentOptionSubmissionRepository.saveAndFlush(submission);
-      } catch (DataIntegrityViolationException ex) {
-        // Concurrent submission — return current state
-        return buildChoiceResponse(
+    saveCompletionIfMissing(user, userId, subTask);
+    ChoiceSubmissionResponseDto response =
+        buildChoiceResponse(
             correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
-      }
+    awardBadgeIfChallengeSolved(response, userId, challengeId);
+    return response;
+  }
 
-      // Mark as completed regardless of correctness (ONCE = attempted = done)
-      if (!subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId)) {
-        SubTaskCompletion completion = new SubTaskCompletion();
-        completion.setUser(user);
-        completion.setSubTask(subTask);
-        completion.setSolvedAt(LocalDateTime.now());
-        try {
-          subTaskCompletionRepository.saveAndFlush(completion);
-        } catch (DataIntegrityViolationException ignored) {
-          // Already recorded by concurrent request
-        }
-      }
+  private ChoiceSubmissionResponseDto handleCorrectUnlimitedChoiceSubmission(
+      User user, UUID userId, UUID challengeId, SubTask subTask, SubTaskOption selectedOption) {
+    try {
+      saveChoiceSubmission(user, subTask, selectedOption, true);
+    } catch (DataIntegrityViolationException ex) {
+      return buildChoiceResponse(true, userId, subTask.getChallenge(), challengeId, null);
+    }
+    saveCompletionIfMissing(user, userId, subTask);
+    ChoiceSubmissionResponseDto response =
+        buildChoiceResponse(true, userId, subTask.getChallenge(), challengeId, null);
+    awardBadgeIfChallengeSolved(response, userId, challengeId);
+    return response;
+  }
 
-      ChoiceSubmissionResponseDto response =
-          buildChoiceResponse(
-              correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
-      if (response.isChallengeSolved()) {
-        badgeService.tryAwardBadgesForChallenge(userId, challengeId);
-      }
-      return response;
+  private void saveChoiceSubmission(
+      User user, SubTask subTask, SubTaskOption selectedOption, boolean correct) {
+    StudentOptionSubmission submission = new StudentOptionSubmission();
+    submission.setUser(user);
+    submission.setSubTask(subTask);
+    submission.setSelectedOption(selectedOption);
+    submission.setCorrect(correct);
+    submission.setSubmittedAt(LocalDateTime.now());
+    studentOptionSubmissionRepository.saveAndFlush(submission);
+  }
 
-    } else {
-      // -----------------------------------------------------------------------
-      // UNLIMITED mode: only persist and complete when the answer is correct.
-      // Wrong answers are NOT saved, so the student can retry.
-      // -----------------------------------------------------------------------
-      if (!correct) {
-        // Return temporary response without persisting anything
-        return buildChoiceResponse(false, userId, subTask.getChallenge(), challengeId, subTask);
-      }
+  private void saveCompletionIfMissing(User user, UUID userId, SubTask subTask) {
+    if (subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTask.getId())) {
+      return;
+    }
+    SubTaskCompletion completion = new SubTaskCompletion();
+    completion.setUser(user);
+    completion.setSubTask(subTask);
+    completion.setSolvedAt(LocalDateTime.now());
+    try {
+      subTaskCompletionRepository.saveAndFlush(completion);
+    } catch (DataIntegrityViolationException ignored) {
+      // Already recorded by concurrent request
+    }
+  }
 
-      // Correct answer — persist submission and completion
-      StudentOptionSubmission submission = new StudentOptionSubmission();
-      submission.setUser(user);
-      submission.setSubTask(subTask);
-      submission.setSelectedOption(selectedOption);
-      submission.setCorrect(true);
-      submission.setSubmittedAt(LocalDateTime.now());
-      try {
-        studentOptionSubmissionRepository.saveAndFlush(submission);
-      } catch (DataIntegrityViolationException ex) {
-        return buildChoiceResponse(true, userId, subTask.getChallenge(), challengeId, null);
-      }
-
-      if (!subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId)) {
-        SubTaskCompletion completion = new SubTaskCompletion();
-        completion.setUser(user);
-        completion.setSubTask(subTask);
-        completion.setSolvedAt(LocalDateTime.now());
-        try {
-          subTaskCompletionRepository.saveAndFlush(completion);
-        } catch (DataIntegrityViolationException ignored) {
-          // Already recorded by concurrent request
-        }
-      }
-
-      ChoiceSubmissionResponseDto response =
-          buildChoiceResponse(true, userId, subTask.getChallenge(), challengeId, null);
-      if (response.isChallengeSolved()) {
-        badgeService.tryAwardBadgesForChallenge(userId, challengeId);
-      }
-      return response;
+  private void awardBadgeIfChallengeSolved(
+      ChoiceSubmissionResponseDto response, UUID userId, UUID challengeId) {
+    if (response.isChallengeSolved()) {
+      badgeService.tryAwardBadgesForChallenge(userId, challengeId);
     }
   }
 
@@ -659,10 +664,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
   private void populateStudentProgress(ChallengeStudentDto dto, UUID userId, Challenge entity) {
     List<SubTaskStudentDto> subTasks = dto.getSubTasks() == null ? List.of() : dto.getSubTasks();
-    List<UUID> subTaskIds = new ArrayList<>();
-    for (SubTaskStudentDto st : subTasks) {
-      subTaskIds.add(st.getId());
-    }
+    List<UUID> subTaskIds = subTaskIds(subTasks);
     Set<UUID> solvedIds =
         subTaskIds.isEmpty()
             ? Set.of()
@@ -673,48 +675,78 @@ public class ChallengeServiceImpl implements ChallengeService {
       flagsById.put(st.getId(), st.getFlag());
     }
 
-    // Load MC submissions for this user in one pass
-    Map<UUID, UUID> selectedOptionBySubTask = new HashMap<>();
-    Map<UUID, UUID> correctOptionBySubTask = new HashMap<>();
-    for (SubTask st : entity.getSubTasks()) {
-      if (st.getType() == SubTaskType.MULTIPLE_CHOICE) {
-        studentOptionSubmissionRepository
-            .findByUserIdAndSubTaskId(userId, st.getId())
-            .ifPresent(
-                sub -> {
-                  selectedOptionBySubTask.put(st.getId(), sub.getSelectedOption().getId());
-                  // Expose correct option only when the student got it wrong
-                  if (!sub.isCorrect()) {
-                    st.getOptions().stream()
-                        .filter(SubTaskOption::isCorrect)
-                        .map(SubTaskOption::getId)
-                        .findFirst()
-                        .ifPresent(cid -> correctOptionBySubTask.put(st.getId(), cid));
-                  }
-                });
-      }
-    }
+    Map<UUID, UUID> selectedOptionBySubTask = loadSelectedOptions(userId, entity.getSubTasks());
+    Map<UUID, UUID> correctOptionBySubTask =
+        loadCorrectOptionsForWrongAnswers(userId, entity.getSubTasks());
 
     int solvedCount = 0;
     for (SubTaskStudentDto st : subTasks) {
-      boolean solved = solvedIds.contains(st.getId());
-      st.setSolved(solved);
-      if (solved) {
-        if (st.getType() == SubTaskType.FLAG) {
-          st.setSolvedFlag(flagsById.get(st.getId()));
-        }
-        solvedCount++;
-      }
-      if (selectedOptionBySubTask.containsKey(st.getId())) {
-        st.setSelectedOptionId(selectedOptionBySubTask.get(st.getId()));
-      }
-      if (correctOptionBySubTask.containsKey(st.getId())) {
-        st.setCorrectOptionId(correctOptionBySubTask.get(st.getId()));
-      }
+      solvedCount +=
+          applySubTaskProgress(
+              st, solvedIds, flagsById, selectedOptionBySubTask, correctOptionBySubTask);
     }
     dto.setTotalSubTaskCount(subTasks.size());
     dto.setSolvedSubTaskCount(solvedCount);
     dto.setSolved(!subTasks.isEmpty() && solvedCount == subTasks.size());
+  }
+
+  private List<UUID> subTaskIds(List<SubTaskStudentDto> subTasks) {
+    List<UUID> ids = new ArrayList<>();
+    for (SubTaskStudentDto subTask : subTasks) {
+      ids.add(subTask.getId());
+    }
+    return ids;
+  }
+
+  private Map<UUID, UUID> loadSelectedOptions(UUID userId, List<SubTask> subTasks) {
+    Map<UUID, UUID> selectedOptionBySubTask = new HashMap<>();
+    for (SubTask subTask : subTasks) {
+      if (subTask.getType() == SubTaskType.MULTIPLE_CHOICE) {
+        studentOptionSubmissionRepository
+            .findByUserIdAndSubTaskId(userId, subTask.getId())
+            .ifPresent(
+                sub ->
+                    selectedOptionBySubTask.put(subTask.getId(), sub.getSelectedOption().getId()));
+      }
+    }
+    return selectedOptionBySubTask;
+  }
+
+  private Map<UUID, UUID> loadCorrectOptionsForWrongAnswers(UUID userId, List<SubTask> subTasks) {
+    Map<UUID, UUID> correctOptionBySubTask = new HashMap<>();
+    for (SubTask subTask : subTasks) {
+      if (subTask.getType() == SubTaskType.MULTIPLE_CHOICE) {
+        studentOptionSubmissionRepository
+            .findByUserIdAndSubTaskId(userId, subTask.getId())
+            .filter(sub -> !sub.isCorrect())
+            .flatMap(sub -> findCorrectOptionId(subTask))
+            .ifPresent(correctId -> correctOptionBySubTask.put(subTask.getId(), correctId));
+      }
+    }
+    return correctOptionBySubTask;
+  }
+
+  private Optional<UUID> findCorrectOptionId(SubTask subTask) {
+    return subTask.getOptions().stream()
+        .filter(SubTaskOption::isCorrect)
+        .map(SubTaskOption::getId)
+        .findFirst();
+  }
+
+  private int applySubTaskProgress(
+      SubTaskStudentDto subTask,
+      Set<UUID> solvedIds,
+      Map<UUID, String> flagsById,
+      Map<UUID, UUID> selectedOptionBySubTask,
+      Map<UUID, UUID> correctOptionBySubTask) {
+    boolean solved = solvedIds.contains(subTask.getId());
+    subTask.setSolved(solved);
+    if (solved && subTask.getType() == SubTaskType.FLAG) {
+      subTask.setSolvedFlag(flagsById.get(subTask.getId()));
+    }
+    subTask.setSelectedOptionId(selectedOptionBySubTask.get(subTask.getId()));
+    subTask.setCorrectOptionId(correctOptionBySubTask.get(subTask.getId()));
+    return solved ? 1 : 0;
   }
 
   // -------------------------------------------------------------------------
@@ -760,7 +792,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     if (!subTask.getChallenge().getId().equals(challengeId)) {
       throw new SubTaskNotFoundException(
-          String.format("Sub-task '%s' does not belong to challenge '%s'", subTaskId, challengeId));
+          String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, subTaskId, challengeId));
     }
 
     if (subTask.getFlag() != null && !subTask.getFlag().isBlank()) {
