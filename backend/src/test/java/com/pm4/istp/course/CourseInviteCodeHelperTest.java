@@ -14,19 +14,28 @@ import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.AbstractPlatformTransactionManager;
+import org.springframework.transaction.support.DefaultTransactionStatus;
 
 @ExtendWith(MockitoExtension.class)
 class CourseInviteCodeHelperTest {
 
   @Mock private CourseRepository courseRepository;
 
-  @InjectMocks private CourseInviteCodeHelper courseInviteCodeHelper;
+  private CourseInviteCodeHelper courseInviteCodeHelper;
+
+  @BeforeEach
+  void setUp() {
+    courseInviteCodeHelper =
+        new CourseInviteCodeHelper(courseRepository, new NoOpTransactionManager());
+  }
 
   // ── generateCode ─────────────────────────────────────────────────────────────
 
@@ -178,5 +187,23 @@ class CourseInviteCodeHelperTest {
         .hasMessageContaining("10 attempts");
 
     verify(courseRepository, times(10)).save(course);
+  }
+
+  private static final class NoOpTransactionManager extends AbstractPlatformTransactionManager {
+
+    @Override
+    protected Object doGetTransaction() throws TransactionException {
+      return new Object();
+    }
+
+    @Override
+    protected void doBegin(Object transaction, org.springframework.transaction.TransactionDefinition definition)
+        throws TransactionException {}
+
+    @Override
+    protected void doCommit(DefaultTransactionStatus status) throws TransactionException {}
+
+    @Override
+    protected void doRollback(DefaultTransactionStatus status) throws TransactionException {}
   }
 }
