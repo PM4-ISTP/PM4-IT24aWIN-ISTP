@@ -118,6 +118,7 @@ export interface CourseDetailResponseDto {
   inviteCode?: string | null;
   imageUrl?: string | null;
   topic?: string | null;
+  mcAttemptsMode?: string | null;
   courseInstructors: CourseInstructorResponseDto[];
   participants: CourseParticipantDto[];
   courseChallenges: CourseChallengeResponseDto[];
