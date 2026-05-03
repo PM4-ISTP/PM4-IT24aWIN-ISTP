@@ -1,5 +1,6 @@
 package com.pm4.istp.challengepod;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -84,7 +85,6 @@ class ChallengePodSchedulerTest {
                 .when(challengePodService)
                 .reapExpiredPods(3600);
 
-        // should swallow the exception and not propagate it
-        scheduler.reap();
+        assertThatCode(() -> scheduler.reap()).doesNotThrowAnyException();
     }
 }
