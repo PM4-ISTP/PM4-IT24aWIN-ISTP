@@ -668,15 +668,15 @@ export function ChallengePlayView({
                             if (current.isSolved && isSelected && !isOnceModeWrongAnswer) {
                               bg = "rgba(20,184,166,0.12)";
                               border = "rgba(20,184,166,0.4)";
-                            // Correct option highlight (after wrong answer in any mode)
+                              // Correct option highlight (after wrong answer in any mode)
                             } else if (isCorrectOpt && hasWrongAnswer) {
                               bg = "rgba(20,184,166,0.10)";
                               border = "rgba(20,184,166,0.35)";
-                            // Wrong selected option: show red
+                              // Wrong selected option: show red
                             } else if (isWrongSelected) {
                               bg = "rgba(248,113,113,0.10)";
                               border = "rgba(248,113,113,0.35)";
-                            // Normal selection before submit
+                              // Normal selection before submit
                             } else if (!hasWrongAnswer && !current.isSolved && isSelected) {
                               bg = "rgba(59,130,246,0.10)";
                               border = "rgba(59,130,246,0.4)";
@@ -712,12 +712,14 @@ export function ChallengePlayView({
                                     style={{
                                       flex: 1,
                                       // Strikethrough on wrong selected option in ONCE mode
-                                      textDecoration: isOnceModeWrongAnswer && isWrongSelected
-                                        ? "line-through"
-                                        : undefined,
-                                      color: isOnceModeWrongAnswer && isWrongSelected
-                                        ? "var(--mantine-color-red-4)"
-                                        : undefined,
+                                      textDecoration:
+                                        isOnceModeWrongAnswer && isWrongSelected
+                                          ? "line-through"
+                                          : undefined,
+                                      color:
+                                        isOnceModeWrongAnswer && isWrongSelected
+                                          ? "var(--mantine-color-red-4)"
+                                          : undefined,
                                     }}
                                   >
                                     {opt.text}
@@ -753,13 +755,13 @@ export function ChallengePlayView({
                         onClick={() => void handleSubmitChoice()}
                         disabled={current.isSolved || hasWrongAnswer || !selectedOption}
                         loading={submitting}
-                        color={isOnceModeWrongAnswer ? "orange" : current.isSolved ? "teal" : "blue"}
+                        color={
+                          isOnceModeWrongAnswer ? "orange" : current.isSolved ? "teal" : "blue"
+                        }
                         leftSection={
-                          isOnceModeWrongAnswer
-                            ? undefined
-                            : current.isSolved
-                              ? <IconCheck size={16} />
-                              : undefined
+                          isOnceModeWrongAnswer ? undefined : current.isSolved ? (
+                            <IconCheck size={16} />
+                          ) : undefined
                         }
                       >
                         {isOnceModeWrongAnswer

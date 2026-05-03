@@ -559,10 +559,19 @@ export default function EditCourse() {
                 <Select
                   label="Multiple-Choice Attempts"
                   value={mcAttemptsMode}
-                  onChange={(value) => { if (value) setMcAttemptsMode(value); }}
+                  onChange={(value) => {
+                    if (value) setMcAttemptsMode(value);
+                  }}
                   data={[
-                    { value: "UNLIMITED", label: "Unlimited — retry until correct (self-learning)" },
-                    { value: "ONCE", label: "Once — one attempt, graded regardless of correctness (Praktikum / exam)" },
+                    {
+                      value: "UNLIMITED",
+                      label: "Unlimited — retry until correct (self-learning)",
+                    },
+                    {
+                      value: "ONCE",
+                      label:
+                        "Once — one attempt, graded regardless of correctness (Praktikum / exam)",
+                    },
                   ]}
                   description="Controls how many times students can attempt MC questions in this course."
                   allowDeselect={false}
