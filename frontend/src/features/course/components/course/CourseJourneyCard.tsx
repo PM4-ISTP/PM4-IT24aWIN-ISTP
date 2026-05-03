@@ -9,12 +9,7 @@ import {
   ThemeIcon,
   Tooltip,
 } from "@mantine/core";
-import {
-  IconCheck,
-  IconClock,
-  IconFlame,
-  IconLock,
-} from "@tabler/icons-react";
+import { IconCheck, IconClock, IconFlame, IconLock } from "@tabler/icons-react";
 import { getInitials } from "@/src/shared/lib/utils";
 import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
 
@@ -177,11 +172,7 @@ function ChallengesPlaceholder() {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function CourseJourneyCard({
-  lessons,
-  challenges,
-  instructor,
-}: CourseJourneyCardProps) {
+export function CourseJourneyCard({ lessons, challenges, instructor }: CourseJourneyCardProps) {
   const lessonPercent = lessons ? calcPercent(lessons.finished, lessons.total) : 0;
   const challengePercent = challenges ? calcPercent(challenges.completed, challenges.total) : 0;
 
@@ -265,7 +256,6 @@ export function CourseJourneyCard({
           ) : (
             <ChallengesPlaceholder />
           )}
-
         </Stack>
 
         {/* ── Instructor section (optional) ── */}
