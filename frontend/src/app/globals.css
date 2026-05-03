@@ -86,6 +86,23 @@ body {
   color: var(--ds-text-primary);
   min-height: 160px;
 }
+.mantine-RichTextEditor-content .ProseMirror ul,
+.course-description ul {
+  list-style: disc;
+}
+.mantine-RichTextEditor-content .ProseMirror ol,
+.course-description ol {
+  list-style: decimal;
+}
+.mantine-RichTextEditor-content .ProseMirror ul,
+.mantine-RichTextEditor-content .ProseMirror ol {
+  padding-left: 1.5em;
+  margin-bottom: 0.75em;
+}
+.mantine-RichTextEditor-content .ProseMirror li {
+  margin-bottom: 0.25em;
+  line-height: 1.5;
+}
 
 /* ── Mantine Select / Combobox dropdown dark style ───────────────────────── */
 .mantine-Select-dropdown,
