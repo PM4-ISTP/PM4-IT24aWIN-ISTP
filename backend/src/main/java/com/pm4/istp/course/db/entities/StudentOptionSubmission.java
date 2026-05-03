@@ -38,9 +38,14 @@ public class StudentOptionSubmission {
   private SubTask subTask;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "selected_option_id", nullable = false,
-      foreignKey = @ForeignKey(name = "fk_student_option_submission_option",
-          foreignKeyDefinition = "FOREIGN KEY (selected_option_id) REFERENCES sub_task_options(id) ON DELETE CASCADE"))
+  @JoinColumn(
+      name = "selected_option_id",
+      nullable = false,
+      foreignKey =
+          @ForeignKey(
+              name = "fk_student_option_submission_option",
+              foreignKeyDefinition =
+                  "FOREIGN KEY (selected_option_id) REFERENCES sub_task_options(id) ON DELETE CASCADE"))
   private SubTaskOption selectedOption;
 
   @Column(name = "is_correct", nullable = false)
