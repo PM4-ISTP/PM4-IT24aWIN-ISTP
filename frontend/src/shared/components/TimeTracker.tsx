@@ -50,11 +50,8 @@ async function seedFromServer(userId: string | null): Promise<void> {
       localStorage.setItem(storageKey(userId), String(serverTotal));
       localStorage.setItem(syncedKey(userId), String(serverTotal));
     } else {
-      // Local has unsynchronised delta — just record what the server knows as the sync baseline
-      const localSynced = Number(localStorage.getItem(syncedKey(userId)) ?? "0");
-      if (serverTotal > localSynced) {
-        localStorage.setItem(syncedKey(userId), String(serverTotal));
-      }
+      // Local has unsynchronised delta — record what the server knows as the sync baseline
+      localStorage.setItem(syncedKey(userId), String(serverTotal));
     }
   } catch {
     // ignore — tracker will still work locally
