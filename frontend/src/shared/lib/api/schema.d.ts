@@ -930,6 +930,7 @@ export interface components {
       /** Format: date-time */
       updatedAt?: string;
       isSolved?: boolean;
+      mcAttemptsMode?: string;
     };
     PublicCourseDetailResponseDto: {
       /** Format: uuid */
