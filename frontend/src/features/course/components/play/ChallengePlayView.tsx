@@ -313,8 +313,10 @@ export function ChallengePlayView({
   async function handleSubmitChoice() {
     if (!current || !current.id || !challenge.id || !selectedOption) return;
 
+    const isOnceMode = (challenge.mcAttemptsMode ?? "UNLIMITED") === "ONCE";
+
     setSubmitting(true);
-    const result = await submitSubTaskChoice(challenge.id, current.id, selectedOption);
+    const result = await submitSubTaskChoice(challenge.id, current.id, selectedOption, courseId);
     setSubmitting(false);
 
     if (!result.success) {
@@ -323,30 +325,30 @@ export function ChallengePlayView({
     }
 
     if (result.data.isCorrect) {
+      // Correct in any mode → mark solved
       updateSubTaskSolved(current.id, { selectedOptionId: selectedOption });
       notifications.show({
         color: "teal",
         title: "Correct answer!",
         message: result.data.isChallengeSolved ? "Lab completed. Nice work!" : "Challenge solved.",
       });
+    } else if (isOnceMode) {
+      // ONCE mode + wrong: mark as done (progress counts), highlight correct option
+      updateSubTaskSolved(current.id, {
+        selectedOptionId: selectedOption,
+        correctOptionId: result.data.correctOptionId ?? undefined,
+      });
+      notifications.show({
+        color: "orange",
+        title: "Incorrect answer",
+        message: "That was your only attempt — the correct answer is highlighted.",
+      });
     } else {
-      // Record which option was picked and the correct option
-      setChallenge((prev) => ({
-        ...prev,
-        subTasks: (prev.subTasks ?? []).map((st) =>
-          st.id === current.id
-            ? {
-                ...st,
-                selectedOptionId: selectedOption,
-                correctOptionId: result.data.correctOptionId,
-              }
-            : st
-        ),
-      }));
+      // UNLIMITED mode + wrong: no state saved, allow retry
       notifications.show({
         color: "red",
         title: "Incorrect answer",
-        message: "That was wrong — the correct answer is highlighted below.",
+        message: "Not quite — try again!",
       });
     }
   }
@@ -381,7 +383,11 @@ export function ChallengePlayView({
     ? (current.selectedOptionId ?? selectedOption)
     : selectedOption;
   const correctOptionId = current?.correctOptionId ?? null;
-  const hasWrongAnswer = Boolean(!current?.isSolved && current?.selectedOptionId);
+  // ONCE mode: subtask is "solved" but the answer was wrong (correctOptionId is set on the subtask)
+  const isOnceModeWrongAnswer = Boolean(current?.isSolved && current?.correctOptionId);
+  // UNLIMITED mode: a wrong option was picked this session but not yet persisted → lock options temporarily
+  const hasWrongAnswer =
+    Boolean(!current?.isSolved && current?.selectedOptionId) || isOnceModeWrongAnswer;
 
   return (
     <Box
@@ -647,7 +653,7 @@ export function ChallengePlayView({
                       <Radio.Group
                         value={displaySelectedOption}
                         onChange={(val) => {
-                          if (!current.isSolved) setSelectedOption(val);
+                          if (!current.isSolved && !hasWrongAnswer) setSelectedOption(val);
                         }}
                       >
                         <Stack gap="xs">
@@ -658,16 +664,20 @@ export function ChallengePlayView({
 
                             let bg = "rgba(255,255,255,0.02)";
                             let border: string | undefined = undefined;
-                            if (current.isSolved && isSelected) {
+                            // Correct solved: selected option shown teal
+                            if (current.isSolved && isSelected && !isOnceModeWrongAnswer) {
                               bg = "rgba(20,184,166,0.12)";
                               border = "rgba(20,184,166,0.4)";
-                            } else if (isCorrectOpt) {
+                            // Correct option highlight (after wrong answer in any mode)
+                            } else if (isCorrectOpt && hasWrongAnswer) {
                               bg = "rgba(20,184,166,0.10)";
                               border = "rgba(20,184,166,0.35)";
+                            // Wrong selected option: show red
                             } else if (isWrongSelected) {
                               bg = "rgba(248,113,113,0.10)";
                               border = "rgba(248,113,113,0.35)";
-                            } else if (!hasWrongAnswer && isSelected) {
+                            // Normal selection before submit
+                            } else if (!hasWrongAnswer && !current.isSolved && isSelected) {
                               bg = "rgba(59,130,246,0.10)";
                               border = "rgba(59,130,246,0.4)";
                             }
@@ -697,17 +707,31 @@ export function ChallengePlayView({
                                     disabled={locked}
                                     style={{ flexShrink: 0 }}
                                   />
-                                  <Text size="sm" style={{ flex: 1 }}>
+                                  <Text
+                                    size="sm"
+                                    style={{
+                                      flex: 1,
+                                      // Strikethrough on wrong selected option in ONCE mode
+                                      textDecoration: isOnceModeWrongAnswer && isWrongSelected
+                                        ? "line-through"
+                                        : undefined,
+                                      color: isOnceModeWrongAnswer && isWrongSelected
+                                        ? "var(--mantine-color-red-4)"
+                                        : undefined,
+                                    }}
+                                  >
                                     {opt.text}
                                   </Text>
-                                  {current.isSolved && isSelected && (
+                                  {/* Correct answer checkmark (correct solved, not once-wrong) */}
+                                  {current.isSolved && isSelected && !isOnceModeWrongAnswer && (
                                     <IconCheck
                                       size={15}
                                       color="var(--mantine-color-teal-4)"
                                       style={{ flexShrink: 0 }}
                                     />
                                   )}
-                                  {isCorrectOpt && !current.isSolved && (
+                                  {/* Correct option highlight after any wrong answer */}
+                                  {isCorrectOpt && hasWrongAnswer && (
                                     <IconCheck
                                       size={15}
                                       color="var(--mantine-color-teal-4)"
@@ -729,10 +753,20 @@ export function ChallengePlayView({
                         onClick={() => void handleSubmitChoice()}
                         disabled={current.isSolved || hasWrongAnswer || !selectedOption}
                         loading={submitting}
-                        color={current.isSolved ? "teal" : "blue"}
-                        leftSection={current.isSolved ? <IconCheck size={16} /> : undefined}
+                        color={isOnceModeWrongAnswer ? "orange" : current.isSolved ? "teal" : "blue"}
+                        leftSection={
+                          isOnceModeWrongAnswer
+                            ? undefined
+                            : current.isSolved
+                              ? <IconCheck size={16} />
+                              : undefined
+                        }
                       >
-                        {current.isSolved ? "Answered" : "Submit answer"}
+                        {isOnceModeWrongAnswer
+                          ? "Attempted (wrong)"
+                          : current.isSolved
+                            ? "Answered"
+                            : "Submit answer"}
                       </Button>
                     </Stack>
                   )}

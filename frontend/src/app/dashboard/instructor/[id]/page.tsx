@@ -106,6 +106,7 @@ export default function EditCourse() {
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const shortDescriptionCharCount = shortDescription.length;
 
+  const [mcAttemptsMode, setMcAttemptsMode] = useState<string>("UNLIMITED");
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
@@ -143,6 +144,7 @@ export default function EditCourse() {
       setImageUrl(course.imageUrl ?? "");
       setTopic(course.topic ?? null);
       setInviteCode(course.inviteCode ?? null);
+      setMcAttemptsMode((course.mcAttemptsMode as string) ?? "UNLIMITED");
 
       // Extract collaborators (not OWNER) for the multi-select
       const collaborators = course.courseInstructors.filter(
@@ -213,6 +215,7 @@ export default function EditCourse() {
       imageUrl: imageUrl.trim() || null,
       topic: topic,
       collaboratorIds: selectedInstructors,
+      mcAttemptsMode,
     });
 
     if (!result.success) {
@@ -550,6 +553,18 @@ export default function EditCourse() {
                     { value: "PRIVATE", label: "Private (invite code only)" },
                   ]}
                   description="Choose exactly one state. Draft keeps it hidden, Public shows in catalog, Private is join-by-code only."
+                  allowDeselect={false}
+                />
+
+                <Select
+                  label="Multiple-Choice Attempts"
+                  value={mcAttemptsMode}
+                  onChange={(value) => { if (value) setMcAttemptsMode(value); }}
+                  data={[
+                    { value: "UNLIMITED", label: "Unlimited — retry until correct (self-learning)" },
+                    { value: "ONCE", label: "Once — one attempt, graded regardless of correctness (Praktikum / exam)" },
+                  ]}
+                  description="Controls how many times students can attempt MC questions in this course."
                   allowDeselect={false}
                 />
 

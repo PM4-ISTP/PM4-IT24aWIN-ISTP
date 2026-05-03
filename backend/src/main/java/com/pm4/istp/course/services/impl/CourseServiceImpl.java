@@ -11,6 +11,7 @@ import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
+import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
 import com.pm4.istp.course.dto.CourseChallengeItemDto;
 import com.pm4.istp.course.dto.CourseChallengeResponseDto;
@@ -89,6 +90,8 @@ public class CourseServiceImpl implements CourseService {
     validateVisibilityState(course.isPublished(), course.isPrivate());
     courseToCreate.setImageUrl(course.getImageUrl());
     courseToCreate.setTopic(courseTopicService.normalizeAndValidate(course.getTopic()));
+    courseToCreate.setMcAttemptsMode(
+        course.getMcAttemptsMode() != null ? course.getMcAttemptsMode() : McAttemptsMode.UNLIMITED);
 
     // Owner = the user making the request
     CourseInstructor owner = new CourseInstructor();
@@ -220,6 +223,10 @@ public class CourseServiceImpl implements CourseService {
     }
     course.setPublished(willBePublished);
     course.setPrivate(willBePrivate);
+    course.setMcAttemptsMode(
+        request.getMcAttemptsMode() != null
+            ? request.getMcAttemptsMode()
+            : McAttemptsMode.UNLIMITED);
 
     // Diff instructor list: preserve OWNER, update COLLABORATORs
     Set<UUID> requestedInstructorIds =
