@@ -36,6 +36,7 @@ export interface CreateCourseDto {
   isPrivate: boolean;
   imageUrl?: string | null;
   topic?: string | null;
+  mcAttemptsMode?: string | null;
   instructors: InstructorAssignment[];
 }
 
@@ -78,6 +79,7 @@ export interface UpdateCourseDto {
   isPrivate: boolean;
   imageUrl?: string | null;
   topic?: string | null;
+  mcAttemptsMode?: string | null;
   instructors: InstructorAssignment[];
 }
 
