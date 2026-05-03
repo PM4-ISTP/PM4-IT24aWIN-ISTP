@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   ActionIcon,
   Alert,
-  Box,
   Button,
   Container,
   Group,
@@ -19,6 +18,7 @@ import {
 import { notifications } from "@mantine/notifications";
 import { IconArrowLeft } from "@tabler/icons-react";
 import MyEditor from "@/src/shared/components/MyEditor";
+import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
 import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
 import { createCourse } from "@/src/features/course/actions/courses";
 import {
@@ -124,15 +124,7 @@ export default function CreateCourse() {
           </Group>
         </Group>
 
-        <Box
-          style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 14,
-            padding: "2rem",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-          }}
-        >
+        <SurfaceCard variant="strong" elevation="md" padding="2rem">
           <Stack gap="lg">
             <TextInput
               label="Course Title"
@@ -253,7 +245,7 @@ export default function CreateCourse() {
               Create Course
             </Button>
           </Stack>
-        </Box>
+        </SurfaceCard>
       </Stack>
     </Container>
   );

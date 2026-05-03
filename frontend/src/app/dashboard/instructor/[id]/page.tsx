@@ -26,6 +26,7 @@ import { notifications } from "@mantine/notifications";
 import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
 import { CoursePeoplePanel } from "@/src/features/course/components/people/CoursePeoplePanel";
 import MyEditor from "@/src/shared/components/MyEditor";
+import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
 import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
@@ -464,15 +465,7 @@ export default function EditCourse() {
 
         <Grid gap="xl" align="start">
           <GridCol span={{ base: 12, md: 7, lg: 8 }}>
-            <Box
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 14,
-                padding: "2rem",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-              }}
-            >
+            <SurfaceCard variant="strong" elevation="md" padding="2rem">
               <Stack gap="lg">
                 <TextInput
                   label="Course Title"
@@ -626,7 +619,7 @@ export default function EditCourse() {
                   Save Changes
                 </Button>
               </Stack>
-            </Box>
+            </SurfaceCard>
           </GridCol>
 
           <GridCol span={{ base: 12, md: 5, lg: 4 }}>
@@ -642,15 +635,7 @@ export default function EditCourse() {
               />
 
               {visibility === "PRIVATE" && (
-                <Box
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: 14,
-                    padding: "1.5rem",
-                    boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-                  }}
-                >
+                <SurfaceCard variant="strong" elevation="md" padding="1.5rem">
                   <Stack gap="sm">
                     <Text
                       size="sm"
@@ -744,7 +729,7 @@ export default function EditCourse() {
                       </Button>
                     )}
                   </Stack>
-                </Box>
+                </SurfaceCard>
               )}
             </Stack>
           </GridCol>

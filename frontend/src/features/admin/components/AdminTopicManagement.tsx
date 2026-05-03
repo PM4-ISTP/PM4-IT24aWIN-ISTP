@@ -1,21 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ActionIcon,
-  Button,
-  Group,
-  Loader,
-  Modal,
-  Stack,
-  Table,
-  Text,
-  TextInput,
-} from "@mantine/core";
+import { ActionIcon, Button, Group, Loader, Stack, Table, Text, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
+import { ConfirmModal } from "@/src/shared/components/ConfirmModal";
 
 const MIN_TOPIC_LENGTH = 3;
 const MAX_TOPIC_LENGTH = 24;
@@ -308,35 +299,24 @@ export default function AdminTopicManagement() {
         </Table.Tbody>
       </Table>
 
-      <Modal
+      <ConfirmModal
         opened={deleteOpened}
         onClose={() => setDeleteOpened(false)}
+        onConfirm={confirmDelete}
         title="Delete Topic"
-        centered
-      >
-        <Stack gap="md">
-          <Text size="sm">
+        message={
+          <>
             Delete{" "}
             <Text span fw={700}>
               {selected ?? ""}
             </Text>
             ? This will also clear the topic from any courses using it.
-          </Text>
-          <Group justify="flex-end">
-            <Button
-              variant="default"
-              radius="md"
-              onClick={() => setDeleteOpened(false)}
-              disabled={saving}
-            >
-              Cancel
-            </Button>
-            <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
-              Delete
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+          </>
+        }
+        confirmLabel="Delete"
+        loading={saving}
+        danger
+      />
     </Stack>
   );
 }

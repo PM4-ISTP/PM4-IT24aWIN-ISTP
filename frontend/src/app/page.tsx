@@ -3,18 +3,9 @@ import { authOptions } from "@/src/shared/lib/auth";
 import { redirect } from "next/navigation";
 import { Box, Container, Stack, Title, Text, Badge } from "@mantine/core";
 import Login from "@/src/features/user/components/Login";
+import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
 
 const heroBackground = "linear-gradient(160deg, #0b1120 0%, #0e1a2e 45%, #0b1624 100%)";
-
-const cardStyle: React.CSSProperties = {
-  width: "100%",
-  maxWidth: 360,
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 14,
-  padding: "32px 28px",
-  boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-};
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -125,7 +116,12 @@ export default async function Home() {
           </Text>
 
           {/* Login card */}
-          <div style={cardStyle}>
+          <SurfaceCard
+            variant="strong"
+            elevation="lg"
+            padding="32px 28px"
+            style={{ width: "100%", maxWidth: 360 }}
+          >
             <Stack gap="md">
               <Stack gap={4} align="center">
                 <Text
@@ -150,7 +146,7 @@ export default async function Home() {
               </Stack>
               <Login />
             </Stack>
-          </div>
+          </SurfaceCard>
         </Stack>
       </Container>
 
