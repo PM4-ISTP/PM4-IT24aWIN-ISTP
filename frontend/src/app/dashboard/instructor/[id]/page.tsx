@@ -55,7 +55,9 @@ import {
   CourseChallengeManager,
   type CourseChallengeEntry,
 } from "@/src/features/course/components/management/CourseChallengeManager";
+import { CourseSubmissionsTable } from "@/src/features/course/components/management/CourseSubmissionsTable";
 import { updateCourseChallenges } from "@/src/features/course/actions/challenges";
+import BadgeDesigner, { type BadgeConfig } from "@/src/features/badge/components/BadgeDesigner";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 const COLLABORATOR_ROLE: InstructorRoleEnum = "COLLABORATOR";
@@ -104,6 +106,7 @@ export default function EditCourse() {
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const shortDescriptionCharCount = shortDescription.length;
 
+  const [mcAttemptsMode, setMcAttemptsMode] = useState<string>("UNLIMITED");
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
@@ -111,6 +114,7 @@ export default function EditCourse() {
 
   const [removeParticipantError, setRemoveParticipantError] = useState<string | null>(null);
   const [removingParticipantIds, setRemovingParticipantIds] = useState<string[]>([]);
+  const [badgeConfig, setBadgeConfig] = useState<BadgeConfig | null>(null);
 
   function handleCollaboratorChange(newValue: string[]) {
     const ownerId = owner?.id;
@@ -140,6 +144,7 @@ export default function EditCourse() {
       setImageUrl(course.imageUrl ?? "");
       setTopic(course.topic ?? null);
       setInviteCode(course.inviteCode ?? null);
+      setMcAttemptsMode((course.mcAttemptsMode as string) ?? "UNLIMITED");
 
       // Extract collaborators (not OWNER) for the multi-select
       const collaborators = course.courseInstructors.filter(
@@ -162,6 +167,7 @@ export default function EditCourse() {
             challengeTitle: string;
             difficulty: string;
             orderIndex: number;
+            dueAt?: string | null;
           },
           i: number
         ) => ({
@@ -169,6 +175,7 @@ export default function EditCourse() {
           challengeTitle: c.challengeTitle,
           difficulty: c.difficulty,
           orderIndex: c.orderIndex ?? i,
+          dueAt: c.dueAt ?? null,
         })
       );
       setCourseChallenges(cc);
@@ -208,6 +215,7 @@ export default function EditCourse() {
       imageUrl: imageUrl.trim() || null,
       topic: topic,
       collaboratorIds: selectedInstructors,
+      mcAttemptsMode,
     });
 
     if (!result.success) {
@@ -222,6 +230,7 @@ export default function EditCourse() {
       courseChallenges.map((c) => ({
         challengeId: c.challengeId,
         orderIndex: c.orderIndex,
+        dueAt: c.dueAt ?? undefined,
       }))
     );
 
@@ -230,6 +239,19 @@ export default function EditCourse() {
     if (!challengeResult.success) {
       setFormError(challengeResult.error);
       return;
+    }
+
+    if (badgeConfig) {
+      await fetch(`/api/backend/api/v1/courses/${courseId}/badge`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          primaryColor: badgeConfig.primaryColor,
+          textColor: badgeConfig.textColor,
+          template: badgeConfig.template,
+          badgeIcon: badgeConfig.badgeIcon,
+        }),
+      }).catch(() => {});
     }
 
     setInviteCode(result.data.inviteCode ?? null);
@@ -349,8 +371,8 @@ export default function EditCourse() {
               <IconArrowLeft size={20} />
             </ActionIcon>
           </Group>
-          <Alert color="red" title="Failed to load course">
-            {loadError}
+          <Alert color="red" title="Could not load course" variant="light">
+            Something went wrong loading this course. Please go back and try again.
           </Alert>
         </Stack>
       </Container>
@@ -365,8 +387,8 @@ export default function EditCourse() {
             Are you sure you want to delete <strong>{title}</strong>? This action cannot be undone.
           </Text>
           {deleteError && (
-            <Alert color="red" title="Failed to delete course">
-              {deleteError}
+            <Alert color="red" title="Could not delete course" variant="light">
+              Something went wrong. Please try again.
             </Alert>
           )}
           <Group justify="flex-end" gap="sm">
@@ -534,13 +556,49 @@ export default function EditCourse() {
                   allowDeselect={false}
                 />
 
+                <Select
+                  label="Multiple-Choice Attempts"
+                  value={mcAttemptsMode}
+                  onChange={(value) => {
+                    if (value) setMcAttemptsMode(value);
+                  }}
+                  data={[
+                    {
+                      value: "UNLIMITED",
+                      label: "Unlimited — retry until correct (self-learning)",
+                    },
+                    {
+                      value: "ONCE",
+                      label:
+                        "Once — one attempt, graded regardless of correctness (Praktikum / exam)",
+                    },
+                  ]}
+                  description="Controls how many times students can attempt MC questions in this course."
+                  allowDeselect={false}
+                />
+
                 <CourseChallengeManager
                   challenges={courseChallenges}
                   onChange={setCourseChallenges}
                 />
 
+                <CourseSubmissionsTable courseId={courseId} />
+
+                {isOwner && (
+                  <Box
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: 14,
+                      padding: "1.5rem",
+                    }}
+                  >
+                    <BadgeDesigner courseId={courseId} onChange={setBadgeConfig} />
+                  </Box>
+                )}
+
                 {formError && (
-                  <Alert color="red" title="Failed to update course">
+                  <Alert color="red" title="Could not save changes" variant="light">
                     {formError}
                   </Alert>
                 )}

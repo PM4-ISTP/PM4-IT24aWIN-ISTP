@@ -6,8 +6,25 @@ import { CourseChallengeDetailsList } from "@/src/features/course/components/man
 import { CourseJourneyCard } from "@/src/features/course/components/course/CourseJourneyCard";
 import { fetchPublicCourse } from "@/src/features/course/actions/courses";
 import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
-import type { InstructorRoleEnum } from "@/src/shared/types/course";
+import type { ChallengeStudentDto, InstructorRoleEnum } from "@/src/shared/types/course";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
+
+function findNextChallenge(challenges: ChallengeStudentDto[]): ChallengeStudentDto | null {
+  return challenges.find((c) => !c.isSolved) ?? null;
+}
+
+function aggregateSubTaskProgress(challenges: ChallengeStudentDto[]): {
+  completed: number;
+  total: number;
+} {
+  let completed = 0;
+  let total = 0;
+  for (const challenge of challenges) {
+    completed += challenge.solvedSubTaskCount ?? 0;
+    total += challenge.totalSubTaskCount ?? challenge.subTasks?.length ?? 0;
+  }
+  return { completed, total };
+}
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 
@@ -60,6 +77,7 @@ export default async function CourseDetails({
   const isEnrolled = course.isEnrolled ?? false;
   const participantCount = course.participantCount ?? 0;
   const isPublished = course.isPublished ?? false;
+  const isPrivate = (course as { isPrivate?: boolean }).isPrivate ?? false;
   const owner = getOwner(course.courseInstructors);
 
   return (
@@ -67,12 +85,13 @@ export default async function CourseDetails({
       <CourseBannerHeader
         title={title}
         topic={course.topic}
-        shortDescription={course.shortDescription}
-        description={sanitizedDescription}
+        shortDescription={null}
+        description={null}
         courseId={course.id!} // already checked, that ID is not undefined
         isEnrolled={isEnrolled}
         participantCount={participantCount}
         isPublished={isPublished}
+        isPrivate={isPrivate}
         backPageName={backPageName}
         backHref={backHref}
       />
@@ -83,16 +102,22 @@ export default async function CourseDetails({
           <CourseJourneyCard
             instructor={owner}
             // lessons={undefined}    ← wire up when lesson API is ready
-            // challenges={undefined} ← wire up when challenge API is ready
+            challenges={
+              isEnrolled ? aggregateSubTaskProgress(course.courseChallenges ?? []) : undefined
+            }
+            nextChallengeHref={
+              isEnrolled
+                ? (() => {
+                    const next = findNextChallenge(course.courseChallenges ?? []);
+                    return next?.id
+                      ? `/dashboard/courses/${course.id}/challenges/${next.id}/play`
+                      : undefined;
+                  })()
+                : undefined
+            }
           />
 
-          <CourseChallengeDetailsList
-            challenges={course.courseChallenges ?? []}
-            title="Course Challenges"
-            showIndex={true}
-          />
-
-          {/* About this course */}
+          {/* Course description */}
           {sanitizedDescription && (
             <Box
               style={{
@@ -115,7 +140,7 @@ export default async function CourseDetails({
                       fontSize: "1.1rem",
                     }}
                   >
-                    About this Course
+                    Course Description
                   </Title>
                 </Group>
                 <div
@@ -126,6 +151,13 @@ export default async function CourseDetails({
               </Stack>
             </Box>
           )}
+
+          <CourseChallengeDetailsList
+            challenges={course.courseChallenges ?? []}
+            title="Course Labs"
+            showIndex={true}
+            courseId={isEnrolled ? course.id : undefined}
+          />
         </Stack>
       </Container>
     </>

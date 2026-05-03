@@ -4,7 +4,10 @@ import com.pm4.istp.course.db.CreateChallengeRequest;
 import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
+import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,4 +27,41 @@ public interface ChallengeService {
       UUID userId, String search, Pageable pageable);
 
   int previewVisibilityImpact(UUID userId, UUID challengeId, ChallengeStatusEnum newStatus);
+
+  /**
+   * Returns the challenge in its student-facing form (no flags; with per-student progress). The
+   * caller must be enrolled in a course that contains this challenge.
+   */
+  ChallengeStudentDto getChallengeForPlay(UUID userId, UUID courseId, UUID challengeId);
+
+  /**
+   * Submits a flag for a sub-task. Case-sensitive comparison against the plaintext flag. On a
+   * correct submission the completion is persisted and cannot be re-submitted.
+   */
+  SubTaskSubmissionResponseDto submitSubTaskFlag(
+      UUID userId, UUID challengeId, UUID subTaskId, String flag);
+
+  /**
+   * Submits a multiple-choice option for a sub-task.
+   *
+   * <p>Behaviour depends on the course's {@code mcAttemptsMode}:
+   *
+   * <ul>
+   *   <li>{@code ONCE} – the submission is recorded and the sub-task is marked completed regardless
+   *       of correctness. Points are awarded only when the answer is correct.
+   *   <li>{@code UNLIMITED} – wrong answers are NOT persisted, so the student can retry. The
+   *       sub-task is marked completed only on a correct answer.
+   * </ul>
+   */
+  ChoiceSubmissionResponseDto submitSubTaskChoice(
+      UUID userId, UUID courseId, UUID challengeId, UUID subTaskId, UUID selectedOptionId);
+
+  /**
+   * Completes a theory sub-task (FLAG type with no flag set) without requiring a flag submission.
+   * The sub-task is marked as solved immediately.
+   */
+  SubTaskSubmissionResponseDto completeTheorySubTask(UUID userId, UUID challengeId, UUID subTaskId);
+
+  /** Returns the number of challenges the user has fully completed (all sub-tasks solved). */
+  long countCompletedChallenges(UUID userId);
 }

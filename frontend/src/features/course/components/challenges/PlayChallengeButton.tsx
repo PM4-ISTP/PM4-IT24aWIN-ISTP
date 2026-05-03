@@ -1,68 +1,58 @@
 "use client";
 
-import { Box, Button, Flex, Text } from "@mantine/core";
+import { Button } from "@mantine/core";
+import { IconCheck, IconPlayerPlay } from "@tabler/icons-react";
+import Link from "next/link";
 
-const darkgreen = "rgba(12, 105, 0, 1)";
-
-function ButtonWithInfoText({
-  buttonText,
-  infoText,
-  buttonColor,
+/**
+ * Action button that navigates to the play view for a challenge. Renders the
+ * appropriate label/colour based on solved state.
+ */
+export default function PlayChallengeButton({
+  href,
+  solved,
+  inProgress,
 }: {
-  buttonText: string;
-  infoText: string;
-  buttonColor: string;
+  href: string;
+  solved: boolean;
+  inProgress: boolean;
 }) {
-  return (
-    <Flex direction="column" justify="flex-end">
-      <Button mb={12} color={buttonColor} style={{ marginLeft: "auto" }}>
-        {buttonText}
+  if (solved) {
+    return (
+      <Button
+        component={Link}
+        href={href}
+        variant="light"
+        color="teal"
+        leftSection={<IconCheck size={16} />}
+        size="sm"
+      >
+        Replay
       </Button>
-      <Text size="xs" ta="right">
-        {infoText}
-      </Text>
-    </Flex>
-  );
-}
-
-export default function PlayChallengeButton({ condition }: { condition: number }) {
-  // TODO: Currently, this is just a placeholder. Once the play challenge flow is implemented, this component needs to be finished.
-  if (condition === 0) {
-    return (
-      <ButtonWithInfoText
-        buttonText="Start"
-        infoText="You have not started this challenge yet."
-        buttonColor={darkgreen}
-      />
-    );
-  } else if (condition === 1) {
-    return (
-      <ButtonWithInfoText
-        buttonText="Restart"
-        infoText="You have already completed this challenge. You can restart it."
-        buttonColor={darkgreen}
-      />
-    );
-  } else if (condition === 2) {
-    return (
-      <Box>
-        <ButtonWithInfoText
-          buttonText="Continue"
-          infoText="Continue playing. A pod is already running."
-          buttonColor="blue"
-        />
-        <Text size="xs" ta="right">
-          Pod started at |TODO: replace with real data| for course |TODO: replace with real data|
-        </Text>
-      </Box>
-    );
-  } else {
-    return (
-      <ButtonWithInfoText
-        buttonText="Continue"
-        infoText="Continue playing. This starts a new pod."
-        buttonColor="blue"
-      />
     );
   }
+  if (inProgress) {
+    return (
+      <Button
+        component={Link}
+        href={href}
+        color="blue"
+        leftSection={<IconPlayerPlay size={16} />}
+        size="sm"
+      >
+        Continue
+      </Button>
+    );
+  }
+  return (
+    <Button
+      component={Link}
+      href={href}
+      color="blue"
+      leftSection={<IconPlayerPlay size={16} />}
+      size="sm"
+    >
+      Start
+    </Button>
+  );
 }

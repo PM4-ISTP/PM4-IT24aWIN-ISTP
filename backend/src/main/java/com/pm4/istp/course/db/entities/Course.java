@@ -91,6 +91,29 @@ public class Course {
     courseChallenge.setCourse(null);
   }
 
+  /**
+   * Controls how many attempts students get for MULTIPLE_CHOICE sub-tasks in this course. Defaults
+   * to UNLIMITED (self-learning). Set to ONCE for graded / Praktikum courses.
+   */
+  @Column(
+      name = "mc_attempts_mode",
+      nullable = false,
+      columnDefinition = "VARCHAR(20) NOT NULL DEFAULT 'UNLIMITED'")
+  @Enumerated(EnumType.STRING)
+  private McAttemptsMode mcAttemptsMode = McAttemptsMode.UNLIMITED;
+
+  @Column(name = "badge_primary_color", nullable = true, length = 7)
+  private String badgePrimaryColor;
+
+  @Column(name = "badge_text_color", nullable = true, length = 7)
+  private String badgeTextColor;
+
+  @Column(name = "badge_template", nullable = true)
+  private Integer badgeTemplate;
+
+  @Column(name = "badge_icon", nullable = true, length = 16)
+  private String badgeIcon;
+
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;

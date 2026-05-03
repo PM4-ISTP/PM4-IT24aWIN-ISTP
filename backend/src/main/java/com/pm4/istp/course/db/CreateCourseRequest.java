@@ -1,5 +1,6 @@
 package com.pm4.istp.course.db;
 
+import com.pm4.istp.course.db.entities.McAttemptsMode;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,4 +18,5 @@ public class CreateCourseRequest {
   private String imageUrl;
   private String topic;
   private List<CreateCourseInstructorRequest> instructors;
+  private McAttemptsMode mcAttemptsMode = McAttemptsMode.UNLIMITED;
 }

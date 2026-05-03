@@ -33,7 +33,7 @@ import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.dto.ChallengeCreatorResponseDto;
-import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
+import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
@@ -92,6 +92,10 @@ class CourseControllerTest {
     private CourseEnrollmentRepository courseEnrollmentRepository;
     @Mock
     private CourseTopicService courseTopicService;
+    @Mock
+    private com.pm4.istp.course.repositories.SubTaskCompletionRepository subTaskCompletionRepository;
+    @Mock
+    private com.pm4.istp.course.repositories.SubTaskRepository subTaskRepository;
 
     @InjectMocks
     private CourseController courseController;
@@ -165,7 +169,7 @@ class CourseControllerTest {
         when(courseMapper.toDto(course)).thenReturn(dto);
 
         CreateCourseRequestDto requestDto = new CreateCourseRequestDto(
-                "Secure Coding", "Desc", "Short desc.", false, false, null, null, List.of());
+                "Secure Coding", "Desc", "Short desc.", false, false, null, null, List.of(), "UNLIMITED");
 
         mockMvc
                 .perform(
@@ -180,7 +184,7 @@ class CourseControllerTest {
     @Test
     void createCourse_whenTitleBlank_returnsBadRequest() throws Exception {
         CreateCourseRequestDto requestDto = new CreateCourseRequestDto("", "Desc", "Short desc.", false, false, null,
-                null, List.of());
+                null, List.of(), "UNLIMITED");
 
         mockMvc
                 .perform(
@@ -316,7 +320,7 @@ class CourseControllerTest {
                 .thenReturn(List.of());
 
         UpdateCourseRequestDto requestDto = new UpdateCourseRequestDto(
-                "Updated Title", "Desc", "Short summary.", false, false, null, null, List.of());
+                "Updated Title", "Desc", "Short summary.", false, false, null, null, List.of(), "UNLIMITED");
 
         mockMvc
                 .perform(
@@ -407,13 +411,13 @@ class CourseControllerTest {
 
     @Test
     void getPublicCourse_returnsOk() throws Exception {
-        ChallengeDetailResponseDto challenge1 = generateChallengeDetailResponseDto("Challenge 1",
+        ChallengeStudentDto challenge1 = generateChallengeStudentDto("Challenge 1",
                 ChallengeStatusEnum.PUBLIC, "Creator 1");
-        ChallengeDetailResponseDto challenge2 = generateChallengeDetailResponseDto("Challenge 2",
+        ChallengeStudentDto challenge2 = generateChallengeStudentDto("Challenge 2",
                 ChallengeStatusEnum.PRIVATE, "Creator 2");
-        ChallengeDetailResponseDto challenge3 = generateChallengeDetailResponseDto("Challenge 3",
+        ChallengeStudentDto challenge3 = generateChallengeStudentDto("Challenge 3",
                 ChallengeStatusEnum.DRAFT, "Creator 3");
-        ChallengeDetailResponseDto challenge4 = generateChallengeDetailResponseDto("Challenge 4",
+        ChallengeStudentDto challenge4 = generateChallengeStudentDto("Challenge 4",
                 ChallengeStatusEnum.PUBLIC, "Creator 4");
 
         Course course = new Course();
@@ -623,18 +627,19 @@ class CourseControllerTest {
     }
 
     // ── Mock object generators ────────────────────────────────────────────────
-    private ChallengeDetailResponseDto generateChallengeDetailResponseDto(String title,
+    private ChallengeStudentDto generateChallengeStudentDto(String title,
             ChallengeStatusEnum challengeStatus, String creatorName) {
         ChallengeCreatorResponseDto challengeCreatorResponseDto = new ChallengeCreatorResponseDto();
         challengeCreatorResponseDto.setId(UUID.randomUUID());
         challengeCreatorResponseDto.setName(creatorName);
 
-        ChallengeDetailResponseDto challengeDetailResponseDto = new ChallengeDetailResponseDto();
-        challengeDetailResponseDto.setTitle(title);
-        challengeDetailResponseDto.setCreator(challengeCreatorResponseDto);
-        challengeDetailResponseDto.setStatus(challengeStatus);
-
-        return challengeDetailResponseDto;
+        ChallengeStudentDto dto = new ChallengeStudentDto();
+        dto.setId(UUID.randomUUID());
+        dto.setTitle(title);
+        dto.setCreator(challengeCreatorResponseDto);
+        dto.setStatus(challengeStatus);
+        dto.setSubTasks(List.of());
+        return dto;
     }
 
     // ── Jackson helper ────────────────────────────────────────────────────────

@@ -6,61 +6,64 @@ import DashboardNav from "@/src/shared/components/DashboardNav";
 import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
 import { ROLES } from "@/src/shared/lib/roles";
 import SessionErrorHandler from "@/src/features/user/components/SessionErrorHandler";
+import TimeTracker from "@/src/shared/components/TimeTracker";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   const name = session?.user?.name ?? "Unknown";
   const image = session?.user?.image ?? null;
   const roles = (session?.roles as string[]) ?? [];
-  const keycloakIssuer = process.env.AUTH_KEYCLOAK_ISSUER;
-  const accountUrl = keycloakIssuer ? `${keycloakIssuer.replace(/\/$/, "")}/account` : undefined;
 
   return (
-    <AppShell header={{ height: 60 }} navbar={{ width: 220, breakpoint: "sm" }} padding="md">
+    <AppShell header={{ height: 60 }} navbar={{ width: 224, breakpoint: "sm" }} padding="md">
       <AppShellHeader
         style={{
-          background: "#0a1220",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(10,18,32,0.95)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
         }}
       >
-        <Group h="100%" px="xl" justify="space-between">
-          <div>
+        <Group h="100%" px="xl" justify="space-between" wrap="nowrap">
+          {/* Logo */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 1, flexShrink: 0 }}>
             <span
               style={{
                 fontFamily: "var(--font-space-grotesk), sans-serif",
                 fontWeight: 700,
-                letterSpacing: "-0.01em",
-                fontSize: "1.1rem",
+                letterSpacing: "0.02em",
+                fontSize: "1.05rem",
                 color: "#e2e8f0",
+                lineHeight: 1,
               }}
             >
               ISTP
             </span>
-            <p
+            <span
               style={{
                 fontFamily: "var(--font-space-grotesk), sans-serif",
                 textTransform: "uppercase",
-                letterSpacing: "0.18em",
-                fontSize: "0.55rem",
+                letterSpacing: "0.2em",
+                fontSize: "0.52rem",
                 fontWeight: 700,
-                color: "rgba(255,255,255,0.35)",
-                margin: 0,
+                color: "rgba(255,255,255,0.3)",
                 lineHeight: 1,
               }}
             >
               ZHAW
-            </p>
+            </span>
           </div>
-          <Group gap="sm">
+
+          {/* Right side */}
+          <Group gap="sm" wrap="nowrap">
             {roles.includes(ROLES.STUDENT) && <JoinCourseButton />}
-            <UserMenu name={name} roles={roles} image={image} accountUrl={accountUrl} />
+            <UserMenu name={name} roles={roles} image={image} />
           </Group>
         </Group>
       </AppShellHeader>
 
       <AppShellNavbar
         style={{
-          background: "#0a1220",
+          background: "rgba(10,18,32,0.97)",
           borderRight: "1px solid rgba(255,255,255,0.06)",
         }}
       >
@@ -75,6 +78,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           MozOsxFontSmoothing: "grayscale",
         }}
       >
+        <TimeTracker userId={(session?.user as { id?: string } | undefined)?.id ?? null} />
         <SessionErrorHandler />
         {children}
       </AppShellMain>

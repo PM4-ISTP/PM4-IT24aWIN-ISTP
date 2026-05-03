@@ -1,5 +1,6 @@
 package com.pm4.istp.shared.util;
 
+import com.pm4.istp.challengepod.exceptions.ChallengePodException;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
@@ -10,27 +11,50 @@ import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
+import com.pm4.istp.course.exceptions.SubTaskAlreadySolvedException;
+import com.pm4.istp.course.exceptions.SubTaskNotFoundException;
 import com.pm4.istp.shared.dto.ErrorDto;
+import com.pm4.istp.shared.keycloak.KeycloakAdminApiException;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
+import com.pm4.istp.user.exceptions.UserProfileSyncException;
+import com.pm4.istp.user.exceptions.UserSoftDeletedException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.RestClientResponseException;
 
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
+  @ExceptionHandler(ChallengePodException.class)
+  public ResponseEntity<ErrorDto> handleChallengePodException(ChallengePodException ex) {
+    log.error("Caught ChallengePodException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Kubernetes operation failed: " + ex.getMessage());
+    return new ResponseEntity<>(errorDto, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
   @ExceptionHandler(ChallengeAccessDeniedException.class)
   public ResponseEntity<ErrorDto> handleChallengeAccessDeniedException(
       ChallengeAccessDeniedException ex) {
     log.error("Caught ChallengeAccessDeniedException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Access denied");
+    return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<ErrorDto> handleAccessDeniedException(AccessDeniedException ex) {
+    log.warn("Caught AccessDeniedException: {}", ex.getMessage());
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError("Access denied");
     return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
@@ -75,7 +99,58 @@ public class GlobalExceptionHandler {
     log.error("Caught UserNotFoundException", ex);
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError("User not found");
-    return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
+    return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(KeycloakAdminApiException.class)
+  public ResponseEntity<ErrorDto> handleKeycloakAdminApiException(KeycloakAdminApiException ex) {
+    log.error("Caught KeycloakAdminApiException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    String details = extractKeycloakDetails(ex);
+    if (details != null) {
+      log.debug("Keycloak Admin API failure details: {}", details);
+    }
+    errorDto.setError("Keycloak update failed");
+    return new ResponseEntity<>(errorDto, HttpStatus.BAD_GATEWAY);
+  }
+
+  private String extractKeycloakDetails(KeycloakAdminApiException ex) {
+    if (ex == null) {
+      return null;
+    }
+    Throwable cause = ex.getCause();
+    if (cause instanceof RestClientResponseException rre) {
+      String body = rre.getResponseBodyAsString();
+      String normalized = body == null ? null : body.trim();
+      if (normalized != null && normalized.length() > 300) {
+        normalized = normalized.substring(0, 300) + "...";
+      }
+      if (normalized != null && !normalized.isBlank()) {
+        return normalized;
+      }
+      return rre.getStatusText();
+    }
+    String msg = ex.getMessage();
+    if (msg != null && !msg.isBlank()) {
+      return msg;
+    }
+    return null;
+  }
+
+  @ExceptionHandler(UserProfileSyncException.class)
+  public ResponseEntity<ErrorDto> handleUserProfileSyncException(UserProfileSyncException ex) {
+    log.error("Caught UserProfileSyncException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Profile update failed");
+    return new ResponseEntity<>(errorDto, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(UserSoftDeletedException.class)
+  public ResponseEntity<ErrorDto> handleUserSoftDeletedException(UserSoftDeletedException ex) {
+    log.warn("Caught UserSoftDeletedException: {}", ex.getMessage());
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError(ex.getMessage() == null ? "User is soft-deleted" : ex.getMessage());
+    return new ResponseEntity<>(errorDto, HttpStatus.CONFLICT);
   }
 
   @ExceptionHandler(InvalidInviteCodeException.class)
@@ -111,6 +186,23 @@ public class GlobalExceptionHandler {
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError(ex.getMessage());
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(SubTaskNotFoundException.class)
+  public ResponseEntity<ErrorDto> handleSubTaskNotFoundException(SubTaskNotFoundException ex) {
+    log.error("Caught SubTaskNotFoundException", ex);
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Sub-task not found");
+    return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(SubTaskAlreadySolvedException.class)
+  public ResponseEntity<ErrorDto> handleSubTaskAlreadySolvedException(
+      SubTaskAlreadySolvedException ex) {
+    log.warn("Caught SubTaskAlreadySolvedException: {}", ex.getMessage());
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError("Sub-task already solved");
+    return new ResponseEntity<>(errorDto, HttpStatus.CONFLICT);
   }
 
   @ExceptionHandler(InviteCodeGenerationException.class)

@@ -1,4 +1,11 @@
-import type { ChallengeDetailResponseDto } from "@/src/features/course/actions/challenges";
+import type { components } from "@/src/shared/lib/api/schema";
+
+export type SubTaskStudentDto = components["schemas"]["SubTaskStudentDto"];
+export type SubTaskOptionStudentDto = components["schemas"]["SubTaskOptionStudentDto"];
+export type ChallengeStudentDto = components["schemas"]["ChallengeStudentDto"];
+export type SubTaskSubmissionRequestDto = components["schemas"]["SubTaskSubmissionRequestDto"];
+export type SubTaskSubmissionResponseDto = components["schemas"]["SubTaskSubmissionResponseDto"];
+export type ChoiceSubmissionResponseDto = components["schemas"]["ChoiceSubmissionResponseDto"];
 
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
 export type PlatformRole = "ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT";
@@ -29,6 +36,7 @@ export interface CreateCourseDto {
   isPrivate: boolean;
   imageUrl?: string | null;
   topic?: string | null;
+  mcAttemptsMode?: string | null;
   instructors: InstructorAssignment[];
 }
 
@@ -71,6 +79,7 @@ export interface UpdateCourseDto {
   isPrivate: boolean;
   imageUrl?: string | null;
   topic?: string | null;
+  mcAttemptsMode?: string | null;
   instructors: InstructorAssignment[];
 }
 
@@ -96,6 +105,7 @@ export interface CourseChallengeResponseDto {
   challengeTitle: string;
   difficulty: string;
   orderIndex: number;
+  dueAt?: string | null;
 }
 
 export interface CourseDetailResponseDto {
@@ -110,11 +120,34 @@ export interface CourseDetailResponseDto {
   inviteCode?: string | null;
   imageUrl?: string | null;
   topic?: string | null;
+  mcAttemptsMode?: string | null;
   courseInstructors: CourseInstructorResponseDto[];
   participants: CourseParticipantDto[];
   courseChallenges: CourseChallengeResponseDto[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type CourseChallengeSubmissionStatusEnum =
+  | "NOT_SUBMITTED"
+  | "IN_PROGRESS"
+  | "ON_TIME"
+  | "LATE";
+
+export interface CourseChallengeSubmissionEntryDto {
+  participantId: string;
+  challengeId: string;
+  solvedSubTaskCount: number;
+  totalSubTaskCount: number;
+  completedAt: string | null;
+  status: CourseChallengeSubmissionStatusEnum;
+}
+
+export interface CourseChallengeSubmissionsResponseDto {
+  courseId: string;
+  participants: CourseParticipantDto[];
+  challenges: CourseChallengeResponseDto[];
+  submissions: CourseChallengeSubmissionEntryDto[];
 }
 
 export interface PublicCourseDetailResponseDto {
@@ -129,7 +162,7 @@ export interface PublicCourseDetailResponseDto {
   topic?: string | null;
   courseInstructors: CourseInstructorResponseDto[];
   participants: null;
-  courseChallenges: ChallengeDetailResponseDto[];
+  courseChallenges: ChallengeStudentDto[];
   createdAt: string;
   updatedAt: string;
 }

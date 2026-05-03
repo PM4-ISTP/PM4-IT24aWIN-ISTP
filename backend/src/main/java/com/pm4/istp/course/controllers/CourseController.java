@@ -7,7 +7,9 @@ import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
-import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
+import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
@@ -16,14 +18,18 @@ import com.pm4.istp.course.dto.CreateCourseResponseDto;
 import com.pm4.istp.course.dto.JoinByInviteCodeRequestDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.dto.PublicCourseDetailResponseDto;
+import com.pm4.istp.course.dto.SubTaskStudentDto;
 import com.pm4.istp.course.dto.UpdateCourseChallengesRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.mappers.CourseMapper;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
+import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
+import com.pm4.istp.course.repositories.SubTaskRepository;
 import com.pm4.istp.course.services.CourseService;
 import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.shared.dto.ErrorDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,7 +37,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -59,6 +69,8 @@ public class CourseController {
   private final CourseService courseService;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final CourseTopicService courseTopicService;
+  private final SubTaskCompletionRepository subTaskCompletionRepository;
+  private final SubTaskRepository subTaskRepository;
 
   @Operation(
       summary = "Create a course",
@@ -199,6 +211,25 @@ public class CourseController {
   }
 
   @Operation(
+      summary = "Leave a course",
+      description =
+          "Allows the authenticated student to remove themselves from a course they are enrolled in.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "204", description = "Successfully left the course"),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found or user not enrolled",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @DeleteMapping("/catalog/{id}/leave")
+  public ResponseEntity<Void> leaveCourse(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    courseService.leaveCourse(userId, id);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Operation(
       summary = "Update course challenges",
       description = "Replaces the challenge list for a course. Accepts own and public challenges.")
   @ApiResponses(
@@ -226,6 +257,57 @@ public class CourseController {
         courseService.updateCourseChallenges(userId, id, request.getChallenges());
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(updatedCourse);
     return ResponseEntity.ok(dto);
+  }
+
+  @Operation(
+      summary = "Get course challenge submissions",
+      description =
+          "Returns a per-student/per-challenge submission matrix including ON_TIME/LATE status based on the optional dueAt deadline.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Submissions loaded successfully",
+            content =
+                @Content(
+                    schema =
+                        @Schema(implementation = CourseChallengeSubmissionsResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @GetMapping("/{id}/submissions")
+  public ResponseEntity<CourseChallengeSubmissionsResponseDto> getCourseSubmissions(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    UUID userId = parseUserId(jwt);
+    return ResponseEntity.ok(courseService.getCourseChallengeSubmissions(userId, id));
+  }
+
+  @Operation(
+      summary = "Get upcoming challenge deadlines for current user",
+      description =
+          "Returns challenge assignments (course + challenge + dueAt) for courses where the user is enrolled or an instructor. Only entries with a dueAt deadline are returned.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Deadlines loaded successfully",
+            content =
+                @Content(
+                    array =
+                        @ArraySchema(
+                            schema = @Schema(implementation = CourseChallengeDeadlineDto.class))))
+      })
+  @GetMapping("/my-deadlines")
+  public ResponseEntity<List<CourseChallengeDeadlineDto>> listMyDeadlines(
+      @AuthenticationPrincipal Jwt jwt) {
+    UUID userId = parseUserId(jwt);
+    return ResponseEntity.ok(courseService.listUpcomingDeadlines(userId));
   }
 
   @Operation(
@@ -460,18 +542,78 @@ public class CourseController {
     filterOutDraftChallenges(dto);
     setInstructorIdsToNull(dto.getCourseInstructors());
     setChallengeCreatorIdsToNull(dto.getCourseChallenges());
+    populateStudentProgress(dto.getCourseChallenges(), userId);
     dto.setInviteCode(null);
     return dto;
   }
 
   private void filterOutDraftChallenges(PublicCourseDetailResponseDto dto) {
-    List<ChallengeDetailResponseDto> challenges = new ArrayList<>();
-    for (ChallengeDetailResponseDto challenge : dto.getCourseChallenges()) {
+    List<ChallengeStudentDto> challenges = new ArrayList<>();
+    for (ChallengeStudentDto challenge : dto.getCourseChallenges()) {
       if (challenge.getStatus() != ChallengeStatusEnum.DRAFT) {
         challenges.add(challenge);
       }
     }
     dto.setCourseChallenges(List.copyOf(challenges));
+  }
+
+  /**
+   * Fills in per-student progress on each challenge and its sub-tasks. Reads SubTaskCompletion rows
+   * in a single query for all sub-tasks of all visible challenges, then marks matching sub-tasks as
+   * solved.
+   */
+  private void populateStudentProgress(List<ChallengeStudentDto> challenges, UUID userId) {
+    if (challenges == null || challenges.isEmpty()) {
+      return;
+    }
+    List<UUID> subTaskIds = new ArrayList<>();
+    for (ChallengeStudentDto challenge : challenges) {
+      List<SubTaskStudentDto> subTasks = challenge.getSubTasks();
+      if (subTasks == null) {
+        continue;
+      }
+      for (SubTaskStudentDto st : subTasks) {
+        subTaskIds.add(st.getId());
+      }
+    }
+    Set<UUID> solvedIds =
+        subTaskIds.isEmpty()
+            ? Set.of()
+            : new HashSet<>(subTaskCompletionRepository.findSolvedSubTaskIds(userId, subTaskIds));
+
+    Map<UUID, String> flagsBySolvedId = loadFlagsForSolved(solvedIds);
+
+    for (ChallengeStudentDto challenge : challenges) {
+      List<SubTaskStudentDto> subTasks =
+          challenge.getSubTasks() == null ? List.of() : challenge.getSubTasks();
+      int solvedCount = 0;
+      for (SubTaskStudentDto st : subTasks) {
+        boolean solved = solvedIds.contains(st.getId());
+        st.setSolved(solved);
+        if (solved) {
+          st.setSolvedFlag(flagsBySolvedId.get(st.getId()));
+          solvedCount++;
+        }
+      }
+      challenge.setTotalSubTaskCount(subTasks.size());
+      challenge.setSolvedSubTaskCount(solvedCount);
+      challenge.setSolved(!subTasks.isEmpty() && solvedCount == subTasks.size());
+    }
+  }
+
+  /**
+   * Returns a {@code subTaskId → flag} map for the given solved sub-task ids. Empty map for an
+   * empty input — exposed only for the user's own solved sub-tasks, never to anyone else.
+   */
+  private Map<UUID, String> loadFlagsForSolved(Set<UUID> solvedIds) {
+    if (solvedIds.isEmpty()) {
+      return Map.of();
+    }
+    Map<UUID, String> flagsBySolvedId = new HashMap<>();
+    for (Object[] row : subTaskRepository.findFlagsByIds(solvedIds)) {
+      flagsBySolvedId.put((UUID) row[0], (String) row[1]);
+    }
+    return flagsBySolvedId;
   }
 
   private void setInstructorIdsToNull(List<CourseDetailInstructorResponseDto> courseInstructors) {
@@ -481,9 +623,11 @@ public class CourseController {
     }
   }
 
-  private void setChallengeCreatorIdsToNull(List<ChallengeDetailResponseDto> courseChallenges) {
-    for (ChallengeDetailResponseDto challengeDetailResponseDto : courseChallenges) {
-      challengeDetailResponseDto.getCreator().setId(null);
+  private void setChallengeCreatorIdsToNull(List<ChallengeStudentDto> courseChallenges) {
+    for (ChallengeStudentDto challenge : courseChallenges) {
+      if (challenge.getCreator() != null) {
+        challenge.getCreator().setId(null);
+      }
     }
   }
 }

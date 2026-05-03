@@ -54,12 +54,14 @@ class AdminConfigurationControllerTest {
         String kubeconfigBase64 = Base64.getEncoder().encodeToString("content".getBytes());
 
         LocalDateTime updatedAt = LocalDateTime.of(2026, 3, 29, 10, 15, 0);
-        AdminConfig adminConfig = new AdminConfig(UUID.randomUUID(), "1", "1Gi", "content", updatedAt);
+        AdminConfig adminConfig =
+                new AdminConfig(UUID.randomUUID(), "1", "1Gi", "ghcr-pull-secret", "content", 3600, updatedAt);
 
-        when(adminConfigurationService.createConfiguration(any(byte[].class), eq("1"), eq("1Gi")))
+        when(adminConfigurationService.createConfiguration(
+                        any(byte[].class), eq("1"), eq("1Gi"), eq("ghcr-pull-secret"), org.mockito.ArgumentMatchers.isNull()))
                 .thenReturn(adminConfig);
 
-        AdminConfigRequest request = new AdminConfigRequest("1", "1Gi", kubeconfigBase64);
+        AdminConfigRequest request = new AdminConfigRequest("1", "1Gi", "ghcr-pull-secret", kubeconfigBase64, null);
 
         mockMvc.perform(
                 post("/api/admin/config")
@@ -68,6 +70,7 @@ class AdminConfigurationControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.cpuLimit").value("1"))
                 .andExpect(jsonPath("$.memoryLimit").value("1Gi"))
+                .andExpect(jsonPath("$.imagePullSecretName").value("ghcr-pull-secret"))
                 .andExpect(jsonPath("$.updatedAt").value("2026-03-29T10:15:00"));
     }
 
@@ -76,7 +79,7 @@ class AdminConfigurationControllerTest {
         byte[] largeContent = new byte[1_048_577];
         String kubeconfigBase64 = Base64.getEncoder().encodeToString(largeContent);
 
-        AdminConfigRequest request = new AdminConfigRequest(null, null, kubeconfigBase64);
+        AdminConfigRequest request = new AdminConfigRequest(null, null, kubeconfigBase64, null);
 
         mockMvc.perform(
                 post("/api/admin/config")
@@ -88,7 +91,7 @@ class AdminConfigurationControllerTest {
 
     @Test
     void testUploadAndStoreAdminConfig_InvalidBase64() throws Exception {
-        AdminConfigRequest request = new AdminConfigRequest(null, null, "not-valid-base64!!!");
+        AdminConfigRequest request = new AdminConfigRequest(null, null, "not-valid-base64!!!", null);
 
         mockMvc.perform(
                 post("/api/admin/config")
@@ -101,7 +104,8 @@ class AdminConfigurationControllerTest {
     @Test
     void testGetAdminConfig_ReturnsConfigWhenPresent() throws Exception {
         LocalDateTime updatedAt = LocalDateTime.of(2026, 3, 29, 11, 30, 0);
-        AdminConfig adminConfig = new AdminConfig(UUID.randomUUID(), "2", "2Gi", "content", updatedAt);
+        AdminConfig adminConfig =
+                new AdminConfig(UUID.randomUUID(), "2", "2Gi", "ghcr-pull-secret", "content", 3600, updatedAt);
 
         when(adminConfigurationService.getAdminConfiguration()).thenReturn(Optional.of(adminConfig));
 
@@ -110,6 +114,7 @@ class AdminConfigurationControllerTest {
                 .andExpect(jsonPath("$.kubeconfigUploaded").value(true))
                 .andExpect(jsonPath("$.cpuLimit").value("2"))
                 .andExpect(jsonPath("$.memoryLimit").value("2Gi"))
+                .andExpect(jsonPath("$.imagePullSecretName").value("ghcr-pull-secret"))
                 .andExpect(jsonPath("$.updatedAt").value("2026-03-29T11:30:00"));
     }
 
@@ -122,6 +127,7 @@ class AdminConfigurationControllerTest {
                 .andExpect(jsonPath("$.kubeconfigUploaded").value(false))
                 .andExpect(jsonPath("$.cpuLimit").isEmpty())
                 .andExpect(jsonPath("$.memoryLimit").isEmpty())
+                .andExpect(jsonPath("$.imagePullSecretName").isEmpty())
                 .andExpect(jsonPath("$.updatedAt").isEmpty());
     }
 
@@ -130,12 +136,14 @@ class AdminConfigurationControllerTest {
         String kubeconfigBase64 = Base64.getEncoder().encodeToString("updated-content".getBytes());
 
         LocalDateTime updatedAt = LocalDateTime.of(2026, 3, 29, 14, 45, 0);
-        AdminConfig adminConfig = new AdminConfig(UUID.randomUUID(), "3", "3Gi", "updated-content", updatedAt);
+        AdminConfig adminConfig =
+                new AdminConfig(UUID.randomUUID(), "3", "3Gi", "ghcr-pull-secret", "updated-content", 3600, updatedAt);
 
-        when(adminConfigurationService.updateConfiguration(any(byte[].class), eq("3"), eq("3Gi")))
+        when(adminConfigurationService.updateConfiguration(
+                        any(byte[].class), eq("3"), eq("3Gi"), eq("ghcr-pull-secret"), org.mockito.ArgumentMatchers.isNull()))
                 .thenReturn(adminConfig);
 
-        AdminConfigRequest request = new AdminConfigRequest("3", "3Gi", kubeconfigBase64);
+        AdminConfigRequest request = new AdminConfigRequest("3", "3Gi", "ghcr-pull-secret", kubeconfigBase64, null);
 
         mockMvc.perform(
                 put("/api/admin/config")
@@ -144,6 +152,7 @@ class AdminConfigurationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cpuLimit").value("3"))
                 .andExpect(jsonPath("$.memoryLimit").value("3Gi"))
+                .andExpect(jsonPath("$.imagePullSecretName").value("ghcr-pull-secret"))
                 .andExpect(jsonPath("$.updatedAt").value("2026-03-29T14:45:00"));
     }
 
@@ -152,7 +161,7 @@ class AdminConfigurationControllerTest {
         byte[] largeContent = new byte[1_048_577];
         String kubeconfigBase64 = Base64.getEncoder().encodeToString(largeContent);
 
-        AdminConfigRequest request = new AdminConfigRequest(null, null, kubeconfigBase64);
+        AdminConfigRequest request = new AdminConfigRequest(null, null, kubeconfigBase64, null);
 
         mockMvc.perform(
                 put("/api/admin/config")

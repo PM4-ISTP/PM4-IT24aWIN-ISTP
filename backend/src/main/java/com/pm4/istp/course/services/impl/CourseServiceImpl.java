@@ -11,7 +11,14 @@ import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseChallenge;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
+import com.pm4.istp.course.db.entities.McAttemptsMode;
+import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
 import com.pm4.istp.course.dto.CourseChallengeItemDto;
+import com.pm4.istp.course.dto.CourseChallengeResponseDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionStatusEnum;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
+import com.pm4.istp.course.dto.CourseParticipantResponseDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
@@ -21,8 +28,11 @@ import com.pm4.istp.course.exceptions.InvalidCourseChallengeException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.repositories.ChallengeRepository;
+import com.pm4.istp.course.repositories.CourseChallengeRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
+import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
+import com.pm4.istp.course.repositories.SubTaskRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseService;
 import com.pm4.istp.course.services.CourseTopicService;
@@ -30,7 +40,10 @@ import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.repositories.UserRepository;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -52,7 +65,10 @@ public class CourseServiceImpl implements CourseService {
   private final UserRepository userRepository;
   private final CourseRepository courseRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
+  private final CourseChallengeRepository courseChallengeRepository;
   private final ChallengeRepository challengeRepository;
+  private final SubTaskRepository subTaskRepository;
+  private final SubTaskCompletionRepository subTaskCompletionRepository;
   private final CourseInviteCodeHelper courseInviteCodeHelper;
   private final CourseTopicService courseTopicService;
 
@@ -74,6 +90,8 @@ public class CourseServiceImpl implements CourseService {
     validateVisibilityState(course.isPublished(), course.isPrivate());
     courseToCreate.setImageUrl(course.getImageUrl());
     courseToCreate.setTopic(courseTopicService.normalizeAndValidate(course.getTopic()));
+    courseToCreate.setMcAttemptsMode(
+        course.getMcAttemptsMode() != null ? course.getMcAttemptsMode() : McAttemptsMode.UNLIMITED);
 
     // Owner = the user making the request
     CourseInstructor owner = new CourseInstructor();
@@ -152,12 +170,10 @@ public class CourseServiceImpl implements CourseService {
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
-    if (course.isPrivate()) {
-      throw new CourseAccessDeniedException(
-          String.format("Course '%s' is private and can only be joined via invite code", courseId));
-    }
-
-    if (!course.isPublished()) {
+    // Private courses are accessible without invite code once the user has the course link.
+    // The catalog/discovery protection is enforced by getCourse (403 for non-enrolled,
+    // non-instructors). Draft courses (not published, not private) remain closed.
+    if (!course.isPublished() && !course.isPrivate()) {
       throw new CourseAccessDeniedException(
           String.format("Course '%s' is not open for enrollment", courseId));
     }
@@ -207,6 +223,10 @@ public class CourseServiceImpl implements CourseService {
     }
     course.setPublished(willBePublished);
     course.setPrivate(willBePrivate);
+    course.setMcAttemptsMode(
+        request.getMcAttemptsMode() != null
+            ? request.getMcAttemptsMode()
+            : McAttemptsMode.UNLIMITED);
 
     // Diff instructor list: preserve OWNER, update COLLABORATORs
     Set<UUID> requestedInstructorIds =
@@ -300,10 +320,137 @@ public class CourseServiceImpl implements CourseService {
       CourseChallenge courseChallenge = new CourseChallenge();
       courseChallenge.setChallenge(challenge);
       courseChallenge.setOrderIndex(item.getOrderIndex());
+      courseChallenge.setDueAt(item.getDueAt());
       course.addCourseChallenge(courseChallenge);
     }
 
     return courseRepository.save(course);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public CourseChallengeSubmissionsResponseDto getCourseChallengeSubmissions(
+      UUID userId, UUID courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+    verifyInstructor(course, userId);
+
+    List<CourseEnrollment> enrollments =
+        courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId);
+    List<CourseParticipantResponseDto> participants =
+        enrollments.stream()
+            .map(
+                e -> {
+                  User p = e.getParticipant();
+                  return new CourseParticipantResponseDto(p.getId(), p.getName(), p.getPicture());
+                })
+            .toList();
+
+    List<CourseChallenge> assigned =
+        course.getCourseChallenges() == null ? List.of() : course.getCourseChallenges();
+    List<CourseChallengeResponseDto> challengesDto =
+        assigned.stream()
+            .map(
+                cc -> {
+                  var ch = cc.getChallenge();
+                  return new CourseChallengeResponseDto(
+                      ch.getId(),
+                      ch.getTitle(),
+                      ch.getDifficulty(),
+                      cc.getOrderIndex(),
+                      cc.getDueAt());
+                })
+            .toList();
+
+    List<UUID> userIds = participants.stream().map(CourseParticipantResponseDto::getId).toList();
+    List<UUID> challengeIds = assigned.stream().map(cc -> cc.getChallenge().getId()).toList();
+
+    Map<UUID, Integer> totalByChallenge = new HashMap<>();
+    if (!challengeIds.isEmpty()) {
+      for (Object[] row : subTaskRepository.countByChallengeIds(challengeIds)) {
+        UUID challengeId = (UUID) row[0];
+        Long count = (Long) row[1];
+        totalByChallenge.put(challengeId, count == null ? 0 : count.intValue());
+      }
+    }
+
+    record Key(UUID userId, UUID challengeId) {}
+    Map<Key, Integer> solvedCountByKey = new HashMap<>();
+    Map<Key, LocalDateTime> completedAtByKey = new HashMap<>();
+    if (!userIds.isEmpty() && !challengeIds.isEmpty()) {
+      for (Object[] row :
+          subTaskCompletionRepository.aggregateSolvedCountsForUsersAndChallenges(
+              userIds, challengeIds)) {
+        UUID u = (UUID) row[0];
+        UUID c = (UUID) row[1];
+        Long solved = (Long) row[2];
+        LocalDateTime completedAt = (LocalDateTime) row[3];
+        Key key = new Key(u, c);
+        solvedCountByKey.put(key, solved == null ? 0 : solved.intValue());
+        completedAtByKey.put(key, completedAt);
+      }
+    }
+
+    Map<UUID, LocalDateTime> dueAtByChallenge = new HashMap<>();
+    for (CourseChallenge cc : assigned) {
+      dueAtByChallenge.put(cc.getChallenge().getId(), cc.getDueAt());
+    }
+
+    List<CourseChallengeSubmissionEntryDto> entries = new ArrayList<>();
+    for (UUID participantId : userIds) {
+      for (UUID challengeId : challengeIds) {
+        Key key = new Key(participantId, challengeId);
+        int solvedCount = solvedCountByKey.getOrDefault(key, 0);
+        int totalCount = totalByChallenge.getOrDefault(challengeId, 0);
+        LocalDateTime completedAt =
+            totalCount > 0 && solvedCount == totalCount ? completedAtByKey.get(key) : null;
+
+        CourseChallengeSubmissionStatusEnum status;
+        if (totalCount <= 0 || solvedCount <= 0) {
+          status = CourseChallengeSubmissionStatusEnum.NOT_SUBMITTED;
+        } else if (solvedCount < totalCount) {
+          status = CourseChallengeSubmissionStatusEnum.IN_PROGRESS;
+        } else {
+          LocalDateTime dueAt = dueAtByChallenge.get(challengeId);
+          if (dueAt == null || completedAt == null || !completedAt.isAfter(dueAt)) {
+            status = CourseChallengeSubmissionStatusEnum.ON_TIME;
+          } else {
+            status = CourseChallengeSubmissionStatusEnum.LATE;
+          }
+        }
+
+        entries.add(
+            new CourseChallengeSubmissionEntryDto(
+                participantId, challengeId, solvedCount, totalCount, completedAt, status));
+      }
+    }
+
+    return new CourseChallengeSubmissionsResponseDto(
+        courseId, participants, challengesDto, entries);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<CourseChallengeDeadlineDto> listUpcomingDeadlines(UUID userId) {
+    List<Object[]> rows = courseChallengeRepository.findDeadlinesForUser(userId);
+    List<CourseChallengeDeadlineDto> result = new ArrayList<>(rows.size());
+    for (Object[] row : rows) {
+      UUID courseId = (UUID) row[0];
+      String courseTitle = (String) row[1];
+      UUID challengeId = (UUID) row[2];
+      String challengeTitle = (String) row[3];
+      LocalDateTime dueAt = (LocalDateTime) row[4];
+      if (courseId == null || challengeId == null || dueAt == null) {
+        continue;
+      }
+      result.add(
+          new CourseChallengeDeadlineDto(
+              courseId, courseTitle, challengeId, challengeTitle, dueAt));
+    }
+    return result;
   }
 
   @Override
@@ -431,6 +578,28 @@ public class CourseServiceImpl implements CourseService {
                         String.format(
                             "Participant with ID '%s' is not enrolled in course '%s'",
                             participantId, courseId)));
+
+    course.removeCourseEnrollment(enrollment);
+    courseRepository.save(course);
+  }
+
+  @Override
+  @Transactional
+  public void leaveCourse(UUID userId, UUID courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+
+    CourseEnrollment enrollment =
+        courseEnrollmentRepository
+            .findByCourseIdAndParticipantId(courseId, userId)
+            .orElseThrow(
+                () ->
+                    new CourseParticipantNotFoundException(
+                        String.format(
+                            "User '%s' is not enrolled in course '%s'", userId, courseId)));
 
     course.removeCourseEnrollment(enrollment);
     courseRepository.save(course);

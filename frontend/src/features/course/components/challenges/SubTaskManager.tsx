@@ -10,9 +10,13 @@ import {
   Collapse,
   Group,
   Input,
+  NumberInput,
+  Radio,
+  SegmentedControl,
   Stack,
   Text,
   TextInput,
+  Textarea,
   Title,
   Tooltip,
 } from "@mantine/core";
@@ -26,25 +30,39 @@ import {
 } from "@tabler/icons-react";
 import MyEditor from "@/src/shared/components/MyEditor";
 
+export interface SubTaskOptionFormValues {
+  id?: string;
+  text: string;
+  isCorrect: boolean;
+  orderIndex: number;
+}
+
 export interface SubTaskFormValues {
   id?: string;
   title: string;
   description: string;
   flag: string;
   orderIndex: number;
+  type: "FLAG" | "MULTIPLE_CHOICE";
+  points: number;
+  hint: string;
+  options: SubTaskOptionFormValues[];
 }
 
 export interface SubTaskManagerProps {
   subTasks: SubTaskFormValues[];
   onChange: (subTasks: SubTaskFormValues[]) => void;
-  errors?: Array<Partial<Record<"title" | "description" | "flag", string>>>;
+  errors?: Array<Partial<Record<"title" | "description" | "flag" | "options", string>>>;
   defaultExpandedIndex?: number | null;
 }
 
 const FLAG_INNER_PATTERN = /^ISTP\{(.+)\}$/;
 const FLAG_FORBIDDEN_CHARS = /[^A-Za-z0-9_]/g;
-// Mantine's default Collapse transition is 200 ms; give the close animation a bit of headroom.
 const COLLAPSE_UNMOUNT_DELAY_MS = 250;
+
+function defaultOption(orderIndex: number): SubTaskOptionFormValues {
+  return { text: "", isCorrect: orderIndex === 0, orderIndex };
+}
 
 export function SubTaskManager({
   subTasks,
@@ -58,7 +76,6 @@ export function SubTaskManager({
       ? defaultExpandedIndex
       : null;
   });
-  // Index of a sub-task whose body is still rendered while its close animation runs.
   const [closingIndex, setClosingIndex] = useState<number | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -97,7 +114,19 @@ export function SubTaskManager({
 
   function handleAdd() {
     const newIndex = subTasks.length;
-    onChange([...subTasks, { title: "", description: "", flag: "", orderIndex: newIndex }]);
+    onChange([
+      ...subTasks,
+      {
+        title: "",
+        description: "",
+        flag: "",
+        orderIndex: newIndex,
+        type: "FLAG",
+        points: 1,
+        hint: "",
+        options: [defaultOption(0), defaultOption(1)],
+      },
+    ]);
     changeExpanded(newIndex);
   }
 
@@ -137,30 +166,66 @@ export function SubTaskManager({
   }
 
   function handleFlagInnerChange(index: number, raw: string) {
-    // If the user pastes a full ISTP{...} value, unwrap it first.
     const wrappedMatch = raw.match(FLAG_INNER_PATTERN);
     const inner = wrappedMatch ? wrappedMatch[1] : raw;
-    // Strip everything that isn't part of the backend-allowed alphabet, then
-    // upper-case so all stored flags share a consistent shape.
     const sanitized = inner.replace(FLAG_FORBIDDEN_CHARS, "").toUpperCase();
     updateAt(index, { flag: sanitized });
   }
+
+  function handleTypeChange(index: number, newType: "FLAG" | "MULTIPLE_CHOICE") {
+    updateAt(index, { type: newType });
+  }
+
+  function handleOptionTextChange(stIndex: number, optIndex: number, text: string) {
+    const st = subTasks[stIndex];
+    const updatedOptions = st.options.map((o, i) => (i === optIndex ? { ...o, text } : o));
+    updateAt(stIndex, { options: updatedOptions });
+  }
+
+  function handleCorrectOptionChange(stIndex: number, optIndex: number) {
+    const st = subTasks[stIndex];
+    const updatedOptions = st.options.map((o, i) => ({ ...o, isCorrect: i === optIndex }));
+    updateAt(stIndex, { options: updatedOptions });
+  }
+
+  function handleAddOption(stIndex: number) {
+    const st = subTasks[stIndex];
+    if (st.options.length >= 4) return;
+    const updatedOptions = [...st.options, defaultOption(st.options.length)];
+    updateAt(stIndex, { options: updatedOptions });
+  }
+
+  function handleRemoveOption(stIndex: number, optIndex: number) {
+    const st = subTasks[stIndex];
+    if (st.options.length <= 2) return;
+    const filtered = st.options
+      .filter((_, i) => i !== optIndex)
+      .map((o, i) => ({ ...o, orderIndex: i }));
+    const hasCorrect = filtered.some((o) => o.isCorrect);
+    if (!hasCorrect && filtered.length > 0) {
+      filtered[0] = { ...filtered[0], isCorrect: true };
+    }
+    updateAt(stIndex, { options: filtered });
+  }
+
+  const totalPoints = subTasks.reduce((sum, st) => sum + (st.points || 1), 0);
 
   return (
     <Stack gap="md">
       <Group justify="space-between" align="center">
         <Stack gap={2}>
-          <Title order={4}>Sub Tasks</Title>
+          <Title order={4}>Challenges</Title>
           <Text size="sm" c="dimmed">
-            Each sub task is worth one point. A sub task without a flag is just a description.
+            Each challenge awards points on correct submission. A challenge without a flag or
+            options is just a description.
           </Text>
         </Stack>
         <Badge size="lg" variant="light">
-          {subTasks.length} point{subTasks.length === 1 ? "" : "s"}
+          {totalPoints} point{totalPoints === 1 ? "" : "s"}
         </Badge>
       </Group>
 
-      {subTasks.length === 0 && <Alert color="orange">At least one sub task is required.</Alert>}
+      {subTasks.length === 0 && <Alert color="orange">At least one challenge is required.</Alert>}
 
       {subTasks.length > 0 && (
         <Stack gap="sm">
@@ -168,9 +233,10 @@ export function SubTaskManager({
             const err = errors?.[index] ?? {};
             const isExpanded = expandedIndex === index;
             const shouldRenderBody = isExpanded || closingIndex === index;
-            const hasError = Boolean(err.title || err.description || err.flag);
-            const displayTitle = st.title.trim() || `Sub Task ${index + 1}`;
-            const hasFlag = st.flag.trim().length > 0;
+            const hasError = Boolean(err.title || err.description || err.flag || err.options);
+            const displayTitle = st.title.trim() || `Challenge ${index + 1}`;
+            const isFlag = st.type === "FLAG";
+            const isMC = st.type === "MULTIPLE_CHOICE";
 
             return (
               <Box
@@ -208,11 +274,12 @@ export function SubTaskManager({
                       align="center"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {hasFlag && (
-                        <Badge size="xs" variant="light" color="grape">
-                          Flag
-                        </Badge>
-                      )}
+                      <Badge size="xs" variant="light" color={isMC ? "violet" : "grape"}>
+                        {isMC ? "MC" : isFlag && st.flag.trim() ? "Flag" : "Info"}
+                      </Badge>
+                      <Badge size="xs" variant="light" color="blue">
+                        {st.points}pt
+                      </Badge>
                       <Tooltip label="Move up">
                         <ActionIcon
                           variant="subtle"
@@ -241,7 +308,7 @@ export function SubTaskManager({
                           size="sm"
                           color="red"
                           onClick={() => handleRemove(index)}
-                          aria-label="Remove sub task"
+                          aria-label="Remove challenge"
                         >
                           <IconTrash size={14} />
                         </ActionIcon>
@@ -250,8 +317,7 @@ export function SubTaskManager({
                   </Group>
                 </Box>
 
-                {/* Expanded body — MyEditor is only mounted while open (or during the
-                    close animation) to avoid keeping a TipTap instance per subtask in memory. */}
+                {/* Expanded body */}
                 <Collapse expanded={isExpanded}>
                   {shouldRenderBody && (
                     <Box
@@ -278,17 +344,115 @@ export function SubTaskManager({
                           />
                         </Input.Wrapper>
 
-                        <TextInput
-                          label="Flag"
-                          description="Leave empty if this sub task has no flag to submit."
-                          placeholder="flag_content_here"
-                          leftSection={<Text size="sm">ISTP&#123;</Text>}
-                          leftSectionWidth={52}
-                          rightSection={<Text size="sm">&#125;</Text>}
-                          value={st.flag}
-                          onChange={(e) => handleFlagInnerChange(index, e.currentTarget.value)}
-                          error={err.flag}
+                        {/* Type + Points */}
+                        <Group gap="md" align="flex-end">
+                          <Stack gap={4} style={{ flex: 1 }}>
+                            <Input.Label>Type</Input.Label>
+                            <SegmentedControl
+                              value={st.type}
+                              onChange={(val) => handleTypeChange(index, val)}
+                              data={[
+                                { label: "Flag", value: "FLAG" },
+                                { label: "Multiple Choice", value: "MULTIPLE_CHOICE" },
+                              ]}
+                            />
+                          </Stack>
+                          <NumberInput
+                            label="Points"
+                            description="Awarded on correct answer"
+                            value={st.points}
+                            onChange={(val) => updateAt(index, { points: Number(val) || 1 })}
+                            min={1}
+                            max={100}
+                            style={{ width: 130 }}
+                          />
+                        </Group>
+
+                        {/* Hint */}
+                        <Textarea
+                          label="Hint"
+                          description="Optional — shown to the student on demand."
+                          placeholder="e.g. Check the HTTP response headers..."
+                          value={st.hint}
+                          onChange={(e) => updateAt(index, { hint: e.currentTarget.value })}
+                          autosize
+                          minRows={2}
+                          maxRows={4}
                         />
+
+                        {/* Flag (FLAG type only) */}
+                        {isFlag && (
+                          <TextInput
+                            label="Flag"
+                            description="Leave empty if this challenge has no flag to submit."
+                            placeholder="flag_content_here"
+                            leftSection={<Text size="sm">ISTP&#123;</Text>}
+                            leftSectionWidth={52}
+                            rightSection={<Text size="sm">&#125;</Text>}
+                            value={st.flag}
+                            onChange={(e) => handleFlagInnerChange(index, e.currentTarget.value)}
+                            error={err.flag}
+                          />
+                        )}
+
+                        {/* Multiple Choice options (MC type only) */}
+                        {isMC && (
+                          <Stack gap="sm">
+                            <Group justify="space-between" align="center">
+                              <Input.Label>Answer options</Input.Label>
+                              <Text size="xs" c="dimmed">
+                                Click the radio to mark the correct answer
+                              </Text>
+                            </Group>
+                            {err.options && (
+                              <Text size="xs" c="red">
+                                {err.options}
+                              </Text>
+                            )}
+                            <Radio.Group
+                              value={String(st.options.findIndex((o) => o.isCorrect))}
+                              onChange={(val) => handleCorrectOptionChange(index, Number(val))}
+                            >
+                              <Stack gap="xs">
+                                {st.options.map((opt, optIdx) => (
+                                  <Group key={optIdx} gap="xs" align="center" wrap="nowrap">
+                                    <Radio value={String(optIdx)} style={{ flexShrink: 0 }} />
+                                    <TextInput
+                                      placeholder={`Option ${optIdx + 1}`}
+                                      value={opt.text}
+                                      onChange={(e) =>
+                                        handleOptionTextChange(index, optIdx, e.currentTarget.value)
+                                      }
+                                      style={{ flex: 1 }}
+                                    />
+                                    <Tooltip label="Remove option">
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="red"
+                                        size="sm"
+                                        disabled={st.options.length <= 2}
+                                        onClick={() => handleRemoveOption(index, optIdx)}
+                                        aria-label="Remove option"
+                                      >
+                                        <IconTrash size={13} />
+                                      </ActionIcon>
+                                    </Tooltip>
+                                  </Group>
+                                ))}
+                              </Stack>
+                            </Radio.Group>
+                            {st.options.length < 4 && (
+                              <Button
+                                variant="subtle"
+                                size="xs"
+                                leftSection={<IconPlus size={13} />}
+                                onClick={() => handleAddOption(index)}
+                              >
+                                Add option
+                              </Button>
+                            )}
+                          </Stack>
+                        )}
                       </Stack>
                     </Box>
                   )}
@@ -303,9 +467,9 @@ export function SubTaskManager({
         variant="light"
         leftSection={<IconPlus size={14} />}
         onClick={handleAdd}
-        aria-label="Add sub task"
+        aria-label="Add challenge"
       >
-        Add Sub Task
+        Add Challenge
       </Button>
     </Stack>
   );

@@ -38,4 +38,10 @@ public class UpdateCourseRequestDto {
 
   @NotNull(message = "Instructor information is required")
   private List<UpdateCourseInstructorRequestDto> instructors;
+
+  /**
+   * How many MC attempts students get. "ONCE" = 1 attempt (graded); "UNLIMITED" = retry until
+   * correct (self-learning). Defaults to "UNLIMITED".
+   */
+  private String mcAttemptsMode = "UNLIMITED";
 }

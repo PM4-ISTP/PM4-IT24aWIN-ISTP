@@ -7,13 +7,21 @@ import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
+import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionRequestDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.dto.CreateChallengeRequestDto;
 import com.pm4.istp.course.dto.CreateChallengeResponseDto;
+import com.pm4.istp.course.dto.DockerImageCheckResponseDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
+import com.pm4.istp.course.dto.SubTaskSubmissionRequestDto;
+import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
 import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
 import com.pm4.istp.course.dto.VisibilityImpactResponseDto;
 import com.pm4.istp.course.mappers.ChallengeMapper;
 import com.pm4.istp.course.services.ChallengeService;
+import com.pm4.istp.course.services.DockerImageAvailabilityService;
+import com.pm4.istp.course.services.DockerImageAvailabilityService.DockerImageAvailabilityResult;
 import com.pm4.istp.shared.dto.ErrorDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -47,6 +55,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChallengeController {
   private final ChallengeMapper challengeMapper;
   private final ChallengeService challengeService;
+  private final DockerImageAvailabilityService dockerImageAvailabilityService;
 
   @Operation(
       summary = "Create a challenge",
@@ -185,6 +194,29 @@ public class ChallengeController {
   }
 
   @Operation(
+      summary = "Check Docker image availability",
+      description = "Checks whether a public GHCR image reference is reachable.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Docker image is reachable"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Docker image is invalid or unreachable",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @GetMapping("/docker-image")
+  public ResponseEntity<DockerImageCheckResponseDto> checkDockerImage(
+      @RequestParam("image") String image) {
+    DockerImageAvailabilityResult result =
+        dockerImageAvailabilityService.checkImageAvailability(image);
+    String message =
+        result.privateImage()
+            ? "Private GHCR image accepted; Kubernetes will use the configured image pull secret"
+            : "Public GHCR image found";
+    return ResponseEntity.ok(new DockerImageCheckResponseDto(true, message));
+  }
+
+  @Operation(
       summary = "Search available challenges",
       description =
           "Searches for challenges by title. Returns the user's own challenges and public ones.")
@@ -232,5 +264,159 @@ public class ChallengeController {
     UUID userId = parseUserId(jwt);
     int affectedCourseCount = challengeService.previewVisibilityImpact(userId, id, status);
     return ResponseEntity.ok(new VisibilityImpactResponseDto(affectedCourseCount));
+  }
+
+  @Operation(
+      summary = "Get a challenge in student play view",
+      description =
+          "Returns a challenge formatted for students (no sub-task flags, with per-user solved"
+              + " progress). Caller must be enrolled in the given course, and the challenge must"
+              + " belong to it.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Challenge retrieved successfully",
+            content = @Content(schema = @Schema(implementation = ChallengeStudentDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @GetMapping("/{id}/play")
+  public ResponseEntity<ChallengeStudentDto> getChallengeForPlay(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID id,
+      @RequestParam("courseId") UUID courseId) {
+    UUID userId = parseUserId(jwt);
+    ChallengeStudentDto dto = challengeService.getChallengeForPlay(userId, courseId, id);
+    return ResponseEntity.ok(dto);
+  }
+
+  @Operation(
+      summary = "Submit a flag for a sub-task",
+      description =
+          "Validates the submitted flag against the stored plaintext flag (case-sensitive). On a"
+              + " correct submission the sub-task is marked as solved for the authenticated user."
+              + " Already-solved sub-tasks cannot be re-submitted.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Submission processed",
+            content =
+                @Content(schema = @Schema(implementation = SubTaskSubmissionResponseDto.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid flag format",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User not enrolled in a course containing this challenge",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge or sub-task not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Sub-task already solved",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PostMapping("/{challengeId}/subtasks/{subTaskId}/submit")
+  public ResponseEntity<SubTaskSubmissionResponseDto> submitSubTaskFlag(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID challengeId,
+      @PathVariable UUID subTaskId,
+      @Valid @RequestBody SubTaskSubmissionRequestDto request) {
+    UUID userId = parseUserId(jwt);
+    SubTaskSubmissionResponseDto response =
+        challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, request.getFlag());
+    return ResponseEntity.ok(response);
+  }
+
+  @Operation(
+      summary = "Submit a multiple-choice answer for a sub-task",
+      description =
+          "Records the student's selected option for a MULTIPLE_CHOICE sub-task. Points are awarded"
+              + " automatically when the correct option is chosen. Re-submission returns the"
+              + " existing result without changing it.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Submission processed",
+            content =
+                @Content(schema = @Schema(implementation = ChoiceSubmissionResponseDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User not enrolled",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge, sub-task or option not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PostMapping("/{challengeId}/subtasks/{subTaskId}/submit-choice")
+  public ResponseEntity<ChoiceSubmissionResponseDto> submitSubTaskChoice(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID challengeId,
+      @PathVariable UUID subTaskId,
+      @Valid @RequestBody ChoiceSubmissionRequestDto request) {
+    UUID userId = parseUserId(jwt);
+    ChoiceSubmissionResponseDto response =
+        challengeService.submitSubTaskChoice(
+            userId, request.getCourseId(), challengeId, subTaskId, request.getSelectedOptionId());
+    return ResponseEntity.ok(response);
+  }
+
+  @Operation(
+      summary = "Complete a theory sub-task",
+      description =
+          "Marks a FLAG sub-task with no flag as completed (theory/reading task). "
+              + "Fails if the sub-task has a flag set.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Theory sub-task marked as completed"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Sub-task has a flag and cannot be auto-completed",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User not enrolled",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Challenge or sub-task not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PostMapping("/{challengeId}/subtasks/{subTaskId}/complete")
+  public ResponseEntity<SubTaskSubmissionResponseDto> completeTheorySubTask(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID challengeId,
+      @PathVariable UUID subTaskId) {
+    UUID userId = parseUserId(jwt);
+    SubTaskSubmissionResponseDto response =
+        challengeService.completeTheorySubTask(userId, challengeId, subTaskId);
+    return ResponseEntity.ok(response);
+  }
+
+  @Operation(
+      summary = "Count completed labs for current user",
+      description =
+          "Returns the number of challenges where the authenticated user has solved all sub-tasks.")
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Count returned successfully")})
+  @GetMapping("/my-completed-count")
+  public ResponseEntity<java.util.Map<String, Long>> countMyCompletedChallenges(
+      @AuthenticationPrincipal Jwt jwt) {
+    UUID userId = parseUserId(jwt);
+    long count = challengeService.countCompletedChallenges(userId);
+    return ResponseEntity.ok(java.util.Map.of("count", count));
   }
 }

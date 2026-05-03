@@ -1,10 +1,18 @@
 .idea
 backend/src/main/resources/Kubeconfig
+backend/src/main/resources/application-local.properties
+
 .gradle
+backend/build/
 
 ### VS Code ###
 .vscode/
 *.code-workspace
+
+### Node / Next.js ###
+frontend/node_modules/
+frontend/.next/
+frontend/out/
 
 ### Claude ###
 .claude/

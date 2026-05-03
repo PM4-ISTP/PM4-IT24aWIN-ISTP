@@ -4,11 +4,9 @@ import { useCallback, useState } from "react";
 import { Loader, MultiSelect } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
+import { useApiClient } from "@/src/shared/lib/api/client";
+import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers";
 import type { CollaboratorUserResponseDto } from "@/src/shared/types/course";
-
-interface ApiErrorResponse {
-  error?: string;
-}
 
 function formatCollaboratorLabel(user: CollaboratorUserResponseDto) {
   const metadata = [user.username, user.email].filter(
@@ -63,41 +61,31 @@ export function InstructorMultiSelect({
   const [options, setOptions] = useState<CollaboratorUserResponseDto[]>(initialUsers ?? []);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const apiClient = useApiClient();
 
   const fetchInstructors = useCallback(
     async (query: string) => {
       setLoading(true);
       setErrorMessage(null);
       try {
-        const params = new URLSearchParams({
-          ...(query ? { query } : {}),
-          size: "20",
-          page: "0",
+        const { data, response } = await apiClient.GET("/api/v1/users/collaborators", {
+          params: {
+            query: {
+              ...(query ? { query } : {}),
+              pageable: { page: 0, size: 20 },
+            },
+          },
+          querySerializer: springPageableSerializer,
         });
 
-        const res = await fetch(`/api/users/instructors?${params}`);
-        const data: unknown = await res.json();
-
-        if (!res.ok) {
-          const apiError =
-            typeof data === "object" &&
-            data !== null &&
-            "error" in data &&
-            typeof (data as ApiErrorResponse).error === "string"
-              ? (data as ApiErrorResponse).error
-              : undefined;
-          const message = apiError ?? "Failed to load collaborators";
-          setErrorMessage(message);
+        if (!response.ok || !data) {
+          setErrorMessage("Failed to load collaborators");
           return;
         }
 
+        const rawContent: unknown[] = data.content ?? [];
         const fetchedInstructors: CollaboratorUserResponseDto[] =
-          typeof data === "object" &&
-          data !== null &&
-          "content" in data &&
-          Array.isArray((data as { content?: unknown }).content)
-            ? (data as { content: unknown[] }).content.filter(isCollaboratorUser)
-            : [];
+          rawContent.filter(isCollaboratorUser);
         onUsersLoaded?.(fetchedInstructors);
 
         setOptions((prev) => {
@@ -115,7 +103,7 @@ export function InstructorMultiSelect({
         setLoading(false);
       }
     },
-    [onUsersLoaded]
+    [apiClient, onUsersLoaded]
   );
 
   const debouncedFetch = useDebouncedCallback(fetchInstructors, 300);

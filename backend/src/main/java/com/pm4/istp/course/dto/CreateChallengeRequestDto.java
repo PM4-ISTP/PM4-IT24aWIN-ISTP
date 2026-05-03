@@ -2,6 +2,7 @@ package com.pm4.istp.course.dto;
 
 import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.validation.DockerImageReference;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -35,9 +36,8 @@ public class CreateChallengeRequestDto {
 
   @NotBlank(message = "Docker image is required")
   @Pattern(
-      regexp = "^[\\w.\\-/]+(:[\\w.\\-]+)?$",
-      message =
-          "Docker image must be a valid image reference (e.g. image, registry/image, registry/image:tag)")
+      regexp = DockerImageReference.GHCR_IMAGE_REGEXP,
+      message = DockerImageReference.GHCR_IMAGE_MESSAGE)
   private String dockerImage;
 
   @NotEmpty(message = "At least one sub task is required")

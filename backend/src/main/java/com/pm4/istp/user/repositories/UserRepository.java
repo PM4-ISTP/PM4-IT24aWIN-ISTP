@@ -18,6 +18,17 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
   Optional<User> findByIdAndDeletedAtIsNull(UUID id);
 
+  @Query(
+      """
+      select u
+      from User u
+      where (:q is null
+          or lower(u.name) like lower(concat('%', :q, '%'))
+          or lower(u.username) like lower(concat('%', :q, '%'))
+          or lower(u.email) like lower(concat('%', :q, '%')))
+      """)
+  Page<User> searchUsers(@Param("q") String query, Pageable pageable);
+
   List<User> findAllByEmailIgnoreCaseAndDeletedAtIsNull(String email);
 
   List<User> findAllByUsernameIgnoreCaseAndDeletedAtIsNull(String username);

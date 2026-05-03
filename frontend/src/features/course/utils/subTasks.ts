@@ -1,4 +1,7 @@
-import type { SubTaskFormValues } from "@/src/features/course/components/challenges/SubTaskManager";
+import type {
+  SubTaskFormValues,
+  SubTaskOptionFormValues,
+} from "@/src/features/course/components/challenges/SubTaskManager";
 import type { components } from "@/src/shared/lib/api/schema";
 
 type SubTaskRequestDto = components["schemas"]["SubTaskRequestDto"];
@@ -17,13 +20,33 @@ export function toFormSubTasks(subTasks: SubTaskResponseDto[] | undefined): SubT
   return subTasks
     .slice()
     .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
-    .map((st, i) => ({
-      id: st.id,
-      title: st.title ?? "",
-      description: st.description ?? "",
-      flag: parseFlagInner(st.flag),
-      orderIndex: st.orderIndex ?? i,
-    }));
+    .map((st, i) => {
+      const type = st.type ?? "FLAG";
+      const rawOptions = st.options ?? [];
+      const options: SubTaskOptionFormValues[] =
+        rawOptions.length > 0
+          ? rawOptions.map((o, oi) => ({
+              id: o.id,
+              text: o.text ?? "",
+              isCorrect: o.isCorrect ?? false,
+              orderIndex: o.orderIndex ?? oi,
+            }))
+          : [
+              { text: "", isCorrect: true, orderIndex: 0 },
+              { text: "", isCorrect: false, orderIndex: 1 },
+            ];
+      return {
+        id: st.id,
+        title: st.title ?? "",
+        description: st.description ?? "",
+        flag: parseFlagInner(st.flag),
+        orderIndex: st.orderIndex ?? i,
+        type,
+        points: st.points ?? 1,
+        hint: st.hint ?? "",
+        options,
+      };
+    });
 }
 
 export function toRequestSubTasks(subTasks: SubTaskFormValues[]): SubTaskRequestDto[] {
@@ -33,32 +56,37 @@ export function toRequestSubTasks(subTasks: SubTaskFormValues[]): SubTaskRequest
       id: st.id,
       title: st.title.trim(),
       description: st.description,
-      flag: trimmedFlag ? `ISTP{${trimmedFlag}}` : undefined,
+      flag: st.type === "FLAG" && trimmedFlag ? `ISTP{${trimmedFlag}}` : undefined,
       orderIndex: i,
+      type: st.type,
+      points: st.points || 1,
+      hint: st.hint.trim() || undefined,
+      options:
+        st.type === "MULTIPLE_CHOICE"
+          ? st.options.map((o, oi) => ({
+              id: o.id,
+              text: o.text.trim(),
+              isCorrect: o.isCorrect,
+              orderIndex: oi,
+            }))
+          : undefined,
     };
   });
 }
 
 export interface SubTaskValidationResult {
   valid: boolean;
-  errors: Array<Partial<Record<"title" | "description" | "flag", string>>>;
+  errors: Array<Partial<Record<"title" | "description" | "flag" | "options", string>>>;
   formError?: string;
 }
 
 export function validateSubTasks(subTasks: SubTaskFormValues[]): SubTaskValidationResult {
   if (subTasks.length === 0) {
-    return {
-      valid: false,
-      errors: [],
-      formError: "At least one sub task is required",
-    };
+    return { valid: false, errors: [], formError: "At least one challenge is required" };
   }
-
-  const errors: Array<Partial<Record<"title" | "description" | "flag", string>>> = subTasks.map(
-    () => ({})
-  );
+  const errors: Array<Partial<Record<"title" | "description" | "flag" | "options", string>>> =
+    subTasks.map(() => ({}));
   let valid = true;
-
   subTasks.forEach((st, i) => {
     if (!st.title.trim()) {
       errors[i].title = "Title is required";
@@ -68,7 +96,18 @@ export function validateSubTasks(subTasks: SubTaskFormValues[]): SubTaskValidati
       errors[i].description = "Description is required";
       valid = false;
     }
+    if (st.type === "MULTIPLE_CHOICE") {
+      const hasEmptyOption = st.options.some((o) => !o.text.trim());
+      if (hasEmptyOption) {
+        errors[i].options = "All options must have text";
+        valid = false;
+      }
+      const hasCorrect = st.options.some((o) => o.isCorrect);
+      if (!hasCorrect) {
+        errors[i].options = "One option must be marked as correct";
+        valid = false;
+      }
+    }
   });
-
   return { valid, errors };
 }

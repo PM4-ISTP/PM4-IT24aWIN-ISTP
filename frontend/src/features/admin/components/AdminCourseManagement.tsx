@@ -66,6 +66,7 @@ export default function AdminCourseManagement() {
   const {
     query,
     onQueryChange,
+    applyQueryNow,
     page,
     setPage,
     items: courses,
@@ -224,6 +225,12 @@ export default function AdminCourseManagement() {
             leftSection={<IconSearch size={16} />}
             value={query}
             onChange={(e) => onQueryChange(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                applyQueryNow();
+              }
+            }}
             w={420}
           />
         </Group>
@@ -340,7 +347,12 @@ export default function AdminCourseManagement() {
 
       {totalPages > 1 && (
         <Group justify="center">
-          <Pagination total={totalPages} value={page + 1} onChange={(v) => setPage(v - 1)} />
+          <Pagination
+            radius="md"
+            total={totalPages}
+            value={page + 1}
+            onChange={(v) => setPage(v - 1)}
+          />
         </Group>
       )}
 
@@ -418,10 +430,26 @@ export default function AdminCourseManagement() {
             ) : null}
 
             <Group justify="flex-end" mt="xs">
-              <Button variant="default" onClick={() => setEditOpened(false)} disabled={saving}>
+              <Button
+                variant="default"
+                radius="md"
+                onClick={() => setEditOpened(false)}
+                disabled={saving}
+              >
                 Cancel
               </Button>
-              <Button type="submit" loading={saving}>
+              <Button
+                type="submit"
+                radius="md"
+                loading={saving}
+                style={{
+                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                  border: "none",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                  fontWeight: 600,
+                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+                }}
+              >
                 Save
               </Button>
             </Group>
@@ -444,10 +472,15 @@ export default function AdminCourseManagement() {
             ? This cannot be undone.
           </Text>
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => setDeleteOpened(false)} disabled={saving}>
+            <Button
+              variant="default"
+              radius="md"
+              onClick={() => setDeleteOpened(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
-            <Button color="red" onClick={() => void confirmDelete()} loading={saving}>
+            <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
               Delete
             </Button>
           </Group>

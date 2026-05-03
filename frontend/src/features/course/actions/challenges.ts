@@ -13,10 +13,17 @@ export type ChallengeDifficultyEnum = NonNullable<
   components["schemas"]["ChallengeDetailResponseDto"]["difficulty"]
 >;
 
+export type ChallengeCreatorResponseDto = components["schemas"]["ChallengeCreatorResponseDto"];
 export type CreateChallengeRequestDto = components["schemas"]["CreateChallengeRequestDto"];
 export type UpdateChallengeRequestDto = components["schemas"]["UpdateChallengeRequestDto"];
 export type CreateChallengeResponseDto = components["schemas"]["CreateChallengeResponseDto"];
 export type ChallengeDetailResponseDto = components["schemas"]["ChallengeDetailResponseDto"];
+export type ChallengeStudentDto = components["schemas"]["ChallengeStudentDto"];
+export type SubTaskStudentDto = components["schemas"]["SubTaskStudentDto"];
+export type SubTaskOptionStudentDto = components["schemas"]["SubTaskOptionStudentDto"];
+export type SubTaskSubmissionRequestDto = components["schemas"]["SubTaskSubmissionRequestDto"];
+export type SubTaskSubmissionResponseDto = components["schemas"]["SubTaskSubmissionResponseDto"];
+export type ChoiceSubmissionResponseDto = components["schemas"]["ChoiceSubmissionResponseDto"];
 export type ListChallengeResponseDto = components["schemas"]["ListChallengeResponseDto"];
 export type PageListChallengeResponseDto = components["schemas"]["PageListChallengeResponseDto"];
 export type CourseChallengeItemDto = components["schemas"]["CourseChallengeItemDto"];
@@ -33,7 +40,7 @@ export async function createChallenge(
       client.POST("/api/v1/challenges", {
         body: dto,
       }),
-    "Failed to create challenge"
+    "Failed to create lab"
   );
 }
 
@@ -45,7 +52,7 @@ export async function fetchChallenge(
       client.GET("/api/v1/challenges/{id}", {
         params: { path: { id } },
       }),
-    "Failed to load challenge"
+    "Failed to load lab"
   );
 }
 
@@ -59,7 +66,7 @@ export async function updateChallenge(
         params: { path: { id } },
         body: dto,
       }),
-    "Failed to update challenge"
+    "Failed to update lab"
   );
 }
 
@@ -69,7 +76,7 @@ export async function deleteChallenge(id: string): Promise<ActionResult<void>> {
       client.DELETE("/api/v1/challenges/{id}", {
         params: { path: { id } },
       }),
-    "Failed to delete challenge"
+    "Failed to delete lab"
   );
 }
 
@@ -83,7 +90,7 @@ export async function fetchInstructorChallenges(
         params: { query: { pageable: { page, size } } },
         querySerializer: springPageableSerializer,
       }),
-    "Failed to load challenges"
+    "Failed to load labs"
   );
 }
 
@@ -98,7 +105,7 @@ export async function searchChallenges(
         params: { query: { q: query, pageable: { page, size } } },
         querySerializer: springPageableSerializer,
       }),
-    "Failed to search challenges"
+    "Failed to search labs"
   );
 }
 
@@ -115,6 +122,63 @@ export async function previewVisibilityImpact(
   );
 }
 
+export async function fetchChallengeForPlay(
+  challengeId: string,
+  courseId: string
+): Promise<ActionResult<ChallengeStudentDto>> {
+  return await withActionResult(
+    (client) =>
+      client.GET("/api/v1/challenges/{id}/play", {
+        params: { path: { id: challengeId }, query: { courseId } },
+      }),
+    "Failed to load lab"
+  );
+}
+
+export async function submitSubTaskFlag(
+  challengeId: string,
+  subTaskId: string,
+  flag: string
+): Promise<ActionResult<SubTaskSubmissionResponseDto>> {
+  return await withActionResult(
+    (client) =>
+      client.POST("/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/submit", {
+        params: { path: { challengeId, subTaskId } },
+        body: { flag },
+      }),
+    "Failed to submit flag"
+  );
+}
+
+export async function submitSubTaskChoice(
+  challengeId: string,
+  subTaskId: string,
+  selectedOptionId: string,
+  courseId: string
+): Promise<ActionResult<ChoiceSubmissionResponseDto>> {
+  return await withActionResult(
+    (client) =>
+      client.POST("/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/submit-choice", {
+        params: { path: { challengeId, subTaskId } },
+        body: { selectedOptionId, courseId },
+      }),
+    "Failed to submit answer"
+  );
+}
+
+export async function completeTheorySubTask(
+  challengeId: string,
+  subTaskId: string
+): Promise<ActionResult<SubTaskSubmissionResponseDto>> {
+  return await withActionResult(
+    (client) =>
+      client.POST("/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/complete", {
+        params: { path: { challengeId, subTaskId } },
+      }),
+    "Failed to complete task"
+  );
+}
+
 export async function updateCourseChallenges(
   courseId: string,
   challenges: CourseChallengeItemDto[]
@@ -125,6 +189,6 @@ export async function updateCourseChallenges(
         params: { path: { id: courseId } },
         body: { challenges },
       }),
-    "Failed to update course challenges"
+    "Failed to update course labs"
   );
 }

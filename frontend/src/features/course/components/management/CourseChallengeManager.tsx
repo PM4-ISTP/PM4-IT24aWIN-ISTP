@@ -16,6 +16,7 @@ import {
   Loader,
   Stack,
   Text,
+  TextInput,
   Title,
 } from "@mantine/core";
 import {
@@ -45,7 +46,8 @@ export interface CourseChallengeEntry {
   challengeTitle: string;
   difficulty: string;
   orderIndex: number;
-  shortDescription?: string;
+  /** ISO local datetime string (e.g. 2026-05-01T12:00:00) or null when no deadline is set. */
+  dueAt?: string | null;
   creatorName?: string;
   creatorId?: string;
   status?: string;
@@ -76,7 +78,7 @@ function SubTaskListView({ subTasks }: { subTasks: SubTaskDetail[] }) {
       <Group gap="sm" align="center">
         <IconListCheck size={16} color="#60a5fa" />
         <Text size="sm" fw={600} style={{ color: "#f1f5f9" }}>
-          Sub Tasks ({sorted.length})
+          Challenges ({sorted.length})
         </Text>
       </Group>
 
@@ -89,7 +91,7 @@ function SubTaskListView({ subTasks }: { subTasks: SubTaskDetail[] }) {
             : null;
           const flag = st.flag?.trim();
           const hasFlag = Boolean(flag);
-          const title = st.title?.trim() || `Sub Task ${i + 1}`;
+          const title = st.title?.trim() || `Challenge ${i + 1}`;
 
           return (
             <Box
@@ -222,7 +224,7 @@ function ChallengeDetailView({ detail }: { detail: ChallengeDetailResponseDto })
         </>
       )}
 
-      {/* Sub Tasks */}
+      {/* Challenges */}
       {subTasks.length > 0 && (
         <>
           <Divider style={{ borderColor: "rgba(255,255,255,0.08)" }} />
@@ -231,6 +233,21 @@ function ChallengeDetailView({ detail }: { detail: ChallengeDetailResponseDto })
       )}
     </Stack>
   );
+}
+
+function toDateTimeLocalValue(value?: string | null): string {
+  if (!value) return "";
+  // backend uses LocalDateTime -> ISO_LOCAL_DATE_TIME (no timezone), typically with seconds
+  // datetime-local expects YYYY-MM-DDTHH:mm
+  if (value.length >= 16) return value.slice(0, 16);
+  return value;
+}
+
+function fromDateTimeLocalValue(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  // normalize to include seconds
+  return trimmed.length === 16 ? `${trimmed}:00` : trimmed;
 }
 
 export function CourseChallengeManager({ challenges, onChange }: CourseChallengeManagerProps) {
@@ -250,7 +267,7 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
       challengeTitle: challenge.title ?? "",
       difficulty: challenge.difficulty ?? "MEDIUM",
       orderIndex: challenges.length,
-      shortDescription: challenge.shortDescription ?? undefined,
+      dueAt: null,
       creatorName: challenge.creatorName ?? undefined,
       status: challenge.status ?? undefined,
     };
@@ -284,12 +301,11 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
     const idx = challenges.findIndex((c) => c.challengeId === challengeId);
     if (idx === -1) return;
     const entry = challenges[idx];
-    if (entry.shortDescription && entry.creatorName && entry.status && entry.creatorId) return;
+    if (entry.creatorName && entry.status && entry.creatorId) return;
 
     const updated = [...challenges];
     updated[idx] = {
       ...entry,
-      shortDescription: entry.shortDescription ?? detail.shortDescription ?? undefined,
       creatorName: entry.creatorName ?? detail.creator?.name ?? undefined,
       creatorId: entry.creatorId ?? detail.creator?.id ?? undefined,
       status: entry.status ?? detail.status ?? undefined,
@@ -332,12 +348,10 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
       const hydrated = challenges.map((entry) => {
         const detail = fetched.get(entry.challengeId);
         if (!detail) return entry;
-        if (entry.shortDescription && entry.creatorName && entry.status && entry.creatorId)
-          return entry;
+        if (entry.creatorName && entry.status && entry.creatorId) return entry;
         updated = true;
         return {
           ...entry,
-          shortDescription: entry.shortDescription ?? detail.shortDescription ?? undefined,
           creatorName: entry.creatorName ?? detail.creator?.name ?? undefined,
           creatorId: entry.creatorId ?? detail.creator?.id ?? undefined,
           status: entry.status ?? detail.status ?? undefined,
@@ -371,7 +385,7 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
   return (
     <Stack gap="md">
       <Group justify="space-between" align="center">
-        <Title order={4}>Course Challenges</Title>
+        <Title order={4}>Course Labs</Title>
         <Button
           variant="light"
           size="xs"
@@ -380,7 +394,7 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
           href="/dashboard/instructor/challenges/create"
           target="_blank"
         >
-          New Challenge
+          New Lab
         </Button>
       </Group>
 
@@ -445,14 +459,7 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
                           </Text>
                         </Group>
 
-                        {/* Row 2: Short description */}
-                        {challenge.shortDescription && (
-                          <Text size="xs" c="dimmed" lineClamp={2}>
-                            {challenge.shortDescription}
-                          </Text>
-                        )}
-
-                        {/* Row 3: Difficulty + Creator */}
+                        {/* Row 2: Difficulty + Creator */}
                         <Group gap="xs">
                           <Text size="xs" c="dimmed">
                             Difficulty:{" "}
@@ -486,6 +493,20 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
                       align="center"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      <TextInput
+                        label="Due date & time"
+                        type="datetime-local"
+                        size="xs"
+                        w={210}
+                        value={toDateTimeLocalValue(challenge.dueAt)}
+                        onChange={(e) => {
+                          const next = fromDateTimeLocalValue(e.currentTarget.value);
+                          const updated = [...challenges];
+                          updated[index] = { ...updated[index], dueAt: next };
+                          onChange(updated);
+                        }}
+                        placeholder="Optional"
+                      />
                       {challenge.status && (
                         <Badge size="xs" variant="light" color={getStatusColor(challenge.status)}>
                           {challenge.status}
@@ -497,8 +518,8 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
                           size="sm"
                           component={Link}
                           href={`/dashboard/instructor/challenges/${challenge.challengeId}`}
-                          aria-label="Edit challenge"
-                          title="Edit challenge"
+                          aria-label="Edit lab"
+                          title="Edit lab"
                         >
                           <IconPencil size={14} />
                         </ActionIcon>

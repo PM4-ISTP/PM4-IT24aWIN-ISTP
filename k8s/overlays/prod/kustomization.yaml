@@ -20,6 +20,9 @@ configMapGenerator:
     literals:
       - keycloak-hostname=istp-auth.pm4.init-lab.ch
       - keycloak-issuer-uri=https://istp-auth.pm4.init-lab.ch/realms/interactive-security-training-platform
+      - keycloak-admin-base-url=https://istp-auth.pm4.init-lab.ch
+      - keycloak-realm=interactive-security-training-platform
+      - keycloak-admin-client-id=istp-backend
       - app-namespace=istp-prod
       - keycloak-admin-url=https://istp-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/
       - istp-domain=pm4.init-lab.ch

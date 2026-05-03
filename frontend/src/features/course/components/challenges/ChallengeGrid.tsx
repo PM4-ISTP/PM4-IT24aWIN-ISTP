@@ -1,6 +1,7 @@
 "use client";
 
-import { Group, Pagination, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Group, Pagination, SimpleGrid, Stack, Text, ThemeIcon } from "@mantine/core";
+import { IconFlag } from "@tabler/icons-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChallengeCard } from "@/src/features/course/components/challenges/ChallengeCard";
 
@@ -45,7 +46,21 @@ export function ChallengeGrid({ challenges, totalPages, currentPage }: Challenge
   }
 
   if (challenges.length === 0) {
-    return <Text c="dimmed">No challenges found.</Text>;
+    return (
+      <div className="ds-empty-state">
+        <ThemeIcon size={56} radius="xl" variant="light" color="indigo">
+          <IconFlag size={26} />
+        </ThemeIcon>
+        <Stack gap={6} align="center">
+          <Text fw={600} style={{ color: "#e2e8f0" }}>
+            No labs found
+          </Text>
+          <Text size="sm" c="dimmed">
+            Create your first lab to get started.
+          </Text>
+        </Stack>
+      </div>
+    );
   }
 
   return (
@@ -68,6 +83,7 @@ export function ChallengeGrid({ challenges, totalPages, currentPage }: Challenge
             value={currentPage}
             onChange={handlePageChange}
             size="sm"
+            radius="md"
           />
         </Group>
       )}

@@ -47,6 +47,16 @@ export function useAdminPagedList<T>({
     [debouncedApplyQuery]
   );
 
+  const applyQueryNow = useCallback(
+    (next?: string) => {
+      const value = (next ?? query).trim();
+      debouncedApplyQuery.cancel();
+      setPage(0);
+      setActiveQuery(value);
+    },
+    [debouncedApplyQuery, query]
+  );
+
   const refresh = useCallback(() => setReloadSeq((s) => s + 1), []);
 
   useEffect(() => {
@@ -86,6 +96,7 @@ export function useAdminPagedList<T>({
   return {
     query,
     onQueryChange,
+    applyQueryNow,
     page,
     setPage,
     items,
