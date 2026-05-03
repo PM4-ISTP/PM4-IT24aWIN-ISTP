@@ -1,7 +1,6 @@
 import {
   Avatar,
   Box,
-  Button,
   Divider,
   Group,
   Progress,
@@ -10,15 +9,7 @@ import {
   ThemeIcon,
   Tooltip,
 } from "@mantine/core";
-import {
-  IconArrowRight,
-  IconCheck,
-  IconClock,
-  IconFlame,
-  IconLock,
-  IconTrophy,
-} from "@tabler/icons-react";
-import Link from "next/link";
+import { IconCheck, IconClock, IconFlame, IconLock } from "@tabler/icons-react";
 import { getInitials } from "@/src/shared/lib/utils";
 import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
 
@@ -61,9 +52,7 @@ export interface CourseJourneyCardProps {
   challenges?: ChallengesProgress;
 
   /**
-   * Link to the next challenge the student should play. When provided, a
-   * "Start Next Challenge" button is rendered; when absent (all done or not
-   * enrolled) the button hides.
+   * Deprecated. The primary course CTA lives in the banner header.
    */
   nextChallengeHref?: string;
 
@@ -183,16 +172,9 @@ function ChallengesPlaceholder() {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function CourseJourneyCard({
-  lessons,
-  challenges,
-  nextChallengeHref,
-  instructor,
-}: CourseJourneyCardProps) {
+export function CourseJourneyCard({ lessons, challenges, instructor }: CourseJourneyCardProps) {
   const lessonPercent = lessons ? calcPercent(lessons.finished, lessons.total) : 0;
   const challengePercent = challenges ? calcPercent(challenges.completed, challenges.total) : 0;
-  const allChallengesComplete =
-    challenges !== undefined && challenges.total > 0 && challenges.completed === challenges.total;
 
   return (
     <Box
@@ -273,28 +255,6 @@ export function CourseJourneyCard({
             />
           ) : (
             <ChallengesPlaceholder />
-          )}
-
-          {challenges && (
-            <Group justify="flex-end">
-              {allChallengesComplete ? (
-                <Button
-                  component="span"
-                  variant="light"
-                  color="teal"
-                  leftSection={<IconTrophy size={16} />}
-                  disabled
-                >
-                  All labs completed
-                </Button>
-              ) : nextChallengeHref ? (
-                <Link href={nextChallengeHref} style={{ textDecoration: "none" }}>
-                  <Button component="span" color="blue" rightSection={<IconArrowRight size={16} />}>
-                    Start Next Lab
-                  </Button>
-                </Link>
-              ) : null}
-            </Group>
           )}
         </Stack>
 
