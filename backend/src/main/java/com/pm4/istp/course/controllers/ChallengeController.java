@@ -370,7 +370,7 @@ public class ChallengeController {
     UUID userId = parseUserId(jwt);
     ChoiceSubmissionResponseDto response =
         challengeService.submitSubTaskChoice(
-            userId, challengeId, subTaskId, request.getSelectedOptionId());
+            userId, request.getCourseId(), challengeId, subTaskId, request.getSelectedOptionId());
     return ResponseEntity.ok(response);
   }
 

@@ -33,6 +33,7 @@ import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseChallenge;
+import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.entities.SubTask;
 import com.pm4.istp.course.db.entities.SubTaskType;
 import com.pm4.istp.course.db.entities.SubTaskCompletion;
@@ -47,7 +48,10 @@ import com.pm4.istp.course.mappers.ChallengeMapper;
 import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseChallengeRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
+import com.pm4.istp.course.repositories.CourseRepository;
+import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
+import com.pm4.istp.course.repositories.SubTaskOptionRepository;
 import com.pm4.istp.course.repositories.SubTaskRepository;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.course.services.impl.ChallengeServiceImpl;
@@ -64,8 +68,11 @@ class ChallengeServiceImplTest {
   @Mock private UserRepository userRepository;
   @Mock private ChallengeRepository challengeRepository;
   @Mock private CourseChallengeRepository courseChallengeRepository;
+  @Mock private CourseRepository courseRepository;
   @Mock private SubTaskRepository subTaskRepository;
+  @Mock private SubTaskOptionRepository subTaskOptionRepository;
   @Mock private SubTaskCompletionRepository subTaskCompletionRepository;
+  @Mock private StudentOptionSubmissionRepository studentOptionSubmissionRepository;
   @Mock private CourseEnrollmentRepository courseEnrollmentRepository;
   @Mock private ChallengeMapper challengeMapper;
   @Mock private DockerImageAvailabilityService dockerImageAvailabilityService;
@@ -750,9 +757,16 @@ class ChallengeServiceImplTest {
     dto.setId(challengeId);
     when(challengeMapper.toStudentDto(challenge)).thenReturn(dto);
 
+    // Stub the course lookup used to set mcAttemptsMode on the DTO
+    Course course = new Course();
+    course.setId(courseId);
+    course.setMcAttemptsMode(McAttemptsMode.UNLIMITED);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
     ChallengeStudentDto result = challengeService.getChallengeForPlay(userId, courseId, challengeId);
 
     assertThat(result).isSameAs(dto);
+    assertThat(result.getMcAttemptsMode()).isEqualTo("UNLIMITED");
   }
 
   @Test

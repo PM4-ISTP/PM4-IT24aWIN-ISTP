@@ -42,6 +42,7 @@ export default function CreateCourse() {
   const [imageUrl, setImageUrl] = useState("");
   const [topic, setTopic] = useState<string | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
+  const [mcAttemptsMode, setMcAttemptsMode] = useState<string>("UNLIMITED");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
@@ -80,6 +81,7 @@ export default function CreateCourse() {
       imageUrl: imageUrl.trim() || null,
       topic: topic,
       collaboratorIds: selectedInstructors,
+      mcAttemptsMode,
     });
 
     setIsSubmitting(false);
@@ -206,6 +208,23 @@ export default function CreateCourse() {
                 { value: "PRIVATE", label: "Private (invite code only)" },
               ]}
               description="Choose exactly one state. Draft keeps it hidden, Public shows in catalog, Private is join-by-code only."
+              allowDeselect={false}
+            />
+
+            <Select
+              label="Multiple-Choice Attempts"
+              value={mcAttemptsMode}
+              onChange={(value) => {
+                if (value) setMcAttemptsMode(value);
+              }}
+              data={[
+                { value: "UNLIMITED", label: "Unlimited — retry until correct (self-learning)" },
+                {
+                  value: "ONCE",
+                  label: "Once — one attempt, graded regardless of correctness (Praktikum / exam)",
+                },
+              ]}
+              description="Controls how many times students can attempt MC questions in this course."
               allowDeselect={false}
             />
 

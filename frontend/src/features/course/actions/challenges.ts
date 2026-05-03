@@ -153,13 +153,14 @@ export async function submitSubTaskFlag(
 export async function submitSubTaskChoice(
   challengeId: string,
   subTaskId: string,
-  selectedOptionId: string
+  selectedOptionId: string,
+  courseId: string
 ): Promise<ActionResult<ChoiceSubmissionResponseDto>> {
   return await withActionResult(
     (client) =>
       client.POST("/api/v1/challenges/{challengeId}/subtasks/{subTaskId}/submit-choice", {
         params: { path: { challengeId, subTaskId } },
-        body: { selectedOptionId },
+        body: { selectedOptionId, courseId },
       }),
     "Failed to submit answer"
   );

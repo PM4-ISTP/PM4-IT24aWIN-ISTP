@@ -7,6 +7,8 @@ import com.pm4.istp.course.db.SubTaskRequest;
 import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.db.entities.Course;
+import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.entities.StudentOptionSubmission;
 import com.pm4.istp.course.db.entities.SubTask;
 import com.pm4.istp.course.db.entities.SubTaskCompletion;
@@ -19,12 +21,14 @@ import com.pm4.istp.course.dto.SubTaskStudentDto;
 import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.SubTaskAlreadySolvedException;
 import com.pm4.istp.course.exceptions.SubTaskNotFoundException;
 import com.pm4.istp.course.mappers.ChallengeMapper;
 import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseChallengeRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
+import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.course.repositories.SubTaskOptionRepository;
@@ -58,9 +62,12 @@ public class ChallengeServiceImpl implements ChallengeService {
   private static final String CHALLENGE_NOT_FOUND_MSG = "Challenge with ID '%s' not found";
   private static final String SUB_TASK_NOT_FOUND_MSG = "Sub-task with ID '%s' not found";
 
+  private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
+
   private final UserRepository userRepository;
   private final ChallengeRepository challengeRepository;
   private final CourseChallengeRepository courseChallengeRepository;
+  private final CourseRepository courseRepository;
   private final SubTaskRepository subTaskRepository;
   private final SubTaskOptionRepository subTaskOptionRepository;
   private final SubTaskCompletionRepository subTaskCompletionRepository;
@@ -381,6 +388,17 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     ChallengeStudentDto dto = challengeMapper.toStudentDto(challenge);
     populateStudentProgress(dto, userId, challenge);
+
+    // Expose the course's MC attempt mode so the frontend can render the UI correctly
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+    McAttemptsMode mode =
+        course.getMcAttemptsMode() != null ? course.getMcAttemptsMode() : McAttemptsMode.UNLIMITED;
+    dto.setMcAttemptsMode(mode.name());
+
     return dto;
   }
 
@@ -452,7 +470,7 @@ public class ChallengeServiceImpl implements ChallengeService {
   @Override
   @Transactional
   public ChoiceSubmissionResponseDto submitSubTaskChoice(
-      UUID userId, UUID challengeId, UUID subTaskId, UUID selectedOptionId) {
+      UUID userId, UUID courseId, UUID challengeId, UUID subTaskId, UUID selectedOptionId) {
     User user =
         userRepository
             .findByIdAndDeletedAtIsNull(userId)
@@ -473,7 +491,16 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     verifyEnrolledInChallengeCourse(userId, subTask.getChallenge());
 
-    // Return existing submission if already answered
+    // Determine which attempt mode this course uses
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+    McAttemptsMode mode =
+        course.getMcAttemptsMode() != null ? course.getMcAttemptsMode() : McAttemptsMode.UNLIMITED;
+
+    // Return existing submission if already saved (applies to ONCE mode and correct UNLIMITED)
     Optional<StudentOptionSubmission> existing =
         studentOptionSubmissionRepository.findByUserIdAndSubTaskId(userId, subTaskId);
     if (existing.isPresent()) {
@@ -499,42 +526,88 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     boolean correct = selectedOption.isCorrect();
 
-    StudentOptionSubmission submission = new StudentOptionSubmission();
-    submission.setUser(user);
-    submission.setSubTask(subTask);
-    submission.setSelectedOption(selectedOption);
-    submission.setCorrect(correct);
-    submission.setSubmittedAt(LocalDateTime.now());
-    try {
-      studentOptionSubmissionRepository.saveAndFlush(submission);
-    } catch (DataIntegrityViolationException ex) {
-      // Concurrent submission — just return current state
-      return buildChoiceResponse(
-          correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
-    }
-
-    // Award completion when correct (reuse the same SubTaskCompletion mechanism)
-    if (correct && !subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId)) {
-      SubTaskCompletion completion = new SubTaskCompletion();
-      completion.setUser(user);
-      completion.setSubTask(subTask);
-      completion.setSolvedAt(LocalDateTime.now());
+    if (mode == McAttemptsMode.ONCE) {
+      // -----------------------------------------------------------------------
+      // ONCE mode: always persist the submission (even if wrong) and always mark
+      // the sub-task as completed so progress is counted.
+      // -----------------------------------------------------------------------
+      StudentOptionSubmission submission = new StudentOptionSubmission();
+      submission.setUser(user);
+      submission.setSubTask(subTask);
+      submission.setSelectedOption(selectedOption);
+      submission.setCorrect(correct);
+      submission.setSubmittedAt(LocalDateTime.now());
       try {
-        subTaskCompletionRepository.saveAndFlush(completion);
-      } catch (DataIntegrityViolationException ignored) {
-        // Already recorded by a concurrent request
-      }
-    }
-
-    ChoiceSubmissionResponseDto response =
-        buildChoiceResponse(
+        studentOptionSubmissionRepository.saveAndFlush(submission);
+      } catch (DataIntegrityViolationException ex) {
+        // Concurrent submission — return current state
+        return buildChoiceResponse(
             correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
+      }
 
-    if (correct && response.isChallengeSolved()) {
-      badgeService.tryAwardBadgesForChallenge(userId, challengeId);
+      // Mark as completed regardless of correctness (ONCE = attempted = done)
+      if (!subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId)) {
+        SubTaskCompletion completion = new SubTaskCompletion();
+        completion.setUser(user);
+        completion.setSubTask(subTask);
+        completion.setSolvedAt(LocalDateTime.now());
+        try {
+          subTaskCompletionRepository.saveAndFlush(completion);
+        } catch (DataIntegrityViolationException ignored) {
+          // Already recorded by concurrent request
+        }
+      }
+
+      ChoiceSubmissionResponseDto response =
+          buildChoiceResponse(
+              correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
+      if (response.isChallengeSolved()) {
+        badgeService.tryAwardBadgesForChallenge(userId, challengeId);
+      }
+      return response;
+
+    } else {
+      // -----------------------------------------------------------------------
+      // UNLIMITED mode: only persist and complete when the answer is correct.
+      // Wrong answers are NOT saved, so the student can retry.
+      // -----------------------------------------------------------------------
+      if (!correct) {
+        // Return temporary response without persisting anything
+        return buildChoiceResponse(false, userId, subTask.getChallenge(), challengeId, subTask);
+      }
+
+      // Correct answer — persist submission and completion
+      StudentOptionSubmission submission = new StudentOptionSubmission();
+      submission.setUser(user);
+      submission.setSubTask(subTask);
+      submission.setSelectedOption(selectedOption);
+      submission.setCorrect(true);
+      submission.setSubmittedAt(LocalDateTime.now());
+      try {
+        studentOptionSubmissionRepository.saveAndFlush(submission);
+      } catch (DataIntegrityViolationException ex) {
+        return buildChoiceResponse(true, userId, subTask.getChallenge(), challengeId, null);
+      }
+
+      if (!subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId)) {
+        SubTaskCompletion completion = new SubTaskCompletion();
+        completion.setUser(user);
+        completion.setSubTask(subTask);
+        completion.setSolvedAt(LocalDateTime.now());
+        try {
+          subTaskCompletionRepository.saveAndFlush(completion);
+        } catch (DataIntegrityViolationException ignored) {
+          // Already recorded by concurrent request
+        }
+      }
+
+      ChoiceSubmissionResponseDto response =
+          buildChoiceResponse(true, userId, subTask.getChallenge(), challengeId, null);
+      if (response.isChallengeSolved()) {
+        badgeService.tryAwardBadgesForChallenge(userId, challengeId);
+      }
+      return response;
     }
-
-    return response;
   }
 
   private ChoiceSubmissionResponseDto buildChoiceResponse(

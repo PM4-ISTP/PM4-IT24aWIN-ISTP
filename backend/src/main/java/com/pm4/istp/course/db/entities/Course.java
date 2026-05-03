@@ -91,6 +91,17 @@ public class Course {
     courseChallenge.setCourse(null);
   }
 
+  /**
+   * Controls how many attempts students get for MULTIPLE_CHOICE sub-tasks in this course. Defaults
+   * to UNLIMITED (self-learning). Set to ONCE for graded / Praktikum courses.
+   */
+  @Column(
+      name = "mc_attempts_mode",
+      nullable = false,
+      columnDefinition = "VARCHAR(20) NOT NULL DEFAULT 'UNLIMITED'")
+  @Enumerated(EnumType.STRING)
+  private McAttemptsMode mcAttemptsMode = McAttemptsMode.UNLIMITED;
+
   @Column(name = "badge_primary_color", nullable = true, length = 7)
   private String badgePrimaryColor;
 

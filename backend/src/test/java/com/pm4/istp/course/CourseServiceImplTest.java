@@ -28,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.pm4.istp.course.db.CreateCourseInstructorRequest;
 import com.pm4.istp.course.db.CreateCourseRequest;
+import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
 import com.pm4.istp.course.db.UpdateCourseRequest;
@@ -117,7 +118,8 @@ class CourseServiceImplTest {
         false,
         null,
         null,
-        List.of(new CreateCourseInstructorRequest(collaboratorId, InstructorRoleEnum.COLLABORATOR)));
+        List.of(new CreateCourseInstructorRequest(collaboratorId, InstructorRoleEnum.COLLABORATOR)),
+        McAttemptsMode.UNLIMITED);
 
     Course result = courseService.createCourse(ownerId, request);
 
@@ -226,7 +228,8 @@ class CourseServiceImplTest {
         false,
         null,
         null,
-        List.of(new UpdateCourseInstructorRequest(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)));
+        List.of(new UpdateCourseInstructorRequest(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
+        McAttemptsMode.UNLIMITED);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(userRepository.findByIdAndDeletedAtIsNull(newCollaboratorId)).thenReturn(Optional.of(newCollaborator));
@@ -324,7 +327,8 @@ class CourseServiceImplTest {
         false,
         null,
         null,
-        List.of());
+        List.of(),
+        McAttemptsMode.UNLIMITED);
 
     assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
         .isInstanceOf(InvalidCourseShortDescriptionException.class)
@@ -352,7 +356,8 @@ class CourseServiceImplTest {
         true,
         null,
         null,
-        List.of());
+        List.of(),
+        McAttemptsMode.UNLIMITED);
 
     assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
         .isInstanceOf(IllegalArgumentException.class)
@@ -599,7 +604,7 @@ class CourseServiceImplTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     CreateCourseRequest request = new CreateCourseRequest(
-        "Solo Course", "Desc", "Short solo summary.", false, false, null, null, List.of());
+        "Solo Course", "Desc", "Short solo summary.", false, false, null, null, List.of(), McAttemptsMode.UNLIMITED);
 
     Course result = courseService.createCourse(ownerId, request);
 
@@ -661,7 +666,7 @@ class CourseServiceImplTest {
     course.addCourseInstructor(ownerRelation);
 
     UpdateCourseRequest request = new UpdateCourseRequest(
-        "Title", "Desc", "Short summary.", false, false, null, null, List.of());
+        "Title", "Desc", "Short summary.", false, false, null, null, List.of(), McAttemptsMode.UNLIMITED);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
@@ -679,7 +684,7 @@ class CourseServiceImplTest {
     when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
 
     UpdateCourseRequest request = new UpdateCourseRequest(
-        "Title", "Desc", "Short summary.", false, false, null, null, List.of());
+        "Title", "Desc", "Short summary.", false, false, null, null, List.of(), McAttemptsMode.UNLIMITED);
 
     assertThatThrownBy(() -> courseService.updateCourse(userId, courseId, request))
         .isInstanceOf(CourseNotFoundException.class);
@@ -1251,7 +1256,8 @@ class CourseServiceImplTest {
         true,
         null,
         null,
-        List.of());
+        List.of(),
+        McAttemptsMode.UNLIMITED);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
@@ -1310,7 +1316,8 @@ class CourseServiceImplTest {
         true,
         null,
         null,
-        List.of());
+        List.of(),
+        McAttemptsMode.UNLIMITED);
 
     assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
         .isInstanceOf(InviteCodeGenerationException.class);
@@ -1349,7 +1356,8 @@ class CourseServiceImplTest {
         true,
         null,
         null,
-        List.of());
+        List.of(),
+        McAttemptsMode.UNLIMITED);
 
     assertThatThrownBy(() -> courseService.updateCourse(ownerId, courseId, updateRequest))
         .isInstanceOf(InviteCodeGenerationException.class);

@@ -37,4 +37,10 @@ public class ChallengeStudentDto {
 
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
+
+  /**
+   * MC attempt mode inherited from the course context. "ONCE" = one attempt regardless of
+   * correctness; "UNLIMITED" = retry until correct. Only populated on the play view.
+   */
+  private String mcAttemptsMode;
 }

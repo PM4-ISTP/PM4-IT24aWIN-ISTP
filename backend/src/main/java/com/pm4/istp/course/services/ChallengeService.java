@@ -42,11 +42,19 @@ public interface ChallengeService {
       UUID userId, UUID challengeId, UUID subTaskId, String flag);
 
   /**
-   * Submits a multiple-choice option for a sub-task. Automatically awards points when correct. A
-   * student may only submit once; re-submission returns the existing result.
+   * Submits a multiple-choice option for a sub-task.
+   *
+   * <p>Behaviour depends on the course's {@code mcAttemptsMode}:
+   *
+   * <ul>
+   *   <li>{@code ONCE} – the submission is recorded and the sub-task is marked completed regardless
+   *       of correctness. Points are awarded only when the answer is correct.
+   *   <li>{@code UNLIMITED} – wrong answers are NOT persisted, so the student can retry. The
+   *       sub-task is marked completed only on a correct answer.
+   * </ul>
    */
   ChoiceSubmissionResponseDto submitSubTaskChoice(
-      UUID userId, UUID challengeId, UUID subTaskId, UUID selectedOptionId);
+      UUID userId, UUID courseId, UUID challengeId, UUID subTaskId, UUID selectedOptionId);
 
   /**
    * Completes a theory sub-task (FLAG type with no flag set) without requiring a flag submission.
