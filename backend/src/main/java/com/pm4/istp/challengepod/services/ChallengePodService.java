@@ -9,8 +9,10 @@ import com.pm4.istp.challengepod.exceptions.ChallengePodException;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.services.ChallengeService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -29,6 +31,7 @@ import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -357,6 +360,11 @@ public class ChallengePodService {
       return PodStatusEnum.TERMINATING;
     }
 
+    Optional<PodStatusEnum> podFailureStatus = findPodFailureStatus(d);
+    if (podFailureStatus.isPresent()) {
+      return podFailureStatus.get();
+    }
+
     if (d.getStatus() != null) {
       List<DeploymentCondition> conditions = d.getStatus().getConditions();
       if (conditions != null) {
@@ -376,6 +384,53 @@ public class ChallengePodService {
     }
 
     return PodStatusEnum.PROVISIONING;
+  }
+
+  private Optional<PodStatusEnum> findPodFailureStatus(Deployment deployment) {
+    Map<String, String> labels = deployment.getMetadata().getLabels();
+    if (labels == null || labels.isEmpty()) {
+      return Optional.empty();
+    }
+
+    try {
+      List<Pod> pods =
+          getClient().pods().inNamespace(defaultNamespace).withLabels(labels).list().getItems();
+
+      boolean hasFailedContainer =
+          pods.stream()
+              .filter(pod -> pod.getStatus() != null)
+              .map(pod -> pod.getStatus().getContainerStatuses())
+              .filter(Objects::nonNull)
+              .flatMap(List::stream)
+              .anyMatch(this::containerHasFailed);
+
+      return hasFailedContainer ? Optional.of(PodStatusEnum.FAILED) : Optional.empty();
+    } catch (Exception e) {
+      log.debug("Could not inspect pod status for {}", deployment.getMetadata().getName(), e);
+      return Optional.empty();
+    }
+  }
+
+  private boolean containerHasFailed(ContainerStatus status) {
+    if (status.getState() == null) {
+      return false;
+    }
+
+    if (status.getState().getWaiting() != null) {
+      String reason = status.getState().getWaiting().getReason();
+      return "ErrImagePull".equals(reason)
+          || "ImagePullBackOff".equals(reason)
+          || "CreateContainerConfigError".equals(reason)
+          || "CreateContainerError".equals(reason)
+          || "CrashLoopBackOff".equals(reason);
+    }
+
+    if (status.getState().getTerminated() != null) {
+      Integer exitCode = status.getState().getTerminated().getExitCode();
+      return exitCode != null && exitCode != 0;
+    }
+
+    return false;
   }
 
   private PodStatusResponse createResources(
@@ -430,14 +485,7 @@ public class ChallengePodService {
             .addNewPort()
             .withContainerPort(DEFAULT_APP_PORT) // TODO(#163): challenge.getContainerPort()
             .endPort()
-            .withNewSecurityContext()
-            .withAllowPrivilegeEscalation(false)
-            .withNewCapabilities()
-            .withDrop("ALL")
-            .endCapabilities()
-            .endSecurityContext()
             .endContainer()
-            // TODO: Consider runAsNonRoot(true) once all challenge images are verified compatible.
             .endSpec()
             .endTemplate()
             .endSpec()

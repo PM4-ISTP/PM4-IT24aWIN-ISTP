@@ -18,6 +18,8 @@ import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.services.ChallengeService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.ContainerStatusBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
@@ -165,9 +167,7 @@ class ChallengePodServiceTest {
                                     .singleElement()
                                     .satisfies(port -> assertThat(port.getContainerPort()).isEqualTo(80));
                             assertThat(container.getResources().getLimits()).containsKeys("cpu", "memory");
-                            assertThat(container.getSecurityContext().getAllowPrivilegeEscalation()).isFalse();
-                            assertThat(container.getSecurityContext().getCapabilities().getDrop())
-                                    .containsExactly("ALL");
+                            assertThat(container.getSecurityContext()).isNull();
                         });
         assertThat(deployment.getSpec().getTemplate().getSpec().getAutomountServiceAccountToken())
                 .isFalse();
@@ -243,6 +243,51 @@ class ChallengePodServiceTest {
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    @Test
+    void containerHasFailed_returnsTrueForImagePullWaitingReasons() {
+        ContainerStatus status = new ContainerStatusBuilder()
+                .withNewState()
+                .withNewWaiting()
+                .withReason("ImagePullBackOff")
+                .endWaiting()
+                .endState()
+                .build();
+
+        Boolean failed = ReflectionTestUtils.invokeMethod(service, "containerHasFailed", status);
+
+        assertThat(failed).isTrue();
+    }
+
+    @Test
+    void containerHasFailed_returnsTrueForNonZeroExitCode() {
+        ContainerStatus status = new ContainerStatusBuilder()
+                .withNewState()
+                .withNewTerminated()
+                .withExitCode(126)
+                .endTerminated()
+                .endState()
+                .build();
+
+        Boolean failed = ReflectionTestUtils.invokeMethod(service, "containerHasFailed", status);
+
+        assertThat(failed).isTrue();
+    }
+
+    @Test
+    void containerHasFailed_returnsFalseForCleanTermination() {
+        ContainerStatus status = new ContainerStatusBuilder()
+                .withNewState()
+                .withNewTerminated()
+                .withExitCode(0)
+                .endTerminated()
+                .endState()
+                .build();
+
+        Boolean failed = ReflectionTestUtils.invokeMethod(service, "containerHasFailed", status);
+
+        assertThat(failed).isFalse();
+    }
 
     @SuppressWarnings("unchecked")
     private void setClientRef(KubernetesClient client) {
