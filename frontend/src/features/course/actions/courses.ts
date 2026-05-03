@@ -40,6 +40,7 @@ export async function createCourse(
     isPrivate: dto.isPrivate,
     imageUrl: dto.imageUrl ?? undefined,
     topic: dto.topic ?? undefined,
+    mcAttemptsMode: dto.mcAttemptsMode ?? "UNLIMITED",
     instructors: dto.collaboratorIds.map((id) => ({
       instructorId: id,
       instructorRole: "COLLABORATOR",
@@ -100,6 +101,7 @@ export async function updateCourse(
     isPrivate: dto.isPrivate,
     imageUrl: dto.imageUrl ?? undefined,
     topic: dto.topic ?? undefined,
+    mcAttemptsMode: dto.mcAttemptsMode ?? "UNLIMITED",
     instructors: dto.collaboratorIds.map((cid) => ({
       instructorId: cid,
       instructorRole: "COLLABORATOR",

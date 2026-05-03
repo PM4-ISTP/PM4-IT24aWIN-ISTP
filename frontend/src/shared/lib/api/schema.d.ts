@@ -652,6 +652,7 @@ export interface components {
       shortDescription: string;
       imageUrl?: string;
       topic?: string;
+      mcAttemptsMode?: string;
       instructors: components["schemas"]["UpdateCourseInstructorRequestDto"][];
       private?: boolean;
       published?: boolean;
@@ -868,6 +869,7 @@ export interface components {
       shortDescription: string;
       imageUrl?: string;
       topic?: string;
+      mcAttemptsMode?: string;
       instructors: components["schemas"]["CreateCourseInstructorRequestDto"][];
       private?: boolean;
       published?: boolean;
