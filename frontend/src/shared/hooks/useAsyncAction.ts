@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { notifications } from "@mantine/notifications";
 
 export interface AsyncActionMessages<T> {
@@ -11,6 +11,9 @@ export interface AsyncActionMessages<T> {
 }
 
 export interface AsyncActionOptions<T> extends AsyncActionMessages<T> {
+  /** Stable Mantine notification id. Reusing the same id de-duplicates toasts
+   *  across rapid retries so the user sees one updating toast instead of a stack. */
+  id?: string;
   onSuccess?: (result: T) => void | Promise<void>;
   onError?: (error: Error) => void | Promise<void>;
   silentSuccess?: boolean;
@@ -35,9 +38,12 @@ export function useAsyncAction<T, Args extends unknown[]>(
 ): AsyncActionState<T, Args> {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const inFlightRef = useRef(false);
 
   const run = useCallback(
     async (...args: Args): Promise<T | undefined> => {
+      if (inFlightRef.current) return undefined;
+      inFlightRef.current = true;
       setLoading(true);
       setError(null);
       try {
@@ -47,6 +53,7 @@ export function useAsyncAction<T, Args extends unknown[]>(
           const message = resolve(options.successMessage, result);
           if (options.successTitle || message) {
             notifications.show({
+              id: options.id,
               title: options.successTitle ?? "Success",
               message: message ?? "",
               color: "green",
@@ -62,6 +69,7 @@ export function useAsyncAction<T, Args extends unknown[]>(
 
         if (!options.silentError) {
           notifications.show({
+            id: options.id,
             title: options.errorTitle ?? "Error",
             message: resolve(options.errorMessage, err) ?? err.message,
             color: "red",
@@ -71,6 +79,7 @@ export function useAsyncAction<T, Args extends unknown[]>(
         if (options.onError) await options.onError(err);
         return undefined;
       } finally {
+        inFlightRef.current = false;
         setLoading(false);
       }
     },

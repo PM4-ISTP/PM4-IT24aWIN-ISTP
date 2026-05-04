@@ -1,5 +1,3 @@
-"use client";
-
 import { Box, type BoxProps } from "@mantine/core";
 import type { CSSProperties, ReactNode } from "react";
 import { surfaceTokens, type SurfaceElevation, type SurfaceVariant } from "@/src/shared/lib/theme";

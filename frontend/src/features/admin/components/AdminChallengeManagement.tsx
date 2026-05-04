@@ -22,6 +22,7 @@ import { useAdminPagedList } from "@/src/features/admin/hooks/useAdminPagedList"
 import { cleanText, formatDate, wrapTextStyle } from "@/src/features/admin/lib/adminUi";
 import MyEditor from "@/src/shared/components/MyEditor";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { slugify } from "@/src/shared/lib/utils";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -69,7 +70,12 @@ export default function AdminChallengeManagement() {
   const [saving, setSaving] = useState(false);
 
   const showToast = useCallback((color: "red" | "orange", title: string, message: string) => {
-    notifications.show({ color, title, message });
+    notifications.show({
+      id: `admin-challenge-management:${color}:${slugify(title)}`,
+      color,
+      title,
+      message,
+    });
   }, []);
 
   useEffect(() => {

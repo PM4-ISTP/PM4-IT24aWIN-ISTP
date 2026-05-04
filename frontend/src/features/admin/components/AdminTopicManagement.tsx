@@ -6,6 +6,7 @@ import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
+import { slugify } from "@/src/shared/lib/utils";
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal";
 
 const MIN_TOPIC_LENGTH = 3;
@@ -62,7 +63,12 @@ export default function AdminTopicManagement() {
 
   const showToast = useCallback(
     (color: "green" | "red" | "orange", title: string, message: string) => {
-      notifications.show({ color, title, message });
+      notifications.show({
+        id: `admin-topic-management:${color}:${slugify(title)}`,
+        color,
+        title,
+        message,
+      });
     },
     []
   );

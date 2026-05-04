@@ -154,6 +154,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
       if (error) throw new Error(JSON.stringify(error));
     },
     {
+      id: "admin-config-delete",
       successTitle: "Success",
       successMessage: "Admin configuration has been successfully deleted.",
       errorTitle: "Error",

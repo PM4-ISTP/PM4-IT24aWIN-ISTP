@@ -11,7 +11,7 @@ export interface LoadingStateProps {
 
 export function LoadingState({ label, size = "md", minHeight = 160 }: LoadingStateProps) {
   return (
-    <Center mih={minHeight} p="lg">
+    <Center mih={minHeight} p="lg" role="status" aria-live="polite" aria-busy="true">
       <Stack align="center" gap="sm">
         <Loader size={size} />
         {label ? (

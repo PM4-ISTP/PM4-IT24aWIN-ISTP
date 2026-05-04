@@ -117,6 +117,7 @@ export default function EditCourse() {
     const ownerId = owner?.id;
     if (ownerId && newValue.includes(ownerId)) {
       notifications.show({
+        id: "course-owner-as-collaborator",
         color: "orange",
         title: "Can't add owner as collaborator",
         message:
@@ -484,6 +485,7 @@ export default function EditCourse() {
                     const newVal = e.currentTarget.value;
                     if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
                       notifications.show({
+                        id: "course-short-description-char-limit",
                         color: "orange",
                         title: "Character limit reached",
                         message: `The short description cannot exceed ${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters (including spaces).`,

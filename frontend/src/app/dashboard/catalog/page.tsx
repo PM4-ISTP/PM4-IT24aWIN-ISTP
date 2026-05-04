@@ -50,6 +50,7 @@ export default async function CatalogPage(props: {
         />
       ) : (
         <NotifyOnMount
+          id="catalog-error"
           color="red"
           title="Could not load catalog"
           message={

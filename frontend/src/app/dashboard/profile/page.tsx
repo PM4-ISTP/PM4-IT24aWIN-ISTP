@@ -112,6 +112,7 @@ export default function ProfilePage() {
       return (await res.json()) as UserProfile;
     },
     {
+      id: "user-profile-save",
       successTitle: "Saved",
       successMessage: "Your profile has been updated.",
       errorTitle: "Error",

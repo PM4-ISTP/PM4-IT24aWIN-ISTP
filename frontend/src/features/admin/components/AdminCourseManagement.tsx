@@ -25,6 +25,7 @@ import { cleanText, formatDate, wrapTextStyle } from "@/src/features/admin/lib/a
 import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 import MyEditor from "@/src/shared/components/MyEditor";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { slugify } from "@/src/shared/lib/utils";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
@@ -75,7 +76,12 @@ export default function AdminCourseManagement() {
   const [saving, setSaving] = useState(false);
 
   const showToast = useCallback((color: "red" | "orange", title: string, message: string) => {
-    notifications.show({ color, title, message });
+    notifications.show({
+      id: `admin-course-management:${color}:${slugify(title)}`,
+      color,
+      title,
+      message,
+    });
   }, []);
 
   useEffect(() => {

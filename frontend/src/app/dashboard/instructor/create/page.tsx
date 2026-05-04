@@ -143,6 +143,7 @@ export default function CreateCourse() {
                 const newVal = e.currentTarget.value;
                 if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
                   notifications.show({
+                    id: "course-short-description-char-limit",
                     color: "orange",
                     title: "Character limit reached",
                     message: `The short description cannot exceed ${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters (including spaces).`,
