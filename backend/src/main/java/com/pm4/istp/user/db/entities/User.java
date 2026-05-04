@@ -96,7 +96,7 @@ public class User {
   @Column(name = "anonymized_at")
   private LocalDateTime anonymizedAt;
 
-  @Column(name = "total_seconds_online", nullable = false)
+  @Column(name = "total_seconds_online", nullable = false, columnDefinition = "bigint default 0")
   private long totalSecondsOnline = 0L;
 
   public boolean isDeleted() {
