@@ -190,6 +190,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     return userRepository
         .findByIdAndDeletedAtIsNull(userId)
         .map(User::getTotalSecondsOnline)
-        .orElse(user.getTotalSecondsOnline() + seconds);
+        .orElseThrow(
+            () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
   }
 }
