@@ -67,7 +67,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
               .retrieve()
               .toBodilessEntity();
 
-      URI location = response == null ? null : response.getHeaders().getLocation();
+      URI location = response.getHeaders().getLocation();
       UUID createdId = parseCreatedUserId(location);
       if (createdId == null) {
         throw new KeycloakAdminApiException(

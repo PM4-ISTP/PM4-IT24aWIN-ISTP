@@ -864,9 +864,10 @@ class CourseServiceImplTest {
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
 
+    List<CourseChallengeItemDto> items = List.of(new CourseChallengeItemDto(challengeId, 0, null));
+
     assertThatThrownBy(
-        () -> courseService.updateCourseChallenges(
-            ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0, null))))
+        () -> courseService.updateCourseChallenges(ownerId, courseId, items))
         .isInstanceOf(InvalidCourseChallengeException.class)
         .hasMessageContaining("draft");
 
@@ -891,9 +892,10 @@ class CourseServiceImplTest {
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
 
+    List<CourseChallengeItemDto> items = List.of(new CourseChallengeItemDto(challengeId, 0, null));
+
     assertThatThrownBy(
-        () -> courseService.updateCourseChallenges(
-            ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0, null))))
+        () -> courseService.updateCourseChallenges(ownerId, courseId, items))
         .isInstanceOf(ChallengeNotFoundException.class);
 
     verify(courseRepository, never()).save(any(Course.class));
@@ -913,9 +915,10 @@ class CourseServiceImplTest {
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.empty());
 
+    List<CourseChallengeItemDto> items = List.of(new CourseChallengeItemDto(challengeId, 0, null));
+
     assertThatThrownBy(
-        () -> courseService.updateCourseChallenges(
-            ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0, null))))
+        () -> courseService.updateCourseChallenges(ownerId, courseId, items))
         .isInstanceOf(ChallengeNotFoundException.class);
 
     verify(courseRepository, never()).save(any(Course.class));
@@ -934,8 +937,9 @@ class CourseServiceImplTest {
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
-    assertThatThrownBy(
-        () -> courseService.updateCourseChallenges(outsiderId, courseId, List.of()))
+    List<CourseChallengeItemDto> items = List.of();
+
+    assertThatThrownBy(() -> courseService.updateCourseChallenges(outsiderId, courseId, items))
         .isInstanceOf(CourseAccessDeniedException.class);
 
     verify(courseRepository, never()).save(any(Course.class));
@@ -948,7 +952,9 @@ class CourseServiceImplTest {
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> courseService.updateCourseChallenges(ownerId, courseId, List.of()))
+    List<CourseChallengeItemDto> items = List.of();
+
+    assertThatThrownBy(() -> courseService.updateCourseChallenges(ownerId, courseId, items))
         .isInstanceOf(CourseNotFoundException.class);
   }
 

@@ -67,7 +67,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
   @PostConstruct
   void init() {
     Duration timeout = userInfoTimeout == null ? Duration.ofSeconds(2) : userInfoTimeout;
-    int timeoutMs = (int) Math.max(1, Math.min(Integer.MAX_VALUE, timeout.toMillis()));
+    int timeoutMs = Math.clamp(timeout.toMillis(), 1, Integer.MAX_VALUE);
 
     SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
     requestFactory.setConnectTimeout(timeoutMs);
@@ -281,6 +281,9 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
   private Set<UserRoleEnum> resolveApplicationRoles() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null) {
+      return Set.of();
+    }
     Set<UserRoleEnum> rawRoles =
         authentication.getAuthorities().stream()
             .map(GrantedAuthority::getAuthority)

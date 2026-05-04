@@ -477,7 +477,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     Optional<StudentOptionSubmission> existing =
         studentOptionSubmissionRepository.findByUserIdAndSubTaskId(userId, subTaskId);
     if (existing.isPresent()) {
-      return buildChoiceResponseForExistingSubmission(existing.get(), userId, challengeId, subTask);
+      return buildChoiceResponseForExistingSubmission(existing.get(), userId, subTask);
     }
 
     SubTaskOption selectedOption = findSelectedOption(subTask, selectedOptionId);
@@ -488,19 +488,18 @@ public class ChallengeServiceImpl implements ChallengeService {
           user, userId, challengeId, subTask, selectedOption, correct);
     }
     if (!correct) {
-      return buildChoiceResponse(false, userId, subTask.getChallenge(), challengeId, subTask);
+      return buildChoiceResponse(false, userId, subTask.getChallenge(), subTask);
     }
     return handleCorrectUnlimitedChoiceSubmission(
         user, userId, challengeId, subTask, selectedOption);
   }
 
   private ChoiceSubmissionResponseDto buildChoiceResponseForExistingSubmission(
-      StudentOptionSubmission submission, UUID userId, UUID challengeId, SubTask subTask) {
+      StudentOptionSubmission submission, UUID userId, SubTask subTask) {
     return buildChoiceResponse(
         submission.isCorrect(),
         userId,
         subTask.getChallenge(),
-        challengeId,
         submission.isCorrect() ? null : subTask);
   }
 
@@ -557,13 +556,11 @@ public class ChallengeServiceImpl implements ChallengeService {
     try {
       saveChoiceSubmission(user, subTask, selectedOption, correct);
     } catch (DataIntegrityViolationException ex) {
-      return buildChoiceResponse(
-          correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
+      return buildChoiceResponse(correct, userId, subTask.getChallenge(), correct ? null : subTask);
     }
     saveCompletionIfMissing(user, userId, subTask);
     ChoiceSubmissionResponseDto response =
-        buildChoiceResponse(
-            correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
+        buildChoiceResponse(correct, userId, subTask.getChallenge(), correct ? null : subTask);
     awardBadgeIfChallengeSolved(response, userId, challengeId);
     return response;
   }
@@ -573,11 +570,11 @@ public class ChallengeServiceImpl implements ChallengeService {
     try {
       saveChoiceSubmission(user, subTask, selectedOption, true);
     } catch (DataIntegrityViolationException ex) {
-      return buildChoiceResponse(true, userId, subTask.getChallenge(), challengeId, null);
+      return buildChoiceResponse(true, userId, subTask.getChallenge(), null);
     }
     saveCompletionIfMissing(user, userId, subTask);
     ChoiceSubmissionResponseDto response =
-        buildChoiceResponse(true, userId, subTask.getChallenge(), challengeId, null);
+        buildChoiceResponse(true, userId, subTask.getChallenge(), null);
     awardBadgeIfChallengeSolved(response, userId, challengeId);
     return response;
   }
@@ -616,7 +613,7 @@ public class ChallengeServiceImpl implements ChallengeService {
   }
 
   private ChoiceSubmissionResponseDto buildChoiceResponse(
-      boolean correct, UUID userId, Challenge challenge, UUID challengeId, SubTask subTask) {
+      boolean correct, UUID userId, Challenge challenge, SubTask subTask) {
     List<SubTask> siblings = challenge.getSubTasks();
     List<UUID> siblingIds = siblingsIds(siblings);
     Set<UUID> solvedIds = solvedSubTaskIds(userId, siblingIds);

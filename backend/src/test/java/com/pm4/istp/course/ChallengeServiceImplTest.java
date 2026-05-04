@@ -107,29 +107,9 @@ class ChallengeServiceImplTest {
       String shortDesc,
       String desc,
       ChallengeStatusEnum status,
-      ChallengeDifficultyEnum difficulty) {
-    return new CreateChallengeRequest(
-        title, shortDesc, desc, status, difficulty, DEFAULT_DOCKER_IMAGE, oneSubTask());
-  }
-
-  private CreateChallengeRequest createRequest(
-      String title,
-      String shortDesc,
-      String desc,
-      ChallengeStatusEnum status,
       ChallengeDifficultyEnum difficulty,
       String dockerImage) {
     return new CreateChallengeRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneSubTask());
-  }
-
-  private UpdateChallengeRequest updateRequest(
-      String title,
-      String shortDesc,
-      String desc,
-      ChallengeStatusEnum status,
-      ChallengeDifficultyEnum difficulty) {
-    return new UpdateChallengeRequest(
-        title, shortDesc, desc, status, difficulty, DEFAULT_DOCKER_IMAGE, oneSubTask());
   }
 
   private UpdateChallengeRequest updateRequest(

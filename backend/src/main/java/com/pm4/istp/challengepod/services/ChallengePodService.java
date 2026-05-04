@@ -585,7 +585,7 @@ public class ChallengePodService {
     if (prefix == null) {
       return "";
     }
-    return prefix.trim().toLowerCase().replaceAll("[^a-z0-9-]", "-").replaceAll("^-+|-+$", "");
+    return prefix.trim().toLowerCase().replaceAll("[^a-z0-9-]", "-").replaceAll("(^-+)|(-+$)", "");
   }
 
   private Optional<String> findIngressHost(String instanceName, int servicePort) {

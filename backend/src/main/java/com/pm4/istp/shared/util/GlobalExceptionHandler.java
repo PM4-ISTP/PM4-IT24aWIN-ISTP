@@ -122,11 +122,11 @@ public class GlobalExceptionHandler {
     Throwable cause = ex.getCause();
     if (cause instanceof RestClientResponseException rre) {
       String body = rre.getResponseBodyAsString();
-      String normalized = body == null ? null : body.trim();
-      if (normalized != null && normalized.length() > 300) {
+      String normalized = body.trim();
+      if (normalized.length() > 300) {
         normalized = normalized.substring(0, 300) + "...";
       }
-      if (normalized != null && !normalized.isBlank()) {
+      if (!normalized.isBlank()) {
         return normalized;
       }
       return rre.getStatusText();

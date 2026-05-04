@@ -94,11 +94,11 @@ class UserProfileServiceImplTest {
   void updateProfile_otherUser_withoutAdminRole_isForbidden() {
     UUID actorId = UUID.randomUUID();
     UUID targetId = UUID.randomUUID();
+    List<GrantedAuthority> authorities = List.of();
+    UpdateUserProfileRequestDto request = new UpdateUserProfileRequestDto();
 
     assertThatThrownBy(
-            () ->
-                userProfileService.updateProfile(
-                    actorId, List.of(), targetId, new UpdateUserProfileRequestDto()))
+            () -> userProfileService.updateProfile(actorId, authorities, targetId, request))
         .isInstanceOf(AccessDeniedException.class);
 
     verify(userRepository, never()).findByIdAndDeletedAtIsNull(any());
@@ -159,7 +159,9 @@ class UserProfileServiceImplTest {
     when(keycloakAdminClient.getUser(userId)).thenReturn(before);
     doThrow(new KeycloakAdminApiException("boom")).when(keycloakAdminClient).updateUser(eq(userId), any());
 
-    assertThatThrownBy(() -> userProfileService.updateProfile(userId, List.of(), userId, request))
+    List<GrantedAuthority> authorities = List.of();
+
+    assertThatThrownBy(() -> userProfileService.updateProfile(userId, authorities, userId, request))
         .isInstanceOf(KeycloakAdminApiException.class);
 
     verify(userRepository, never()).save(any());
@@ -189,7 +191,9 @@ class UserProfileServiceImplTest {
     when(keycloakAdminClient.getUser(userId)).thenReturn(before);
     when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("db down"));
 
-    assertThatThrownBy(() -> userProfileService.updateProfile(userId, List.of(), userId, request))
+    List<GrantedAuthority> authorities = List.of();
+
+    assertThatThrownBy(() -> userProfileService.updateProfile(userId, authorities, userId, request))
         .isInstanceOf(UserProfileSyncException.class);
 
     verify(keycloakAdminClient, times(2)).updateUser(eq(userId), any(KeycloakUserRepresentation.class));
