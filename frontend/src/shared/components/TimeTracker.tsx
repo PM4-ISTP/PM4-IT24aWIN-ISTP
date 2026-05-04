@@ -24,13 +24,14 @@ async function syncToBackend(userId: string | null): Promise<void> {
     const synced = Number(localStorage.getItem(syncedKey(userId)) ?? "0");
     const delta = current - synced;
     if (delta <= 0) return;
+    const secondsToSync = Math.min(delta, MAX_SYNC_SECONDS);
     const res = await fetch("/api/backend/api/v1/users/me/online-time", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ seconds: Math.min(delta, MAX_SYNC_SECONDS) }),
+      body: JSON.stringify({ seconds: secondsToSync }),
     });
     if (res.ok) {
-      localStorage.setItem(syncedKey(userId), String(current));
+      localStorage.setItem(syncedKey(userId), String(synced + secondsToSync));
     }
   } catch {
     // network failures are silently ignored — will retry on next sync
