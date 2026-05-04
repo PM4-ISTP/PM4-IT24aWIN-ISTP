@@ -66,6 +66,7 @@ public class BadgeServiceImpl implements BadgeService {
         request.badgeIcon() == null || request.badgeIcon().isBlank()
             ? DEFAULT_ICON
             : request.badgeIcon());
+    course.setBadgeEnabled(request.badgeEnabled());
 
     Course saved = courseRepository.save(course);
     return toConfigDto(saved);
@@ -89,6 +90,9 @@ public class BadgeServiceImpl implements BadgeService {
         courseRepository.findCoursesByChallengeIdAndEnrolledUserId(challengeId, userId);
 
     for (Course course : courses) {
+      if (!course.isBadgeEnabled()) {
+        continue;
+      }
       if (userCourseBadgeRepository.existsByUserIdAndCourseId(userId, course.getId())) {
         continue;
       }
@@ -141,7 +145,8 @@ public class BadgeServiceImpl implements BadgeService {
         course.getBadgePrimaryColor() != null ? course.getBadgePrimaryColor() : DEFAULT_COLOR,
         course.getBadgeTextColor() != null ? course.getBadgeTextColor() : DEFAULT_TEXT_COLOR,
         course.getBadgeTemplate() != null ? course.getBadgeTemplate() : DEFAULT_TEMPLATE,
-        course.getBadgeIcon() != null ? course.getBadgeIcon() : DEFAULT_ICON);
+        course.getBadgeIcon() != null ? course.getBadgeIcon() : DEFAULT_ICON,
+        course.isBadgeEnabled());
   }
 
   private UserBadgeDto toBadgeDto(UserCourseBadge b) {

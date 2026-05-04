@@ -78,7 +78,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           MozOsxFontSmoothing: "grayscale",
         }}
       >
-        <TimeTracker userId={(session?.user as { id?: string } | undefined)?.id ?? null} />
+        <TimeTracker userId={session?.userId ?? null} />
         <SessionErrorHandler />
         {children}
       </AppShellMain>

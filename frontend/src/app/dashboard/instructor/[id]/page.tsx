@@ -250,6 +250,7 @@ export default function EditCourse() {
           textColor: badgeConfig.textColor,
           template: badgeConfig.template,
           badgeIcon: badgeConfig.badgeIcon,
+          badgeEnabled: badgeConfig.badgeEnabled,
         }),
       }).catch(() => {});
     }

@@ -8,4 +8,5 @@ public record CourseBadgeConfigDto(
     String primaryColor,
     String textColor,
     int template,
-    String badgeIcon) {}
+    String badgeIcon,
+    boolean badgeEnabled) {}
