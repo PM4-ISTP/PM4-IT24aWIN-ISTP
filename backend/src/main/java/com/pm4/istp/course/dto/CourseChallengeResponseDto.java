@@ -16,4 +16,5 @@ public class CourseChallengeResponseDto {
   private ChallengeDifficultyEnum difficulty;
   private int orderIndex;
   private LocalDateTime dueAt;
+  private int maxScore;
 }

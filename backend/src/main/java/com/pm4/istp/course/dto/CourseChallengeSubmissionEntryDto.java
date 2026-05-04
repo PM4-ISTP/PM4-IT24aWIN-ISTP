@@ -14,6 +14,8 @@ public class CourseChallengeSubmissionEntryDto {
   private UUID challengeId;
   private int solvedSubTaskCount;
   private int totalSubTaskCount;
+  private int awardedPoints;
+  private int maxPoints;
   private int solvedBeforeDeadlineCount;
   private LocalDateTime completedAt;
   private CourseChallengeSubmissionStatusEnum status;

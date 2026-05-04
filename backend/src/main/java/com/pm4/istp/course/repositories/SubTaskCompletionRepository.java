@@ -45,6 +45,28 @@ public interface SubTaskCompletionRepository extends JpaRepository<SubTaskComple
 
   @Query(
       """
+      select c.user.id, c.subTask.challenge.id, coalesce(sum(c.subTask.points), 0), max(c.solvedAt)
+      from SubTaskCompletion c
+      where c.user.id in :userIds and c.subTask.challenge.id in :challengeIds
+      group by c.user.id, c.subTask.challenge.id
+      """)
+  List<Object[]> aggregateSolvedPointsForUsersAndChallenges(
+      @Param("userIds") Collection<UUID> userIds,
+      @Param("challengeIds") Collection<UUID> challengeIds);
+
+  @Query(
+      """
+      select c.user.id, c.subTask.challenge.id, coalesce(sum(c.subTask.points), 0)
+      from SubTaskCompletion c
+      where c.user.id in :userIds and c.subTask.challenge.id in :challengeIds
+      group by c.user.id, c.subTask.challenge.id
+      """)
+  List<Object[]> aggregatePointsForUsersAndChallenges(
+      @Param("userIds") Collection<UUID> userIds,
+      @Param("challengeIds") Collection<UUID> challengeIds);
+
+  @Query(
+      """
       select stc.user.id, stc.subTask.challenge.id, count(stc)
       from SubTaskCompletion stc
       join CourseChallenge cc on cc.challenge.id = stc.subTask.challenge.id and cc.course.id = :courseId

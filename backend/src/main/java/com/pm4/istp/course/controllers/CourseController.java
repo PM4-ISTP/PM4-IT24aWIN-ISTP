@@ -9,6 +9,7 @@ import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
@@ -20,6 +21,7 @@ import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.dto.PublicCourseDetailResponseDto;
 import com.pm4.istp.course.dto.SubTaskStudentDto;
 import com.pm4.istp.course.dto.UpdateCourseChallengesRequestDto;
+import com.pm4.istp.course.dto.UpdateCourseChallengeScoreRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.mappers.CourseMapper;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
@@ -286,6 +288,45 @@ public class CourseController {
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     return ResponseEntity.ok(courseService.getCourseChallengeSubmissions(userId, id));
+  }
+
+  @Operation(
+      summary = "Update participant score for a course challenge",
+      description =
+          "Allows an instructor to manually override points for one participant in one lab/challenge."
+              + " Valid range is 0 to the challenge max score.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Score updated successfully",
+            content =
+                @Content(schema = @Schema(implementation = CourseChallengeSubmissionEntryDto.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Points are out of range",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course, challenge, or participant not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PutMapping("/{id}/submissions/{participantId}/{challengeId}/score")
+  public ResponseEntity<CourseChallengeSubmissionEntryDto> updateCourseChallengeScore(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID id,
+      @PathVariable UUID participantId,
+      @PathVariable UUID challengeId,
+      @Valid @RequestBody UpdateCourseChallengeScoreRequestDto request) {
+    UUID instructorId = parseUserId(jwt);
+    CourseChallengeSubmissionEntryDto updated =
+        courseService.updateCourseChallengeScore(
+            instructorId, id, participantId, challengeId, request.getPoints());
+    return ResponseEntity.ok(updated);
   }
 
   @Operation(

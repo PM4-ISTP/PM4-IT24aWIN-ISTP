@@ -6,13 +6,14 @@ import {
   ActionIcon,
   Alert,
   Avatar,
+  Button,
   Box,
   Container,
   Drawer,
   Group,
   Loader,
   Menu,
-  Progress,
+  NumberInput,
   Select,
   SimpleGrid,
   Stack,
@@ -30,7 +31,6 @@ import {
   IconSearch,
   IconTrendingUp,
   IconUsers,
-  IconAlertCircle,
   IconPlayerPlay,
 } from "@tabler/icons-react";
 import { fetchCourse } from "@/src/features/course/actions/courses";
@@ -61,15 +61,6 @@ function overallStatus(statuses: SubmissionStatus[]): SubmissionStatus {
   if (statuses.includes("ON_TIME")) return "ON_TIME";
   if (statuses.includes("IN_PROGRESS")) return "IN_PROGRESS";
   return "NOT_SUBMITTED";
-}
-
-function statusColor(s: SubmissionStatus): string {
-  switch (s) {
-    case "ON_TIME": return "teal";
-    case "LATE": return "red";
-    case "IN_PROGRESS": return "blue";
-    default: return "gray";
-  }
 }
 
 function statusLabel(s: SubmissionStatus): string {
@@ -123,6 +114,8 @@ interface StudentRow {
   totalSubTasks: number;
   completionPct: number;
   status: SubmissionStatus;
+  awardedPoints: number;
+  maxPoints: number;
 }
 
 interface LabRow {
@@ -132,6 +125,8 @@ interface LabRow {
   solved: number;
   total: number;
   pct: number;
+  awardedPoints: number;
+  maxPoints: number;
 }
 
 // stat card
@@ -175,6 +170,8 @@ export default function CourseResultsPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<StudentRow | null>(null);
   const [labFilter, setLabFilter] = useState<string | null>(null);
+  const [scoreDrafts, setScoreDrafts] = useState<Record<string, number>>({});
+  const [savingScoreKey, setSavingScoreKey] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -210,9 +207,11 @@ export default function CourseResultsPage() {
       const completedLabs = subs.filter((s) => s.status === "ON_TIME" || s.status === "LATE").length;
       const solvedSubTasks = subs.reduce((acc, s) => acc + (s.solvedSubTaskCount ?? 0), 0);
       const totalSubTasks = subs.reduce((acc, s) => acc + (s.totalSubTaskCount ?? 0), 0);
+      const awardedPoints = subs.reduce((acc, s) => acc + (s.awardedPoints ?? 0), 0);
+      const maxPoints = subs.reduce((acc, s) => acc + (s.maxPoints ?? 0), 0);
       const completionPct = totalSubTasks > 0 ? Math.round((solvedSubTasks / totalSubTasks) * 100) : 0;
       const status = overallStatus(subs.map((s) => s.status as SubmissionStatus));
-      return { participant: p, submissions: subs, completedLabs, totalLabs: challenges.length, solvedSubTasks, totalSubTasks, completionPct, status };
+      return { participant: p, submissions: subs, completedLabs, totalLabs: challenges.length, solvedSubTasks, totalSubTasks, completionPct, status, awardedPoints, maxPoints };
     });
   }, [data, challenges]);
 
@@ -229,7 +228,7 @@ export default function CourseResultsPage() {
       const solved = sub?.solvedSubTaskCount ?? 0;
       const total = sub?.totalSubTaskCount ?? 0;
       const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
-      return { row, sub, status, solved, total, pct };
+      return { row, sub, status, solved, total, pct, awardedPoints: sub?.awardedPoints ?? 0, maxPoints: sub?.maxPoints ?? 0 };
     });
   }, [rows, activeLab]);
 
@@ -265,6 +264,50 @@ export default function CourseResultsPage() {
 
   const displayRows = activeLab ? filteredLabRows : filteredRows;
 
+  function scoreKey(participantId: string, challengeId: string): string {
+    return `${participantId}:${challengeId}`;
+  }
+
+  async function saveManualScore(
+    participantId: string,
+    challengeId: string,
+    points: number,
+    maxPoints: number
+  ) {
+    if (points < 0 || points > maxPoints) {
+      return;
+    }
+    const key = scoreKey(participantId, challengeId);
+    setSavingScoreKey(key);
+    try {
+      const res = await fetch(
+        `/api/backend/api/v1/courses/${encodeURIComponent(courseId)}/submissions/${encodeURIComponent(participantId)}/${encodeURIComponent(challengeId)}/score`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ points }),
+        }
+      );
+      if (!res.ok) {
+        throw new Error((await res.text()) || "Failed to save score");
+      }
+      const updatedEntry = (await res.json()) as CourseChallengeSubmissionEntryDto;
+      setData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          submissions: prev.submissions.map((s) =>
+            s.participantId === participantId && s.challengeId === challengeId ? updatedEntry : s
+          ),
+        };
+      });
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSavingScoreKey(null);
+    }
+  }
+
   function exportToCSV() {
     const labLabel = activeLab
       ? `Lab_${String(labIdx).padStart(2, "0")}_${activeLab.challengeTitle.replace(/\s+/g, "_")}`
@@ -282,18 +325,18 @@ export default function CourseResultsPage() {
     let csvRows: string[];
     if (activeLab) {
       csvRows = [
-        ["First Name", "Last Name", "Email", "Status", "Tasks Solved", "Tasks Total", "Score %", "Submitted"].join(","),
+        ["First Name", "Last Name", "Email", "Status", "Points", "Max Points", "Tasks Solved", "Tasks Total", "Score %", "Submitted"].join(","),
         ...filteredLabRows.map((lr) => {
           const [first, last] = splitName(lr.row.participant.name);
-          return [esc(first), esc(last), esc(lr.row.participant.email ?? ""), esc(statusLabel(lr.status)), lr.solved, lr.total, lr.pct, esc(lr.sub?.completedAt ? formatDate(lr.sub.completedAt) : "—")].join(",");
+          return [esc(first), esc(last), esc(lr.row.participant.email ?? ""), esc(statusLabel(lr.status)), lr.awardedPoints, lr.maxPoints, lr.solved, lr.total, lr.pct, esc(lr.sub?.completedAt ? formatDate(lr.sub.completedAt) : "—")].join(",");
         }),
       ];
     } else {
       csvRows = [
-        ["First Name", "Last Name", "Email", "Overall Status", "Labs Completed", "Total Labs", "Score %"].join(","),
+        ["First Name", "Last Name", "Email", "Overall Status", "Points", "Max Points", "Labs Completed", "Total Labs", "Score %"].join(","),
         ...filteredRows.map((r) => {
           const [first, last] = splitName(r.participant.name);
-          return [esc(first), esc(last), esc(r.participant.email ?? ""), esc(statusLabel(r.status)), r.completedLabs, r.totalLabs, r.completionPct].join(",");
+          return [esc(first), esc(last), esc(r.participant.email ?? ""), esc(statusLabel(r.status)), r.awardedPoints, r.maxPoints, r.completedLabs, r.totalLabs, r.completionPct].join(",");
         }),
       ];
     }
@@ -403,7 +446,7 @@ export default function CourseResultsPage() {
             <Box style={{ display: "grid", gridTemplateColumns: "2.5fr 1.2fr 1.4fr 1.8fr 60px", padding: "0.6rem 1.5rem", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               {(activeLab
                 ? ["Participant", "Status", "Tasks", "Completion", "Actions"]
-                : ["Participant", "Status", "Labs Done", "Completion", "Actions"]
+                : ["Participant", "Status", "Points", "Completion", "Actions"]
               ).map((h) => (
                 <Text key={h} size="xs" fw={700} style={{ color: "#475569", letterSpacing: "0.1em", textTransform: "uppercase" }}>{h}</Text>
               ))}
@@ -414,10 +457,10 @@ export default function CourseResultsPage() {
               <Text size="sm" c="dimmed" p="xl" ta="center">No participants found.</Text>
             ) : (
               displayRows.map((item) => {
-                const row = "row" in item ? (item as LabRow).row : (item as StudentRow);
-                const labItem = activeLab ? (item as LabRow) : null;
+                const row = "row" in item ? item.row : item;
+                const labItem = activeLab && "row" in item ? item : null;
                 const status = labItem ? labItem.status : row.status;
-                const pointsLabel = labItem ? `${labItem.solved} / ${labItem.total}` : `${row.completedLabs} / ${row.totalLabs}`;
+                const pointsLabel = labItem ? `${labItem.awardedPoints} / ${labItem.maxPoints} Punkte` : `${row.awardedPoints} / ${row.maxPoints} Punkte`;
                 const pct = labItem ? labItem.pct : row.completionPct;
                 const submittedAt = labItem?.sub?.completedAt ?? null;
 
@@ -445,7 +488,7 @@ export default function CourseResultsPage() {
 
                     <Stack gap={1}>
                       <Text size="sm" fw={600} style={{ color: "#f1f5f9" }}>{pointsLabel}</Text>
-                      <Text size="xs" style={{ color: "#475569" }}>{activeLab ? "tasks" : "labs completed"}</Text>
+                      <Text size="xs" style={{ color: "#475569" }}>{activeLab ? "lab points" : "total points"}</Text>
                     </Stack>
 
                     <Stack gap={4}>
@@ -525,7 +568,7 @@ export default function CourseResultsPage() {
                 <Text size="xs" tt="uppercase" style={{ color: "#64748b", letterSpacing: "0.08em" }} mb={6}>Status</Text>
                 <span style={statusBadgeStyle(selected.status)}>{statusLabel(selected.status)}</span>
                 <Text size="xs" style={{ color: "#64748b", marginTop: 8 }}>
-                  {selected.completedLabs} / {selected.totalLabs} labs done
+                  {selected.awardedPoints} / {selected.maxPoints} Punkte (gesamt)
                 </Text>
               </Box>
             </SimpleGrid>
@@ -536,12 +579,16 @@ export default function CourseResultsPage() {
 
             <Stack gap="xs">
               {challenges.length === 0 && <Text size="sm" c="dimmed">No labs assigned.</Text>}
-              {(challenges as CourseChallengeResponseDto[]).map((c, idx) => {
+              {challenges.map((c: CourseChallengeResponseDto, idx) => {
                 const sub = selected.submissions.find((s) => s.challengeId === c.challengeId);
                 const st = (sub?.status ?? "NOT_SUBMITTED") as SubmissionStatus;
                 const solved = sub?.solvedSubTaskCount ?? 0;
                 const total = sub?.totalSubTaskCount ?? 0;
                 const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
+                const currentPoints = sub?.awardedPoints ?? 0;
+                const maxPoints = sub?.maxPoints ?? c.maxScore ?? 0;
+                const key = scoreKey(selected.participant.id, c.challengeId);
+                const draftValue = scoreDrafts[key] ?? currentPoints;
                 return (
                   <Box key={c.challengeId} style={{
                     background: activeLab?.challengeId === c.challengeId ? "rgba(96,165,250,0.07)" : "rgba(255,255,255,0.03)",
@@ -557,8 +604,8 @@ export default function CourseResultsPage() {
                     {/* Score row */}
                     <Group justify="space-between" align="center" mb={6}>
                       <Group gap={6} align="baseline">
-                        <Text fw={700} style={{ color: "#f1f5f9", fontSize: "1.1rem", lineHeight: 1 }}>{solved}</Text>
-                        <Text size="xs" style={{ color: "#64748b" }}>/ {total} tasks</Text>
+                        <Text fw={700} style={{ color: "#f1f5f9", fontSize: "1.1rem", lineHeight: 1 }}>{currentPoints}</Text>
+                        <Text size="xs" style={{ color: "#64748b" }}>/ {maxPoints} Punkte</Text>
                         {total > 0 && (
                           <Text size="xs" style={{ color: progressColor(st), fontWeight: 600 }}>{pct}%</Text>
                         )}
@@ -569,11 +616,11 @@ export default function CourseResultsPage() {
                       <Box style={{ height: "100%", width: `${pct}%`, background: progressColor(st), borderRadius: 4 }} />
                     </Box>
                     {/* Deadline + submission info */}
-                    {(c as { dueAt?: string | null }).dueAt && (
+                    {c.dueAt && (
                       <Group gap={4} mb={2}>
                         <IconClock size={11} color="#475569" />
                         <Text size="xs" style={{ color: "#475569" }}>
-                          Deadline: {formatDate((c as { dueAt?: string | null }).dueAt)}
+                          Deadline: {formatDate(c.dueAt)}
                         </Text>
                       </Group>
                     )}
@@ -581,7 +628,7 @@ export default function CourseResultsPage() {
                       <Group gap={4}>
                         <IconClock size={11} color="#f87171" />
                         <Text size="xs" style={{ color: "#f87171", fontWeight: 600 }}>
-                          Submitted late: {formatDate(sub.completedAt)}
+                          Submitted late: {formatDate(sub.completedAt)} (kein automatischer Abzug)
                         </Text>
                       </Group>
                     )}
@@ -591,6 +638,50 @@ export default function CourseResultsPage() {
                         <Text size="xs" style={{ color: "#2dd4bf" }}>
                           Submitted: {formatDate(sub.completedAt)}
                         </Text>
+                      </Group>
+                    )}
+                    {sub && (
+                      <Group gap="xs" mt={10} justify="space-between" align="flex-end">
+                        <Button
+                          variant="light"
+                          size="xs"
+                          onClick={() =>
+                            router.push(
+                              `/dashboard/instructor/${courseId}/statistic/${c.challengeId}?query=${encodeURIComponent(selected.participant.name)}`
+                            )
+                          }
+                        >
+                          Abgabe ansehen
+                        </Button>
+                        <Group gap={6} align="flex-end">
+                          <NumberInput
+                            size="xs"
+                            min={0}
+                            max={maxPoints}
+                            value={draftValue}
+                            onChange={(value) => {
+                              const next = typeof value === "number" ? value : 0;
+                              setScoreDrafts((prev) => ({ ...prev, [key]: next }));
+                            }}
+                            allowDecimal={false}
+                            clampBehavior="strict"
+                            styles={{ input: { width: 92 } }}
+                          />
+                          <Button
+                            size="xs"
+                            loading={savingScoreKey === key}
+                            onClick={() => {
+                              void saveManualScore(
+                                selected.participant.id,
+                                c.challengeId,
+                                draftValue,
+                                maxPoints
+                              );
+                            }}
+                          >
+                            Punkte speichern
+                          </Button>
+                        </Group>
                       </Group>
                     )}
                   </Box>

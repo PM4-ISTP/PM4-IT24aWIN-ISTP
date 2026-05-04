@@ -9,6 +9,7 @@ import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseChallenge;
+import com.pm4.istp.course.db.entities.CourseChallengeScoreOverride;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
@@ -29,6 +30,7 @@ import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseChallengeRepository;
+import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
@@ -66,6 +68,7 @@ public class CourseServiceImpl implements CourseService {
   private final CourseRepository courseRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final CourseChallengeRepository courseChallengeRepository;
+  private final CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
   private final ChallengeRepository challengeRepository;
   private final SubTaskRepository subTaskRepository;
   private final SubTaskCompletionRepository subTaskCompletionRepository;
@@ -362,7 +365,8 @@ public class CourseServiceImpl implements CourseService {
                       ch.getTitle(),
                       ch.getDifficulty(),
                       cc.getOrderIndex(),
-                      cc.getDueAt());
+                      cc.getDueAt(),
+                      ch.getMaxScore());
                 })
             .toList();
 
@@ -380,6 +384,7 @@ public class CourseServiceImpl implements CourseService {
 
     record Key(UUID userId, UUID challengeId) {}
     Map<Key, Integer> solvedCountByKey = new HashMap<>();
+    Map<Key, Integer> autoPointsByKey = new HashMap<>();
     Map<Key, LocalDateTime> completedAtByKey = new HashMap<>();
     if (!userIds.isEmpty() && !challengeIds.isEmpty()) {
       for (Object[] row :
@@ -392,6 +397,14 @@ public class CourseServiceImpl implements CourseService {
         Key key = new Key(u, c);
         solvedCountByKey.put(key, solved == null ? 0 : solved.intValue());
         completedAtByKey.put(key, completedAt);
+      }
+
+      for (Object[] row :
+          subTaskCompletionRepository.aggregatePointsForUsersAndChallenges(userIds, challengeIds)) {
+        UUID u = (UUID) row[0];
+        UUID c = (UUID) row[1];
+        Number points = (Number) row[2];
+        autoPointsByKey.put(new Key(u, c), points == null ? 0 : points.intValue());
       }
     }
 
@@ -412,12 +425,32 @@ public class CourseServiceImpl implements CourseService {
       }
     }
 
+    Map<Key, Integer> overridePointsByKey = new HashMap<>();
+    if (!userIds.isEmpty() && !challengeIds.isEmpty()) {
+      for (Object[] row :
+          courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+              courseId, userIds, challengeIds)) {
+        UUID participantId = (UUID) row[0];
+        UUID challengeId = (UUID) row[1];
+        Number points = (Number) row[2];
+        overridePointsByKey.put(new Key(participantId, challengeId), points.intValue());
+      }
+    }
+
     List<CourseChallengeSubmissionEntryDto> entries = new ArrayList<>();
     for (UUID participantId : userIds) {
       for (UUID challengeId : challengeIds) {
         Key key = new Key(participantId, challengeId);
         int solvedCount = solvedCountByKey.getOrDefault(key, 0);
         int totalCount = totalByChallenge.getOrDefault(challengeId, 0);
+        int maxPoints =
+            assigned.stream()
+                .filter(cc -> cc.getChallenge().getId().equals(challengeId))
+                .findFirst()
+                .map(cc -> cc.getChallenge().getMaxScore())
+                .orElse(0);
+        int autoPoints = autoPointsByKey.getOrDefault(key, 0);
+        int awardedPoints = overridePointsByKey.getOrDefault(key, autoPoints);
         LocalDateTime completedAt =
             totalCount > 0 && solvedCount == totalCount ? completedAtByKey.get(key) : null;
 
@@ -445,6 +478,8 @@ public class CourseServiceImpl implements CourseService {
                 challengeId,
                 solvedCount,
                 totalCount,
+                awardedPoints,
+                maxPoints,
                 solvedBefore,
                 completedAt,
                 status));
@@ -453,6 +488,74 @@ public class CourseServiceImpl implements CourseService {
 
     return new CourseChallengeSubmissionsResponseDto(
         courseId, participants, challengesDto, entries);
+  }
+
+  @Override
+  @Transactional
+  public CourseChallengeSubmissionEntryDto updateCourseChallengeScore(
+      UUID instructorId, UUID courseId, UUID participantId, UUID challengeId, int points) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+    verifyInstructor(course, instructorId);
+
+    CourseChallenge assignedChallenge =
+        course.getCourseChallenges().stream()
+            .filter(cc -> cc.getChallenge().getId().equals(challengeId))
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new InvalidCourseChallengeException(
+                        String.format(
+                            "Challenge '%s' is not assigned to course '%s'", challengeId, courseId)));
+
+    if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId)) {
+      throw new CourseParticipantNotFoundException(
+          String.format("Participant '%s' is not enrolled in course '%s'", participantId, courseId));
+    }
+
+    int maxPoints = assignedChallenge.getChallenge().getMaxScore();
+    if (points < 0 || points > maxPoints) {
+      throw new IllegalArgumentException(
+          String.format("Points must be between 0 and %d", maxPoints));
+    }
+
+    User participant =
+        userRepository
+            .findByIdAndDeletedAtIsNull(participantId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, participantId)));
+    User instructor =
+        userRepository
+            .findByIdAndDeletedAtIsNull(instructorId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, instructorId)));
+
+    CourseChallengeScoreOverride override =
+        courseChallengeScoreOverrideRepository
+            .findByCourseIdAndParticipantIdAndChallengeId(courseId, participantId, challengeId)
+            .orElseGet(CourseChallengeScoreOverride::new);
+    override.setCourse(course);
+    override.setParticipant(participant);
+    override.setChallenge(assignedChallenge.getChallenge());
+    override.setUpdatedByInstructor(instructor);
+    override.setPoints(points);
+    courseChallengeScoreOverrideRepository.save(override);
+
+    CourseChallengeSubmissionsResponseDto submissions =
+        getCourseChallengeSubmissions(instructorId, courseId);
+    return submissions.getSubmissions().stream()
+        .filter(
+            entry ->
+                participantId.equals(entry.getParticipantId())
+                    && challengeId.equals(entry.getChallengeId()))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "Updated score could not be mapped back to a submission entry"));
   }
 
   @Override

@@ -107,6 +107,7 @@ export interface CourseChallengeResponseDto {
   difficulty: string;
   orderIndex: number;
   dueAt?: string | null;
+  maxScore?: number;
 }
 
 export interface CourseDetailResponseDto {
@@ -140,6 +141,8 @@ export interface CourseChallengeSubmissionEntryDto {
   challengeId: string;
   solvedSubTaskCount: number;
   totalSubTaskCount: number;
+  awardedPoints: number;
+  maxPoints: number;
   completedAt: string | null;
   status: CourseChallengeSubmissionStatusEnum;
 }

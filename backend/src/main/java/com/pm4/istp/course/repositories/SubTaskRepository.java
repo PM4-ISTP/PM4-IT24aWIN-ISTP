@@ -24,4 +24,13 @@ public interface SubTaskRepository extends JpaRepository<SubTask, UUID> {
       group by s.challenge.id
       """)
   List<Object[]> countByChallengeIds(@Param("challengeIds") Collection<UUID> challengeIds);
+
+  @Query(
+      """
+      select s.challenge.id, coalesce(sum(s.points), 0)
+      from SubTask s
+      where s.challenge.id in :challengeIds
+      group by s.challenge.id
+      """)
+  List<Object[]> sumPointsByChallengeIds(@Param("challengeIds") Collection<UUID> challengeIds);
 }
