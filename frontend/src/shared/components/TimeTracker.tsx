@@ -17,7 +17,10 @@ function syncedKey(userId: string | null): string {
 }
 
 /** Sends the unsynced delta (currentTotal - lastSyncedTotal) to the backend. */
-async function syncToBackend(userId: string | null): Promise<void> {
+async function syncToBackend(
+  userId: string | null,
+  keepalive = false,
+): Promise<void> {
   if (!userId) return;
   try {
     const current = Number(localStorage.getItem(storageKey(userId)) ?? "0");
@@ -29,6 +32,7 @@ async function syncToBackend(userId: string | null): Promise<void> {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ seconds: secondsToSync }),
+      keepalive,
     });
     if (res.ok) {
       localStorage.setItem(syncedKey(userId), String(synced + secondsToSync));
@@ -101,7 +105,7 @@ export default function TimeTracker({ userId }: { userId: string | null }) {
         } catch {
           // ignore
         }
-        void syncToBackend(userId);
+        void syncToBackend(userId, true);
       } else {
         // tab became visible again — reset lastTick
         lastTick = Date.now();
@@ -122,7 +126,7 @@ export default function TimeTracker({ userId }: { userId: string | null }) {
       } catch {
         // ignore
       }
-      void syncToBackend(userId);
+      void syncToBackend(userId, true);
     };
   }, [userId]);
 
