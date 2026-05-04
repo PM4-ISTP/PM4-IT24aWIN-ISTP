@@ -17,10 +17,7 @@ function syncedKey(userId: string | null): string {
 }
 
 /** Sends the unsynced delta (currentTotal - lastSyncedTotal) to the backend. */
-async function syncToBackend(
-  userId: string | null,
-  keepalive = false,
-): Promise<void> {
+async function syncToBackend(userId: string | null, keepalive = false): Promise<void> {
   if (!userId) return;
   try {
     const current = Number(localStorage.getItem(storageKey(userId)) ?? "0");
