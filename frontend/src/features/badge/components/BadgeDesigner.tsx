@@ -109,7 +109,7 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
           template: data.template ?? 1,
           badgeIcon: data.badgeIcon ?? "🏆",
           courseTitle: data.courseTitle ?? "",
-          badgeEnabled: data.badgeEnabled !== false,
+          badgeEnabled: data.badgeEnabled ?? true,
         };
         setConfig(loaded);
         onChange(loaded);
