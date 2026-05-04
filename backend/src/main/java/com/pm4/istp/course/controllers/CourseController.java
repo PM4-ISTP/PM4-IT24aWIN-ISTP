@@ -20,8 +20,8 @@ import com.pm4.istp.course.dto.JoinByInviteCodeRequestDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.dto.PublicCourseDetailResponseDto;
 import com.pm4.istp.course.dto.SubTaskStudentDto;
-import com.pm4.istp.course.dto.UpdateCourseChallengesRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseChallengeScoreRequestDto;
+import com.pm4.istp.course.dto.UpdateCourseChallengesRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.mappers.CourseMapper;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
@@ -301,7 +301,8 @@ public class CourseController {
             responseCode = "200",
             description = "Score updated successfully",
             content =
-                @Content(schema = @Schema(implementation = CourseChallengeSubmissionEntryDto.class))),
+                @Content(
+                    schema = @Schema(implementation = CourseChallengeSubmissionEntryDto.class))),
         @ApiResponse(
             responseCode = "400",
             description = "Points are out of range",

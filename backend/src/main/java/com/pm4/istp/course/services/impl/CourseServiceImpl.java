@@ -509,11 +509,13 @@ public class CourseServiceImpl implements CourseService {
                 () ->
                     new InvalidCourseChallengeException(
                         String.format(
-                            "Challenge '%s' is not assigned to course '%s'", challengeId, courseId)));
+                            "Challenge '%s' is not assigned to course '%s'",
+                            challengeId, courseId)));
 
     if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId)) {
       throw new CourseParticipantNotFoundException(
-          String.format("Participant '%s' is not enrolled in course '%s'", participantId, courseId));
+          String.format(
+              "Participant '%s' is not enrolled in course '%s'", participantId, courseId));
     }
 
     int maxPoints = assignedChallenge.getChallenge().getMaxScore();
