@@ -412,6 +412,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/users/me/online-time": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Add online time for the authenticated user */
+    patch: operations["addOnlineTime"];
+    trace?: never;
+  };
   "/api/v1/courses/topics": {
     parameters: {
       query?: never;
@@ -725,6 +742,12 @@ export interface components {
       username?: string;
       picture?: string;
       title?: string;
+      /** Format: int64 */
+      totalSecondsOnline?: number;
+    };
+    AddOnlineTimeRequestDto: {
+      /** Format: int64 */
+      seconds: number;
     };
     ErrorDto: {
       error?: string;
@@ -2755,6 +2778,31 @@ export interface operations {
         content: {
           "*/*": components["schemas"]["ErrorDto"];
         };
+      };
+    };
+  };
+  addOnlineTime: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AddOnlineTimeRequestDto"];
+      };
+    };
+    responses: {
+      /** @description Online time updated */
+      204: {
+        headers: { [name: string]: unknown };
+        content?: never;
+      };
+      /** @description Validation error */
+      400: {
+        headers: { [name: string]: unknown };
+        content?: never;
       };
     };
   };

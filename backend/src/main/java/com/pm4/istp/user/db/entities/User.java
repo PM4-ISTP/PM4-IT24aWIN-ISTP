@@ -96,6 +96,9 @@ public class User {
   @Column(name = "anonymized_at")
   private LocalDateTime anonymizedAt;
 
+  @Column(name = "total_seconds_online", nullable = false, columnDefinition = "bigint default 0")
+  private long totalSecondsOnline = 0L;
+
   public boolean isDeleted() {
     return deletedAt != null;
   }
@@ -117,7 +120,8 @@ public class User {
         && Objects.equals(createdAt, user.createdAt)
         && Objects.equals(updatedAt, user.updatedAt)
         && Objects.equals(deletedAt, user.deletedAt)
-        && Objects.equals(anonymizedAt, user.anonymizedAt);
+        && Objects.equals(anonymizedAt, user.anonymizedAt)
+        && totalSecondsOnline == user.totalSecondsOnline;
   }
 
   @Override
@@ -134,6 +138,7 @@ public class User {
         createdAt,
         updatedAt,
         deletedAt,
-        anonymizedAt);
+        anonymizedAt,
+        totalSecondsOnline);
   }
 }

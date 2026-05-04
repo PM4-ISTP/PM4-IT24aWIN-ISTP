@@ -1,8 +1,11 @@
 package com.pm4.istp.user;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -115,5 +118,43 @@ class UserProfileControllerTest {
         .andExpect(jsonPath("$.error").value("firstName: must not be blank"));
 
     verify(userProfileService, never()).updateProfile(any(), any(), any(), any());
+  }
+
+  @Test
+  void addOnlineTime_validSeconds_returnsNoContent() throws Exception {
+    when(userProfileService.addOnlineTime(any(), eq(30L))).thenReturn(630L);
+
+    mockMvc
+        .perform(
+            patch("/api/v1/users/me/online-time")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"seconds\": 30}"))
+        .andExpect(status().isNoContent());
+
+    verify(userProfileService).addOnlineTime(any(), eq(30L));
+  }
+
+  @Test
+  void addOnlineTime_negativeSeconds_returnsBadRequest() throws Exception {
+    mockMvc
+        .perform(
+            patch("/api/v1/users/me/online-time")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"seconds\": -1}"))
+        .andExpect(status().isBadRequest());
+
+    verify(userProfileService, never()).addOnlineTime(any(), any(long.class));
+  }
+
+  @Test
+  void addOnlineTime_exceedsMax_returnsBadRequest() throws Exception {
+    mockMvc
+        .perform(
+            patch("/api/v1/users/me/online-time")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"seconds\": 3601}"))
+        .andExpect(status().isBadRequest());
+
+    verify(userProfileService, never()).addOnlineTime(any(), any(long.class));
   }
 }

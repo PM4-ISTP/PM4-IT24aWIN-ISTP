@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -172,5 +173,23 @@ public class UserProfileServiceImpl implements UserProfileService {
       return normalizedFirst;
     }
     return normalizedFirst + " " + normalizedLast;
+  }
+
+  @Override
+  @Transactional
+  public long addOnlineTime(UUID userId, long seconds) {
+    User user =
+        userRepository
+            .findByIdAndDeletedAtIsNull(userId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+    if (seconds == 0) {
+      return user.getTotalSecondsOnline();
+    }
+    userRepository.incrementTotalSecondsOnlineById(userId, seconds);
+    return userRepository
+        .findByIdAndDeletedAtIsNull(userId)
+        .map(User::getTotalSecondsOnline)
+        .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
   }
 }
