@@ -41,7 +41,7 @@ class ChallengePodControllerTest {
         return jwt;
     }
 
-    private PodStatusResponse runningResponse(UUID challengeId) {
+    private PodStatusResponse runningResponse() {
         Instant now = Instant.now();
         return new PodStatusResponse(
                 PodStatusEnum.RUNNING,
@@ -60,7 +60,7 @@ class ChallengePodControllerTest {
         UUID userId = UUID.randomUUID();
         UUID challengeId = UUID.randomUUID();
         Jwt jwt = jwtFor(userId);
-        PodStatusResponse response = runningResponse(challengeId);
+        PodStatusResponse response = runningResponse();
 
         when(challengePodService.startPod(userId, challengeId)).thenReturn(Pair.of(response, true));
 
@@ -76,7 +76,7 @@ class ChallengePodControllerTest {
         UUID userId = UUID.randomUUID();
         UUID challengeId = UUID.randomUUID();
         Jwt jwt = jwtFor(userId);
-        PodStatusResponse response = runningResponse(challengeId);
+        PodStatusResponse response = runningResponse();
 
         when(challengePodService.startPod(userId, challengeId)).thenReturn(Pair.of(response, false));
 
@@ -132,7 +132,7 @@ class ChallengePodControllerTest {
         UUID userId = UUID.randomUUID();
         UUID challengeId = UUID.randomUUID();
         Jwt jwt = jwtFor(userId);
-        PodStatusResponse response = runningResponse(challengeId);
+        PodStatusResponse response = runningResponse();
 
         when(challengePodService.getPod(userId, challengeId)).thenReturn(response);
 

@@ -122,7 +122,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     if (attributes == null || attributes.isEmpty()) {
       return new HashMap<>();
     }
-    Map<String, List<String>> copy = new HashMap<>(attributes.size());
+    Map<String, List<String>> copy = HashMap.newHashMap(attributes.size());
     for (Map.Entry<String, List<String>> entry : attributes.entrySet()) {
       if (entry.getKey() == null) {
         continue;

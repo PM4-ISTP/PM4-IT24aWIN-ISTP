@@ -167,7 +167,9 @@ class AdminTopicServiceImplTest {
 
   @Test
   void addTopic_withTooLongValue_throwsIllegalArgumentException() {
-    assertThatThrownBy(() -> adminTopicService.addTopic("A".repeat(25)))
+    String topic = "A".repeat(25);
+
+    assertThatThrownBy(() -> adminTopicService.addTopic(topic))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Topic must be at most 24 characters");
   }

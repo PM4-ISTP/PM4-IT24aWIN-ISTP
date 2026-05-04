@@ -458,8 +458,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     String timestamp = SOFT_DELETE_TS_FORMAT.format(Instant.now().atOffset(ZoneOffset.UTC));
-    String anonymizedEmail = toSoftDeletedEmail(before.getEmail(), timestamp, userId);
-    String anonymizedUsername = toSoftDeletedUsername(before.getUsername(), timestamp, userId);
+    String anonymizedEmail = toSoftDeletedEmail(before.getEmail(), timestamp);
+    String anonymizedUsername = toSoftDeletedUsername(before.getUsername(), timestamp);
 
     KeycloakUserRepresentation after = deepCopy(before);
     after.setEmail(anonymizedEmail);
@@ -634,7 +634,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         user.getAnonymizedAt());
   }
 
-  private String toSoftDeletedEmail(String originalEmail, String timestamp, UUID userId) {
+  private String toSoftDeletedEmail(String originalEmail, String timestamp) {
     String normalized = normalizeOptional(originalEmail);
     String token =
         normalized == null
@@ -660,7 +660,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     return prefix + truncated + suffix;
   }
 
-  private String toSoftDeletedUsername(String originalUsername, String timestamp, UUID userId) {
+  private String toSoftDeletedUsername(String originalUsername, String timestamp) {
     String normalized = normalizeOptional(originalUsername);
     String base = normalized == null ? "user" : normalized;
     String prefix = "deleted_" + timestamp + "_";

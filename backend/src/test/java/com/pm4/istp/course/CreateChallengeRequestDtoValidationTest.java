@@ -94,6 +94,7 @@ class CreateChallengeRequestDtoValidationTest {
 
     assertThat(violations)
         .filteredOn(v -> v.getPropertyPath().toString().equals("dockerImage"))
-        .isNotEmpty();
+        .extracting(ConstraintViolation::getMessage)
+        .contains("Docker image is required");
   }
 }
