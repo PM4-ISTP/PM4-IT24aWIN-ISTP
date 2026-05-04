@@ -186,7 +186,10 @@ public class UserProfileServiceImpl implements UserProfileService {
     if (seconds == 0) {
       return user.getTotalSecondsOnline();
     }
-    user.setTotalSecondsOnline(user.getTotalSecondsOnline() + seconds);
-    return userRepository.save(user).getTotalSecondsOnline();
+    userRepository.incrementTotalSecondsOnlineById(userId, seconds);
+    return userRepository
+        .findByIdAndDeletedAtIsNull(userId)
+        .map(User::getTotalSecondsOnline)
+        .orElse(user.getTotalSecondsOnline() + seconds);
   }
 }

@@ -3,6 +3,7 @@ package com.pm4.istp.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -202,14 +203,20 @@ class UserProfileServiceImplTest {
     dbUser.setId(userId);
     dbUser.setTotalSecondsOnline(100L);
 
-    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(dbUser));
-    when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    User updatedUser = new User();
+    updatedUser.setId(userId);
+    updatedUser.setTotalSecondsOnline(150L);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId))
+        .thenReturn(Optional.of(dbUser))
+        .thenReturn(Optional.of(updatedUser));
+    when(userRepository.incrementTotalSecondsOnlineById(userId, 50L)).thenReturn(1);
 
     long result = userProfileService.addOnlineTime(userId, 50L);
 
     assertThat(result).isEqualTo(150L);
-    assertThat(dbUser.getTotalSecondsOnline()).isEqualTo(150L);
-    verify(userRepository).save(dbUser);
+    verify(userRepository).incrementTotalSecondsOnlineById(userId, 50L);
+    verify(userRepository, never()).save(any());
   }
 
   @Test
@@ -225,6 +232,7 @@ class UserProfileServiceImplTest {
     long result = userProfileService.addOnlineTime(userId, 0L);
 
     assertThat(result).isEqualTo(200L);
+    verify(userRepository, never()).incrementTotalSecondsOnlineById(any(), anyLong());
     verify(userRepository, never()).save(any());
   }
 }

@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -52,6 +53,16 @@ public interface UserRepository extends JpaRepository<User, UUID> {
       """)
   Page<User> findDistinctByAnyRoleAndIdNot(
       @Param("roles") Set<UserRoleEnum> roles, @Param("userId") UUID userId, Pageable pageable);
+
+  @Modifying(clearAutomatically = true)
+  @Query(
+      """
+      update User u
+      set u.totalSecondsOnline = u.totalSecondsOnline + :seconds
+      where u.id = :userId
+        and u.deletedAt is null
+      """)
+  int incrementTotalSecondsOnlineById(@Param("userId") UUID userId, @Param("seconds") long seconds);
 
   @Query(
       """
