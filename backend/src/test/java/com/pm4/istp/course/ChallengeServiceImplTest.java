@@ -695,7 +695,7 @@ class ChallengeServiceImplTest {
     Pageable pageable = PageRequest.of(0, 10);
     Page<ListChallengeResponseDto> expected = new PageImpl<>(List.of());
 
-    when(challengeRepository.searchAvailableChallenges(eq(userId), eq("sql"), eq(pageable)))
+    when(challengeRepository.searchAvailableChallenges(userId, "sql", pageable))
         .thenReturn(expected);
 
     Page<ListChallengeResponseDto> result =

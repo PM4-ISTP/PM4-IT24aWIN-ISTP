@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -26,10 +27,10 @@ public class KeycloakServiceAccountTokenProvider {
   private final ObjectMapper objectMapper;
   private final Clock clock = Clock.systemUTC();
 
-  private volatile CachedToken cachedToken;
+  private final AtomicReference<CachedToken> cachedToken = new AtomicReference<>();
 
   public String getAccessToken() {
-    CachedToken current = cachedToken;
+    CachedToken current = cachedToken.get();
     Instant now = Instant.now(clock);
 
     if (current != null && current.expiresAt().isAfter(now.plusSeconds(REFRESH_SAFETY_SECONDS))) {
@@ -37,14 +38,14 @@ public class KeycloakServiceAccountTokenProvider {
     }
 
     synchronized (this) {
-      current = cachedToken;
+      current = cachedToken.get();
       now = Instant.now(clock);
       if (current != null && current.expiresAt().isAfter(now.plusSeconds(REFRESH_SAFETY_SECONDS))) {
         return current.accessToken();
       }
 
       CachedToken refreshed = fetchToken(now);
-      cachedToken = refreshed;
+      cachedToken.set(refreshed);
       return refreshed.accessToken();
     }
   }
