@@ -365,46 +365,11 @@ public class CourseServiceImpl implements CourseService {
 
     Map<UUID, Integer> totalByChallenge = loadSubTaskTotals(challengeIds);
 
-    record Key(UUID userId, UUID challengeId) {}
-    Map<Key, Integer> solvedCountByKey = new HashMap<>();
-    Map<Key, LocalDateTime> completedAtByKey = new HashMap<>();
-    if (!userIds.isEmpty() && !challengeIds.isEmpty()) {
-      for (Object[] row :
-          subTaskCompletionRepository.aggregateSolvedCountsForUsersAndChallenges(
-              userIds, challengeIds)) {
-        UUID u = (UUID) row[0];
-        UUID c = (UUID) row[1];
-        Long solved = (Long) row[2];
-        LocalDateTime completedAt = (LocalDateTime) row[3];
-        Key key = new Key(u, c);
-        solvedCountByKey.put(key, solved == null ? 0 : solved.intValue());
-        completedAtByKey.put(key, completedAt);
-      }
-    }
-
-    Map<UUID, LocalDateTime> dueAtByChallenge = new HashMap<>();
-    for (CourseChallenge cc : assigned) {
-      dueAtByChallenge.put(cc.getChallenge().getId(), cc.getDueAt());
-    }
-
-    List<CourseChallengeSubmissionEntryDto> entries = new ArrayList<>();
-    for (UUID participantId : userIds) {
-      for (UUID challengeId : challengeIds) {
-        Key key = new Key(participantId, challengeId);
-        int solvedCount = solvedCountByKey.getOrDefault(key, 0);
-        int totalCount = totalByChallenge.getOrDefault(challengeId, 0);
-        LocalDateTime completedAt =
-            totalCount > 0 && solvedCount == totalCount ? completedAtByKey.get(key) : null;
-
-        CourseChallengeSubmissionStatusEnum status =
-            resolveSubmissionStatus(
-                solvedCount, totalCount, completedAt, dueAtByChallenge.get(challengeId));
-
-        entries.add(
-            new CourseChallengeSubmissionEntryDto(
-                participantId, challengeId, solvedCount, totalCount, completedAt, status));
-      }
-    }
+    SubmissionAggregates aggregates = loadSubmissionAggregates(userIds, challengeIds);
+    Map<UUID, LocalDateTime> dueAtByChallenge = loadDueDates(assigned);
+    List<CourseChallengeSubmissionEntryDto> entries =
+        buildSubmissionEntries(
+            userIds, challengeIds, totalByChallenge, aggregates, dueAtByChallenge);
 
     return new CourseChallengeSubmissionsResponseDto(
         courseId, participants, challengesDto, entries);
@@ -450,6 +415,70 @@ public class CourseServiceImpl implements CourseService {
     return totalByChallenge;
   }
 
+  private SubmissionAggregates loadSubmissionAggregates(
+      List<UUID> userIds, List<UUID> challengeIds) {
+    Map<SubmissionKey, Integer> solvedCountByKey = new HashMap<>();
+    Map<SubmissionKey, LocalDateTime> completedAtByKey = new HashMap<>();
+    if (userIds.isEmpty() || challengeIds.isEmpty()) {
+      return new SubmissionAggregates(solvedCountByKey, completedAtByKey);
+    }
+    for (Object[] row :
+        subTaskCompletionRepository.aggregateSolvedCountsForUsersAndChallenges(
+            userIds, challengeIds)) {
+      UUID userId = (UUID) row[0];
+      UUID challengeId = (UUID) row[1];
+      Long solved = (Long) row[2];
+      LocalDateTime completedAt = (LocalDateTime) row[3];
+      SubmissionKey key = new SubmissionKey(userId, challengeId);
+      solvedCountByKey.put(key, solved == null ? 0 : solved.intValue());
+      completedAtByKey.put(key, completedAt);
+    }
+    return new SubmissionAggregates(solvedCountByKey, completedAtByKey);
+  }
+
+  private Map<UUID, LocalDateTime> loadDueDates(List<CourseChallenge> assigned) {
+    Map<UUID, LocalDateTime> dueAtByChallenge = new HashMap<>();
+    for (CourseChallenge courseChallenge : assigned) {
+      dueAtByChallenge.put(courseChallenge.getChallenge().getId(), courseChallenge.getDueAt());
+    }
+    return dueAtByChallenge;
+  }
+
+  private List<CourseChallengeSubmissionEntryDto> buildSubmissionEntries(
+      List<UUID> userIds,
+      List<UUID> challengeIds,
+      Map<UUID, Integer> totalByChallenge,
+      SubmissionAggregates aggregates,
+      Map<UUID, LocalDateTime> dueAtByChallenge) {
+    List<CourseChallengeSubmissionEntryDto> entries = new ArrayList<>();
+    for (UUID participantId : userIds) {
+      for (UUID challengeId : challengeIds) {
+        entries.add(
+            buildSubmissionEntry(
+                participantId, challengeId, totalByChallenge, aggregates, dueAtByChallenge));
+      }
+    }
+    return entries;
+  }
+
+  private CourseChallengeSubmissionEntryDto buildSubmissionEntry(
+      UUID participantId,
+      UUID challengeId,
+      Map<UUID, Integer> totalByChallenge,
+      SubmissionAggregates aggregates,
+      Map<UUID, LocalDateTime> dueAtByChallenge) {
+    SubmissionKey key = new SubmissionKey(participantId, challengeId);
+    int solvedCount = aggregates.solvedCountByKey().getOrDefault(key, 0);
+    int totalCount = totalByChallenge.getOrDefault(challengeId, 0);
+    LocalDateTime completedAt =
+        totalCount > 0 && solvedCount == totalCount ? aggregates.completedAtByKey().get(key) : null;
+    CourseChallengeSubmissionStatusEnum status =
+        resolveSubmissionStatus(
+            solvedCount, totalCount, completedAt, dueAtByChallenge.get(challengeId));
+    return new CourseChallengeSubmissionEntryDto(
+        participantId, challengeId, solvedCount, totalCount, completedAt, status);
+  }
+
   private CourseChallengeSubmissionStatusEnum resolveSubmissionStatus(
       int solvedCount, int totalCount, LocalDateTime completedAt, LocalDateTime dueAt) {
     if (totalCount <= 0 || solvedCount <= 0) {
@@ -463,6 +492,12 @@ public class CourseServiceImpl implements CourseService {
     }
     return CourseChallengeSubmissionStatusEnum.LATE;
   }
+
+  private record SubmissionKey(UUID userId, UUID challengeId) {}
+
+  private record SubmissionAggregates(
+      Map<SubmissionKey, Integer> solvedCountByKey,
+      Map<SubmissionKey, LocalDateTime> completedAtByKey) {}
 
   @Override
   @Transactional(readOnly = true)
