@@ -73,7 +73,7 @@ class AdminUserServiceImplTest {
     verify(keycloakAdminClient).resetPassword(eq(createdId), passwordCaptor.capture(), eq(true));
     assertThat(passwordCaptor.getValue()).isEqualTo(response.getTemporaryPassword());
 
-    verify(keycloakAdminClient).addRealmRoles(eq(createdId), eq(List.of(role)));
+    verify(keycloakAdminClient).addRealmRoles(createdId, List.of(role));
 
     ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
     verify(userRepository).save(userCaptor.capture());
@@ -169,7 +169,7 @@ class AdminUserServiceImplTest {
     assertThat(response.getUserId()).isEqualTo(userId);
     assertThat(response.isCreated()).isTrue();
 
-    verify(keycloakAdminClient).addRealmRoles(eq(userId), eq(List.of(role)));
+    verify(keycloakAdminClient).addRealmRoles(userId, List.of(role));
     verify(userRepository).save(any(User.class));
   }
 
@@ -245,8 +245,8 @@ class AdminUserServiceImplTest {
     assertThat(detail.getId()).isEqualTo(userId);
     assertThat(detail.getRoles()).contains("ROLE_INSTRUCTOR");
 
-    verify(keycloakAdminClient).removeRealmRoles(eq(userId), eq(List.of(student)));
-    verify(keycloakAdminClient).addRealmRoles(eq(userId), eq(List.of(instructor)));
+    verify(keycloakAdminClient).removeRealmRoles(userId, List.of(student));
+    verify(keycloakAdminClient).addRealmRoles(userId, List.of(instructor));
     assertThat(dbUser.getRoles()).contains(com.pm4.istp.user.db.entities.UserRoleEnum.ROLE_INSTRUCTOR);
   }
 
@@ -282,7 +282,7 @@ class AdminUserServiceImplTest {
     assertThatThrownBy(() -> adminUserService.restoreUser(userId))
         .isInstanceOf(com.pm4.istp.user.exceptions.UserProfileSyncException.class);
 
-    verify(keycloakAdminClient).updateUser(eq(userId), eq(before));
+    verify(keycloakAdminClient).updateUser(userId, before);
   }
 
   @Test
@@ -308,7 +308,7 @@ class AdminUserServiceImplTest {
     assertThat(after.getEmail()).endsWith("@invalid.local");
     assertThat(after.getUsername()).startsWith("deleted_");
 
-    verify(userService).softDeleteAndAnonymizeUser(eq(userId), eq(after.getEmail()), eq(after.getUsername()));
+    verify(userService).softDeleteAndAnonymizeUser(userId, after.getEmail(), after.getUsername());
   }
 
   @Test

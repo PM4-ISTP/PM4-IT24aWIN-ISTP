@@ -34,7 +34,8 @@ public class ChallengePodController {
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID challengeId) {
     UUID userId = JwtUtil.parseUserId(jwt);
     Pair<PodStatusResponse, Boolean> result = challengePodService.startPod(userId, challengeId);
-    HttpStatus status = result.getSecond() ? HttpStatus.CREATED : HttpStatus.OK;
+    HttpStatus status =
+        Boolean.TRUE.equals(result.getSecond()) ? HttpStatus.CREATED : HttpStatus.OK;
     return ResponseEntity.status(status).body(result.getFirst());
   }
 

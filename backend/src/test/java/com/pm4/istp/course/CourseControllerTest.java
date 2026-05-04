@@ -523,7 +523,7 @@ class CourseControllerTest {
         dto.setCourseInstructors(Collections.emptyList());
         dto.setCourseChallenges(Collections.emptyList());
 
-        when(courseService.joinByInviteCode(eq("ABC123"), eq(userId))).thenReturn(course);
+        when(courseService.joinByInviteCode("ABC123", userId)).thenReturn(course);
         when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
         when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(1L);
         when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
@@ -542,7 +542,7 @@ class CourseControllerTest {
 
     @Test
     void joinByInviteCode_withInvalidCode_returnsNotFound() throws Exception {
-        when(courseService.joinByInviteCode(eq("BADCOD"), eq(userId)))
+        when(courseService.joinByInviteCode("BADCOD", userId))
                 .thenThrow(new InvalidInviteCodeException("Invalid invite code"));
 
         JoinByInviteCodeRequestDto requestDto = new JoinByInviteCodeRequestDto("BADCOD");

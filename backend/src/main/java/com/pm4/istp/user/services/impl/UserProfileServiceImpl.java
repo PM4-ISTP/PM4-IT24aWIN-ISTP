@@ -103,7 +103,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
     return authorities.stream()
         .map(GrantedAuthority::getAuthority)
-        .anyMatch(a -> ROLE_ADMINISTRATOR.equalsIgnoreCase(a));
+        .anyMatch(ROLE_ADMINISTRATOR::equalsIgnoreCase);
   }
 
   private KeycloakUserRepresentation deepCopy(KeycloakUserRepresentation source) {

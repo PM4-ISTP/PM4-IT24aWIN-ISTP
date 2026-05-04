@@ -19,6 +19,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentCondition;
 import io.fabric8.kubernetes.api.model.networking.v1.IngressBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.IngressRule;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
@@ -616,7 +617,7 @@ public class ChallengePodService {
                                   && Integer.valueOf(servicePort)
                                       .equals(
                                           path.getBackend().getService().getPort().getNumber())))
-          .map(rule -> rule.getHost())
+          .map(IngressRule::getHost)
           .filter(host -> host != null && !host.isBlank())
           .findFirst();
     } catch (Exception e) {
