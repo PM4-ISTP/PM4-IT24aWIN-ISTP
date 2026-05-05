@@ -167,7 +167,7 @@ export function LabPlayView({
   const current = challenges[activeStep] ?? null;
   const allSolved = lab.isSolved ?? false;
 
-  const sanitizedChallengeDescription = useMemo(
+  const sanitizedLabDescription = useMemo(
     () => (lab.description ? getSanitizedHtml(lab.description) : ""),
     [lab.description]
   );
@@ -495,11 +495,11 @@ export function LabPlayView({
                 />
               </Stack>
 
-              {sanitizedChallengeDescription && (
+              {sanitizedLabDescription && (
                 <Box
                   className="course-description"
                   style={{ fontSize: "var(--mantine-font-size-sm)" }}
-                  dangerouslySetInnerHTML={{ __html: sanitizedChallengeDescription }}
+                  dangerouslySetInnerHTML={{ __html: sanitizedLabDescription }}
                 />
               )}
             </Stack>
