@@ -531,8 +531,7 @@ public class LabServiceImpl implements LabService {
     try {
       saveChoiceSubmission(user, challenge, selectedOption, correct);
     } catch (DataIntegrityViolationException ex) {
-      return buildChoiceResponse(
-          correct, userId, challenge.getLab(), correct ? null : challenge);
+      return buildChoiceResponse(correct, userId, challenge.getLab(), correct ? null : challenge);
     }
     saveCompletionIfMissing(user, userId, challenge);
     ChoiceSubmissionResponseDto response =
