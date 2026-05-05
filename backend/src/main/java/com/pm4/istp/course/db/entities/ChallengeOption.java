@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "sub_task_options")
+@Table(name = "challenge_options")
 @Getter
 @Setter
 @NoArgsConstructor

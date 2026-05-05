@@ -15,7 +15,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 @Entity
-@Table(name = "challenges")
+@Table(name = "labs")
 @Getter
 @Setter
 @NoArgsConstructor

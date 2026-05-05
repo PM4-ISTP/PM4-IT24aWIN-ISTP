@@ -14,10 +14,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(
-    name = "sub_task_completions",
+    name = "challenge_completions",
     uniqueConstraints =
         @UniqueConstraint(
-            name = "uk_sub_task_completion_user_sub_task",
+            name = "uk_challenge_completion_user_challenge",
             columnNames = {"user_id", "sub_task_id"}))
 @Getter
 @Setter
