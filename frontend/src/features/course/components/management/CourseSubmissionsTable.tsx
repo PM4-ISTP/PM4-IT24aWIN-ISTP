@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Badge, Box, Group, Loader, ScrollArea, Stack, Table, Text } from "@mantine/core";
-import type { CourseChallengeSubmissionsResponseDto } from "@/src/shared/types/course";
+import type { CourseLabSubmissionsResponseDto } from "@/src/shared/types/course";
 
 function badgeColor(status: string): string {
   switch (status) {
@@ -37,7 +37,7 @@ function formatDue(value?: string | null): string {
 export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<CourseChallengeSubmissionsResponseDto | null>(null);
+  const [data, setData] = useState<CourseLabSubmissionsResponseDto | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,7 +55,7 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
           const msg = await res.text();
           throw new Error(msg || res.statusText);
         }
-        const json = (await res.json()) as CourseChallengeSubmissionsResponseDto;
+        const json = (await res.json()) as CourseLabSubmissionsResponseDto;
         if (!cancelled) setData(json);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
@@ -72,13 +72,13 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
     if (!data) return null;
     const byKey = new Map<string, (typeof data.submissions)[number]>();
     for (const s of data.submissions ?? []) {
-      byKey.set(`${s.participantId}:${s.challengeId}`, s);
+      byKey.set(`${s.participantId}:${s.labId}`, s);
     }
-    const challenges = [...(data.challenges ?? [])].sort(
+    const labs = [...(data.labs ?? [])].sort(
       (a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
     );
     const participants = data.participants ?? [];
-    return { byKey, challenges, participants };
+    return { byKey, labs, participants };
   }, [data]);
 
   return (
@@ -105,9 +105,9 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
           </Alert>
         ) : null}
 
-        {!loading && matrix && matrix.challenges.length === 0 ? (
+        {!loading && matrix && matrix.labs.length === 0 ? (
           <Text size="sm" c="dimmed">
-            No challenges assigned.
+            No labs assigned.
           </Text>
         ) : null}
 
@@ -117,17 +117,17 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
           </Text>
         ) : null}
 
-        {!loading && matrix && matrix.challenges.length > 0 && matrix.participants.length > 0 ? (
+        {!loading && matrix && matrix.labs.length > 0 && matrix.participants.length > 0 ? (
           <ScrollArea>
             <Table withTableBorder highlightOnHover>
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>Student</Table.Th>
-                  {matrix.challenges.map((c) => (
-                    <Table.Th key={c.challengeId}>
+                  {matrix.labs.map((c) => (
+                    <Table.Th key={c.labId}>
                       <Stack gap={2}>
                         <Text size="xs" fw={600}>
-                          {c.challengeTitle}
+                          {c.labTitle}
                         </Text>
                         <Text size="xs" c="dimmed">
                           Due: {formatDue((c as { dueAt?: string | null }).dueAt ?? null)}
@@ -143,16 +143,16 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
                     <Table.Td>
                       <Text size="sm">{p.name}</Text>
                     </Table.Td>
-                    {matrix.challenges.map((c) => {
-                      const s = matrix.byKey.get(`${p.id}:${c.challengeId}`);
+                    {matrix.labs.map((c) => {
+                      const s = matrix.byKey.get(`${p.id}:${c.labId}`);
                       const status = s?.status ?? "NOT_SUBMITTED";
                       const progress =
-                        s && s.totalSubTaskCount > 0
-                          ? `${s.solvedSubTaskCount}/${s.totalSubTaskCount}`
+                        s && s.totalChallengeCount > 0
+                          ? `${s.solvedChallengeCount}/${s.totalChallengeCount}`
                           : "â€”";
                       const completedAt = s?.completedAt ?? null;
                       return (
-                        <Table.Td key={`${p.id}:${c.challengeId}`}>
+                        <Table.Td key={`${p.id}:${c.labId}`}>
                           <Stack gap={2}>
                             <Group gap="xs" wrap="nowrap">
                               <Badge variant="light" color={badgeColor(status)}>

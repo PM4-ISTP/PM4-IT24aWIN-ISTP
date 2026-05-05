@@ -1,18 +1,18 @@
 package com.pm4.istp.shared.util;
 
-import com.pm4.istp.challengepod.exceptions.ChallengePodException;
-import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
-import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.challengepod.exceptions.LabPodException;
+import com.pm4.istp.course.exceptions.LabAccessDeniedException;
+import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
-import com.pm4.istp.course.exceptions.InvalidCourseChallengeException;
+import com.pm4.istp.course.exceptions.InvalidCourseLabException;
 import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
-import com.pm4.istp.course.exceptions.SubTaskAlreadySolvedException;
-import com.pm4.istp.course.exceptions.SubTaskNotFoundException;
+import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
+import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.shared.dto.ErrorDto;
 import com.pm4.istp.shared.keycloak.KeycloakAdminApiException;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
@@ -36,18 +36,18 @@ import org.springframework.web.client.RestClientResponseException;
 public class GlobalExceptionHandler {
   private static final String ACCESS_DENIED_ERROR = "Access denied";
 
-  @ExceptionHandler(ChallengePodException.class)
-  public ResponseEntity<ErrorDto> handleChallengePodException(ChallengePodException ex) {
-    log.error("Caught ChallengePodException", ex);
+  @ExceptionHandler(LabPodException.class)
+  public ResponseEntity<ErrorDto> handleLabPodException(LabPodException ex) {
+    log.error("Caught LabPodException", ex);
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError("Kubernetes operation failed: " + ex.getMessage());
     return new ResponseEntity<>(errorDto, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
-  @ExceptionHandler(ChallengeAccessDeniedException.class)
+  @ExceptionHandler(LabAccessDeniedException.class)
   public ResponseEntity<ErrorDto> handleChallengeAccessDeniedException(
-      ChallengeAccessDeniedException ex) {
-    log.error("Caught ChallengeAccessDeniedException", ex);
+      LabAccessDeniedException ex) {
+    log.error("Caught LabAccessDeniedException", ex);
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError(ACCESS_DENIED_ERROR);
     return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
@@ -61,11 +61,11 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(errorDto, HttpStatus.FORBIDDEN);
   }
 
-  @ExceptionHandler(ChallengeNotFoundException.class)
-  public ResponseEntity<ErrorDto> handleChallengeNotFoundException(ChallengeNotFoundException ex) {
-    log.error("Caught ChallengeNotFoundException", ex);
+  @ExceptionHandler(LabNotFoundException.class)
+  public ResponseEntity<ErrorDto> handleChallengeNotFoundException(LabNotFoundException ex) {
+    log.error("Caught LabNotFoundException", ex);
     ErrorDto errorDto = new ErrorDto();
-    errorDto.setError("Challenge not found");
+    errorDto.setError("Lab not found");
     return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
   }
 
@@ -180,27 +180,27 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
   }
 
-  @ExceptionHandler(InvalidCourseChallengeException.class)
+  @ExceptionHandler(InvalidCourseLabException.class)
   public ResponseEntity<ErrorDto> handleInvalidCourseChallengeException(
-      InvalidCourseChallengeException ex) {
-    log.warn("Caught InvalidCourseChallengeException: {}", ex.getMessage());
+      InvalidCourseLabException ex) {
+    log.warn("Caught InvalidCourseLabException: {}", ex.getMessage());
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError(ex.getMessage());
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
   }
 
-  @ExceptionHandler(SubTaskNotFoundException.class)
-  public ResponseEntity<ErrorDto> handleSubTaskNotFoundException(SubTaskNotFoundException ex) {
-    log.error("Caught SubTaskNotFoundException", ex);
+  @ExceptionHandler(ChallengeNotFoundException.class)
+  public ResponseEntity<ErrorDto> handleChallengeNotFoundException(ChallengeNotFoundException ex) {
+    log.error("Caught ChallengeNotFoundException", ex);
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError("Sub-task not found");
     return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
   }
 
-  @ExceptionHandler(SubTaskAlreadySolvedException.class)
-  public ResponseEntity<ErrorDto> handleSubTaskAlreadySolvedException(
-      SubTaskAlreadySolvedException ex) {
-    log.warn("Caught SubTaskAlreadySolvedException: {}", ex.getMessage());
+  @ExceptionHandler(ChallengeAlreadySolvedException.class)
+  public ResponseEntity<ErrorDto> handleChallengeAlreadySolvedException(
+      ChallengeAlreadySolvedException ex) {
+    log.warn("Caught ChallengeAlreadySolvedException: {}", ex.getMessage());
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError("Sub-task already solved");
     return new ResponseEntity<>(errorDto, HttpStatus.CONFLICT);

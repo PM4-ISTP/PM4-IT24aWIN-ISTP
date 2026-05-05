@@ -32,7 +32,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/courses/{id}/challenges": {
+  "/api/v1/courses/{id}/labs": {
     parameters: {
       query?: never;
       header?: never;
@@ -41,8 +41,8 @@ export interface paths {
     };
     get?: never;
     /**
-     * Update course challenges
-     * @description Replaces the challenge list for a course. Accepts own and public challenges.
+     * Update course labs
+     * @description Replaces the lab list for a course. Accepts own and public labs.
      */
     put: operations["updateCourseChallenges"];
     post?: never;
@@ -52,7 +52,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/challenges/{id}": {
+  "/api/v1/labs/{id}": {
     parameters: {
       query?: never;
       header?: never;
@@ -60,19 +60,19 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get a challenge by ID
-     * @description Returns the full details of a challenge. Visibility depends on status and user role.
+     * Get a lab by ID
+     * @description Returns the full details of a lab. Visibility depends on status and user role.
      */
     get: operations["getChallenge"];
     /**
-     * Update a challenge
-     * @description Updates an existing challenge. Only the creator can update.
+     * Update a lab
+     * @description Updates an existing lab. Only the creator can update.
      */
     put: operations["updateChallenge"];
     post?: never;
     /**
-     * Delete a challenge
-     * @description Deletes a challenge and removes it from all courses. Only the creator can delete.
+     * Delete a lab
+     * @description Deletes a lab and removes it from all courses. Only the creator can delete.
      */
     delete: operations["deleteChallenge"];
     options?: never;
@@ -180,7 +180,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/challenges": {
+  "/api/v1/labs": {
     parameters: {
       query?: never;
       header?: never;
@@ -188,14 +188,14 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * List my challenges
-     * @description Returns a paginated list of challenges created by the authenticated user.
+     * List my labs
+     * @description Returns a paginated list of labs created by the authenticated user.
      */
     get: operations["listChallenges"];
     put?: never;
     /**
-     * Create a challenge
-     * @description Creates a new challenge and returns the persisted challenge.
+     * Create a lab
+     * @description Creates a new lab and returns the persisted lab.
      */
     post: operations["createChallenge"];
     delete?: never;
@@ -204,7 +204,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/challenge-pods/{challengeId}": {
+  "/api/v1/lab-pods/{labId}": {
     parameters: {
       query?: never;
       header?: never;
@@ -300,7 +300,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/challenges/{id}/visibility-impact": {
+  "/api/v1/labs/{id}/visibility-impact": {
     parameters: {
       query?: never;
       header?: never;
@@ -309,7 +309,7 @@ export interface paths {
     };
     /**
      * Preview visibility change impact
-     * @description Returns how many course assignments would be removed if the challenge's visibility were changed to the given status. Only the creator can call this.
+     * @description Returns how many course assignments would be removed if the lab's visibility were changed to the given status. Only the creator can call this.
      */
     get: operations["getVisibilityImpact"];
     put?: never;
@@ -320,7 +320,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/challenges/search": {
+  "/api/v1/labs/search": {
     parameters: {
       query?: never;
       header?: never;
@@ -328,8 +328,8 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Search available challenges
-     * @description Searches for challenges by title. Returns the user's own challenges and public ones.
+     * Search available labs
+     * @description Searches for labs by title. Returns the user's own labs and public ones.
      */
     get: operations["searchChallenges"];
     put?: never;
@@ -362,10 +362,10 @@ export interface components {
       isPublished?: boolean;
       isPrivate?: boolean;
     };
-    CourseChallengeResponseDto: {
+    CourseLabResponseDto: {
       /** Format: uuid */
-      challengeId?: string;
-      challengeTitle?: string;
+      labId?: string;
+      labTitle?: string;
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
@@ -404,7 +404,7 @@ export interface components {
       inviteCode?: string;
       courseInstructors?: components["schemas"]["CourseDetailInstructorResponseDto"][];
       participants?: components["schemas"]["CourseParticipantResponseDto"][];
-      courseChallenges?: components["schemas"]["CourseChallengeResponseDto"][];
+      courseLabs?: components["schemas"]["CourseLabResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
@@ -434,16 +434,16 @@ export interface components {
     ErrorDto: {
       error?: string;
     };
-    CourseChallengeItemDto: {
+    CourseLabItemDto: {
       /** Format: uuid */
-      challengeId: string;
+      labId: string;
       /** Format: int32 */
       orderIndex: number;
       /** Format: date-time */
       dueAt?: string;
     };
-    UpdateCourseChallengesRequestDto: {
-      challenges: components["schemas"]["CourseChallengeItemDto"][];
+    UpdateCourseLabsRequestDto: {
+      labs: components["schemas"]["CourseLabItemDto"][];
     };
     UpdateChallengeRequestDto: {
       title: string;
@@ -560,7 +560,7 @@ export interface components {
       inviteCode?: string;
       courseInstructors?: components["schemas"]["CourseDetailInstructorResponseDto"][];
       participants?: components["schemas"]["CourseParticipantResponseDto"][];
-      courseChallenges?: components["schemas"]["ChallengeDetailResponseDto"][];
+      courseLabs?: components["schemas"]["ChallengeDetailResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
@@ -705,7 +705,7 @@ export interface components {
       pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
-    ListChallengeResponseDto: {
+    ListLabResponseDto: {
       /** Format: uuid */
       id?: string;
       title?: string;
@@ -722,14 +722,14 @@ export interface components {
       /** Format: date-time */
       updatedAt?: string;
     };
-    PageListChallengeResponseDto: {
+    PageListLabResponseDto: {
       /** Format: int64 */
       totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
       /** Format: int32 */
       size?: number;
-      content?: components["schemas"]["ListChallengeResponseDto"][];
+      content?: components["schemas"]["ListLabResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
@@ -877,11 +877,11 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["UpdateCourseChallengesRequestDto"];
+        "application/json": components["schemas"]["UpdateCourseLabsRequestDto"];
       };
     };
     responses: {
-      /** @description Course challenges updated successfully */
+      /** @description Course labs updated successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -899,7 +899,7 @@ export interface operations {
           "*/*": components["schemas"]["ErrorDto"];
         };
       };
-      /** @description Course or challenge not found */
+      /** @description Course or lab not found */
       404: {
         headers: {
           [name: string]: unknown;
@@ -921,7 +921,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Challenge found */
+      /** @description Lab found */
       200: {
         headers: {
           [name: string]: unknown;
@@ -939,7 +939,7 @@ export interface operations {
           "*/*": components["schemas"]["ErrorDto"];
         };
       };
-      /** @description Challenge not found */
+      /** @description Lab not found */
       404: {
         headers: {
           [name: string]: unknown;
@@ -965,7 +965,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Challenge updated successfully */
+      /** @description Lab updated successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -992,7 +992,7 @@ export interface operations {
           "*/*": components["schemas"]["ErrorDto"];
         };
       };
-      /** @description Challenge not found */
+      /** @description Lab not found */
       404: {
         headers: {
           [name: string]: unknown;
@@ -1014,7 +1014,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Challenge deleted successfully */
+      /** @description Lab deleted successfully */
       204: {
         headers: {
           [name: string]: unknown;
@@ -1030,7 +1030,7 @@ export interface operations {
           "*/*": components["schemas"]["ErrorDto"];
         };
       };
-      /** @description Challenge not found */
+      /** @description Lab not found */
       404: {
         headers: {
           [name: string]: unknown;
@@ -1302,7 +1302,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["PageListChallengeResponseDto"];
+          "*/*": components["schemas"]["PageListLabResponseDto"];
         };
       };
     };
@@ -1320,7 +1320,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Challenge created successfully */
+      /** @description Lab created successfully */
       201: {
         headers: {
           [name: string]: unknown;
@@ -1354,7 +1354,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        challengeId: string;
+        labId: string;
       };
       cookie?: never;
     };
@@ -1376,7 +1376,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        challengeId: string;
+        labId: string;
       };
       cookie?: never;
     };
@@ -1398,7 +1398,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        challengeId: string;
+        labId: string;
       };
       cookie?: never;
     };
@@ -1557,7 +1557,7 @@ export interface operations {
           "*/*": components["schemas"]["ErrorDto"];
         };
       };
-      /** @description Challenge not found */
+      /** @description Lab not found */
       404: {
         headers: {
           [name: string]: unknown;
@@ -1586,7 +1586,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["PageListChallengeResponseDto"];
+          "*/*": components["schemas"]["PageListLabResponseDto"];
         };
       };
     };

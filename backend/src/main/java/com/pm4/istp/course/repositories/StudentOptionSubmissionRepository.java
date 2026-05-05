@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 public interface StudentOptionSubmissionRepository
     extends JpaRepository<StudentOptionSubmission, UUID> {
 
-  boolean existsByUserIdAndSubTaskId(UUID userId, UUID subTaskId);
+  boolean existsByUserIdAndChallengeId(UUID userId, UUID challengeId);
 
-  Optional<StudentOptionSubmission> findByUserIdAndSubTaskId(UUID userId, UUID subTaskId);
+  Optional<StudentOptionSubmission> findByUserIdAndChallengeId(UUID userId, UUID challengeId);
 }

@@ -27,7 +27,7 @@ export function useDockerImageCheck(image: string): {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => {
       void fetch(
-        `/api/backend/api/v1/challenges/docker-image?image=${encodeURIComponent(trimmed)}`,
+        `/api/backend/api/v1/labs/docker-image?image=${encodeURIComponent(trimmed)}`,
         {
           method: "GET",
           signal: controller.signal,

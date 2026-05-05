@@ -79,20 +79,20 @@ public class Course {
   @JsonIgnore
   @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
   @OrderBy("orderIndex ASC")
-  private List<CourseChallenge> courseChallenges = new ArrayList<>();
+  private List<CourseLab> courseLabs = new ArrayList<>();
 
-  public void addCourseChallenge(CourseChallenge courseChallenge) {
-    courseChallenges.add(courseChallenge);
-    courseChallenge.setCourse(this);
+  public void addCourseChallenge(CourseLab courseLab) {
+    courseLabs.add(courseLab);
+    courseLab.setCourse(this);
   }
 
-  public void removeCourseChallenge(CourseChallenge courseChallenge) {
-    courseChallenges.remove(courseChallenge);
-    courseChallenge.setCourse(null);
+  public void removeCourseChallenge(CourseLab courseLab) {
+    courseLabs.remove(courseLab);
+    courseLab.setCourse(null);
   }
 
   /**
-   * Controls how many attempts students get for MULTIPLE_CHOICE sub-tasks in this course. Defaults
+   * Controls how many attempts students get for MULTIPLE_CHOICE challenges in this course. Defaults
    * to UNLIMITED (self-learning). Set to ONCE for graded / Praktikum courses.
    */
   @Column(

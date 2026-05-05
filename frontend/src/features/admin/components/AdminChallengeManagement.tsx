@@ -29,7 +29,7 @@ import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackend
 type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC";
 type ChallengeDifficulty = "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
 
-type AdminChallengeListItem = {
+type AdminLabListItem = {
   id: string;
   title: string;
   description: string | null;
@@ -62,14 +62,14 @@ export default function AdminChallengeManagement() {
     applyQueryNow,
     page,
     setPage,
-    items: challenges,
+    items: labs,
     totalPages,
     loading,
     error,
     setError,
     refresh,
-  } = useAdminPagedList<AdminChallengeListItem>({
-    endpoint: "/api/backend/api/admin/challenges",
+  } = useAdminPagedList<AdminLabListItem>({
+    endpoint: "/api/backend/api/admin/labs",
     label: "labs",
     pageSize: PAGE_SIZE,
     sort: "updatedAt,desc",
@@ -77,7 +77,7 @@ export default function AdminChallengeManagement() {
 
   const [editOpened, setEditOpened] = useState(false);
   const [deleteOpened, setDeleteOpened] = useState(false);
-  const [selected, setSelected] = useState<AdminChallengeListItem | null>(null);
+  const [selected, setSelected] = useState<AdminLabListItem | null>(null);
   const [saving, setSaving] = useState(false);
 
   const showToast = useCallback(
@@ -109,19 +109,19 @@ export default function AdminChallengeManagement() {
 
   const selectedTitle = useMemo(() => selected?.title ?? "", [selected]);
 
-  function openEdit(challenge: AdminChallengeListItem) {
-    setSelected(challenge);
+  function openEdit(lab: AdminLabListItem) {
+    setSelected(lab);
     form.setValues({
-      title: challenge.title ?? "",
-      description: challenge.description ?? "<p>Add a description...</p>",
-      status: challenge.status ?? "DRAFT",
-      difficulty: challenge.difficulty ?? "BEGINNER",
+      title: lab.title ?? "",
+      description: lab.description ?? "<p>Add a description...</p>",
+      status: lab.status ?? "DRAFT",
+      difficulty: lab.difficulty ?? "BEGINNER",
     });
     setEditOpened(true);
   }
 
-  function openDelete(challenge: AdminChallengeListItem) {
-    setSelected(challenge);
+  function openDelete(lab: AdminLabListItem) {
+    setSelected(lab);
     setDeleteOpened(true);
   }
 
@@ -130,7 +130,7 @@ export default function AdminChallengeManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/backend/api/admin/challenges/${selected.id}`, {
+      const res = await fetch(`/api/backend/api/admin/labs/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -162,7 +162,7 @@ export default function AdminChallengeManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/backend/api/admin/challenges/${selected.id}`, {
+      const res = await fetch(`/api/backend/api/admin/labs/${selected.id}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -226,7 +226,7 @@ export default function AdminChallengeManagement() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {challenges.length === 0 ? (
+          {labs.length === 0 ? (
             <Table.Tr>
               <Table.Td colSpan={5}>
                 <Text size="sm" c="dimmed" ta="center" py="md">
@@ -235,7 +235,7 @@ export default function AdminChallengeManagement() {
               </Table.Td>
             </Table.Tr>
           ) : (
-            challenges.map((c) => (
+            labs.map((c) => (
               <Table.Tr key={c.id}>
                 <Table.Td>
                   <Text fw={600} size="sm" lineClamp={2} style={wrapTextStyle} title={c.title}>

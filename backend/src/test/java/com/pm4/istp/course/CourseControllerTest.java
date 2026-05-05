@@ -29,11 +29,11 @@ import com.pm4.istp.course.controllers.CourseController;
 import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseRequest;
-import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.dto.ChallengeCreatorResponseDto;
-import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
@@ -93,9 +93,9 @@ class CourseControllerTest {
     @Mock
     private CourseTopicService courseTopicService;
     @Mock
-    private com.pm4.istp.course.repositories.SubTaskCompletionRepository subTaskCompletionRepository;
+    private com.pm4.istp.course.repositories.ChallengeCompletionRepository challengeCompletionRepository;
     @Mock
-    private com.pm4.istp.course.repositories.SubTaskRepository subTaskRepository;
+    private com.pm4.istp.course.repositories.ChallengeRepository challengeRepository;
 
     @InjectMocks
     private CourseController courseController;
@@ -411,14 +411,14 @@ class CourseControllerTest {
 
     @Test
     void getPublicCourse_returnsOk() throws Exception {
-        ChallengeStudentDto challenge1 = generateChallengeStudentDto("Challenge 1",
-                ChallengeStatusEnum.PUBLIC, "Creator 1");
-        ChallengeStudentDto challenge2 = generateChallengeStudentDto("Challenge 2",
-                ChallengeStatusEnum.PRIVATE, "Creator 2");
-        ChallengeStudentDto challenge3 = generateChallengeStudentDto("Challenge 3",
-                ChallengeStatusEnum.DRAFT, "Creator 3");
-        ChallengeStudentDto challenge4 = generateChallengeStudentDto("Challenge 4",
-                ChallengeStatusEnum.PUBLIC, "Creator 4");
+        LabStudentDto challenge1 = generateChallengeStudentDto("Lab 1",
+                LabStatusEnum.PUBLIC, "Creator 1");
+        LabStudentDto challenge2 = generateChallengeStudentDto("Lab 2",
+                LabStatusEnum.PRIVATE, "Creator 2");
+        LabStudentDto challenge3 = generateChallengeStudentDto("Lab 3",
+                LabStatusEnum.DRAFT, "Creator 3");
+        LabStudentDto challenge4 = generateChallengeStudentDto("Lab 4",
+                LabStatusEnum.PUBLIC, "Creator 4");
 
         Course course = new Course();
         course.setId(courseId);
@@ -456,12 +456,12 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.courseInstructors[*].id").value(everyItem(nullValue())))
                 .andExpect(jsonPath("$.courseInstructors[*].instructor.id").value(everyItem(nullValue())))
                 .andExpect(jsonPath("$.courseInstructors[0].instructor.name").value("Instructor"))
-                .andExpect(jsonPath("$.courseChallenges").isArray())
-                .andExpect(jsonPath("$.courseChallenges", hasSize(3)))
-                .andExpect(jsonPath("$.courseChallenges[*].creator.id").value(everyItem(nullValue())))
-                .andExpect(jsonPath("$.courseChallenges[0].creator.name").value("Creator 1"))
-                .andExpect(jsonPath("$.courseChallenges[1].creator.name").value("Creator 2"))
-                .andExpect(jsonPath("$.courseChallenges[2].creator.name").value("Creator 4"))
+                .andExpect(jsonPath("$.courseLabs").isArray())
+                .andExpect(jsonPath("$.courseLabs", hasSize(3)))
+                .andExpect(jsonPath("$.courseLabs[*].creator.id").value(everyItem(nullValue())))
+                .andExpect(jsonPath("$.courseLabs[0].creator.name").value("Creator 1"))
+                .andExpect(jsonPath("$.courseLabs[1].creator.name").value("Creator 2"))
+                .andExpect(jsonPath("$.courseLabs[2].creator.name").value("Creator 4"))
                 .andExpect(jsonPath("$.participants").value(nullValue()));
     }
 
@@ -627,18 +627,18 @@ class CourseControllerTest {
     }
 
     // ── Mock object generators ────────────────────────────────────────────────
-    private ChallengeStudentDto generateChallengeStudentDto(String title,
-            ChallengeStatusEnum challengeStatus, String creatorName) {
+    private LabStudentDto generateChallengeStudentDto(String title,
+            LabStatusEnum labStatus, String creatorName) {
         ChallengeCreatorResponseDto challengeCreatorResponseDto = new ChallengeCreatorResponseDto();
         challengeCreatorResponseDto.setId(UUID.randomUUID());
         challengeCreatorResponseDto.setName(creatorName);
 
-        ChallengeStudentDto dto = new ChallengeStudentDto();
+        LabStudentDto dto = new LabStudentDto();
         dto.setId(UUID.randomUUID());
         dto.setTitle(title);
         dto.setCreator(challengeCreatorResponseDto);
-        dto.setStatus(challengeStatus);
-        dto.setSubTasks(List.of());
+        dto.setStatus(labStatus);
+        dto.setLabs(List.of());
         return dto;
     }
 

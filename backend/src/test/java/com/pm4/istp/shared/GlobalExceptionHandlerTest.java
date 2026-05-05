@@ -15,11 +15,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
-import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
-import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.course.exceptions.LabAccessDeniedException;
+import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
-import com.pm4.istp.course.exceptions.InvalidCourseChallengeException;
+import com.pm4.istp.course.exceptions.InvalidCourseLabException;
 import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
@@ -75,7 +75,7 @@ class GlobalExceptionHandlerTest {
   @Test
   void handleChallengeAccessDeniedException_returnsForbidden() {
     ResponseEntity<ErrorDto> response = handler.handleChallengeAccessDeniedException(
-        new ChallengeAccessDeniedException("no access"));
+        new LabAccessDeniedException("no access"));
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     assertThat(response.getBody()).isNotNull();
@@ -85,11 +85,11 @@ class GlobalExceptionHandlerTest {
   @Test
   void handleChallengeNotFoundException_returnsNotFound() {
     ResponseEntity<ErrorDto> response = handler
-        .handleChallengeNotFoundException(new ChallengeNotFoundException("missing"));
+        .handleChallengeNotFoundException(new LabNotFoundException("missing"));
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     assertThat(response.getBody()).isNotNull();
-    assertThat(response.getBody().getError()).isEqualTo("Challenge not found");
+    assertThat(response.getBody().getError()).isEqualTo("Lab not found");
   }
 
   @Test
@@ -105,11 +105,11 @@ class GlobalExceptionHandlerTest {
   @Test
   void handleInvalidCourseChallengeException_returnsBadRequestWithMessage() {
     ResponseEntity<ErrorDto> response = handler.handleInvalidCourseChallengeException(
-        new InvalidCourseChallengeException("Challenge 'Foo' is a draft"));
+        new InvalidCourseLabException("Lab 'Foo' is a draft"));
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(response.getBody()).isNotNull();
-    assertThat(response.getBody().getError()).isEqualTo("Challenge 'Foo' is a draft");
+    assertThat(response.getBody().getError()).isEqualTo("Lab 'Foo' is a draft");
   }
 
   @Test

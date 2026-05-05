@@ -35,7 +35,7 @@ public class StudentOptionSubmission {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "sub_task_id", nullable = false)
-  private SubTask subTask;
+  private Challenge challenge;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(
@@ -46,7 +46,7 @@ public class StudentOptionSubmission {
               name = "fk_student_option_submission_option",
               foreignKeyDefinition =
                   "FOREIGN KEY (selected_option_id) REFERENCES sub_task_options(id) ON DELETE CASCADE"))
-  private SubTaskOption selectedOption;
+  private ChallengeOption selectedOption;
 
   @Column(name = "is_correct", nullable = false)
   private boolean correct;
