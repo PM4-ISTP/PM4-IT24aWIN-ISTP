@@ -352,8 +352,7 @@ public class CourseServiceImpl implements CourseService {
     verifyInstructor(course, userId);
 
     List<CourseParticipantResponseDto> participants = loadParticipants(courseId);
-    List<CourseLab> assigned =
-        course.getCourseLabs() == null ? List.of() : course.getCourseLabs();
+    List<CourseLab> assigned = course.getCourseLabs() == null ? List.of() : course.getCourseLabs();
     List<CourseLabResponseDto> challengesDto = toChallengeSubmissionDtos(assigned);
 
     List<UUID> userIds = participants.stream().map(CourseParticipantResponseDto::getId).toList();

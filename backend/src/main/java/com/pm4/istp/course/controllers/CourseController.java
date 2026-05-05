@@ -253,8 +253,7 @@ public class CourseController {
       @PathVariable UUID id,
       @Valid @RequestBody UpdateCourseLabsRequestDto request) {
     UUID userId = parseUserId(jwt);
-    Course updatedCourse =
-        courseService.updateCourseChallenges(userId, id, request.getLabs());
+    Course updatedCourse = courseService.updateCourseChallenges(userId, id, request.getLabs());
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(updatedCourse);
     return ResponseEntity.ok(dto);
   }

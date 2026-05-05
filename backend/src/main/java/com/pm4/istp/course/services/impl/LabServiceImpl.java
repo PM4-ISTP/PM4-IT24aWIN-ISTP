@@ -635,7 +635,8 @@ public class LabServiceImpl implements LabService {
   // -------------------------------------------------------------------------
 
   private void populateStudentProgress(LabStudentDto dto, UUID userId, Lab entity) {
-    List<ChallengeStudentDto> challenges = dto.getChallenges() == null ? List.of() : dto.getChallenges();
+    List<ChallengeStudentDto> challenges =
+        dto.getChallenges() == null ? List.of() : dto.getChallenges();
     List<UUID> challengeIds = challengeIds(challenges);
     Set<UUID> solvedIds =
         challengeIds.isEmpty()
