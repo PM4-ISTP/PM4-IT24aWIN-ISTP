@@ -305,17 +305,17 @@ public class CourseServiceImpl implements CourseService {
     verifyInstructor(course, userId);
 
     // Clear existing lab assignments
-    course.getCourseChallenges().clear();
+    course.getCourseLabs().clear();
 
     // Add new lab assignments
     for (CourseLabItemDto item : labs) {
       Lab lab =
           labRepository
-              .findById(item.getChallengeId())
+              .findById(item.getLabId())
               .orElseThrow(
                   () ->
                       new LabNotFoundException(
-                          String.format("Lab with ID '%s' not found", item.getChallengeId())));
+                          String.format("Lab with ID '%s' not found", item.getLabId())));
 
       // DRAFT labs cannot be added to any course, even by their creator
       if (lab.getStatus() == LabStatusEnum.DRAFT) {
@@ -328,11 +328,11 @@ public class CourseServiceImpl implements CourseService {
       boolean isPublic = lab.getStatus() == LabStatusEnum.PUBLIC;
       if (!isCreator && !isPublic) {
         throw new LabNotFoundException(
-            String.format("Lab with ID '%s' not found", item.getChallengeId()));
+            String.format("Lab with ID '%s' not found", item.getLabId()));
       }
 
       CourseLab courseLab = new CourseLab();
-      courseLab.setChallenge(lab);
+      courseLab.setLab(lab);
       courseLab.setOrderIndex(item.getOrderIndex());
       courseLab.setDueAt(item.getDueAt());
       course.addCourseChallenge(courseLab);
@@ -353,11 +353,11 @@ public class CourseServiceImpl implements CourseService {
 
     List<CourseParticipantResponseDto> participants = loadParticipants(courseId);
     List<CourseLab> assigned =
-        course.getCourseChallenges() == null ? List.of() : course.getCourseChallenges();
+        course.getCourseLabs() == null ? List.of() : course.getCourseLabs();
     List<CourseLabResponseDto> challengesDto = toChallengeSubmissionDtos(assigned);
 
     List<UUID> userIds = participants.stream().map(CourseParticipantResponseDto::getId).toList();
-    List<UUID> challengeIds = assigned.stream().map(cc -> cc.getChallenge().getId()).toList();
+    List<UUID> challengeIds = assigned.stream().map(cc -> cc.getLab().getId()).toList();
 
     Map<UUID, Integer> totalByLab = loadChallengeTotals(challengeIds);
 
@@ -384,7 +384,7 @@ public class CourseServiceImpl implements CourseService {
     return assigned.stream()
         .map(
             courseLab -> {
-              Lab lab = courseLab.getChallenge();
+              Lab lab = courseLab.getLab();
               return new CourseLabResponseDto(
                   lab.getId(),
                   lab.getTitle(),
@@ -431,7 +431,7 @@ public class CourseServiceImpl implements CourseService {
   private Map<UUID, LocalDateTime> loadDueDates(List<CourseLab> assigned) {
     Map<UUID, LocalDateTime> dueAtByChallenge = new HashMap<>();
     for (CourseLab courseLab : assigned) {
-      dueAtByChallenge.put(courseLab.getChallenge().getId(), courseLab.getDueAt());
+      dueAtByChallenge.put(courseLab.getLab().getId(), courseLab.getDueAt());
     }
     return dueAtByChallenge;
   }

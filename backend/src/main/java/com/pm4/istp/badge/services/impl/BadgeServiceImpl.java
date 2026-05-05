@@ -100,8 +100,8 @@ public class BadgeServiceImpl implements BadgeService {
 
   private boolean isCourseCompleted(UUID userId, Course course) {
     List<UUID> allChallengeIds = new ArrayList<>();
-    for (CourseLab cc : course.getCourseChallenges()) {
-      for (Challenge st : cc.getChallenge().getLabs()) {
+    for (CourseLab cc : course.getCourseLabs()) {
+      for (Challenge st : cc.getLab().getChallenges()) {
         allChallengeIds.add(st.getId());
       }
     }

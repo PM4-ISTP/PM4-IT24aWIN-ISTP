@@ -254,7 +254,7 @@ public class CourseController {
       @Valid @RequestBody UpdateCourseLabsRequestDto request) {
     UUID userId = parseUserId(jwt);
     Course updatedCourse =
-        courseService.updateCourseChallenges(userId, id, request.getChallenges());
+        courseService.updateCourseChallenges(userId, id, request.getLabs());
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(updatedCourse);
     return ResponseEntity.ok(dto);
   }
@@ -539,20 +539,20 @@ public class CourseController {
     dto.setParticipants(null);
     filterOutDraftChallenges(dto);
     setInstructorIdsToNull(dto.getCourseInstructors());
-    setChallengeCreatorIdsToNull(dto.getCourseChallenges());
-    populateStudentProgress(dto.getCourseChallenges(), userId);
+    setChallengeCreatorIdsToNull(dto.getCourseLabs());
+    populateStudentProgress(dto.getCourseLabs(), userId);
     dto.setInviteCode(null);
     return dto;
   }
 
   private void filterOutDraftChallenges(PublicCourseDetailResponseDto dto) {
     List<LabStudentDto> labs = new ArrayList<>();
-    for (LabStudentDto lab : dto.getCourseChallenges()) {
+    for (LabStudentDto lab : dto.getCourseLabs()) {
       if (lab.getStatus() != LabStatusEnum.DRAFT) {
         labs.add(lab);
       }
     }
-    dto.setCourseChallenges(List.copyOf(labs));
+    dto.setCourseLabs(List.copyOf(labs));
   }
 
   /**
@@ -606,7 +606,7 @@ public class CourseController {
   }
 
   private List<ChallengeStudentDto> safeChallenges(LabStudentDto lab) {
-    return lab.getLabs() == null ? List.of() : lab.getLabs();
+    return lab.getChallenges() == null ? List.of() : lab.getChallenges();
   }
 
   /**

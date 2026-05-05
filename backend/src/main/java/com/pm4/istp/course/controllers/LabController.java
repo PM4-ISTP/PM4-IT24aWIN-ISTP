@@ -113,7 +113,7 @@ public class LabController {
     UUID userId = parseUserId(jwt);
     Lab lab = labService.getChallenge(userId, id);
     ChallengeDetailResponseDto dto = labMapper.toDetailResponseDto(lab);
-    dto.setCourseCount(lab.getCourseChallenges().size());
+    dto.setCourseCount(lab.getCourseLabs().size());
     return ResponseEntity.ok(dto);
   }
 

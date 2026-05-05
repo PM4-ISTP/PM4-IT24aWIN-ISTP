@@ -100,8 +100,8 @@ public class LabServiceImpl implements LabService {
     lab.setCreator(creator);
 
     List<Challenge> challenges = buildChallengesForCreate(request.getChallenges(), lab);
-    lab.getLabs().addAll(challenges);
-    lab.setMaxScore(totalPoints(lab.getLabs()));
+    lab.getChallenges().addAll(challenges);
+    lab.setMaxScore(totalPoints(lab.getChallenges()));
 
     return labRepository.save(lab);
   }
@@ -142,7 +142,7 @@ public class LabServiceImpl implements LabService {
     lab.setDockerImage(request.getDockerImage());
 
     applyChallengeUpdates(lab, request.getChallenges());
-    lab.setMaxScore(totalPoints(lab.getLabs()));
+    lab.setMaxScore(totalPoints(lab.getChallenges()));
 
     Lab saved = labRepository.save(lab);
     cleanupCourseChallengesForVisibilityChange(labId, userId, oldStatus, newStatus);
@@ -162,7 +162,7 @@ public class LabServiceImpl implements LabService {
     int idx = 0;
     for (ChallengeRequest req : requests) {
       Challenge st = new Challenge();
-      st.setChallenge(parent);
+      st.setLab(parent);
       st.setTitle(req.getTitle());
       st.setDescription(req.getDescription());
       st.setFlag(normalizeFlag(req.getFlag()));
@@ -180,7 +180,7 @@ public class LabServiceImpl implements LabService {
     List<ChallengeRequest> incoming = requests == null ? List.of() : requests;
 
     Map<UUID, Challenge> existingById = new HashMap<>();
-    for (Challenge existing : lab.getLabs()) {
+    for (Challenge existing : lab.getChallenges()) {
       if (existing.getId() != null) {
         existingById.put(existing.getId(), existing);
       }
@@ -192,7 +192,7 @@ public class LabServiceImpl implements LabService {
       Challenge target = req.getId() != null ? existingById.remove(req.getId()) : null;
       if (target == null) {
         target = new Challenge();
-        target.setChallenge(lab);
+        target.setLab(lab);
       }
       target.setTitle(req.getTitle());
       target.setDescription(req.getDescription());
@@ -205,8 +205,8 @@ public class LabServiceImpl implements LabService {
       retained.add(target);
     }
 
-    lab.getLabs().clear();
-    lab.getLabs().addAll(retained);
+    lab.getChallenges().clear();
+    lab.getChallenges().addAll(retained);
   }
 
   private void applyOptions(Challenge challenge, List<ChallengeOptionRequest> optionRequests) {
@@ -357,7 +357,7 @@ public class LabServiceImpl implements LabService {
                 () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
     boolean challengeBelongsToCourse =
-        lab.getCourseChallenges().stream().anyMatch(cc -> cc.getCourse().getId().equals(courseId));
+        lab.getCourseLabs().stream().anyMatch(cc -> cc.getCourse().getId().equals(courseId));
     if (!challengeBelongsToCourse) {
       throw new LabAccessDeniedException(
           String.format("Lab '%s' is not part of course '%s'", labId, courseId));
@@ -397,7 +397,7 @@ public class LabServiceImpl implements LabService {
                     new ChallengeNotFoundException(
                         String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
 
-    if (!challenge.getChallenge().getId().equals(labId)) {
+    if (!challenge.getLab().getId().equals(labId)) {
       throw new ChallengeNotFoundException(
           String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, challengeId, labId));
     }
@@ -423,7 +423,7 @@ public class LabServiceImpl implements LabService {
       }
     }
 
-    List<Challenge> siblings = challenge.getChallenge().getLabs();
+    List<Challenge> siblings = challenge.getLab().getLabs();
     List<UUID> siblingIds = siblingsIds(siblings);
     Set<UUID> solvedIds = solvedChallengeIds(userId, siblingIds);
     int solvedCount = solvedIds.size();
@@ -491,7 +491,7 @@ public class LabServiceImpl implements LabService {
                 () ->
                     new ChallengeNotFoundException(
                         String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
-    if (!challenge.getChallenge().getId().equals(labId)) {
+    if (!challenge.getLab().getId().equals(labId)) {
       throw new ChallengeNotFoundException(
           String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, challengeId, labId));
     }
@@ -590,7 +590,7 @@ public class LabServiceImpl implements LabService {
 
   private ChoiceSubmissionResponseDto buildChoiceResponse(
       boolean correct, UUID userId, Lab lab, Challenge challenge) {
-    List<Challenge> siblings = lab.getLabs();
+    List<Challenge> siblings = lab.getChallenges();
     List<UUID> siblingIds = siblingsIds(siblings);
     Set<UUID> solvedIds = solvedChallengeIds(userId, siblingIds);
     int solvedCount = solvedIds.size();
@@ -635,7 +635,7 @@ public class LabServiceImpl implements LabService {
   // -------------------------------------------------------------------------
 
   private void populateStudentProgress(LabStudentDto dto, UUID userId, Lab entity) {
-    List<ChallengeStudentDto> challenges = dto.getLabs() == null ? List.of() : dto.getLabs();
+    List<ChallengeStudentDto> challenges = dto.getChallenges() == null ? List.of() : dto.getChallenges();
     List<UUID> challengeIds = challengeIds(challenges);
     Set<UUID> solvedIds =
         challengeIds.isEmpty()
@@ -767,7 +767,7 @@ public class LabServiceImpl implements LabService {
                     new ChallengeNotFoundException(
                         String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
 
-    if (!challenge.getChallenge().getId().equals(labId)) {
+    if (!challenge.getLab().getId().equals(labId)) {
       throw new ChallengeNotFoundException(
           String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, challengeId, labId));
     }
@@ -791,7 +791,7 @@ public class LabServiceImpl implements LabService {
       }
     }
 
-    List<Challenge> siblings = challenge.getChallenge().getLabs();
+    List<Challenge> siblings = challenge.getLab().getLabs();
     List<UUID> siblingIds = siblingsIds(siblings);
     Set<UUID> solvedIds = solvedChallengeIds(userId, siblingIds);
     int solvedCount = solvedIds.size();
