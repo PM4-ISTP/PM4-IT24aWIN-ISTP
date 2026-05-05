@@ -5,7 +5,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import MyEditor from "@/src/shared/components/MyEditor";
 import {
   ChallengeManager,
-  type ChallengeFormValues,
+  type ChallengeFormValues as ChallengeItemFormValues,
 } from "@/src/features/course/components/labs/ChallengeManager";
 import type {
   LabStatusEnum,
@@ -19,7 +19,7 @@ import {
 } from "@/src/features/course/constants/challengeConstants";
 import type { DockerImageCheckStatus } from "@/src/features/course/hooks/useDockerImageCheck";
 
-export type { ChallengeFormValues };
+export type { ChallengeItemFormValues };
 
 export interface ChallengeFormValues {
   title: string;
@@ -27,7 +27,7 @@ export interface ChallengeFormValues {
   status: LabStatusEnum;
   difficulty: LabDifficultyEnum;
   dockerImage: string;
-  challenges: ChallengeFormValues[];
+  challenges: ChallengeItemFormValues[];
 }
 
 export interface ChallengeFormFieldsProps {
