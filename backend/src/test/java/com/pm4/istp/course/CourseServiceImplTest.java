@@ -792,9 +792,9 @@ class CourseServiceImplTest {
     Course updated = courseService.updateCourseChallenges(
         ownerId, courseId, List.of(new CourseLabItemDto(labId, 0, null)));
 
-    assertThat(updated.getCourseChallenges()).hasSize(1);
-    assertThat(updated.getCourseChallenges().getFirst().getChallenge()).isSameAs(lab);
-    assertThat(updated.getCourseChallenges().getFirst().getOrderIndex()).isZero();
+    assertThat(updated.getCourseLabs()).hasSize(1);
+    assertThat(updated.getCourseLabs().getFirst().getLab()).isSameAs(lab);
+    assertThat(updated.getCourseLabs().getFirst().getOrderIndex()).isZero();
     verify(courseRepository).save(course);
   }
 
@@ -819,8 +819,8 @@ class CourseServiceImplTest {
         courseService.updateCourseChallenges(
             ownerId, courseId, List.of(new CourseLabItemDto(labId, 0, dueAt)));
 
-    assertThat(updated.getCourseChallenges()).hasSize(1);
-    assertThat(updated.getCourseChallenges().getFirst().getDueAt()).isEqualTo(dueAt);
+    assertThat(updated.getCourseLabs()).hasSize(1);
+    assertThat(updated.getCourseLabs().getFirst().getDueAt()).isEqualTo(dueAt);
   }
 
   @Test
@@ -846,7 +846,7 @@ class CourseServiceImplTest {
     Course updated = courseService.updateCourseChallenges(
         ownerId, courseId, List.of(new CourseLabItemDto(labId, 0, null)));
 
-    assertThat(updated.getCourseChallenges()).hasSize(1);
+    assertThat(updated.getCourseLabs()).hasSize(1);
   }
 
   @Test
@@ -970,7 +970,7 @@ class CourseServiceImplTest {
     // pre-seed with an existing assignment to verify it gets cleared
     Lab existing = buildChallenge(UUID.randomUUID(), owner, LabStatusEnum.PUBLIC);
     com.pm4.istp.course.db.entities.CourseLab existingAssignment = new com.pm4.istp.course.db.entities.CourseLab();
-    existingAssignment.setChallenge(existing);
+    existingAssignment.setLab(existing);
     existingAssignment.setOrderIndex(0);
     course.addCourseChallenge(existingAssignment);
 
@@ -980,7 +980,7 @@ class CourseServiceImplTest {
 
     Course updated = courseService.updateCourseChallenges(ownerId, courseId, List.of());
 
-    assertThat(updated.getCourseChallenges()).isEmpty();
+    assertThat(updated.getCourseLabs()).isEmpty();
   }
 
   @Test
@@ -997,7 +997,7 @@ class CourseServiceImplTest {
 
     com.pm4.istp.course.db.entities.CourseLab assignment =
         new com.pm4.istp.course.db.entities.CourseLab();
-    assignment.setChallenge(lab);
+    assignment.setLab(lab);
     assignment.setOrderIndex(0);
     LocalDateTime dueAt = LocalDateTime.of(2026, 5, 1, 12, 0);
     assignment.setDueAt(dueAt);

@@ -93,7 +93,7 @@ class ChallengeServiceImplTest {
     lab.setStatus(status);
     lab.setDifficulty(LabDifficultyEnum.MEDIUM);
     lab.setCreator(creator);
-    lab.setLabs(new ArrayList<>());
+    lab.setChallenges(new ArrayList<>());
     return lab;
   }
 
@@ -153,13 +153,13 @@ class ChallengeServiceImplTest {
     assertThat(created.getDifficulty()).isEqualTo(LabDifficultyEnum.HARD);
     assertThat(created.getDockerImage()).isEqualTo("ghcr.io/pm4-istp/buffer-overflow:latest");
     assertThat(created.getCreator()).isSameAs(creator);
-    assertThat(created.getLabs()).hasSize(2);
-    assertThat(created.getLabs().get(0).getTitle()).isEqualTo("Recon");
-    assertThat(created.getLabs().get(0).getFlag()).isEqualTo("ISTP{abc}");
-    assertThat(created.getLabs().get(0).getOrderIndex()).isZero();
-    assertThat(created.getLabs().get(1).getTitle()).isEqualTo("Exploit");
-    assertThat(created.getLabs().get(1).getFlag()).isNull();
-    assertThat(created.getLabs().get(1).getOrderIndex()).isEqualTo(1);
+    assertThat(created.getChallenges()).hasSize(2);
+    assertThat(created.getChallenges().get(0).getTitle()).isEqualTo("Recon");
+    assertThat(created.getChallenges().get(0).getFlag()).isEqualTo("ISTP{abc}");
+    assertThat(created.getChallenges().get(0).getOrderIndex()).isZero();
+    assertThat(created.getChallenges().get(1).getTitle()).isEqualTo("Exploit");
+    assertThat(created.getChallenges().get(1).getFlag()).isNull();
+    assertThat(created.getChallenges().get(1).getOrderIndex()).isEqualTo(1);
     assertThat(created.getMaxScore()).isEqualTo(2);
     verify(dockerImageAvailabilityService).assertImageExists("ghcr.io/pm4-istp/buffer-overflow:latest");
     verify(labRepository).save(any(Lab.class));
@@ -186,7 +186,7 @@ class ChallengeServiceImplTest {
 
     Lab created = labService.createChallenge(creatorId, request);
 
-    assertThat(created.getLabs().get(0).getFlag()).isNull();
+    assertThat(created.getChallenges().get(0).getFlag()).isNull();
   }
 
   @Test
@@ -363,11 +363,11 @@ class ChallengeServiceImplTest {
     UUID existingId = UUID.randomUUID();
     Challenge existing = new Challenge();
     existing.setId(existingId);
-    existing.setChallenge(lab);
+    existing.setLab(lab);
     existing.setTitle("Old");
     existing.setDescription("Old desc");
     existing.setOrderIndex(0);
-    lab.getLabs().add(existing);
+    lab.getChallenges().add(existing);
 
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
     when(labRepository.save(any(Lab.class)))
@@ -388,13 +388,13 @@ class ChallengeServiceImplTest {
 
     Lab updated = labService.updateChallenge(creatorId, labId, request);
 
-    assertThat(updated.getLabs()).hasSize(2);
-    assertThat(updated.getLabs().get(0).getId()).isNull();
-    assertThat(updated.getLabs().get(0).getTitle()).isEqualTo("New first");
-    assertThat(updated.getLabs().get(1).getId()).isEqualTo(existingId);
-    assertThat(updated.getLabs().get(1).getTitle()).isEqualTo("Renamed");
-    assertThat(updated.getLabs().get(1).getFlag()).isEqualTo("ISTP{x}");
-    assertThat(updated.getLabs().get(1).getOrderIndex()).isEqualTo(1);
+    assertThat(updated.getChallenges()).hasSize(2);
+    assertThat(updated.getChallenges().get(0).getId()).isNull();
+    assertThat(updated.getChallenges().get(0).getTitle()).isEqualTo("New first");
+    assertThat(updated.getChallenges().get(1).getId()).isEqualTo(existingId);
+    assertThat(updated.getChallenges().get(1).getTitle()).isEqualTo("Renamed");
+    assertThat(updated.getChallenges().get(1).getFlag()).isEqualTo("ISTP{x}");
+    assertThat(updated.getChallenges().get(1).getOrderIndex()).isEqualTo(1);
     assertThat(updated.getMaxScore()).isEqualTo(2);
   }
 
@@ -716,10 +716,10 @@ class ChallengeServiceImplTest {
       course.setId(courseId);
       CourseLab cc = new CourseLab();
       cc.setCourse(course);
-      cc.setChallenge(lab);
+      cc.setLab(lab);
       ccs.add(cc);
     }
-    lab.setCourseChallenges(ccs);
+    lab.setCourseLabs(ccs);
     return lab;
   }
 
@@ -803,9 +803,9 @@ class ChallengeServiceImplTest {
   private Challenge buildChallenge(UUID id, Lab parent, String flag) {
     Challenge st = new Challenge();
     st.setId(id);
-    st.setChallenge(parent);
+    st.setLab(parent);
     st.setFlag(flag);
-    parent.getLabs().add(st);
+    parent.getChallenges().add(st);
     return st;
   }
 

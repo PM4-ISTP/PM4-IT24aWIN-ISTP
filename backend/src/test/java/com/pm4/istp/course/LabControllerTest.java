@@ -100,7 +100,7 @@ class ChallengeControllerTest {
     Lab lab = new Lab();
     lab.setId(labId);
     lab.setCreator(new User());
-    lab.setCourseChallenges(List.of(new CourseLab(), new CourseLab()));
+    lab.setCourseLabs(List.of(new CourseLab(), new CourseLab()));
 
     ChallengeDetailResponseDto dto = new ChallengeDetailResponseDto();
 
@@ -137,7 +137,7 @@ class ChallengeControllerTest {
     UpdateLabRequest mappedRequest = new UpdateLabRequest();
     Lab updated = new Lab();
     updated.setId(labId);
-    updated.setCourseChallenges(List.of(new CourseLab()));
+    updated.setCourseLabs(List.of(new CourseLab()));
     ChallengeDetailResponseDto dto = new ChallengeDetailResponseDto();
 
     when(labMapper.fromDto(requestDto)).thenReturn(mappedRequest);

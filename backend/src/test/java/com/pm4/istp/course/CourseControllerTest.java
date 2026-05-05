@@ -438,7 +438,7 @@ class CourseControllerTest {
         dto.setId(courseId);
         dto.setTitle("Public Course");
         dto.setCourseInstructors(List.of(instructor));
-        dto.setCourseChallenges(List.of(challenge1, challenge2, challenge3, challenge4));
+        dto.setCourseLabs(List.of(challenge1, challenge2, challenge3, challenge4));
         dto.setParticipants(List.of(new CourseParticipantResponseDto(UUID.randomUUID(), "Student", null)));
 
         when(courseService.getCourse(userId, courseId)).thenReturn(course);
@@ -497,7 +497,7 @@ class CourseControllerTest {
         PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
         dto.setId(courseId);
         dto.setCourseInstructors(Collections.emptyList());
-        dto.setCourseChallenges(Collections.emptyList());
+        dto.setCourseLabs(Collections.emptyList());
 
         when(courseService.enrollInCourse(userId, courseId)).thenReturn(course);
         when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
@@ -521,7 +521,7 @@ class CourseControllerTest {
         PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
         dto.setId(courseId);
         dto.setCourseInstructors(Collections.emptyList());
-        dto.setCourseChallenges(Collections.emptyList());
+        dto.setCourseLabs(Collections.emptyList());
 
         when(courseService.joinByInviteCode("ABC123", userId)).thenReturn(course);
         when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
@@ -638,7 +638,7 @@ class CourseControllerTest {
         dto.setTitle(title);
         dto.setCreator(challengeCreatorResponseDto);
         dto.setStatus(labStatus);
-        dto.setLabs(List.of());
+        dto.setChallenges(List.of());
         return dto;
     }
 
