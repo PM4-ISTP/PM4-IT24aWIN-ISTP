@@ -153,8 +153,7 @@ export default async function Home() {
   const session = await getServerSession(authOptions);
   const name = session?.user?.name ?? "there";
   const firstName = name.split(" ")[0];
-  const userId =
-    (session?.user as { id?: string } | undefined)?.id ?? session?.user?.email ?? undefined;
+  const userId = session?.userId ?? undefined;
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
   const [deadlines, completedLabsCount] = await Promise.all([
     fetchMyDeadlines(),

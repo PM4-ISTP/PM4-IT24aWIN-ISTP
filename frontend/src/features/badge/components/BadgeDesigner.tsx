@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ColorInput, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { ColorInput, Group, SimpleGrid, Stack, Switch, Text, Title } from "@mantine/core";
 import BadgeSvg from "./BadgeSvg";
 
 const BG_SWATCHES = [
@@ -38,6 +38,7 @@ export interface BadgeConfig {
   template: number;
   badgeIcon: string;
   courseTitle?: string;
+  badgeEnabled: boolean;
 }
 
 interface Props {
@@ -95,6 +96,7 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
     template: 1,
     badgeIcon: "🏆",
     courseTitle: "",
+    badgeEnabled: true,
   });
 
   useEffect(() => {
@@ -107,6 +109,7 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
           template: data.template ?? 1,
           badgeIcon: data.badgeIcon ?? "🏆",
           courseTitle: data.courseTitle ?? "",
+          badgeEnabled: data.badgeEnabled ?? true,
         };
         setConfig(loaded);
         onChange(loaded);
@@ -136,6 +139,13 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
           Students earn this badge when they complete all challenges.
         </Text>
       </div>
+
+      <Switch
+        label="Award badge on completion"
+        checked={config.badgeEnabled}
+        onChange={(e) => update({ badgeEnabled: e.currentTarget.checked })}
+        styles={{ label: { color: "#cbd5e1" } }}
+      />
 
       <Group align="flex-start" gap="xl">
         <div style={{ flexShrink: 0 }}>

@@ -102,6 +102,9 @@ public class Course {
   @Enumerated(EnumType.STRING)
   private McAttemptsMode mcAttemptsMode = McAttemptsMode.UNLIMITED;
 
+  @Column(name = "badge_enabled", nullable = false, columnDefinition = "boolean default true")
+  private boolean badgeEnabled = true;
+
   @Column(name = "badge_primary_color", nullable = true, length = 7)
   private String badgePrimaryColor;
 
