@@ -34,7 +34,7 @@ public class PublicCourseDetailResponseDto {
 
   private List<CourseDetailInstructorResponseDto> courseInstructors;
   private List<CourseParticipantResponseDto> participants;
-  private List<ChallengeStudentDto> courseChallenges;
+  private List<LabStudentDto> courseLabs;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 }

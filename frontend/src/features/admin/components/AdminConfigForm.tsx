@@ -225,7 +225,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
             <TextInput
               id="image-pull-secret-input"
               label="Image pull secret"
-              description="Optional Kubernetes secret name for private GHCR challenge images."
+              description="Optional Kubernetes secret name for private GHCR lab images."
               placeholder="ghcr-pull-secret"
               key={form.key("imagePullSecretName")}
               {...form.getInputProps("imagePullSecretName")}
@@ -235,7 +235,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
             <NumberInput
               id="pod-ttl-input"
               label="Pod TTL (seconds)"
-              description="How long a challenge pod stays alive before it is automatically cleaned up."
+              description="How long a lab pod stays alive before it is automatically cleaned up."
               key={form.key("podTtlSeconds")}
               {...form.getInputProps("podTtlSeconds")}
               min={60}
@@ -257,8 +257,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                 )}
               </Text>
               <Text size="xs" c="dimmed">
-                Upload your Kubeconfig file for the Kubernetes cluster that manages the challenge
-                pods.
+                Upload your Kubeconfig file for the Kubernetes cluster that manages the lab pods.
               </Text>
               <Dropzone
                 id="kubeconfig-input"

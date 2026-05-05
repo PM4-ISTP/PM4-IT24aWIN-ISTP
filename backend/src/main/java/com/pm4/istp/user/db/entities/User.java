@@ -1,9 +1,9 @@
 package com.pm4.istp.user.db.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
+import com.pm4.istp.course.db.entities.Lab;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -64,7 +64,7 @@ public class User {
 
   @JsonIgnore
   @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL)
-  private List<Challenge> creatorChallenges = new ArrayList<>();
+  private List<Lab> creatorChallenges = new ArrayList<>();
 
   @JsonIgnore
   @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL)

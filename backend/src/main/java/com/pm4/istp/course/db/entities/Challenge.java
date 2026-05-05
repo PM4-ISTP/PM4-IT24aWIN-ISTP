@@ -1,7 +1,5 @@
 package com.pm4.istp.course.db.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.pm4.istp.user.db.entities.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,48 +24,41 @@ public class Challenge {
   @Column(name = "id", updatable = false, nullable = false, unique = true)
   private UUID id;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "challenge_id", nullable = false)
+  private Lab lab;
+
   @Column(name = "title", nullable = false)
   private String title;
 
-  @Column(name = "short_description")
-  private String shortDescription;
-
-  @Column(name = "description", nullable = true, length = 5000)
+  @Column(name = "description", nullable = false, length = 5000)
   private String description;
 
-  @Column(name = "status", nullable = false)
+  @Column(name = "flag", nullable = true)
+  private String flag;
+
+  @Column(name = "order_index", nullable = false)
+  private int orderIndex;
+
+  @Column(name = "type", nullable = false, columnDefinition = "VARCHAR(50) NOT NULL DEFAULT 'FLAG'")
   @Enumerated(EnumType.STRING)
-  private ChallengeStatusEnum status;
+  private ChallengeType type = ChallengeType.FLAG;
 
-  @Column(name = "difficulty", nullable = false)
-  @Enumerated(EnumType.STRING)
-  private ChallengeDifficultyEnum difficulty;
+  /** Points awarded automatically when this challenge is solved correctly. */
+  @Column(name = "points", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1")
+  private int points = 1;
 
-  @Column(name = "docker_image", nullable = false)
-  private String dockerImage;
+  /** Optional hint text shown to the student on demand. */
+  @Column(name = "hint", nullable = true, length = 1000)
+  private String hint;
 
-  // This field wil be filled by the SubTasks which will come later, for now we
-  // will set it manually
-  // to 0
-  @Column(name = "max_score", nullable = false)
-  private int maxScore;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "creator_id", nullable = false)
-  private User creator;
-
-  @JsonIgnore
-  @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<CourseChallenge> courseChallenges = new ArrayList<>();
-
-  @JsonIgnore
   @OneToMany(
       mappedBy = "challenge",
       cascade = CascadeType.ALL,
       orphanRemoval = true,
       fetch = FetchType.LAZY)
   @OrderBy("orderIndex ASC")
-  private List<SubTask> subTasks = new ArrayList<>();
+  private List<ChallengeOption> options = new ArrayList<>();
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)

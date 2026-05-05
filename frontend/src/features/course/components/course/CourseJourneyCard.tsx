@@ -25,16 +25,16 @@ interface LessonsProgress {
 }
 
 /**
- * Props for challenge progress.
+ * Props for lab progress.
  *
- * TODO: Replace with real challenge data once the challenges feature is
+ * TODO: Replace with real lab data once the labs feature is
  * implemented in the backend. Until then, leave this prop undefined to render
  * the placeholder state.
  */
 interface ChallengesProgress {
-  /** Number of challenges the user has completed */
+  /** Number of labs the user has completed */
   completed: number;
-  /** Total number of challenges in the course */
+  /** Total number of labs in the course */
   total: number;
 }
 
@@ -46,10 +46,10 @@ export interface CourseJourneyCardProps {
   lessons?: LessonsProgress;
 
   /**
-   * Challenge progress data (aggregate sub-task progress across the course).
+   * Lab progress data (aggregate challenge progress across the course).
    * Leave undefined to show the "coming soon" placeholder.
    */
-  challenges?: ChallengesProgress;
+  labs?: ChallengesProgress;
 
   /**
    * Deprecated. The primary course CTA lives in the banner header.
@@ -122,12 +122,12 @@ function StatChip({ icon, label, dimmed }: StatChipProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Placeholder — shown when challenges have not been implemented yet
+// Placeholder — shown when labs have not been implemented yet
 // ---------------------------------------------------------------------------
 
 /**
- * PLACEHOLDER: Rendered in place of the challenges progress bar until the
- * challenges feature is available. Remove this component and wire up the real
+ * PLACEHOLDER: Rendered in place of the labs progress bar until the
+ * labs feature is available. Remove this component and wire up the real
  * ChallengesProgress prop instead.
  */
 function ChallengesPlaceholder() {
@@ -148,7 +148,7 @@ function ChallengesPlaceholder() {
           Coming soon
         </Text>
       </Group>
-      {/* Visual placeholder bar — replace with real Progress once backend supports challenges */}
+      {/* Visual placeholder bar — replace with real Progress once backend supports labs */}
       <Progress
         value={0}
         color="orange"
@@ -172,9 +172,9 @@ function ChallengesPlaceholder() {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function CourseJourneyCard({ lessons, challenges, instructor }: CourseJourneyCardProps) {
+export function CourseJourneyCard({ lessons, labs, instructor }: CourseJourneyCardProps) {
   const lessonPercent = lessons ? calcPercent(lessons.finished, lessons.total) : 0;
-  const challengePercent = challenges ? calcPercent(challenges.completed, challenges.total) : 0;
+  const challengePercent = labs ? calcPercent(labs.completed, labs.total) : 0;
 
   return (
     <Box
@@ -234,7 +234,7 @@ export function CourseJourneyCard({ lessons, challenges, instructor }: CourseJou
           )}
 
           {/* ── Challenges progress (or placeholder) ── */}
-          {challenges ? (
+          {labs ? (
             <ProgressSection
               label="Challenges"
               percent={challengePercent}
@@ -242,13 +242,13 @@ export function CourseJourneyCard({ lessons, challenges, instructor }: CourseJou
               statLeft={
                 <StatChip
                   icon={<IconFlame size={13} color="var(--mantine-color-orange-5)" />}
-                  label={`${challenges.completed} Challenge${challenges.completed !== 1 ? "s" : ""} Solved`}
+                  label={`${labs.completed} Lab${labs.completed !== 1 ? "s" : ""} Solved`}
                 />
               }
               statRight={
                 <StatChip
                   icon={<IconClock size={13} color="var(--mantine-color-dimmed)" />}
-                  label={`${Math.max(challenges.total - challenges.completed, 0)} Remaining`}
+                  label={`${Math.max(labs.total - labs.completed, 0)} Remaining`}
                   dimmed
                 />
               }

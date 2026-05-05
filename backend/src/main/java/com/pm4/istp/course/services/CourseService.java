@@ -3,9 +3,9 @@ package com.pm4.istp.course.services;
 import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Course;
-import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
-import com.pm4.istp.course.dto.CourseChallengeItemDto;
-import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
+import com.pm4.istp.course.dto.CourseLabDeadlineDto;
+import com.pm4.istp.course.dto.CourseLabItemDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import java.util.List;
 import java.util.UUID;
@@ -23,12 +23,11 @@ public interface CourseService {
 
   void deleteCourse(UUID userId, UUID courseId);
 
-  Course updateCourseChallenges(
-      UUID userId, UUID courseId, List<CourseChallengeItemDto> challenges);
+  Course updateCourseChallenges(UUID userId, UUID courseId, List<CourseLabItemDto> labs);
 
-  CourseChallengeSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId);
+  CourseLabSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId);
 
-  List<CourseChallengeDeadlineDto> listUpcomingDeadlines(UUID userId);
+  List<CourseLabDeadlineDto> listUpcomingDeadlines(UUID userId);
 
   Page<ListCourseResponseDto> listCoursesForInstructors(UUID instructorId, Pageable pageable);
 

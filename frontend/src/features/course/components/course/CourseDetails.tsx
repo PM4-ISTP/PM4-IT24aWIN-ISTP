@@ -2,26 +2,26 @@ import { Alert, Box, Container, Group, Stack, Title } from "@mantine/core";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseBannerHeader } from "@/src/features/course/components/course/CourseBannerHeader";
-import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
+import { CourseLabDetailsList } from "@/src/features/course/components/management/CourseLabDetailsList";
 import { CourseJourneyCard } from "@/src/features/course/components/course/CourseJourneyCard";
 import { fetchPublicCourse } from "@/src/features/course/actions/courses";
 import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
-import type { ChallengeStudentDto, InstructorRoleEnum } from "@/src/shared/types/course";
+import type { LabStudentDto, InstructorRoleEnum } from "@/src/shared/types/course";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
 
-function findNextChallenge(challenges: ChallengeStudentDto[]): ChallengeStudentDto | null {
-  return challenges.find((c) => !c.isSolved) ?? null;
+function findNextChallenge(labs: LabStudentDto[]): LabStudentDto | null {
+  return labs.find((c) => !c.isSolved) ?? null;
 }
 
-function aggregateSubTaskProgress(challenges: ChallengeStudentDto[]): {
+function aggregateChallengeProgress(labs: LabStudentDto[]): {
   completed: number;
   total: number;
 } {
   let completed = 0;
   let total = 0;
-  for (const challenge of challenges) {
-    completed += challenge.solvedSubTaskCount ?? 0;
-    total += challenge.totalSubTaskCount ?? challenge.subTasks?.length ?? 0;
+  for (const lab of labs) {
+    completed += lab.solvedChallengeCount ?? 0;
+    total += lab.totalChallengeCount ?? lab.challenges?.length ?? 0;
   }
   return { completed, total };
 }
@@ -81,8 +81,8 @@ export default async function CourseDetails({
   const owner = getOwner(course.courseInstructors);
   const nextChallengeHref = isEnrolled
     ? (() => {
-        const next = findNextChallenge(course.courseChallenges ?? []);
-        return next?.id ? `/dashboard/courses/${course.id}/challenges/${next.id}/play` : undefined;
+        const next = findNextChallenge(course.courseLabs ?? []);
+        return next?.id ? `/dashboard/courses/${course.id}/labs/${next.id}/play` : undefined;
       })()
     : undefined;
 
@@ -109,9 +109,7 @@ export default async function CourseDetails({
           <CourseJourneyCard
             instructor={owner}
             // lessons={undefined}    ← wire up when lesson API is ready
-            challenges={
-              isEnrolled ? aggregateSubTaskProgress(course.courseChallenges ?? []) : undefined
-            }
+            labs={isEnrolled ? aggregateChallengeProgress(course.courseLabs ?? []) : undefined}
           />
 
           {/* Course description */}
@@ -149,8 +147,8 @@ export default async function CourseDetails({
             </Box>
           )}
 
-          <CourseChallengeDetailsList
-            challenges={course.courseChallenges ?? []}
+          <CourseLabDetailsList
+            labs={course.courseLabs ?? []}
             title="Course Labs"
             showIndex={true}
             courseId={isEnrolled ? course.id : undefined}

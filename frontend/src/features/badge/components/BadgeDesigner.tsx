@@ -136,7 +136,7 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
           Course Badge
         </Title>
         <Text size="sm" style={{ color: "#94a3b8" }} mt={2}>
-          Students earn this badge when they complete all challenges.
+          Students earn this badge when they complete all labs.
         </Text>
       </div>
 

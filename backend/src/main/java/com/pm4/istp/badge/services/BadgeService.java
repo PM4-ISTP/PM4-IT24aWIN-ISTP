@@ -15,5 +15,5 @@ public interface BadgeService {
 
   List<UserBadgeDto> getUserBadges(UUID userId);
 
-  void tryAwardBadgesForChallenge(UUID userId, UUID challengeId);
+  void tryAwardBadgesForChallenge(UUID userId, UUID labId);
 }

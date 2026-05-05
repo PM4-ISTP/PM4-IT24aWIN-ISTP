@@ -8,8 +8,8 @@ import Link from "next/link";
 export type DeadlineItem = {
   courseId: string;
   courseTitle: string;
-  challengeId: string;
-  challengeTitle: string;
+  labId: string;
+  labTitle: string;
   dueAt: string;
 };
 
@@ -47,8 +47,8 @@ export function DeadlineWidget({ deadlines, userId }: Props) {
     }
   });
 
-  function dismiss(courseId: string, challengeId: string) {
-    const key = `${courseId}:${challengeId}`;
+  function dismiss(courseId: string, labId: string) {
+    const key = `${courseId}:${labId}`;
     setDismissed((prev) => {
       const next = new Set(prev);
       next.add(key);
@@ -64,7 +64,7 @@ export function DeadlineWidget({ deadlines, userId }: Props) {
   const now = new Date();
 
   const visible = deadlines.filter((it) => {
-    const key = `${it.courseId}:${it.challengeId}`;
+    const key = `${it.courseId}:${it.labId}`;
     return !dismissed.has(key);
   });
 
@@ -91,7 +91,7 @@ export function DeadlineWidget({ deadlines, userId }: Props) {
     <Stack gap="xs">
       {sorted.map((it, idx) => {
         const isOverdue = new Date(it.dueAt).getTime() < now.getTime();
-        const key = `${it.courseId}:${it.challengeId}`;
+        const key = `${it.courseId}:${it.labId}`;
 
         return (
           <Box key={`${key}:${idx}`}>
@@ -111,7 +111,7 @@ export function DeadlineWidget({ deadlines, userId }: Props) {
                 <Link
                   href={`/dashboard/courses/${encodeURIComponent(
                     it.courseId
-                  )}/challenges/${encodeURIComponent(it.challengeId)}/play`}
+                  )}/labs/${encodeURIComponent(it.labId)}/play`}
                   style={{
                     color: "#e2e8f0",
                     fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -123,9 +123,9 @@ export function DeadlineWidget({ deadlines, userId }: Props) {
                     whiteSpace: "nowrap",
                     display: "block",
                   }}
-                  title={it.challengeTitle}
+                  title={it.labTitle}
                 >
-                  {it.challengeTitle}
+                  {it.labTitle}
                 </Link>
               </Stack>
 
@@ -141,7 +141,7 @@ export function DeadlineWidget({ deadlines, userId }: Props) {
                       variant="subtle"
                       color="red"
                       title="Aus Kalender entfernen"
-                      onClick={() => dismiss(it.courseId, it.challengeId)}
+                      onClick={() => dismiss(it.courseId, it.labId)}
                       style={{ opacity: 0.7 }}
                     >
                       <IconX size={12} />

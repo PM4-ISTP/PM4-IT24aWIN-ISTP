@@ -51,11 +51,11 @@ import type {
   InstructorRoleEnum,
 } from "@/src/shared/types/course";
 import {
-  CourseChallengeManager,
+  CourseLabManager,
   type CourseChallengeEntry,
-} from "@/src/features/course/components/management/CourseChallengeManager";
+} from "@/src/features/course/components/management/CourseLabManager";
 import { CourseSubmissionsTable } from "@/src/features/course/components/management/CourseSubmissionsTable";
-import { updateCourseChallenges } from "@/src/features/course/actions/challenges";
+import { updateCourseChallenges } from "@/src/features/course/actions/labs";
 import BadgeDesigner, { type BadgeConfig } from "@/src/features/badge/components/BadgeDesigner";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
@@ -92,7 +92,7 @@ export default function EditCourse() {
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [knownUsers, setKnownUsers] = useState<Record<string, CollaboratorUserResponseDto>>({});
   const [initialUsers, setInitialUsers] = useState<CollaboratorUserResponseDto[]>([]);
-  const [courseChallenges, setCourseChallenges] = useState<CourseChallengeEntry[]>([]);
+  const [courseLabs, setCourseChallenges] = useState<CourseChallengeEntry[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -162,20 +162,20 @@ export default function EditCourse() {
         )
       );
 
-      // Load course challenges
-      const cc = (course.courseChallenges ?? []).map(
+      // Load course labs
+      const cc = (course.courseLabs ?? []).map(
         (
           c: {
-            challengeId: string;
-            challengeTitle: string;
+            labId: string;
+            labTitle: string;
             difficulty: string;
             orderIndex: number;
             dueAt?: string | null;
           },
           i: number
         ) => ({
-          challengeId: c.challengeId,
-          challengeTitle: c.challengeTitle,
+          labId: c.labId,
+          labTitle: c.labTitle,
           difficulty: c.difficulty,
           orderIndex: c.orderIndex ?? i,
           dueAt: c.dueAt ?? null,
@@ -227,11 +227,11 @@ export default function EditCourse() {
       return;
     }
 
-    // Save course challenges separately
+    // Save course labs separately
     const challengeResult = await updateCourseChallenges(
       courseId,
-      courseChallenges.map((c) => ({
-        challengeId: c.challengeId,
+      courseLabs.map((c) => ({
+        labId: c.labId,
         orderIndex: c.orderIndex,
         dueAt: c.dueAt ?? undefined,
       }))
@@ -578,10 +578,7 @@ export default function EditCourse() {
                   allowDeselect={false}
                 />
 
-                <CourseChallengeManager
-                  challenges={courseChallenges}
-                  onChange={setCourseChallenges}
-                />
+                <CourseLabManager labs={courseLabs} onChange={setCourseChallenges} />
 
                 <CourseSubmissionsTable courseId={courseId} />
 

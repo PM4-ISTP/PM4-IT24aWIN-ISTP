@@ -347,11 +347,11 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
   @Query(
       """
       select distinct c from Course c
-      join fetch c.courseChallenges cc
-      join fetch cc.challenge ch
+      join fetch c.courseLabs cc
+      join fetch cc.lab ch
       join c.courseEnrollments ce
-      where cc.challenge.id = :challengeId and ce.participant.id = :userId
+      where cc.lab.id = :labId and ce.participant.id = :userId
       """)
   List<Course> findCoursesByChallengeIdAndEnrolledUserId(
-      @Param("challengeId") UUID challengeId, @Param("userId") UUID userId);
+      @Param("labId") UUID labId, @Param("userId") UUID userId);
 }
