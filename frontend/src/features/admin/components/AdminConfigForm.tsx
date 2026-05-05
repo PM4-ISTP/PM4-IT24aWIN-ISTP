@@ -25,6 +25,7 @@ import {
   memoryUnits,
   stringToMemorySpecification,
 } from "@/src/shared/lib/memoryUnit";
+import { useAsyncAction } from "@/src/shared/hooks/useAsyncAction";
 import { notifications } from "@mantine/notifications";
 
 type AdminConfigResponse = components["schemas"]["AdminConfigResponse"];
@@ -147,24 +148,20 @@ export default function AdminConfigForm({ initialConfig }: Props) {
     }
   };
 
-  const handleDelete = async () => {
-    try {
+  const deleteAction = useAsyncAction(
+    async () => {
       const { error } = await apiClient.DELETE("/api/admin/config");
       if (error) throw new Error(JSON.stringify(error));
-      notifications.show({
-        title: "Success",
-        message: "Admin configuration has been successfully deleted.",
-        color: "green",
-      });
-      router.refresh();
-    } catch (e) {
-      notifications.show({
-        title: "Error",
-        message: "It was not possible to delete the admin configuration: " + (e as Error).message,
-        color: "red",
-      });
+    },
+    {
+      id: "admin-config-delete",
+      successTitle: "Success",
+      successMessage: "Admin configuration has been successfully deleted.",
+      errorTitle: "Error",
+      errorMessage: (e) => `It was not possible to delete the admin configuration: ${e.message}`,
+      onSuccess: () => router.refresh(),
     }
-  };
+  );
 
   return (
     <form onSubmit={form.onSubmit((values) => void handleSubmit(values))}>
@@ -371,8 +368,8 @@ export default function AdminConfigForm({ initialConfig }: Props) {
           <Button
             id="admin-config-form-delete-button"
             type="button"
-            onClick={() => void handleDelete()}
-            loading={form.submitting}
+            onClick={() => void deleteAction.run()}
+            loading={form.submitting || deleteAction.loading}
             radius="md"
             style={{
               background: "linear-gradient(90deg, #dc2626, #b91c1c)",

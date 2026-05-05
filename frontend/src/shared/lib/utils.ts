@@ -5,6 +5,19 @@ export function isStringArray(value: unknown): value is string[] {
 }
 
 /**
+ * Lowercases a string and replaces whitespace with hyphens, stripping any
+ * non `[a-z0-9-]` characters. Useful for building stable Mantine notification
+ * ids from human-readable titles.
+ */
+export function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
+/**
  * Returns up to two uppercase initials from a display name.
  * Used for avatar fallbacks across the app.
  */

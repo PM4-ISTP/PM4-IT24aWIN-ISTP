@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Avatar, Button, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
+import { useAsyncAction } from "@/src/shared/hooks/useAsyncAction";
+import { httpUrlValidator } from "@/src/shared/lib/validation";
 
 type UserProfile = {
   id: string;
@@ -49,10 +51,8 @@ export default function ProfilePage() {
       title: (value) => (value && value.length > 255 ? "Max 255 characters" : null),
       pictureUrl: (value) => {
         if (!value) return null;
-        const trimmed = value.trim();
-        if (trimmed.length > 2048) return "Max 2048 characters";
-        if (!/^https?:\/\//i.test(trimmed)) return "Must start with http:// or https://";
-        return null;
+        if (value.trim().length > 2048) return "Max 2048 characters";
+        return httpUrlValidator()(value);
       },
     },
   });
@@ -91,8 +91,8 @@ export default function ProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSubmit = async (values: UpdateProfilePayload) => {
-    try {
+  const submitAction = useAsyncAction(
+    async (values: UpdateProfilePayload) => {
       setStatusMessage(null);
       const payload: UpdateProfilePayload = {
         firstName: values.firstName.trim(),
@@ -109,30 +109,27 @@ export default function ProfilePage() {
       if (!res.ok) {
         throw new Error(await safeErrorMessage(res));
       }
-
-      const updated = (await res.json()) as UserProfile;
-      setProfile(updated);
-
-      setStatusMessage({ kind: "success", text: "Profile saved." });
-      notifications.show({
-        title: "Saved",
-        message: "Your profile has been updated.",
-        color: "green",
-      });
-
-      router.refresh();
-    } catch (e) {
-      setStatusMessage({
-        kind: "error",
-        text: "Failed to update profile: " + (e as Error).message,
-      });
-      notifications.show({
-        title: "Error",
-        message: "Failed to update profile: " + (e as Error).message,
-        color: "red",
-      });
+      return (await res.json()) as UserProfile;
+    },
+    {
+      id: "user-profile-save",
+      successTitle: "Saved",
+      successMessage: "Your profile has been updated.",
+      errorTitle: "Error",
+      errorMessage: (e) => `Failed to update profile: ${e.message}`,
+      onSuccess: (updated) => {
+        setProfile(updated);
+        setStatusMessage({ kind: "success", text: "Profile saved." });
+        router.refresh();
+      },
+      onError: (e) => {
+        setStatusMessage({
+          kind: "error",
+          text: `Failed to update profile: ${e.message}`,
+        });
+      },
     }
-  };
+  );
 
   const displayName =
     profile?.name ||
@@ -184,21 +181,21 @@ export default function ProfilePage() {
           </div>
         </Group>
 
-        <form onSubmit={form.onSubmit((v) => void handleSubmit(v))}>
+        <form onSubmit={form.onSubmit((v) => void submitAction.run(v))}>
           <Stack gap="md" mt="lg">
             <Group grow>
               <TextInput
                 label="First name"
                 required
                 placeholder="First name"
-                disabled={loadingProfile || form.submitting}
+                disabled={loadingProfile || submitAction.loading}
                 {...form.getInputProps("firstName")}
               />
               <TextInput
                 label="Last name"
                 required
                 placeholder="Last name"
-                disabled={loadingProfile || form.submitting}
+                disabled={loadingProfile || submitAction.loading}
                 {...form.getInputProps("lastName")}
               />
             </Group>
@@ -206,14 +203,14 @@ export default function ProfilePage() {
             <TextInput
               label="Title"
               placeholder="e.g. Dr., Student, ..."
-              disabled={loadingProfile || form.submitting}
+              disabled={loadingProfile || submitAction.loading}
               {...form.getInputProps("title")}
             />
 
             <TextInput
               label="Profile picture URL"
               placeholder="https://..."
-              disabled={loadingProfile || form.submitting}
+              disabled={loadingProfile || submitAction.loading}
               {...form.getInputProps("pictureUrl")}
             />
 
@@ -226,7 +223,7 @@ export default function ProfilePage() {
             <Group justify="flex-end" mt="xs">
               <Button
                 type="submit"
-                loading={form.submitting}
+                loading={submitAction.loading}
                 disabled={loadingProfile}
                 radius="md"
                 style={{

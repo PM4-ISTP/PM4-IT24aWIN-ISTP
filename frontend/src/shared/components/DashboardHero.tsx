@@ -7,6 +7,7 @@ import WelcomeTitle from "./WelcomeTitle";
 import { useRouter } from "next/navigation";
 import TrophyCabinet from "@/src/features/badge/components/TrophyCabinet";
 import { getTotalSecondsOnline, formatTimeOnline } from "./TimeTracker";
+import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
 
 const statLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -68,16 +69,11 @@ export default function DashboardHero({
 
   return (
     <>
-      <Box
-        style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 14,
-          padding: "2rem 2.5rem",
-          position: "relative",
-          overflow: "hidden",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
-        }}
+      <SurfaceCard
+        variant="default"
+        elevation="md"
+        padding="2rem 2.5rem"
+        style={{ position: "relative", overflow: "hidden" }}
       >
         {/* Subtle blue accent glow */}
         <Box
@@ -189,7 +185,7 @@ export default function DashboardHero({
             ))}
           </Stack>
         </Group>
-      </Box>
+      </SurfaceCard>
 
       <TrophyCabinet
         opened={cabinetOpen}

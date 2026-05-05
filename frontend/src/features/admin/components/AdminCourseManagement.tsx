@@ -3,13 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionIcon,
-  Affix,
   Badge,
   Button,
   Group,
   Loader,
   Modal,
-  Notification,
   Pagination,
   Select,
   Stack,
@@ -20,13 +18,14 @@ import {
   Textarea,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IconPencil, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
+import { IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useAdminPagedList } from "@/src/features/admin/hooks/useAdminPagedList";
 import { cleanText, formatDate, wrapTextStyle } from "@/src/features/admin/lib/adminUi";
 import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 import MyEditor from "@/src/shared/components/MyEditor";
-import { useToast } from "@/src/shared/hooks/useToast";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { slugify } from "@/src/shared/lib/utils";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
@@ -54,16 +53,6 @@ const PAGE_SIZE = 10;
 export default function AdminCourseManagement() {
   const topicOptions = useCourseTopicOptions();
   const {
-    visible: toastVisible,
-    show: showToastNotification,
-    hide: hideToastNotification,
-  } = useToast();
-  const [toastConfig, setToastConfig] = useState<{
-    color: "red" | "orange";
-    title: string;
-    message: string;
-  } | null>(null);
-  const {
     query,
     onQueryChange,
     applyQueryNow,
@@ -86,13 +75,14 @@ export default function AdminCourseManagement() {
   const [selected, setSelected] = useState<AdminCourseListItem | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const showToast = useCallback(
-    (color: "red" | "orange", title: string, message: string) => {
-      setToastConfig({ color, title, message });
-      showToastNotification();
-    },
-    [showToastNotification]
-  );
+  const showToast = useCallback((color: "red" | "orange", title: string, message: string) => {
+    notifications.show({
+      id: `admin-course-management:${color}:${slugify(title)}`,
+      color,
+      title,
+      message,
+    });
+  }, []);
 
   useEffect(() => {
     if (!error) return;
@@ -486,20 +476,6 @@ export default function AdminCourseManagement() {
           </Group>
         </Stack>
       </Modal>
-
-      {toastVisible && toastConfig && (
-        <Affix position={{ bottom: 20, right: 20 }} style={{ zIndex: 3000 }}>
-          <Notification
-            color={toastConfig.color}
-            title={toastConfig.title}
-            onClose={hideToastNotification}
-            withCloseButton
-            icon={<IconX size={18} />}
-          >
-            {toastConfig.message}
-          </Notification>
-        </Affix>
-      )}
     </Stack>
   );
 }
