@@ -1,40 +1,40 @@
 package com.pm4.istp.course.services.impl;
 
 import com.pm4.istp.badge.services.BadgeService;
-import com.pm4.istp.course.db.CreateLabRequest;
 import com.pm4.istp.course.db.ChallengeOptionRequest;
 import com.pm4.istp.course.db.ChallengeRequest;
+import com.pm4.istp.course.db.CreateLabRequest;
 import com.pm4.istp.course.db.UpdateLabRequest;
-import com.pm4.istp.course.db.entities.Lab;
-import com.pm4.istp.course.db.entities.LabStatusEnum;
-import com.pm4.istp.course.db.entities.Course;
-import com.pm4.istp.course.db.entities.McAttemptsMode;
-import com.pm4.istp.course.db.entities.StudentOptionSubmission;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeCompletion;
 import com.pm4.istp.course.db.entities.ChallengeOption;
 import com.pm4.istp.course.db.entities.ChallengeType;
-import com.pm4.istp.course.dto.LabStudentDto;
-import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
-import com.pm4.istp.course.dto.ListLabResponseDto;
+import com.pm4.istp.course.db.entities.Course;
+import com.pm4.istp.course.db.entities.Lab;
+import com.pm4.istp.course.db.entities.LabStatusEnum;
+import com.pm4.istp.course.db.entities.McAttemptsMode;
+import com.pm4.istp.course.db.entities.StudentOptionSubmission;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
-import com.pm4.istp.course.exceptions.LabAccessDeniedException;
-import com.pm4.istp.course.exceptions.LabNotFoundException;
-import com.pm4.istp.course.exceptions.CourseNotFoundException;
+import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
+import com.pm4.istp.course.dto.LabStudentDto;
+import com.pm4.istp.course.dto.ListLabResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.course.exceptions.CourseNotFoundException;
+import com.pm4.istp.course.exceptions.LabAccessDeniedException;
+import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.mappers.LabMapper;
-import com.pm4.istp.course.repositories.LabRepository;
-import com.pm4.istp.course.repositories.CourseLabRepository;
-import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
-import com.pm4.istp.course.repositories.CourseRepository;
-import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.ChallengeOptionRepository;
 import com.pm4.istp.course.repositories.ChallengeRepository;
-import com.pm4.istp.course.services.LabService;
+import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
+import com.pm4.istp.course.repositories.CourseLabRepository;
+import com.pm4.istp.course.repositories.CourseRepository;
+import com.pm4.istp.course.repositories.LabRepository;
+import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
+import com.pm4.istp.course.services.LabService;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.repositories.UserRepository;
@@ -113,9 +113,7 @@ public class LabServiceImpl implements LabService {
         labRepository
             .findById(labId)
             .orElseThrow(
-                () ->
-                    new LabNotFoundException(
-                        String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
     verifyVisibility(lab, userId);
     return lab;
@@ -128,9 +126,7 @@ public class LabServiceImpl implements LabService {
         labRepository
             .findById(labId)
             .orElseThrow(
-                () ->
-                    new LabNotFoundException(
-                        String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
 
@@ -256,9 +252,7 @@ public class LabServiceImpl implements LabService {
         labRepository
             .findById(labId)
             .orElseThrow(
-                () ->
-                    new LabNotFoundException(
-                        String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
 
@@ -266,10 +260,7 @@ public class LabServiceImpl implements LabService {
   }
 
   private int countAffectedCourses(
-      UUID labId,
-      UUID creatorId,
-      LabStatusEnum oldStatus,
-      LabStatusEnum newStatus) {
+      UUID labId, UUID creatorId, LabStatusEnum oldStatus, LabStatusEnum newStatus) {
     if (oldStatus == newStatus) {
       return 0;
     }
@@ -278,17 +269,13 @@ public class LabServiceImpl implements LabService {
     }
     if (newStatus == LabStatusEnum.PRIVATE && oldStatus == LabStatusEnum.PUBLIC) {
       return (int)
-          courseLabRepository.countByChallengeIdWhereCreatorNotInstructor(
-              labId, creatorId);
+          courseLabRepository.countByChallengeIdWhereCreatorNotInstructor(labId, creatorId);
     }
     return 0;
   }
 
   private void cleanupCourseChallengesForVisibilityChange(
-      UUID labId,
-      UUID creatorId,
-      LabStatusEnum oldStatus,
-      LabStatusEnum newStatus) {
+      UUID labId, UUID creatorId, LabStatusEnum oldStatus, LabStatusEnum newStatus) {
     if (oldStatus == newStatus) {
       return;
     }
@@ -297,8 +284,7 @@ public class LabServiceImpl implements LabService {
       return;
     }
     if (newStatus == LabStatusEnum.PRIVATE && oldStatus == LabStatusEnum.PUBLIC) {
-      courseLabRepository.deleteByChallengeIdWhereCreatorNotInstructor(
-          labId, creatorId);
+      courseLabRepository.deleteByChallengeIdWhereCreatorNotInstructor(labId, creatorId);
     }
   }
 
@@ -309,17 +295,14 @@ public class LabServiceImpl implements LabService {
         labRepository
             .findById(labId)
             .orElseThrow(
-                () ->
-                    new LabNotFoundException(
-                        String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
     labRepository.delete(lab);
   }
 
   @Override
-  public Page<ListLabResponseDto> listChallengesForCreator(
-      UUID creatorId, Pageable pageable) {
+  public Page<ListLabResponseDto> listChallengesForCreator(UUID creatorId, Pageable pageable) {
     return labRepository.findListChallengesForCreator(creatorId, pageable);
   }
 
@@ -332,8 +315,7 @@ public class LabServiceImpl implements LabService {
   private void verifyCreator(Lab lab, UUID userId) {
     if (!lab.getCreator().getId().equals(userId)) {
       throw new LabAccessDeniedException(
-          String.format(
-              "User with ID '%s' is not the creator of lab '%s'", userId, lab.getId()));
+          String.format("User with ID '%s' is not the creator of lab '%s'", userId, lab.getId()));
     }
   }
 
@@ -344,21 +326,17 @@ public class LabServiceImpl implements LabService {
 
     if (lab.getStatus() == LabStatusEnum.DRAFT) {
       throw new LabAccessDeniedException(
-          String.format(
-              "User with ID '%s' cannot access draft lab '%s'", userId, lab.getId()));
+          String.format("User with ID '%s' cannot access draft lab '%s'", userId, lab.getId()));
     }
 
     if (lab.getStatus() == LabStatusEnum.PRIVATE) {
       boolean isInstructorOfCourseWithChallenge =
-          courseLabRepository.existsByChallengeIdAndCourseInstructorId(
-              lab.getId(), userId);
+          courseLabRepository.existsByChallengeIdAndCourseInstructorId(lab.getId(), userId);
       boolean isEnrolledInCourseWithChallenge =
           courseLabRepository.existsByChallengeIdAndEnrolledUserId(lab.getId(), userId);
       if (!isInstructorOfCourseWithChallenge && !isEnrolledInCourseWithChallenge) {
         throw new LabAccessDeniedException(
-            String.format(
-                "User with ID '%s' cannot access private lab '%s'",
-                userId, lab.getId()));
+            String.format("User with ID '%s' cannot access private lab '%s'", userId, lab.getId()));
       }
     }
   }
@@ -376,13 +354,10 @@ public class LabServiceImpl implements LabService {
         labRepository
             .findById(labId)
             .orElseThrow(
-                () ->
-                    new LabNotFoundException(
-                        String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
     boolean challengeBelongsToCourse =
-        lab.getCourseChallenges().stream()
-            .anyMatch(cc -> cc.getCourse().getId().equals(courseId));
+        lab.getCourseChallenges().stream().anyMatch(cc -> cc.getCourse().getId().equals(courseId));
     if (!challengeBelongsToCourse) {
       throw new LabAccessDeniedException(
           String.format("Lab '%s' is not part of course '%s'", labId, courseId));
@@ -419,7 +394,8 @@ public class LabServiceImpl implements LabService {
             .findById(challengeId)
             .orElseThrow(
                 () ->
-                    new ChallengeNotFoundException(String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
+                    new ChallengeNotFoundException(
+                        String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
 
     if (!challenge.getChallenge().getId().equals(labId)) {
       throw new ChallengeNotFoundException(
@@ -484,14 +460,12 @@ public class LabServiceImpl implements LabService {
     boolean correct = selectedOption.isCorrect();
 
     if (mode == McAttemptsMode.ONCE) {
-      return handleOnceChoiceSubmission(
-          user, userId, labId, challenge, selectedOption, correct);
+      return handleOnceChoiceSubmission(user, userId, labId, challenge, selectedOption, correct);
     }
     if (!correct) {
       return buildChoiceResponse(false, userId, challenge.getChallenge(), challenge);
     }
-    return handleCorrectUnlimitedChoiceSubmission(
-        user, userId, labId, challenge, selectedOption);
+    return handleCorrectUnlimitedChoiceSubmission(user, userId, labId, challenge, selectedOption);
   }
 
   private ChoiceSubmissionResponseDto buildChoiceResponseForExistingSubmission(
@@ -515,7 +489,8 @@ public class LabServiceImpl implements LabService {
             .findById(challengeId)
             .orElseThrow(
                 () ->
-                    new ChallengeNotFoundException(String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
+                    new ChallengeNotFoundException(
+                        String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
     if (!challenge.getChallenge().getId().equals(labId)) {
       throw new ChallengeNotFoundException(
           String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, challengeId, labId));
@@ -556,7 +531,8 @@ public class LabServiceImpl implements LabService {
     try {
       saveChoiceSubmission(user, challenge, selectedOption, correct);
     } catch (DataIntegrityViolationException ex) {
-      return buildChoiceResponse(correct, userId, challenge.getChallenge(), correct ? null : challenge);
+      return buildChoiceResponse(
+          correct, userId, challenge.getChallenge(), correct ? null : challenge);
     }
     saveCompletionIfMissing(user, userId, challenge);
     ChoiceSubmissionResponseDto response =
@@ -650,8 +626,7 @@ public class LabServiceImpl implements LabService {
     if (!enrolled) {
       throw new LabAccessDeniedException(
           String.format(
-              "User '%s' is not enrolled in any course containing lab '%s'",
-              userId, lab.getId()));
+              "User '%s' is not enrolled in any course containing lab '%s'", userId, lab.getId()));
     }
   }
 
@@ -665,7 +640,8 @@ public class LabServiceImpl implements LabService {
     Set<UUID> solvedIds =
         challengeIds.isEmpty()
             ? Set.of()
-            : new HashSet<>(challengeCompletionRepository.findSolvedChallengeIds(userId, challengeIds));
+            : new HashSet<>(
+                challengeCompletionRepository.findSolvedChallengeIds(userId, challengeIds));
 
     Map<UUID, String> flagsById = new HashMap<>();
     for (Challenge st : entity.getChallenges()) {
@@ -703,13 +679,15 @@ public class LabServiceImpl implements LabService {
             .findByUserIdAndChallengeId(userId, challenge.getId())
             .ifPresent(
                 sub ->
-                    selectedOptionByChallenge.put(challenge.getId(), sub.getSelectedOption().getId()));
+                    selectedOptionByChallenge.put(
+                        challenge.getId(), sub.getSelectedOption().getId()));
       }
     }
     return selectedOptionByChallenge;
   }
 
-  private Map<UUID, UUID> loadCorrectOptionsForWrongAnswers(UUID userId, List<Challenge> challenges) {
+  private Map<UUID, UUID> loadCorrectOptionsForWrongAnswers(
+      UUID userId, List<Challenge> challenges) {
     Map<UUID, UUID> correctOptionByChallenge = new HashMap<>();
     for (Challenge challenge : challenges) {
       if (challenge.getType() == ChallengeType.MULTIPLE_CHOICE) {
@@ -762,7 +740,8 @@ public class LabServiceImpl implements LabService {
     if (challengeIds.isEmpty()) {
       return Set.of();
     }
-    return new HashSet<>(challengeCompletionRepository.findSolvedChallengeIds(userId, challengeIds));
+    return new HashSet<>(
+        challengeCompletionRepository.findSolvedChallengeIds(userId, challengeIds));
   }
 
   @Override
@@ -785,7 +764,8 @@ public class LabServiceImpl implements LabService {
             .findById(challengeId)
             .orElseThrow(
                 () ->
-                    new ChallengeNotFoundException(String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
+                    new ChallengeNotFoundException(
+                        String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
 
     if (!challenge.getChallenge().getId().equals(labId)) {
       throw new ChallengeNotFoundException(

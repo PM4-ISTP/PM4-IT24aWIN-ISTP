@@ -11,9 +11,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Student-facing lab DTO — used both on the public course detail page and on the play view.
- * Carries no challenge flags; instead includes per-student progress ({@code solvedChallengeCount},
- * {@code totalChallengeCount}, {@code solved}).
+ * Student-facing lab DTO — used both on the public course detail page and on the play view. Carries
+ * no challenge flags; instead includes per-student progress ({@code solvedChallengeCount}, {@code
+ * totalChallengeCount}, {@code solved}).
  */
 @Data
 @AllArgsConstructor

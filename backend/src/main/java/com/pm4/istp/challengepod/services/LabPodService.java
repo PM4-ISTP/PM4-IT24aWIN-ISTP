@@ -7,8 +7,8 @@ import com.pm4.istp.challengepod.dto.PodStatusResponse;
 import com.pm4.istp.challengepod.events.KubeconfigChangedEvent;
 import com.pm4.istp.challengepod.exceptions.LabPodException;
 import com.pm4.istp.course.db.entities.Lab;
-import com.pm4.istp.course.services.LabService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
+import com.pm4.istp.course.services.LabService;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
@@ -107,8 +107,7 @@ public class LabPodService {
 
     String kubeconfigContent = adminConfig.getKubeconfig();
     if (kubeconfigContent == null || kubeconfigContent.isBlank()) {
-      throw new LabPodException(
-          "Admin configuration exists but kubeconfig content is missing.");
+      throw new LabPodException("Admin configuration exists but kubeconfig content is missing.");
     }
 
     Config config = Config.fromKubeconfig(kubeconfigContent);
@@ -156,9 +155,9 @@ public class LabPodService {
   // -------------------------------------------------------------------------
 
   /**
-   * Start a pod for (userId, labId). Idempotent — returns the existing pod if already
-   * running. Boolean in the pair indicates whether a new pod was created (true) or an existing one
-   * returned (false).
+   * Start a pod for (userId, labId). Idempotent — returns the existing pod if already running.
+   * Boolean in the pair indicates whether a new pod was created (true) or an existing one returned
+   * (false).
    */
   public Pair<PodStatusResponse, Boolean> startPod(UUID userId, UUID labId) {
     // Visibility / existence check — throws LabNotFoundException or
@@ -192,8 +191,7 @@ public class LabPodService {
       }
 
       // Create new pod resources
-      return Pair.of(
-          createResources(userId, labId, instanceName, adminConfig, lab), true);
+      return Pair.of(createResources(userId, labId, instanceName, adminConfig, lab), true);
 
     } catch (KubernetesClientException e) {
       if (e.getCode() == 409) {
@@ -436,11 +434,7 @@ public class LabPodService {
   }
 
   private PodStatusResponse createResources(
-      UUID userId,
-      UUID labId,
-      String instanceName,
-      AdminConfig adminConfig,
-      Lab lab) {
+      UUID userId, UUID labId, String instanceName, AdminConfig adminConfig, Lab lab) {
 
     KubernetesClient client = getClient();
     long nowEpoch = Instant.now().getEpochSecond();

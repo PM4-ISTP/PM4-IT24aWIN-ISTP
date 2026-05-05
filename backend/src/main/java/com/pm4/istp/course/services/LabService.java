@@ -4,10 +4,10 @@ import com.pm4.istp.course.db.CreateLabRequest;
 import com.pm4.istp.course.db.UpdateLabRequest;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
-import com.pm4.istp.course.dto.LabStudentDto;
-import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
-import com.pm4.istp.course.dto.ListLabResponseDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
+import com.pm4.istp.course.dto.LabStudentDto;
+import com.pm4.istp.course.dto.ListLabResponseDto;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,14 +23,13 @@ public interface LabService {
 
   Page<ListLabResponseDto> listChallengesForCreator(UUID creatorId, Pageable pageable);
 
-  Page<ListLabResponseDto> searchAvailableChallenges(
-      UUID userId, String search, Pageable pageable);
+  Page<ListLabResponseDto> searchAvailableChallenges(UUID userId, String search, Pageable pageable);
 
   int previewVisibilityImpact(UUID userId, UUID labId, LabStatusEnum newStatus);
 
   /**
-   * Returns the lab in its student-facing form (no flags; with per-student progress). The
-   * caller must be enrolled in a course that contains this lab.
+   * Returns the lab in its student-facing form (no flags; with per-student progress). The caller
+   * must be enrolled in a course that contains this lab.
    */
   LabStudentDto getChallengeForPlay(UUID userId, UUID courseId, UUID labId);
 
@@ -47,8 +46,8 @@ public interface LabService {
    * <p>Behaviour depends on the course's {@code mcAttemptsMode}:
    *
    * <ul>
-   *   <li>{@code ONCE} – the submission is recorded and the challenge is marked completed regardless
-   *       of correctness. Points are awarded only when the answer is correct.
+   *   <li>{@code ONCE} – the submission is recorded and the challenge is marked completed
+   *       regardless of correctness. Points are awarded only when the answer is correct.
    *   <li>{@code UNLIMITED} – wrong answers are NOT persisted, so the student can retry. The
    *       challenge is marked completed only on a correct answer.
    * </ul>

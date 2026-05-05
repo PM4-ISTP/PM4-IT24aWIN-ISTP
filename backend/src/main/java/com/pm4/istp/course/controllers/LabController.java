@@ -7,21 +7,21 @@ import com.pm4.istp.course.db.UpdateLabRequest;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
-import com.pm4.istp.course.dto.LabStudentDto;
+import com.pm4.istp.course.dto.ChallengeSubmissionRequestDto;
+import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionRequestDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.dto.CreateChallengeRequestDto;
 import com.pm4.istp.course.dto.CreateChallengeResponseDto;
 import com.pm4.istp.course.dto.DockerImageCheckResponseDto;
+import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.ListLabResponseDto;
-import com.pm4.istp.course.dto.ChallengeSubmissionRequestDto;
-import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
 import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
 import com.pm4.istp.course.dto.VisibilityImpactResponseDto;
 import com.pm4.istp.course.mappers.LabMapper;
-import com.pm4.istp.course.services.LabService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService.DockerImageAvailabilityResult;
+import com.pm4.istp.course.services.LabService;
 import com.pm4.istp.shared.dto.ErrorDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -155,8 +155,7 @@ public class LabController {
 
   @Operation(
       summary = "Delete a lab",
-      description =
-          "Deletes a lab and removes it from all courses. Only the creator can delete.")
+      description = "Deletes a lab and removes it from all courses. Only the creator can delete.")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "204", description = "Lab deleted successfully"),
@@ -188,8 +187,7 @@ public class LabController {
   public ResponseEntity<Page<ListLabResponseDto>> listChallenges(
       @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
     UUID userId = parseUserId(jwt);
-    Page<ListLabResponseDto> labs =
-        labService.listChallengesForCreator(userId, pageable);
+    Page<ListLabResponseDto> labs = labService.listChallengesForCreator(userId, pageable);
     return ResponseEntity.ok(labs);
   }
 
@@ -218,8 +216,7 @@ public class LabController {
 
   @Operation(
       summary = "Search available labs",
-      description =
-          "Searches for labs by title. Returns the user's own labs and public ones.")
+      description = "Searches for labs by title. Returns the user's own labs and public ones.")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "200", description = "Search results retrieved successfully")
@@ -397,9 +394,7 @@ public class LabController {
       })
   @PostMapping("/{labId}/challenges/{challengeId}/complete")
   public ResponseEntity<ChallengeSubmissionResponseDto> completeTheoryChallenge(
-      @AuthenticationPrincipal Jwt jwt,
-      @PathVariable UUID labId,
-      @PathVariable UUID challengeId) {
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID labId, @PathVariable UUID challengeId) {
     UUID userId = parseUserId(jwt);
     ChallengeSubmissionResponseDto response =
         labService.completeTheoryChallenge(userId, labId, challengeId);

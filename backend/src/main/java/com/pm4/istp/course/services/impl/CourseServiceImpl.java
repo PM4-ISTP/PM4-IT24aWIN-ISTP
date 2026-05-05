@@ -5,34 +5,34 @@ import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
 import com.pm4.istp.course.db.UpdateCourseRequest;
-import com.pm4.istp.course.db.entities.Lab;
-import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
-import com.pm4.istp.course.db.entities.CourseLab;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
+import com.pm4.istp.course.db.entities.CourseLab;
+import com.pm4.istp.course.db.entities.Lab;
+import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabDeadlineDto;
 import com.pm4.istp.course.dto.CourseLabItemDto;
 import com.pm4.istp.course.dto.CourseLabResponseDto;
-import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionStatusEnum;
 import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
-import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseLabException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
-import com.pm4.istp.course.repositories.LabRepository;
-import com.pm4.istp.course.repositories.CourseLabRepository;
-import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
-import com.pm4.istp.course.repositories.CourseRepository;
+import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.ChallengeRepository;
+import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
+import com.pm4.istp.course.repositories.CourseLabRepository;
+import com.pm4.istp.course.repositories.CourseRepository;
+import com.pm4.istp.course.repositories.LabRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseService;
 import com.pm4.istp.course.services.CourseTopicService;
@@ -296,8 +296,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional
-  public Course updateCourseChallenges(
-      UUID userId, UUID courseId, List<CourseLabItemDto> labs) {
+  public Course updateCourseChallenges(UUID userId, UUID courseId, List<CourseLabItemDto> labs) {
     Course course =
         courseRepository
             .findById(courseId)
@@ -316,14 +315,12 @@ public class CourseServiceImpl implements CourseService {
               .orElseThrow(
                   () ->
                       new LabNotFoundException(
-                          String.format(
-                              "Lab with ID '%s' not found", item.getChallengeId())));
+                          String.format("Lab with ID '%s' not found", item.getChallengeId())));
 
       // DRAFT labs cannot be added to any course, even by their creator
       if (lab.getStatus() == LabStatusEnum.DRAFT) {
         throw new InvalidCourseLabException(
-            String.format(
-                "Lab '%s' is a draft and cannot be added to a course", lab.getTitle()));
+            String.format("Lab '%s' is a draft and cannot be added to a course", lab.getTitle()));
       }
 
       // Only allow adding own PRIVATE labs or PUBLIC labs
@@ -346,8 +343,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional(readOnly = true)
-  public CourseLabSubmissionsResponseDto getCourseChallengeSubmissions(
-      UUID userId, UUID courseId) {
+  public CourseLabSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId) {
     Course course =
         courseRepository
             .findById(courseId)
@@ -368,11 +364,9 @@ public class CourseServiceImpl implements CourseService {
     SubmissionAggregates aggregates = loadSubmissionAggregates(userIds, challengeIds);
     Map<UUID, LocalDateTime> dueAtByChallenge = loadDueDates(assigned);
     List<CourseChallengeSubmissionEntryDto> entries =
-        buildSubmissionEntries(
-            userIds, challengeIds, totalByLab, aggregates, dueAtByChallenge);
+        buildSubmissionEntries(userIds, challengeIds, totalByLab, aggregates, dueAtByChallenge);
 
-    return new CourseLabSubmissionsResponseDto(
-        courseId, participants, challengesDto, entries);
+    return new CourseLabSubmissionsResponseDto(courseId, participants, challengesDto, entries);
   }
 
   private List<CourseParticipantResponseDto> loadParticipants(UUID courseId) {
@@ -386,8 +380,7 @@ public class CourseServiceImpl implements CourseService {
         .toList();
   }
 
-  private List<CourseLabResponseDto> toChallengeSubmissionDtos(
-      List<CourseLab> assigned) {
+  private List<CourseLabResponseDto> toChallengeSubmissionDtos(List<CourseLab> assigned) {
     return assigned.stream()
         .map(
             courseLab -> {
@@ -423,8 +416,7 @@ public class CourseServiceImpl implements CourseService {
       return new SubmissionAggregates(solvedCountByKey, completedAtByKey);
     }
     for (Object[] row :
-        challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
-            userIds, challengeIds)) {
+        challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(userIds, challengeIds)) {
       UUID userId = (UUID) row[0];
       UUID labId = (UUID) row[1];
       Long solved = (Long) row[2];
@@ -454,8 +446,7 @@ public class CourseServiceImpl implements CourseService {
     for (UUID participantId : userIds) {
       for (UUID labId : challengeIds) {
         entries.add(
-            buildSubmissionEntry(
-                participantId, labId, totalByLab, aggregates, dueAtByChallenge));
+            buildSubmissionEntry(participantId, labId, totalByLab, aggregates, dueAtByChallenge));
       }
     }
     return entries;
@@ -473,8 +464,7 @@ public class CourseServiceImpl implements CourseService {
     LocalDateTime completedAt =
         totalCount > 0 && solvedCount == totalCount ? aggregates.completedAtByKey().get(key) : null;
     CourseLabSubmissionStatusEnum status =
-        resolveSubmissionStatus(
-            solvedCount, totalCount, completedAt, dueAtByChallenge.get(labId));
+        resolveSubmissionStatus(solvedCount, totalCount, completedAt, dueAtByChallenge.get(labId));
     return new CourseChallengeSubmissionEntryDto(
         participantId, labId, solvedCount, totalCount, completedAt, status);
   }
@@ -513,9 +503,7 @@ public class CourseServiceImpl implements CourseService {
       if (courseId == null || labId == null || dueAt == null) {
         continue;
       }
-      result.add(
-          new CourseLabDeadlineDto(
-              courseId, courseTitle, labId, labTitle, dueAt));
+      result.add(new CourseLabDeadlineDto(courseId, courseTitle, labId, labTitle, dueAt));
     }
     return result;
   }

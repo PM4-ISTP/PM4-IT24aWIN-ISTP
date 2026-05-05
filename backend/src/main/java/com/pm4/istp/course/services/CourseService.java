@@ -23,8 +23,7 @@ public interface CourseService {
 
   void deleteCourse(UUID userId, UUID courseId);
 
-  Course updateCourseChallenges(
-      UUID userId, UUID courseId, List<CourseLabItemDto> labs);
+  Course updateCourseChallenges(UUID userId, UUID courseId, List<CourseLabItemDto> labs);
 
   CourseLabSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId);
 

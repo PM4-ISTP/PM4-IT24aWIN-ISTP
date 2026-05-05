@@ -1,18 +1,18 @@
 package com.pm4.istp.shared.util;
 
 import com.pm4.istp.challengepod.exceptions.LabPodException;
-import com.pm4.istp.course.exceptions.LabAccessDeniedException;
-import com.pm4.istp.course.exceptions.LabNotFoundException;
+import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
+import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
-import com.pm4.istp.course.exceptions.InvalidCourseLabException;
 import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
+import com.pm4.istp.course.exceptions.InvalidCourseLabException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
-import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
-import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.course.exceptions.LabAccessDeniedException;
+import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.shared.dto.ErrorDto;
 import com.pm4.istp.shared.keycloak.KeycloakAdminApiException;
 import com.pm4.istp.user.exceptions.UserNotFoundException;

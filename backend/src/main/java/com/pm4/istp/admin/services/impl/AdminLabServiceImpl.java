@@ -39,9 +39,7 @@ public class AdminLabServiceImpl implements AdminLabService {
         labRepository
             .findById(labId)
             .orElseThrow(
-                () ->
-                    new LabNotFoundException(
-                        String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
     lab.setTitle(request.getTitle());
     lab.setShortDescription(normalizeBlankToNull(request.getShortDescription()));
@@ -61,9 +59,7 @@ public class AdminLabServiceImpl implements AdminLabService {
         labRepository
             .findById(labId)
             .orElseThrow(
-                () ->
-                    new LabNotFoundException(
-                        String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
     labRepository.delete(lab);
   }
 

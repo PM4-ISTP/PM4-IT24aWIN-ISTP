@@ -6,11 +6,11 @@ import com.pm4.istp.badge.dto.UpdateCourseBadgeRequestDto;
 import com.pm4.istp.badge.dto.UserBadgeDto;
 import com.pm4.istp.badge.repositories.UserCourseBadgeRepository;
 import com.pm4.istp.badge.services.BadgeService;
+import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseLab;
-import com.pm4.istp.course.db.entities.Challenge;
-import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
+import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.repositories.UserRepository;
 import java.time.LocalDateTime;
@@ -108,7 +108,8 @@ public class BadgeServiceImpl implements BadgeService {
     if (allChallengeIds.isEmpty()) {
       return false;
     }
-    List<UUID> solvedIds = challengeCompletionRepository.findSolvedChallengeIds(userId, allChallengeIds);
+    List<UUID> solvedIds =
+        challengeCompletionRepository.findSolvedChallengeIds(userId, allChallengeIds);
     Set<UUID> solvedSet = new HashSet<>(solvedIds);
     return solvedSet.containsAll(allChallengeIds);
   }

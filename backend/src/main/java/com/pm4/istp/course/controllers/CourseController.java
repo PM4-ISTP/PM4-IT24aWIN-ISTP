@@ -4,27 +4,27 @@ import static com.pm4.istp.shared.util.JwtUtil.parseUserId;
 
 import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.UpdateCourseRequest;
-import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
-import com.pm4.istp.course.dto.LabStudentDto;
-import com.pm4.istp.course.dto.CourseLabDeadlineDto;
-import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
+import com.pm4.istp.course.db.entities.LabStatusEnum;
+import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
+import com.pm4.istp.course.dto.CourseLabDeadlineDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
 import com.pm4.istp.course.dto.CreateCourseRequestDto;
 import com.pm4.istp.course.dto.CreateCourseResponseDto;
 import com.pm4.istp.course.dto.JoinByInviteCodeRequestDto;
+import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.dto.PublicCourseDetailResponseDto;
-import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.UpdateCourseLabsRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.mappers.CourseMapper;
-import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.ChallengeRepository;
+import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.services.CourseService;
 import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.shared.dto.ErrorDto;
@@ -269,9 +269,7 @@ public class CourseController {
             responseCode = "200",
             description = "Submissions loaded successfully",
             content =
-                @Content(
-                    schema =
-                        @Schema(implementation = CourseLabSubmissionsResponseDto.class))),
+                @Content(schema = @Schema(implementation = CourseLabSubmissionsResponseDto.class))),
         @ApiResponse(
             responseCode = "403",
             description = "Access denied",
@@ -558,8 +556,8 @@ public class CourseController {
   }
 
   /**
-   * Fills in per-student progress on each lab and its challenges. Reads ChallengeCompletion rows
-   * in a single query for all challenges of all visible labs, then marks matching challenges as
+   * Fills in per-student progress on each lab and its challenges. Reads ChallengeCompletion rows in
+   * a single query for all challenges of all visible labs, then marks matching challenges as
    * solved.
    */
   private void populateStudentProgress(List<LabStudentDto> labs, UUID userId) {
@@ -570,7 +568,8 @@ public class CourseController {
     Set<UUID> solvedIds =
         challengeIds.isEmpty()
             ? Set.of()
-            : new HashSet<>(challengeCompletionRepository.findSolvedChallengeIds(userId, challengeIds));
+            : new HashSet<>(
+                challengeCompletionRepository.findSolvedChallengeIds(userId, challengeIds));
 
     Map<UUID, String> flagsBySolvedId = loadFlagsForSolved(solvedIds);
 

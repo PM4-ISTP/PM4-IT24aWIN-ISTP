@@ -48,8 +48,7 @@ public class LabPodController {
   }
 
   @DeleteMapping("/{labId}")
-  public ResponseEntity<Void> stopPod(
-      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID labId) {
+  public ResponseEntity<Void> stopPod(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID labId) {
     UUID userId = JwtUtil.parseUserId(jwt);
     boolean deleted = labPodService.deletePod(userId, labId);
     if (!deleted) {
