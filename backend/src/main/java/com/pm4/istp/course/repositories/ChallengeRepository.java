@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
-  List<Challenge> findByChallengeIdOrderByOrderIndexAsc(UUID labId);
+  List<Challenge> findByLabIdOrderByOrderIndexAsc(UUID labId);
 
   @Query("select s.id, s.flag from Challenge s where s.id in :ids")
   List<Object[]> findFlagsByIds(@Param("ids") Collection<UUID> ids);
