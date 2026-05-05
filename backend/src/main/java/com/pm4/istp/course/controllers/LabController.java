@@ -149,7 +149,7 @@ public class LabController {
     UpdateLabRequest request = labMapper.fromDto(updateChallengeRequestDto);
     Lab updated = labService.updateChallenge(userId, id, request);
     ChallengeDetailResponseDto dto = labMapper.toDetailResponseDto(updated);
-    dto.setCourseCount(updated.getCourseChallenges().size());
+    dto.setCourseCount(updated.getCourseLabs().size());
     return ResponseEntity.ok(dto);
   }
 

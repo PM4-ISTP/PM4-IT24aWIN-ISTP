@@ -402,7 +402,7 @@ public class LabServiceImpl implements LabService {
           String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, challengeId, labId));
     }
 
-    verifyEnrolledInChallengeCourse(userId, challenge.getChallenge());
+    verifyEnrolledInChallengeCourse(userId, challenge.getLab());
 
     if (challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId)) {
       throw new ChallengeAlreadySolvedException(
@@ -423,7 +423,7 @@ public class LabServiceImpl implements LabService {
       }
     }
 
-    List<Challenge> siblings = challenge.getLab().getLabs();
+    List<Challenge> siblings = challenge.getLab().getChallenges();
     List<UUID> siblingIds = siblingsIds(siblings);
     Set<UUID> solvedIds = solvedChallengeIds(userId, siblingIds);
     int solvedCount = solvedIds.size();
@@ -447,7 +447,7 @@ public class LabServiceImpl implements LabService {
       UUID userId, UUID courseId, UUID labId, UUID challengeId, UUID selectedOptionId) {
     User user = findActiveUser(userId);
     Challenge challenge = findChallengeInChallenge(challengeId, labId);
-    verifyEnrolledInChallengeCourse(userId, challenge.getChallenge());
+    verifyEnrolledInChallengeCourse(userId, challenge.getLab());
 
     McAttemptsMode mode = getCourseMcAttemptsMode(courseId);
     Optional<StudentOptionSubmission> existing =
@@ -463,7 +463,7 @@ public class LabServiceImpl implements LabService {
       return handleOnceChoiceSubmission(user, userId, labId, challenge, selectedOption, correct);
     }
     if (!correct) {
-      return buildChoiceResponse(false, userId, challenge.getChallenge(), challenge);
+      return buildChoiceResponse(false, userId, challenge.getLab(), challenge);
     }
     return handleCorrectUnlimitedChoiceSubmission(user, userId, labId, challenge, selectedOption);
   }
@@ -473,7 +473,7 @@ public class LabServiceImpl implements LabService {
     return buildChoiceResponse(
         submission.isCorrect(),
         userId,
-        challenge.getChallenge(),
+        challenge.getLab(),
         submission.isCorrect() ? null : challenge);
   }
 
@@ -532,11 +532,11 @@ public class LabServiceImpl implements LabService {
       saveChoiceSubmission(user, challenge, selectedOption, correct);
     } catch (DataIntegrityViolationException ex) {
       return buildChoiceResponse(
-          correct, userId, challenge.getChallenge(), correct ? null : challenge);
+          correct, userId, challenge.getLab(), correct ? null : challenge);
     }
     saveCompletionIfMissing(user, userId, challenge);
     ChoiceSubmissionResponseDto response =
-        buildChoiceResponse(correct, userId, challenge.getChallenge(), correct ? null : challenge);
+        buildChoiceResponse(correct, userId, challenge.getLab(), correct ? null : challenge);
     awardBadgeIfChallengeSolved(response, userId, labId);
     return response;
   }
@@ -546,11 +546,11 @@ public class LabServiceImpl implements LabService {
     try {
       saveChoiceSubmission(user, challenge, selectedOption, true);
     } catch (DataIntegrityViolationException ex) {
-      return buildChoiceResponse(true, userId, challenge.getChallenge(), null);
+      return buildChoiceResponse(true, userId, challenge.getLab(), null);
     }
     saveCompletionIfMissing(user, userId, challenge);
     ChoiceSubmissionResponseDto response =
-        buildChoiceResponse(true, userId, challenge.getChallenge(), null);
+        buildChoiceResponse(true, userId, challenge.getLab(), null);
     awardBadgeIfChallengeSolved(response, userId, labId);
     return response;
   }
@@ -778,7 +778,7 @@ public class LabServiceImpl implements LabService {
           "This challenge requires a flag submission and cannot be auto-completed.");
     }
 
-    verifyEnrolledInChallengeCourse(userId, challenge.getChallenge());
+    verifyEnrolledInChallengeCourse(userId, challenge.getLab());
 
     if (!challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId)) {
       ChallengeCompletion completion = new ChallengeCompletion();
@@ -792,7 +792,7 @@ public class LabServiceImpl implements LabService {
       }
     }
 
-    List<Challenge> siblings = challenge.getLab().getLabs();
+    List<Challenge> siblings = challenge.getLab().getChallenges();
     List<UUID> siblingIds = siblingsIds(siblings);
     Set<UUID> solvedIds = solvedChallengeIds(userId, siblingIds);
     int solvedCount = solvedIds.size();
