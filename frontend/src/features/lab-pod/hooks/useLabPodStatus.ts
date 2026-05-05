@@ -33,10 +33,9 @@ export function useLabPodStatus(
 
   const fetchOnce = useCallback(async () => {
     try {
-      const { data: json, error: apiError } = await apiClient.GET(
-        "/api/v1/lab-pods/{labId}",
-        { params: { path: { labId } } }
-      );
+      const { data: json, error: apiError } = await apiClient.GET("/api/v1/lab-pods/{labId}", {
+        params: { path: { labId } },
+      });
 
       if (apiError !== undefined) {
         setError("Request failed");

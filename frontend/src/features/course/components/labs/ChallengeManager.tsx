@@ -131,7 +131,9 @@ export function ChallengeManager({
   }
 
   function handleRemove(index: number) {
-    const next = challenges.filter((_, i) => i !== index).map((st, i) => ({ ...st, orderIndex: i }));
+    const next = challenges
+      .filter((_, i) => i !== index)
+      .map((st, i) => ({ ...st, orderIndex: i }));
     onChange(next);
     clearClosing();
     if (expandedIndex === index) {
@@ -216,8 +218,8 @@ export function ChallengeManager({
         <Stack gap={2}>
           <Title order={4}>Challenges</Title>
           <Text size="sm" c="dimmed">
-            Each lab awards points on correct submission. A lab without a flag or
-            options is just a description.
+            Each lab awards points on correct submission. A lab without a flag or options is just a
+            description.
           </Text>
         </Stack>
         <Badge size="lg" variant="light">

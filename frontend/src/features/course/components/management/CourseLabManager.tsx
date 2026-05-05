@@ -275,9 +275,7 @@ export function CourseLabManager({ labs, onChange }: CourseChallengeManagerProps
   }
 
   function handleRemove(labId: string) {
-    const updated = labs
-      .filter((c) => c.labId !== labId)
-      .map((c, i) => ({ ...c, orderIndex: i }));
+    const updated = labs.filter((c) => c.labId !== labId).map((c, i) => ({ ...c, orderIndex: i }));
     onChange(updated);
     if (expandedId === labId) setExpandedId(null);
   }
@@ -398,10 +396,7 @@ export function CourseLabManager({ labs, onChange }: CourseChallengeManagerProps
         </Button>
       </Group>
 
-      <LabSearchSelect
-        excludeIds={labs.map((c) => c.labId)}
-        onSelect={handleAddChallenge}
-      />
+      <LabSearchSelect excludeIds={labs.map((c) => c.labId)} onSelect={handleAddChallenge} />
 
       {labs.length === 0 ? (
         <Text size="sm" c="dimmed">
@@ -463,12 +458,7 @@ export function CourseLabManager({ labs, onChange }: CourseChallengeManagerProps
                         <Group gap="xs">
                           <Text size="xs" c="dimmed">
                             Difficulty:{" "}
-                            <Text
-                              span
-                              size="xs"
-                              fw={600}
-                              c={getDifficultyColor(lab.difficulty)}
-                            >
+                            <Text span size="xs" fw={600} c={getDifficultyColor(lab.difficulty)}>
                               {lab.difficulty}
                             </Text>
                           </Text>

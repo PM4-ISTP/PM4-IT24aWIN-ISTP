@@ -109,9 +109,7 @@ export default async function CourseDetails({
           <CourseJourneyCard
             instructor={owner}
             // lessons={undefined}    ← wire up when lesson API is ready
-            labs={
-              isEnrolled ? aggregateChallengeProgress(course.courseLabs ?? []) : undefined
-            }
+            labs={isEnrolled ? aggregateChallengeProgress(course.courseLabs ?? []) : undefined}
           />
 
           {/* Course description */}

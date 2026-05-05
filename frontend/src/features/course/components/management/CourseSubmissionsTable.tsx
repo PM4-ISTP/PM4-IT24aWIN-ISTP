@@ -74,9 +74,7 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
     for (const s of data.submissions ?? []) {
       byKey.set(`${s.participantId}:${s.labId}`, s);
     }
-    const labs = [...(data.labs ?? [])].sort(
-      (a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
-    );
+    const labs = [...(data.labs ?? [])].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
     const participants = data.participants ?? [];
     return { byKey, labs, participants };
   }, [data]);

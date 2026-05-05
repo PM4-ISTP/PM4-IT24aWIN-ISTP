@@ -15,7 +15,9 @@ export function parseFlagInner(raw: string | undefined | null): string {
   return match ? match[1] : raw;
 }
 
-export function toFormChallenges(challenges: ChallengeResponseDto[] | undefined): ChallengeFormValues[] {
+export function toFormChallenges(
+  challenges: ChallengeResponseDto[] | undefined
+): ChallengeFormValues[] {
   if (!challenges) return [];
   return challenges
     .slice()

@@ -7,10 +7,7 @@ import {
   ChallengeManager,
   type ChallengeFormValues as ChallengeItemFormValues,
 } from "@/src/features/course/components/labs/ChallengeManager";
-import type {
-  LabStatusEnum,
-  LabDifficultyEnum,
-} from "@/src/features/course/actions/labs";
+import type { LabStatusEnum, LabDifficultyEnum } from "@/src/features/course/actions/labs";
 import {
   STATUS_OPTIONS,
   DIFFICULTY_OPTIONS,
@@ -115,9 +112,7 @@ export function LabFormFields({
         <Input.Label>Difficulty</Input.Label>
         <SegmentedControl
           value={values.difficulty}
-          onChange={(val: string) =>
-            onChange({ ...values, difficulty: val as LabDifficultyEnum })
-          }
+          onChange={(val: string) => onChange({ ...values, difficulty: val as LabDifficultyEnum })}
           data={DIFFICULTY_OPTIONS}
           color={DIFFICULTY_COLORS[values.difficulty]}
           fullWidth

@@ -1,7 +1,4 @@
-import type {
-  LabStatusEnum,
-  LabDifficultyEnum,
-} from "@/src/features/course/actions/labs";
+import type { LabStatusEnum, LabDifficultyEnum } from "@/src/features/course/actions/labs";
 
 export const CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS = 200;
 

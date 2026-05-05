@@ -577,10 +577,7 @@ export default function EditCourse() {
                   allowDeselect={false}
                 />
 
-                <CourseLabManager
-                  labs={courseLabs}
-                  onChange={setCourseChallenges}
-                />
+                <CourseLabManager labs={courseLabs} onChange={setCourseChallenges} />
 
                 <CourseSubmissionsTable courseId={courseId} />
 

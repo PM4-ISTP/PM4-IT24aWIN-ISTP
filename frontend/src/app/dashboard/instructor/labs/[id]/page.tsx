@@ -41,10 +41,7 @@ import {
   DOCKER_IMAGE_PATTERN,
 } from "@/src/features/course/constants/challengeConstants";
 
-function isMoreRestrictive(
-  oldStatus: LabStatusEnum,
-  newStatus: LabStatusEnum
-): boolean {
+function isMoreRestrictive(oldStatus: LabStatusEnum, newStatus: LabStatusEnum): boolean {
   if (oldStatus === newStatus) return false;
   if (newStatus === "DRAFT") return true;
   if (newStatus === "PRIVATE" && oldStatus === "PUBLIC") return true;

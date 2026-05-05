@@ -22,13 +22,13 @@ export type LabStudentDto = components["schemas"]["LabStudentDto"];
 export type ChallengeStudentDto = components["schemas"]["ChallengeStudentDto"];
 export type ChallengeOptionStudentDto = components["schemas"]["ChallengeOptionStudentDto"];
 export type ChallengeSubmissionRequestDto = components["schemas"]["ChallengeSubmissionRequestDto"];
-export type ChallengeSubmissionResponseDto = components["schemas"]["ChallengeSubmissionResponseDto"];
+export type ChallengeSubmissionResponseDto =
+  components["schemas"]["ChallengeSubmissionResponseDto"];
 export type ChoiceSubmissionResponseDto = components["schemas"]["ChoiceSubmissionResponseDto"];
 export type ListLabResponseDto = components["schemas"]["ListLabResponseDto"];
 export type PageListLabResponseDto = components["schemas"]["PageListLabResponseDto"];
 export type CourseLabItemDto = components["schemas"]["CourseLabItemDto"];
-export type UpdateCourseLabsRequestDto =
-  components["schemas"]["UpdateCourseLabsRequestDto"];
+export type UpdateCourseLabsRequestDto = components["schemas"]["UpdateCourseLabsRequestDto"];
 export type VisibilityImpactResponseDto = components["schemas"]["VisibilityImpactResponseDto"];
 export type CourseDetailResponseDto = components["schemas"]["CourseDetailResponseDto"];
 

@@ -79,9 +79,7 @@ export function CourseLabDetailsList({
           const labTitle = showIndex
             ? `#${index + 1} ${formatText(lab.title)}`
             : formatText(lab.title);
-          const sanitizedDescription = lab.description
-            ? getSanitizedHtml(lab.description)
-            : "";
+          const sanitizedDescription = lab.description ? getSanitizedHtml(lab.description) : "";
           const challenges = lab.challenges ?? [];
           const solvedCount = lab.solvedChallengeCount ?? 0;
           const totalCount = lab.totalChallengeCount ?? challenges.length;

@@ -260,8 +260,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                 )}
               </Text>
               <Text size="xs" c="dimmed">
-                Upload your Kubeconfig file for the Kubernetes cluster that manages the lab
-                pods.
+                Upload your Kubeconfig file for the Kubernetes cluster that manages the lab pods.
               </Text>
               <Dropzone
                 id="kubeconfig-input"

@@ -4,7 +4,8 @@ export type ChallengeStudentDto = components["schemas"]["ChallengeStudentDto"];
 export type ChallengeOptionStudentDto = components["schemas"]["ChallengeOptionStudentDto"];
 export type LabStudentDto = components["schemas"]["LabStudentDto"];
 export type ChallengeSubmissionRequestDto = components["schemas"]["ChallengeSubmissionRequestDto"];
-export type ChallengeSubmissionResponseDto = components["schemas"]["ChallengeSubmissionResponseDto"];
+export type ChallengeSubmissionResponseDto =
+  components["schemas"]["ChallengeSubmissionResponseDto"];
 export type ChoiceSubmissionResponseDto = components["schemas"]["ChoiceSubmissionResponseDto"];
 
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
@@ -128,11 +129,7 @@ export interface CourseDetailResponseDto {
   updatedAt: string;
 }
 
-export type CourseLabSubmissionStatusEnum =
-  | "NOT_SUBMITTED"
-  | "IN_PROGRESS"
-  | "ON_TIME"
-  | "LATE";
+export type CourseLabSubmissionStatusEnum = "NOT_SUBMITTED" | "IN_PROGRESS" | "ON_TIME" | "LATE";
 
 export interface CourseChallengeSubmissionEntryDto {
   participantId: string;

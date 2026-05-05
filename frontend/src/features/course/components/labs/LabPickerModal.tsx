@@ -15,10 +15,7 @@ import {
 } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { IconCheck, IconSearch } from "@tabler/icons-react";
-import {
-  searchChallenges,
-  type ListLabResponseDto,
-} from "@/src/features/course/actions/labs";
+import { searchChallenges, type ListLabResponseDto } from "@/src/features/course/actions/labs";
 import {
   getDifficultyColor,
   getStatusColor,
@@ -34,12 +31,7 @@ interface ChallengePickerModalProps {
   onSelect: (lab: ListLabResponseDto) => void;
 }
 
-export function LabPickerModal({
-  opened,
-  onClose,
-  addedIds,
-  onSelect,
-}: ChallengePickerModalProps) {
+export function LabPickerModal({ opened, onClose, addedIds, onSelect }: ChallengePickerModalProps) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const [labs, setLabs] = useState<ListLabResponseDto[]>([]);
@@ -138,11 +130,7 @@ export function LabPickerModal({
                       </Group>
 
                       <Group gap="xs">
-                        <Badge
-                          size="xs"
-                          variant="light"
-                          color={getStatusColor(lab.status ?? "")}
-                        >
+                        <Badge size="xs" variant="light" color={getStatusColor(lab.status ?? "")}>
                           {lab.status}
                         </Badge>
                         <Badge

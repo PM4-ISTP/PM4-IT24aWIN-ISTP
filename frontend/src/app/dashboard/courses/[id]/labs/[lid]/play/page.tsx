@@ -33,11 +33,5 @@ export default async function PlayChallengePage({
     );
   }
 
-  return (
-    <LabPlayView
-      courseId={courseId}
-      labId={labId}
-      initialChallenge={result.data}
-    />
-  );
+  return <LabPlayView courseId={courseId} labId={labId} initialChallenge={result.data} />;
 }
