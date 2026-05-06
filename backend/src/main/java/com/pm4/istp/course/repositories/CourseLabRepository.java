@@ -71,13 +71,8 @@ public interface CourseLabRepository extends JpaRepository<CourseLab, UUID> {
       select cc.course.id, cc.course.title, cc.lab.id, cc.lab.title, cc.dueAt
       from CourseLab cc
       where cc.dueAt is not null
-      and (
-        exists (
-          select 1 from CourseEnrollment e where e.course = cc.course and e.participant.id = :userId
-        )
-        or exists (
-          select 1 from CourseInstructor ci where ci.course = cc.course and ci.instructor.id = :userId
-        )
+      and exists (
+        select 1 from CourseEnrollment e where e.course = cc.course and e.participant.id = :userId
       )
       order by cc.dueAt asc
       """)
