@@ -6,9 +6,11 @@ import com.pm4.istp.badge.dto.UpdateCourseBadgeRequestDto;
 import com.pm4.istp.badge.dto.UserBadgeDto;
 import com.pm4.istp.badge.repositories.UserCourseBadgeRepository;
 import com.pm4.istp.badge.services.BadgeService;
+import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseLab;
+import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.user.db.entities.User;
@@ -58,6 +60,8 @@ public class BadgeServiceImpl implements BadgeService {
         courseRepository
             .findById(courseId)
             .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+
+    verifyOwner(course, userId);
 
     course.setBadgePrimaryColor(request.primaryColor());
     course.setBadgeTextColor(request.textColor());
@@ -136,6 +140,20 @@ public class BadgeServiceImpl implements BadgeService {
           "Badge already exists (concurrent award) for user '{}' course '{}'",
           userId,
           course.getId());
+    }
+  }
+
+  private void verifyOwner(Course course, UUID userId) {
+    boolean isOwner =
+        course.getCourseInstructors().stream()
+            .anyMatch(
+                ci ->
+                    ci.getInstructor().getId().equals(userId)
+                        && ci.getInstructorRole() == InstructorRoleEnum.OWNER);
+    if (!isOwner) {
+      throw new CourseAccessDeniedException(
+          String.format(
+              "User with ID '%s' is not the owner of course '%s'", userId, course.getId()));
     }
   }
 
