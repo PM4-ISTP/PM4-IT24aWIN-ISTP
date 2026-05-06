@@ -35,11 +35,14 @@ import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseLab;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.entities.Challenge;
+import com.pm4.istp.course.db.entities.ChallengeOption;
 import com.pm4.istp.course.db.entities.ChallengeType;
 import com.pm4.istp.course.db.entities.ChallengeCompletion;
+import com.pm4.istp.course.db.entities.StudentOptionSubmission;
 import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.ListLabResponseDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
@@ -964,5 +967,201 @@ class ChallengeServiceImplTest {
     assertThatThrownBy(
         () -> labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{secret}"))
         .isInstanceOf(ChallengeAlreadySolvedException.class);
+  }
+
+  private ChallengeOption option(UUID id, Challenge challenge, String text, boolean correct) {
+    ChallengeOption option = new ChallengeOption();
+    option.setId(id);
+    option.setChallenge(challenge);
+    option.setText(text);
+    option.setCorrect(correct);
+    challenge.getOptions().add(option);
+    return option;
+  }
+
+  @Test
+  void submitChallengeChoice_onceMode_persistsWrongAnswerAndRevealsCorrectOption() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID wrongOptionId = UUID.randomUUID();
+    UUID correctOptionId = UUID.randomUUID();
+    User user = buildUser(userId);
+    Lab lab = buildChallengeWithCourses(labId, courseId);
+    Challenge challenge = buildChallenge(challengeId, lab, null);
+    challenge.setType(ChallengeType.MULTIPLE_CHOICE);
+    option(wrongOptionId, challenge, "Nope", false);
+    option(correctOptionId, challenge, "Yep", true);
+    Course course = new Course();
+    course.setId(courseId);
+    course.setMcAttemptsMode(McAttemptsMode.ONCE);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId)).thenReturn(true);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(userId, challengeId))
+        .thenReturn(Optional.empty());
+    when(challengeCompletionRepository.findSolvedChallengeIds(eq(userId), any())).thenReturn(List.of());
+
+    ChoiceSubmissionResponseDto response =
+        labService.submitChallengeChoice(userId, courseId, labId, challengeId, wrongOptionId);
+
+    assertThat(response.isCorrect()).isFalse();
+    assertThat(response.getCorrectOptionId()).isEqualTo(correctOptionId);
+    verify(studentOptionSubmissionRepository).saveAndFlush(any(StudentOptionSubmission.class));
+    verify(challengeCompletionRepository).saveAndFlush(any(ChallengeCompletion.class));
+  }
+
+  @Test
+  void submitChallengeChoice_unlimitedWrongAnswer_doesNotPersistAttempt() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID wrongOptionId = UUID.randomUUID();
+    UUID correctOptionId = UUID.randomUUID();
+    Lab lab = buildChallengeWithCourses(labId, courseId);
+    Challenge challenge = buildChallenge(challengeId, lab, null);
+    challenge.setType(ChallengeType.MULTIPLE_CHOICE);
+    option(wrongOptionId, challenge, "Nope", false);
+    option(correctOptionId, challenge, "Yep", true);
+    Course course = new Course();
+    course.setId(courseId);
+    course.setMcAttemptsMode(McAttemptsMode.UNLIMITED);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(buildUser(userId)));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId)).thenReturn(true);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(userId, challengeId))
+        .thenReturn(Optional.empty());
+    when(challengeCompletionRepository.findSolvedChallengeIds(eq(userId), any())).thenReturn(List.of());
+
+    ChoiceSubmissionResponseDto response =
+        labService.submitChallengeChoice(userId, courseId, labId, challengeId, wrongOptionId);
+
+    assertThat(response.isCorrect()).isFalse();
+    assertThat(response.getCorrectOptionId()).isEqualTo(correctOptionId);
+    verify(studentOptionSubmissionRepository, never()).saveAndFlush(any());
+    verify(challengeCompletionRepository, never()).saveAndFlush(any());
+  }
+
+  @Test
+  void submitChallengeChoice_correctUnlimited_savesSubmissionCompletionAndAwardsWhenLabSolved() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID correctOptionId = UUID.randomUUID();
+    User user = buildUser(userId);
+    Lab lab = buildChallengeWithCourses(labId, courseId);
+    Challenge challenge = buildChallenge(challengeId, lab, null);
+    challenge.setType(ChallengeType.MULTIPLE_CHOICE);
+    option(correctOptionId, challenge, "Yep", true);
+    Course course = new Course();
+    course.setId(courseId);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId)).thenReturn(true);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(userId, challengeId))
+        .thenReturn(Optional.empty());
+    when(challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId))
+        .thenReturn(false);
+    when(challengeCompletionRepository.findSolvedChallengeIds(eq(userId), any()))
+        .thenReturn(List.of(challengeId));
+
+    ChoiceSubmissionResponseDto response =
+        labService.submitChallengeChoice(userId, courseId, labId, challengeId, correctOptionId);
+
+    assertThat(response.isCorrect()).isTrue();
+    assertThat(response.isChallengeSolved()).isTrue();
+    verify(studentOptionSubmissionRepository).saveAndFlush(any(StudentOptionSubmission.class));
+    verify(challengeCompletionRepository).saveAndFlush(any(ChallengeCompletion.class));
+    verify(badgeService).tryAwardBadgesForChallenge(userId, labId);
+  }
+
+  @Test
+  void submitChallengeChoice_existingWrongSubmission_returnsStoredResult() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID wrongOptionId = UUID.randomUUID();
+    UUID correctOptionId = UUID.randomUUID();
+    Lab lab = buildChallengeWithCourses(labId, courseId);
+    Challenge challenge = buildChallenge(challengeId, lab, null);
+    challenge.setType(ChallengeType.MULTIPLE_CHOICE);
+    ChallengeOption wrong = option(wrongOptionId, challenge, "Nope", false);
+    option(correctOptionId, challenge, "Yep", true);
+    StudentOptionSubmission submission = new StudentOptionSubmission();
+    submission.setSelectedOption(wrong);
+    submission.setCorrect(false);
+    Course course = new Course();
+    course.setId(courseId);
+    course.setMcAttemptsMode(McAttemptsMode.ONCE);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(buildUser(userId)));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId)).thenReturn(true);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(userId, challengeId))
+        .thenReturn(Optional.of(submission));
+    when(challengeCompletionRepository.findSolvedChallengeIds(eq(userId), any())).thenReturn(List.of());
+
+    ChoiceSubmissionResponseDto response =
+        labService.submitChallengeChoice(userId, courseId, labId, challengeId, wrongOptionId);
+
+    assertThat(response.isCorrect()).isFalse();
+    assertThat(response.getCorrectOptionId()).isEqualTo(correctOptionId);
+    verify(studentOptionSubmissionRepository, never()).saveAndFlush(any());
+  }
+
+  @Test
+  void completeTheoryChallenge_savesCompletionAndAwardsBadgeWhenAllSolved() {
+    UUID userId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    User user = buildUser(userId);
+    Lab lab = buildChallengeWithCourses(labId, courseId);
+    Challenge challenge = buildChallenge(challengeId, lab, null);
+    challenge.setType(ChallengeType.FLAG);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId)).thenReturn(true);
+    when(challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId))
+        .thenReturn(false);
+    when(challengeCompletionRepository.findSolvedChallengeIds(eq(userId), any()))
+        .thenReturn(List.of(challengeId));
+
+    ChallengeSubmissionResponseDto response =
+        labService.completeTheoryChallenge(userId, labId, challengeId);
+
+    assertThat(response.isCorrect()).isTrue();
+    assertThat(response.isChallengeSolved()).isTrue();
+    verify(challengeCompletionRepository).saveAndFlush(any(ChallengeCompletion.class));
+    verify(badgeService).tryAwardBadgesForChallenge(userId, labId);
+  }
+
+  @Test
+  void completeTheoryChallenge_rejectsFlagBasedChallenge() {
+    UUID userId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    Lab lab = buildChallengeWithCourses(labId, courseId);
+    Challenge challenge = buildChallenge(challengeId, lab, "ISTP{flag}");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(buildUser(userId)));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+
+    assertThatThrownBy(() -> labService.completeTheoryChallenge(userId, labId, challengeId))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("requires a flag submission");
   }
 }

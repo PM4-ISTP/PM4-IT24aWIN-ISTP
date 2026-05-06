@@ -216,6 +216,32 @@ class AdminUserServiceImplTest {
   }
 
   @Test
+  void createUser_rejectsDuplicateEmailOrUsernameBeforeKeycloakCall() {
+    AdminCreateUserRequestDto request = new AdminCreateUserRequestDto();
+    request.setEmail(" user@example.com ");
+    request.setUsername(" user1 ");
+    request.setFirstName(" Alice ");
+    request.setLastName(" Example ");
+
+    when(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull("user@example.com"))
+        .thenReturn(List.of(new User()));
+
+    assertThatThrownBy(() -> adminUserService.createUser(request))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Email is already in use");
+    verifyNoInteractions(keycloakAdminClient);
+
+    when(userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull("user@example.com"))
+        .thenReturn(List.of());
+    when(userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull("user1"))
+        .thenReturn(List.of(new User()));
+
+    assertThatThrownBy(() -> adminUserService.createUser(request))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Username is already in use");
+  }
+
+  @Test
   void createUser_dbSaveFails_deletesKeycloakUser() {
     UUID createdId = UUID.randomUUID();
 
@@ -358,6 +384,93 @@ class AdminUserServiceImplTest {
   }
 
   @Test
+  void updateUserRole_whenDbMissing_createsProjectionFromKeycloakAttributes() {
+    UUID userId = UUID.randomUUID();
+    var req = new com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto();
+    req.setRoles(java.util.Set.of("ROLE_ADMINISTRATOR"));
+    KeycloakRoleRepresentation administrator = new KeycloakRoleRepresentation();
+    administrator.setName("ROLE_ADMINISTRATOR");
+    when(keycloakAdminClient.listUserRealmRoles(userId)).thenReturn(List.of());
+    when(keycloakAdminClient.getRealmRoleByName("ROLE_ADMINISTRATOR")).thenReturn(administrator);
+    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+    KeycloakUserRepresentation kcUser = new KeycloakUserRepresentation();
+    kcUser.setId(userId.toString());
+    kcUser.setEmail("user@example.com");
+    kcUser.setUsername("user1");
+    kcUser.setFirstName("Alice");
+    kcUser.setLastName("Example");
+    kcUser.setAttributes(Map.of("title", List.of("Admin"), "picture", List.of("pic.png")));
+    when(keycloakAdminClient.getUser(userId)).thenReturn(kcUser);
+    when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    adminUserService.updateUserRole(userId, req);
+
+    ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+    verify(userRepository).save(userCaptor.capture());
+    assertThat(userCaptor.getValue().getName()).isEqualTo("Alice Example");
+    assertThat(userCaptor.getValue().getTitle()).isEqualTo("Admin");
+    assertThat(userCaptor.getValue().getPicture()).isEqualTo("pic.png");
+    assertThat(userCaptor.getValue().getRoles())
+        .containsExactly(com.pm4.istp.user.db.entities.UserRoleEnum.ROLE_ADMINISTRATOR);
+  }
+
+  @Test
+  void updateUserRole_whenDbSaveFails_rollsBackKeycloakRoleChanges() {
+    UUID userId = UUID.randomUUID();
+    var req = new com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto();
+    req.setRoles(java.util.Set.of("ROLE_ADMINISTRATOR"));
+
+    KeycloakRoleRepresentation student = new KeycloakRoleRepresentation();
+    student.setName("ROLE_STUDENT");
+    KeycloakRoleRepresentation administrator = new KeycloakRoleRepresentation();
+    administrator.setName("ROLE_ADMINISTRATOR");
+    when(keycloakAdminClient.listUserRealmRoles(userId)).thenReturn(List.of(student));
+    when(keycloakAdminClient.getRealmRoleByName("ROLE_STUDENT")).thenReturn(student);
+    when(keycloakAdminClient.getRealmRoleByName("ROLE_ADMINISTRATOR")).thenReturn(administrator);
+    User dbUser = new User();
+    dbUser.setId(userId);
+    dbUser.setRoles(java.util.Set.of(com.pm4.istp.user.db.entities.UserRoleEnum.ROLE_STUDENT));
+    when(userRepository.findById(userId)).thenReturn(Optional.of(dbUser));
+    when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("db down"));
+
+    assertThatThrownBy(() -> adminUserService.updateUserRole(userId, req))
+        .isInstanceOf(com.pm4.istp.user.exceptions.UserProfileSyncException.class);
+
+    verify(keycloakAdminClient).removeRealmRoles(userId, List.of(student));
+    verify(keycloakAdminClient).addRealmRoles(userId, List.of(administrator));
+    verify(keycloakAdminClient).removeRealmRoles(userId, List.of(administrator));
+    verify(keycloakAdminClient).addRealmRoles(userId, List.of(student));
+  }
+
+  @Test
+  void updateUserRole_rejectsInvalidRequests() {
+    UUID userId = UUID.randomUUID();
+    var empty = new com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto();
+    empty.setRoles(java.util.Set.of());
+    var multiple = new com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto();
+    multiple.setRoles(java.util.Set.of("ROLE_STUDENT", "ROLE_ADMINISTRATOR"));
+    var invalid = new com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto();
+    invalid.setRoles(java.util.Set.of("offline_access"));
+
+    assertThatThrownBy(() -> adminUserService.updateUserRole(null, invalid))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("userId is required");
+    assertThatThrownBy(() -> adminUserService.updateUserRole(userId, null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("roles is required");
+    assertThatThrownBy(() -> adminUserService.updateUserRole(userId, empty))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("roles is required");
+    assertThatThrownBy(() -> adminUserService.updateUserRole(userId, multiple))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Exactly one role");
+    assertThatThrownBy(() -> adminUserService.updateUserRole(userId, invalid))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Invalid app roles");
+  }
+
+  @Test
   void restoreUser_success_enablesKeycloakAndRestoresDb() {
     UUID userId = UUID.randomUUID();
 
@@ -373,6 +486,37 @@ class AdminUserServiceImplTest {
     assertThat(captor.getValue().getEnabled()).isTrue();
 
     verify(userService).restoreUser(userId);
+  }
+
+  @Test
+  void disableUser_successDisablesKeycloakAndSoftDeletesDb() {
+    UUID userId = UUID.randomUUID();
+    KeycloakUserRepresentation before = new KeycloakUserRepresentation();
+    before.setId(userId.toString());
+    before.setEnabled(true);
+    when(keycloakAdminClient.getUser(userId)).thenReturn(before);
+
+    adminUserService.disableUser(userId);
+
+    ArgumentCaptor<KeycloakUserRepresentation> captor = ArgumentCaptor.forClass(KeycloakUserRepresentation.class);
+    verify(keycloakAdminClient).updateUser(eq(userId), captor.capture());
+    assertThat(captor.getValue().getEnabled()).isFalse();
+    verify(userService).softDeleteUser(userId);
+  }
+
+  @Test
+  void disableUser_dbFails_rollsBackKeycloak() {
+    UUID userId = UUID.randomUUID();
+    KeycloakUserRepresentation before = new KeycloakUserRepresentation();
+    before.setId(userId.toString());
+    before.setEnabled(true);
+    when(keycloakAdminClient.getUser(userId)).thenReturn(before);
+    doThrow(new RuntimeException("db down")).when(userService).softDeleteUser(userId);
+
+    assertThatThrownBy(() -> adminUserService.disableUser(userId))
+        .isInstanceOf(com.pm4.istp.user.exceptions.UserProfileSyncException.class);
+
+    verify(keycloakAdminClient).updateUser(userId, before);
   }
 
   @Test

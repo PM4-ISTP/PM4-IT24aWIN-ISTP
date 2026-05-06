@@ -105,4 +105,34 @@ class JwtAuthenticationConverterTest {
 
         assertThat(token.getPrincipal()).isSameAs(jwt);
     }
+
+    @Test
+    void convert_withGroupsClaim_mapsTrimmedNonBlankGroups() {
+        Jwt jwt = Jwt.withTokenValue("token")
+                .header("alg", "none")
+                .claim("realm_access", Map.of("roles", List.of("ROLE_STUDENT")))
+                .claim("groups", List.of("/class/a", " /instructors ", "", 42))
+                .build();
+
+        JwtAuthenticationToken token = converter.convert(jwt);
+
+        assertThat(token.getAuthorities())
+                .extracting(GrantedAuthority::getAuthority)
+                .containsExactlyInAnyOrder("ROLE_STUDENT", "GROUP_/class/a", "GROUP_/instructors");
+    }
+
+    @Test
+    void convert_withRolesClaimPresentButNull_returnsOnlyGroups() {
+        Jwt jwt = Jwt.withTokenValue("token")
+                .header("alg", "none")
+                .claim("realm_access", Collections.singletonMap("roles", null))
+                .claim("groups", List.of("/students"))
+                .build();
+
+        JwtAuthenticationToken token = converter.convert(jwt);
+
+        assertThat(token.getAuthorities())
+                .extracting(GrantedAuthority::getAuthority)
+                .containsExactly("GROUP_/students");
+    }
 }
