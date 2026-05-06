@@ -243,7 +243,7 @@ export default function CourseResultsPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<StudentRow | null>(null);
   const [labFilter, setLabFilter] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<SubmissionStatus | null>(null);
   const [scoreDrafts, setScoreDrafts] = useState<Record<string, number>>({});
   const [savingScoreKey, setSavingScoreKey] = useState<string | null>(null);
 
@@ -295,7 +295,7 @@ export default function CourseResultsPage() {
       const maxPoints = subs.reduce((acc, s) => acc + (s.maxPoints ?? 0), 0);
       const completionPct =
         totalSubTasks > 0 ? Math.round((solvedSubTasks / totalSubTasks) * 100) : 0;
-      const status = overallStatus(subs.map((s) => s.status as SubmissionStatus));
+      const status = overallStatus(subs.map((s) => s.status));
       return {
         participant: p,
         submissions: subs,
@@ -320,7 +320,7 @@ export default function CourseResultsPage() {
     if (!activeLab) return [];
     return rows.map((row) => {
       const sub = row.submissions.find((s) => s.challengeId === activeLab.challengeId);
-      const status = (sub?.status ?? "NOT_SUBMITTED") as SubmissionStatus;
+      const status = sub?.status ?? "NOT_SUBMITTED";
       const solved = sub?.solvedSubTaskCount ?? 0;
       const total = sub?.totalSubTaskCount ?? 0;
       const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
@@ -338,13 +338,22 @@ export default function CourseResultsPage() {
   }, [rows, activeLab]);
 
   const filteredRows = useMemo(
-    () => rows.filter((r) => r.participant.name.toLowerCase().includes(search.toLowerCase())),
-    [rows, search]
+    () =>
+      rows.filter((r) => {
+        const matchesSearch = r.participant.name.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus = !statusFilter || r.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      }),
+    [rows, search, statusFilter]
   );
   const filteredLabRows = useMemo(
     () =>
-      labRows.filter((lr) => lr.row.participant.name.toLowerCase().includes(search.toLowerCase())),
-    [labRows, search]
+      labRows.filter((lr) => {
+        const matchesSearch = lr.row.participant.name.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus = !statusFilter || lr.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      }),
+    [labRows, search, statusFilter]
   );
 
   const totalParticipants = rows.length;
@@ -930,7 +939,7 @@ export default function CourseResultsPage() {
               )}
               {challenges.map((c: CourseChallengeResponseDto, idx) => {
                 const sub = selected.submissions.find((s) => s.challengeId === c.challengeId);
-                const st = (sub?.status ?? "NOT_SUBMITTED") as SubmissionStatus;
+                const st = sub?.status ?? "NOT_SUBMITTED";
                 const solved = sub?.solvedSubTaskCount ?? 0;
                 const total = sub?.totalSubTaskCount ?? 0;
                 const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
