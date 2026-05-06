@@ -38,8 +38,8 @@ public class SubTaskStudentDto {
   private boolean solved;
 
   /**
-   * The plaintext flag. Populated only when the requesting user has solved this sub-task (FLAG
-   * type); {@code null} otherwise.
+   * The plaintext flag. Populated only when the requesting user has solved this sub-task or an instructor is retrieving
+   * the solutions (FLAG type); {@code null} otherwise.
    */
   private String solvedFlag;
 
