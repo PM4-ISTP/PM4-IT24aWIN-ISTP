@@ -22,6 +22,9 @@ import com.pm4.istp.course.dto.CreateChallengeResponseDto;
 import com.pm4.istp.course.dto.ListLabResponseDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionRequestDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionRequestDto;
+import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
+import com.pm4.istp.course.dto.DockerImageCheckResponseDto;
 import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
 import com.pm4.istp.course.dto.VisibilityImpactResponseDto;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
@@ -29,6 +32,8 @@ import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.mappers.LabMapper;
+import com.pm4.istp.course.services.DockerImageAvailabilityService;
+import com.pm4.istp.course.services.DockerImageAvailabilityService.DockerImageAvailabilityResult;
 import com.pm4.istp.course.services.LabService;
 import com.pm4.istp.user.db.entities.User;
 
@@ -54,6 +59,8 @@ class ChallengeControllerTest {
   private LabService labService;
   @Mock
   private LabMapper labMapper;
+  @Mock
+  private DockerImageAvailabilityService dockerImageAvailabilityService;
 
   @InjectMocks
   private LabController challengeController;
@@ -386,5 +393,52 @@ class ChallengeControllerTest {
     assertThatThrownBy(
         () -> challengeController.submitChallengeFlag(jwt, labId, challengeId, request))
         .isInstanceOf(ChallengeAlreadySolvedException.class);
+  }
+
+  @Test
+  void checkDockerImage_returnsPublicAndPrivateMessages() {
+    when(dockerImageAvailabilityService.checkImageAvailability("ghcr.io/acme/lab:latest"))
+        .thenReturn(DockerImageAvailabilityResult.publicGhcrImage());
+    when(dockerImageAvailabilityService.checkImageAvailability("ghcr.io/acme/private:latest"))
+        .thenReturn(DockerImageAvailabilityResult.privateGhcrImage());
+
+    ResponseEntity<DockerImageCheckResponseDto> publicResponse =
+        challengeController.checkDockerImage("ghcr.io/acme/lab:latest");
+    ResponseEntity<DockerImageCheckResponseDto> privateResponse =
+        challengeController.checkDockerImage("ghcr.io/acme/private:latest");
+
+    assertThat(publicResponse.getBody()).isNotNull();
+    assertThat(publicResponse.getBody().message()).isEqualTo("Public GHCR image found");
+    assertThat(privateResponse.getBody()).isNotNull();
+    assertThat(privateResponse.getBody().message()).contains("image pull secret");
+  }
+
+  @Test
+  void submitChallengeChoiceAndCompleteTheoryAndCompletedCount_delegateToService() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID optionId = UUID.randomUUID();
+    Jwt jwt = jwtFor(userId);
+    ChoiceSubmissionRequestDto choiceRequest = new ChoiceSubmissionRequestDto(optionId, courseId);
+    ChoiceSubmissionResponseDto choiceResponse =
+        new ChoiceSubmissionResponseDto(true, true, 2, 2, null);
+    ChallengeSubmissionResponseDto theoryResponse =
+        new ChallengeSubmissionResponseDto(true, true, 2, 2);
+
+    when(labService.submitChallengeChoice(userId, courseId, labId, challengeId, optionId))
+        .thenReturn(choiceResponse);
+    when(labService.completeTheoryChallenge(userId, labId, challengeId)).thenReturn(theoryResponse);
+    when(labService.countCompletedChallenges(userId)).thenReturn(7L);
+
+    assertThat(
+            challengeController
+                .submitChallengeChoice(jwt, labId, challengeId, choiceRequest)
+                .getBody())
+        .isSameAs(choiceResponse);
+    assertThat(challengeController.completeTheoryChallenge(jwt, labId, challengeId).getBody())
+        .isSameAs(theoryResponse);
+    assertThat(challengeController.countMyCompletedChallenges(jwt).getBody()).containsEntry("count", 7L);
   }
 }
