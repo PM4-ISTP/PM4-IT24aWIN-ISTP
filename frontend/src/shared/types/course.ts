@@ -136,6 +136,13 @@ export type CourseChallengeSubmissionStatusEnum =
   | "ON_TIME"
   | "LATE";
 
+export const courseChallengeSubmissionStatusEnumValues: CourseChallengeSubmissionStatusEnum[] = [
+  "NOT_SUBMITTED",
+  "IN_PROGRESS",
+  "ON_TIME",
+  "LATE",
+];
+
 export interface CourseChallengeSubmissionEntryDto {
   participantId: string;
   challengeId: string;

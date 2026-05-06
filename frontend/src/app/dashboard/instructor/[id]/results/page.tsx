@@ -34,17 +34,23 @@ import {
   IconPlayerPlay,
 } from "@tabler/icons-react";
 import { fetchCourse } from "@/src/features/course/actions/courses";
-import type {
-  CourseChallengeSubmissionsResponseDto,
-  CourseChallengeSubmissionEntryDto,
-  CourseParticipantDto,
-  CourseChallengeResponseDto,
+import {
+  type CourseChallengeSubmissionsResponseDto,
+  type CourseChallengeSubmissionEntryDto,
+  type CourseParticipantDto,
+  type CourseChallengeResponseDto,
+  type CourseChallengeSubmissionStatusEnum as SubmissionStatus,
+  courseChallengeSubmissionStatusEnumValues,
 } from "@/src/shared/types/course";
 
 // helpers
 
 function initials(name: string): string {
-  return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 function avatarColor(name: string): string {
@@ -53,8 +59,6 @@ function avatarColor(name: string): string {
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
 }
-
-type SubmissionStatus = "ON_TIME" | "LATE" | "IN_PROGRESS" | "NOT_SUBMITTED";
 
 function overallStatus(statuses: SubmissionStatus[]): SubmissionStatus {
   if (statuses.includes("LATE")) return "LATE";
@@ -65,42 +69,67 @@ function overallStatus(statuses: SubmissionStatus[]): SubmissionStatus {
 
 function statusLabel(s: SubmissionStatus): string {
   switch (s) {
-    case "ON_TIME": return "On Time";
-    case "LATE": return "Late";
-    case "IN_PROGRESS": return "In Progress";
-    default: return "Not Started";
+    case "ON_TIME":
+      return "On Time";
+    case "LATE":
+      return "Late";
+    case "IN_PROGRESS":
+      return "In Progress";
+    default:
+      return "Not Started";
   }
 }
 
 function statusBadgeStyle(s: SubmissionStatus): React.CSSProperties {
   const map: Record<SubmissionStatus, { bg: string; color: string; border: string }> = {
-    ON_TIME:       { bg: "rgba(20,184,166,0.15)",  color: "#2dd4bf", border: "rgba(20,184,166,0.3)"  },
-    LATE:          { bg: "rgba(239,68,68,0.15)",   color: "#f87171", border: "rgba(239,68,68,0.3)"   },
-    IN_PROGRESS:   { bg: "rgba(96,165,250,0.15)",  color: "#60a5fa", border: "rgba(96,165,250,0.3)"  },
-    NOT_SUBMITTED: { bg: "rgba(148,163,184,0.1)",  color: "#94a3b8", border: "rgba(148,163,184,0.2)" },
+    ON_TIME: { bg: "rgba(20,184,166,0.15)", color: "#2dd4bf", border: "rgba(20,184,166,0.3)" },
+    LATE: { bg: "rgba(239,68,68,0.15)", color: "#f87171", border: "rgba(239,68,68,0.3)" },
+    IN_PROGRESS: { bg: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "rgba(96,165,250,0.3)" },
+    NOT_SUBMITTED: {
+      bg: "rgba(148,163,184,0.1)",
+      color: "#94a3b8",
+      border: "rgba(148,163,184,0.2)",
+    },
   };
   const t = map[s];
   return {
-    background: t.bg, color: t.color, border: `1px solid ${t.border}`,
-    borderRadius: 20, padding: "3px 12px", fontSize: "0.72rem", fontWeight: 600,
-    letterSpacing: "0.02em", whiteSpace: "nowrap" as const, display: "inline-block",
+    background: t.bg,
+    color: t.color,
+    border: `1px solid ${t.border}`,
+    borderRadius: 20,
+    padding: "3px 12px",
+    fontSize: "0.72rem",
+    fontWeight: 600,
+    letterSpacing: "0.02em",
+    whiteSpace: "nowrap" as const,
+    display: "inline-block",
   };
 }
 
 function progressColor(s: SubmissionStatus): string {
   switch (s) {
-    case "ON_TIME": return "#2dd4bf";
-    case "LATE": return "#f87171";
-    case "IN_PROGRESS": return "#60a5fa";
-    default: return "#475569";
+    case "ON_TIME":
+      return "#2dd4bf";
+    case "LATE":
+      return "#f87171";
+    case "IN_PROGRESS":
+      return "#60a5fa";
+    default:
+      return "#475569";
   }
 }
 
 function formatDate(value?: string | null): string {
   if (!value) return "—";
   try {
-    return new Date(value).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
-  } catch { return value; }
+    return new Date(value).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  } catch {
+    return value;
+  }
 }
 
 // types
@@ -131,25 +160,69 @@ interface LabRow {
 
 // stat card
 
-function StatCard({ label, value, sub, subColor, icon, progress }: {
-  label: string; value: string | number; sub?: string; subColor?: string;
-  icon: React.ReactNode; progress?: number;
+function StatCard({
+  label,
+  value,
+  sub,
+  subColor,
+  icon,
+  progress,
+}: {
+  label: string;
+  value: string | number;
+  sub?: string;
+  subColor?: string;
+  icon: React.ReactNode;
+  progress?: number;
 }) {
   return (
-    <Box style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "1.1rem 1.25rem" }}>
-      <Text size="xs" tt="uppercase" fw={600} style={{ color: "#64748b", letterSpacing: "0.08em", marginBottom: 6 }}>{label}</Text>
+    <Box
+      style={{
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 12,
+        padding: "1.1rem 1.25rem",
+      }}
+    >
+      <Text
+        size="xs"
+        tt="uppercase"
+        fw={600}
+        style={{ color: "#64748b", letterSpacing: "0.08em", marginBottom: 6 }}
+      >
+        {label}
+      </Text>
       <Stack gap={4}>
-        <Text fw={700} style={{ color: "#f1f5f9", fontSize: "1.6rem", lineHeight: 1 }}>{value}</Text>
+        <Text fw={700} style={{ color: "#f1f5f9", fontSize: "1.6rem", lineHeight: 1 }}>
+          {value}
+        </Text>
         {sub && (
           <Group gap={4} align="center">
             {icon}
-            <Text size="xs" style={{ color: subColor ?? "#64748b" }}>{sub}</Text>
+            <Text size="xs" style={{ color: subColor ?? "#64748b" }}>
+              {sub}
+            </Text>
           </Group>
         )}
       </Stack>
       {progress !== undefined && (
-        <Box style={{ marginTop: 10, height: 4, borderRadius: 4, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-          <Box style={{ height: "100%", width: `${progress}%`, background: "linear-gradient(90deg,#2dd4bf,#22d3ee)", borderRadius: 4 }} />
+        <Box
+          style={{
+            marginTop: 10,
+            height: 4,
+            borderRadius: 4,
+            background: "rgba(255,255,255,0.08)",
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            style={{
+              height: "100%",
+              width: `${progress}%`,
+              background: "linear-gradient(90deg,#2dd4bf,#22d3ee)",
+              borderRadius: 4,
+            }}
+          />
         </Box>
       )}
     </Box>
@@ -170,8 +243,13 @@ export default function CourseResultsPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<StudentRow | null>(null);
   const [labFilter, setLabFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [scoreDrafts, setScoreDrafts] = useState<Record<string, number>>({});
   const [savingScoreKey, setSavingScoreKey] = useState<string | null>(null);
+
+  const submissionStatuses = courseChallengeSubmissionStatusEnumValues.map((status) => {
+    return { value: status, label: statusLabel(status) };
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -180,7 +258,9 @@ export default function CourseResultsPage() {
         setLoading(true);
         const [courseResult, subRes] = await Promise.all([
           fetchCourse(courseId),
-          fetch(`/api/backend/api/v1/courses/${encodeURIComponent(courseId)}/submissions`, { cache: "no-store" }),
+          fetch(`/api/backend/api/v1/courses/${encodeURIComponent(courseId)}/submissions`, {
+            cache: "no-store",
+          }),
         ]);
         if (courseResult.success) setCourseTitle(courseResult.data.title);
         if (!subRes.ok) throw new Error((await subRes.text()) || subRes.statusText);
@@ -192,7 +272,9 @@ export default function CourseResultsPage() {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [courseId]);
 
   const challenges = useMemo(
@@ -204,14 +286,28 @@ export default function CourseResultsPage() {
     if (!data) return [];
     return (data.participants ?? []).map((p) => {
       const subs = (data.submissions ?? []).filter((s) => s.participantId === p.id);
-      const completedLabs = subs.filter((s) => s.status === "ON_TIME" || s.status === "LATE").length;
+      const completedLabs = subs.filter(
+        (s) => s.status === "ON_TIME" || s.status === "LATE"
+      ).length;
       const solvedSubTasks = subs.reduce((acc, s) => acc + (s.solvedSubTaskCount ?? 0), 0);
       const totalSubTasks = subs.reduce((acc, s) => acc + (s.totalSubTaskCount ?? 0), 0);
       const awardedPoints = subs.reduce((acc, s) => acc + (s.awardedPoints ?? 0), 0);
       const maxPoints = subs.reduce((acc, s) => acc + (s.maxPoints ?? 0), 0);
-      const completionPct = totalSubTasks > 0 ? Math.round((solvedSubTasks / totalSubTasks) * 100) : 0;
+      const completionPct =
+        totalSubTasks > 0 ? Math.round((solvedSubTasks / totalSubTasks) * 100) : 0;
       const status = overallStatus(subs.map((s) => s.status as SubmissionStatus));
-      return { participant: p, submissions: subs, completedLabs, totalLabs: challenges.length, solvedSubTasks, totalSubTasks, completionPct, status, awardedPoints, maxPoints };
+      return {
+        participant: p,
+        submissions: subs,
+        completedLabs,
+        totalLabs: challenges.length,
+        solvedSubTasks,
+        totalSubTasks,
+        completionPct,
+        status,
+        awardedPoints,
+        maxPoints,
+      };
     });
   }, [data, challenges]);
 
@@ -228,7 +324,16 @@ export default function CourseResultsPage() {
       const solved = sub?.solvedSubTaskCount ?? 0;
       const total = sub?.totalSubTaskCount ?? 0;
       const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
-      return { row, sub, status, solved, total, pct, awardedPoints: sub?.awardedPoints ?? 0, maxPoints: sub?.maxPoints ?? 0 };
+      return {
+        row,
+        sub,
+        status,
+        solved,
+        total,
+        pct,
+        awardedPoints: sub?.awardedPoints ?? 0,
+        maxPoints: sub?.maxPoints ?? 0,
+      };
     });
   }, [rows, activeLab]);
 
@@ -237,20 +342,30 @@ export default function CourseResultsPage() {
     [rows, search]
   );
   const filteredLabRows = useMemo(
-    () => labRows.filter((lr) => lr.row.participant.name.toLowerCase().includes(search.toLowerCase())),
+    () =>
+      labRows.filter((lr) => lr.row.participant.name.toLowerCase().includes(search.toLowerCase())),
     [labRows, search]
   );
 
   const totalParticipants = rows.length;
-  const statsOnTime = activeLab ? labRows.filter((lr) => lr.status === "ON_TIME").length : rows.filter((r) => r.status === "ON_TIME").length;
-  const statsLate   = activeLab ? labRows.filter((lr) => lr.status === "LATE").length     : rows.filter((r) => r.status === "LATE").length;
-  const statsInProg = activeLab ? labRows.filter((lr) => lr.status === "IN_PROGRESS").length : rows.filter((r) => r.status === "IN_PROGRESS").length;
-  const avgPct = totalParticipants > 0
-    ? Math.round(
-        (activeLab ? labRows.map((lr) => lr.pct) : rows.map((r) => r.completionPct))
-          .reduce((a, b) => a + b, 0) / totalParticipants
-      )
-    : 0;
+  const statsOnTime = activeLab
+    ? labRows.filter((lr) => lr.status === "ON_TIME").length
+    : rows.filter((r) => r.status === "ON_TIME").length;
+  const statsLate = activeLab
+    ? labRows.filter((lr) => lr.status === "LATE").length
+    : rows.filter((r) => r.status === "LATE").length;
+  const statsInProg = activeLab
+    ? labRows.filter((lr) => lr.status === "IN_PROGRESS").length
+    : rows.filter((r) => r.status === "IN_PROGRESS").length;
+  const avgPct =
+    totalParticipants > 0
+      ? Math.round(
+          (activeLab ? labRows.map((lr) => lr.pct) : rows.map((r) => r.completionPct)).reduce(
+            (a, b) => a + b,
+            0
+          ) / totalParticipants
+        )
+      : 0;
 
   const labIdx = activeLab ? challenges.indexOf(activeLab) + 1 : null;
   const tableTitle = activeLab
@@ -325,18 +440,60 @@ export default function CourseResultsPage() {
     let csvRows: string[];
     if (activeLab) {
       csvRows = [
-        ["First Name", "Last Name", "Email", "Status", "Points", "Max Points", "Tasks Solved", "Tasks Total", "Score %", "Submitted"].join(","),
+        [
+          "First Name",
+          "Last Name",
+          "Email",
+          "Status",
+          "Points",
+          "Max Points",
+          "Tasks Solved",
+          "Tasks Total",
+          "Score %",
+          "Submitted",
+        ].join(","),
         ...filteredLabRows.map((lr) => {
           const [first, last] = splitName(lr.row.participant.name);
-          return [esc(first), esc(last), esc(lr.row.participant.email ?? ""), esc(statusLabel(lr.status)), lr.awardedPoints, lr.maxPoints, lr.solved, lr.total, lr.pct, esc(lr.sub?.completedAt ? formatDate(lr.sub.completedAt) : "—")].join(",");
+          return [
+            esc(first),
+            esc(last),
+            esc(lr.row.participant.email ?? ""),
+            esc(statusLabel(lr.status)),
+            lr.awardedPoints,
+            lr.maxPoints,
+            lr.solved,
+            lr.total,
+            lr.pct,
+            esc(lr.sub?.completedAt ? formatDate(lr.sub.completedAt) : "—"),
+          ].join(",");
         }),
       ];
     } else {
       csvRows = [
-        ["First Name", "Last Name", "Email", "Overall Status", "Points", "Max Points", "Labs Completed", "Total Labs", "Score %"].join(","),
+        [
+          "First Name",
+          "Last Name",
+          "Email",
+          "Overall Status",
+          "Points",
+          "Max Points",
+          "Labs Completed",
+          "Total Labs",
+          "Score %",
+        ].join(","),
         ...filteredRows.map((r) => {
           const [first, last] = splitName(r.participant.name);
-          return [esc(first), esc(last), esc(r.participant.email ?? ""), esc(statusLabel(r.status)), r.awardedPoints, r.maxPoints, r.completedLabs, r.totalLabs, r.completionPct].join(",");
+          return [
+            esc(first),
+            esc(last),
+            esc(r.participant.email ?? ""),
+            esc(statusLabel(r.status)),
+            r.awardedPoints,
+            r.maxPoints,
+            r.completedLabs,
+            r.totalLabs,
+            r.completionPct,
+          ].join(",");
         }),
       ];
     }
@@ -355,7 +512,12 @@ export default function CourseResultsPage() {
       {/* Header */}
       <Group mb="xl" justify="space-between" align="center">
         <Group align="center" gap="sm">
-          <ActionIcon variant="subtle" size="lg" onClick={() => router.push(`/dashboard/instructor/${courseId}`)} aria-label="Back">
+          <ActionIcon
+            variant="subtle"
+            size="lg"
+            onClick={() => router.push(`/dashboard/instructor/${courseId}`)}
+            aria-label="Back"
+          >
             <IconArrowLeft size={20} />
           </ActionIcon>
           <Stack gap={2}>
@@ -363,7 +525,9 @@ export default function CourseResultsPage() {
               Results Overview
             </Title>
             <Text size="sm" style={{ color: "#64748b" }}>
-              {activeLab ? `Analysis of Lab ${String(labIdx).padStart(2, "0")}: ${activeLab.challengeTitle}` : courseTitle}
+              {activeLab
+                ? `Analysis of Lab ${String(labIdx).padStart(2, "0")}: ${activeLab.challengeTitle}`
+                : courseTitle}
             </Text>
           </Stack>
         </Group>
@@ -376,16 +540,43 @@ export default function CourseResultsPage() {
           clearable
           w={260}
           styles={{
-            input: { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f1f5f9" },
+            input: {
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "#f1f5f9",
+            },
+            dropdown: { background: "#1e293b", border: "1px solid rgba(255,255,255,0.12)" },
+          }}
+        />
+        <Select
+          placeholder="Lab Status"
+          leftSection={<IconFilter size={14} />}
+          data={submissionStatuses}
+          value={statusFilter}
+          onChange={setStatusFilter}
+          clearable
+          w={260}
+          styles={{
+            input: {
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "#f1f5f9",
+            },
             dropdown: { background: "#1e293b", border: "1px solid rgba(255,255,255,0.12)" },
           }}
         />
       </Group>
 
-      {error && <Alert color="red" title="Failed to load" mb="lg">{error}</Alert>}
+      {error && (
+        <Alert color="red" title="Failed to load" mb="lg">
+          {error}
+        </Alert>
+      )}
 
       {loading ? (
-        <Group justify="center" py="xl"><Loader /></Group>
+        <Group justify="center" py="xl">
+          <Loader />
+        </Group>
       ) : (
         <>
           {/* Stat cards */}
@@ -403,7 +594,9 @@ export default function CourseResultsPage() {
               value={`${statsOnTime} / ${totalParticipants}`}
               sub="submitted on time"
               icon={<IconCheck size={12} color="#64748b" />}
-              progress={totalParticipants > 0 ? Math.round((statsOnTime / totalParticipants) * 100) : 0}
+              progress={
+                totalParticipants > 0 ? Math.round((statsOnTime / totalParticipants) * 100) : 0
+              }
             />
             <StatCard
               label="In Progress"
@@ -421,10 +614,25 @@ export default function CourseResultsPage() {
           </SimpleGrid>
 
           {/* Table card */}
-          <Box style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, overflow: "hidden" }}>
+          <Box
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 14,
+              overflow: "hidden",
+            }}
+          >
             {/* Toolbar */}
-            <Group justify="space-between" align="center" px="xl" py="md" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-              <Text fw={600} style={{ color: "#f1f5f9", fontSize: "1rem" }}>{tableTitle}</Text>
+            <Group
+              justify="space-between"
+              align="center"
+              px="xl"
+              py="md"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+            >
+              <Text fw={600} style={{ color: "#f1f5f9", fontSize: "1rem" }}>
+                {tableTitle}
+              </Text>
               <Group gap="sm">
                 <TextInput
                   placeholder="Search participants…"
@@ -433,53 +641,104 @@ export default function CourseResultsPage() {
                   onChange={(e) => setSearch(e.currentTarget.value)}
                   size="xs"
                   w={200}
-                  styles={{ input: { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#f1f5f9", fontSize: "0.8rem" } }}
+                  styles={{
+                    input: {
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      color: "#f1f5f9",
+                      fontSize: "0.8rem",
+                    },
+                  }}
                 />
                 <Group gap={6} style={{ cursor: "pointer" }} onClick={exportToCSV}>
                   <IconDownload size={14} color="#60a5fa" />
-                  <Text size="xs" fw={600} c="blue">Export Report</Text>
+                  <Text size="xs" fw={600} c="blue">
+                    Export Report
+                  </Text>
                 </Group>
               </Group>
             </Group>
 
             {/* Column headers */}
-            <Box style={{ display: "grid", gridTemplateColumns: "2.5fr 1.2fr 1.4fr 1.8fr 60px", padding: "0.6rem 1.5rem", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <Box
+              style={{
+                display: "grid",
+                gridTemplateColumns: "2.5fr 1.2fr 1.4fr 1.8fr 60px",
+                padding: "0.6rem 1.5rem",
+                background: "rgba(255,255,255,0.02)",
+                borderBottom: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
               {(activeLab
                 ? ["Participant", "Status", "Tasks", "Completion", "Actions"]
                 : ["Participant", "Status", "Points", "Completion", "Actions"]
               ).map((h) => (
-                <Text key={h} size="xs" fw={700} style={{ color: "#475569", letterSpacing: "0.1em", textTransform: "uppercase" }}>{h}</Text>
+                <Text
+                  key={h}
+                  size="xs"
+                  fw={700}
+                  style={{ color: "#475569", letterSpacing: "0.1em", textTransform: "uppercase" }}
+                >
+                  {h}
+                </Text>
               ))}
             </Box>
 
             {/* Rows */}
             {displayRows.length === 0 ? (
-              <Text size="sm" c="dimmed" p="xl" ta="center">No participants found.</Text>
+              <Text size="sm" c="dimmed" p="xl" ta="center">
+                No participants found.
+              </Text>
             ) : (
               displayRows.map((item) => {
                 const row = "row" in item ? item.row : item;
                 const labItem = activeLab && "row" in item ? item : null;
                 const status = labItem ? labItem.status : row.status;
-                const pointsLabel = labItem ? `${labItem.awardedPoints} / ${labItem.maxPoints} Punkte` : `${row.awardedPoints} / ${row.maxPoints} Punkte`;
+                const pointsLabel = labItem
+                  ? `${labItem.awardedPoints} / ${labItem.maxPoints} Punkte`
+                  : `${row.awardedPoints} / ${row.maxPoints} Punkte`;
                 const pct = labItem ? labItem.pct : row.completionPct;
                 const submittedAt = labItem?.sub?.completedAt ?? null;
 
                 return (
                   <Box
                     key={row.participant.id}
-                    style={{ display: "grid", gridTemplateColumns: "2.5fr 1.2fr 1.4fr 1.8fr 60px", padding: "0.85rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center", cursor: "pointer", transition: "background 0.12s" }}
-                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)")}
-                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "2.5fr 1.2fr 1.4fr 1.8fr 60px",
+                      padding: "0.85rem 1.5rem",
+                      borderBottom: "1px solid rgba(255,255,255,0.04)",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      transition: "background 0.12s",
+                    }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)")
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLElement).style.background = "transparent")
+                    }
                     onClick={() => setSelected(row)}
                   >
                     <Group gap="sm">
-                      <Avatar color={avatarColor(row.participant.name)} radius="md" size={36} style={{ fontWeight: 700, fontSize: "0.8rem" }}>
+                      <Avatar
+                        color={avatarColor(row.participant.name)}
+                        radius="md"
+                        size={36}
+                        style={{ fontWeight: 700, fontSize: "0.8rem" }}
+                      >
                         {initials(row.participant.name)}
                       </Avatar>
                       <Stack gap={1}>
-                        <Text size="sm" fw={600} style={{ color: "#f1f5f9", lineHeight: 1.2 }}>{row.participant.name}</Text>
+                        <Text size="sm" fw={600} style={{ color: "#f1f5f9", lineHeight: 1.2 }}>
+                          {row.participant.name}
+                        </Text>
                         <Text size="xs" style={{ color: "#475569" }}>
-                          {submittedAt ? `Submitted: ${formatDate(submittedAt)}` : activeLab ? "Not submitted" : `${row.totalLabs} labs assigned`}
+                          {submittedAt
+                            ? `Submitted: ${formatDate(submittedAt)}`
+                            : activeLab
+                              ? "Not submitted"
+                              : `${row.totalLabs} labs assigned`}
                         </Text>
                       </Stack>
                     </Group>
@@ -487,28 +746,58 @@ export default function CourseResultsPage() {
                     <span style={statusBadgeStyle(status)}>{statusLabel(status)}</span>
 
                     <Stack gap={1}>
-                      <Text size="sm" fw={600} style={{ color: "#f1f5f9" }}>{pointsLabel}</Text>
-                      <Text size="xs" style={{ color: "#475569" }}>{activeLab ? "lab points" : "total points"}</Text>
+                      <Text size="sm" fw={600} style={{ color: "#f1f5f9" }}>
+                        {pointsLabel}
+                      </Text>
+                      <Text size="xs" style={{ color: "#475569" }}>
+                        {activeLab ? "lab points" : "total points"}
+                      </Text>
                     </Stack>
 
                     <Stack gap={4}>
-                      <Text size="xs" style={{ color: "#94a3b8" }}>{pct}%</Text>
-                      <Box style={{ height: 5, borderRadius: 4, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
-                        <Box style={{ height: "100%", width: `${pct}%`, background: progressColor(status), borderRadius: 4, transition: "width 0.3s" }} />
+                      <Text size="xs" style={{ color: "#94a3b8" }}>
+                        {pct}%
+                      </Text>
+                      <Box
+                        style={{
+                          height: 5,
+                          borderRadius: 4,
+                          background: "rgba(255,255,255,0.07)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <Box
+                          style={{
+                            height: "100%",
+                            width: `${pct}%`,
+                            background: progressColor(status),
+                            borderRadius: 4,
+                            transition: "width 0.3s",
+                          }}
+                        />
                       </Box>
                     </Stack>
 
                     <Menu shadow="md" width={160} position="bottom-end">
                       <Menu.Target>
-                        <ActionIcon variant="subtle" color="gray" onClick={(e) => e.stopPropagation()}>
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <IconDotsVertical size={16} />
                         </ActionIcon>
                       </Menu.Target>
-                      <Menu.Dropdown style={{ background: "#1e293b", border: "1px solid rgba(255,255,255,0.1)" }}>
+                      <Menu.Dropdown
+                        style={{ background: "#1e293b", border: "1px solid rgba(255,255,255,0.1)" }}
+                      >
                         <Menu.Item
                           style={{ color: "#cbd5e1" }}
                           leftSection={<IconUsers size={14} />}
-                          onClick={(e) => { e.stopPropagation(); setSelected(row); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelected(row);
+                          }}
                         >
                           View Details
                         </Menu.Item>
@@ -520,7 +809,13 @@ export default function CourseResultsPage() {
             )}
 
             {/* Footer */}
-            <Box style={{ padding: "0.65rem 1.5rem", borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.01)" }}>
+            <Box
+              style={{
+                padding: "0.65rem 1.5rem",
+                borderTop: "1px solid rgba(255,255,255,0.06)",
+                background: "rgba(255,255,255,0.01)",
+              }}
+            >
               <Text size="xs" style={{ color: "#475569" }}>
                 Showing {displayRows.length} of {totalParticipants} participants
                 {activeLab ? ` · ${activeLab.challengeTitle}` : ""}
@@ -542,8 +837,12 @@ export default function CourseResultsPage() {
               </Avatar>
             )}
             <Stack gap={0}>
-              <Text fw={700} size="sm" style={{ color: "#f1f5f9" }}>{selected?.participant.name}</Text>
-              <Text size="xs" style={{ color: "#64748b" }}>Lab breakdown</Text>
+              <Text fw={700} size="sm" style={{ color: "#f1f5f9" }}>
+                {selected?.participant.name}
+              </Text>
+              <Text size="xs" style={{ color: "#64748b" }}>
+                Lab breakdown
+              </Text>
             </Stack>
           </Group>
         }
@@ -557,28 +856,78 @@ export default function CourseResultsPage() {
         {selected && (
           <Stack gap="md" pt="sm">
             <SimpleGrid cols={2} spacing="sm">
-              <Box style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "1rem" }}>
-                <Text size="xs" tt="uppercase" style={{ color: "#64748b", letterSpacing: "0.08em" }} mb={4}>Overall</Text>
-                <Text size="xl" fw={700} style={{ color: "#f1f5f9" }}>{selected.completionPct}%</Text>
-                <Box style={{ height: 4, borderRadius: 4, background: "rgba(255,255,255,0.07)", overflow: "hidden", marginTop: 8 }}>
-                  <Box style={{ height: "100%", width: `${selected.completionPct}%`, background: progressColor(selected.status), borderRadius: 4 }} />
+              <Box
+                style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "1rem" }}
+              >
+                <Text
+                  size="xs"
+                  tt="uppercase"
+                  style={{ color: "#64748b", letterSpacing: "0.08em" }}
+                  mb={4}
+                >
+                  Overall
+                </Text>
+                <Text size="xl" fw={700} style={{ color: "#f1f5f9" }}>
+                  {selected.completionPct}%
+                </Text>
+                <Box
+                  style={{
+                    height: 4,
+                    borderRadius: 4,
+                    background: "rgba(255,255,255,0.07)",
+                    overflow: "hidden",
+                    marginTop: 8,
+                  }}
+                >
+                  <Box
+                    style={{
+                      height: "100%",
+                      width: `${selected.completionPct}%`,
+                      background: progressColor(selected.status),
+                      borderRadius: 4,
+                    }}
+                  />
                 </Box>
               </Box>
-              <Box style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "1rem" }}>
-                <Text size="xs" tt="uppercase" style={{ color: "#64748b", letterSpacing: "0.08em" }} mb={6}>Status</Text>
-                <span style={statusBadgeStyle(selected.status)}>{statusLabel(selected.status)}</span>
+              <Box
+                style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "1rem" }}
+              >
+                <Text
+                  size="xs"
+                  tt="uppercase"
+                  style={{ color: "#64748b", letterSpacing: "0.08em" }}
+                  mb={6}
+                >
+                  Status
+                </Text>
+                <span style={statusBadgeStyle(selected.status)}>
+                  {statusLabel(selected.status)}
+                </span>
                 <Text size="xs" style={{ color: "#64748b", marginTop: 8 }}>
                   {selected.awardedPoints} / {selected.maxPoints} Punkte (gesamt)
                 </Text>
               </Box>
             </SimpleGrid>
 
-            <Text size="sm" fw={600} style={{ color: "#94a3b8", letterSpacing: "0.05em", textTransform: "uppercase", fontSize: "0.7rem" }}>
+            <Text
+              size="sm"
+              fw={600}
+              style={{
+                color: "#94a3b8",
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+                fontSize: "0.7rem",
+              }}
+            >
               Lab Breakdown
             </Text>
 
             <Stack gap="xs">
-              {challenges.length === 0 && <Text size="sm" c="dimmed">No labs assigned.</Text>}
+              {challenges.length === 0 && (
+                <Text size="sm" c="dimmed">
+                  No labs assigned.
+                </Text>
+              )}
               {challenges.map((c: CourseChallengeResponseDto, idx) => {
                 const sub = selected.submissions.find((s) => s.challengeId === c.challengeId);
                 const st = (sub?.status ?? "NOT_SUBMITTED") as SubmissionStatus;
@@ -590,11 +939,21 @@ export default function CourseResultsPage() {
                 const key = scoreKey(selected.participant.id, c.challengeId);
                 const draftValue = scoreDrafts[key] ?? currentPoints;
                 return (
-                  <Box key={c.challengeId} style={{
-                    background: activeLab?.challengeId === c.challengeId ? "rgba(96,165,250,0.07)" : "rgba(255,255,255,0.03)",
-                    borderRadius: 10, padding: "0.85rem 1rem",
-                    border: activeLab?.challengeId === c.challengeId ? "1px solid rgba(96,165,250,0.2)" : "1px solid rgba(255,255,255,0.05)",
-                  }}>
+                  <Box
+                    key={c.challengeId}
+                    style={{
+                      background:
+                        activeLab?.challengeId === c.challengeId
+                          ? "rgba(96,165,250,0.07)"
+                          : "rgba(255,255,255,0.03)",
+                      borderRadius: 10,
+                      padding: "0.85rem 1rem",
+                      border:
+                        activeLab?.challengeId === c.challengeId
+                          ? "1px solid rgba(96,165,250,0.2)"
+                          : "1px solid rgba(255,255,255,0.05)",
+                    }}
+                  >
                     <Group justify="space-between" mb={6}>
                       <Text size="sm" fw={500} style={{ color: "#e2e8f0" }}>
                         Lab {String(idx + 1).padStart(2, "0")}: {c.challengeTitle}
@@ -604,16 +963,40 @@ export default function CourseResultsPage() {
                     {/* Score row */}
                     <Group justify="space-between" align="center" mb={6}>
                       <Group gap={6} align="baseline">
-                        <Text fw={700} style={{ color: "#f1f5f9", fontSize: "1.1rem", lineHeight: 1 }}>{currentPoints}</Text>
-                        <Text size="xs" style={{ color: "#64748b" }}>/ {maxPoints} Punkte</Text>
+                        <Text
+                          fw={700}
+                          style={{ color: "#f1f5f9", fontSize: "1.1rem", lineHeight: 1 }}
+                        >
+                          {currentPoints}
+                        </Text>
+                        <Text size="xs" style={{ color: "#64748b" }}>
+                          / {maxPoints} Punkte
+                        </Text>
                         {total > 0 && (
-                          <Text size="xs" style={{ color: progressColor(st), fontWeight: 600 }}>{pct}%</Text>
+                          <Text size="xs" style={{ color: progressColor(st), fontWeight: 600 }}>
+                            {pct}%
+                          </Text>
                         )}
                       </Group>
                     </Group>
                     {/* Progress bar */}
-                    <Box style={{ height: 4, borderRadius: 4, background: "rgba(255,255,255,0.07)", overflow: "hidden", marginBottom: 8 }}>
-                      <Box style={{ height: "100%", width: `${pct}%`, background: progressColor(st), borderRadius: 4 }} />
+                    <Box
+                      style={{
+                        height: 4,
+                        borderRadius: 4,
+                        background: "rgba(255,255,255,0.07)",
+                        overflow: "hidden",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Box
+                        style={{
+                          height: "100%",
+                          width: `${pct}%`,
+                          background: progressColor(st),
+                          borderRadius: 4,
+                        }}
+                      />
                     </Box>
                     {/* Deadline + submission info */}
                     {c.dueAt && (
