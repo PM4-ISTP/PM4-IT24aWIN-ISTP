@@ -132,10 +132,7 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
             href="/dashboard/instructor/results"
             label="Results Overview"
             icon="group"
-            active={
-              pathname === "/dashboard/instructor/results" ||
-              pathname.endsWith("/results")
-            }
+            active={pathname === "/dashboard/instructor/results" || pathname.endsWith("/results")}
           />
         </>
       )}
