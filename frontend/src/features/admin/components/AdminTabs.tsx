@@ -39,7 +39,7 @@ export default function AdminTabs({ initialConfig }: AdminTabsProps) {
       <Tabs.List mb="lg">
         <Tabs.Tab value="config">Platform Config</Tabs.Tab>
         <Tabs.Tab value="courses">Courses</Tabs.Tab>
-        <Tabs.Tab value="labs">Challenges</Tabs.Tab>
+        <Tabs.Tab value="labs">Labs</Tabs.Tab>
         <Tabs.Tab value="topics">Topics</Tabs.Tab>
       </Tabs.List>
 

@@ -34,6 +34,7 @@ type AdminLabListItem = {
   description: string | null;
   status: ChallengeStatus;
   difficulty: ChallengeDifficulty;
+  dockerImage: string | null;
   courseCount: number;
   createdAt: string;
   updatedAt: string;
@@ -321,6 +322,12 @@ export default function AdminChallengeManagement() {
         <form onSubmit={form.onSubmit((values) => void submitEdit(values))}>
           <Stack gap="sm">
             <TextInput label="Title" required {...form.getInputProps("title")} />
+            <TextInput
+              label="Docker Image"
+              value={selected?.dockerImage ?? ""}
+              readOnly
+              styles={{ input: { fontFamily: "monospace", fontSize: "0.85rem" } }}
+            />
             <MyEditor
               description={form.values.description}
               setDescription={(value) => form.setFieldValue("description", value)}
