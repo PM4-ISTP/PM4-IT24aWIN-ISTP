@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,12 +32,20 @@ public class DockerImageAvailabilityService {
   private static final Pattern TOKEN_PATTERN =
       Pattern.compile("\"(?:token|access_token)\"\\s*:\\s*\"([^\"]+)\"");
 
-  private final HttpClient httpClient =
-      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+  private final HttpClient httpClient;
   private final AdminConfigurationService adminConfigurationService;
 
+  @Autowired
   public DockerImageAvailabilityService(AdminConfigurationService adminConfigurationService) {
+    this(
+        adminConfigurationService,
+        HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build());
+  }
+
+  DockerImageAvailabilityService(
+      AdminConfigurationService adminConfigurationService, HttpClient httpClient) {
     this.adminConfigurationService = adminConfigurationService;
+    this.httpClient = httpClient;
   }
 
   public void assertImageExists(String imageReference) {

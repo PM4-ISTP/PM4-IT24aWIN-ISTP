@@ -36,6 +36,9 @@ import com.pm4.istp.course.dto.ChallengeCreatorResponseDto;
 import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
+import com.pm4.istp.course.dto.CourseLabDeadlineDto;
+import com.pm4.istp.course.dto.CourseLabItemDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
 import com.pm4.istp.course.dto.CreateCourseRequestDto;
 import com.pm4.istp.course.dto.CreateCourseResponseDto;
@@ -43,6 +46,7 @@ import com.pm4.istp.course.dto.JoinByInviteCodeRequestDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.dto.PublicCourseDetailResponseDto;
 import com.pm4.istp.course.dto.UpdateCourseRequestDto;
+import com.pm4.istp.course.dto.UpdateCourseLabsRequestDto;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
@@ -57,6 +61,7 @@ import com.pm4.istp.user.dto.UserDto;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -624,6 +629,66 @@ class CourseControllerTest {
                 .perform(post("/api/v1/courses/{id}/invite-code/regenerate", courseId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Course not found"));
+    }
+
+    @Test
+    void remainingCourseEndpoints_delegateToServices() throws Exception {
+        UUID participantId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        Course course = new Course();
+        course.setId(courseId);
+        CourseDetailResponseDto detailDto = new CourseDetailResponseDto();
+        detailDto.setId(courseId);
+        CourseLabSubmissionsResponseDto submissions =
+                new CourseLabSubmissionsResponseDto(courseId, List.of(), List.of(), List.of());
+        CourseLabDeadlineDto deadline =
+                new CourseLabDeadlineDto(courseId, "Course", labId, "Lab", LocalDateTime.now());
+
+        doNothing().when(courseService).removeParticipant(userId, courseId, participantId);
+        doNothing().when(courseService).leaveCourse(userId, courseId);
+        when(courseService.updateCourseChallenges(eq(userId), eq(courseId), any()))
+                .thenReturn(course);
+        when(courseMapper.toCourseDetailDto(course)).thenReturn(detailDto);
+        when(courseService.getCourseChallengeSubmissions(userId, courseId)).thenReturn(submissions);
+        when(courseService.listUpcomingDeadlines(userId)).thenReturn(List.of(deadline));
+        when(courseTopicService.listActiveTopics()).thenReturn(List.of("web", "crypto"));
+
+        mockMvc.perform(delete("/api/v1/courses/{id}/participants/{participantId}", courseId, participantId))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/v1/courses/catalog/{id}/leave", courseId))
+                .andExpect(status().isNoContent());
+        mockMvc
+                .perform(
+                        put("/api/v1/courses/{id}/labs", courseId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"labs":[{"labId":"%s","orderIndex":1,"dueAt":"2026-05-06T12:00:00"}]}
+                                        """
+                                                .formatted(labId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(courseId.toString()));
+        mockMvc.perform(get("/api/v1/courses/{id}/submissions", courseId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.courseId").value(courseId.toString()));
+        mockMvc.perform(get("/api/v1/courses/my-deadlines"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].courseId").value(courseId.toString()));
+        mockMvc.perform(get("/api/v1/courses/topics"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]").value("web"));
+    }
+
+    @Test
+    void listPublishedCourses_withTopic_normalizesTopic() throws Exception {
+        Page<ListCourseResponseDto> page = new PageImpl<>(List.of());
+
+        when(courseService.listPublishedCourses(eq("security"), eq("web"), any())).thenReturn(page);
+
+        mockMvc
+                .perform(get("/api/v1/courses/catalog").param("query", "security").param("topic", " web "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     // ── Mock object generators ────────────────────────────────────────────────

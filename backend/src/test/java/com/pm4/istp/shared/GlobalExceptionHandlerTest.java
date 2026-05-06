@@ -9,23 +9,33 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.client.RestClientResponseException;
 
+import com.pm4.istp.challengepod.exceptions.LabPodException;
+import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
+import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
+import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseLabException;
 import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
+import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
 import com.pm4.istp.shared.dto.ErrorDto;
+import com.pm4.istp.shared.keycloak.KeycloakAdminApiException;
 import com.pm4.istp.shared.util.GlobalExceptionHandler;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
+import com.pm4.istp.user.exceptions.UserProfileSyncException;
+import com.pm4.istp.user.exceptions.UserSoftDeletedException;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -211,5 +221,79 @@ class GlobalExceptionHandlerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getError()).isEqualTo("invalid visibility");
+  }
+
+  @Test
+  void remainingSpecificHandlers_returnExpectedStatuses() {
+    assertResponse(
+        handler.handleLabPodException(new LabPodException("pod failed")),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "Kubernetes operation failed: pod failed");
+    assertResponse(
+        handler.handleCourseParticipantNotFoundException(
+            new CourseParticipantNotFoundException("missing")),
+        HttpStatus.NOT_FOUND,
+        "Participant not found");
+    assertResponse(
+        handler.handleInvalidInviteCodeException(new InvalidInviteCodeException("bad")),
+        HttpStatus.NOT_FOUND,
+        "Invalid invite code");
+    assertResponse(
+        handler.handleChallengeNotFoundException(new ChallengeNotFoundException("missing")),
+        HttpStatus.NOT_FOUND,
+        "Sub-task not found");
+    assertResponse(
+        handler.handleChallengeAlreadySolvedException(new ChallengeAlreadySolvedException("solved")),
+        HttpStatus.CONFLICT,
+        "Sub-task already solved");
+    assertResponse(
+        handler.handleUserProfileSyncException(new UserProfileSyncException("sync failed")),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "Profile update failed");
+    assertResponse(
+        handler.handleUserSoftDeletedException(new UserSoftDeletedException(null)),
+        HttpStatus.CONFLICT,
+        "User is soft-deleted");
+    assertResponse(
+        handler.handleUserSoftDeletedException(new UserSoftDeletedException("disabled")),
+        HttpStatus.CONFLICT,
+        "disabled");
+    assertResponse(
+        handler.handleIllegalArgumentException(new IllegalArgumentException()),
+        HttpStatus.BAD_REQUEST,
+        "Invalid request");
+  }
+
+  @Test
+  void handleKeycloakAdminApiException_extractsDetailsFromCauseOrMessage() {
+    RestClientResponseException responseException =
+        new RestClientResponseException(
+            "bad gateway",
+            HttpStatusCode.valueOf(502),
+            "Bad Gateway",
+            null,
+            "{\"error\":\"".repeat(40).getBytes(),
+            null);
+
+    assertResponse(
+        handler.handleKeycloakAdminApiException(
+            new KeycloakAdminApiException("keycloak failed", responseException)),
+        HttpStatus.BAD_GATEWAY,
+        "Keycloak update failed");
+    assertResponse(
+        handler.handleKeycloakAdminApiException(new KeycloakAdminApiException("plain failure")),
+        HttpStatus.BAD_GATEWAY,
+        "Keycloak update failed");
+    assertResponse(
+        handler.handleKeycloakAdminApiException(new KeycloakAdminApiException("")),
+        HttpStatus.BAD_GATEWAY,
+        "Keycloak update failed");
+  }
+
+  private static void assertResponse(
+      ResponseEntity<ErrorDto> response, HttpStatus status, String message) {
+    assertThat(response.getStatusCode()).isEqualTo(status);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().getError()).isEqualTo(message);
   }
 }
