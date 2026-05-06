@@ -23,8 +23,11 @@ import com.pm4.istp.user.repositories.UserRepository;
 import com.pm4.istp.user.services.UserService;
 import java.util.List;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -84,6 +87,110 @@ class AdminUserServiceImplTest {
     assertThat(userCaptor.getValue().getLastName()).isEqualTo("Example");
     assertThat(userCaptor.getValue().getTitle()).isEqualTo("Student");
     assertThat(userCaptor.getValue().getPicture()).isEqualTo("https://example.com/pic.png");
+  }
+
+  @Test
+  void listUserDirectory_filtersInvalidKeycloakIdsAndAddsDbProjection() {
+    UUID userId = UUID.randomUUID();
+    KeycloakUserRepresentation valid = new KeycloakUserRepresentation();
+    valid.setId(userId.toString());
+    valid.setEmail("user@example.com");
+    valid.setUsername("user1");
+    valid.setFirstName("Alice");
+    valid.setLastName("Example");
+    valid.setEnabled(true);
+    KeycloakUserRepresentation invalid = new KeycloakUserRepresentation();
+    invalid.setId("not-a-uuid");
+    KeycloakUserRepresentation missing = new KeycloakUserRepresentation();
+
+    User dbUser = new User();
+    dbUser.setId(userId);
+    dbUser.setRoles(java.util.Set.of(com.pm4.istp.user.db.entities.UserRoleEnum.ROLE_ADMINISTRATOR));
+    when(keycloakAdminClient.listUsers("alice", 0, 200)).thenReturn(List.of(valid, invalid, missing));
+    when(userRepository.findById(userId)).thenReturn(Optional.of(dbUser));
+
+    var result = adminUserService.listUserDirectory(" alice ", -1, 500);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst().getId()).isEqualTo(userId);
+    assertThat(result.getFirst().isEnabled()).isTrue();
+    assertThat(result.getFirst().isProvisioned()).isTrue();
+    assertThat(result.getFirst().getRoles()).containsExactly("ROLE_ADMINISTRATOR");
+  }
+
+  @Test
+  void listUsers_mapsRepositoryPageAndNormalizesBlankQuery() {
+    UUID userId = UUID.randomUUID();
+    User user = new User();
+    user.setId(userId);
+    user.setName("Alice Example");
+    user.setEmail("user@example.com");
+    user.setUsername("user1");
+    user.setRoles(java.util.Set.of(com.pm4.istp.user.db.entities.UserRoleEnum.ROLE_STUDENT));
+    var pageable = PageRequest.of(0, 10);
+    when(userRepository.searchUsers(null, pageable)).thenReturn(new PageImpl<>(List.of(user)));
+
+    var page = adminUserService.listUsers("   ", pageable);
+
+    assertThat(page.getContent()).singleElement().satisfies(dto -> {
+      assertThat(dto.getId()).isEqualTo(userId);
+      assertThat(dto.getName()).isEqualTo("Alice Example");
+      assertThat(dto.getRoles()).containsExactly("ROLE_STUDENT");
+    });
+  }
+
+  @Test
+  void getUser_withoutDbRow_usesKeycloakAttributesAndManagedRoles() {
+    UUID userId = UUID.randomUUID();
+    KeycloakUserRepresentation kcUser = new KeycloakUserRepresentation();
+    kcUser.setId(userId.toString());
+    kcUser.setEmail("user@example.com");
+    kcUser.setUsername("user1");
+    kcUser.setFirstName(" Alice ");
+    kcUser.setLastName(" Example ");
+    kcUser.setAttributes(Map.of("title", List.of("Student"), "picture", List.of("pic.png")));
+    KeycloakRoleRepresentation student = new KeycloakRoleRepresentation();
+    student.setName("ROLE_STUDENT");
+    KeycloakRoleRepresentation external = new KeycloakRoleRepresentation();
+    external.setName("offline_access");
+    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+    when(keycloakAdminClient.getUser(userId)).thenReturn(kcUser);
+    when(keycloakAdminClient.listUserRealmRoles(userId)).thenReturn(List.of(student, external));
+
+    var detail = adminUserService.getUser(userId);
+
+    assertThat(detail.getName()).isEqualTo("Alice Example");
+    assertThat(detail.getTitle()).isEqualTo("Student");
+    assertThat(detail.getPicture()).isEqualTo("pic.png");
+    assertThat(detail.getRoles()).containsExactly("ROLE_STUDENT");
+    assertThat(detail.isProvisioned()).isFalse();
+  }
+
+  @Test
+  void simpleUserActions_validateInputsAndDelegateToKeycloak() {
+    UUID userId = UUID.randomUUID();
+    var passwordRequest = new com.pm4.istp.admin.dto.AdminSetUserPasswordRequestDto();
+    passwordRequest.setPassword("Secret123!");
+    passwordRequest.setTemporary(true);
+
+    assertThatThrownBy(() -> adminUserService.listUserSessions(null))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> adminUserService.logoutUser(null))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> adminUserService.sendPasswordResetEmail(null))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> adminUserService.setUserPassword(userId, null))
+        .isInstanceOf(IllegalArgumentException.class);
+
+    adminUserService.listUserSessions(userId);
+    adminUserService.logoutUser(userId);
+    adminUserService.sendPasswordResetEmail(userId);
+    adminUserService.setUserPassword(userId, passwordRequest);
+
+    verify(keycloakAdminClient).listUserSessions(userId);
+    verify(keycloakAdminClient).logoutUser(userId);
+    verify(keycloakAdminClient).executeActionsEmail(userId, List.of("UPDATE_PASSWORD"));
+    verify(keycloakAdminClient).resetPassword(userId, "Secret123!", true);
   }
 
   @Test

@@ -11,6 +11,7 @@ import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
 import com.pm4.istp.course.exceptions.InvalidCourseLabException;
+import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
@@ -63,6 +64,40 @@ class CourseDtoAndExceptionTest {
   }
 
   @Test
+  void newCodeExceptions_coverRemainingConstructors() {
+    RuntimeException cause = new RuntimeException("cause");
+
+    assertThat(new ChallengeAlreadySolvedException("solved")).hasMessage("solved");
+    assertThat(new ChallengeAlreadySolvedException("solved", cause)).hasCause(cause);
+    assertThat(new ChallengeAlreadySolvedException(cause)).hasCause(cause);
+    assertThat(new ChallengeAlreadySolvedException("solved", cause, false, false))
+        .hasMessage("solved");
+    assertThat(new CourseParticipantNotFoundException("missing")).hasMessage("missing");
+    assertThat(new CourseParticipantNotFoundException("missing", cause)).hasCause(cause);
+    assertThat(new CourseParticipantNotFoundException(cause)).hasCause(cause);
+    assertThat(new CourseParticipantNotFoundException("missing", cause, false, false))
+        .hasMessage("missing");
+    assertThat(new InvalidCourseLabException()).hasNoCause();
+    assertThat(new InvalidCourseLabException("bad")).hasMessage("bad");
+    assertThat(new InvalidCourseLabException(cause)).hasCause(cause);
+    assertThat(new InvalidCourseLabException("bad", cause, false, false)).hasMessage("bad");
+    assertThat(new InvalidInviteCodeException()).hasNoCause();
+    assertThat(new InvalidInviteCodeException("bad")).hasMessage("bad");
+    assertThat(new InvalidInviteCodeException("bad", cause)).hasCause(cause);
+    assertThat(new InvalidInviteCodeException("bad", cause, false, false)).hasMessage("bad");
+    assertThat(new InviteCodeGenerationException()).hasNoCause();
+    assertThat(new InviteCodeGenerationException("failed", cause)).hasCause(cause);
+    assertThat(new InviteCodeGenerationException(cause)).hasCause(cause);
+    assertThat(new InviteCodeGenerationException("failed", cause, false, false))
+        .hasMessage("failed");
+    assertThat(new LabNotFoundException()).hasNoCause();
+    assertThat(new LabNotFoundException("missing")).hasMessage("missing");
+    assertThat(new LabNotFoundException("missing", cause)).hasCause(cause);
+    assertThat(new LabNotFoundException(cause)).hasCause(cause);
+    assertThat(new InvalidCourseShortDescriptionException("too short")).hasMessage("too short");
+  }
+
+  @Test
   void remainingIstpExceptionConstructors_areCovered() {
     RuntimeException cause = new RuntimeException("cause");
 
@@ -77,9 +112,11 @@ class CourseDtoAndExceptionTest {
     assertThat(new CourseNotFoundException(cause)).hasCause(cause);
     assertThat(new CourseNotFoundException("missing", cause, false, false)).hasMessage("missing");
     assertThat(new InvalidCourseCollaboratorException()).hasNoCause();
+    assertThat(new InvalidCourseCollaboratorException("bad", cause)).hasCause(cause);
     assertThat(new InvalidCourseCollaboratorException(cause)).hasCause(cause);
     assertThat(new InvalidCourseCollaboratorException("bad", cause, false, false)).hasMessage("bad");
     assertThat(new LabAccessDeniedException()).hasNoCause();
+    assertThat(new LabAccessDeniedException("denied", cause)).hasCause(cause);
     assertThat(new LabAccessDeniedException(cause)).hasCause(cause);
     assertThat(new LabAccessDeniedException("denied", cause, false, false)).hasMessage("denied");
   }

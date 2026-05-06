@@ -21,14 +21,24 @@ import com.pm4.istp.course.services.LabService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.ContainerStatusBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
+import io.fabric8.kubernetes.api.model.networking.v1.IngressBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.IngressList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
 import io.fabric8.kubernetes.client.dsl.ServiceResource;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -120,7 +130,7 @@ class LabPodServiceTest {
     @SuppressWarnings({"rawtypes", "unchecked"})
     void createResources_createsOnlyAppContainerAppPortAndAppIngressRule() {
         KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
-        NonNamespaceOperation deploymentOperation =
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
                 mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
         NonNamespaceOperation serviceOperation =
                 mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
@@ -230,6 +240,193 @@ class LabPodServiceTest {
     // ── Client cache: shutdown ───────────────────────────────────────────────
 
     @Test
+    void getPod_returnsNotFound_whenNoDeploymentExists() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        stubFindDeployments(client, userId, labId, List.of());
+
+        PodStatusResponse response = service.getPod(userId, labId);
+
+        assertThat(response.status()).isEqualTo(PodStatusEnum.NOT_FOUND);
+        assertThat(response.podName()).isNull();
+    }
+
+    @Test
+    void getPod_buildsRunningResponseFromDeploymentIngressAndAdminTtl() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        long createdAt = Instant.now().minusSeconds(60).getEpochSecond();
+        Map<String, String> labels = podLabels(userId, labId, createdAt);
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-abcdef12")
+                        .withLabels(labels)
+                        .endMetadata()
+                        .withNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build();
+        Ingress ingress =
+                new IngressBuilder()
+                        .withNewSpec()
+                        .addNewRule()
+                        .withHost("custom.example.test")
+                        .withNewHttp()
+                        .addNewPath()
+                        .withNewBackend()
+                        .withNewService()
+                        .withNewPort()
+                        .withNumber(80)
+                        .endPort()
+                        .endService()
+                        .endBackend()
+                        .endPath()
+                        .endHttp()
+                        .endRule()
+                        .endSpec()
+                        .build();
+        AdminConfig config = adminConfigWith("kubeconfig", 120);
+
+        stubFindDeployments(client, userId, labId, List.of(deployment));
+        stubPodsForLabels(client, labels, List.of());
+        stubIngressGet(client, "pod-abcdef12-ingress", ingress);
+        when(adminConfigurationService.getAdminConfiguration()).thenReturn(Optional.of(config));
+
+        PodStatusResponse response = service.getPod(userId, labId);
+
+        assertThat(response.status()).isEqualTo(PodStatusEnum.RUNNING);
+        assertThat(response.podName()).isEqualTo("pod-abcdef12");
+        assertThat(response.appUrl()).isEqualTo("http://custom.example.test");
+        assertThat(response.createdAt()).isEqualTo(Instant.ofEpochSecond(createdAt));
+        assertThat(response.expiresAt()).isEqualTo(Instant.ofEpochSecond(createdAt + 120));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void getPod_fallsBackToGeneratedHttpsHost_whenIngressCannotBeInspected() {
+        LabPodService tlsService =
+                new LabPodService(
+                        adminConfigurationService,
+                        labService,
+                        dockerImageAvailabilityService,
+                        "default",
+                        "test.domain",
+                        true,
+                        " Team Alpha! ");
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        Map<String, String> labels = podLabels(userId, labId, Instant.now().getEpochSecond());
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-feedbeef")
+                        .withLabels(labels)
+                        .endMetadata()
+                        .build();
+        AtomicReference<KubernetesClient> ref =
+                (AtomicReference<KubernetesClient>) ReflectionTestUtils.getField(tlsService, "clientRef");
+        assert ref != null;
+        ref.set(client);
+        stubFindDeployments(client, userId, labId, List.of(deployment));
+        stubPodsForLabels(client, labels, List.of());
+        stubIngressGetThrows(client, "pod-feedbeef-ingress");
+        when(adminConfigurationService.getAdminConfiguration()).thenReturn(Optional.empty());
+
+        PodStatusResponse response = tlsService.getPod(userId, labId);
+
+        assertThat(response.status()).isEqualTo(PodStatusEnum.PROVISIONING);
+        assertThat(response.appUrl()).isEqualTo("https://app-team-alpha-feedbeef.test.domain");
+    }
+
+    @Test
+    void deletePod_returnsFalse_whenNoDeploymentExists() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        stubFindDeployments(client, userId, labId, List.of());
+
+        assertThat(service.deletePod(userId, labId)).isFalse();
+    }
+
+    @Test
+    void deletePod_rejectsDeploymentWhoseLabelsDoNotMatchCaller() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-badlabel")
+                        .addToLabels("istp.pm4.ch/user-id", UUID.randomUUID().toString())
+                        .addToLabels("istp.pm4.ch/lab-id", labId.toString())
+                        .endMetadata()
+                        .build();
+        stubFindDeployments(client, userId, labId, List.of(deployment));
+
+        assertThatThrownBy(() -> service.deletePod(userId, labId))
+                .isInstanceOf(LabPodException.class)
+                .hasMessageContaining("Ownership check failed");
+    }
+
+    @Test
+    void deletePod_deletesDeploymentServiceAndIngressByInstanceName() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-1234abcd")
+                        .withLabels(podLabels(userId, labId, Instant.now().getEpochSecond()))
+                        .endMetadata()
+                        .build();
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                stubFindDeployments(client, userId, labId, List.of(deployment));
+        RollableScalableResource<Deployment> deploymentResource = mock(RollableScalableResource.class);
+        when(deploymentOperation.withName("pod-1234abcd")).thenReturn(deploymentResource);
+        stubDeleteResources(client, "pod-1234abcd");
+
+        assertThat(service.deletePod(userId, labId)).isTrue();
+
+        verify(deploymentResource).delete();
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void reapExpiredPods_deletesOnlyDeploymentsOlderThanTtl() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        long now = Instant.now().getEpochSecond();
+        Deployment expired =
+                deploymentForReap("pod-expired", Map.of("istp.pm4.ch/created-at-epoch", String.valueOf(now - 500)));
+        Deployment fresh =
+                deploymentForReap("pod-fresh", Map.of("istp.pm4.ch/created-at-epoch", String.valueOf(now)));
+        Deployment missingLabel = deploymentForReap("pod-missing", Map.of());
+        when(client.apps().deployments().inNamespace("default")).thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel("app", "istp-lab-pod")).thenReturn(deploymentOperation);
+        DeploymentList deploymentList = new DeploymentList();
+        deploymentList.setItems(List.of(expired, fresh, missingLabel));
+        RollableScalableResource<Deployment> expiredResource = mock(RollableScalableResource.class);
+        when(deploymentOperation.list()).thenReturn(deploymentList);
+        when(deploymentOperation.withName("pod-expired")).thenReturn(expiredResource);
+
+        service.reapExpiredPods(300);
+
+        verify(expiredResource).delete();
+    }
+
+    @Test
     void shutdown_closesAndClearsClient() {
         KubernetesClient mockClient = mock(KubernetesClient.class);
         setClientRef(mockClient);
@@ -309,6 +506,89 @@ class LabPodServiceTest {
     }
 
     // ── AdminConfig helper ───────────────────────────────────────────────────
+
+    @SuppressWarnings("unchecked")
+    private NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> stubFindDeployments(
+            KubernetesClient client, UUID userId, UUID labId, List<Deployment> deployments) {
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        when(client.apps().deployments().inNamespace("default")).thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel("app", "istp-lab-pod")).thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel("istp.pm4.ch/user-id", userId.toString()))
+                .thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel("istp.pm4.ch/lab-id", labId.toString()))
+                .thenReturn(deploymentOperation);
+        DeploymentList deploymentList = new DeploymentList();
+        deploymentList.setItems(deployments);
+        when(deploymentOperation.list()).thenReturn(deploymentList);
+        return deploymentOperation;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void stubPodsForLabels(KubernetesClient client, Map<String, String> labels, List<Pod> pods) {
+        NonNamespaceOperation<Pod, PodList, PodResource> podOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        PodList podList = new PodList();
+        podList.setItems(pods);
+        when(client.pods().inNamespace("default")).thenReturn(podOperation);
+        when(podOperation.withLabels(labels)).thenReturn(podOperation);
+        when(podOperation.list()).thenReturn(podList);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void stubDeleteResources(KubernetesClient client, String instanceName) {
+        NonNamespaceOperation serviceOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        NonNamespaceOperation ingressOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        ServiceResource serviceResource = mock(ServiceResource.class);
+        Resource ingressResource = mock(Resource.class);
+        when(client.services().inNamespace("default")).thenReturn(serviceOperation);
+        when(serviceOperation.withName(instanceName + "-svc")).thenReturn(serviceResource);
+        when(client.network().v1().ingresses().inNamespace("default")).thenReturn(ingressOperation);
+        when(ingressOperation.withName(instanceName + "-ingress")).thenReturn(ingressResource);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void stubIngressGet(KubernetesClient client, String ingressName, Ingress ingress) {
+        NonNamespaceOperation<Ingress, IngressList, Resource<Ingress>> ingressOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        Resource<Ingress> ingressResource = mock(Resource.class);
+        when(client.network().v1().ingresses().inNamespace("default")).thenReturn(ingressOperation);
+        when(ingressOperation.withName(ingressName)).thenReturn(ingressResource);
+        when(ingressResource.get()).thenReturn(ingress);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void stubIngressGetThrows(KubernetesClient client, String ingressName) {
+        NonNamespaceOperation<Ingress, IngressList, Resource<Ingress>> ingressOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        Resource<Ingress> ingressResource = mock(Resource.class);
+        when(client.network().v1().ingresses().inNamespace("default")).thenReturn(ingressOperation);
+        when(ingressOperation.withName(ingressName)).thenReturn(ingressResource);
+        when(ingressResource.get()).thenThrow(new RuntimeException("api unavailable"));
+    }
+
+    private Map<String, String> podLabels(UUID userId, UUID labId, long createdAtEpoch) {
+        return Map.of(
+                "app",
+                "istp-lab-pod",
+                "istp.pm4.ch/user-id",
+                userId.toString(),
+                "istp.pm4.ch/lab-id",
+                labId.toString(),
+                "istp.pm4.ch/created-at-epoch",
+                String.valueOf(createdAtEpoch));
+    }
+
+    private Deployment deploymentForReap(String name, Map<String, String> labels) {
+        return new DeploymentBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .withLabels(labels)
+                .endMetadata()
+                .build();
+    }
 
     private AdminConfig adminConfigWith(String kubeconfig, int ttl) {
         AdminConfig cfg = new AdminConfig();
