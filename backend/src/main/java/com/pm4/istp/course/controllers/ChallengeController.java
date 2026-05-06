@@ -309,7 +309,8 @@ public class ChallengeController {
         @ApiResponse(
             responseCode = "200",
             description = "Challenge retrieved successfully",
-            content = @Content(schema = @Schema(implementation = ChallengeStudentSolutionDto.class))),
+            content =
+                @Content(schema = @Schema(implementation = ChallengeStudentSolutionDto.class))),
         @ApiResponse(
             responseCode = "403",
             description = "Access denied (not instructor of course)",

@@ -11,9 +11,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Instructor-facing view of a student's challenge progress and submissions.
- * Similar to {@link ChallengeStudentDto}, but omits the challenge's docker image and MC attempt
- * mode while including each sub-task's submitted solution.
+ * Instructor-facing view of a student's challenge progress and submissions. Similar to {@link
+ * ChallengeStudentDto}, but omits the challenge's docker image and MC attempt mode while including
+ * each sub-task's submitted solution.
  */
 @Data
 @AllArgsConstructor
@@ -37,4 +37,3 @@ public class ChallengeStudentSolutionDto {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 }
-

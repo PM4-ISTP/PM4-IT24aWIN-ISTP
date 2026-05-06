@@ -66,7 +66,8 @@ public class ChallengeServiceImpl implements ChallengeService {
   private static final String SUB_TASK_NOT_FOUND_MSG = "Sub-task with ID '%s' not found";
 
   private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
-  private static final String CHALLENGE_NOT_PART_OF_COURSE_MSG = "Challenge '%s' is not part of course '%s'";
+  private static final String CHALLENGE_NOT_PART_OF_COURSE_MSG =
+      "Challenge '%s' is not part of course '%s'";
 
   private final UserRepository userRepository;
   private final ChallengeRepository challengeRepository;
@@ -436,7 +437,8 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId)) {
       throw new CourseParticipantNotFoundException(
-          String.format("Participant with ID '%s' is not enrolled in course '%s'", participantId, courseId));
+          String.format(
+              "Participant with ID '%s' is not enrolled in course '%s'", participantId, courseId));
     }
 
     ChallengeStudentSolutionDto dto = challengeMapper.toStudentSolutionDto(challenge);
@@ -763,16 +765,18 @@ public class ChallengeServiceImpl implements ChallengeService {
     dto.setSolved(!subTasks.isEmpty() && solvedCount == subTasks.size());
   }
 
-  private void populateStudentSolution(ChallengeStudentSolutionDto dto, UUID participantId, Challenge entity) {
+  private void populateStudentSolution(
+      ChallengeStudentSolutionDto dto, UUID participantId, Challenge entity) {
     List<SubTaskStudentDto> subTasks = dto.getSubTasks() == null ? List.of() : dto.getSubTasks();
     List<UUID> subTaskIds = new ArrayList<>();
     for (SubTaskStudentDto st : subTasks) {
       subTaskIds.add(st.getId());
     }
     Set<UUID> solvedIds =
-            subTaskIds.isEmpty()
-                    ? Set.of()
-                    : new HashSet<>(subTaskCompletionRepository.findSolvedSubTaskIds(participantId, subTaskIds));
+        subTaskIds.isEmpty()
+            ? Set.of()
+            : new HashSet<>(
+                subTaskCompletionRepository.findSolvedSubTaskIds(participantId, subTaskIds));
 
     Map<UUID, String> flagsById = new HashMap<>();
     for (SubTask st : entity.getSubTasks()) {
@@ -785,19 +789,19 @@ public class ChallengeServiceImpl implements ChallengeService {
     for (SubTask st : entity.getSubTasks()) {
       if (st.getType() == SubTaskType.MULTIPLE_CHOICE) {
         studentOptionSubmissionRepository
-                .findByUserIdAndSubTaskId(participantId, st.getId())
-                .ifPresent(
-                        sub -> {
-                          selectedOptionBySubTask.put(st.getId(), sub.getSelectedOption().getId());
-                          // Expose correct option only when student got it wrong or the solution is missing
-                          if (!sub.isCorrect() || solvedIds.contains(st.getId())) {
-                            st.getOptions().stream()
-                                    .filter(SubTaskOption::isCorrect)
-                                    .map(SubTaskOption::getId)
-                                    .findFirst()
-                                    .ifPresent(cid -> correctOptionBySubTask.put(st.getId(), cid));
-                          }
-                        });
+            .findByUserIdAndSubTaskId(participantId, st.getId())
+            .ifPresent(
+                sub -> {
+                  selectedOptionBySubTask.put(st.getId(), sub.getSelectedOption().getId());
+                  // Expose correct option only when student got it wrong or the solution is missing
+                  if (!sub.isCorrect() || solvedIds.contains(st.getId())) {
+                    st.getOptions().stream()
+                        .filter(SubTaskOption::isCorrect)
+                        .map(SubTaskOption::getId)
+                        .findFirst()
+                        .ifPresent(cid -> correctOptionBySubTask.put(st.getId(), cid));
+                  }
+                });
       }
     }
 
