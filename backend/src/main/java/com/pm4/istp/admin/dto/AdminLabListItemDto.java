@@ -18,6 +18,7 @@ public class AdminLabListItemDto {
   private String description;
   private LabStatusEnum status;
   private LabDifficultyEnum difficulty;
+  private String dockerImage;
   private int maxScore;
   private long courseCount;
   private LocalDateTime createdAt;
