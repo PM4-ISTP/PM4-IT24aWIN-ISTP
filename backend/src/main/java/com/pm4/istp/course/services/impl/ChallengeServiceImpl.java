@@ -789,8 +789,8 @@ public class ChallengeServiceImpl implements ChallengeService {
                 .ifPresent(
                         sub -> {
                           selectedOptionBySubTask.put(st.getId(), sub.getSelectedOption().getId());
-                          // Expose correct option only when the student got it wrong
-                          if (!sub.isCorrect()) {
+                          // Expose correct option only when student got it wrong or the solution is missing
+                          if (!sub.isCorrect() || solvedIds.contains(st.getId())) {
                             st.getOptions().stream()
                                     .filter(SubTaskOption::isCorrect)
                                     .map(SubTaskOption::getId)
