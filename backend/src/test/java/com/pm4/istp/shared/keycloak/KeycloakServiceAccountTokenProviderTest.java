@@ -57,6 +57,22 @@ class KeycloakServiceAccountTokenProviderTest {
         .hasMessageContaining("Failed to fetch");
   }
 
+  @Test
+  void getAccessToken_refreshesWhenCachedTokenExpiresWithinSafetyWindow() throws Exception {
+    AtomicInteger calls = new AtomicInteger();
+    startServer(
+        exchange -> {
+          int call = calls.incrementAndGet();
+          write(exchange, 200, "{\"access_token\":\"token-" + call + "\",\"expires_in\":5}");
+        });
+
+    KeycloakServiceAccountTokenProvider provider = providerForServer();
+
+    assertThat(provider.getAccessToken()).isEqualTo("token-1");
+    assertThat(provider.getAccessToken()).isEqualTo("token-2");
+    assertThat(calls).hasValue(2);
+  }
+
   private KeycloakServiceAccountTokenProvider providerForServer() {
     KeycloakAdminProperties properties = new KeycloakAdminProperties();
     properties.setBaseUrl("http://localhost:" + server.getAddress().getPort() + "/");
