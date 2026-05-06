@@ -540,40 +540,42 @@ export default function CourseResultsPage() {
             </Text>
           </Stack>
         </Group>
-        <Select
-          placeholder="All Labs"
-          leftSection={<IconFilter size={14} />}
-          data={labSelectData}
-          value={labFilter}
-          onChange={setLabFilter}
-          clearable
-          w={260}
-          styles={{
-            input: {
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "#f1f5f9",
-            },
-            dropdown: { background: "#1e293b", border: "1px solid rgba(255,255,255,0.12)" },
-          }}
-        />
-        <Select
-          placeholder="Lab Status"
-          leftSection={<IconFilter size={14} />}
-          data={submissionStatuses}
-          value={statusFilter}
-          onChange={setStatusFilter}
-          clearable
-          w={260}
-          styles={{
-            input: {
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "#f1f5f9",
-            },
-            dropdown: { background: "#1e293b", border: "1px solid rgba(255,255,255,0.12)" },
-          }}
-        />
+        <Group>
+          <Select
+            placeholder="All Labs"
+            leftSection={<IconFilter size={14} />}
+            data={labSelectData}
+            value={labFilter}
+            onChange={setLabFilter}
+            clearable
+            w={260}
+            styles={{
+              input: {
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "#f1f5f9",
+              },
+              dropdown: { background: "#1e293b", border: "1px solid rgba(255,255,255,0.12)" },
+            }}
+          />
+          <Select
+            placeholder="Lab Status"
+            leftSection={<IconFilter size={14} />}
+            data={submissionStatuses}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            clearable
+            w={260}
+            styles={{
+              input: {
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "#f1f5f9",
+              },
+              dropdown: { background: "#1e293b", border: "1px solid rgba(255,255,255,0.12)" },
+            }}
+          />
+        </Group>
       </Group>
 
       {error && (
