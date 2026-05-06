@@ -9,9 +9,9 @@ export const dynamic = "force-dynamic";
 export default async function PlayChallengePage({
   params,
 }: {
-  params: Promise<{ id: string; cid: string }>;
+  params: Promise<{ id: string; lid: string }>;
 }) {
-  const { id: courseId, cid: labId } = await params;
+  const { id: courseId, lid: labId } = await params;
 
   const result = await fetchChallengeForPlay(labId, courseId);
 
