@@ -90,7 +90,11 @@ export default async function InstructorResultsPage(props: {
                     </Group>
                   </Stack>
 
-                  <IconChevronRight size={16} color="rgba(255,255,255,0.3)" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <IconChevronRight
+                    size={16}
+                    color="rgba(255,255,255,0.3)"
+                    style={{ flexShrink: 0, marginTop: 2 }}
+                  />
                 </Group>
               </Box>
             </Link>
