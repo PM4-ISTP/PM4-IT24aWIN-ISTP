@@ -36,6 +36,16 @@ function darken(hex: string, factor: number): string {
   return `#${nr.toString(16).padStart(2, "0")}${ng.toString(16).padStart(2, "0")}${nb.toString(16).padStart(2, "0")}`;
 }
 
+function splitTitle(title: string): [string, string] {
+  const MAX_TOTAL = 34;
+  const MAX_LINE = 17;
+  const t = title.length > MAX_TOTAL ? title.slice(0, MAX_TOTAL) + "…" : title;
+  if (t.length <= MAX_LINE) return [t, ""];
+  let splitAt = t.lastIndexOf(" ", MAX_LINE);
+  if (splitAt <= 0) splitAt = MAX_LINE;
+  return [t.slice(0, splitAt), t.slice(splitAt).trim()];
+}
+
 function CircleBadge({
   color,
   textColor,
@@ -51,6 +61,7 @@ function CircleBadge({
 }) {
   const light = lighten(color, 0.3);
   const dark = darken(color, 0.4);
+  const [line1, line2] = splitTitle(title);
   return (
     <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" width={size} height={size}>
       <defs>
@@ -58,8 +69,8 @@ function CircleBadge({
           <stop offset="0%" stopColor={light} />
           <stop offset="100%" stopColor={dark} />
         </linearGradient>
-        <radialGradient id="cfade" cx="50%" cy="72%" r="52%">
-          <stop offset="0%" stopColor={dark} stopOpacity="0.85" />
+        <radialGradient id="cfade" cx="50%" cy="78%" r="55%">
+          <stop offset="0%" stopColor={dark} stopOpacity="0.75" />
           <stop offset="100%" stopColor={dark} stopOpacity="0" />
         </radialGradient>
         <clipPath id="cclip">
@@ -67,39 +78,20 @@ function CircleBadge({
         </clipPath>
       </defs>
       <circle cx="150" cy="150" r="130" fill="url(#cbg)" />
-      <circle
-        cx="150"
-        cy="150"
-        r="120"
-        fill="none"
-        stroke={textColor}
-        strokeWidth="2"
-        strokeOpacity="0.25"
-      />
-      <circle
-        cx="150"
-        cy="150"
-        r="108"
-        fill="none"
-        stroke={textColor}
-        strokeWidth="1"
-        strokeOpacity="0.15"
-      />
-      <rect x="20" y="195" width="260" height="90" fill="url(#cfade)" clipPath="url(#cclip)" />
-      <text x="150" y="158" textAnchor="middle" fontSize="72" dominantBaseline="middle">
+      <circle cx="150" cy="150" r="120" fill="none" stroke={textColor} strokeWidth="2" strokeOpacity="0.25" />
+      <circle cx="150" cy="150" r="108" fill="none" stroke={textColor} strokeWidth="1" strokeOpacity="0.15" />
+      <rect x="20" y="185" width="260" height="110" fill="url(#cfade)" clipPath="url(#cclip)" />
+      <text x="150" y={line2 ? "118" : "128"} textAnchor="middle" fontSize="68" dominantBaseline="middle">
         {icon}
       </text>
-      <text
-        x="150"
-        y="245"
-        textAnchor="middle"
-        fontSize="18"
-        fill={textColor}
-        fontWeight="bold"
-        fontFamily="system-ui, sans-serif"
-      >
-        {title}
+      <text x="150" y={line2 ? "198" : "208"} textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+        {line1}
       </text>
+      {line2 ? (
+        <text x="150" y="220" textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+          {line2}
+        </text>
+      ) : null}
     </svg>
   );
 }
@@ -127,6 +119,7 @@ function HexBadge({
       const angle = (Math.PI / 180) * (60 * i - 30);
       return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
     }).join(" ");
+  const [line1, line2] = splitTitle(title);
   return (
     <svg
       viewBox="0 0 300 310"
@@ -139,8 +132,8 @@ function HexBadge({
           <stop offset="0%" stopColor={light} />
           <stop offset="100%" stopColor={dark} />
         </linearGradient>
-        <radialGradient id="hfade" cx="50%" cy="75%" r="50%">
-          <stop offset="0%" stopColor={dark} stopOpacity="0.85" />
+        <radialGradient id="hfade" cx="50%" cy="78%" r="52%">
+          <stop offset="0%" stopColor={dark} stopOpacity="0.75" />
           <stop offset="100%" stopColor={dark} stopOpacity="0" />
         </radialGradient>
         <clipPath id="hclip">
@@ -148,35 +141,20 @@ function HexBadge({
         </clipPath>
       </defs>
       <polygon points={hexPoints(R)} fill="url(#hbg)" />
-      <polygon
-        points={hexPoints(R - 10)}
-        fill="none"
-        stroke={textColor}
-        strokeWidth="2"
-        strokeOpacity="0.25"
-      />
-      <polygon
-        points={hexPoints(R - 22)}
-        fill="none"
-        stroke={textColor}
-        strokeWidth="1"
-        strokeOpacity="0.15"
-      />
+      <polygon points={hexPoints(R - 10)} fill="none" stroke={textColor} strokeWidth="2" strokeOpacity="0.25" />
+      <polygon points={hexPoints(R - 22)} fill="none" stroke={textColor} strokeWidth="1" strokeOpacity="0.15" />
       <rect x="20" y="195" width="260" height="100" fill="url(#hfade)" clipPath="url(#hclip)" />
-      <text x={cx} y={cy - 12} textAnchor="middle" fontSize="72" dominantBaseline="middle">
+      <text x={cx} y={line2 ? cy - 42 : cy - 30} textAnchor="middle" fontSize="68" dominantBaseline="middle">
         {icon}
       </text>
-      <text
-        x={cx}
-        y={cy + 72}
-        textAnchor="middle"
-        fontSize="18"
-        fill={textColor}
-        fontWeight="bold"
-        fontFamily="system-ui, sans-serif"
-      >
-        {title}
+      <text x={cx} y={line2 ? "188" : "200"} textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+        {line1}
       </text>
+      {line2 ? (
+        <text x={cx} y="210" textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+          {line2}
+        </text>
+      ) : null}
     </svg>
   );
 }
@@ -292,21 +270,25 @@ function MedalBadge({
         strokeOpacity="0.12"
       />
       <circle cx="150" cy="215" r="120" fill="url(#mshine)" />
-      <rect x="20" y="258" width="260" height="80" fill="url(#mfade)" clipPath="url(#mclip)" />
-      <text x="150" y="220" textAnchor="middle" fontSize="72" dominantBaseline="middle">
-        {icon}
-      </text>
-      <text
-        x="150"
-        y="305"
-        textAnchor="middle"
-        fontSize="17"
-        fill={textColor}
-        fontWeight="bold"
-        fontFamily="system-ui, sans-serif"
-      >
-        {title}
-      </text>
+      <rect x="20" y="250" width="260" height="90" fill="url(#mfade)" clipPath="url(#mclip)" />
+      {(() => {
+        const [line1, line2] = splitTitle(title);
+        return (
+          <>
+            <text x="150" y={line2 ? "178" : "190"} textAnchor="middle" fontSize="68" dominantBaseline="middle">
+              {icon}
+            </text>
+            <text x="150" y={line2 ? "257" : "269"} textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+              {line1}
+            </text>
+            {line2 ? (
+              <text x="150" y="279" textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+                {line2}
+              </text>
+            ) : null}
+          </>
+        );
+      })()}
     </svg>
   );
 }
@@ -319,16 +301,15 @@ export default function BadgeSvg({
   title = "",
   size = 200,
 }: BadgeSvgProps) {
-  const truncated = title.length > 20 ? title.slice(0, 20) + "…" : title;
   if (template === 2)
     return (
-      <HexBadge color={color} textColor={textColor} icon={icon} title={truncated} size={size} />
+      <HexBadge color={color} textColor={textColor} icon={icon} title={title} size={size} />
     );
   if (template === 3)
     return (
-      <MedalBadge color={color} textColor={textColor} icon={icon} title={truncated} size={size} />
+      <MedalBadge color={color} textColor={textColor} icon={icon} title={title} size={size} />
     );
   return (
-    <CircleBadge color={color} textColor={textColor} icon={icon} title={truncated} size={size} />
+    <CircleBadge color={color} textColor={textColor} icon={icon} title={title} size={size} />
   );
 }
