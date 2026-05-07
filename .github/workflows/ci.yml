@@ -142,6 +142,7 @@ jobs:
         run: ./gradlew test jacocoTestReport
 
       - name: Run SonarQube analysis
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         run: ./gradlew sonar
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
