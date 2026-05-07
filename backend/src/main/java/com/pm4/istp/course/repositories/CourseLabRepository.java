@@ -80,4 +80,17 @@ public interface CourseLabRepository extends JpaRepository<CourseLab, UUID> {
       order by cc.dueAt asc
       """)
   List<Object[]> findDeadlinesForUser(@Param("userId") UUID userId);
+
+  @Query(
+      """
+      select cc.course.id, cc.course.title, cc.lab.id, cc.lab.title
+      from CourseLab cc
+      where cc.lab.id = :labId
+      and exists (
+        select 1 from CourseEnrollment e where e.course = cc.course and e.participant.id = :userId
+      )
+      order by cc.course.title asc
+      """)
+  List<Object[]> findEnrolledCourseLabSummariesForUserAndLab(
+      @Param("userId") UUID userId, @Param("labId") UUID labId);
 }
