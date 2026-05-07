@@ -78,17 +78,55 @@ function CircleBadge({
         </clipPath>
       </defs>
       <circle cx="150" cy="150" r="130" fill="url(#cbg)" />
-      <circle cx="150" cy="150" r="120" fill="none" stroke={textColor} strokeWidth="2" strokeOpacity="0.25" />
-      <circle cx="150" cy="150" r="108" fill="none" stroke={textColor} strokeWidth="1" strokeOpacity="0.15" />
+      <circle
+        cx="150"
+        cy="150"
+        r="120"
+        fill="none"
+        stroke={textColor}
+        strokeWidth="2"
+        strokeOpacity="0.25"
+      />
+      <circle
+        cx="150"
+        cy="150"
+        r="108"
+        fill="none"
+        stroke={textColor}
+        strokeWidth="1"
+        strokeOpacity="0.15"
+      />
       <rect x="20" y="185" width="260" height="110" fill="url(#cfade)" clipPath="url(#cclip)" />
-      <text x="150" y={line2 ? "118" : "128"} textAnchor="middle" fontSize="68" dominantBaseline="middle">
+      <text
+        x="150"
+        y={line2 ? "118" : "128"}
+        textAnchor="middle"
+        fontSize="68"
+        dominantBaseline="middle"
+      >
         {icon}
       </text>
-      <text x="150" y={line2 ? "198" : "208"} textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+      <text
+        x="150"
+        y={line2 ? "198" : "208"}
+        textAnchor="middle"
+        fontSize="17"
+        fill={textColor}
+        fontWeight="bold"
+        fontFamily="system-ui, sans-serif"
+      >
         {line1}
       </text>
       {line2 ? (
-        <text x="150" y="220" textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+        <text
+          x="150"
+          y="220"
+          textAnchor="middle"
+          fontSize="17"
+          fill={textColor}
+          fontWeight="bold"
+          fontFamily="system-ui, sans-serif"
+        >
           {line2}
         </text>
       ) : null}
@@ -141,17 +179,51 @@ function HexBadge({
         </clipPath>
       </defs>
       <polygon points={hexPoints(R)} fill="url(#hbg)" />
-      <polygon points={hexPoints(R - 10)} fill="none" stroke={textColor} strokeWidth="2" strokeOpacity="0.25" />
-      <polygon points={hexPoints(R - 22)} fill="none" stroke={textColor} strokeWidth="1" strokeOpacity="0.15" />
+      <polygon
+        points={hexPoints(R - 10)}
+        fill="none"
+        stroke={textColor}
+        strokeWidth="2"
+        strokeOpacity="0.25"
+      />
+      <polygon
+        points={hexPoints(R - 22)}
+        fill="none"
+        stroke={textColor}
+        strokeWidth="1"
+        strokeOpacity="0.15"
+      />
       <rect x="20" y="195" width="260" height="100" fill="url(#hfade)" clipPath="url(#hclip)" />
-      <text x={cx} y={line2 ? cy - 42 : cy - 30} textAnchor="middle" fontSize="68" dominantBaseline="middle">
+      <text
+        x={cx}
+        y={line2 ? cy - 42 : cy - 30}
+        textAnchor="middle"
+        fontSize="68"
+        dominantBaseline="middle"
+      >
         {icon}
       </text>
-      <text x={cx} y={line2 ? "188" : "200"} textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+      <text
+        x={cx}
+        y={line2 ? "188" : "200"}
+        textAnchor="middle"
+        fontSize="17"
+        fill={textColor}
+        fontWeight="bold"
+        fontFamily="system-ui, sans-serif"
+      >
         {line1}
       </text>
       {line2 ? (
-        <text x={cx} y="210" textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+        <text
+          x={cx}
+          y="210"
+          textAnchor="middle"
+          fontSize="17"
+          fill={textColor}
+          fontWeight="bold"
+          fontFamily="system-ui, sans-serif"
+        >
           {line2}
         </text>
       ) : null}
@@ -275,14 +347,36 @@ function MedalBadge({
         const [line1, line2] = splitTitle(title);
         return (
           <>
-            <text x="150" y={line2 ? "178" : "190"} textAnchor="middle" fontSize="68" dominantBaseline="middle">
+            <text
+              x="150"
+              y={line2 ? "178" : "190"}
+              textAnchor="middle"
+              fontSize="68"
+              dominantBaseline="middle"
+            >
               {icon}
             </text>
-            <text x="150" y={line2 ? "257" : "269"} textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+            <text
+              x="150"
+              y={line2 ? "257" : "269"}
+              textAnchor="middle"
+              fontSize="17"
+              fill={textColor}
+              fontWeight="bold"
+              fontFamily="system-ui, sans-serif"
+            >
               {line1}
             </text>
             {line2 ? (
-              <text x="150" y="279" textAnchor="middle" fontSize="17" fill={textColor} fontWeight="bold" fontFamily="system-ui, sans-serif">
+              <text
+                x="150"
+                y="279"
+                textAnchor="middle"
+                fontSize="17"
+                fill={textColor}
+                fontWeight="bold"
+                fontFamily="system-ui, sans-serif"
+              >
                 {line2}
               </text>
             ) : null}
@@ -302,14 +396,8 @@ export default function BadgeSvg({
   size = 200,
 }: BadgeSvgProps) {
   if (template === 2)
-    return (
-      <HexBadge color={color} textColor={textColor} icon={icon} title={title} size={size} />
-    );
+    return <HexBadge color={color} textColor={textColor} icon={icon} title={title} size={size} />;
   if (template === 3)
-    return (
-      <MedalBadge color={color} textColor={textColor} icon={icon} title={title} size={size} />
-    );
-  return (
-    <CircleBadge color={color} textColor={textColor} icon={icon} title={title} size={size} />
-  );
+    return <MedalBadge color={color} textColor={textColor} icon={icon} title={title} size={size} />;
+  return <CircleBadge color={color} textColor={textColor} icon={icon} title={title} size={size} />;
 }
