@@ -5,4 +5,3 @@ public class LabSubmissionClosedException extends RuntimeException {
     super(message);
   }
 }
-

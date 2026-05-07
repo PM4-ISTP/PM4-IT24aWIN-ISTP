@@ -71,7 +71,8 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(LabSubmissionClosedException.class)
-  public ResponseEntity<ErrorDto> handleLabSubmissionClosedException(LabSubmissionClosedException ex) {
+  public ResponseEntity<ErrorDto> handleLabSubmissionClosedException(
+      LabSubmissionClosedException ex) {
     log.warn("Caught LabSubmissionClosedException: {}", ex.getMessage());
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError(ex.getMessage());

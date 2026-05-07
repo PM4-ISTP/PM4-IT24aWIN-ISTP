@@ -332,7 +332,8 @@ public class LabController {
       @Valid @RequestBody ChallengeSubmissionRequestDto request) {
     UUID userId = parseUserId(jwt);
     ChallengeSubmissionResponseDto response =
-        labService.submitChallengeFlag(userId, request.getCourseId(), labId, challengeId, request.getFlag());
+        labService.submitChallengeFlag(
+            userId, request.getCourseId(), labId, challengeId, request.getFlag());
     return ResponseEntity.ok(response);
   }
 
