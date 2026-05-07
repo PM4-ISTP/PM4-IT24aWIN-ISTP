@@ -58,7 +58,6 @@ function avatarColor(name: string): string {
 }
 
 function worstStatus(statuses: SubmissionStatus[]): SubmissionStatus {
-  if (statuses.includes("LATE")) return "LATE";
   if (statuses.includes("IN_PROGRESS")) return "IN_PROGRESS";
   if (statuses.includes("ON_TIME")) return "ON_TIME";
   return "NOT_SUBMITTED";
@@ -67,9 +66,7 @@ function worstStatus(statuses: SubmissionStatus[]): SubmissionStatus {
 function statusLabel(s: SubmissionStatus): string {
   switch (s) {
     case "ON_TIME":
-      return "On Time";
-    case "LATE":
-      return "Late";
+      return "Submitted";
     case "IN_PROGRESS":
       return "In Progress";
     default:
@@ -80,7 +77,7 @@ function statusLabel(s: SubmissionStatus): string {
 function statusBadgeStyle(s: SubmissionStatus): React.CSSProperties {
   const map: Record<SubmissionStatus, { bg: string; color: string; border: string }> = {
     ON_TIME: { bg: "rgba(20,184,166,0.15)", color: "#2dd4bf", border: "rgba(20,184,166,0.3)" },
-    LATE: { bg: "rgba(239,68,68,0.15)", color: "#f87171", border: "rgba(239,68,68,0.3)" },
+    LATE: { bg: "rgba(20,184,166,0.15)", color: "#2dd4bf", border: "rgba(20,184,166,0.3)" },
     IN_PROGRESS: { bg: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "rgba(96,165,250,0.3)" },
     NOT_SUBMITTED: {
       bg: "rgba(148,163,184,0.1)",
