@@ -89,6 +89,10 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
   const isAdmin = roles.includes(ROLES.ADMINISTRATOR);
   const isInstructor = roles.includes(ROLES.INSTRUCTOR) || isAdmin;
 
+  const isInstructorResults =
+    pathname === "/dashboard/instructor/results" ||
+    /^\/dashboard\/instructor\/[^/]+\/results/.test(pathname);
+
   return (
     <nav style={{ display: "flex", flexDirection: "column", gap: 0, paddingTop: "0.5rem" }}>
       <NavItem href="/dashboard" label="Home" icon="home" active={pathname === "/dashboard"} />
@@ -117,8 +121,15 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
             active={
               pathname === "/dashboard/instructor" ||
               (pathname.startsWith("/dashboard/instructor/") &&
-                !pathname.startsWith("/dashboard/instructor/labs"))
+                !pathname.startsWith("/dashboard/instructor/labs") &&
+                !isInstructorResults)
             }
+          />
+          <NavItem
+            href="/dashboard/instructor/results"
+            label="Results"
+            icon="analytics"
+            active={isInstructorResults}
           />
           <NavItem
             href="/dashboard/instructor/labs"

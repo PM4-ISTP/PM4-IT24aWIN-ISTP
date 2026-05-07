@@ -8,9 +8,11 @@ import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
 import com.pm4.istp.course.dto.CourseLabDeadlineDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionDetailDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
 import com.pm4.istp.course.dto.CreateCourseRequestDto;
@@ -19,6 +21,7 @@ import com.pm4.istp.course.dto.JoinByInviteCodeRequestDto;
 import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.dto.PublicCourseDetailResponseDto;
+import com.pm4.istp.course.dto.UpdateCourseChallengeScoreRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseLabsRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.mappers.CourseMapper;
@@ -283,6 +286,74 @@ public class CourseController {
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     return ResponseEntity.ok(courseService.getCourseChallengeSubmissions(userId, id));
+  }
+
+  @Operation(
+      summary = "Get course lab submission details",
+      description =
+          "Returns per-challenge details for one participant in one lab, including selected options / submitted flags and the current awarded points (manual overrides included).")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Submission details loaded successfully",
+            content =
+                @Content(schema = @Schema(implementation = CourseLabSubmissionDetailDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course, participant or lab not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @GetMapping("/{id}/submissions/{participantId}/{labId}")
+  public ResponseEntity<CourseLabSubmissionDetailDto> getCourseLabSubmissionDetails(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID id,
+      @PathVariable UUID participantId,
+      @PathVariable UUID labId) {
+    UUID userId = parseUserId(jwt);
+    return ResponseEntity.ok(
+        courseService.getCourseLabSubmissionDetails(userId, id, participantId, labId));
+  }
+
+  @Operation(
+      summary = "Update participant score for a course challenge",
+      description =
+          "Allows an instructor to manually override points for one participant in one challenge. Valid range is 0 to the challenge max score.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Score updated successfully",
+            content =
+                @Content(
+                    schema = @Schema(implementation = CourseChallengeSubmissionEntryDto.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course, participant or challenge not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @PutMapping("/{id}/submissions/{participantId}/{challengeId}/score")
+  public ResponseEntity<CourseChallengeSubmissionEntryDto> updateCourseChallengeScore(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID id,
+      @PathVariable UUID participantId,
+      @PathVariable UUID challengeId,
+      @Valid @RequestBody UpdateCourseChallengeScoreRequestDto request) {
+    UUID userId = parseUserId(jwt);
+    return ResponseEntity.ok(
+        courseService.updateCourseChallengeScore(userId, id, participantId, challengeId, request));
   }
 
   @Operation(

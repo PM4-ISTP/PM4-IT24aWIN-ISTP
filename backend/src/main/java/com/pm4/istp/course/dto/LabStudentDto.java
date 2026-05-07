@@ -32,6 +32,9 @@ public class LabStudentDto {
   private int solvedChallengeCount;
   private int totalChallengeCount;
 
+  /** Due date/time in the context of a course assignment (can be null). */
+  private LocalDateTime dueAt;
+
   @JsonProperty("isSolved")
   private boolean solved;
 

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +54,7 @@ import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
+import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.ChallengeOptionRepository;
 import com.pm4.istp.course.repositories.ChallengeRepository;
@@ -76,12 +78,23 @@ class ChallengeServiceImplTest {
   @Mock private ChallengeOptionRepository challengeOptionRepository;
   @Mock private ChallengeCompletionRepository challengeCompletionRepository;
   @Mock private StudentOptionSubmissionRepository studentOptionSubmissionRepository;
+  @Mock private StudentFlagSubmissionRepository studentFlagSubmissionRepository;
   @Mock private CourseEnrollmentRepository courseEnrollmentRepository;
   @Mock private LabMapper labMapper;
   @Mock private DockerImageAvailabilityService dockerImageAvailabilityService;
   @Mock private BadgeService badgeService;
 
   @InjectMocks private LabServiceImpl labService;
+
+  private void stubDefaultSubmissionRepos() {
+    // Not all tests touch these repos, so keep stubs lenient to avoid UnnecessaryStubbingException.
+    lenient()
+        .when(studentFlagSubmissionRepository.findByUserIdAndChallengeId(any(), any()))
+        .thenReturn(Optional.empty());
+    lenient()
+        .when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(any(), any()))
+        .thenReturn(Optional.empty());
+  }
 
   private User buildUser(UUID id) {
     User user = new User();
@@ -814,6 +827,7 @@ class ChallengeServiceImplTest {
 
   @Test
   void submitChallengeFlag_returnsCorrectAndPersists_whenFlagMatches() {
+    stubDefaultSubmissionRepos();
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
@@ -824,15 +838,17 @@ class ChallengeServiceImplTest {
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
-    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId))
-        .thenReturn(true);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)).thenReturn(true);
+    CourseLab courseLab = new CourseLab();
+    courseLab.setDueAt(null);
+    when(courseLabRepository.findByCourseIdAndLabId(courseId, labId)).thenReturn(Optional.of(courseLab));
     when(challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId))
         .thenReturn(false);
     when(challengeCompletionRepository.findSolvedChallengeIds(eq(userId), any()))
         .thenReturn(List.of(challengeId));
 
     ChallengeSubmissionResponseDto result =
-        labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{secret}");
+        labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{secret}");
 
     assertThat(result.isCorrect()).isTrue();
     assertThat(result.isChallengeSolved()).isTrue();
@@ -841,6 +857,7 @@ class ChallengeServiceImplTest {
 
   @Test
   void submitChallengeFlag_returnsIncorrect_andDoesNotPersist_whenFlagMismatches() {
+    stubDefaultSubmissionRepos();
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
@@ -851,15 +868,17 @@ class ChallengeServiceImplTest {
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
-    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId))
-        .thenReturn(true);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)).thenReturn(true);
+    CourseLab courseLab = new CourseLab();
+    courseLab.setDueAt(null);
+    when(courseLabRepository.findByCourseIdAndLabId(courseId, labId)).thenReturn(Optional.of(courseLab));
     when(challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId))
         .thenReturn(false);
     when(challengeCompletionRepository.findSolvedChallengeIds(eq(userId), any()))
         .thenReturn(List.of());
 
     ChallengeSubmissionResponseDto result =
-        labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{wrong}");
+        labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{wrong}");
 
     assertThat(result.isCorrect()).isFalse();
     verify(challengeCompletionRepository, never()).saveAndFlush(any());
@@ -867,7 +886,9 @@ class ChallengeServiceImplTest {
 
   @Test
   void submitChallengeFlag_whenChallengeNotFound_throwsNotFound() {
+    stubDefaultSubmissionRepos();
     UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
 
@@ -876,12 +897,13 @@ class ChallengeServiceImplTest {
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(
-        () -> labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{x}"))
+        () -> labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{x}"))
         .isInstanceOf(ChallengeNotFoundException.class);
   }
 
   @Test
   void submitChallengeFlag_whenChallengeBelongsToOtherChallenge_throwsNotFound() {
+    stubDefaultSubmissionRepos();
     UUID userId = UUID.randomUUID();
     UUID requestedChallengeId = UUID.randomUUID();
     UUID actualChallengeId = UUID.randomUUID();
@@ -896,12 +918,13 @@ class ChallengeServiceImplTest {
 
     assertThatThrownBy(
         () -> labService.submitChallengeFlag(
-            userId, requestedChallengeId, challengeId, "ISTP{secret}"))
+            userId, courseId, requestedChallengeId, challengeId, "ISTP{secret}"))
         .isInstanceOf(ChallengeNotFoundException.class);
   }
 
   @Test
   void submitChallengeFlag_whenNotEnrolled_throwsAccessDenied() {
+    stubDefaultSubmissionRepos();
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
@@ -912,16 +935,16 @@ class ChallengeServiceImplTest {
     when(userRepository.findByIdAndDeletedAtIsNull(userId))
         .thenReturn(Optional.of(buildUser(userId)));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
-    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId))
-        .thenReturn(false);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)).thenReturn(false);
 
     assertThatThrownBy(
-        () -> labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{secret}"))
+        () -> labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{secret}"))
         .isInstanceOf(LabAccessDeniedException.class);
   }
 
   @Test
   void submitChallengeFlag_whenAlreadySolved_throws409() {
+    stubDefaultSubmissionRepos();
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
@@ -932,18 +955,21 @@ class ChallengeServiceImplTest {
     when(userRepository.findByIdAndDeletedAtIsNull(userId))
         .thenReturn(Optional.of(buildUser(userId)));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
-    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId))
-        .thenReturn(true);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)).thenReturn(true);
+    CourseLab courseLab = new CourseLab();
+    courseLab.setDueAt(null);
+    when(courseLabRepository.findByCourseIdAndLabId(courseId, labId)).thenReturn(Optional.of(courseLab));
     when(challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId))
         .thenReturn(true);
 
     assertThatThrownBy(
-        () -> labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{secret}"))
+        () -> labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{secret}"))
         .isInstanceOf(ChallengeAlreadySolvedException.class);
   }
 
   @Test
   void submitChallengeFlag_whenConcurrentInsertHitsUniqueConstraint_throws409() {
+    stubDefaultSubmissionRepos();
     // Race condition: two concurrent correct submissions both pass the
     // existsByUserIdAndChallengeId check, then one trips the unique constraint
     // on insert. We must surface that as 409, not 500.
@@ -957,15 +983,17 @@ class ChallengeServiceImplTest {
     when(userRepository.findByIdAndDeletedAtIsNull(userId))
         .thenReturn(Optional.of(buildUser(userId)));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
-    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId))
-        .thenReturn(true);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)).thenReturn(true);
+    CourseLab courseLab = new CourseLab();
+    courseLab.setDueAt(null);
+    when(courseLabRepository.findByCourseIdAndLabId(courseId, labId)).thenReturn(Optional.of(courseLab));
     when(challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId))
         .thenReturn(false);
     when(challengeCompletionRepository.saveAndFlush(any(ChallengeCompletion.class)))
         .thenThrow(new DataIntegrityViolationException("unique violation"));
 
     assertThatThrownBy(
-        () -> labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{secret}"))
+        () -> labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{secret}"))
         .isInstanceOf(ChallengeAlreadySolvedException.class);
   }
 
@@ -999,7 +1027,10 @@ class ChallengeServiceImplTest {
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
-    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId)).thenReturn(true);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)).thenReturn(true);
+    CourseLab courseLab = new CourseLab();
+    courseLab.setDueAt(null);
+    when(courseLabRepository.findByCourseIdAndLabId(courseId, labId)).thenReturn(Optional.of(courseLab));
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(userId, challengeId))
         .thenReturn(Optional.empty());
@@ -1033,7 +1064,10 @@ class ChallengeServiceImplTest {
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(buildUser(userId)));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
-    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId)).thenReturn(true);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)).thenReturn(true);
+    CourseLab courseLab = new CourseLab();
+    courseLab.setDueAt(null);
+    when(courseLabRepository.findByCourseIdAndLabId(courseId, labId)).thenReturn(Optional.of(courseLab));
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(userId, challengeId))
         .thenReturn(Optional.empty());
@@ -1065,7 +1099,10 @@ class ChallengeServiceImplTest {
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
-    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId)).thenReturn(true);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)).thenReturn(true);
+    CourseLab courseLab = new CourseLab();
+    courseLab.setDueAt(null);
+    when(courseLabRepository.findByCourseIdAndLabId(courseId, labId)).thenReturn(Optional.of(courseLab));
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(userId, challengeId))
         .thenReturn(Optional.empty());
@@ -1106,7 +1143,10 @@ class ChallengeServiceImplTest {
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(buildUser(userId)));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
-    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId)).thenReturn(true);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)).thenReturn(true);
+    CourseLab courseLab = new CourseLab();
+    courseLab.setDueAt(null);
+    when(courseLabRepository.findByCourseIdAndLabId(courseId, labId)).thenReturn(Optional.of(courseLab));
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(userId, challengeId))
         .thenReturn(Optional.of(submission));
@@ -1133,14 +1173,17 @@ class ChallengeServiceImplTest {
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
-    when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, userId)).thenReturn(true);
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)).thenReturn(true);
+    CourseLab courseLab = new CourseLab();
+    courseLab.setDueAt(null);
+    when(courseLabRepository.findByCourseIdAndLabId(courseId, labId)).thenReturn(Optional.of(courseLab));
     when(challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId))
         .thenReturn(false);
     when(challengeCompletionRepository.findSolvedChallengeIds(eq(userId), any()))
         .thenReturn(List.of(challengeId));
 
     ChallengeSubmissionResponseDto response =
-        labService.completeTheoryChallenge(userId, labId, challengeId);
+        labService.completeTheoryChallenge(userId, courseId, labId, challengeId);
 
     assertThat(response.isCorrect()).isTrue();
     assertThat(response.isChallengeSolved()).isTrue();
@@ -1160,7 +1203,7 @@ class ChallengeServiceImplTest {
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(buildUser(userId)));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
 
-    assertThatThrownBy(() -> labService.completeTheoryChallenge(userId, labId, challengeId))
+    assertThatThrownBy(() -> labService.completeTheoryChallenge(userId, courseId, labId, challengeId))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("requires a flag submission");
   }

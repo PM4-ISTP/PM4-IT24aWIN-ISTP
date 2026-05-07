@@ -10,9 +10,11 @@ import com.pm4.istp.course.db.entities.ChallengeCompletion;
 import com.pm4.istp.course.db.entities.ChallengeOption;
 import com.pm4.istp.course.db.entities.ChallengeType;
 import com.pm4.istp.course.db.entities.Course;
+import com.pm4.istp.course.db.entities.CourseLab;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
+import com.pm4.istp.course.db.entities.StudentFlagSubmission;
 import com.pm4.istp.course.db.entities.StudentOptionSubmission;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
@@ -24,6 +26,7 @@ import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
+import com.pm4.istp.course.exceptions.LabSubmissionClosedException;
 import com.pm4.istp.course.mappers.LabMapper;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.ChallengeOptionRepository;
@@ -32,6 +35,7 @@ import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.LabRepository;
+import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
 import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.course.services.LabService;
@@ -74,6 +78,7 @@ public class LabServiceImpl implements LabService {
   private final ChallengeOptionRepository challengeOptionRepository;
   private final ChallengeCompletionRepository challengeCompletionRepository;
   private final StudentOptionSubmissionRepository studentOptionSubmissionRepository;
+  private final StudentFlagSubmissionRepository studentFlagSubmissionRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final LabMapper labMapper;
   private final DockerImageAvailabilityService dockerImageAvailabilityService;
@@ -376,6 +381,11 @@ public class LabServiceImpl implements LabService {
         course.getMcAttemptsMode() != null ? course.getMcAttemptsMode() : McAttemptsMode.UNLIMITED;
     dto.setMcAttemptsMode(mode.name());
 
+    // Attach due date/time from the course assignment (if any) for student visibility.
+    courseLabRepository
+        .findByCourseIdAndLabId(courseId, labId)
+        .ifPresent((courseLab) -> dto.setDueAt(courseLab.getDueAt()));
+
     return dto;
   }
 
@@ -386,7 +396,7 @@ public class LabServiceImpl implements LabService {
   @Override
   @Transactional
   public ChallengeSubmissionResponseDto submitChallengeFlag(
-      UUID userId, UUID labId, UUID challengeId, String flag) {
+      UUID userId, UUID courseId, UUID labId, UUID challengeId, String flag) {
     User user = findActiveUser(userId);
 
     Challenge challenge =
@@ -402,7 +412,7 @@ public class LabServiceImpl implements LabService {
           String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, challengeId, labId));
     }
 
-    verifyEnrolledInChallengeCourse(userId, challenge.getLab());
+    verifySubmissionAllowed(userId, courseId, challenge.getLab().getId());
 
     if (challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId)) {
       throw new ChallengeAlreadySolvedException(
@@ -410,6 +420,18 @@ public class LabServiceImpl implements LabService {
     }
 
     boolean correct = challenge.getFlag() != null && challenge.getFlag().equals(flag);
+
+    StudentFlagSubmission submission =
+        studentFlagSubmissionRepository
+            .findByUserIdAndChallengeId(userId, challengeId)
+            .orElseGet(StudentFlagSubmission::new);
+    submission.setUser(user);
+    submission.setChallenge(challenge);
+    submission.setSubmittedFlag(flag);
+    submission.setCorrect(correct);
+    submission.setSubmittedAt(LocalDateTime.now());
+    studentFlagSubmissionRepository.save(submission);
+
     if (correct) {
       ChallengeCompletion completion = new ChallengeCompletion();
       completion.setUser(user);
@@ -447,7 +469,7 @@ public class LabServiceImpl implements LabService {
       UUID userId, UUID courseId, UUID labId, UUID challengeId, UUID selectedOptionId) {
     User user = findActiveUser(userId);
     Challenge challenge = findChallengeInChallenge(challengeId, labId);
-    verifyEnrolledInChallengeCourse(userId, challenge.getLab());
+    verifySubmissionAllowed(userId, courseId, challenge.getLab().getId());
 
     McAttemptsMode mode = getCourseMcAttemptsMode(courseId);
     Optional<StudentOptionSubmission> existing =
@@ -629,6 +651,24 @@ public class LabServiceImpl implements LabService {
     }
   }
 
+  private void verifySubmissionAllowed(UUID userId, UUID courseId, UUID labId) {
+    verifyEnrollment(userId, courseId);
+
+    CourseLab courseLab =
+        courseLabRepository
+            .findByCourseIdAndLabId(courseId, labId)
+            .orElseThrow(
+                () ->
+                    new LabAccessDeniedException(
+                        String.format(
+                            "Lab '%s' is not part of course '%s' for user '%s'",
+                            labId, courseId, userId)));
+
+    if (courseLab.getDueAt() != null && LocalDateTime.now().isAfter(courseLab.getDueAt())) {
+      throw new LabSubmissionClosedException("Submission deadline has passed for this lab.");
+    }
+  }
+
   // -------------------------------------------------------------------------
   // Progress population
   // -------------------------------------------------------------------------
@@ -752,7 +792,7 @@ public class LabServiceImpl implements LabService {
   @Override
   @Transactional
   public ChallengeSubmissionResponseDto completeTheoryChallenge(
-      UUID userId, UUID labId, UUID challengeId) {
+      UUID userId, UUID courseId, UUID labId, UUID challengeId) {
     User user =
         userRepository
             .findByIdAndDeletedAtIsNull(userId)
@@ -777,7 +817,7 @@ public class LabServiceImpl implements LabService {
           "This challenge requires a flag submission and cannot be auto-completed.");
     }
 
-    verifyEnrolledInChallengeCourse(userId, challenge.getLab());
+    verifySubmissionAllowed(userId, courseId, challenge.getLab().getId());
 
     if (!challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId)) {
       ChallengeCompletion completion = new ChallengeCompletion();

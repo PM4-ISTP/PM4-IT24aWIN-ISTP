@@ -26,6 +26,16 @@ function aggregateChallengeProgress(labs: LabStudentDto[]): {
   return { completed, total };
 }
 
+function aggregateLabProgress(labs: LabStudentDto[]): {
+  completed: number;
+  total: number;
+} {
+  return {
+    completed: labs.filter((l) => l.isSolved).length,
+    total: labs.length,
+  };
+}
+
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
 
 function getOwner(instructors: CourseDetailInstructorResponseDto[] | undefined) {
@@ -108,8 +118,10 @@ export default async function CourseDetails({
         <Stack gap="lg">
           <CourseJourneyCard
             instructor={owner}
-            // lessons={undefined}    ← wire up when lesson API is ready
-            labs={isEnrolled ? aggregateChallengeProgress(course.courseLabs ?? []) : undefined}
+            labs={isEnrolled ? aggregateLabProgress(course.courseLabs ?? []) : undefined}
+            challenges={
+              isEnrolled ? aggregateChallengeProgress(course.courseLabs ?? []) : undefined
+            }
           />
 
           {/* Course description */}

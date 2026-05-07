@@ -167,6 +167,11 @@ export function LabPlayView({
   const current = challenges[activeStep] ?? null;
   const allSolved = lab.isSolved ?? false;
 
+  const earnedPoints = challenges
+    .filter((c) => c.isSolved)
+    .reduce((sum, c) => sum + (c.points ?? 0), 0);
+  const totalPoints = lab.maxScore ?? challenges.reduce((sum, c) => sum + (c.points ?? 0), 0);
+
   const sanitizedLabDescription = useMemo(
     () => (lab.description ? getSanitizedHtml(lab.description) : ""),
     [lab.description]
@@ -286,7 +291,7 @@ export function LabPlayView({
     }
 
     setSubmitting(true);
-    const result = await submitChallengeFlag(lab.id, current.id, normalizedFlag);
+    const result = await submitChallengeFlag(lab.id, current.id, normalizedFlag, courseId);
     setSubmitting(false);
 
     if (!result.success) {
@@ -356,7 +361,7 @@ export function LabPlayView({
   async function handleCompleteTheory() {
     if (!current || !current.id || !lab.id || current.isSolved) return;
     setSubmitting(true);
-    const result = await completeTheoryChallenge(lab.id, current.id);
+    const result = await completeTheoryChallenge(lab.id, current.id, courseId);
     setSubmitting(false);
     if (!result.success) {
       notifications.show({ color: "red", title: "Could not complete task", message: result.error });
@@ -493,6 +498,22 @@ export function LabPlayView({
                   radius="xl"
                   size="sm"
                 />
+                {totalPoints > 0 && (
+                  <Group justify="space-between" align="center">
+                    <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
+                      Punkte
+                    </Text>
+                    <Badge
+                      variant="filled"
+                      color={allSolved ? "teal" : earnedPoints > 0 ? "blue" : "gray"}
+                      size="md"
+                      radius="sm"
+                      fw={700}
+                    >
+                      {earnedPoints} / {totalPoints} Pts
+                    </Badge>
+                  </Group>
+                )}
               </Stack>
 
               {sanitizedLabDescription && (
@@ -544,8 +565,15 @@ export function LabPlayView({
                         </Badge>
                       )}
                       {(current.points ?? 0) > 0 && (
-                        <Badge variant="light" color="blue" size="xs">
-                          {current.points}pt
+                        <Badge
+                          variant="filled"
+                          color={current.isSolved ? "teal" : "blue"}
+                          size="sm"
+                          radius="sm"
+                          leftSection={current.isSolved ? <IconTrophy size={11} /> : undefined}
+                          fw={700}
+                        >
+                          {current.points} Pts
                         </Badge>
                       )}
                     </Group>

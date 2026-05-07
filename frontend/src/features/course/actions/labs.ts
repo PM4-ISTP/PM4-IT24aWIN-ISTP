@@ -138,13 +138,14 @@ export async function fetchChallengeForPlay(
 export async function submitChallengeFlag(
   labId: string,
   challengeId: string,
-  flag: string
+  flag: string,
+  courseId: string
 ): Promise<ActionResult<ChallengeSubmissionResponseDto>> {
   return await withActionResult(
     (client) =>
       client.POST("/api/v1/labs/{labId}/challenges/{challengeId}/submit", {
         params: { path: { labId, challengeId } },
-        body: { flag },
+        body: { flag, courseId },
       }),
     "Failed to submit flag"
   );
@@ -168,12 +169,13 @@ export async function submitChallengeChoice(
 
 export async function completeTheoryChallenge(
   labId: string,
-  challengeId: string
+  challengeId: string,
+  courseId: string
 ): Promise<ActionResult<ChallengeSubmissionResponseDto>> {
   return await withActionResult(
     (client) =>
       client.POST("/api/v1/labs/{labId}/challenges/{challengeId}/complete", {
-        params: { path: { labId, challengeId } },
+        params: { path: { labId, challengeId }, query: { courseId } },
       }),
     "Failed to complete task"
   );

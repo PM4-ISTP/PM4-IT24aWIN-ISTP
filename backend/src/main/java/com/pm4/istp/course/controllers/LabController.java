@@ -332,7 +332,8 @@ public class LabController {
       @Valid @RequestBody ChallengeSubmissionRequestDto request) {
     UUID userId = parseUserId(jwt);
     ChallengeSubmissionResponseDto response =
-        labService.submitChallengeFlag(userId, labId, challengeId, request.getFlag());
+        labService.submitChallengeFlag(
+            userId, request.getCourseId(), labId, challengeId, request.getFlag());
     return ResponseEntity.ok(response);
   }
 
@@ -394,10 +395,13 @@ public class LabController {
       })
   @PostMapping("/{labId}/challenges/{challengeId}/complete")
   public ResponseEntity<ChallengeSubmissionResponseDto> completeTheoryChallenge(
-      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID labId, @PathVariable UUID challengeId) {
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID labId,
+      @PathVariable UUID challengeId,
+      @RequestParam("courseId") UUID courseId) {
     UUID userId = parseUserId(jwt);
     ChallengeSubmissionResponseDto response =
-        labService.completeTheoryChallenge(userId, labId, challengeId);
+        labService.completeTheoryChallenge(userId, courseId, labId, challengeId);
     return ResponseEntity.ok(response);
   }
 
