@@ -317,10 +317,8 @@ public class CourseServiceImpl implements CourseService {
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
-    // Clear existing lab assignments
-    course.getCourseLabs().clear();
-
-    // Add new lab assignments
+    Map<UUID, CourseLabItemDto> requestedByLabId = new HashMap<>();
+    Map<UUID, Lab> labById = new HashMap<>();
     for (CourseLabItemDto item : labs) {
       Lab lab =
           labRepository
@@ -344,12 +342,41 @@ public class CourseServiceImpl implements CourseService {
             String.format("Lab with ID '%s' not found", item.getLabId()));
       }
 
-      CourseLab courseLab = new CourseLab();
-      courseLab.setLab(lab);
+      requestedByLabId.put(item.getLabId(), item);
+      labById.put(item.getLabId(), lab);
+    }
+
+    Map<UUID, CourseLab> existingByLabId =
+        course.getCourseLabs().stream()
+            .collect(
+                Collectors.toMap(courseLab -> courseLab.getLab().getId(), courseLab -> courseLab));
+
+    course
+        .getCourseLabs()
+        .removeIf(
+            courseLab -> {
+              boolean removed = !requestedByLabId.containsKey(courseLab.getLab().getId());
+              if (removed) {
+                courseLab.setCourse(null);
+              }
+              return removed;
+            });
+
+    for (Map.Entry<UUID, CourseLabItemDto> entry : requestedByLabId.entrySet()) {
+      CourseLabItemDto item = entry.getValue();
+      CourseLab courseLab = existingByLabId.get(entry.getKey());
+      if (courseLab == null) {
+        courseLab = new CourseLab();
+        courseLab.setLab(labById.get(entry.getKey()));
+        course.addCourseChallenge(courseLab);
+      }
       courseLab.setOrderIndex(item.getOrderIndex());
       courseLab.setDueAt(item.getDueAt());
-      course.addCourseChallenge(courseLab);
     }
+
+    course
+        .getCourseLabs()
+        .sort((left, right) -> Integer.compare(left.getOrderIndex(), right.getOrderIndex()));
 
     return courseRepository.save(course);
   }

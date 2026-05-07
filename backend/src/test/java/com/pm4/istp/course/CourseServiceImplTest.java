@@ -37,6 +37,7 @@ import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
+import com.pm4.istp.course.db.entities.CourseLab;
 import com.pm4.istp.course.dto.CourseLabItemDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
@@ -821,6 +822,55 @@ class CourseServiceImplTest {
 
     assertThat(updated.getCourseLabs()).hasSize(1);
     assertThat(updated.getCourseLabs().getFirst().getDueAt()).isEqualTo(dueAt);
+  }
+
+  @Test
+  void updateCourseChallenges_diffsExistingAssignments() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID keptLabId = UUID.randomUUID();
+    UUID removedLabId = UUID.randomUUID();
+    UUID addedLabId = UUID.randomUUID();
+    LocalDateTime dueAt = LocalDateTime.of(2026, 5, 2, 12, 0);
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = buildCourseWithOwner(courseId, owner);
+    Lab keptLab = buildChallenge(keptLabId, owner, LabStatusEnum.PUBLIC);
+    Lab removedLab = buildChallenge(removedLabId, owner, LabStatusEnum.PUBLIC);
+    Lab addedLab = buildChallenge(addedLabId, owner, LabStatusEnum.PUBLIC);
+
+    CourseLab keptAssignment = new CourseLab();
+    keptAssignment.setLab(keptLab);
+    keptAssignment.setOrderIndex(0);
+    course.addCourseChallenge(keptAssignment);
+
+    CourseLab removedAssignment = new CourseLab();
+    removedAssignment.setLab(removedLab);
+    removedAssignment.setOrderIndex(1);
+    course.addCourseChallenge(removedAssignment);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(labRepository.findById(keptLabId)).thenReturn(Optional.of(keptLab));
+    when(labRepository.findById(addedLabId)).thenReturn(Optional.of(addedLab));
+    when(courseRepository.save(any(Course.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Course updated =
+        courseService.updateCourseChallenges(
+            ownerId,
+            courseId,
+            List.of(new CourseLabItemDto(addedLabId, 0, null), new CourseLabItemDto(keptLabId, 1, dueAt)));
+
+    assertThat(updated.getCourseLabs()).hasSize(2);
+    assertThat(updated.getCourseLabs()).extracting(courseLab -> courseLab.getLab().getId())
+        .containsExactly(addedLabId, keptLabId);
+    assertThat(updated.getCourseLabs().get(1)).isSameAs(keptAssignment);
+    assertThat(keptAssignment.getOrderIndex()).isEqualTo(1);
+    assertThat(keptAssignment.getDueAt()).isEqualTo(dueAt);
+    assertThat(removedAssignment.getCourse()).isNull();
+    verify(labRepository, never()).findById(removedLabId);
+    verify(courseRepository).save(course);
   }
 
   @Test
