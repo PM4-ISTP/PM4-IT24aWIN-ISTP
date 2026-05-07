@@ -20,4 +20,3 @@ public class CourseLabChallengeSubmissionDetailDto {
   private String submittedFlag;
   private String selectedOptionText;
 }
-

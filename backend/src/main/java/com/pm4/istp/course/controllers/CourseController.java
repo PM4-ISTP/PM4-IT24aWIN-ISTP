@@ -297,7 +297,8 @@ public class CourseController {
         @ApiResponse(
             responseCode = "200",
             description = "Submission details loaded successfully",
-            content = @Content(schema = @Schema(implementation = CourseLabSubmissionDetailDto.class))),
+            content =
+                @Content(schema = @Schema(implementation = CourseLabSubmissionDetailDto.class))),
         @ApiResponse(
             responseCode = "403",
             description = "Access denied",
@@ -328,7 +329,8 @@ public class CourseController {
             responseCode = "200",
             description = "Score updated successfully",
             content =
-                @Content(schema = @Schema(implementation = CourseChallengeSubmissionEntryDto.class))),
+                @Content(
+                    schema = @Schema(implementation = CourseChallengeSubmissionEntryDto.class))),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid request",
