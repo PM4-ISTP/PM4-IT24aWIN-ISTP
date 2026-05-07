@@ -5,6 +5,7 @@ import com.pm4.istp.course.db.UpdateChallengeRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.ChallengeStudentSolutionDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
 import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
@@ -33,6 +34,13 @@ public interface ChallengeService {
    * caller must be enrolled in a course that contains this challenge.
    */
   ChallengeStudentDto getChallengeForPlay(UUID userId, UUID courseId, UUID challengeId);
+
+  /**
+   * Returns a student's challenge view including their submitted solutions. The caller must be an
+   * instructor of the given course.
+   */
+  ChallengeStudentSolutionDto getChallengeForStudentSolution(
+      UUID instructorId, UUID courseId, UUID challengeId, UUID participantId);
 
   /**
    * Submits a flag for a sub-task. Case-sensitive comparison against the plaintext flag. On a

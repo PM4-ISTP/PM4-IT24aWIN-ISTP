@@ -8,6 +8,7 @@ import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.ChallengeStudentSolutionDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionRequestDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.dto.CreateChallengeRequestDto;
@@ -294,6 +295,40 @@ public class ChallengeController {
       @RequestParam("courseId") UUID courseId) {
     UUID userId = parseUserId(jwt);
     ChallengeStudentDto dto = challengeService.getChallengeForPlay(userId, courseId, id);
+    return ResponseEntity.ok(dto);
+  }
+
+  @Operation(
+      summary = "Get a participant's challenge solution view",
+      description =
+          "Returns a challenge formatted for an instructor, including the participant's submitted"
+              + " solutions for each sub-task. Caller must be an instructor of the given course."
+              + " For missing or false answers, the solution gets returned.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Challenge retrieved successfully",
+            content =
+                @Content(schema = @Schema(implementation = ChallengeStudentSolutionDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied (not instructor of course)",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course, challenge, or participant not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @GetMapping("/{challengeId}/solution")
+  public ResponseEntity<ChallengeStudentSolutionDto> getChallengeForStudentSolution(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID challengeId,
+      @RequestParam("courseId") UUID courseId,
+      @RequestParam("studentId") UUID studentId) {
+    UUID userId = parseUserId(jwt);
+    ChallengeStudentSolutionDto dto =
+        challengeService.getChallengeForStudentSolution(userId, courseId, challengeId, studentId);
     return ResponseEntity.ok(dto);
   }
 

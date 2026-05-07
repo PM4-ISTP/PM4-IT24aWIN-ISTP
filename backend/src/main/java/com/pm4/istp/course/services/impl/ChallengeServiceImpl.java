@@ -16,13 +16,16 @@ import com.pm4.istp.course.db.entities.SubTaskCompletion;
 import com.pm4.istp.course.db.entities.SubTaskOption;
 import com.pm4.istp.course.db.entities.SubTaskType;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.ChallengeStudentSolutionDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.dto.ListChallengeResponseDto;
 import com.pm4.istp.course.dto.SubTaskStudentDto;
 import com.pm4.istp.course.dto.SubTaskSubmissionResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeAccessDeniedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
+import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.SubTaskAlreadySolvedException;
 import com.pm4.istp.course.exceptions.SubTaskNotFoundException;
 import com.pm4.istp.course.mappers.ChallengeMapper;
@@ -66,6 +69,8 @@ public class ChallengeServiceImpl implements ChallengeService {
   private static final String SUB_TASK_NOT_FOUND_MSG = "Sub-task with ID '%s' not found";
 
   private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
+  private static final String CHALLENGE_NOT_PART_OF_COURSE_MSG =
+      "Challenge '%s' is not part of course '%s'";
 
   private final UserRepository userRepository;
   private final ChallengeRepository challengeRepository;
@@ -388,7 +393,7 @@ public class ChallengeServiceImpl implements ChallengeService {
             .anyMatch(cc -> cc.getCourse().getId().equals(courseId));
     if (!challengeBelongsToCourse) {
       throw new ChallengeAccessDeniedException(
-          String.format("Challenge '%s' is not part of course '%s'", challengeId, courseId));
+          String.format(CHALLENGE_NOT_PART_OF_COURSE_MSG, challengeId, courseId));
     }
 
     ChallengeStudentDto dto = challengeMapper.toStudentDto(challenge);
@@ -420,6 +425,45 @@ public class ChallengeServiceImpl implements ChallengeService {
         course.getMcAttemptsMode() != null ? course.getMcAttemptsMode() : McAttemptsMode.UNLIMITED;
     dto.setMcAttemptsMode(mode.name());
 
+    return dto;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public ChallengeStudentSolutionDto getChallengeForStudentSolution(
+      UUID instructorId, UUID courseId, UUID challengeId, UUID participantId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+
+    verifyInstructor(course, instructorId);
+
+    Challenge challenge =
+        challengeRepository
+            .findById(challengeId)
+            .orElseThrow(
+                () ->
+                    new ChallengeNotFoundException(
+                        String.format(CHALLENGE_NOT_FOUND_MSG, challengeId)));
+
+    boolean challengeBelongsToCourse =
+        challenge.getCourseChallenges().stream()
+            .anyMatch(cc -> cc.getCourse().getId().equals(courseId));
+    if (!challengeBelongsToCourse) {
+      throw new ChallengeNotFoundException(
+          String.format(CHALLENGE_NOT_PART_OF_COURSE_MSG, challengeId));
+    }
+
+    if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId)) {
+      throw new CourseParticipantNotFoundException(
+          String.format(
+              "Participant with ID '%s' is not enrolled in course '%s'", participantId, courseId));
+    }
+
+    ChallengeStudentSolutionDto dto = challengeMapper.toStudentSolutionDto(challenge);
+    populateStudentSolution(dto, participantId, challenge);
     return dto;
   }
 
@@ -554,11 +598,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     if (existing.isPresent()) {
       StudentOptionSubmission prev = existing.get();
       return buildChoiceResponse(
-          prev.isCorrect(),
-          userId,
-          subTask.getChallenge(),
-          challengeId,
-          prev.isCorrect() ? null : subTask);
+          prev.isCorrect(), userId, subTask.getChallenge(), prev.isCorrect() ? null : subTask);
     }
 
     SubTaskOption selectedOption =
@@ -590,7 +630,7 @@ public class ChallengeServiceImpl implements ChallengeService {
       } catch (DataIntegrityViolationException ex) {
         // Concurrent submission — return current state
         return buildChoiceResponse(
-            correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
+            correct, userId, subTask.getChallenge(), correct ? null : subTask);
       }
 
       // Mark as completed regardless of correctness (ONCE = attempted = done)
@@ -607,8 +647,7 @@ public class ChallengeServiceImpl implements ChallengeService {
       }
 
       ChoiceSubmissionResponseDto response =
-          buildChoiceResponse(
-              correct, userId, subTask.getChallenge(), challengeId, correct ? null : subTask);
+          buildChoiceResponse(correct, userId, subTask.getChallenge(), correct ? null : subTask);
       if (response.isChallengeSolved()) {
         badgeService.tryAwardBadgesForChallenge(userId, challengeId);
       }
@@ -621,7 +660,7 @@ public class ChallengeServiceImpl implements ChallengeService {
       // -----------------------------------------------------------------------
       if (!correct) {
         // Return temporary response without persisting anything
-        return buildChoiceResponse(false, userId, subTask.getChallenge(), challengeId, subTask);
+        return buildChoiceResponse(false, userId, subTask.getChallenge(), subTask);
       }
 
       // Correct answer — persist submission and completion
@@ -634,7 +673,7 @@ public class ChallengeServiceImpl implements ChallengeService {
       try {
         studentOptionSubmissionRepository.saveAndFlush(submission);
       } catch (DataIntegrityViolationException ex) {
-        return buildChoiceResponse(true, userId, subTask.getChallenge(), challengeId, null);
+        return buildChoiceResponse(true, userId, subTask.getChallenge(), null);
       }
 
       if (!subTaskCompletionRepository.existsByUserIdAndSubTaskId(userId, subTaskId)) {
@@ -650,7 +689,7 @@ public class ChallengeServiceImpl implements ChallengeService {
       }
 
       ChoiceSubmissionResponseDto response =
-          buildChoiceResponse(true, userId, subTask.getChallenge(), challengeId, null);
+          buildChoiceResponse(true, userId, subTask.getChallenge(), null);
       if (response.isChallengeSolved()) {
         badgeService.tryAwardBadgesForChallenge(userId, challengeId);
       }
@@ -659,7 +698,7 @@ public class ChallengeServiceImpl implements ChallengeService {
   }
 
   private ChoiceSubmissionResponseDto buildChoiceResponse(
-      boolean correct, UUID userId, Challenge challenge, UUID challengeId, SubTask subTask) {
+      boolean correct, UUID userId, Challenge challenge, SubTask subTask) {
     List<SubTask> siblings = challenge.getSubTasks();
     List<UUID> siblingIds = siblingsIds(siblings);
     Set<UUID> solvedIds = solvedSubTaskIds(userId, siblingIds);
@@ -682,6 +721,15 @@ public class ChallengeServiceImpl implements ChallengeService {
   // -------------------------------------------------------------------------
   // Enrollment guards
   // -------------------------------------------------------------------------
+
+  private void verifyInstructor(Course course, UUID userId) {
+    boolean isInstructor =
+        course.getCourseInstructors().stream()
+            .anyMatch(ci -> ci.getInstructor().getId().equals(userId));
+    if (!isInstructor) {
+      throw new CourseAccessDeniedException("Access denied (not instructor of course)");
+    }
+  }
 
   private void verifyEnrollment(UUID userId, UUID courseId) {
     if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)) {
@@ -752,6 +800,68 @@ public class ChallengeServiceImpl implements ChallengeService {
           st.setSolvedFlag(flagsById.get(st.getId()));
         }
         solvedCount++;
+      }
+      if (selectedOptionBySubTask.containsKey(st.getId())) {
+        st.setSelectedOptionId(selectedOptionBySubTask.get(st.getId()));
+      }
+      if (correctOptionBySubTask.containsKey(st.getId())) {
+        st.setCorrectOptionId(correctOptionBySubTask.get(st.getId()));
+      }
+    }
+    dto.setTotalSubTaskCount(subTasks.size());
+    dto.setSolvedSubTaskCount(solvedCount);
+    dto.setSolved(!subTasks.isEmpty() && solvedCount == subTasks.size());
+  }
+
+  private void populateStudentSolution(
+      ChallengeStudentSolutionDto dto, UUID participantId, Challenge entity) {
+    List<SubTaskStudentDto> subTasks = dto.getSubTasks() == null ? List.of() : dto.getSubTasks();
+    List<UUID> subTaskIds = new ArrayList<>();
+    for (SubTaskStudentDto st : subTasks) {
+      subTaskIds.add(st.getId());
+    }
+    Set<UUID> solvedIds =
+        subTaskIds.isEmpty()
+            ? Set.of()
+            : new HashSet<>(
+                subTaskCompletionRepository.findSolvedSubTaskIds(participantId, subTaskIds));
+
+    Map<UUID, String> flagsById = new HashMap<>();
+    for (SubTask st : entity.getSubTasks()) {
+      flagsById.put(st.getId(), st.getFlag());
+    }
+
+    // Load MC submissions for this user in one pass
+    Map<UUID, UUID> selectedOptionBySubTask = new HashMap<>();
+    Map<UUID, UUID> correctOptionBySubTask = new HashMap<>();
+    for (SubTask st : entity.getSubTasks()) {
+      if (st.getType() == SubTaskType.MULTIPLE_CHOICE) {
+        studentOptionSubmissionRepository
+            .findByUserIdAndSubTaskId(participantId, st.getId())
+            .ifPresent(
+                sub -> {
+                  selectedOptionBySubTask.put(st.getId(), sub.getSelectedOption().getId());
+                  // Expose correct option only when student got it wrong or the solution is missing
+                  if (!sub.isCorrect() || solvedIds.contains(st.getId())) {
+                    st.getOptions().stream()
+                        .filter(SubTaskOption::isCorrect)
+                        .map(SubTaskOption::getId)
+                        .findFirst()
+                        .ifPresent(cid -> correctOptionBySubTask.put(st.getId(), cid));
+                  }
+                });
+      }
+    }
+
+    int solvedCount = 0;
+    for (SubTaskStudentDto st : subTasks) {
+      boolean solved = solvedIds.contains(st.getId());
+      st.setSolved(solved);
+      if (solved) {
+        solvedCount++;
+      }
+      if (st.getType() == SubTaskType.FLAG) {
+        st.setSolvedFlag(flagsById.get(st.getId()));
       }
       if (selectedOptionBySubTask.containsKey(st.getId())) {
         st.setSelectedOptionId(selectedOptionBySubTask.get(st.getId()));
