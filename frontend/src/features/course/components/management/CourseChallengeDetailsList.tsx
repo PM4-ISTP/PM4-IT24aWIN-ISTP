@@ -13,9 +13,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconCheck, IconCircleDashed, IconListCheck } from "@tabler/icons-react";
-import {
-  getDifficultyColor,
-} from "@/src/features/course/constants/challengeConstants";
+import { getDifficultyColor } from "@/src/features/course/constants/challengeConstants";
 import PlayChallengeButton from "@/src/features/course/components/challenges/PlayChallengeButton";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
 import type { ChallengeStudentDto } from "@/src/shared/types/course";

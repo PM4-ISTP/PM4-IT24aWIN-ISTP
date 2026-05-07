@@ -70,12 +70,17 @@ function overallStatus(statuses: SubmissionStatus[]): SubmissionStatus {
   return "NOT_SUBMITTED";
 }
 
-function lastStatusInfo(
-  subs: CourseChallengeSubmissionEntryDto[]
-): { status: SubmissionStatus; completedAt: string | null; challengeId: string | null } {
+function lastStatusInfo(subs: CourseChallengeSubmissionEntryDto[]): {
+  status: SubmissionStatus;
+  completedAt: string | null;
+  challengeId: string | null;
+} {
   const withCompleted = subs
     .filter((s) => Boolean(s.completedAt))
-    .sort((a, b) => (new Date(b.completedAt!).getTime() ?? 0) - (new Date(a.completedAt!).getTime() ?? 0));
+    .sort(
+      (a, b) =>
+        (new Date(b.completedAt!).getTime() ?? 0) - (new Date(a.completedAt!).getTime() ?? 0)
+    );
   if (withCompleted.length > 0) {
     return {
       status: withCompleted[0].status ?? "NOT_SUBMITTED",
@@ -378,7 +383,9 @@ export default function CourseResultsPage() {
         overallStatus: overall,
         lastStatus: last.status,
         lastCompletedAt: last.completedAt,
-        lastChallengeTitle: last.challengeId ? titleByChallengeId.get(last.challengeId) ?? null : null,
+        lastChallengeTitle: last.challengeId
+          ? (titleByChallengeId.get(last.challengeId) ?? null)
+          : null,
         lateLabs,
         onTimeLabs,
         inProgressLabs,
@@ -522,12 +529,20 @@ export default function CourseResultsPage() {
       setSubmissionDetail((prev) => {
         if (!prev) return prev;
         if (prev.participantId !== participantId || prev.challengeId !== challengeId) return prev;
-        return { ...prev, awardedPoints: updatedEntry.awardedPoints, maxPoints: updatedEntry.maxPoints };
+        return {
+          ...prev,
+          awardedPoints: updatedEntry.awardedPoints,
+          maxPoints: updatedEntry.maxPoints,
+        };
       });
       setSubmissionModalPoints((prev) => {
         if (!prev) return prev;
         if (prev.participantId !== participantId || prev.challengeId !== challengeId) return prev;
-        return { ...prev, currentPoints: updatedEntry.awardedPoints, maxPoints: updatedEntry.maxPoints };
+        return {
+          ...prev,
+          currentPoints: updatedEntry.awardedPoints,
+          maxPoints: updatedEntry.maxPoints,
+        };
       });
     } catch (e) {
       setError((e as Error).message);
@@ -568,7 +583,9 @@ export default function CourseResultsPage() {
 
       // Seed per-subtask manual grading defaults so the total matches the current awarded points.
       const defaultBySubTaskId: Record<string, number> = {};
-      const sorted = [...(json.subTasks ?? [])].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+      const sorted = [...(json.subTasks ?? [])].sort(
+        (a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
+      );
       for (const st of sorted) {
         defaultBySubTaskId[st.subTaskId] = st.correct ? st.points : 0;
       }
@@ -925,8 +942,8 @@ export default function CourseResultsPage() {
                         </Text>
                         <Text size="xs" style={{ color: "#475569" }}>
                           {(() => {
-                              const email = row.participant.email ?? "-";
-                              if (activeLab) {
+                            const email = row.participant.email ?? "-";
+                            if (activeLab) {
                               const submitted = submittedAt
                                 ? `Submitted: ${formatDateTime(submittedAt)}`
                                 : "Not submitted";
@@ -944,16 +961,14 @@ export default function CourseResultsPage() {
                       <Tooltip
                         withArrow
                         position="top"
-                        label={
-                          [
-                            `Latest: ${statusLabel(row.status)}`,
-                            row.lastChallengeTitle ? `• ${row.lastChallengeTitle}` : "",
-                            row.lastCompletedAt ? `• ${formatDateTime(row.lastCompletedAt)}` : "",
-                            `\nOverall: ${statusLabel(row.overallStatus)} (late ${row.lateLabs}, on time ${row.onTimeLabs}, in progress ${row.inProgressLabs}, not started ${row.notStartedLabs})`,
-                          ]
-                            .filter(Boolean)
-                            .join(" ")
-                        }
+                        label={[
+                          `Latest: ${statusLabel(row.status)}`,
+                          row.lastChallengeTitle ? `• ${row.lastChallengeTitle}` : "",
+                          row.lastCompletedAt ? `• ${formatDateTime(row.lastCompletedAt)}` : "",
+                          `\nOverall: ${statusLabel(row.overallStatus)} (late ${row.lateLabs}, on time ${row.onTimeLabs}, in progress ${row.inProgressLabs}, not started ${row.notStartedLabs})`,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
                       >
                         <span style={{ ...statusBadgeStyle(status), cursor: "help" }}>
                           {statusLabel(status)}
@@ -965,10 +980,10 @@ export default function CourseResultsPage() {
                       <Text size="sm" fw={600} style={{ color: "#f1f5f9" }}>
                         {pointsLabel}
                       </Text>
-                  <Text size="xs" style={{ color: "#475569" }}>
-                    {activeLab ? "lab points" : "total points"}
-                  </Text>
-                </Stack>
+                      <Text size="xs" style={{ color: "#475569" }}>
+                        {activeLab ? "lab points" : "total points"}
+                      </Text>
+                    </Stack>
 
                     <Stack gap={4}>
                       <Text size="xs" style={{ color: "#94a3b8" }}>
@@ -1119,9 +1134,9 @@ export default function CourseResultsPage() {
                 <span style={statusBadgeStyle(selected.status)}>
                   {statusLabel(selected.status)}
                 </span>
-                  <Text size="xs" style={{ color: "#64748b", marginTop: 8 }}>
+                <Text size="xs" style={{ color: "#64748b", marginTop: 8 }}>
                   {selected.awardedPoints} / {selected.maxPoints} points (total)
-                  </Text>
+                </Text>
               </Box>
             </SimpleGrid>
 
@@ -1300,18 +1315,24 @@ export default function CourseResultsPage() {
                     : "Late submission (0 points by default)"
                 }
                 styles={{
-                  root: { background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)" },
+                  root: {
+                    background: "rgba(239,68,68,0.08)",
+                    border: "1px solid rgba(239,68,68,0.18)",
+                  },
                   title: { color: "#fecaca" },
                   message: { color: "#fecaca" },
                 }}
               >
-                Due: {formatDateTime(submissionDetail.dueAt)} • Submitted: {formatDateTime(submissionDetail.completedAt)}
+                Due: {formatDateTime(submissionDetail.dueAt)} • Submitted:{" "}
+                {formatDateTime(submissionDetail.completedAt)}
                 {" • "}Points: {submissionDetail.awardedPoints} / {submissionDetail.maxPoints}
               </Alert>
             )}
 
             {(() => {
-              const dueAtMs = submissionDetail.dueAt ? new Date(submissionDetail.dueAt).getTime() : null;
+              const dueAtMs = submissionDetail.dueAt
+                ? new Date(submissionDetail.dueAt).getTime()
+                : null;
               const hasLateSubTask =
                 dueAtMs !== null &&
                 (submissionDetail.subTasks ?? []).some((st) => {
@@ -1332,8 +1353,8 @@ export default function CourseResultsPage() {
                     }}
                   />
                   <Text size="xs" style={{ color: "#94a3b8" }}>
-                    Orange outline = submitted after deadline (0 pts by default unless manually overridden). Correct/wrong
-                    stays based on the student answer.
+                    Orange outline = submitted after deadline (0 pts by default unless manually
+                    overridden). Correct/wrong stays based on the student answer.
                   </Text>
                 </Group>
               );
@@ -1402,7 +1423,9 @@ export default function CourseResultsPage() {
                 .slice()
                 .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
                 .map((st) => {
-                  const dueAtMs = submissionDetail.dueAt ? new Date(submissionDetail.dueAt).getTime() : null;
+                  const dueAtMs = submissionDetail.dueAt
+                    ? new Date(submissionDetail.dueAt).getTime()
+                    : null;
                   const submittedAtMs = st.submittedAt ? new Date(st.submittedAt).getTime() : null;
                   const isLateSubTask =
                     dueAtMs !== null &&
@@ -1414,75 +1437,77 @@ export default function CourseResultsPage() {
                   const fallback = st.correct ? st.points : 0;
                   const manualPoints = subTaskScoreDrafts[subKey] ?? fallback;
                   return (
-                  <Box
-                    key={st.subTaskId}
-                    style={{
-                      background: isLateSubTask ? "rgba(251,146,60,0.06)" : "rgba(255,255,255,0.03)",
-                      border: isLateSubTask
-                        ? "2px solid rgba(251,146,60,0.35)"
-                        : "1px solid rgba(255,255,255,0.06)",
-                      borderRadius: 10,
-                      padding: "0.85rem 1rem",
-                    }}
-                  >
-                    <Group justify="space-between" align="flex-start" wrap="nowrap">
-                      <Stack gap={2} style={{ minWidth: 0 }}>
-                        <Text fw={600} style={{ color: "#f1f5f9" }}>
-                          {st.orderIndex + 1}. {st.title}
-                        </Text>
-                        <Text size="xs" style={{ color: "#94a3b8" }}>
-                          {st.type} {"|"} {st.points} pt{st.points === 1 ? "" : "s"} {"|"}{" "}
-                          {st.completed ? "completed" : "not completed"}
-                          {st.correct === null ? (
-                            ""
-                          ) : (
-                            <>
-                              {" | "}
-                              <Text
-                                component="span"
-                                size="xs"
-                                fw={700}
-                                style={{ color: st.correct ? "#2dd4bf" : "#f87171" }}
-                              >
-                                {st.correct ? "correct" : "wrong"}
-                              </Text>
-                            </>
-                          )}
-                        </Text>
-                      </Stack>
+                    <Box
+                      key={st.subTaskId}
+                      style={{
+                        background: isLateSubTask
+                          ? "rgba(251,146,60,0.06)"
+                          : "rgba(255,255,255,0.03)",
+                        border: isLateSubTask
+                          ? "2px solid rgba(251,146,60,0.35)"
+                          : "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: 10,
+                        padding: "0.85rem 1rem",
+                      }}
+                    >
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Stack gap={2} style={{ minWidth: 0 }}>
+                          <Text fw={600} style={{ color: "#f1f5f9" }}>
+                            {st.orderIndex + 1}. {st.title}
+                          </Text>
+                          <Text size="xs" style={{ color: "#94a3b8" }}>
+                            {st.type} {"|"} {st.points} pt{st.points === 1 ? "" : "s"} {"|"}{" "}
+                            {st.completed ? "completed" : "not completed"}
+                            {st.correct === null ? (
+                              ""
+                            ) : (
+                              <>
+                                {" | "}
+                                <Text
+                                  component="span"
+                                  size="xs"
+                                  fw={700}
+                                  style={{ color: st.correct ? "#2dd4bf" : "#f87171" }}
+                                >
+                                  {st.correct ? "correct" : "wrong"}
+                                </Text>
+                              </>
+                            )}
+                          </Text>
+                        </Stack>
 
-                      <Group gap={6} align="flex-end" style={{ flexShrink: 0 }}>
-                        <NumberInput
-                          size="xs"
-                          min={0}
-                          max={st.points}
-                          value={manualPoints}
-                          onChange={(value) => {
-                            const raw = typeof value === "number" ? value : 0;
-                            const next = Math.max(0, Math.min(st.points, raw));
-                            setSubTaskScoreDrafts((prev) => ({ ...prev, [subKey]: next }));
-                          }}
-                          allowDecimal={false}
-                          clampBehavior="strict"
-                          styles={{ input: { width: 86 } }}
-                        />
+                        <Group gap={6} align="flex-end" style={{ flexShrink: 0 }}>
+                          <NumberInput
+                            size="xs"
+                            min={0}
+                            max={st.points}
+                            value={manualPoints}
+                            onChange={(value) => {
+                              const raw = typeof value === "number" ? value : 0;
+                              const next = Math.max(0, Math.min(st.points, raw));
+                              setSubTaskScoreDrafts((prev) => ({ ...prev, [subKey]: next }));
+                            }}
+                            allowDecimal={false}
+                            clampBehavior="strict"
+                            styles={{ input: { width: 86 } }}
+                          />
+                        </Group>
                       </Group>
-                    </Group>
 
-                    {st.type === "MULTIPLE_CHOICE" ? (
-                      <Stack gap={6} mt="sm">
-                        <Text size="sm" style={{ color: "#e2e8f0" }}>
-                          Selected: {st.selectedOptionText ?? "-"}
-                        </Text>
-                      </Stack>
-                    ) : (
-                      <Stack gap={6} mt="sm">
-                        <Text size="sm" style={{ color: "#e2e8f0" }}>
-                          Submitted flag: {st.submittedFlag ?? "-"}
-                        </Text>
-                      </Stack>
-                    )}
-                  </Box>
+                      {st.type === "MULTIPLE_CHOICE" ? (
+                        <Stack gap={6} mt="sm">
+                          <Text size="sm" style={{ color: "#e2e8f0" }}>
+                            Selected: {st.selectedOptionText ?? "-"}
+                          </Text>
+                        </Stack>
+                      ) : (
+                        <Stack gap={6} mt="sm">
+                          <Text size="sm" style={{ color: "#e2e8f0" }}>
+                            Submitted flag: {st.submittedFlag ?? "-"}
+                          </Text>
+                        </Stack>
+                      )}
+                    </Box>
                   );
                 })
             )}
