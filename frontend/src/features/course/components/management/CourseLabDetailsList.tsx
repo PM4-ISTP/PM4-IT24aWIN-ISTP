@@ -12,11 +12,8 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core";
-import { IconCheck, IconCircleDashed, IconListCheck } from "@tabler/icons-react";
-import {
-  getDifficultyColor,
-  getStatusColor,
-} from "@/src/features/course/constants/challengeConstants";
+import { IconCheck, IconCircleDashed, IconClock, IconListCheck } from "@tabler/icons-react";
+import { getDifficultyColor } from "@/src/features/course/constants/challengeConstants";
 import PlayLabButton from "@/src/features/course/components/labs/PlayLabButton";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
 import type { LabStudentDto } from "@/src/shared/types/course";
@@ -24,6 +21,19 @@ import type { LabStudentDto } from "@/src/shared/types/course";
 function formatText(value?: string | number | null): string {
   if (value === undefined || value === null || value === "") return "n/a";
   return String(value);
+}
+
+function formatDue(value?: string | null): string {
+  if (!value) return "–";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("de-CH", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function ChallengeRow({ title, solved, index }: { title: string; solved: boolean; index: number }) {
@@ -122,21 +132,28 @@ export function CourseLabDetailsList({
                       {labTitle}
                     </Text>
                   </Group>
-                  <Group gap="xs" wrap="nowrap">
-                    <Badge variant="light" color={getStatusColor(lab.status ?? "")}>
-                      {formatText(lab.status)}
-                    </Badge>
-                    <Badge variant="light" color={getDifficultyColor(lab.difficulty ?? "")}>
-                      {formatText(lab.difficulty)}
-                    </Badge>
-                    <Badge
-                      variant="light"
-                      color={lab.isSolved ? "teal" : "blue"}
-                      aria-label={`${solvedCount} of ${totalCount} labs solved`}
-                    >
-                      {solvedCount}/{totalCount}
-                    </Badge>
-                  </Group>
+                  <Stack gap={2} align="flex-end" style={{ flexShrink: 0 }}>
+                    <Group gap="xs" wrap="nowrap">
+                      <Badge variant="light" color={getDifficultyColor(lab.difficulty ?? "")}>
+                        {formatText(lab.difficulty)}
+                      </Badge>
+                      <Badge
+                        variant="light"
+                        color={lab.isSolved ? "teal" : "blue"}
+                        aria-label={`${solvedCount} of ${totalCount} challenges solved`}
+                      >
+                        {solvedCount}/{totalCount}
+                      </Badge>
+                    </Group>
+                    {lab.dueAt ? (
+                      <Group gap={6} wrap="nowrap" style={{ opacity: 0.85 }}>
+                        <IconClock size={14} color="rgba(255,255,255,0.55)" />
+                        <Text size="xs" c="dimmed">
+                          Due: {formatDue(lab.dueAt)}
+                        </Text>
+                      </Group>
+                    ) : null}
+                  </Stack>
                 </Group>
               </Accordion.Control>
               <Accordion.Panel>

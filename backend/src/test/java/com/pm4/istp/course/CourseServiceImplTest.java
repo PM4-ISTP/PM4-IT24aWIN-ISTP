@@ -984,7 +984,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void getCourseChallengeSubmissions_returnsOnTimeLateInProgressAndNotSubmitted() {
+  void getCourseChallengeSubmissions_returnsOnTimeInProgressAndNotSubmitted() {
     UUID instructorId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -1055,7 +1055,8 @@ class CourseServiceImplTest {
             .collect(java.util.stream.Collectors.toMap(s -> s.getParticipantId(), s -> s));
 
     assertThat(byStudent.get(studentOnTime.getId()).getStatus().name()).isEqualTo("ON_TIME");
-    assertThat(byStudent.get(studentLate.getId()).getStatus().name()).isEqualTo("LATE");
+    // Late submissions are no longer a concept. If someone completed after the due date, it's still ON_TIME.
+    assertThat(byStudent.get(studentLate.getId()).getStatus().name()).isEqualTo("ON_TIME");
     assertThat(byStudent.get(studentInProgress.getId()).getStatus().name()).isEqualTo("IN_PROGRESS");
     assertThat(byStudent.get(studentNotSubmitted.getId()).getStatus().name())
         .isEqualTo("NOT_SUBMITTED");

@@ -50,6 +50,7 @@ public interface CourseMapper {
   @Mapping(target = "solved", ignore = true)
   @Mapping(target = "solvedChallengeCount", ignore = true)
   @Mapping(target = "totalChallengeCount", ignore = true)
+  @Mapping(target = "dueAt", source = "dueAt")
   LabStudentDto toChallengeStudentDto(CourseLab courseLab);
 
   @Mapping(

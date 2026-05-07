@@ -306,14 +306,15 @@ class ChallengeControllerTest {
   @Test
   void submitChallengeFlag_returnsSubmissionResult() {
     UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
-    ChallengeSubmissionRequestDto request = new ChallengeSubmissionRequestDto("ISTP{ok}");
+    ChallengeSubmissionRequestDto request = new ChallengeSubmissionRequestDto(courseId, "ISTP{ok}");
     ChallengeSubmissionResponseDto result = new ChallengeSubmissionResponseDto(true, false, 1, 3);
 
-    when(labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{ok}"))
+    when(labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{ok}"))
         .thenReturn(result);
 
     ResponseEntity<ChallengeSubmissionResponseDto> response =
@@ -321,20 +322,21 @@ class ChallengeControllerTest {
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isSameAs(result);
-    verify(labService).submitChallengeFlag(userId, labId, challengeId, "ISTP{ok}");
+    verify(labService).submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{ok}");
   }
 
   @Test
   void submitChallengeFlag_returnsIncorrectResult() {
     UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
-    ChallengeSubmissionRequestDto request = new ChallengeSubmissionRequestDto("ISTP{wrong}");
+    ChallengeSubmissionRequestDto request = new ChallengeSubmissionRequestDto(courseId, "ISTP{wrong}");
     ChallengeSubmissionResponseDto result = new ChallengeSubmissionResponseDto(false, false, 0, 3);
 
-    when(labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{wrong}"))
+    when(labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{wrong}"))
         .thenReturn(result);
 
     ResponseEntity<ChallengeSubmissionResponseDto> response =
@@ -347,13 +349,14 @@ class ChallengeControllerTest {
   @Test
   void submitChallengeFlag_whenNotEnrolled_propagatesAccessDenied() {
     UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
-    ChallengeSubmissionRequestDto request = new ChallengeSubmissionRequestDto("ISTP{x}");
+    ChallengeSubmissionRequestDto request = new ChallengeSubmissionRequestDto(courseId, "ISTP{x}");
 
-    when(labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{x}"))
+    when(labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{x}"))
         .thenThrow(new LabAccessDeniedException("not enrolled"));
 
     assertThatThrownBy(
@@ -364,13 +367,14 @@ class ChallengeControllerTest {
   @Test
   void submitChallengeFlag_whenChallengeNotFound_propagatesNotFound() {
     UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
-    ChallengeSubmissionRequestDto request = new ChallengeSubmissionRequestDto("ISTP{x}");
+    ChallengeSubmissionRequestDto request = new ChallengeSubmissionRequestDto(courseId, "ISTP{x}");
 
-    when(labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{x}"))
+    when(labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{x}"))
         .thenThrow(new ChallengeNotFoundException("missing"));
 
     assertThatThrownBy(
@@ -381,13 +385,14 @@ class ChallengeControllerTest {
   @Test
   void submitChallengeFlag_whenAlreadySolved_propagatesConflict() {
     UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     UUID challengeId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
-    ChallengeSubmissionRequestDto request = new ChallengeSubmissionRequestDto("ISTP{x}");
+    ChallengeSubmissionRequestDto request = new ChallengeSubmissionRequestDto(courseId, "ISTP{x}");
 
-    when(labService.submitChallengeFlag(userId, labId, challengeId, "ISTP{x}"))
+    when(labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{x}"))
         .thenThrow(new ChallengeAlreadySolvedException("already done"));
 
     assertThatThrownBy(
@@ -429,7 +434,8 @@ class ChallengeControllerTest {
 
     when(labService.submitChallengeChoice(userId, courseId, labId, challengeId, optionId))
         .thenReturn(choiceResponse);
-    when(labService.completeTheoryChallenge(userId, labId, challengeId)).thenReturn(theoryResponse);
+    when(labService.completeTheoryChallenge(userId, courseId, labId, challengeId))
+        .thenReturn(theoryResponse);
     when(labService.countCompletedChallenges(userId)).thenReturn(7L);
 
     assertThat(
@@ -437,7 +443,7 @@ class ChallengeControllerTest {
                 .submitChallengeChoice(jwt, labId, challengeId, choiceRequest)
                 .getBody())
         .isSameAs(choiceResponse);
-    assertThat(challengeController.completeTheoryChallenge(jwt, labId, challengeId).getBody())
+    assertThat(challengeController.completeTheoryChallenge(jwt, labId, challengeId, courseId).getBody())
         .isSameAs(theoryResponse);
     assertThat(challengeController.countMyCompletedChallenges(jwt).getBody()).containsEntry("count", 7L);
   }

@@ -13,6 +13,7 @@ import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
+import com.pm4.istp.course.exceptions.LabSubmissionClosedException;
 import com.pm4.istp.shared.dto.ErrorDto;
 import com.pm4.istp.shared.keycloak.KeycloakAdminApiException;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
@@ -67,6 +68,14 @@ public class GlobalExceptionHandler {
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError("Lab not found");
     return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(LabSubmissionClosedException.class)
+  public ResponseEntity<ErrorDto> handleLabSubmissionClosedException(LabSubmissionClosedException ex) {
+    log.warn("Caught LabSubmissionClosedException: {}", ex.getMessage());
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError(ex.getMessage());
+    return new ResponseEntity<>(errorDto, HttpStatus.CONFLICT);
   }
 
   @ExceptionHandler(CourseAccessDeniedException.class)

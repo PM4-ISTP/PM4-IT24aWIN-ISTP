@@ -2,6 +2,7 @@ package com.pm4.istp.course.repositories;
 
 import com.pm4.istp.course.db.entities.CourseLab;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Repository;
 public interface CourseLabRepository extends JpaRepository<CourseLab, UUID> {
 
   List<CourseLab> findByCourseIdOrderByOrderIndexAsc(UUID courseId);
+
+  Optional<CourseLab> findByCourseIdAndLabId(UUID courseId, UUID labId);
 
   @Query(
       """

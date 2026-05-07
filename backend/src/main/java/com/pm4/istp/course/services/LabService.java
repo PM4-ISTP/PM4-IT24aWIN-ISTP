@@ -38,7 +38,7 @@ public interface LabService {
    * correct submission the completion is persisted and cannot be re-submitted.
    */
   ChallengeSubmissionResponseDto submitChallengeFlag(
-      UUID userId, UUID labId, UUID challengeId, String flag);
+      UUID userId, UUID courseId, UUID labId, UUID challengeId, String flag);
 
   /**
    * Submits a multiple-choice option for a challenge.
@@ -59,7 +59,8 @@ public interface LabService {
    * Completes a theory challenge (FLAG type with no flag set) without requiring a flag submission.
    * The challenge is marked as solved immediately.
    */
-  ChallengeSubmissionResponseDto completeTheoryChallenge(UUID userId, UUID labId, UUID challengeId);
+  ChallengeSubmissionResponseDto completeTheoryChallenge(
+      UUID userId, UUID courseId, UUID labId, UUID challengeId);
 
   /** Returns the number of labs the user has fully completed (all challenges solved). */
   long countCompletedChallenges(UUID userId);

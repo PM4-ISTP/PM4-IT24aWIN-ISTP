@@ -286,7 +286,7 @@ export function LabPlayView({
     }
 
     setSubmitting(true);
-    const result = await submitChallengeFlag(lab.id, current.id, normalizedFlag);
+    const result = await submitChallengeFlag(lab.id, current.id, normalizedFlag, courseId);
     setSubmitting(false);
 
     if (!result.success) {
@@ -356,7 +356,7 @@ export function LabPlayView({
   async function handleCompleteTheory() {
     if (!current || !current.id || !lab.id || current.isSolved) return;
     setSubmitting(true);
-    const result = await completeTheoryChallenge(lab.id, current.id);
+    const result = await completeTheoryChallenge(lab.id, current.id, courseId);
     setSubmitting(false);
     if (!result.success) {
       notifications.show({ color: "red", title: "Could not complete task", message: result.error });

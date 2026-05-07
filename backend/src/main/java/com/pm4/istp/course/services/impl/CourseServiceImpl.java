@@ -484,8 +484,11 @@ public class CourseServiceImpl implements CourseService {
         correct = opt.isCorrect();
         selectedOptionText = opt.getSelectedOption() != null ? opt.getSelectedOption().getText() : null;
       } else if (flag != null) {
-        correct = flag.isCorrect();
-        submittedFlag = flag.getSubmittedFlag();
+        String sf = flag.getSubmittedFlag();
+        if (sf != null && !sf.isBlank()) {
+          correct = flag.isCorrect();
+          submittedFlag = sf;
+        }
       } else if (completed) {
         // completed without stored submission (e.g. theory challenge or legacy data)
         correct = true;
@@ -753,7 +756,9 @@ public class CourseServiceImpl implements CourseService {
     if (dueAt == null || completedAt == null || !completedAt.isAfter(dueAt)) {
       return CourseLabSubmissionStatusEnum.ON_TIME;
     }
-    return CourseLabSubmissionStatusEnum.LATE;
+    // No "late" status anymore: once dueAt is passed, submissions are blocked.
+    // For legacy data that may already be completed after the deadline, treat as ON_TIME.
+    return CourseLabSubmissionStatusEnum.ON_TIME;
   }
 
   private record SubmissionKey(UUID userId, UUID labId) {}

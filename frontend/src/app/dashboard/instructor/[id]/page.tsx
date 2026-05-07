@@ -54,7 +54,6 @@ import {
   CourseLabManager,
   type CourseChallengeEntry,
 } from "@/src/features/course/components/management/CourseLabManager";
-import { CourseSubmissionsTable } from "@/src/features/course/components/management/CourseSubmissionsTable";
 import { updateCourseChallenges } from "@/src/features/course/actions/labs";
 import BadgeDesigner, { type BadgeConfig } from "@/src/features/badge/components/BadgeDesigner";
 
@@ -579,8 +578,6 @@ export default function EditCourse() {
                 />
 
                 <CourseLabManager labs={courseLabs} onChange={setCourseChallenges} />
-
-                <CourseSubmissionsTable courseId={courseId} />
 
                 {isOwner && (
                   <Box

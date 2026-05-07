@@ -10,6 +10,7 @@ import {
   Container,
   Group,
   Loader,
+  Drawer,
   Modal,
   Select,
   SimpleGrid,
@@ -38,7 +39,7 @@ import {
   type CourseParticipantDto,
 } from "@/src/shared/types/course";
 
-const statusValues: SubmissionStatus[] = ["NOT_SUBMITTED", "IN_PROGRESS", "ON_TIME", "LATE"];
+const statusValues: SubmissionStatus[] = ["NOT_SUBMITTED", "IN_PROGRESS", "ON_TIME"];
 
 function initials(name: string): string {
   return name
@@ -209,6 +210,9 @@ interface ParticipantRow {
   maxPoints: number;
   completionPct: number;
   overallStatus: SubmissionStatus;
+  currentLabId: string | null;
+  currentLabTitle: string | null;
+  currentLabStatus: SubmissionStatus;
   latestStatus: SubmissionStatus;
   latestLabTitle: string | null;
   latestCompletedAt: string | null;
@@ -226,8 +230,9 @@ export default function CourseResultsPage() {
   const [search, setSearch] = useState("");
   const [labFilter, setLabFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<SubmissionStatus | null>(null);
-  const [detailsOpened, setDetailsOpened] = useState(false);
+  const [drawerOpened, setDrawerOpened] = useState(false);
   const [activeParticipant, setActiveParticipant] = useState<ParticipantRow | null>(null);
+  const [detailsOpened, setDetailsOpened] = useState(false);
   const [activeLabId, setActiveLabId] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
@@ -309,8 +314,28 @@ export default function CourseResultsPage() {
         totalChallenges > 0 ? Math.round((solvedChallenges / totalChallenges) * 100) : 0;
 
       const overallStatus = worstStatus(effectiveSubs.map((s) => s.status));
+      let currentLabId: string | null = null;
+      let currentLabStatus: SubmissionStatus = "NOT_SUBMITTED";
+      if (!labFilter) {
+        const orderedLabIds = labs.map((l) => l.labId);
+        for (const lid of orderedLabIds) {
+          const s = byLabId.get(lid);
+          const started =
+            !!s &&
+            ((s.solvedChallengeCount ?? 0) > 0 ||
+              (s.awardedPoints ?? 0) > 0 ||
+              Boolean(s.completedAt));
+          if (started) {
+            currentLabId = lid;
+            currentLabStatus = s!.status;
+          }
+        }
+      } else {
+        currentLabId = labFilter;
+        currentLabStatus = byLabId.get(labFilter)?.status ?? "NOT_SUBMITTED";
+      }
 
-      const latest = [...effectiveSubs]
+      const latest = [...subs]
         .filter((s) => Boolean(s.completedAt))
         .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())[0];
 
@@ -323,12 +348,15 @@ export default function CourseResultsPage() {
         maxPoints,
         completionPct,
         overallStatus,
+        currentLabId,
+        currentLabTitle: currentLabId ? (labTitleById.get(currentLabId) ?? null) : null,
+        currentLabStatus,
         latestStatus: latest?.status ?? "NOT_SUBMITTED",
         latestLabTitle: latest ? (labTitleById.get(latest.labId) ?? null) : null,
         latestCompletedAt: latest?.completedAt ?? null,
       };
     });
-  }, [data, submissionsByParticipant, labFilter, labTitleById]);
+  }, [data, submissionsByParticipant, labFilter, labTitleById, labs]);
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -337,15 +365,15 @@ export default function CourseResultsPage() {
         q.length === 0 ||
         r.participant.name.toLowerCase().includes(q) ||
         (r.participant.email ?? "").toLowerCase().includes(q);
-      const matchesStatus = !statusFilter || r.overallStatus === statusFilter;
+      const matchesStatus = !statusFilter || r.currentLabStatus === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [rows, search, statusFilter]);
 
   const totalParticipants = rows.length;
   const statsOnTime = rows.filter((r) => r.overallStatus === "ON_TIME").length;
-  const statsLate = rows.filter((r) => r.overallStatus === "LATE").length;
   const statsInProg = rows.filter((r) => r.overallStatus === "IN_PROGRESS").length;
+  const statsNotStarted = rows.filter((r) => r.overallStatus === "NOT_SUBMITTED").length;
   const avgPct =
     totalParticipants > 0
       ? Math.round(rows.map((r) => r.completionPct).reduce((a, b) => a + b, 0) / totalParticipants)
@@ -377,44 +405,16 @@ export default function CourseResultsPage() {
     }
   }
 
-  async function openDetails(row: ParticipantRow) {
+  function openDrawer(row: ParticipantRow) {
     setActiveParticipant(row);
-    const nextLabId = labFilter ?? labs[0]?.labId ?? null;
-    setActiveLabId(nextLabId);
-    setDetailsOpened(true);
-    if (nextLabId) {
-      await loadDetail(row.participant.id, nextLabId);
-    } else {
-      setDetail(null);
-      setDetailError(null);
-    }
+    setDrawerOpened(true);
   }
 
-  async function setOverridePoints(challengeId: string, points: number) {
-    if (!activeParticipant || !activeLabId) return;
-    const res = await fetch(
-      `/api/backend/api/v1/courses/${encodeURIComponent(courseId)}/submissions/${encodeURIComponent(
-        activeParticipant.participant.id
-      )}/${encodeURIComponent(challengeId)}/score`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ points }),
-      }
-    );
-    if (!res.ok) throw new Error((await res.text()) || res.statusText);
-    const updated = (await res.json()) as CourseChallengeSubmissionEntryDto;
-
-    setData((prev) => {
-      if (!prev) return prev;
-      const nextSubs = (prev.submissions ?? []).map((s) => {
-        if (s.participantId === updated.participantId && s.labId === updated.labId) return updated;
-        return s;
-      });
-      return { ...prev, submissions: nextSubs };
-    });
-
-    await loadDetail(activeParticipant.participant.id, activeLabId);
+  async function openDetails(labId: string) {
+    if (!activeParticipant) return;
+    setActiveLabId(labId);
+    setDetailsOpened(true);
+    await loadDetail(activeParticipant.participant.id, labId);
   }
 
   return (
@@ -460,9 +460,8 @@ export default function CourseResultsPage() {
         <StatCard
           label="In Progress"
           value={statsInProg}
-          sub={`${statsLate} late`}
-          subColor={statsLate > 0 ? "#f87171" : "#64748b"}
-          icon={<IconPlayerPlay size={12} color={statsLate > 0 ? "#f87171" : "#64748b"} />}
+          sub={`${statsNotStarted} not started`}
+          icon={<IconPlayerPlay size={12} color="#64748b" />}
         />
         <StatCard
           label="Participants"
@@ -581,16 +580,14 @@ export default function CourseResultsPage() {
           </Text>
         ) : (
           filteredRows.map((r) => {
-            const latestMeta =
-              r.latestLabTitle && r.latestCompletedAt
-                ? `${r.latestLabTitle} • ${formatDateTime(r.latestCompletedAt)}`
-                : r.latestLabTitle
-                  ? r.latestLabTitle
-                  : r.latestCompletedAt
-                    ? formatDateTime(r.latestCompletedAt)
-                    : null;
-
-            const status = labFilter ? r.overallStatus : r.latestStatus;
+            const status = r.currentLabStatus;
+            const currentIndex =
+              r.currentLabId != null ? labs.findIndex((l) => l.labId === r.currentLabId) : -1;
+            const labMeta =
+              r.currentLabId && currentIndex >= 0
+                ? `Lab ${String(currentIndex + 1).padStart(2, "0")}`
+                : null;
+            const currentMeta = labMeta ? `${labMeta}${r.currentLabTitle ? `: ${r.currentLabTitle}` : ""}` : null;
             return (
               <Box
                 key={r.participant.id}
@@ -603,7 +600,7 @@ export default function CourseResultsPage() {
                   cursor: "pointer",
                 }}
                 onClick={() => {
-                  void openDetails(r);
+                  openDrawer(r);
                 }}
               >
                 <Group gap="sm">
@@ -628,17 +625,18 @@ export default function CourseResultsPage() {
                 <Tooltip
                   withArrow
                   position="top"
-                  label={
-                    labFilter
-                      ? statusLabel(status)
-                      : latestMeta
-                        ? `Latest: ${statusLabel(status)} • ${latestMeta}`
-                        : `Latest: ${statusLabel(status)}`
-                  }
+                  label={currentMeta ? `Current: ${statusLabel(status)} · ${currentMeta}` : statusLabel(status)}
                 >
-                  <span style={{ ...statusBadgeStyle(status), cursor: "help" }}>
-                    {statusLabel(status)}
-                  </span>
+                  <Group gap={10} wrap="nowrap">
+                    <span style={{ ...statusBadgeStyle(status), cursor: "help" }}>
+                      {statusLabel(status)}
+                    </span>
+                    {labMeta ? (
+                      <Text size="xs" style={{ color: "#475569" }}>
+                        {labMeta}
+                      </Text>
+                    ) : null}
+                  </Group>
                 </Tooltip>
 
                 <Stack gap={2}>
@@ -679,11 +677,147 @@ export default function CourseResultsPage() {
         )}
       </Box>
 
+      <Drawer
+        opened={drawerOpened && !!activeParticipant}
+        onClose={() => {
+          setDrawerOpened(false);
+          setDetailsOpened(false);
+          setActiveParticipant(null);
+          setActiveLabId(null);
+          setDetail(null);
+          setDetailError(null);
+        }}
+        title={
+          <Group gap="sm">
+            {activeParticipant ? (
+              <Avatar
+                color={avatarColor(activeParticipant.participant.name)}
+                radius="md"
+                size="sm"
+                style={{ fontWeight: 700, fontSize: "0.78rem" }}
+              >
+                {initials(activeParticipant.participant.name)}
+              </Avatar>
+            ) : null}
+            <Stack gap={0} style={{ minWidth: 0 }}>
+              <Text fw={700} size="sm" style={{ color: "#f1f5f9" }}>
+                {activeParticipant?.participant.name ?? "Participant"}
+              </Text>
+              <Text size="xs" style={{ color: "#64748b" }}>
+                Lab breakdown
+              </Text>
+            </Stack>
+          </Group>
+        }
+        position="right"
+        size="md"
+        styles={{
+          content: { background: "#0b1220", border: "1px solid rgba(255,255,255,0.08)" },
+          header: { background: "#0b1220", borderBottom: "1px solid rgba(255,255,255,0.08)" },
+          body: { paddingTop: 10 },
+        }}
+      >
+        {!activeParticipant ? null : (
+          <Stack gap="md">
+            <SimpleGrid cols={2} spacing="sm">
+              <Box
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 12,
+                  padding: "0.95rem 1rem",
+                }}
+              >
+                <Text size="xs" tt="uppercase" fw={700} style={{ color: "#64748b" }}>
+                  Points
+                </Text>
+                <Text fw={800} style={{ color: "#f1f5f9", fontSize: "1.4rem", marginTop: 6 }}>
+                  {activeParticipant.awardedPoints}/{activeParticipant.maxPoints}
+                </Text>
+              </Box>
+              <Box
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 12,
+                  padding: "0.95rem 1rem",
+                }}
+              >
+                <Text size="xs" tt="uppercase" fw={700} style={{ color: "#64748b" }}>
+                  Challenges
+                </Text>
+                <Text fw={800} style={{ color: "#f1f5f9", fontSize: "1.4rem", marginTop: 6 }}>
+                  {activeParticipant.solvedChallenges}/{activeParticipant.totalChallenges}
+                </Text>
+              </Box>
+            </SimpleGrid>
+
+            {labs.length === 0 ? (
+              <Alert color="gray" title="No labs assigned">
+                This course currently has no labs assigned, so there is nothing to grade yet.
+              </Alert>
+            ) : (
+              <Stack gap="sm">
+                {labs.map((l, idx) => {
+                  const sub = activeParticipant.byLabId.get(l.labId);
+                  const status = (sub?.status ?? "NOT_SUBMITTED") as SubmissionStatus;
+                  return (
+                    <Box
+                      key={l.labId}
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: `1px solid ${
+                          status === "LATE" ? "rgba(249,115,22,0.28)" : "rgba(255,255,255,0.08)"
+                        }`,
+                        borderRadius: 14,
+                        padding: "0.95rem 1rem",
+                      }}
+                    >
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Stack gap={2} style={{ minWidth: 0 }}>
+                          <Text fw={750} style={{ color: "#f1f5f9" }} lineClamp={1}>
+                            Lab {String(idx + 1).padStart(2, "0")}: {l.labTitle}
+                          </Text>
+                          <Group gap={8}>
+                            <span style={statusBadgeStyle(status)}>{statusLabel(status)}</span>
+                            {sub?.completedAt ? (
+                              <Text size="xs" style={{ color: "#475569" }}>
+                                {formatDateTime(sub.completedAt)}
+                              </Text>
+                            ) : null}
+                          </Group>
+                          <Text size="sm" style={{ color: "#94a3b8", marginTop: 6 }}>
+                            {(sub?.awardedPoints ?? 0)}/{(sub?.maxPoints ?? 0)} pts ·{" "}
+                            {(sub?.solvedChallengeCount ?? 0)}/{(sub?.totalChallengeCount ?? 0)}{" "}
+                            challenges
+                          </Text>
+                        </Stack>
+
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void openDetails(l.labId);
+                          }}
+                          style={{ marginTop: 2 }}
+                        >
+                          <IconSearch size={16} />
+                        </ActionIcon>
+                      </Group>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
+          </Stack>
+        )}
+      </Drawer>
+
       <Modal
         opened={detailsOpened}
         onClose={() => {
           setDetailsOpened(false);
-          setActiveParticipant(null);
           setDetail(null);
           setDetailError(null);
         }}
@@ -763,16 +897,27 @@ export default function CourseResultsPage() {
 
                 {detail.challenges.map((c: CourseLabChallengeSubmissionDetailDto, idx: number) => {
                   const isLate = detail.status === "LATE";
-                  const correctLabel =
-                    c.correct === null ? "unknown" : c.correct ? "correct" : "wrong";
-                  const correctColor =
-                    c.correct === null ? "#94a3b8" : c.correct ? "#2dd4bf" : "#f87171";
+                  const attempted =
+                    Boolean(c.completed) ||
+                    Boolean(c.submittedFlag && c.submittedFlag.trim().length > 0) ||
+                    Boolean(c.selectedOptionText && c.selectedOptionText.trim().length > 0);
 
-                  const max = Math.max(0, c.maxPoints ?? 0);
-                  const options = Array.from({ length: max + 1 }, (_, i) => ({
-                    value: String(i),
-                    label: String(i),
-                  }));
+                  const correctLabel = !attempted
+                    ? "not attempted"
+                    : c.correct === null
+                      ? c.completed
+                        ? "completed"
+                        : "attempted"
+                      : c.correct
+                        ? "correct"
+                        : "wrong";
+                  const correctColor = !attempted
+                    ? "#94a3b8"
+                    : c.correct === null
+                      ? "#94a3b8"
+                      : c.correct
+                        ? "#2dd4bf"
+                        : "#f87171";
 
                   return (
                     <Box
@@ -811,32 +956,11 @@ export default function CourseResultsPage() {
 
                         <Stack gap={6} align="flex-end" style={{ flexShrink: 0 }}>
                           <Text size="xs" style={{ color: "#64748b" }}>
-                            Award points
+                            Points
                           </Text>
-                          <Select
-                            value={String(c.overridePoints ?? c.awardedPoints ?? 0)}
-                            data={options}
-                            onChange={(v) => {
-                              const val = Number(v ?? "0");
-                              void setOverridePoints(c.challengeId, val);
-                            }}
-                            w={96}
-                            size="xs"
-                            styles={{
-                              input: {
-                                background: "rgba(255,255,255,0.05)",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                color: "#f1f5f9",
-                                textAlign: "center",
-                                fontWeight: 700,
-                              },
-                              dropdown: {
-                                background: "#0b1220",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                              },
-                              option: { color: "#e2e8f0" },
-                            }}
-                          />
+                          <Text fw={800} style={{ color: "#f1f5f9" }}>
+                            {c.awardedPoints ?? 0}/{c.maxPoints ?? 0}
+                          </Text>
                         </Stack>
                       </Group>
                     </Box>

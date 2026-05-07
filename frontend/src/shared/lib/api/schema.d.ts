@@ -330,7 +330,7 @@ export interface paths {
   };
   "/api/v1/labs/{labId}/challenges/{challengeId}/complete": {
     parameters: {
-      query?: never;
+      query: { courseId: string };
       header?: never;
       path: { labId: string; challengeId: string };
       cookie?: never;
@@ -952,6 +952,8 @@ export interface components {
       /** Format: int32 */
       totalChallengeCount?: number;
       /** Format: date-time */
+      dueAt?: string | null;
+      /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
@@ -1068,6 +1070,7 @@ export interface components {
       updatedAt?: string;
     };
     ChallengeSubmissionRequestDto: {
+      courseId: string;
       flag: string;
     };
     ChallengeSubmissionResponseDto: {
@@ -2184,7 +2187,7 @@ export interface operations {
   };
   completeTheoryChallenge: {
     parameters: {
-      query?: never;
+      query: { courseId: string };
       header?: never;
       path: {
         labId: string;
