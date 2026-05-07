@@ -9,7 +9,7 @@ import {
   ThemeIcon,
   Tooltip,
 } from "@mantine/core";
-import { IconCheck, IconClock, IconFlame, IconLock } from "@tabler/icons-react";
+import { IconCheck, IconClock, IconFlame, IconListCheck, IconLock } from "@tabler/icons-react";
 import { getInitials } from "@/src/shared/lib/utils";
 import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
 
@@ -24,17 +24,8 @@ interface LessonsProgress {
   total: number;
 }
 
-/**
- * Props for lab progress.
- *
- * TODO: Replace with real lab data once the labs feature is
- * implemented in the backend. Until then, leave this prop undefined to render
- * the placeholder state.
- */
-interface ChallengesProgress {
-  /** Number of labs the user has completed */
+interface SimpleProgress {
   completed: number;
-  /** Total number of labs in the course */
   total: number;
 }
 
@@ -45,11 +36,11 @@ export interface CourseJourneyCardProps {
    */
   lessons?: LessonsProgress;
 
-  /**
-   * Lab progress data (aggregate challenge progress across the course).
-   * Leave undefined to show the "coming soon" placeholder.
-   */
-  labs?: ChallengesProgress;
+  /** How many labs (top-level) the student has fully solved. */
+  labs?: SimpleProgress;
+
+  /** How many individual challenges across all labs the student has solved. */
+  challenges?: SimpleProgress;
 
   /**
    * Deprecated. The primary course CTA lives in the banner header.
@@ -172,9 +163,10 @@ function ChallengesPlaceholder() {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function CourseJourneyCard({ lessons, labs, instructor }: CourseJourneyCardProps) {
+export function CourseJourneyCard({ lessons, labs, challenges, instructor }: CourseJourneyCardProps) {
   const lessonPercent = lessons ? calcPercent(lessons.finished, lessons.total) : 0;
-  const challengePercent = labs ? calcPercent(labs.completed, labs.total) : 0;
+  const labPercent = labs ? calcPercent(labs.completed, labs.total) : 0;
+  const challengePercent = challenges ? calcPercent(challenges.completed, challenges.total) : 0;
 
   return (
     <Box
@@ -198,46 +190,11 @@ export function CourseJourneyCard({ lessons, labs, instructor }: CourseJourneyCa
 
           <Divider />
 
-          {/* ── Lessons progress ── */}
-          {lessons ? (
-            <ProgressSection
-              label="Lessons"
-              percent={lessonPercent}
-              color="blue"
-              statLeft={
-                <StatChip
-                  icon={<IconCheck size={13} color="var(--mantine-color-blue-5)" />}
-                  label={`${lessons.finished} Lesson${lessons.finished !== 1 ? "s" : ""} Finished`}
-                />
-              }
-              statRight={
-                <StatChip
-                  icon={<IconClock size={13} color="var(--mantine-color-dimmed)" />}
-                  label={`${lessons.total - lessons.finished} Remaining`}
-                  dimmed
-                />
-              }
-            />
-          ) : (
-            // TODO: Remove this once lesson tracking is implemented
-            <Stack gap={8}>
-              <Group justify="space-between">
-                <Text size="sm" fw={600} c="dimmed">
-                  Lessons
-                </Text>
-                <Text size="xs" c="dimmed" fs="italic">
-                  Coming soon
-                </Text>
-              </Group>
-              <Progress value={0} color="blue" radius="xl" size="md" style={{ opacity: 0.35 }} />
-            </Stack>
-          )}
-
-          {/* ── Challenges progress (or placeholder) ── */}
+          {/* ── Labs progress ── */}
           {labs ? (
             <ProgressSection
-              label="Challenges"
-              percent={challengePercent}
+              label="Labs"
+              percent={labPercent}
               color="orange"
               statLeft={
                 <StatChip
@@ -249,6 +206,36 @@ export function CourseJourneyCard({ lessons, labs, instructor }: CourseJourneyCa
                 <StatChip
                   icon={<IconClock size={13} color="var(--mantine-color-dimmed)" />}
                   label={`${Math.max(labs.total - labs.completed, 0)} Remaining`}
+                  dimmed
+                />
+              }
+            />
+          ) : (
+            <Stack gap={8}>
+              <Group justify="space-between">
+                <Text size="sm" fw={600} c="dimmed">Labs</Text>
+                <Text size="xs" c="dimmed" fs="italic">Coming soon</Text>
+              </Group>
+              <Progress value={0} color="orange" radius="xl" size="md" style={{ opacity: 0.35 }} />
+            </Stack>
+          )}
+
+          {/* ── Challenges progress ── */}
+          {challenges ? (
+            <ProgressSection
+              label="Challenges"
+              percent={challengePercent}
+              color="blue"
+              statLeft={
+                <StatChip
+                  icon={<IconListCheck size={13} color="var(--mantine-color-blue-5)" />}
+                  label={`${challenges.completed} Challenge${challenges.completed !== 1 ? "s" : ""} Solved`}
+                />
+              }
+              statRight={
+                <StatChip
+                  icon={<IconClock size={13} color="var(--mantine-color-dimmed)" />}
+                  label={`${Math.max(challenges.total - challenges.completed, 0)} Remaining`}
                   dimmed
                 />
               }

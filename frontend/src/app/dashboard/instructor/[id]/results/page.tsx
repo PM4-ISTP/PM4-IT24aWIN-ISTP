@@ -23,6 +23,7 @@ import {
 import {
   IconArrowLeft,
   IconCheck,
+  IconClock,
   IconPlayerPlay,
   IconSearch,
   IconTrendingUp,
@@ -767,6 +768,42 @@ export default function CourseResultsPage() {
                 {labs.map((l, idx) => {
                   const sub = activeParticipant.byLabId.get(l.labId);
                   const status = (sub?.status ?? "NOT_SUBMITTED");
+
+                  // Deadline logic
+                  const now = new Date();
+                  const dueDate = l.dueAt ? new Date(l.dueAt) : null;
+                  const deadlinePassed = dueDate ? now > dueDate : false;
+                  const hasDeadline = dueDate !== null;
+
+                  let deadlineColor = "#64748b";
+                  let deadlineLabel = "";
+                  let deadlineBg = "transparent";
+                  let deadlineBorder = "transparent";
+
+                  if (hasDeadline) {
+                    if (!deadlinePassed) {
+                      deadlineColor = "#2dd4bf";
+                      deadlineLabel = `Due: ${formatDateTime(l.dueAt)} — still open`;
+                      deadlineBg = "rgba(20,184,166,0.07)";
+                      deadlineBorder = "rgba(20,184,166,0.2)";
+                    } else if (status === "ON_TIME") {
+                      deadlineColor = "#2dd4bf";
+                      deadlineLabel = `Due: ${formatDateTime(l.dueAt)} — submitted on time`;
+                      deadlineBg = "rgba(20,184,166,0.07)";
+                      deadlineBorder = "rgba(20,184,166,0.2)";
+                    } else if (status === "LATE") {
+                      deadlineColor = "#f97316";
+                      deadlineLabel = `Due: ${formatDateTime(l.dueAt)} — submitted late`;
+                      deadlineBg = "rgba(249,115,22,0.09)";
+                      deadlineBorder = "rgba(249,115,22,0.28)";
+                    } else {
+                      deadlineColor = "#f87171";
+                      deadlineLabel = `Due: ${formatDateTime(l.dueAt)} — expired`;
+                      deadlineBg = "rgba(239,68,68,0.08)";
+                      deadlineBorder = "rgba(239,68,68,0.25)";
+                    }
+                  }
+
                   return (
                     <Box
                       key={l.labId}
@@ -797,6 +834,26 @@ export default function CourseResultsPage() {
                             {sub?.solvedChallengeCount ?? 0}/{sub?.totalChallengeCount ?? 0}{" "}
                             challenges
                           </Text>
+
+                          {hasDeadline && (
+                            <Box
+                              style={{
+                                marginTop: 8,
+                                background: deadlineBg,
+                                border: `1px solid ${deadlineBorder}`,
+                                borderRadius: 8,
+                                padding: "5px 10px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                              }}
+                            >
+                              <IconClock size={13} color={deadlineColor} style={{ flexShrink: 0 }} />
+                              <Text size="xs" fw={600} style={{ color: deadlineColor }}>
+                                {deadlineLabel}
+                              </Text>
+                            </Box>
+                          )}
                         </Stack>
 
                         <ActionIcon
@@ -943,7 +1000,7 @@ export default function CourseResultsPage() {
                             {idx + 1}. {c.title}
                           </Text>
                           <Text size="xs" style={{ color: "#64748b" }}>
-                            {c.type} • {c.maxPoints} pts •{" "}
+                            {c.type} •{" "}
                             <span style={{ color: correctColor }}>{correctLabel}</span>
                           </Text>
                           {c.submittedFlag ? (

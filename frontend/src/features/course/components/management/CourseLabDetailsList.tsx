@@ -12,7 +12,7 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core";
-import { IconCheck, IconCircleDashed, IconClock, IconListCheck } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCheck, IconCircleDashed, IconClock, IconListCheck } from "@tabler/icons-react";
 import { getDifficultyColor } from "@/src/features/course/constants/challengeConstants";
 import PlayLabButton from "@/src/features/course/components/labs/PlayLabButton";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
@@ -98,11 +98,26 @@ export function CourseLabDetailsList({
             ? `/dashboard/courses/${courseId}/labs/${lab.id}/play`
             : undefined;
 
+          const now = new Date();
+          const dueDate = lab.dueAt ? new Date(lab.dueAt) : null;
+          const deadlinePassed = dueDate ? now > dueDate : false;
+          const deadlineExpiredUnsolved = deadlinePassed && !lab.isSolved;
+          const deadlineExpiredSolved = deadlinePassed && lab.isSolved;
+
           return (
             <Accordion.Item
               key={lab.id}
               value={lab.id}
-              style={{ background: "rgba(255,255,255,0.02)" }}
+              style={{
+                background: deadlineExpiredUnsolved
+                  ? "rgba(239,68,68,0.06)"
+                  : "rgba(255,255,255,0.02)",
+                borderLeft: deadlineExpiredUnsolved
+                  ? "3px solid rgba(239,68,68,0.7)"
+                  : deadlineExpiredSolved
+                    ? "3px solid rgba(20,184,166,0.5)"
+                    : undefined,
+              }}
             >
               <Accordion.Control>
                 <Group justify="space-between" align="center" wrap="nowrap" pr="md">
@@ -132,28 +147,69 @@ export function CourseLabDetailsList({
                       {labTitle}
                     </Text>
                   </Group>
-                  <Stack gap={2} align="flex-end" style={{ flexShrink: 0 }}>
-                    <Group gap="xs" wrap="nowrap">
-                      <Badge variant="light" color={getDifficultyColor(lab.difficulty ?? "")}>
-                        {formatText(lab.difficulty)}
-                      </Badge>
-                      <Badge
-                        variant="light"
-                        color={lab.isSolved ? "teal" : "blue"}
-                        aria-label={`${solvedCount} of ${totalCount} challenges solved`}
-                      >
-                        {solvedCount}/{totalCount}
-                      </Badge>
-                    </Group>
+                  <Group gap="xs" wrap="nowrap" align="center" style={{ flexShrink: 0 }}>
                     {lab.dueAt ? (
-                      <Group gap={6} wrap="nowrap" style={{ opacity: 0.85 }}>
-                        <IconClock size={14} color="rgba(255,255,255,0.55)" />
-                        <Text size="xs" c="dimmed">
-                          Due: {formatDue(lab.dueAt)}
-                        </Text>
-                      </Group>
+                      deadlineExpiredUnsolved ? (
+                        <Group
+                          gap={5}
+                          wrap="nowrap"
+                          style={{
+                            background: "rgba(239,68,68,0.15)",
+                            border: "1px solid rgba(239,68,68,0.4)",
+                            borderRadius: 8,
+                            padding: "4px 10px",
+                          }}
+                        >
+                          <IconAlertTriangle size={15} color="#f87171" style={{ flexShrink: 0 }} />
+                          <Text size="sm" fw={700} style={{ color: "#f87171", whiteSpace: "nowrap" }}>
+                            Expired · {formatDue(lab.dueAt)}
+                          </Text>
+                        </Group>
+                      ) : deadlineExpiredSolved ? (
+                        <Group
+                          gap={5}
+                          wrap="nowrap"
+                          style={{
+                            background: "rgba(20,184,166,0.1)",
+                            border: "1px solid rgba(20,184,166,0.3)",
+                            borderRadius: 8,
+                            padding: "4px 10px",
+                          }}
+                        >
+                          <IconClock size={15} color="rgba(20,184,166,0.9)" style={{ flexShrink: 0 }} />
+                          <Text size="sm" fw={600} style={{ color: "rgba(20,184,166,0.9)", whiteSpace: "nowrap" }}>
+                            Due: {formatDue(lab.dueAt)}
+                          </Text>
+                        </Group>
+                      ) : (
+                        <Group
+                          gap={5}
+                          wrap="nowrap"
+                          style={{
+                            background: "rgba(255,255,255,0.05)",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            borderRadius: 8,
+                            padding: "4px 10px",
+                          }}
+                        >
+                          <IconClock size={15} color="rgba(255,255,255,0.6)" style={{ flexShrink: 0 }} />
+                          <Text size="sm" fw={600} style={{ color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+                            Due: {formatDue(lab.dueAt)}
+                          </Text>
+                        </Group>
+                      )
                     ) : null}
-                  </Stack>
+                    <Badge variant="light" color={getDifficultyColor(lab.difficulty ?? "")}>
+                      {formatText(lab.difficulty)}
+                    </Badge>
+                    <Badge
+                      variant="light"
+                      color={lab.isSolved ? "teal" : "blue"}
+                      aria-label={`${solvedCount} of ${totalCount} challenges solved`}
+                    >
+                      {solvedCount}/{totalCount}
+                    </Badge>
+                  </Group>
                 </Group>
               </Accordion.Control>
               <Accordion.Panel>
