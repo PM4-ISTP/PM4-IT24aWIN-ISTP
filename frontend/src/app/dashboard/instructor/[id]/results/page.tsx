@@ -327,7 +327,7 @@ export default function CourseResultsPage() {
               Boolean(s.completedAt));
           if (started) {
             currentLabId = lid;
-            currentLabStatus = s!.status;
+            currentLabStatus = s.status;
           }
         }
       } else {
@@ -587,7 +587,9 @@ export default function CourseResultsPage() {
               r.currentLabId && currentIndex >= 0
                 ? `Lab ${String(currentIndex + 1).padStart(2, "0")}`
                 : null;
-            const currentMeta = labMeta ? `${labMeta}${r.currentLabTitle ? `: ${r.currentLabTitle}` : ""}` : null;
+            const currentMeta = labMeta
+              ? `${labMeta}${r.currentLabTitle ? `: ${r.currentLabTitle}` : ""}`
+              : null;
             return (
               <Box
                 key={r.participant.id}
@@ -625,7 +627,11 @@ export default function CourseResultsPage() {
                 <Tooltip
                   withArrow
                   position="top"
-                  label={currentMeta ? `Current: ${statusLabel(status)} · ${currentMeta}` : statusLabel(status)}
+                  label={
+                    currentMeta
+                      ? `Current: ${statusLabel(status)} · ${currentMeta}`
+                      : statusLabel(status)
+                  }
                 >
                   <Group gap={10} wrap="nowrap">
                     <span style={{ ...statusBadgeStyle(status), cursor: "help" }}>
@@ -760,7 +766,7 @@ export default function CourseResultsPage() {
               <Stack gap="sm">
                 {labs.map((l, idx) => {
                   const sub = activeParticipant.byLabId.get(l.labId);
-                  const status = (sub?.status ?? "NOT_SUBMITTED") as SubmissionStatus;
+                  const status = (sub?.status ?? "NOT_SUBMITTED");
                   return (
                     <Box
                       key={l.labId}
@@ -787,8 +793,8 @@ export default function CourseResultsPage() {
                             ) : null}
                           </Group>
                           <Text size="sm" style={{ color: "#94a3b8", marginTop: 6 }}>
-                            {(sub?.awardedPoints ?? 0)}/{(sub?.maxPoints ?? 0)} pts ·{" "}
-                            {(sub?.solvedChallengeCount ?? 0)}/{(sub?.totalChallengeCount ?? 0)}{" "}
+                            {sub?.awardedPoints ?? 0}/{sub?.maxPoints ?? 0} pts ·{" "}
+                            {sub?.solvedChallengeCount ?? 0}/{sub?.totalChallengeCount ?? 0}{" "}
                             challenges
                           </Text>
                         </Stack>
