@@ -31,9 +31,9 @@ public class CourseSubTaskSubmissionDetailDto {
 
   /** Present for MULTIPLE_CHOICE sub-tasks when the student selected an option. */
   private UUID selectedOptionId;
+
   private String selectedOptionText;
 
   /** Present for MULTIPLE_CHOICE sub-tasks to show all options to the instructor. */
   private List<SubTaskOptionResponseDto> options;
 }
-

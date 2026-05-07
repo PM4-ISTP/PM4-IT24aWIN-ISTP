@@ -527,11 +527,13 @@ public class CourseServiceImpl implements CourseService {
                 () ->
                     new InvalidCourseChallengeException(
                         String.format(
-                            "Challenge '%s' is not assigned to course '%s'", challengeId, courseId)));
+                            "Challenge '%s' is not assigned to course '%s'",
+                            challengeId, courseId)));
 
     if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId)) {
       throw new CourseParticipantNotFoundException(
-          String.format("Participant '%s' is not enrolled in course '%s'", participantId, courseId));
+          String.format(
+              "Participant '%s' is not enrolled in course '%s'", participantId, courseId));
     }
 
     User participant =
@@ -545,7 +547,8 @@ public class CourseServiceImpl implements CourseService {
     Set<UUID> completedIds =
         subTaskIds.isEmpty()
             ? Set.of()
-            : new HashSet<>(subTaskCompletionRepository.findSolvedSubTaskIds(participantId, subTaskIds));
+            : new HashSet<>(
+                subTaskCompletionRepository.findSolvedSubTaskIds(participantId, subTaskIds));
 
     Map<UUID, StudentOptionSubmission> mcBySubTask = new HashMap<>();
     for (StudentOptionSubmission submission :
@@ -567,7 +570,8 @@ public class CourseServiceImpl implements CourseService {
     int solvedCount = completedIds.size();
     LocalDateTime completedAt =
         totalCount > 0 && solvedCount == totalCount
-            ? subTaskCompletionRepository.findMaxSolvedAtForUserAndChallenge(participantId, challengeId)
+            ? subTaskCompletionRepository.findMaxSolvedAtForUserAndChallenge(
+                participantId, challengeId)
             : null;
 
     CourseChallengeSubmissionStatusEnum status;
@@ -629,11 +633,15 @@ public class CourseServiceImpl implements CourseService {
                         (st.getOptions() == null)
                             ? List.of()
                             : st.getOptions().stream()
-                                .sorted((a, b) -> Integer.compare(a.getOrderIndex(), b.getOrderIndex()))
+                                .sorted(
+                                    (a, b) -> Integer.compare(a.getOrderIndex(), b.getOrderIndex()))
                                 .map(
                                     o ->
                                         new SubTaskOptionResponseDto(
-                                            o.getId(), o.getText(), o.isCorrect(), o.getOrderIndex()))
+                                            o.getId(),
+                                            o.getText(),
+                                            o.isCorrect(),
+                                            o.getOrderIndex()))
                                 .toList();
                     dto.setOptions(options);
                   } else {

@@ -27,4 +27,3 @@ public class CourseChallengeSubmissionDetailDto {
 
   private List<CourseSubTaskSubmissionDetailDto> subTasks;
 }
-

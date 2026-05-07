@@ -25,8 +25,8 @@ import com.pm4.istp.course.dto.UpdateCourseChallengeScoreRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseChallengesRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.mappers.CourseMapper;
-import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
+import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.course.repositories.SubTaskRepository;
 import com.pm4.istp.course.services.CourseService;
@@ -642,7 +642,8 @@ public class CourseController {
    * in a single query for all sub-tasks of all visible challenges, then marks matching sub-tasks as
    * solved.
    */
-  private void populateStudentProgress(UUID courseId, List<ChallengeStudentDto> challenges, UUID userId) {
+  private void populateStudentProgress(
+      UUID courseId, List<ChallengeStudentDto> challenges, UUID userId) {
     if (challenges == null || challenges.isEmpty()) {
       return;
     }
