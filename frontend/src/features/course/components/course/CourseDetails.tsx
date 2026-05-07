@@ -119,7 +119,9 @@ export default async function CourseDetails({
           <CourseJourneyCard
             instructor={owner}
             labs={isEnrolled ? aggregateLabProgress(course.courseLabs ?? []) : undefined}
-            challenges={isEnrolled ? aggregateChallengeProgress(course.courseLabs ?? []) : undefined}
+            challenges={
+              isEnrolled ? aggregateChallengeProgress(course.courseLabs ?? []) : undefined
+            }
           />
 
           {/* Course description */}

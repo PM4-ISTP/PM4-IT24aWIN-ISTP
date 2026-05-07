@@ -212,8 +212,12 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
           ) : (
             <Stack gap={8}>
               <Group justify="space-between">
-                <Text size="sm" fw={600} c="dimmed">Labs</Text>
-                <Text size="xs" c="dimmed" fs="italic">Coming soon</Text>
+                <Text size="sm" fw={600} c="dimmed">
+                  Labs
+                </Text>
+                <Text size="xs" c="dimmed" fs="italic">
+                  Coming soon
+                </Text>
               </Group>
               <Progress value={0} color="orange" radius="xl" size="md" style={{ opacity: 0.35 }} />
             </Stack>

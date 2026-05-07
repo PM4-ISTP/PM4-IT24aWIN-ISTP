@@ -12,7 +12,13 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core";
-import { IconAlertTriangle, IconCheck, IconCircleDashed, IconClock, IconListCheck } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconCheck,
+  IconCircleDashed,
+  IconClock,
+  IconListCheck,
+} from "@tabler/icons-react";
 import { getDifficultyColor } from "@/src/features/course/constants/challengeConstants";
 import PlayLabButton from "@/src/features/course/components/labs/PlayLabButton";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
@@ -161,7 +167,11 @@ export function CourseLabDetailsList({
                           }}
                         >
                           <IconAlertTriangle size={15} color="#f87171" style={{ flexShrink: 0 }} />
-                          <Text size="sm" fw={700} style={{ color: "#f87171", whiteSpace: "nowrap" }}>
+                          <Text
+                            size="sm"
+                            fw={700}
+                            style={{ color: "#f87171", whiteSpace: "nowrap" }}
+                          >
                             Expired · {formatDue(lab.dueAt)}
                           </Text>
                         </Group>
@@ -176,8 +186,16 @@ export function CourseLabDetailsList({
                             padding: "4px 10px",
                           }}
                         >
-                          <IconClock size={15} color="rgba(20,184,166,0.9)" style={{ flexShrink: 0 }} />
-                          <Text size="sm" fw={600} style={{ color: "rgba(20,184,166,0.9)", whiteSpace: "nowrap" }}>
+                          <IconClock
+                            size={15}
+                            color="rgba(20,184,166,0.9)"
+                            style={{ flexShrink: 0 }}
+                          />
+                          <Text
+                            size="sm"
+                            fw={600}
+                            style={{ color: "rgba(20,184,166,0.9)", whiteSpace: "nowrap" }}
+                          >
                             Due: {formatDue(lab.dueAt)}
                           </Text>
                         </Group>
@@ -192,8 +210,16 @@ export function CourseLabDetailsList({
                             padding: "4px 10px",
                           }}
                         >
-                          <IconClock size={15} color="rgba(255,255,255,0.6)" style={{ flexShrink: 0 }} />
-                          <Text size="sm" fw={600} style={{ color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+                          <IconClock
+                            size={15}
+                            color="rgba(255,255,255,0.6)"
+                            style={{ flexShrink: 0 }}
+                          />
+                          <Text
+                            size="sm"
+                            fw={600}
+                            style={{ color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}
+                          >
                             Due: {formatDue(lab.dueAt)}
                           </Text>
                         </Group>

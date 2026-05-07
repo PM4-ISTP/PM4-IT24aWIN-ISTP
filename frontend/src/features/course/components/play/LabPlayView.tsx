@@ -170,9 +170,7 @@ export function LabPlayView({
   const earnedPoints = challenges
     .filter((c) => c.isSolved)
     .reduce((sum, c) => sum + (c.points ?? 0), 0);
-  const totalPoints =
-    lab.maxScore ??
-    challenges.reduce((sum, c) => sum + (c.points ?? 0), 0);
+  const totalPoints = lab.maxScore ?? challenges.reduce((sum, c) => sum + (c.points ?? 0), 0);
 
   const sanitizedLabDescription = useMemo(
     () => (lab.description ? getSanitizedHtml(lab.description) : ""),
@@ -572,11 +570,7 @@ export function LabPlayView({
                           color={current.isSolved ? "teal" : "blue"}
                           size="sm"
                           radius="sm"
-                          leftSection={
-                            current.isSolved ? (
-                              <IconTrophy size={11} />
-                            ) : undefined
-                          }
+                          leftSection={current.isSolved ? <IconTrophy size={11} /> : undefined}
                           fw={700}
                         >
                           {current.points} Pts

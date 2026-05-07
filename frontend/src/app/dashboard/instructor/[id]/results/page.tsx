@@ -764,7 +764,7 @@ export default function CourseResultsPage() {
               <Stack gap="sm">
                 {labs.map((l, idx) => {
                   const sub = activeParticipant.byLabId.get(l.labId);
-                  const status = (sub?.status ?? "NOT_SUBMITTED");
+                  const status = sub?.status ?? "NOT_SUBMITTED";
 
                   // Deadline logic
                   const now = new Date();
@@ -845,7 +845,11 @@ export default function CourseResultsPage() {
                                 gap: 6,
                               }}
                             >
-                              <IconClock size={13} color={deadlineColor} style={{ flexShrink: 0 }} />
+                              <IconClock
+                                size={13}
+                                color={deadlineColor}
+                                style={{ flexShrink: 0 }}
+                              />
                               <Text size="xs" fw={600} style={{ color: deadlineColor }}>
                                 {deadlineLabel}
                               </Text>
@@ -997,8 +1001,7 @@ export default function CourseResultsPage() {
                             {idx + 1}. {c.title}
                           </Text>
                           <Text size="xs" style={{ color: "#64748b" }}>
-                            {c.type} •{" "}
-                            <span style={{ color: correctColor }}>{correctLabel}</span>
+                            {c.type} • <span style={{ color: correctColor }}>{correctLabel}</span>
                           </Text>
                           {c.submittedFlag ? (
                             <Text size="sm" style={{ color: "#e2e8f0", marginTop: 6 }}>
