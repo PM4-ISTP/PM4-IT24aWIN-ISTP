@@ -99,6 +99,7 @@ export interface CourseParticipantDto {
   id: string;
   name: string;
   picture: string | null;
+  email?: string | null;
 }
 
 export interface CourseLabResponseDto {
