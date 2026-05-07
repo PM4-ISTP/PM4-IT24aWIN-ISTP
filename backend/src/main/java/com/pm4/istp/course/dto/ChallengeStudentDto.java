@@ -27,6 +27,8 @@ public class ChallengeStudentDto {
   private ChallengeDifficultyEnum difficulty;
   private String dockerImage;
   private int maxScore;
+  /** Points awarded to the current student for this challenge (includes manual overrides when set). */
+  private int awardedPoints;
   private ChallengeCreatorResponseDto creator;
   private List<SubTaskStudentDto> subTasks;
   private int solvedSubTaskCount;

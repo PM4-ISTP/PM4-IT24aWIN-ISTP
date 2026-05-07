@@ -96,6 +96,8 @@ class CourseControllerTest {
     private com.pm4.istp.course.repositories.SubTaskCompletionRepository subTaskCompletionRepository;
     @Mock
     private com.pm4.istp.course.repositories.SubTaskRepository subTaskRepository;
+    @Mock
+    private com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
 
     @InjectMocks
     private CourseController courseController;
@@ -121,6 +123,12 @@ class CourseControllerTest {
                 }
                 return value.trim();
             });
+
+        lenient()
+            .when(
+                courseChallengeScoreOverrideRepository.findByCourseIdAndParticipantIdAndChallengeId(
+                    any(), any(), any()))
+            .thenReturn(java.util.Optional.empty());
 
         HandlerMethodArgumentResolver jwtResolver = new HandlerMethodArgumentResolver() {
             @Override
@@ -439,7 +447,8 @@ class CourseControllerTest {
         dto.setTitle("Public Course");
         dto.setCourseInstructors(List.of(instructor));
         dto.setCourseChallenges(List.of(challenge1, challenge2, challenge3, challenge4));
-        dto.setParticipants(List.of(new CourseParticipantResponseDto(UUID.randomUUID(), "Student", null)));
+        dto.setParticipants(
+            List.of(new CourseParticipantResponseDto(UUID.randomUUID(), "Student", null, null)));
 
         when(courseService.getCourse(userId, courseId)).thenReturn(course);
         when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);

@@ -47,8 +47,10 @@ import com.pm4.istp.course.exceptions.SubTaskNotFoundException;
 import com.pm4.istp.course.mappers.ChallengeMapper;
 import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseChallengeRepository;
+import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
+import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
 import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.course.repositories.SubTaskOptionRepository;
@@ -69,10 +71,12 @@ class ChallengeServiceImplTest {
   @Mock private ChallengeRepository challengeRepository;
   @Mock private CourseChallengeRepository courseChallengeRepository;
   @Mock private CourseRepository courseRepository;
+  @Mock private CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
   @Mock private SubTaskRepository subTaskRepository;
   @Mock private SubTaskOptionRepository subTaskOptionRepository;
   @Mock private SubTaskCompletionRepository subTaskCompletionRepository;
   @Mock private StudentOptionSubmissionRepository studentOptionSubmissionRepository;
+  @Mock private StudentFlagSubmissionRepository studentFlagSubmissionRepository;
   @Mock private CourseEnrollmentRepository courseEnrollmentRepository;
   @Mock private ChallengeMapper challengeMapper;
   @Mock private DockerImageAvailabilityService dockerImageAvailabilityService;
@@ -762,6 +766,10 @@ class ChallengeServiceImplTest {
     course.setId(courseId);
     course.setMcAttemptsMode(McAttemptsMode.UNLIMITED);
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(
+            courseChallengeScoreOverrideRepository.findByCourseIdAndParticipantIdAndChallengeId(
+                courseId, userId, challengeId))
+        .thenReturn(Optional.empty());
 
     ChallengeStudentDto result = challengeService.getChallengeForPlay(userId, courseId, challengeId);
 
@@ -847,6 +855,8 @@ class ChallengeServiceImplTest {
         .thenReturn(false);
     when(subTaskCompletionRepository.findSolvedSubTaskIds(eq(userId), any()))
         .thenReturn(List.of(subTaskId));
+    when(studentFlagSubmissionRepository.findByUserIdAndSubTaskId(userId, subTaskId))
+        .thenReturn(Optional.empty());
 
     SubTaskSubmissionResponseDto result =
         challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{secret}");
@@ -874,6 +884,8 @@ class ChallengeServiceImplTest {
         .thenReturn(false);
     when(subTaskCompletionRepository.findSolvedSubTaskIds(eq(userId), any()))
         .thenReturn(List.of());
+    when(studentFlagSubmissionRepository.findByUserIdAndSubTaskId(userId, subTaskId))
+        .thenReturn(Optional.empty());
 
     SubTaskSubmissionResponseDto result =
         challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{wrong}");
@@ -980,6 +992,8 @@ class ChallengeServiceImplTest {
         .thenReturn(false);
     when(subTaskCompletionRepository.saveAndFlush(any(SubTaskCompletion.class)))
         .thenThrow(new DataIntegrityViolationException("unique violation"));
+    when(studentFlagSubmissionRepository.findByUserIdAndSubTaskId(userId, subTaskId))
+        .thenReturn(Optional.empty());
 
     assertThatThrownBy(
         () -> challengeService.submitSubTaskFlag(userId, challengeId, subTaskId, "ISTP{secret}"))

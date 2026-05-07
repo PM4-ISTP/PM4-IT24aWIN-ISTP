@@ -161,6 +161,45 @@ export interface CourseChallengeSubmissionsResponseDto {
   submissions: CourseChallengeSubmissionEntryDto[];
 }
 
+export type SubTaskTypeEnum = "FLAG" | "MULTIPLE_CHOICE";
+
+export interface SubTaskOptionResponseDto {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+  orderIndex: number;
+}
+
+export interface CourseSubTaskSubmissionDetailDto {
+  subTaskId: string;
+  orderIndex: number;
+  title: string;
+  type: SubTaskTypeEnum;
+  points: number;
+  completed: boolean;
+  correct: boolean | null;
+  submittedAt: string | null;
+  submittedFlag: string | null;
+  selectedOptionId: string | null;
+  selectedOptionText: string | null;
+  options: SubTaskOptionResponseDto[] | null;
+}
+
+export interface CourseChallengeSubmissionDetailDto {
+  courseId: string;
+  participantId: string;
+  participantName: string;
+  participantEmail: string | null;
+  challengeId: string;
+  challengeTitle: string;
+  awardedPoints: number;
+  maxPoints: number;
+  dueAt: string | null;
+  completedAt: string | null;
+  status: CourseChallengeSubmissionStatusEnum;
+  subTasks: CourseSubTaskSubmissionDetailDto[];
+}
+
 export interface PublicCourseDetailResponseDto {
   id: string;
   title: string;

@@ -5,6 +5,7 @@ import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
 import com.pm4.istp.course.dto.CourseChallengeItemDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionDetailDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
@@ -28,6 +29,9 @@ public interface CourseService {
       UUID userId, UUID courseId, List<CourseChallengeItemDto> challenges);
 
   CourseChallengeSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId);
+
+  CourseChallengeSubmissionDetailDto getCourseChallengeSubmissionDetails(
+      UUID instructorId, UUID courseId, UUID participantId, UUID challengeId);
 
   CourseChallengeSubmissionEntryDto updateCourseChallengeScore(
       UUID instructorId, UUID courseId, UUID participantId, UUID challengeId, int points);

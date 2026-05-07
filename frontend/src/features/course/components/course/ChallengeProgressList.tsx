@@ -17,9 +17,26 @@ import {
 } from "@mantine/core";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
 
-import type { PageListChallengeProgressForCourseDto } from "@/src/features/course/actions/courses";
+type ChallengeProgressUser = {
+  id?: string | null;
+  name?: string | null;
+  username?: string | null;
+  email?: string | null;
+};
 
-type ChallengeProgress = NonNullable<PageListChallengeProgressForCourseDto["content"]>[number];
+type ChallengeProgressSubTask = {
+  isCompleted: boolean;
+  subTask: {
+    id: string;
+    orderIndex: number;
+    title: string;
+  };
+};
+
+type ChallengeProgress = {
+  user: ChallengeProgressUser;
+  subTasks: ChallengeProgressSubTask[];
+};
 
 type ChallengeProgressListProps = {
   progresses: ChallengeProgress[];

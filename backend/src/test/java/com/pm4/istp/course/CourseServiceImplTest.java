@@ -48,8 +48,12 @@ import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
 import com.pm4.istp.course.repositories.ChallengeRepository;
+import com.pm4.istp.course.repositories.CourseChallengeRepository;
+import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
+import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
+import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.course.repositories.SubTaskRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
@@ -69,11 +73,19 @@ class CourseServiceImplTest {
   @Mock
   private CourseEnrollmentRepository courseEnrollmentRepository;
   @Mock
+  private CourseChallengeRepository courseChallengeRepository;
+  @Mock
+  private CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
+  @Mock
   private ChallengeRepository challengeRepository;
   @Mock
   private SubTaskRepository subTaskRepository;
   @Mock
   private SubTaskCompletionRepository subTaskCompletionRepository;
+  @Mock
+  private StudentOptionSubmissionRepository studentOptionSubmissionRepository;
+  @Mock
+  private StudentFlagSubmissionRepository studentFlagSubmissionRepository;
   @Mock
   private CourseInviteCodeHelper courseInviteCodeHelper;
   @Mock
@@ -994,6 +1006,14 @@ class CourseServiceImplTest {
                 new Object[] {studentOnTime.getId(), challengeId, 3L, dueAt.minusMinutes(5)},
                 new Object[] {studentLate.getId(), challengeId, 3L, dueAt.plusMinutes(1)},
                 new Object[] {studentInProgress.getId(), challengeId, 2L, dueAt.minusMinutes(2)}));
+    when(subTaskCompletionRepository.aggregatePointsForUsersAndChallenges(any(), any()))
+        .thenReturn(List.of());
+    when(subTaskCompletionRepository.aggregateSolvedCountsBeforeDeadline(any(), any(), any()))
+        .thenReturn(List.of());
+    when(
+            courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+                any(), any(), any()))
+        .thenReturn(List.of());
 
     var result = courseService.getCourseChallengeSubmissions(instructorId, courseId);
 

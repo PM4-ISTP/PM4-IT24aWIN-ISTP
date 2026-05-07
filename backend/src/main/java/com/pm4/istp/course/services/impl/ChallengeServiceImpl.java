@@ -9,6 +9,7 @@ import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
+import com.pm4.istp.course.db.entities.StudentFlagSubmission;
 import com.pm4.istp.course.db.entities.StudentOptionSubmission;
 import com.pm4.istp.course.db.entities.SubTask;
 import com.pm4.istp.course.db.entities.SubTaskCompletion;
@@ -29,6 +30,8 @@ import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseChallengeRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
+import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
+import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
 import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.course.repositories.SubTaskOptionRepository;
@@ -68,10 +71,12 @@ public class ChallengeServiceImpl implements ChallengeService {
   private final ChallengeRepository challengeRepository;
   private final CourseChallengeRepository courseChallengeRepository;
   private final CourseRepository courseRepository;
+  private final CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
   private final SubTaskRepository subTaskRepository;
   private final SubTaskOptionRepository subTaskOptionRepository;
   private final SubTaskCompletionRepository subTaskCompletionRepository;
   private final StudentOptionSubmissionRepository studentOptionSubmissionRepository;
+  private final StudentFlagSubmissionRepository studentFlagSubmissionRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final ChallengeMapper challengeMapper;
   private final DockerImageAvailabilityService dockerImageAvailabilityService;
@@ -389,6 +394,22 @@ public class ChallengeServiceImpl implements ChallengeService {
     ChallengeStudentDto dto = challengeMapper.toStudentDto(challenge);
     populateStudentProgress(dto, userId, challenge);
 
+    // Awarded points (manual override if present; otherwise derived from completed sub-tasks)
+    int autoPoints = 0;
+    if (dto.getSubTasks() != null) {
+      for (SubTaskStudentDto st : dto.getSubTasks()) {
+        if (st != null && st.isSolved()) {
+          autoPoints += st.getPoints();
+        }
+      }
+    }
+    int awarded =
+        courseChallengeScoreOverrideRepository
+            .findByCourseIdAndParticipantIdAndChallengeId(courseId, userId, challengeId)
+            .map(o -> o.getPoints())
+            .orElse(autoPoints);
+    dto.setAwardedPoints(awarded);
+
     // Expose the course's MC attempt mode so the frontend can render the UI correctly
     Course course =
         courseRepository
@@ -435,7 +456,34 @@ public class ChallengeServiceImpl implements ChallengeService {
           String.format("Sub-task '%s' already solved by user '%s'", subTaskId, userId));
     }
 
-    boolean correct = subTask.getFlag() != null && subTask.getFlag().equals(flag);
+    String normalizedFlag = normalizeFlag(flag);
+    boolean correct = subTask.getFlag() != null && subTask.getFlag().equals(normalizedFlag);
+
+    // Always persist the student's last submitted flag so instructors can review submissions
+    StudentFlagSubmission submission =
+        studentFlagSubmissionRepository
+            .findByUserIdAndSubTaskId(userId, subTaskId)
+            .orElseGet(StudentFlagSubmission::new);
+    submission.setUser(user);
+    submission.setSubTask(subTask);
+    submission.setSubmittedFlag(normalizedFlag);
+    submission.setCorrect(correct);
+    submission.setSubmittedAt(LocalDateTime.now());
+    try {
+      studentFlagSubmissionRepository.saveAndFlush(submission);
+    } catch (DataIntegrityViolationException ex) {
+      // Concurrent insert due to unique constraint (user_id, sub_task_id). Best-effort retry by
+      // loading the existing record and updating it.
+      StudentFlagSubmission existing =
+          studentFlagSubmissionRepository.findByUserIdAndSubTaskId(userId, subTaskId).orElse(null);
+      if (existing != null) {
+        existing.setSubmittedFlag(normalizedFlag);
+        existing.setCorrect(correct);
+        existing.setSubmittedAt(LocalDateTime.now());
+        studentFlagSubmissionRepository.saveAndFlush(existing);
+      }
+    }
+
     if (correct) {
       SubTaskCompletion completion = new SubTaskCompletion();
       completion.setUser(user);

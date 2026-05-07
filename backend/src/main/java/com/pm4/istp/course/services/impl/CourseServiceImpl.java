@@ -13,14 +13,21 @@ import com.pm4.istp.course.db.entities.CourseChallengeScoreOverride;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
+import com.pm4.istp.course.db.entities.StudentFlagSubmission;
+import com.pm4.istp.course.db.entities.StudentOptionSubmission;
+import com.pm4.istp.course.db.entities.SubTask;
+import com.pm4.istp.course.db.entities.SubTaskType;
 import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
 import com.pm4.istp.course.dto.CourseChallengeItemDto;
 import com.pm4.istp.course.dto.CourseChallengeResponseDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionDetailDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionStatusEnum;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
+import com.pm4.istp.course.dto.CourseSubTaskSubmissionDetailDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
+import com.pm4.istp.course.dto.SubTaskOptionResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
@@ -33,6 +40,8 @@ import com.pm4.istp.course.repositories.CourseChallengeRepository;
 import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
+import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
+import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.course.repositories.SubTaskRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
@@ -44,8 +53,10 @@ import com.pm4.istp.user.repositories.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -72,6 +83,8 @@ public class CourseServiceImpl implements CourseService {
   private final ChallengeRepository challengeRepository;
   private final SubTaskRepository subTaskRepository;
   private final SubTaskCompletionRepository subTaskCompletionRepository;
+  private final StudentOptionSubmissionRepository studentOptionSubmissionRepository;
+  private final StudentFlagSubmissionRepository studentFlagSubmissionRepository;
   private final CourseInviteCodeHelper courseInviteCodeHelper;
   private final CourseTopicService courseTopicService;
 
@@ -449,8 +462,6 @@ public class CourseServiceImpl implements CourseService {
                 .findFirst()
                 .map(cc -> cc.getChallenge().getMaxScore())
                 .orElse(0);
-        int autoPoints = autoPointsByKey.getOrDefault(key, 0);
-        int awardedPoints = overridePointsByKey.getOrDefault(key, autoPoints);
         LocalDateTime completedAt =
             totalCount > 0 && solvedCount == totalCount ? completedAtByKey.get(key) : null;
 
@@ -467,6 +478,13 @@ public class CourseServiceImpl implements CourseService {
             status = CourseChallengeSubmissionStatusEnum.LATE;
           }
         }
+
+        int autoPoints = autoPointsByKey.getOrDefault(key, 0);
+        // Late submissions receive 0 points by default (manual overrides can still apply).
+        if (status == CourseChallengeSubmissionStatusEnum.LATE) {
+          autoPoints = 0;
+        }
+        int awardedPoints = overridePointsByKey.getOrDefault(key, autoPoints);
 
         int solvedBefore =
             status == CourseChallengeSubmissionStatusEnum.LATE
@@ -488,6 +506,164 @@ public class CourseServiceImpl implements CourseService {
 
     return new CourseChallengeSubmissionsResponseDto(
         courseId, participants, challengesDto, entries);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public CourseChallengeSubmissionDetailDto getCourseChallengeSubmissionDetails(
+      UUID instructorId, UUID courseId, UUID participantId, UUID challengeId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+    verifyInstructor(course, instructorId);
+
+    CourseChallenge assignedChallenge =
+        course.getCourseChallenges().stream()
+            .filter(cc -> cc.getChallenge().getId().equals(challengeId))
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new InvalidCourseChallengeException(
+                        String.format(
+                            "Challenge '%s' is not assigned to course '%s'", challengeId, courseId)));
+
+    if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId)) {
+      throw new CourseParticipantNotFoundException(
+          String.format("Participant '%s' is not enrolled in course '%s'", participantId, courseId));
+    }
+
+    User participant =
+        userRepository
+            .findByIdAndDeletedAtIsNull(participantId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, participantId)));
+
+    List<SubTask> subTasks = subTaskRepository.findByChallengeIdOrderByOrderIndexAsc(challengeId);
+    List<UUID> subTaskIds = subTasks.stream().map(SubTask::getId).toList();
+    Set<UUID> completedIds =
+        subTaskIds.isEmpty()
+            ? Set.of()
+            : new HashSet<>(subTaskCompletionRepository.findSolvedSubTaskIds(participantId, subTaskIds));
+
+    Map<UUID, StudentOptionSubmission> mcBySubTask = new HashMap<>();
+    for (StudentOptionSubmission submission :
+        studentOptionSubmissionRepository.findByUserIdAndChallengeId(participantId, challengeId)) {
+      if (submission.getSubTask() != null && submission.getSubTask().getId() != null) {
+        mcBySubTask.put(submission.getSubTask().getId(), submission);
+      }
+    }
+
+    Map<UUID, StudentFlagSubmission> flagBySubTask = new HashMap<>();
+    for (StudentFlagSubmission submission :
+        studentFlagSubmissionRepository.findByUserIdAndChallengeId(participantId, challengeId)) {
+      if (submission.getSubTask() != null && submission.getSubTask().getId() != null) {
+        flagBySubTask.put(submission.getSubTask().getId(), submission);
+      }
+    }
+
+    int totalCount = subTasks.size();
+    int solvedCount = completedIds.size();
+    LocalDateTime completedAt =
+        totalCount > 0 && solvedCount == totalCount
+            ? subTaskCompletionRepository.findMaxSolvedAtForUserAndChallenge(participantId, challengeId)
+            : null;
+
+    CourseChallengeSubmissionStatusEnum status;
+    if (totalCount <= 0 || solvedCount <= 0) {
+      status = CourseChallengeSubmissionStatusEnum.NOT_SUBMITTED;
+    } else if (solvedCount < totalCount) {
+      status = CourseChallengeSubmissionStatusEnum.IN_PROGRESS;
+    } else {
+      LocalDateTime dueAt = assignedChallenge.getDueAt();
+      if (dueAt == null || completedAt == null || !completedAt.isAfter(dueAt)) {
+        status = CourseChallengeSubmissionStatusEnum.ON_TIME;
+      } else {
+        status = CourseChallengeSubmissionStatusEnum.LATE;
+      }
+    }
+
+    int autoPoints = 0;
+    if (!completedIds.isEmpty()) {
+      for (SubTask st : subTasks) {
+        if (st != null && st.getId() != null && completedIds.contains(st.getId())) {
+          autoPoints += st.getPoints();
+        }
+      }
+    }
+    // Late submissions receive 0 points by default (manual overrides can still apply).
+    if (status == CourseChallengeSubmissionStatusEnum.LATE) {
+      autoPoints = 0;
+    }
+
+    Optional<CourseChallengeScoreOverride> overrideOpt =
+        courseChallengeScoreOverrideRepository.findByCourseIdAndParticipantIdAndChallengeId(
+            courseId, participantId, challengeId);
+    int awardedPoints = overrideOpt.map(CourseChallengeScoreOverride::getPoints).orElse(autoPoints);
+
+    List<CourseSubTaskSubmissionDetailDto> subTaskDtos =
+        subTasks.stream()
+            .map(
+                st -> {
+                  boolean completed = st.getId() != null && completedIds.contains(st.getId());
+                  CourseSubTaskSubmissionDetailDto dto = new CourseSubTaskSubmissionDetailDto();
+                  dto.setSubTaskId(st.getId());
+                  dto.setOrderIndex(st.getOrderIndex());
+                  dto.setTitle(st.getTitle());
+                  dto.setType(st.getType());
+                  dto.setPoints(st.getPoints());
+                  dto.setCompleted(completed);
+
+                  if (st.getType() == SubTaskType.MULTIPLE_CHOICE) {
+                    StudentOptionSubmission mc = mcBySubTask.get(st.getId());
+                    if (mc != null) {
+                      dto.setCorrect(mc.isCorrect());
+                      dto.setSubmittedAt(mc.getSubmittedAt());
+                      if (mc.getSelectedOption() != null) {
+                        dto.setSelectedOptionId(mc.getSelectedOption().getId());
+                        dto.setSelectedOptionText(mc.getSelectedOption().getText());
+                      }
+                    }
+                    List<SubTaskOptionResponseDto> options =
+                        (st.getOptions() == null)
+                            ? List.of()
+                            : st.getOptions().stream()
+                                .sorted((a, b) -> Integer.compare(a.getOrderIndex(), b.getOrderIndex()))
+                                .map(
+                                    o ->
+                                        new SubTaskOptionResponseDto(
+                                            o.getId(), o.getText(), o.isCorrect(), o.getOrderIndex()))
+                                .toList();
+                    dto.setOptions(options);
+                  } else {
+                    StudentFlagSubmission fs = flagBySubTask.get(st.getId());
+                    if (fs != null) {
+                      dto.setCorrect(fs.isCorrect());
+                      dto.setSubmittedAt(fs.getSubmittedAt());
+                      dto.setSubmittedFlag(fs.getSubmittedFlag());
+                    }
+                    dto.setOptions(null);
+                  }
+
+                  return dto;
+                })
+            .toList();
+
+    CourseChallengeSubmissionDetailDto result = new CourseChallengeSubmissionDetailDto();
+    result.setCourseId(courseId);
+    result.setParticipantId(participantId);
+    result.setParticipantName(participant.getName());
+    result.setParticipantEmail(participant.getEmail());
+    result.setChallengeId(challengeId);
+    result.setChallengeTitle(assignedChallenge.getChallenge().getTitle());
+    result.setAwardedPoints(awardedPoints);
+    result.setMaxPoints(assignedChallenge.getChallenge().getMaxScore());
+    result.setDueAt(assignedChallenge.getDueAt());
+    result.setCompletedAt(completedAt);
+    result.setStatus(status);
+    result.setSubTasks(subTaskDtos);
+    return result;
   }
 
   @Override

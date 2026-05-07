@@ -9,6 +9,7 @@ import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionDetailDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
@@ -25,6 +26,7 @@ import com.pm4.istp.course.dto.UpdateCourseChallengesRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.mappers.CourseMapper;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
+import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
 import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.course.repositories.SubTaskRepository;
 import com.pm4.istp.course.services.CourseService;
@@ -73,6 +75,7 @@ public class CourseController {
   private final CourseTopicService courseTopicService;
   private final SubTaskCompletionRepository subTaskCompletionRepository;
   private final SubTaskRepository subTaskRepository;
+  private final CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
 
   @Operation(
       summary = "Create a course",
@@ -288,6 +291,40 @@ public class CourseController {
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     return ResponseEntity.ok(courseService.getCourseChallengeSubmissions(userId, id));
+  }
+
+  @Operation(
+      summary = "Get course challenge submission details",
+      description =
+          "Returns the full per-sub-task submission details for one participant in one lab/challenge. "
+              + "Includes multiple-choice selected options and flag submissions so instructors can manually grade.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Submission details loaded successfully",
+            content =
+                @Content(
+                    schema = @Schema(implementation = CourseChallengeSubmissionDetailDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course, challenge, or participant not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
+  @GetMapping("/{id}/submissions/{participantId}/{challengeId}")
+  public ResponseEntity<CourseChallengeSubmissionDetailDto> getCourseChallengeSubmissionDetails(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID id,
+      @PathVariable UUID participantId,
+      @PathVariable UUID challengeId) {
+    UUID instructorId = parseUserId(jwt);
+    return ResponseEntity.ok(
+        courseService.getCourseChallengeSubmissionDetails(
+            instructorId, id, participantId, challengeId));
   }
 
   @Operation(
@@ -585,7 +622,7 @@ public class CourseController {
     filterOutDraftChallenges(dto);
     setInstructorIdsToNull(dto.getCourseInstructors());
     setChallengeCreatorIdsToNull(dto.getCourseChallenges());
-    populateStudentProgress(dto.getCourseChallenges(), userId);
+    populateStudentProgress(courseId, dto.getCourseChallenges(), userId);
     dto.setInviteCode(null);
     return dto;
   }
@@ -605,7 +642,7 @@ public class CourseController {
    * in a single query for all sub-tasks of all visible challenges, then marks matching sub-tasks as
    * solved.
    */
-  private void populateStudentProgress(List<ChallengeStudentDto> challenges, UUID userId) {
+  private void populateStudentProgress(UUID courseId, List<ChallengeStudentDto> challenges, UUID userId) {
     if (challenges == null || challenges.isEmpty()) {
       return;
     }
@@ -630,17 +667,29 @@ public class CourseController {
       List<SubTaskStudentDto> subTasks =
           challenge.getSubTasks() == null ? List.of() : challenge.getSubTasks();
       int solvedCount = 0;
+      int autoPoints = 0;
       for (SubTaskStudentDto st : subTasks) {
         boolean solved = solvedIds.contains(st.getId());
         st.setSolved(solved);
         if (solved) {
           st.setSolvedFlag(flagsBySolvedId.get(st.getId()));
           solvedCount++;
+          autoPoints += st.getPoints();
         }
       }
       challenge.setTotalSubTaskCount(subTasks.size());
       challenge.setSolvedSubTaskCount(solvedCount);
       challenge.setSolved(!subTasks.isEmpty() && solvedCount == subTasks.size());
+
+      // Awarded points = manual override if present, else derived from completed sub-tasks.
+      int awarded =
+          challenge.getId() == null
+              ? autoPoints
+              : courseChallengeScoreOverrideRepository
+                  .findByCourseIdAndParticipantIdAndChallengeId(courseId, userId, challenge.getId())
+                  .map(o -> o.getPoints())
+                  .orElse(autoPoints);
+      challenge.setAwardedPoints(awarded);
     }
   }
 

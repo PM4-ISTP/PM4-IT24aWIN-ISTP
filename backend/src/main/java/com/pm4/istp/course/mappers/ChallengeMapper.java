@@ -63,6 +63,7 @@ public interface ChallengeMapper {
   @Mapping(target = "solved", ignore = true)
   @Mapping(target = "solvedSubTaskCount", ignore = true)
   @Mapping(target = "totalSubTaskCount", ignore = true)
+  @Mapping(target = "awardedPoints", ignore = true)
   ChallengeStudentDto toStudentDto(Challenge challenge);
 
   @Mapping(target = "challengeId", source = "challenge.id")

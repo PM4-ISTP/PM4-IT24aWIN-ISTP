@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.time.LocalDateTime;
 
 @Repository
 public interface SubTaskCompletionRepository extends JpaRepository<SubTaskCompletion, UUID> {
@@ -94,4 +95,14 @@ public interface SubTaskCompletionRepository extends JpaRepository<SubTaskComple
       )
       """)
   long countCompletedChallenges(@Param("userId") UUID userId);
+
+  @Query(
+      """
+      select max(c.solvedAt)
+      from SubTaskCompletion c
+      where c.user.id = :userId
+        and c.subTask.challenge.id = :challengeId
+      """)
+  LocalDateTime findMaxSolvedAtForUserAndChallenge(
+      @Param("userId") UUID userId, @Param("challengeId") UUID challengeId);
 }

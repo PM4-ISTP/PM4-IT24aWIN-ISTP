@@ -15,7 +15,6 @@ import {
 import { IconCheck, IconCircleDashed, IconListCheck } from "@tabler/icons-react";
 import {
   getDifficultyColor,
-  getStatusColor,
 } from "@/src/features/course/constants/challengeConstants";
 import PlayChallengeButton from "@/src/features/course/components/challenges/PlayChallengeButton";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
@@ -60,6 +59,11 @@ export function CourseChallengeDetailsList({
   if (challenges.length === 0) return null;
 
   const totalSolved = challenges.filter((c) => c.isSolved).length;
+  const totalAwardedPoints = challenges.reduce((acc, c) => {
+    const awarded = (c as { awardedPoints?: number }).awardedPoints ?? 0;
+    return acc + awarded;
+  }, 0);
+  const totalMaxPoints = challenges.reduce((acc, c) => acc + (c.maxScore ?? 0), 0);
 
   return (
     <Stack gap="md">
@@ -69,6 +73,9 @@ export function CourseChallengeDetailsList({
           <IconListCheck size={16} color="rgba(255,255,255,0.5)" />
           <Text size="sm" c="dimmed">
             {totalSolved}/{challenges.length} completed
+          </Text>
+          <Text size="sm" c="dimmed">
+            | Points: {totalAwardedPoints}/{totalMaxPoints}
           </Text>
         </Group>
       </Group>
@@ -125,18 +132,24 @@ export function CourseChallengeDetailsList({
                     </Text>
                   </Group>
                   <Group gap="xs" wrap="nowrap">
-                    <Badge variant="light" color={getStatusColor(challenge.status ?? "")}>
-                      {formatText(challenge.status)}
-                    </Badge>
                     <Badge variant="light" color={getDifficultyColor(challenge.difficulty ?? "")}>
                       {formatText(challenge.difficulty)}
+                    </Badge>
+                    <Badge
+                      variant="light"
+                      color="cyan"
+                      size="lg"
+                      style={{ fontWeight: 800, letterSpacing: "0.02em" }}
+                    >
+                      {(challenge as { awardedPoints?: number }).awardedPoints ?? 0}/
+                      {challenge.maxScore ?? 0} pts
                     </Badge>
                     <Badge
                       variant="light"
                       color={challenge.isSolved ? "teal" : "blue"}
                       aria-label={`${solvedCount} of ${totalCount} challenges solved`}
                     >
-                      {solvedCount}/{totalCount}
+                      {solvedCount}/{totalCount} challenges
                     </Badge>
                   </Group>
                 </Group>

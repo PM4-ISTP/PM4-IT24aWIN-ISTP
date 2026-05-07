@@ -166,6 +166,8 @@ export function ChallengePlayView({
   const percent = total === 0 ? 0 : Math.round((solvedCount / total) * 100);
   const current = subTasks[activeStep] ?? null;
   const allSolved = challenge.isSolved ?? false;
+  const awardedPoints = (challenge as { awardedPoints?: number }).awardedPoints ?? 0;
+  const maxScore = (challenge as { maxScore?: number }).maxScore ?? 0;
 
   const sanitizedChallengeDescription = useMemo(
     () => (challenge.description ? getSanitizedHtml(challenge.description) : ""),
@@ -487,6 +489,14 @@ export function ChallengePlayView({
                     {solvedCount} / {total} challenges
                   </Text>
                 </Group>
+                <Group justify="space-between" align="center">
+                  <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
+                    Points
+                  </Text>
+                  <Text fw={800} style={{ color: "#e2e8f0", fontSize: "1.05rem", lineHeight: 1 }}>
+                    {awardedPoints} / {maxScore}
+                  </Text>
+                </Group>
                 <Progress
                   value={percent}
                   color={allSolved ? "teal" : "blue"}
@@ -548,6 +558,9 @@ export function ChallengePlayView({
                           {current.points}pt
                         </Badge>
                       )}
+                      <Badge variant="light" color="cyan" size="sm">
+                        {awardedPoints}/{maxScore} pts
+                      </Badge>
                     </Group>
                     <Title order={4} style={{ lineHeight: 1.3 }}>
                       {current.title}

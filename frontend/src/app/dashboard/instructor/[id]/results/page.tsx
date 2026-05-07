@@ -8,6 +8,8 @@ import {
   Avatar,
   Button,
   Box,
+  Tooltip,
+  Modal,
   Container,
   Drawer,
   Group,
@@ -37,6 +39,7 @@ import { fetchCourse } from "@/src/features/course/actions/courses";
 import {
   type CourseChallengeSubmissionsResponseDto,
   type CourseChallengeSubmissionEntryDto,
+  type CourseChallengeSubmissionDetailDto,
   type CourseParticipantDto,
   type CourseChallengeResponseDto,
   type CourseChallengeSubmissionStatusEnum as SubmissionStatus,
@@ -65,6 +68,25 @@ function overallStatus(statuses: SubmissionStatus[]): SubmissionStatus {
   if (statuses.includes("ON_TIME")) return "ON_TIME";
   if (statuses.includes("IN_PROGRESS")) return "IN_PROGRESS";
   return "NOT_SUBMITTED";
+}
+
+function lastStatusInfo(
+  subs: CourseChallengeSubmissionEntryDto[]
+): { status: SubmissionStatus; completedAt: string | null; challengeId: string | null } {
+  const withCompleted = subs
+    .filter((s) => Boolean(s.completedAt))
+    .sort((a, b) => (new Date(b.completedAt!).getTime() ?? 0) - (new Date(a.completedAt!).getTime() ?? 0));
+  if (withCompleted.length > 0) {
+    return {
+      status: withCompleted[0].status ?? "NOT_SUBMITTED",
+      completedAt: withCompleted[0].completedAt ?? null,
+      challengeId: withCompleted[0].challengeId ?? null,
+    };
+  }
+  if (subs.some((s) => s.status === "IN_PROGRESS")) {
+    return { status: "IN_PROGRESS", completedAt: null, challengeId: null };
+  }
+  return { status: "NOT_SUBMITTED", completedAt: null, challengeId: null };
 }
 
 function statusLabel(s: SubmissionStatus): string {
@@ -96,13 +118,19 @@ function statusBadgeStyle(s: SubmissionStatus): React.CSSProperties {
     background: t.bg,
     color: t.color,
     border: `1px solid ${t.border}`,
-    borderRadius: 20,
-    padding: "3px 12px",
+    borderRadius: 999,
+    padding: "3px 10px",
     fontSize: "0.72rem",
     fontWeight: 600,
     letterSpacing: "0.02em",
     whiteSpace: "nowrap" as const,
-    display: "inline-block",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    justifySelf: "start",
+    maxWidth: "100%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
   };
 }
 
@@ -120,12 +148,27 @@ function progressColor(s: SubmissionStatus): string {
 }
 
 function formatDate(value?: string | null): string {
-  if (!value) return "—";
+  if (!value) return "-";
   try {
     return new Date(value).toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
+    });
+  } catch {
+    return value;
+  }
+}
+
+function formatDateTime(value?: string | null): string {
+  if (!value) return "-";
+  try {
+    return new Date(value).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   } catch {
     return value;
@@ -143,6 +186,14 @@ interface StudentRow {
   totalSubTasks: number;
   completionPct: number;
   status: SubmissionStatus;
+  overallStatus: SubmissionStatus;
+  lastStatus: SubmissionStatus;
+  lastCompletedAt: string | null;
+  lastChallengeTitle: string | null;
+  lateLabs: number;
+  onTimeLabs: number;
+  inProgressLabs: number;
+  notStartedLabs: number;
   awardedPoints: number;
   maxPoints: number;
 }
@@ -244,8 +295,20 @@ export default function CourseResultsPage() {
   const [selected, setSelected] = useState<StudentRow | null>(null);
   const [labFilter, setLabFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<SubmissionStatus | null>(null);
-  const [scoreDrafts, setScoreDrafts] = useState<Record<string, number>>({});
   const [savingScoreKey, setSavingScoreKey] = useState<string | null>(null);
+  const [subTaskScoreDrafts, setSubTaskScoreDrafts] = useState<Record<string, number>>({});
+
+  const [submissionModalOpen, setSubmissionModalOpen] = useState(false);
+  const [submissionModalLoading, setSubmissionModalLoading] = useState(false);
+  const [submissionModalError, setSubmissionModalError] = useState<string | null>(null);
+  const [submissionDetail, setSubmissionDetail] =
+    useState<CourseChallengeSubmissionDetailDto | null>(null);
+  const [submissionModalPoints, setSubmissionModalPoints] = useState<{
+    participantId: string;
+    challengeId: string;
+    currentPoints: number;
+    maxPoints: number;
+  } | null>(null);
 
   const submissionStatuses = courseChallengeSubmissionStatusEnumValues.map((status) => {
     return { value: status, label: statusLabel(status) };
@@ -284,18 +347,25 @@ export default function CourseResultsPage() {
 
   const rows = useMemo<StudentRow[]>(() => {
     if (!data) return [];
+    const titleByChallengeId = new Map(challenges.map((c) => [c.challengeId, c.challengeTitle]));
     return (data.participants ?? []).map((p) => {
       const subs = (data.submissions ?? []).filter((s) => s.participantId === p.id);
       const completedLabs = subs.filter(
         (s) => s.status === "ON_TIME" || s.status === "LATE"
       ).length;
+      const lateLabs = subs.filter((s) => s.status === "LATE").length;
+      const onTimeLabs = subs.filter((s) => s.status === "ON_TIME").length;
+      const inProgressLabs = subs.filter((s) => s.status === "IN_PROGRESS").length;
+      const notStartedLabs = subs.filter((s) => s.status === "NOT_SUBMITTED").length;
       const solvedSubTasks = subs.reduce((acc, s) => acc + (s.solvedSubTaskCount ?? 0), 0);
       const totalSubTasks = subs.reduce((acc, s) => acc + (s.totalSubTaskCount ?? 0), 0);
       const awardedPoints = subs.reduce((acc, s) => acc + (s.awardedPoints ?? 0), 0);
       const maxPoints = subs.reduce((acc, s) => acc + (s.maxPoints ?? 0), 0);
       const completionPct =
         totalSubTasks > 0 ? Math.round((solvedSubTasks / totalSubTasks) * 100) : 0;
-      const status = overallStatus(subs.map((s) => s.status));
+      const overall = overallStatus(subs.map((s) => s.status));
+      const last = lastStatusInfo(subs);
+      const status = last.status;
       return {
         participant: p,
         submissions: subs,
@@ -305,6 +375,14 @@ export default function CourseResultsPage() {
         totalSubTasks,
         completionPct,
         status,
+        overallStatus: overall,
+        lastStatus: last.status,
+        lastCompletedAt: last.completedAt,
+        lastChallengeTitle: last.challengeId ? titleByChallengeId.get(last.challengeId) ?? null : null,
+        lateLabs,
+        onTimeLabs,
+        inProgressLabs,
+        notStartedLabs,
         awardedPoints,
         maxPoints,
       };
@@ -340,7 +418,10 @@ export default function CourseResultsPage() {
   const filteredRows = useMemo(
     () =>
       rows.filter((r) => {
-        const matchesSearch = r.participant.name.toLowerCase().includes(search.toLowerCase());
+        const q = search.toLowerCase();
+        const matchesSearch =
+          r.participant.name.toLowerCase().includes(q) ||
+          (r.participant.email ?? "").toLowerCase().includes(q);
         const matchesStatus = !statusFilter || r.status === statusFilter;
         return matchesSearch && matchesStatus;
       }),
@@ -349,7 +430,10 @@ export default function CourseResultsPage() {
   const filteredLabRows = useMemo(
     () =>
       labRows.filter((lr) => {
-        const matchesSearch = lr.row.participant.name.toLowerCase().includes(search.toLowerCase());
+        const q = search.toLowerCase();
+        const matchesSearch =
+          lr.row.participant.name.toLowerCase().includes(q) ||
+          (lr.row.participant.email ?? "").toLowerCase().includes(q);
         const matchesStatus = !statusFilter || lr.status === statusFilter;
         return matchesSearch && matchesStatus;
       }),
@@ -425,10 +509,106 @@ export default function CourseResultsPage() {
           ),
         };
       });
+      setSelected((prev) => {
+        if (!prev) return prev;
+        if (prev.participant.id !== participantId) return prev;
+        return {
+          ...prev,
+          submissions: prev.submissions.map((s) =>
+            s.participantId === participantId && s.challengeId === challengeId ? updatedEntry : s
+          ),
+        };
+      });
+      setSubmissionDetail((prev) => {
+        if (!prev) return prev;
+        if (prev.participantId !== participantId || prev.challengeId !== challengeId) return prev;
+        return { ...prev, awardedPoints: updatedEntry.awardedPoints, maxPoints: updatedEntry.maxPoints };
+      });
+      setSubmissionModalPoints((prev) => {
+        if (!prev) return prev;
+        if (prev.participantId !== participantId || prev.challengeId !== challengeId) return prev;
+        return { ...prev, currentPoints: updatedEntry.awardedPoints, maxPoints: updatedEntry.maxPoints };
+      });
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setSavingScoreKey(null);
+    }
+  }
+
+  async function openSubmissionDetail(
+    participantId: string,
+    challengeId: string,
+    currentPoints: number,
+    maxPoints: number
+  ) {
+    setSubmissionModalOpen(true);
+    setSubmissionModalLoading(true);
+    setSubmissionModalError(null);
+    setSubmissionDetail(null);
+    setSubmissionModalPoints({ participantId, challengeId, currentPoints, maxPoints });
+    try {
+      const res = await fetch(
+        `/api/backend/api/v1/courses/${encodeURIComponent(courseId)}/submissions/${encodeURIComponent(participantId)}/${encodeURIComponent(challengeId)}`,
+        { cache: "no-store" }
+      );
+      if (!res.ok) {
+        throw new Error((await res.text()) || res.statusText);
+      }
+      const json = (await res.json()) as CourseChallengeSubmissionDetailDto;
+      setSubmissionDetail(json);
+      setSubmissionModalPoints((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          currentPoints: json.awardedPoints,
+          maxPoints: json.maxPoints,
+        };
+      });
+
+      // Seed per-subtask manual grading defaults so the total matches the current awarded points.
+      const defaultBySubTaskId: Record<string, number> = {};
+      const sorted = [...(json.subTasks ?? [])].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+      for (const st of sorted) {
+        defaultBySubTaskId[st.subTaskId] = st.correct ? st.points : 0;
+      }
+      const maxTotal = sorted.reduce((acc, st) => acc + (st.points ?? 0), 0);
+      let target = json.awardedPoints ?? 0;
+      if (target < 0) target = 0;
+      if (target > maxTotal) target = maxTotal;
+
+      let total = sorted.reduce((acc, st) => acc + (defaultBySubTaskId[st.subTaskId] ?? 0), 0);
+      if (total > target) {
+        for (let i = sorted.length - 1; i >= 0 && total > target; i--) {
+          const st = sorted[i];
+          const current = defaultBySubTaskId[st.subTaskId] ?? 0;
+          const take = Math.min(current, total - target);
+          defaultBySubTaskId[st.subTaskId] = current - take;
+          total -= take;
+        }
+      } else if (total < target) {
+        for (let i = sorted.length - 1; i >= 0 && total < target; i--) {
+          const st = sorted[i];
+          const current = defaultBySubTaskId[st.subTaskId] ?? 0;
+          const cap = (st.points ?? 0) - current;
+          const add = Math.min(cap, target - total);
+          defaultBySubTaskId[st.subTaskId] = current + add;
+          total += add;
+        }
+      }
+
+      setSubTaskScoreDrafts((prev) => {
+        const next = { ...prev };
+        for (const st of sorted) {
+          const key = `${participantId}:${challengeId}:${st.subTaskId}`;
+          next[key] = defaultBySubTaskId[st.subTaskId] ?? 0;
+        }
+        return next;
+      });
+    } catch (e) {
+      setSubmissionModalError((e as Error).message);
+    } finally {
+      setSubmissionModalLoading(false);
     }
   }
 
@@ -595,8 +775,7 @@ export default function CourseResultsPage() {
             <StatCard
               label="Average Completion"
               value={`${avgPct}%`}
-              sub={`+${statsOnTime} on time`}
-              subColor="#2dd4bf"
+              sub={activeLab ? "This lab only" : "All labs"}
               icon={<IconTrendingUp size={12} color="#2dd4bf" />}
               progress={avgPct}
             />
@@ -674,7 +853,7 @@ export default function CourseResultsPage() {
             <Box
               style={{
                 display: "grid",
-                gridTemplateColumns: "2.5fr 1.2fr 1.4fr 1.8fr 60px",
+                gridTemplateColumns: "2.5fr 1.6fr 1.4fr 1.8fr 60px",
                 padding: "0.6rem 1.5rem",
                 background: "rgba(255,255,255,0.02)",
                 borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -682,7 +861,7 @@ export default function CourseResultsPage() {
             >
               {(activeLab
                 ? ["Participant", "Status", "Tasks", "Completion", "Actions"]
-                : ["Participant", "Status", "Points", "Completion", "Actions"]
+                : ["Participant", "Latest Status", "Points", "Completion", "Actions"]
               ).map((h) => (
                 <Text
                   key={h}
@@ -706,8 +885,8 @@ export default function CourseResultsPage() {
                 const labItem = activeLab && "row" in item ? item : null;
                 const status = labItem ? labItem.status : row.status;
                 const pointsLabel = labItem
-                  ? `${labItem.awardedPoints} / ${labItem.maxPoints} Punkte`
-                  : `${row.awardedPoints} / ${row.maxPoints} Punkte`;
+                  ? `${labItem.awardedPoints} / ${labItem.maxPoints} points`
+                  : `${row.awardedPoints} / ${row.maxPoints} points`;
                 const pct = labItem ? labItem.pct : row.completionPct;
                 const submittedAt = labItem?.sub?.completedAt ?? null;
 
@@ -716,7 +895,7 @@ export default function CourseResultsPage() {
                     key={row.participant.id}
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "2.5fr 1.2fr 1.4fr 1.8fr 60px",
+                      gridTemplateColumns: "2.5fr 1.6fr 1.4fr 1.8fr 60px",
                       padding: "0.85rem 1.5rem",
                       borderBottom: "1px solid rgba(255,255,255,0.04)",
                       alignItems: "center",
@@ -745,25 +924,51 @@ export default function CourseResultsPage() {
                           {row.participant.name}
                         </Text>
                         <Text size="xs" style={{ color: "#475569" }}>
-                          {submittedAt
-                            ? `Submitted: ${formatDate(submittedAt)}`
-                            : activeLab
-                              ? "Not submitted"
-                              : `${row.totalLabs} labs assigned`}
+                          {(() => {
+                              const email = row.participant.email ?? "-";
+                              if (activeLab) {
+                              const submitted = submittedAt
+                                ? `Submitted: ${formatDateTime(submittedAt)}`
+                                : "Not submitted";
+                              return `${email} • ${submitted}`;
+                            }
+                            return email;
+                          })()}
                         </Text>
                       </Stack>
                     </Group>
 
-                    <span style={statusBadgeStyle(status)}>{statusLabel(status)}</span>
+                    {activeLab ? (
+                      <span style={statusBadgeStyle(status)}>{statusLabel(status)}</span>
+                    ) : (
+                      <Tooltip
+                        withArrow
+                        position="top"
+                        label={
+                          [
+                            `Latest: ${statusLabel(row.status)}`,
+                            row.lastChallengeTitle ? `• ${row.lastChallengeTitle}` : "",
+                            row.lastCompletedAt ? `• ${formatDateTime(row.lastCompletedAt)}` : "",
+                            `\nOverall: ${statusLabel(row.overallStatus)} (late ${row.lateLabs}, on time ${row.onTimeLabs}, in progress ${row.inProgressLabs}, not started ${row.notStartedLabs})`,
+                          ]
+                            .filter(Boolean)
+                            .join(" ")
+                        }
+                      >
+                        <span style={{ ...statusBadgeStyle(status), cursor: "help" }}>
+                          {statusLabel(status)}
+                        </span>
+                      </Tooltip>
+                    )}
 
                     <Stack gap={1}>
                       <Text size="sm" fw={600} style={{ color: "#f1f5f9" }}>
                         {pointsLabel}
                       </Text>
-                      <Text size="xs" style={{ color: "#475569" }}>
-                        {activeLab ? "lab points" : "total points"}
-                      </Text>
-                    </Stack>
+                  <Text size="xs" style={{ color: "#475569" }}>
+                    {activeLab ? "lab points" : "total points"}
+                  </Text>
+                </Stack>
 
                     <Stack gap={4}>
                       <Text size="xs" style={{ color: "#94a3b8" }}>
@@ -914,9 +1119,9 @@ export default function CourseResultsPage() {
                 <span style={statusBadgeStyle(selected.status)}>
                   {statusLabel(selected.status)}
                 </span>
-                <Text size="xs" style={{ color: "#64748b", marginTop: 8 }}>
-                  {selected.awardedPoints} / {selected.maxPoints} Punkte (gesamt)
-                </Text>
+                  <Text size="xs" style={{ color: "#64748b", marginTop: 8 }}>
+                  {selected.awardedPoints} / {selected.maxPoints} points (total)
+                  </Text>
               </Box>
             </SimpleGrid>
 
@@ -947,8 +1152,6 @@ export default function CourseResultsPage() {
                 const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
                 const currentPoints = sub?.awardedPoints ?? 0;
                 const maxPoints = sub?.maxPoints ?? c.maxScore ?? 0;
-                const key = scoreKey(selected.participant.id, c.challengeId);
-                const draftValue = scoreDrafts[key] ?? currentPoints;
                 return (
                   <Box
                     key={c.challengeId}
@@ -981,7 +1184,7 @@ export default function CourseResultsPage() {
                           {currentPoints}
                         </Text>
                         <Text size="xs" style={{ color: "#64748b" }}>
-                          / {maxPoints} Punkte
+                          / {maxPoints} points
                         </Text>
                         {total > 0 && (
                           <Text size="xs" style={{ color: progressColor(st), fontWeight: 600 }}>
@@ -1014,7 +1217,7 @@ export default function CourseResultsPage() {
                       <Group gap={4} mb={2}>
                         <IconClock size={11} color="#475569" />
                         <Text size="xs" style={{ color: "#475569" }}>
-                          Deadline: {formatDate(c.dueAt)}
+                          Deadline: {formatDateTime(c.dueAt)}
                         </Text>
                       </Group>
                     )}
@@ -1022,7 +1225,7 @@ export default function CourseResultsPage() {
                       <Group gap={4}>
                         <IconClock size={11} color="#f87171" />
                         <Text size="xs" style={{ color: "#f87171", fontWeight: 600 }}>
-                          Submitted late: {formatDate(sub.completedAt)} (kein automatischer Abzug)
+                          Submitted late: {formatDateTime(sub.completedAt)}
                         </Text>
                       </Group>
                     )}
@@ -1030,7 +1233,7 @@ export default function CourseResultsPage() {
                       <Group gap={4}>
                         <IconClock size={11} color="#2dd4bf" />
                         <Text size="xs" style={{ color: "#2dd4bf" }}>
-                          Submitted: {formatDate(sub.completedAt)}
+                          Submitted: {formatDateTime(sub.completedAt)}
                         </Text>
                       </Group>
                     )}
@@ -1040,42 +1243,16 @@ export default function CourseResultsPage() {
                           variant="light"
                           size="xs"
                           onClick={() =>
-                            router.push(
-                              `/dashboard/instructor/${courseId}/statistic/${c.challengeId}?query=${encodeURIComponent(selected.participant.name)}`
+                            void openSubmissionDetail(
+                              selected.participant.id,
+                              c.challengeId,
+                              currentPoints,
+                              maxPoints
                             )
                           }
                         >
-                          Abgabe ansehen
+                          View submission
                         </Button>
-                        <Group gap={6} align="flex-end">
-                          <NumberInput
-                            size="xs"
-                            min={0}
-                            max={maxPoints}
-                            value={draftValue}
-                            onChange={(value) => {
-                              const next = typeof value === "number" ? value : 0;
-                              setScoreDrafts((prev) => ({ ...prev, [key]: next }));
-                            }}
-                            allowDecimal={false}
-                            clampBehavior="strict"
-                            styles={{ input: { width: 92 } }}
-                          />
-                          <Button
-                            size="xs"
-                            loading={savingScoreKey === key}
-                            onClick={() => {
-                              void saveManualScore(
-                                selected.participant.id,
-                                c.challengeId,
-                                draftValue,
-                                maxPoints
-                              );
-                            }}
-                          >
-                            Punkte speichern
-                          </Button>
-                        </Group>
                       </Group>
                     )}
                   </Box>
@@ -1085,6 +1262,233 @@ export default function CourseResultsPage() {
           </Stack>
         )}
       </Drawer>
+
+      <Modal
+        opened={submissionModalOpen}
+        onClose={() => setSubmissionModalOpen(false)}
+        title="Submission details"
+        size="xl"
+        centered
+        styles={{
+          content: { background: "#0b1220", border: "1px solid rgba(255,255,255,0.08)" },
+          header: { background: "#0b1220" },
+          title: { color: "#f1f5f9", fontWeight: 700 },
+          close: { color: "#cbd5e1" },
+        }}
+      >
+        {submissionModalLoading ? (
+          <Group justify="center" py="md">
+            <Loader size="sm" />
+          </Group>
+        ) : submissionModalError ? (
+          <Alert color="red" title="Failed to load submission">
+            {submissionModalError}
+          </Alert>
+        ) : submissionDetail && submissionModalPoints ? (
+          <Stack gap="sm">
+            <Text size="sm" style={{ color: "#94a3b8" }}>
+              {submissionDetail.participantName} {"|"} {submissionDetail.challengeTitle}
+            </Text>
+
+            {submissionDetail.status === "LATE" && (
+              <Alert
+                color="red"
+                variant="light"
+                title={
+                  submissionDetail.awardedPoints > 0
+                    ? "Late submission (manual points awarded)"
+                    : "Late submission (0 points by default)"
+                }
+                styles={{
+                  root: { background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)" },
+                  title: { color: "#fecaca" },
+                  message: { color: "#fecaca" },
+                }}
+              >
+                Due: {formatDateTime(submissionDetail.dueAt)} • Submitted: {formatDateTime(submissionDetail.completedAt)}
+                {" • "}Points: {submissionDetail.awardedPoints} / {submissionDetail.maxPoints}
+              </Alert>
+            )}
+
+            {(() => {
+              const dueAtMs = submissionDetail.dueAt ? new Date(submissionDetail.dueAt).getTime() : null;
+              const hasLateSubTask =
+                dueAtMs !== null &&
+                (submissionDetail.subTasks ?? []).some((st) => {
+                  if (!st?.submittedAt) return false;
+                  const t = new Date(st.submittedAt).getTime();
+                  return Number.isFinite(t) && t > dueAtMs;
+                });
+              if (!hasLateSubTask) return null;
+              return (
+                <Group gap={10} style={{ marginTop: 2 }}>
+                  <Box
+                    style={{
+                      width: 14,
+                      height: 14,
+                      borderRadius: 4,
+                      border: "2px solid rgba(251,146,60,0.7)",
+                      background: "rgba(251,146,60,0.12)",
+                    }}
+                  />
+                  <Text size="xs" style={{ color: "#94a3b8" }}>
+                    Orange outline = submitted after deadline (0 pts by default unless manually overridden). Correct/wrong
+                    stays based on the student answer.
+                  </Text>
+                </Group>
+              );
+            })()}
+
+            {(() => {
+              const key = scoreKey(
+                submissionModalPoints.participantId,
+                submissionModalPoints.challengeId
+              );
+              const sortedSubTasks = submissionDetail.subTasks
+                .slice()
+                .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+              const computedTotal = sortedSubTasks.reduce((acc, st) => {
+                const subKey = `${submissionModalPoints.participantId}:${submissionModalPoints.challengeId}:${st.subTaskId}`;
+                const fallback = st.correct ? st.points : 0;
+                return acc + (subTaskScoreDrafts[subKey] ?? fallback);
+              }, 0);
+              const draftValue = computedTotal;
+              return (
+                <Group
+                  justify="space-between"
+                  align="flex-end"
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 10,
+                    padding: "0.75rem 1rem",
+                  }}
+                >
+                  <Stack gap={2}>
+                    <Text size="xs" tt="uppercase" fw={700} style={{ color: "#64748b" }}>
+                      Points
+                    </Text>
+                    <Text fw={700} style={{ color: "#f1f5f9" }}>
+                      {draftValue} / {submissionModalPoints.maxPoints}
+                    </Text>
+                  </Stack>
+
+                  <Group gap={6} align="flex-end">
+                    <Button
+                      size="xs"
+                      loading={savingScoreKey === key}
+                      onClick={() => {
+                        void saveManualScore(
+                          submissionModalPoints.participantId,
+                          submissionModalPoints.challengeId,
+                          draftValue,
+                          submissionModalPoints.maxPoints
+                        );
+                      }}
+                    >
+                      Save points
+                    </Button>
+                  </Group>
+                </Group>
+              );
+            })()}
+
+            {submissionDetail.subTasks.length === 0 ? (
+              <Text size="sm" c="dimmed">
+                No tasks found.
+              </Text>
+            ) : (
+              submissionDetail.subTasks
+                .slice()
+                .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+                .map((st) => {
+                  const dueAtMs = submissionDetail.dueAt ? new Date(submissionDetail.dueAt).getTime() : null;
+                  const submittedAtMs = st.submittedAt ? new Date(st.submittedAt).getTime() : null;
+                  const isLateSubTask =
+                    dueAtMs !== null &&
+                    submittedAtMs !== null &&
+                    Number.isFinite(submittedAtMs) &&
+                    submittedAtMs > dueAtMs;
+
+                  const subKey = `${submissionModalPoints.participantId}:${submissionModalPoints.challengeId}:${st.subTaskId}`;
+                  const fallback = st.correct ? st.points : 0;
+                  const manualPoints = subTaskScoreDrafts[subKey] ?? fallback;
+                  return (
+                  <Box
+                    key={st.subTaskId}
+                    style={{
+                      background: isLateSubTask ? "rgba(251,146,60,0.06)" : "rgba(255,255,255,0.03)",
+                      border: isLateSubTask
+                        ? "2px solid rgba(251,146,60,0.35)"
+                        : "1px solid rgba(255,255,255,0.06)",
+                      borderRadius: 10,
+                      padding: "0.85rem 1rem",
+                    }}
+                  >
+                    <Group justify="space-between" align="flex-start" wrap="nowrap">
+                      <Stack gap={2} style={{ minWidth: 0 }}>
+                        <Text fw={600} style={{ color: "#f1f5f9" }}>
+                          {st.orderIndex + 1}. {st.title}
+                        </Text>
+                        <Text size="xs" style={{ color: "#94a3b8" }}>
+                          {st.type} {"|"} {st.points} pt{st.points === 1 ? "" : "s"} {"|"}{" "}
+                          {st.completed ? "completed" : "not completed"}
+                          {st.correct === null ? (
+                            ""
+                          ) : (
+                            <>
+                              {" | "}
+                              <Text
+                                component="span"
+                                size="xs"
+                                fw={700}
+                                style={{ color: st.correct ? "#2dd4bf" : "#f87171" }}
+                              >
+                                {st.correct ? "correct" : "wrong"}
+                              </Text>
+                            </>
+                          )}
+                        </Text>
+                      </Stack>
+
+                      <Group gap={6} align="flex-end" style={{ flexShrink: 0 }}>
+                        <NumberInput
+                          size="xs"
+                          min={0}
+                          max={st.points}
+                          value={manualPoints}
+                          onChange={(value) => {
+                            const raw = typeof value === "number" ? value : 0;
+                            const next = Math.max(0, Math.min(st.points, raw));
+                            setSubTaskScoreDrafts((prev) => ({ ...prev, [subKey]: next }));
+                          }}
+                          allowDecimal={false}
+                          clampBehavior="strict"
+                          styles={{ input: { width: 86 } }}
+                        />
+                      </Group>
+                    </Group>
+
+                    {st.type === "MULTIPLE_CHOICE" ? (
+                      <Stack gap={6} mt="sm">
+                        <Text size="sm" style={{ color: "#e2e8f0" }}>
+                          Selected: {st.selectedOptionText ?? "-"}
+                        </Text>
+                      </Stack>
+                    ) : (
+                      <Stack gap={6} mt="sm">
+                        <Text size="sm" style={{ color: "#e2e8f0" }}>
+                          Submitted flag: {st.submittedFlag ?? "-"}
+                        </Text>
+                      </Stack>
+                    )}
+                  </Box>
+                  );
+                })
+            )}
+          </Stack>
+        ) : null}
+      </Modal>
     </Container>
   );
 }
