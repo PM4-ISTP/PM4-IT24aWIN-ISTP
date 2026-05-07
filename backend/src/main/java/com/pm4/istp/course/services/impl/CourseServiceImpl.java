@@ -738,7 +738,9 @@ public class CourseServiceImpl implements CourseService {
               courseId, List.of(participantId), challengeIds)) {
         UUID cid = (UUID) row[1];
         Integer pts = (Integer) row[2];
-        if (cid != null && pts != null) overrides.put(cid, pts);
+        if (cid != null && pts != null) {
+          overrides.put(cid, pts);
+        }
       }
 
       for (com.pm4.istp.course.db.entities.Challenge c : challenges) {
