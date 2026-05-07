@@ -13,6 +13,7 @@ import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
+import com.pm4.istp.course.db.entities.StudentFlagSubmission;
 import com.pm4.istp.course.db.entities.StudentOptionSubmission;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
@@ -32,6 +33,7 @@ import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.LabRepository;
+import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
 import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.course.services.LabService;
@@ -74,6 +76,7 @@ public class LabServiceImpl implements LabService {
   private final ChallengeOptionRepository challengeOptionRepository;
   private final ChallengeCompletionRepository challengeCompletionRepository;
   private final StudentOptionSubmissionRepository studentOptionSubmissionRepository;
+  private final StudentFlagSubmissionRepository studentFlagSubmissionRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final LabMapper labMapper;
   private final DockerImageAvailabilityService dockerImageAvailabilityService;
@@ -410,6 +413,18 @@ public class LabServiceImpl implements LabService {
     }
 
     boolean correct = challenge.getFlag() != null && challenge.getFlag().equals(flag);
+
+    StudentFlagSubmission submission =
+        studentFlagSubmissionRepository
+            .findByUserIdAndChallengeId(userId, challengeId)
+            .orElseGet(StudentFlagSubmission::new);
+    submission.setUser(user);
+    submission.setChallenge(challenge);
+    submission.setSubmittedFlag(flag);
+    submission.setCorrect(correct);
+    submission.setSubmittedAt(LocalDateTime.now());
+    studentFlagSubmissionRepository.save(submission);
+
     if (correct) {
       ChallengeCompletion completion = new ChallengeCompletion();
       completion.setUser(user);

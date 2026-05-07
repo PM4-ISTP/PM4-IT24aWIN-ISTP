@@ -108,6 +108,7 @@ export interface CourseLabResponseDto {
   difficulty: string;
   orderIndex: number;
   dueAt?: string | null;
+  maxScore?: number | null;
 }
 
 export interface CourseDetailResponseDto {
@@ -137,8 +138,36 @@ export interface CourseChallengeSubmissionEntryDto {
   labId: string;
   solvedChallengeCount: number;
   totalChallengeCount: number;
+  awardedPoints: number;
+  maxPoints: number;
   completedAt: string | null;
   status: CourseLabSubmissionStatusEnum;
+}
+
+export interface CourseLabChallengeSubmissionDetailDto {
+  challengeId: string;
+  title: string;
+  type: string;
+  maxPoints: number;
+  completed: boolean;
+  correct: boolean | null;
+  awardedPoints: number | null;
+  overridePoints: number | null;
+  submittedFlag: string | null;
+  selectedOptionText: string | null;
+}
+
+export interface CourseLabSubmissionDetailDto {
+  courseId: string;
+  participantId: string;
+  labId: string;
+  labTitle: string;
+  dueAt: string | null;
+  completedAt: string | null;
+  status: CourseLabSubmissionStatusEnum;
+  awardedPoints: number;
+  maxPoints: number;
+  challenges: CourseLabChallengeSubmissionDetailDto[];
 }
 
 export interface CourseLabSubmissionsResponseDto {

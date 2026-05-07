@@ -10,6 +10,7 @@ import {
   Container,
   Group,
   Loader,
+  Modal,
   Select,
   SimpleGrid,
   Stack,
@@ -29,7 +30,9 @@ import {
 import { fetchCourse } from "@/src/features/course/actions/courses";
 import {
   type CourseChallengeSubmissionEntryDto,
+  type CourseLabChallengeSubmissionDetailDto,
   type CourseLabResponseDto,
+  type CourseLabSubmissionDetailDto,
   type CourseLabSubmissionsResponseDto,
   type CourseLabSubmissionStatusEnum as SubmissionStatus,
   type CourseParticipantDto,
@@ -202,6 +205,8 @@ interface ParticipantRow {
   byLabId: Map<string, CourseChallengeSubmissionEntryDto>;
   solvedChallenges: number;
   totalChallenges: number;
+  awardedPoints: number;
+  maxPoints: number;
   completionPct: number;
   overallStatus: SubmissionStatus;
   latestStatus: SubmissionStatus;
@@ -221,6 +226,12 @@ export default function CourseResultsPage() {
   const [search, setSearch] = useState("");
   const [labFilter, setLabFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<SubmissionStatus | null>(null);
+  const [detailsOpened, setDetailsOpened] = useState(false);
+  const [activeParticipant, setActiveParticipant] = useState<ParticipantRow | null>(null);
+  const [activeLabId, setActiveLabId] = useState<string | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [detail, setDetail] = useState<CourseLabSubmissionDetailDto | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -292,6 +303,8 @@ export default function CourseResultsPage() {
         (acc, s) => acc + (s.totalChallengeCount ?? 0),
         0
       );
+      const awardedPoints = effectiveSubs.reduce((acc, s) => acc + (s.awardedPoints ?? 0), 0);
+      const maxPoints = effectiveSubs.reduce((acc, s) => acc + (s.maxPoints ?? 0), 0);
       const completionPct =
         totalChallenges > 0 ? Math.round((solvedChallenges / totalChallenges) * 100) : 0;
 
@@ -306,6 +319,8 @@ export default function CourseResultsPage() {
         byLabId,
         solvedChallenges,
         totalChallenges,
+        awardedPoints,
+        maxPoints,
         completionPct,
         overallStatus,
         latestStatus: latest?.status ?? "NOT_SUBMITTED",
@@ -340,6 +355,67 @@ export default function CourseResultsPage() {
     value: l.labId,
     label: `Lab ${String(idx + 1).padStart(2, "0")}: ${l.labTitle}`,
   }));
+
+  async function loadDetail(participantId: string, labId: string) {
+    try {
+      setDetailLoading(true);
+      setDetailError(null);
+      const res = await fetch(
+        `/api/backend/api/v1/courses/${encodeURIComponent(courseId)}/submissions/${encodeURIComponent(
+          participantId
+        )}/${encodeURIComponent(labId)}`,
+        { cache: "no-store" }
+      );
+      if (!res.ok) throw new Error((await res.text()) || res.statusText);
+      const json = (await res.json()) as CourseLabSubmissionDetailDto;
+      setDetail(json);
+    } catch (e) {
+      setDetailError((e as Error).message);
+      setDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }
+
+  async function openDetails(row: ParticipantRow) {
+    setActiveParticipant(row);
+    const nextLabId = labFilter ?? labs[0]?.labId ?? null;
+    setActiveLabId(nextLabId);
+    setDetailsOpened(true);
+    if (nextLabId) {
+      await loadDetail(row.participant.id, nextLabId);
+    } else {
+      setDetail(null);
+      setDetailError(null);
+    }
+  }
+
+  async function setOverridePoints(challengeId: string, points: number) {
+    if (!activeParticipant || !activeLabId) return;
+    const res = await fetch(
+      `/api/backend/api/v1/courses/${encodeURIComponent(courseId)}/submissions/${encodeURIComponent(
+        activeParticipant.participant.id
+      )}/${encodeURIComponent(challengeId)}/score`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ points }),
+      }
+    );
+    if (!res.ok) throw new Error((await res.text()) || res.statusText);
+    const updated = (await res.json()) as CourseChallengeSubmissionEntryDto;
+
+    setData((prev) => {
+      if (!prev) return prev;
+      const nextSubs = (prev.submissions ?? []).map((s) => {
+        if (s.participantId === updated.participantId && s.labId === updated.labId) return updated;
+        return s;
+      });
+      return { ...prev, submissions: nextSubs };
+    });
+
+    await loadDetail(activeParticipant.participant.id, activeLabId);
+  }
 
   return (
     <Container size="lg" py="xl">
@@ -477,13 +553,13 @@ export default function CourseResultsPage() {
         <Box
           style={{
             display: "grid",
-            gridTemplateColumns: "2.5fr 1.2fr 1.5fr 1.8fr",
+            gridTemplateColumns: "2.5fr 1.2fr 1.8fr 1.8fr",
             padding: "0.6rem 1.5rem",
             background: "rgba(255,255,255,0.02)",
             borderBottom: "1px solid rgba(255,255,255,0.06)",
           }}
         >
-          {["Participant", "Status", "Challenges", "Completion"].map((h) => (
+          {["Participant", "Status", "Points / Challenges", "Completion"].map((h) => (
             <Text
               key={h}
               size="xs"
@@ -520,10 +596,14 @@ export default function CourseResultsPage() {
                 key={r.participant.id}
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "2.5fr 1.2fr 1.5fr 1.8fr",
+                  gridTemplateColumns: "2.5fr 1.2fr 1.8fr 1.8fr",
                   padding: "0.85rem 1.5rem",
                   borderBottom: "1px solid rgba(255,255,255,0.04)",
                   alignItems: "center",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  void openDetails(r);
                 }}
               >
                 <Group gap="sm">
@@ -563,10 +643,10 @@ export default function CourseResultsPage() {
 
                 <Stack gap={2}>
                   <Text size="sm" fw={700} style={{ color: "#f1f5f9" }}>
-                    {r.solvedChallenges}/{r.totalChallenges}
+                    {r.awardedPoints}/{r.maxPoints} pts
                   </Text>
                   <Text size="xs" style={{ color: "#475569" }}>
-                    challenges solved
+                    {r.solvedChallenges}/{r.totalChallenges} challenges
                   </Text>
                 </Stack>
 
@@ -598,6 +678,175 @@ export default function CourseResultsPage() {
           })
         )}
       </Box>
+
+      <Modal
+        opened={detailsOpened}
+        onClose={() => {
+          setDetailsOpened(false);
+          setActiveParticipant(null);
+          setDetail(null);
+          setDetailError(null);
+        }}
+        title={
+          <Text fw={700} style={{ color: "#f1f5f9" }}>
+            Submission details{activeParticipant ? ` — ${activeParticipant.participant.name}` : ""}
+          </Text>
+        }
+        centered
+        size="lg"
+        styles={{
+          content: { background: "#0b1220", border: "1px solid rgba(255,255,255,0.08)" },
+          header: { background: "#0b1220", borderBottom: "1px solid rgba(255,255,255,0.08)" },
+          body: { paddingTop: 10 },
+        }}
+      >
+        {!activeParticipant ? null : (
+          <Stack gap="md">
+            <Group justify="space-between" align="center">
+              <Select
+                placeholder="Select lab"
+                data={labSelectData}
+                value={activeLabId}
+                onChange={(v) => {
+                  const next = (v as string) ?? null;
+                  setActiveLabId(next);
+                  if (next) void loadDetail(activeParticipant.participant.id, next);
+                }}
+                w={360}
+                styles={{
+                  input: {
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "#f1f5f9",
+                  },
+                  dropdown: { background: "#0b1220", border: "1px solid rgba(255,255,255,0.1)" },
+                  option: { color: "#e2e8f0" },
+                }}
+              />
+              <Text size="sm" style={{ color: "#94a3b8" }}>
+                {detail ? `${detail.awardedPoints}/${detail.maxPoints} pts` : ""}
+              </Text>
+            </Group>
+
+            {detailLoading ? (
+              <Group justify="center" py="md">
+                <Loader size="sm" />
+              </Group>
+            ) : detailError ? (
+              <Alert color="red" title="Failed to load submission details">
+                {detailError}
+              </Alert>
+            ) : !detail ? (
+              <Text size="sm" c="dimmed">
+                No lab selected.
+              </Text>
+            ) : (
+              <Stack gap="sm">
+                {detail.status === "LATE" ? (
+                  <Box
+                    style={{
+                      background: "rgba(249,115,22,0.12)",
+                      border: "1px solid rgba(249,115,22,0.25)",
+                      borderRadius: 12,
+                      padding: "0.9rem 1rem",
+                    }}
+                  >
+                    <Text fw={700} style={{ color: "#fdba74" }}>
+                      Late submission
+                    </Text>
+                    <Text size="sm" style={{ color: "#94a3b8", marginTop: 4 }}>
+                      Due: {formatDateTime(detail.dueAt)} • Submitted:{" "}
+                      {formatDateTime(detail.completedAt)}
+                    </Text>
+                  </Box>
+                ) : null}
+
+                {detail.challenges.map((c: CourseLabChallengeSubmissionDetailDto, idx: number) => {
+                  const isLate = detail.status === "LATE";
+                  const correctLabel =
+                    c.correct === null ? "unknown" : c.correct ? "correct" : "wrong";
+                  const correctColor =
+                    c.correct === null ? "#94a3b8" : c.correct ? "#2dd4bf" : "#f87171";
+
+                  const max = Math.max(0, c.maxPoints ?? 0);
+                  const options = Array.from({ length: max + 1 }, (_, i) => ({
+                    value: String(i),
+                    label: String(i),
+                  }));
+
+                  return (
+                    <Box
+                      key={c.challengeId}
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: `1px solid ${
+                          isLate ? "rgba(249,115,22,0.25)" : "rgba(255,255,255,0.08)"
+                        }`,
+                        borderRadius: 14,
+                        padding: "1rem 1.1rem",
+                      }}
+                    >
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Stack gap={2} style={{ minWidth: 0 }}>
+                          <Text fw={700} style={{ color: "#f1f5f9" }}>
+                            {idx + 1}. {c.title}
+                          </Text>
+                          <Text size="xs" style={{ color: "#64748b" }}>
+                            {c.type} • {c.maxPoints} pts •{" "}
+                            <span style={{ color: correctColor }}>{correctLabel}</span>
+                          </Text>
+                          {c.submittedFlag ? (
+                            <Text size="sm" style={{ color: "#e2e8f0", marginTop: 6 }}>
+                              Submitted flag:{" "}
+                              <span style={{ color: "#94a3b8" }}>{c.submittedFlag}</span>
+                            </Text>
+                          ) : null}
+                          {c.selectedOptionText ? (
+                            <Text size="sm" style={{ color: "#e2e8f0", marginTop: 6 }}>
+                              Selected:{" "}
+                              <span style={{ color: "#94a3b8" }}>{c.selectedOptionText}</span>
+                            </Text>
+                          ) : null}
+                        </Stack>
+
+                        <Stack gap={6} align="flex-end" style={{ flexShrink: 0 }}>
+                          <Text size="xs" style={{ color: "#64748b" }}>
+                            Award points
+                          </Text>
+                          <Select
+                            value={String(c.overridePoints ?? c.awardedPoints ?? 0)}
+                            data={options}
+                            onChange={(v) => {
+                              const val = Number(v ?? "0");
+                              void setOverridePoints(c.challengeId, val);
+                            }}
+                            w={96}
+                            size="xs"
+                            styles={{
+                              input: {
+                                background: "rgba(255,255,255,0.05)",
+                                border: "1px solid rgba(255,255,255,0.1)",
+                                color: "#f1f5f9",
+                                textAlign: "center",
+                                fontWeight: 700,
+                              },
+                              dropdown: {
+                                background: "#0b1220",
+                                border: "1px solid rgba(255,255,255,0.1)",
+                              },
+                              option: { color: "#e2e8f0" },
+                            }}
+                          />
+                        </Stack>
+                      </Group>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
+          </Stack>
+        )}
+      </Modal>
     </Container>
   );
 }
