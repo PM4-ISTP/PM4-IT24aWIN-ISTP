@@ -163,7 +163,7 @@ function ChallengesPlaceholder() {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function CourseJourneyCard({ lessons, labs, challenges, instructor }: CourseJourneyCardProps) {
+export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourneyCardProps) {
   const labPercent = labs ? calcPercent(labs.completed, labs.total) : 0;
   const challengePercent = challenges ? calcPercent(challenges.completed, challenges.total) : 0;
 
