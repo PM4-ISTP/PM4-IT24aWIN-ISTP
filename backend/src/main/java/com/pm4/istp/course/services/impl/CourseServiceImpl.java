@@ -374,7 +374,10 @@ public class CourseServiceImpl implements CourseService {
             enrollment -> {
               User participant = enrollment.getParticipant();
               return new CourseParticipantResponseDto(
-                  participant.getId(), participant.getName(), participant.getPicture());
+                  participant.getId(),
+                  participant.getName(),
+                  participant.getPicture(),
+                  participant.getEmail());
             })
         .toList();
   }
@@ -389,7 +392,8 @@ public class CourseServiceImpl implements CourseService {
                   lab.getTitle(),
                   lab.getDifficulty(),
                   courseLab.getOrderIndex(),
-                  courseLab.getDueAt());
+                  courseLab.getDueAt(),
+                  lab.getMaxScore());
             })
         .toList();
   }

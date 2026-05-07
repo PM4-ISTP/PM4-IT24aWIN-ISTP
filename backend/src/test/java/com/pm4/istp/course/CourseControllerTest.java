@@ -444,7 +444,8 @@ class CourseControllerTest {
         dto.setTitle("Public Course");
         dto.setCourseInstructors(List.of(instructor));
         dto.setCourseLabs(List.of(challenge1, challenge2, challenge3, challenge4));
-        dto.setParticipants(List.of(new CourseParticipantResponseDto(UUID.randomUUID(), "Student", null)));
+        dto.setParticipants(
+            List.of(new CourseParticipantResponseDto(UUID.randomUUID(), "Student", null, null)));
 
         when(courseService.getCourse(userId, courseId)).thenReturn(course);
         when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);

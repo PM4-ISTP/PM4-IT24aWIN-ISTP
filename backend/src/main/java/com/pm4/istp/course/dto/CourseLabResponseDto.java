@@ -16,4 +16,5 @@ public class CourseLabResponseDto {
   private LabDifficultyEnum difficulty;
   private int orderIndex;
   private LocalDateTime dueAt;
+  private int maxScore;
 }
