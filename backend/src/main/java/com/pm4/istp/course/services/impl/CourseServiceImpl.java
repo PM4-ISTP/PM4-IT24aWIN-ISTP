@@ -348,7 +348,8 @@ public class CourseServiceImpl implements CourseService {
 
     Map<UUID, CourseLab> existingByLabId =
         course.getCourseLabs().stream()
-            .collect(Collectors.toMap(courseLab -> courseLab.getLab().getId(), courseLab -> courseLab));
+            .collect(
+                Collectors.toMap(courseLab -> courseLab.getLab().getId(), courseLab -> courseLab));
 
     course
         .getCourseLabs()
