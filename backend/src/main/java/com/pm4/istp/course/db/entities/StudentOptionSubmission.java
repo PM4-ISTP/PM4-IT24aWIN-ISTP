@@ -45,7 +45,7 @@ public class StudentOptionSubmission {
           @ForeignKey(
               name = "fk_student_option_submission_option",
               foreignKeyDefinition =
-                  "FOREIGN KEY (selected_option_id) REFERENCES sub_task_options(id) ON DELETE CASCADE"))
+                  "FOREIGN KEY (selected_option_id) REFERENCES challenge_options(id) ON DELETE CASCADE"))
   private ChallengeOption selectedOption;
 
   @Column(name = "is_correct", nullable = false)
