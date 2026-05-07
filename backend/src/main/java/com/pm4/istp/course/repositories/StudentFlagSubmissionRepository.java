@@ -11,7 +11,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface StudentFlagSubmissionRepository extends JpaRepository<StudentFlagSubmission, UUID> {
+public interface StudentFlagSubmissionRepository
+    extends JpaRepository<StudentFlagSubmission, UUID> {
   Optional<StudentFlagSubmission> findByUserIdAndChallengeId(UUID userId, UUID challengeId);
 
   @Query(
@@ -23,4 +24,3 @@ public interface StudentFlagSubmissionRepository extends JpaRepository<StudentFl
   List<Object[]> findForUserAndChallenges(
       @Param("userId") UUID userId, @Param("challengeIds") Collection<UUID> challengeIds);
 }
-

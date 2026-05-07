@@ -22,4 +22,3 @@ public class CourseLabSubmissionDetailDto {
   private int maxPoints;
   private List<CourseLabChallengeSubmissionDetailDto> challenges;
 }
-
