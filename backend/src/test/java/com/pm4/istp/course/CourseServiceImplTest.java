@@ -32,30 +32,26 @@ import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
 import com.pm4.istp.course.db.UpdateCourseRequest;
-import com.pm4.istp.course.db.entities.Challenge;
-import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.db.entities.Lab;
+import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
-import com.pm4.istp.course.dto.CourseChallengeItemDto;
+import com.pm4.istp.course.dto.CourseLabItemDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
-import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
+import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
-import com.pm4.istp.course.exceptions.InvalidCourseChallengeException;
+import com.pm4.istp.course.exceptions.InvalidCourseLabException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
-import com.pm4.istp.course.repositories.ChallengeRepository;
-import com.pm4.istp.course.repositories.CourseChallengeRepository;
-import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
+import com.pm4.istp.course.repositories.LabRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
-import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
-import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
-import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
-import com.pm4.istp.course.repositories.SubTaskRepository;
+import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
+import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.course.services.impl.CourseServiceImpl;
@@ -73,19 +69,11 @@ class CourseServiceImplTest {
   @Mock
   private CourseEnrollmentRepository courseEnrollmentRepository;
   @Mock
-  private CourseChallengeRepository courseChallengeRepository;
-  @Mock
-  private CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
+  private LabRepository labRepository;
   @Mock
   private ChallengeRepository challengeRepository;
   @Mock
-  private SubTaskRepository subTaskRepository;
-  @Mock
-  private SubTaskCompletionRepository subTaskCompletionRepository;
-  @Mock
-  private StudentOptionSubmissionRepository studentOptionSubmissionRepository;
-  @Mock
-  private StudentFlagSubmissionRepository studentFlagSubmissionRepository;
+  private ChallengeCompletionRepository challengeCompletionRepository;
   @Mock
   private CourseInviteCodeHelper courseInviteCodeHelper;
   @Mock
@@ -138,6 +126,11 @@ class CourseServiceImplTest {
     assertThat(result.getTitle()).isEqualTo("Secure Coding");
     assertThat(result.getShortDescription()).isEqualTo("Learn the secure coding basics.");
     assertThat(result.getCourseInstructors()).hasSize(2);
+    assertThat(result.getCourseEnrollments()).hasSize(1);
+
+    CourseEnrollment ownerEnrollment = result.getCourseEnrollments().getFirst();
+    assertThat(ownerEnrollment.getParticipant().getId()).isEqualTo(ownerId);
+    assertThat(ownerEnrollment.getCourse()).isSameAs(result);
 
     CourseInstructor ownerRelation = result.getCourseInstructors().stream()
         .filter(ci -> ci.getInstructorRole() == InstructorRoleEnum.OWNER)
@@ -157,6 +150,44 @@ class CourseServiceImplTest {
     assertThat(collaboratorRelation.getCourse()).isSameAs(result);
 
     verify(courseRepository).save(any(Course.class));
+  }
+
+  @Test
+  void createCourse_whenPrivate_autoEnrollsOwnerAndUsesInviteCodeHelper() {
+    UUID ownerId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+    owner.setName("Owner");
+    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
+
+    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
+    when(courseInviteCodeHelper.saveNewCourseWithInviteCode(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    CreateCourseRequest request = new CreateCourseRequest(
+        "Private Secure Coding",
+        "Intro",
+        "Private practice course.",
+        false,
+        true,
+        null,
+        null,
+        List.of(),
+        McAttemptsMode.UNLIMITED);
+
+    Course result = courseService.createCourse(ownerId, request);
+
+    assertThat(result.isPrivate()).isTrue();
+    assertThat(result.getCourseInstructors()).hasSize(1);
+    assertThat(result.getCourseEnrollments()).hasSize(1);
+
+    CourseEnrollment ownerEnrollment = result.getCourseEnrollments().getFirst();
+    assertThat(ownerEnrollment.getParticipant().getId()).isEqualTo(ownerId);
+    assertThat(ownerEnrollment.getCourse()).isSameAs(result);
+
+    verify(courseInviteCodeHelper).saveNewCourseWithInviteCode(any(Course.class));
+    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
@@ -732,38 +763,38 @@ class CourseServiceImplTest {
     return course;
   }
 
-  private Challenge buildChallenge(UUID id, User creator, ChallengeStatusEnum status) {
-    Challenge challenge = new Challenge();
-    challenge.setId(id);
-    challenge.setTitle("Challenge " + id);
-    challenge.setStatus(status);
-    challenge.setCreator(creator);
-    return challenge;
+  private Lab buildChallenge(UUID id, User creator, LabStatusEnum status) {
+    Lab lab = new Lab();
+    lab.setId(id);
+    lab.setTitle("Lab " + id);
+    lab.setStatus(status);
+    lab.setCreator(creator);
+    return lab;
   }
 
   @Test
   void updateCourseChallenges_replacesAssignmentsWithOwnPrivateChallenge() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
-    UUID challengeId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
 
     User owner = new User();
     owner.setId(ownerId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Challenge challenge = buildChallenge(challengeId, owner, ChallengeStatusEnum.PRIVATE);
+    Lab lab = buildChallenge(labId, owner, LabStatusEnum.PRIVATE);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     Course updated = courseService.updateCourseChallenges(
-        ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0, null)));
+        ownerId, courseId, List.of(new CourseLabItemDto(labId, 0, null)));
 
-    assertThat(updated.getCourseChallenges()).hasSize(1);
-    assertThat(updated.getCourseChallenges().getFirst().getChallenge()).isSameAs(challenge);
-    assertThat(updated.getCourseChallenges().getFirst().getOrderIndex()).isZero();
+    assertThat(updated.getCourseLabs()).hasSize(1);
+    assertThat(updated.getCourseLabs().getFirst().getLab()).isSameAs(lab);
+    assertThat(updated.getCourseLabs().getFirst().getOrderIndex()).isZero();
     verify(courseRepository).save(course);
   }
 
@@ -771,25 +802,25 @@ class CourseServiceImplTest {
   void updateCourseChallenges_setsDueAtWhenProvided() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
-    UUID challengeId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
     LocalDateTime dueAt = LocalDateTime.of(2026, 5, 1, 12, 0);
 
     User owner = new User();
     owner.setId(ownerId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Challenge challenge = buildChallenge(challengeId, owner, ChallengeStatusEnum.PUBLIC);
+    Lab lab = buildChallenge(labId, owner, LabStatusEnum.PUBLIC);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
     when(courseRepository.save(any(Course.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     Course updated =
         courseService.updateCourseChallenges(
-            ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0, dueAt)));
+            ownerId, courseId, List.of(new CourseLabItemDto(labId, 0, dueAt)));
 
-    assertThat(updated.getCourseChallenges()).hasSize(1);
-    assertThat(updated.getCourseChallenges().getFirst().getDueAt()).isEqualTo(dueAt);
+    assertThat(updated.getCourseLabs()).hasSize(1);
+    assertThat(updated.getCourseLabs().getFirst().getDueAt()).isEqualTo(dueAt);
   }
 
   @Test
@@ -797,7 +828,7 @@ class CourseServiceImplTest {
     UUID ownerId = UUID.randomUUID();
     UUID otherCreatorId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
-    UUID challengeId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
 
     User owner = new User();
     owner.setId(ownerId);
@@ -805,38 +836,39 @@ class CourseServiceImplTest {
     otherCreator.setId(otherCreatorId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Challenge challenge = buildChallenge(challengeId, otherCreator, ChallengeStatusEnum.PUBLIC);
+    Lab lab = buildChallenge(labId, otherCreator, LabStatusEnum.PUBLIC);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     Course updated = courseService.updateCourseChallenges(
-        ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0, null)));
+        ownerId, courseId, List.of(new CourseLabItemDto(labId, 0, null)));
 
-    assertThat(updated.getCourseChallenges()).hasSize(1);
+    assertThat(updated.getCourseLabs()).hasSize(1);
   }
 
   @Test
   void updateCourseChallenges_rejectsDraftChallengeEvenFromOwnCreator() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
-    UUID challengeId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
 
     User owner = new User();
     owner.setId(ownerId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Challenge challenge = buildChallenge(challengeId, owner, ChallengeStatusEnum.DRAFT);
+    Lab lab = buildChallenge(labId, owner, LabStatusEnum.DRAFT);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+
+    List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
 
     assertThatThrownBy(
-        () -> courseService.updateCourseChallenges(
-            ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0, null))))
-        .isInstanceOf(InvalidCourseChallengeException.class)
+        () -> courseService.updateCourseChallenges(ownerId, courseId, items))
+        .isInstanceOf(InvalidCourseLabException.class)
         .hasMessageContaining("draft");
 
     verify(courseRepository, never()).save(any(Course.class));
@@ -847,7 +879,7 @@ class CourseServiceImplTest {
     UUID ownerId = UUID.randomUUID();
     UUID otherCreatorId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
-    UUID challengeId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
 
     User owner = new User();
     owner.setId(ownerId);
@@ -855,15 +887,16 @@ class CourseServiceImplTest {
     otherCreator.setId(otherCreatorId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Challenge challenge = buildChallenge(challengeId, otherCreator, ChallengeStatusEnum.PRIVATE);
+    Lab lab = buildChallenge(labId, otherCreator, LabStatusEnum.PRIVATE);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+
+    List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
 
     assertThatThrownBy(
-        () -> courseService.updateCourseChallenges(
-            ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0, null))))
-        .isInstanceOf(ChallengeNotFoundException.class);
+        () -> courseService.updateCourseChallenges(ownerId, courseId, items))
+        .isInstanceOf(LabNotFoundException.class);
 
     verify(courseRepository, never()).save(any(Course.class));
   }
@@ -872,7 +905,7 @@ class CourseServiceImplTest {
   void updateCourseChallenges_whenChallengeDoesNotExist_throwsChallengeNotFound() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
-    UUID challengeId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
 
     User owner = new User();
     owner.setId(ownerId);
@@ -880,12 +913,13 @@ class CourseServiceImplTest {
     Course course = buildCourseWithOwner(courseId, owner);
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(challengeRepository.findById(challengeId)).thenReturn(Optional.empty());
+    when(labRepository.findById(labId)).thenReturn(Optional.empty());
+
+    List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
 
     assertThatThrownBy(
-        () -> courseService.updateCourseChallenges(
-            ownerId, courseId, List.of(new CourseChallengeItemDto(challengeId, 0, null))))
-        .isInstanceOf(ChallengeNotFoundException.class);
+        () -> courseService.updateCourseChallenges(ownerId, courseId, items))
+        .isInstanceOf(LabNotFoundException.class);
 
     verify(courseRepository, never()).save(any(Course.class));
   }
@@ -903,8 +937,9 @@ class CourseServiceImplTest {
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
-    assertThatThrownBy(
-        () -> courseService.updateCourseChallenges(outsiderId, courseId, List.of()))
+    List<CourseLabItemDto> items = List.of();
+
+    assertThatThrownBy(() -> courseService.updateCourseChallenges(outsiderId, courseId, items))
         .isInstanceOf(CourseAccessDeniedException.class);
 
     verify(courseRepository, never()).save(any(Course.class));
@@ -917,7 +952,9 @@ class CourseServiceImplTest {
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> courseService.updateCourseChallenges(ownerId, courseId, List.of()))
+    List<CourseLabItemDto> items = List.of();
+
+    assertThatThrownBy(() -> courseService.updateCourseChallenges(ownerId, courseId, items))
         .isInstanceOf(CourseNotFoundException.class);
   }
 
@@ -931,9 +968,9 @@ class CourseServiceImplTest {
 
     Course course = buildCourseWithOwner(courseId, owner);
     // pre-seed with an existing assignment to verify it gets cleared
-    Challenge existing = buildChallenge(UUID.randomUUID(), owner, ChallengeStatusEnum.PUBLIC);
-    com.pm4.istp.course.db.entities.CourseChallenge existingAssignment = new com.pm4.istp.course.db.entities.CourseChallenge();
-    existingAssignment.setChallenge(existing);
+    Lab existing = buildChallenge(UUID.randomUUID(), owner, LabStatusEnum.PUBLIC);
+    com.pm4.istp.course.db.entities.CourseLab existingAssignment = new com.pm4.istp.course.db.entities.CourseLab();
+    existingAssignment.setLab(existing);
     existingAssignment.setOrderIndex(0);
     course.addCourseChallenge(existingAssignment);
 
@@ -943,24 +980,24 @@ class CourseServiceImplTest {
 
     Course updated = courseService.updateCourseChallenges(ownerId, courseId, List.of());
 
-    assertThat(updated.getCourseChallenges()).isEmpty();
+    assertThat(updated.getCourseLabs()).isEmpty();
   }
 
   @Test
   void getCourseChallengeSubmissions_returnsOnTimeLateInProgressAndNotSubmitted() {
     UUID instructorId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
-    UUID challengeId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
 
     User instructor = new User();
     instructor.setId(instructorId);
 
     Course course = buildCourseWithOwner(courseId, instructor);
-    Challenge challenge = buildChallenge(challengeId, instructor, ChallengeStatusEnum.PUBLIC);
+    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
 
-    com.pm4.istp.course.db.entities.CourseChallenge assignment =
-        new com.pm4.istp.course.db.entities.CourseChallenge();
-    assignment.setChallenge(challenge);
+    com.pm4.istp.course.db.entities.CourseLab assignment =
+        new com.pm4.istp.course.db.entities.CourseLab();
+    assignment.setLab(lab);
     assignment.setOrderIndex(0);
     LocalDateTime dueAt = LocalDateTime.of(2026, 5, 1, 12, 0);
     assignment.setDueAt(dueAt);
@@ -995,30 +1032,22 @@ class CourseServiceImplTest {
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId))
         .thenReturn(List.of(e1, e2, e3, e4));
-    when(subTaskRepository.countByChallengeIds(List.of(challengeId)))
-        .thenReturn(List.<Object[]>of(new Object[] {challengeId, 3L}));
+    when(challengeRepository.countByLabIds(List.of(labId)))
+        .thenReturn(List.<Object[]>of(new Object[] {labId, 3L}));
 
     when(
-            subTaskCompletionRepository.aggregateSolvedCountsForUsersAndChallenges(
+            challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
                 any(), any()))
         .thenReturn(
             List.of(
-                new Object[] {studentOnTime.getId(), challengeId, 3L, dueAt.minusMinutes(5)},
-                new Object[] {studentLate.getId(), challengeId, 3L, dueAt.plusMinutes(1)},
-                new Object[] {studentInProgress.getId(), challengeId, 2L, dueAt.minusMinutes(2)}));
-    when(subTaskCompletionRepository.aggregatePointsForUsersAndChallenges(any(), any()))
-        .thenReturn(List.of());
-    when(subTaskCompletionRepository.aggregateSolvedCountsBeforeDeadline(any(), any(), any()))
-        .thenReturn(List.of());
-    when(
-            courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
-                any(), any(), any()))
-        .thenReturn(List.of());
+                new Object[] {studentOnTime.getId(), labId, 3L, dueAt.minusMinutes(5)},
+                new Object[] {studentLate.getId(), labId, 3L, dueAt.plusMinutes(1)},
+                new Object[] {studentInProgress.getId(), labId, 2L, dueAt.minusMinutes(2)}));
 
     var result = courseService.getCourseChallengeSubmissions(instructorId, courseId);
 
-    assertThat(result.getChallenges()).hasSize(1);
-    assertThat(result.getChallenges().getFirst().getDueAt()).isEqualTo(dueAt);
+    assertThat(result.getLabs()).hasSize(1);
+    assertThat(result.getLabs().getFirst().getDueAt()).isEqualTo(dueAt);
     assertThat(result.getParticipants()).hasSize(4);
 
     var byStudent =

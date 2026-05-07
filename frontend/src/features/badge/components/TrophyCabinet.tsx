@@ -111,7 +111,7 @@ function printCertificate(badge: UserBadge, userName: string) {
     <h1 class="headline">Achievement<br/>Unlocked</h1>
     <p class="sub">This is to certify that</p>
     <p class="name">${userName}</p>
-    <p class="sub">has successfully completed all challenges in</p>
+    <p class="sub">has successfully completed all labs in</p>
     <p class="course">${badge.courseTitle}</p>
     <svg viewBox="0 0 300 300" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
       ${buildInlineSvgContent(badge)}
@@ -180,7 +180,7 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
             No badges yet
           </Text>
           <Text size="sm" c="dimmed" ta="center" maw={360}>
-            Complete all challenges in a course to earn your first badge!
+            Complete all labs in a course to earn your first badge!
           </Text>
         </Stack>
       ) : (

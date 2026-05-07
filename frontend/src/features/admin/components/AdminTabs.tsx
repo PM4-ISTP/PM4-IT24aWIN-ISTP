@@ -39,7 +39,7 @@ export default function AdminTabs({ initialConfig }: AdminTabsProps) {
       <Tabs.List mb="lg">
         <Tabs.Tab value="config">Platform Config</Tabs.Tab>
         <Tabs.Tab value="courses">Courses</Tabs.Tab>
-        <Tabs.Tab value="challenges">Challenges</Tabs.Tab>
+        <Tabs.Tab value="labs">Labs</Tabs.Tab>
         <Tabs.Tab value="topics">Topics</Tabs.Tab>
       </Tabs.List>
 
@@ -55,7 +55,7 @@ export default function AdminTabs({ initialConfig }: AdminTabsProps) {
         </Box>
       </Tabs.Panel>
 
-      <Tabs.Panel value="challenges">
+      <Tabs.Panel value="labs">
         <Box style={cardStyle}>
           <AdminChallengeManagement />
         </Box>

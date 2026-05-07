@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public class ValidFlagValidator implements ConstraintValidator<ValidFlag, String> {
 
-  private static final Pattern FLAG_PATTERN = Pattern.compile("^ISTP\\{[A-Za-z0-9_]+\\}$");
+  private static final Pattern FLAG_PATTERN = Pattern.compile("^ISTP\\{\\w+\\}$");
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {

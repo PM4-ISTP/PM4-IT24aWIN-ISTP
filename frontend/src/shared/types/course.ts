@@ -1,10 +1,11 @@
 import type { components } from "@/src/shared/lib/api/schema";
 
-export type SubTaskStudentDto = components["schemas"]["SubTaskStudentDto"];
-export type SubTaskOptionStudentDto = components["schemas"]["SubTaskOptionStudentDto"];
 export type ChallengeStudentDto = components["schemas"]["ChallengeStudentDto"];
-export type SubTaskSubmissionRequestDto = components["schemas"]["SubTaskSubmissionRequestDto"];
-export type SubTaskSubmissionResponseDto = components["schemas"]["SubTaskSubmissionResponseDto"];
+export type ChallengeOptionStudentDto = components["schemas"]["ChallengeOptionStudentDto"];
+export type LabStudentDto = components["schemas"]["LabStudentDto"];
+export type ChallengeSubmissionRequestDto = components["schemas"]["ChallengeSubmissionRequestDto"];
+export type ChallengeSubmissionResponseDto =
+  components["schemas"]["ChallengeSubmissionResponseDto"];
 export type ChoiceSubmissionResponseDto = components["schemas"]["ChoiceSubmissionResponseDto"];
 
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
@@ -98,16 +99,14 @@ export interface CourseParticipantDto {
   id: string;
   name: string;
   picture: string | null;
-  email?: string | null;
 }
 
-export interface CourseChallengeResponseDto {
-  challengeId: string;
-  challengeTitle: string;
+export interface CourseLabResponseDto {
+  labId: string;
+  labTitle: string;
   difficulty: string;
   orderIndex: number;
   dueAt?: string | null;
-  maxScore?: number;
 }
 
 export interface CourseDetailResponseDto {
@@ -125,79 +124,27 @@ export interface CourseDetailResponseDto {
   mcAttemptsMode?: string | null;
   courseInstructors: CourseInstructorResponseDto[];
   participants: CourseParticipantDto[];
-  courseChallenges: CourseChallengeResponseDto[];
+  courseLabs: CourseLabResponseDto[];
   createdAt: string;
   updatedAt: string;
 }
 
-export type CourseChallengeSubmissionStatusEnum =
-  | "NOT_SUBMITTED"
-  | "IN_PROGRESS"
-  | "ON_TIME"
-  | "LATE";
-
-export const courseChallengeSubmissionStatusEnumValues: CourseChallengeSubmissionStatusEnum[] = [
-  "NOT_SUBMITTED",
-  "IN_PROGRESS",
-  "ON_TIME",
-  "LATE",
-];
+export type CourseLabSubmissionStatusEnum = "NOT_SUBMITTED" | "IN_PROGRESS" | "ON_TIME" | "LATE";
 
 export interface CourseChallengeSubmissionEntryDto {
   participantId: string;
-  challengeId: string;
-  solvedSubTaskCount: number;
-  totalSubTaskCount: number;
-  awardedPoints: number;
-  maxPoints: number;
+  labId: string;
+  solvedChallengeCount: number;
+  totalChallengeCount: number;
   completedAt: string | null;
-  status: CourseChallengeSubmissionStatusEnum;
+  status: CourseLabSubmissionStatusEnum;
 }
 
-export interface CourseChallengeSubmissionsResponseDto {
+export interface CourseLabSubmissionsResponseDto {
   courseId: string;
   participants: CourseParticipantDto[];
-  challenges: CourseChallengeResponseDto[];
+  labs: CourseLabResponseDto[];
   submissions: CourseChallengeSubmissionEntryDto[];
-}
-
-export type SubTaskTypeEnum = "FLAG" | "MULTIPLE_CHOICE";
-
-export interface SubTaskOptionResponseDto {
-  id: string;
-  text: string;
-  isCorrect: boolean;
-  orderIndex: number;
-}
-
-export interface CourseSubTaskSubmissionDetailDto {
-  subTaskId: string;
-  orderIndex: number;
-  title: string;
-  type: SubTaskTypeEnum;
-  points: number;
-  completed: boolean;
-  correct: boolean | null;
-  submittedAt: string | null;
-  submittedFlag: string | null;
-  selectedOptionId: string | null;
-  selectedOptionText: string | null;
-  options: SubTaskOptionResponseDto[] | null;
-}
-
-export interface CourseChallengeSubmissionDetailDto {
-  courseId: string;
-  participantId: string;
-  participantName: string;
-  participantEmail: string | null;
-  challengeId: string;
-  challengeTitle: string;
-  awardedPoints: number;
-  maxPoints: number;
-  dueAt: string | null;
-  completedAt: string | null;
-  status: CourseChallengeSubmissionStatusEnum;
-  subTasks: CourseSubTaskSubmissionDetailDto[];
 }
 
 export interface PublicCourseDetailResponseDto {
@@ -212,7 +159,7 @@ export interface PublicCourseDetailResponseDto {
   topic?: string | null;
   courseInstructors: CourseInstructorResponseDto[];
   participants: null;
-  courseChallenges: ChallengeStudentDto[];
+  courseLabs: LabStudentDto[];
   createdAt: string;
   updatedAt: string;
 }

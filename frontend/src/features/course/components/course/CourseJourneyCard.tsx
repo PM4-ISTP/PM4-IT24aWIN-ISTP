@@ -1,7 +1,6 @@
 import {
   Avatar,
   Box,
-  Button,
   Divider,
   Group,
   Progress,
@@ -10,15 +9,7 @@ import {
   ThemeIcon,
   Tooltip,
 } from "@mantine/core";
-import {
-  IconArrowRight,
-  IconCheck,
-  IconClock,
-  IconFlame,
-  IconLock,
-  IconTrophy,
-} from "@tabler/icons-react";
-import Link from "next/link";
+import { IconCheck, IconClock, IconFlame, IconLock } from "@tabler/icons-react";
 import { getInitials } from "@/src/shared/lib/utils";
 import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
 
@@ -34,16 +25,16 @@ interface LessonsProgress {
 }
 
 /**
- * Props for challenge progress.
+ * Props for lab progress.
  *
- * TODO: Replace with real challenge data once the challenges feature is
+ * TODO: Replace with real lab data once the labs feature is
  * implemented in the backend. Until then, leave this prop undefined to render
  * the placeholder state.
  */
 interface ChallengesProgress {
-  /** Number of challenges the user has completed */
+  /** Number of labs the user has completed */
   completed: number;
-  /** Total number of challenges in the course */
+  /** Total number of labs in the course */
   total: number;
 }
 
@@ -55,15 +46,13 @@ export interface CourseJourneyCardProps {
   lessons?: LessonsProgress;
 
   /**
-   * Challenge progress data (aggregate sub-task progress across the course).
+   * Lab progress data (aggregate challenge progress across the course).
    * Leave undefined to show the "coming soon" placeholder.
    */
-  challenges?: ChallengesProgress;
+  labs?: ChallengesProgress;
 
   /**
-   * Link to the next challenge the student should play. When provided, a
-   * "Start Next Challenge" button is rendered; when absent (all done or not
-   * enrolled) the button hides.
+   * Deprecated. The primary course CTA lives in the banner header.
    */
   nextChallengeHref?: string;
 
@@ -133,12 +122,12 @@ function StatChip({ icon, label, dimmed }: StatChipProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Placeholder — shown when challenges have not been implemented yet
+// Placeholder — shown when labs have not been implemented yet
 // ---------------------------------------------------------------------------
 
 /**
- * PLACEHOLDER: Rendered in place of the challenges progress bar until the
- * challenges feature is available. Remove this component and wire up the real
+ * PLACEHOLDER: Rendered in place of the labs progress bar until the
+ * labs feature is available. Remove this component and wire up the real
  * ChallengesProgress prop instead.
  */
 function ChallengesPlaceholder() {
@@ -159,7 +148,7 @@ function ChallengesPlaceholder() {
           Coming soon
         </Text>
       </Group>
-      {/* Visual placeholder bar — replace with real Progress once backend supports challenges */}
+      {/* Visual placeholder bar — replace with real Progress once backend supports labs */}
       <Progress
         value={0}
         color="orange"
@@ -183,16 +172,9 @@ function ChallengesPlaceholder() {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function CourseJourneyCard({
-  lessons,
-  challenges,
-  nextChallengeHref,
-  instructor,
-}: CourseJourneyCardProps) {
+export function CourseJourneyCard({ lessons, labs, instructor }: CourseJourneyCardProps) {
   const lessonPercent = lessons ? calcPercent(lessons.finished, lessons.total) : 0;
-  const challengePercent = challenges ? calcPercent(challenges.completed, challenges.total) : 0;
-  const allChallengesComplete =
-    challenges !== undefined && challenges.total > 0 && challenges.completed === challenges.total;
+  const challengePercent = labs ? calcPercent(labs.completed, labs.total) : 0;
 
   return (
     <Box
@@ -252,7 +234,7 @@ export function CourseJourneyCard({
           )}
 
           {/* ── Challenges progress (or placeholder) ── */}
-          {challenges ? (
+          {labs ? (
             <ProgressSection
               label="Challenges"
               percent={challengePercent}
@@ -260,41 +242,19 @@ export function CourseJourneyCard({
               statLeft={
                 <StatChip
                   icon={<IconFlame size={13} color="var(--mantine-color-orange-5)" />}
-                  label={`${challenges.completed} Challenge${challenges.completed !== 1 ? "s" : ""} Solved`}
+                  label={`${labs.completed} Lab${labs.completed !== 1 ? "s" : ""} Solved`}
                 />
               }
               statRight={
                 <StatChip
                   icon={<IconClock size={13} color="var(--mantine-color-dimmed)" />}
-                  label={`${Math.max(challenges.total - challenges.completed, 0)} Remaining`}
+                  label={`${Math.max(labs.total - labs.completed, 0)} Remaining`}
                   dimmed
                 />
               }
             />
           ) : (
             <ChallengesPlaceholder />
-          )}
-
-          {challenges && (
-            <Group justify="flex-end">
-              {allChallengesComplete ? (
-                <Button
-                  component="span"
-                  variant="light"
-                  color="teal"
-                  leftSection={<IconTrophy size={16} />}
-                  disabled
-                >
-                  All labs completed
-                </Button>
-              ) : nextChallengeHref ? (
-                <Link href={nextChallengeHref} style={{ textDecoration: "none" }}>
-                  <Button component="span" color="blue" rightSection={<IconArrowRight size={16} />}>
-                    Start Next Lab
-                  </Button>
-                </Link>
-              ) : null}
-            </Group>
           )}
         </Stack>
 

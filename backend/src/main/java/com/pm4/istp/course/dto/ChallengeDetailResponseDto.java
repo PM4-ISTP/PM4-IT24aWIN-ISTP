@@ -1,7 +1,7 @@
 package com.pm4.istp.course.dto;
 
-import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
-import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.db.entities.LabDifficultyEnum;
+import com.pm4.istp.course.db.entities.LabStatusEnum;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -17,13 +17,13 @@ public class ChallengeDetailResponseDto {
   private String title;
   private String shortDescription;
   private String description;
-  private ChallengeStatusEnum status;
-  private ChallengeDifficultyEnum difficulty;
+  private LabStatusEnum status;
+  private LabDifficultyEnum difficulty;
   private int maxScore;
   private String dockerImage;
   private ChallengeCreatorResponseDto creator;
   private long courseCount;
-  private List<SubTaskResponseDto> subTasks;
+  private List<ChallengeResponseDto> challenges;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 }

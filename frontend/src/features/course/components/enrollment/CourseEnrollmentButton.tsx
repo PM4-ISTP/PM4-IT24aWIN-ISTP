@@ -13,6 +13,7 @@ interface CourseEnrollmentButtonProps {
   participantCount: number;
   isPublished: boolean;
   isPrivate?: boolean;
+  nextChallengeHref?: string;
 }
 
 export function CourseEnrollmentButton({
@@ -21,6 +22,7 @@ export function CourseEnrollmentButton({
   participantCount,
   isPublished,
   isPrivate = false,
+  nextChallengeHref,
 }: CourseEnrollmentButtonProps) {
   const router = useRouter();
   const client = useApiClient();
@@ -74,12 +76,16 @@ export function CourseEnrollmentButton({
     <Stack gap="xs" align="flex-end">
       <Group gap="sm">
         {hasJoined ? (
-          /* TODO: Replace href with real lesson route once lessons are implemented */
           <Button
             size="md"
             radius="md"
             rightSection={<IconArrowRight size={16} />}
-            onClick={() => router.push(`/dashboard/learn/${courseId}`)}
+            disabled={!nextChallengeHref}
+            onClick={() => {
+              if (nextChallengeHref) {
+                router.push(nextChallengeHref);
+              }
+            }}
             style={{
               background: "linear-gradient(90deg, #2563eb, #4f46e5)",
               border: "none",
@@ -88,7 +94,7 @@ export function CourseEnrollmentButton({
               boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
             }}
           >
-            Start Next Lesson
+            {nextChallengeHref ? "Continue Course" : "All Labs Completed"}
           </Button>
         ) : (
           <Button

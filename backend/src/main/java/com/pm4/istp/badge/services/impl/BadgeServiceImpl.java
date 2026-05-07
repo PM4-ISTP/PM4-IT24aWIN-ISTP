@@ -6,11 +6,13 @@ import com.pm4.istp.badge.dto.UpdateCourseBadgeRequestDto;
 import com.pm4.istp.badge.dto.UserBadgeDto;
 import com.pm4.istp.badge.repositories.UserCourseBadgeRepository;
 import com.pm4.istp.badge.services.BadgeService;
+import com.pm4.istp.course.db.InstructorRoleEnum;
+import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.Course;
-import com.pm4.istp.course.db.entities.CourseChallenge;
-import com.pm4.istp.course.db.entities.SubTask;
+import com.pm4.istp.course.db.entities.CourseLab;
+import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
+import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
-import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.repositories.UserRepository;
 import java.time.LocalDateTime;
@@ -38,7 +40,7 @@ public class BadgeServiceImpl implements BadgeService {
   private final CourseRepository courseRepository;
   private final UserRepository userRepository;
   private final UserCourseBadgeRepository userCourseBadgeRepository;
-  private final SubTaskCompletionRepository subTaskCompletionRepository;
+  private final ChallengeCompletionRepository challengeCompletionRepository;
 
   @Override
   @Transactional(readOnly = true)
@@ -59,6 +61,8 @@ public class BadgeServiceImpl implements BadgeService {
             .findById(courseId)
             .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
 
+    verifyOwner(course, userId);
+
     course.setBadgePrimaryColor(request.primaryColor());
     course.setBadgeTextColor(request.textColor());
     course.setBadgeTemplate(request.template());
@@ -66,6 +70,7 @@ public class BadgeServiceImpl implements BadgeService {
         request.badgeIcon() == null || request.badgeIcon().isBlank()
             ? DEFAULT_ICON
             : request.badgeIcon());
+    course.setBadgeEnabled(request.badgeEnabled());
 
     Course saved = courseRepository.save(course);
     return toConfigDto(saved);
@@ -84,11 +89,14 @@ public class BadgeServiceImpl implements BadgeService {
 
   @Override
   @Transactional
-  public void tryAwardBadgesForChallenge(UUID userId, UUID challengeId) {
+  public void tryAwardBadgesForChallenge(UUID userId, UUID labId) {
     List<Course> courses =
-        courseRepository.findCoursesByChallengeIdAndEnrolledUserId(challengeId, userId);
+        courseRepository.findCoursesByChallengeIdAndEnrolledUserId(labId, userId);
 
     for (Course course : courses) {
+      if (!course.isBadgeEnabled()) {
+        continue;
+      }
       if (userCourseBadgeRepository.existsByUserIdAndCourseId(userId, course.getId())) {
         continue;
       }
@@ -99,18 +107,19 @@ public class BadgeServiceImpl implements BadgeService {
   }
 
   private boolean isCourseCompleted(UUID userId, Course course) {
-    List<UUID> allSubTaskIds = new ArrayList<>();
-    for (CourseChallenge cc : course.getCourseChallenges()) {
-      for (SubTask st : cc.getChallenge().getSubTasks()) {
-        allSubTaskIds.add(st.getId());
+    List<UUID> allChallengeIds = new ArrayList<>();
+    for (CourseLab cc : course.getCourseLabs()) {
+      for (Challenge st : cc.getLab().getChallenges()) {
+        allChallengeIds.add(st.getId());
       }
     }
-    if (allSubTaskIds.isEmpty()) {
+    if (allChallengeIds.isEmpty()) {
       return false;
     }
-    List<UUID> solvedIds = subTaskCompletionRepository.findSolvedSubTaskIds(userId, allSubTaskIds);
+    List<UUID> solvedIds =
+        challengeCompletionRepository.findSolvedChallengeIds(userId, allChallengeIds);
     Set<UUID> solvedSet = new HashSet<>(solvedIds);
-    return solvedSet.containsAll(allSubTaskIds);
+    return solvedSet.containsAll(allChallengeIds);
   }
 
   private void awardBadge(UUID userId, Course course) {
@@ -134,6 +143,20 @@ public class BadgeServiceImpl implements BadgeService {
     }
   }
 
+  private void verifyOwner(Course course, UUID userId) {
+    boolean isOwner =
+        course.getCourseInstructors().stream()
+            .anyMatch(
+                ci ->
+                    ci.getInstructor().getId().equals(userId)
+                        && ci.getInstructorRole() == InstructorRoleEnum.OWNER);
+    if (!isOwner) {
+      throw new CourseAccessDeniedException(
+          String.format(
+              "User with ID '%s' is not the owner of course '%s'", userId, course.getId()));
+    }
+  }
+
   private CourseBadgeConfigDto toConfigDto(Course course) {
     return new CourseBadgeConfigDto(
         course.getId(),
@@ -141,7 +164,8 @@ public class BadgeServiceImpl implements BadgeService {
         course.getBadgePrimaryColor() != null ? course.getBadgePrimaryColor() : DEFAULT_COLOR,
         course.getBadgeTextColor() != null ? course.getBadgeTextColor() : DEFAULT_TEXT_COLOR,
         course.getBadgeTemplate() != null ? course.getBadgeTemplate() : DEFAULT_TEMPLATE,
-        course.getBadgeIcon() != null ? course.getBadgeIcon() : DEFAULT_ICON);
+        course.getBadgeIcon() != null ? course.getBadgeIcon() : DEFAULT_ICON,
+        course.isBadgeEnabled());
   }
 
   private UserBadgeDto toBadgeDto(UserCourseBadge b) {

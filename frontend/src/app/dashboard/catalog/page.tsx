@@ -1,7 +1,7 @@
 import { Stack, Text, Title } from "@mantine/core";
 import { fetchCourseTopics, fetchPublishedCourses } from "@/src/features/course/actions/courses";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
-import ToastOnMount from "@/src/shared/components/ToastOnMount";
+import NotifyOnMount from "@/src/shared/components/NotifyOnMount";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 import CatalogFilters from "@/src/app/dashboard/catalog/CatalogFilters";
 
@@ -49,7 +49,8 @@ export default async function CatalogPage(props: {
           coursePathPrefix="/dashboard/catalog"
         />
       ) : (
-        <ToastOnMount
+        <NotifyOnMount
+          id="catalog-error"
           color="red"
           title="Could not load catalog"
           message={

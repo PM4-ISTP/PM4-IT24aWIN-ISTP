@@ -1,7 +1,7 @@
 package com.pm4.istp.course.dto;
 
-import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
-import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.db.entities.LabDifficultyEnum;
+import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.validation.DockerImageReference;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -18,8 +18,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdateChallengeRequestDto {
-  @NotBlank(message = "Challenge title is required")
-  @Size(max = 255, message = "Challenge title must be at most 255 characters")
+  @NotBlank(message = "Lab title is required")
+  @Size(max = 255, message = "Lab title must be at most 255 characters")
   private String title;
 
   @Size(max = 200, message = "Short description must not exceed 200 characters")
@@ -28,11 +28,11 @@ public class UpdateChallengeRequestDto {
   @Size(max = 5000, message = "Description must be at most 5000 characters")
   private String description;
 
-  @NotNull(message = "Challenge status is required")
-  private ChallengeStatusEnum status;
+  @NotNull(message = "Lab status is required")
+  private LabStatusEnum status;
 
-  @NotNull(message = "Challenge difficulty is required")
-  private ChallengeDifficultyEnum difficulty;
+  @NotNull(message = "Lab difficulty is required")
+  private LabDifficultyEnum difficulty;
 
   @NotBlank(message = "Docker image is required")
   @Pattern(
@@ -42,5 +42,5 @@ public class UpdateChallengeRequestDto {
 
   @NotEmpty(message = "At least one sub task is required")
   @Valid
-  private List<SubTaskRequestDto> subTasks;
+  private List<ChallengeRequestDto> challenges;
 }

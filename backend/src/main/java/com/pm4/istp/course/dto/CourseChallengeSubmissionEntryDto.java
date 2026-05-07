@@ -11,12 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CourseChallengeSubmissionEntryDto {
   private UUID participantId;
-  private UUID challengeId;
-  private int solvedSubTaskCount;
-  private int totalSubTaskCount;
-  private int awardedPoints;
-  private int maxPoints;
-  private int solvedBeforeDeadlineCount;
+  private UUID labId;
+  private int solvedChallengeCount;
+  private int totalChallengeCount;
   private LocalDateTime completedAt;
-  private CourseChallengeSubmissionStatusEnum status;
+  private CourseLabSubmissionStatusEnum status;
 }

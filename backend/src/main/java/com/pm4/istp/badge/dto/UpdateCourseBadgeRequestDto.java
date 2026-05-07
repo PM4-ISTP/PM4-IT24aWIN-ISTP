@@ -10,4 +10,5 @@ public record UpdateCourseBadgeRequestDto(
     @NotNull @Pattern(regexp = "^#[0-9A-Fa-f]{6}$") String primaryColor,
     @NotNull @Pattern(regexp = "^#[0-9A-Fa-f]{6}$") String textColor,
     @NotNull @Min(1) @Max(3) Integer template,
-    @Size(max = 16) String badgeIcon) {}
+    @Size(max = 16) String badgeIcon,
+    boolean badgeEnabled) {}

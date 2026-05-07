@@ -25,6 +25,7 @@ import {
   memoryUnits,
   stringToMemorySpecification,
 } from "@/src/shared/lib/memoryUnit";
+import { useAsyncAction } from "@/src/shared/hooks/useAsyncAction";
 import { notifications } from "@mantine/notifications";
 
 type AdminConfigResponse = components["schemas"]["AdminConfigResponse"];
@@ -147,24 +148,20 @@ export default function AdminConfigForm({ initialConfig }: Props) {
     }
   };
 
-  const handleDelete = async () => {
-    try {
+  const deleteAction = useAsyncAction(
+    async () => {
       const { error } = await apiClient.DELETE("/api/admin/config");
       if (error) throw new Error(JSON.stringify(error));
-      notifications.show({
-        title: "Success",
-        message: "Admin configuration has been successfully deleted.",
-        color: "green",
-      });
-      router.refresh();
-    } catch (e) {
-      notifications.show({
-        title: "Error",
-        message: "It was not possible to delete the admin configuration: " + (e as Error).message,
-        color: "red",
-      });
+    },
+    {
+      id: "admin-config-delete",
+      successTitle: "Success",
+      successMessage: "Admin configuration has been successfully deleted.",
+      errorTitle: "Error",
+      errorMessage: (e) => `It was not possible to delete the admin configuration: ${e.message}`,
+      onSuccess: () => router.refresh(),
     }
-  };
+  );
 
   return (
     <form onSubmit={form.onSubmit((values) => void handleSubmit(values))}>
@@ -228,7 +225,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
             <TextInput
               id="image-pull-secret-input"
               label="Image pull secret"
-              description="Optional Kubernetes secret name for private GHCR challenge images."
+              description="Optional Kubernetes secret name for private GHCR lab images."
               placeholder="ghcr-pull-secret"
               key={form.key("imagePullSecretName")}
               {...form.getInputProps("imagePullSecretName")}
@@ -238,7 +235,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
             <NumberInput
               id="pod-ttl-input"
               label="Pod TTL (seconds)"
-              description="How long a challenge pod stays alive before it is automatically cleaned up."
+              description="How long a lab pod stays alive before it is automatically cleaned up."
               key={form.key("podTtlSeconds")}
               {...form.getInputProps("podTtlSeconds")}
               min={60}
@@ -260,8 +257,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                 )}
               </Text>
               <Text size="xs" c="dimmed">
-                Upload your Kubeconfig file for the Kubernetes cluster that manages the challenge
-                pods.
+                Upload your Kubeconfig file for the Kubernetes cluster that manages the lab pods.
               </Text>
               <Dropzone
                 id="kubeconfig-input"
@@ -371,8 +367,8 @@ export default function AdminConfigForm({ initialConfig }: Props) {
           <Button
             id="admin-config-form-delete-button"
             type="button"
-            onClick={() => void handleDelete()}
-            loading={form.submitting}
+            onClick={() => void deleteAction.run()}
+            loading={form.submitting || deleteAction.loading}
             radius="md"
             style={{
               background: "linear-gradient(90deg, #dc2626, #b91c1c)",

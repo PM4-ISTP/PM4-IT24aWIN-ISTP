@@ -5,45 +5,34 @@ import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
 import com.pm4.istp.course.db.UpdateCourseRequest;
-import com.pm4.istp.course.db.entities.Challenge;
-import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
-import com.pm4.istp.course.db.entities.CourseChallenge;
-import com.pm4.istp.course.db.entities.CourseChallengeScoreOverride;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
+import com.pm4.istp.course.db.entities.CourseLab;
+import com.pm4.istp.course.db.entities.Lab;
+import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
-import com.pm4.istp.course.db.entities.StudentFlagSubmission;
-import com.pm4.istp.course.db.entities.StudentOptionSubmission;
-import com.pm4.istp.course.db.entities.SubTask;
-import com.pm4.istp.course.db.entities.SubTaskType;
-import com.pm4.istp.course.dto.CourseChallengeDeadlineDto;
-import com.pm4.istp.course.dto.CourseChallengeItemDto;
-import com.pm4.istp.course.dto.CourseChallengeResponseDto;
-import com.pm4.istp.course.dto.CourseChallengeSubmissionDetailDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
-import com.pm4.istp.course.dto.CourseChallengeSubmissionStatusEnum;
-import com.pm4.istp.course.dto.CourseChallengeSubmissionsResponseDto;
+import com.pm4.istp.course.dto.CourseLabDeadlineDto;
+import com.pm4.istp.course.dto.CourseLabItemDto;
+import com.pm4.istp.course.dto.CourseLabResponseDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionStatusEnum;
+import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
-import com.pm4.istp.course.dto.CourseSubTaskSubmissionDetailDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
-import com.pm4.istp.course.dto.SubTaskOptionResponseDto;
-import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
-import com.pm4.istp.course.exceptions.InvalidCourseChallengeException;
+import com.pm4.istp.course.exceptions.InvalidCourseLabException;
 import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
+import com.pm4.istp.course.exceptions.LabNotFoundException;
+import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.ChallengeRepository;
-import com.pm4.istp.course.repositories.CourseChallengeRepository;
-import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
+import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
-import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
-import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
-import com.pm4.istp.course.repositories.SubTaskCompletionRepository;
-import com.pm4.istp.course.repositories.SubTaskRepository;
+import com.pm4.istp.course.repositories.LabRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseService;
 import com.pm4.istp.course.services.CourseTopicService;
@@ -53,10 +42,8 @@ import com.pm4.istp.user.repositories.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -78,13 +65,10 @@ public class CourseServiceImpl implements CourseService {
   private final UserRepository userRepository;
   private final CourseRepository courseRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
-  private final CourseChallengeRepository courseChallengeRepository;
-  private final CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
+  private final CourseLabRepository courseLabRepository;
+  private final LabRepository labRepository;
   private final ChallengeRepository challengeRepository;
-  private final SubTaskRepository subTaskRepository;
-  private final SubTaskCompletionRepository subTaskCompletionRepository;
-  private final StudentOptionSubmissionRepository studentOptionSubmissionRepository;
-  private final StudentFlagSubmissionRepository studentFlagSubmissionRepository;
+  private final ChallengeCompletionRepository challengeCompletionRepository;
   private final CourseInviteCodeHelper courseInviteCodeHelper;
   private final CourseTopicService courseTopicService;
 
@@ -117,6 +101,8 @@ public class CourseServiceImpl implements CourseService {
     owner.setAcceptedAt(LocalDateTime.now());
     courseToCreate.addCourseInstructor(owner);
 
+    addEnrollmentIfMissing(courseToCreate, instructorUser);
+
     // Collaborators from the request payload
     if (!course.getInstructors().isEmpty()) {
       for (CreateCourseInstructorRequest req : course.getInstructors()) {
@@ -140,6 +126,23 @@ public class CourseServiceImpl implements CourseService {
       return courseInviteCodeHelper.saveNewCourseWithInviteCode(courseToCreate);
     }
     return courseRepository.save(courseToCreate);
+  }
+
+  private void addEnrollmentIfMissing(Course course, User participant) {
+    boolean alreadyEnrolled =
+        course.getCourseEnrollments().stream()
+            .anyMatch(
+                enrollment ->
+                    enrollment.getParticipant() != null
+                        && participant.getId().equals(enrollment.getParticipant().getId()));
+
+    if (alreadyEnrolled) {
+      return;
+    }
+
+    CourseEnrollment courseEnrollment = new CourseEnrollment();
+    courseEnrollment.setParticipant(participant);
+    course.addCourseEnrollment(courseEnrollment);
   }
 
   @Override
@@ -293,51 +296,46 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional
-  public Course updateCourseChallenges(
-      UUID userId, UUID courseId, List<CourseChallengeItemDto> challenges) {
+  public Course updateCourseChallenges(UUID userId, UUID courseId, List<CourseLabItemDto> labs) {
     Course course =
         courseRepository
             .findById(courseId)
             .orElseThrow(
-                () ->
-                    new CourseNotFoundException(
-                        String.format("Course with ID '%s' not found", courseId)));
+                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
-    // Clear existing challenge assignments
-    course.getCourseChallenges().clear();
+    // Clear existing lab assignments
+    course.getCourseLabs().clear();
 
-    // Add new challenge assignments
-    for (CourseChallengeItemDto item : challenges) {
-      Challenge challenge =
-          challengeRepository
-              .findById(item.getChallengeId())
+    // Add new lab assignments
+    for (CourseLabItemDto item : labs) {
+      Lab lab =
+          labRepository
+              .findById(item.getLabId())
               .orElseThrow(
                   () ->
-                      new ChallengeNotFoundException(
-                          String.format(
-                              "Challenge with ID '%s' not found", item.getChallengeId())));
+                      new LabNotFoundException(
+                          String.format("Lab with ID '%s' not found", item.getLabId())));
 
-      // DRAFT challenges cannot be added to any course, even by their creator
-      if (challenge.getStatus() == ChallengeStatusEnum.DRAFT) {
-        throw new InvalidCourseChallengeException(
-            String.format(
-                "Challenge '%s' is a draft and cannot be added to a course", challenge.getTitle()));
+      // DRAFT labs cannot be added to any course, even by their creator
+      if (lab.getStatus() == LabStatusEnum.DRAFT) {
+        throw new InvalidCourseLabException(
+            String.format("Lab '%s' is a draft and cannot be added to a course", lab.getTitle()));
       }
 
-      // Only allow adding own PRIVATE challenges or PUBLIC challenges
-      boolean isCreator = challenge.getCreator().getId().equals(userId);
-      boolean isPublic = challenge.getStatus() == ChallengeStatusEnum.PUBLIC;
+      // Only allow adding own PRIVATE labs or PUBLIC labs
+      boolean isCreator = lab.getCreator().getId().equals(userId);
+      boolean isPublic = lab.getStatus() == LabStatusEnum.PUBLIC;
       if (!isCreator && !isPublic) {
-        throw new ChallengeNotFoundException(
-            String.format("Challenge with ID '%s' not found", item.getChallengeId()));
+        throw new LabNotFoundException(
+            String.format("Lab with ID '%s' not found", item.getLabId()));
       }
 
-      CourseChallenge courseChallenge = new CourseChallenge();
-      courseChallenge.setChallenge(challenge);
-      courseChallenge.setOrderIndex(item.getOrderIndex());
-      courseChallenge.setDueAt(item.getDueAt());
-      course.addCourseChallenge(courseChallenge);
+      CourseLab courseLab = new CourseLab();
+      courseLab.setLab(lab);
+      courseLab.setOrderIndex(item.getOrderIndex());
+      courseLab.setDueAt(item.getDueAt());
+      course.addCourseChallenge(courseLab);
     }
 
     return courseRepository.save(course);
@@ -345,8 +343,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional(readOnly = true)
-  public CourseChallengeSubmissionsResponseDto getCourseChallengeSubmissions(
-      UUID userId, UUID courseId) {
+  public CourseLabSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId) {
     Course course =
         courseRepository
             .findById(courseId)
@@ -354,405 +351,162 @@ public class CourseServiceImpl implements CourseService {
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
-    List<CourseEnrollment> enrollments =
-        courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId);
-    List<CourseParticipantResponseDto> participants =
-        enrollments.stream()
-            .map(
-                e -> {
-                  User p = e.getParticipant();
-                  return new CourseParticipantResponseDto(
-                      p.getId(), p.getName(), p.getPicture(), p.getEmail());
-                })
-            .toList();
-
-    List<CourseChallenge> assigned =
-        course.getCourseChallenges() == null ? List.of() : course.getCourseChallenges();
-    List<CourseChallengeResponseDto> challengesDto =
-        assigned.stream()
-            .map(
-                cc -> {
-                  var ch = cc.getChallenge();
-                  return new CourseChallengeResponseDto(
-                      ch.getId(),
-                      ch.getTitle(),
-                      ch.getDifficulty(),
-                      cc.getOrderIndex(),
-                      cc.getDueAt(),
-                      ch.getMaxScore());
-                })
-            .toList();
+    List<CourseParticipantResponseDto> participants = loadParticipants(courseId);
+    List<CourseLab> assigned = course.getCourseLabs() == null ? List.of() : course.getCourseLabs();
+    List<CourseLabResponseDto> challengesDto = toChallengeSubmissionDtos(assigned);
 
     List<UUID> userIds = participants.stream().map(CourseParticipantResponseDto::getId).toList();
-    List<UUID> challengeIds = assigned.stream().map(cc -> cc.getChallenge().getId()).toList();
+    List<UUID> challengeIds = assigned.stream().map(cc -> cc.getLab().getId()).toList();
 
-    Map<UUID, Integer> totalByChallenge = new HashMap<>();
-    if (!challengeIds.isEmpty()) {
-      for (Object[] row : subTaskRepository.countByChallengeIds(challengeIds)) {
-        UUID challengeId = (UUID) row[0];
-        Long count = (Long) row[1];
-        totalByChallenge.put(challengeId, count == null ? 0 : count.intValue());
-      }
+    Map<UUID, Integer> totalByLab = loadChallengeTotals(challengeIds);
+
+    SubmissionAggregates aggregates = loadSubmissionAggregates(userIds, challengeIds);
+    Map<UUID, LocalDateTime> dueAtByChallenge = loadDueDates(assigned);
+    List<CourseChallengeSubmissionEntryDto> entries =
+        buildSubmissionEntries(userIds, challengeIds, totalByLab, aggregates, dueAtByChallenge);
+
+    return new CourseLabSubmissionsResponseDto(courseId, participants, challengesDto, entries);
+  }
+
+  private List<CourseParticipantResponseDto> loadParticipants(UUID courseId) {
+    return courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId).stream()
+        .map(
+            enrollment -> {
+              User participant = enrollment.getParticipant();
+              return new CourseParticipantResponseDto(
+                  participant.getId(),
+                  participant.getName(),
+                  participant.getPicture(),
+                  participant.getEmail());
+            })
+        .toList();
+  }
+
+  private List<CourseLabResponseDto> toChallengeSubmissionDtos(List<CourseLab> assigned) {
+    return assigned.stream()
+        .map(
+            courseLab -> {
+              Lab lab = courseLab.getLab();
+              return new CourseLabResponseDto(
+                  lab.getId(),
+                  lab.getTitle(),
+                  lab.getDifficulty(),
+                  courseLab.getOrderIndex(),
+                  courseLab.getDueAt(),
+                  lab.getMaxScore());
+            })
+        .toList();
+  }
+
+  private Map<UUID, Integer> loadChallengeTotals(List<UUID> challengeIds) {
+    Map<UUID, Integer> totalByLab = new HashMap<>();
+    if (challengeIds.isEmpty()) {
+      return totalByLab;
     }
-
-    record Key(UUID userId, UUID challengeId) {}
-    Map<Key, Integer> solvedCountByKey = new HashMap<>();
-    Map<Key, Integer> autoPointsByKey = new HashMap<>();
-    Map<Key, LocalDateTime> completedAtByKey = new HashMap<>();
-    if (!userIds.isEmpty() && !challengeIds.isEmpty()) {
-      for (Object[] row :
-          subTaskCompletionRepository.aggregateSolvedCountsForUsersAndChallenges(
-              userIds, challengeIds)) {
-        UUID u = (UUID) row[0];
-        UUID c = (UUID) row[1];
-        Long solved = (Long) row[2];
-        LocalDateTime completedAt = (LocalDateTime) row[3];
-        Key key = new Key(u, c);
-        solvedCountByKey.put(key, solved == null ? 0 : solved.intValue());
-        completedAtByKey.put(key, completedAt);
-      }
-
-      for (Object[] row :
-          subTaskCompletionRepository.aggregatePointsForUsersAndChallenges(userIds, challengeIds)) {
-        UUID u = (UUID) row[0];
-        UUID c = (UUID) row[1];
-        Number points = (Number) row[2];
-        autoPointsByKey.put(new Key(u, c), points == null ? 0 : points.intValue());
-      }
+    for (Object[] row : challengeRepository.countByLabIds(challengeIds)) {
+      UUID labId = (UUID) row[0];
+      Long count = (Long) row[1];
+      totalByLab.put(labId, count == null ? 0 : count.intValue());
     }
+    return totalByLab;
+  }
 
+  private SubmissionAggregates loadSubmissionAggregates(
+      List<UUID> userIds, List<UUID> challengeIds) {
+    Map<SubmissionKey, Integer> solvedCountByKey = new HashMap<>();
+    Map<SubmissionKey, LocalDateTime> completedAtByKey = new HashMap<>();
+    if (userIds.isEmpty() || challengeIds.isEmpty()) {
+      return new SubmissionAggregates(solvedCountByKey, completedAtByKey);
+    }
+    for (Object[] row :
+        challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(userIds, challengeIds)) {
+      UUID userId = (UUID) row[0];
+      UUID labId = (UUID) row[1];
+      Long solved = (Long) row[2];
+      LocalDateTime completedAt = (LocalDateTime) row[3];
+      SubmissionKey key = new SubmissionKey(userId, labId);
+      solvedCountByKey.put(key, solved == null ? 0 : solved.intValue());
+      completedAtByKey.put(key, completedAt);
+    }
+    return new SubmissionAggregates(solvedCountByKey, completedAtByKey);
+  }
+
+  private Map<UUID, LocalDateTime> loadDueDates(List<CourseLab> assigned) {
     Map<UUID, LocalDateTime> dueAtByChallenge = new HashMap<>();
-    for (CourseChallenge cc : assigned) {
-      dueAtByChallenge.put(cc.getChallenge().getId(), cc.getDueAt());
+    for (CourseLab courseLab : assigned) {
+      dueAtByChallenge.put(courseLab.getLab().getId(), courseLab.getDueAt());
     }
+    return dueAtByChallenge;
+  }
 
-    Map<Key, Integer> solvedBeforeDeadlineByKey = new HashMap<>();
-    if (!userIds.isEmpty() && !challengeIds.isEmpty()) {
-      for (Object[] row :
-          subTaskCompletionRepository.aggregateSolvedCountsBeforeDeadline(
-              courseId, userIds, challengeIds)) {
-        UUID u = (UUID) row[0];
-        UUID c = (UUID) row[1];
-        Long count = (Long) row[2];
-        solvedBeforeDeadlineByKey.put(new Key(u, c), count == null ? 0 : count.intValue());
-      }
-    }
-
-    Map<Key, Integer> overridePointsByKey = new HashMap<>();
-    if (!userIds.isEmpty() && !challengeIds.isEmpty()) {
-      for (Object[] row :
-          courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
-              courseId, userIds, challengeIds)) {
-        UUID participantId = (UUID) row[0];
-        UUID challengeId = (UUID) row[1];
-        Number points = (Number) row[2];
-        overridePointsByKey.put(new Key(participantId, challengeId), points.intValue());
-      }
-    }
-
+  private List<CourseChallengeSubmissionEntryDto> buildSubmissionEntries(
+      List<UUID> userIds,
+      List<UUID> challengeIds,
+      Map<UUID, Integer> totalByLab,
+      SubmissionAggregates aggregates,
+      Map<UUID, LocalDateTime> dueAtByChallenge) {
     List<CourseChallengeSubmissionEntryDto> entries = new ArrayList<>();
     for (UUID participantId : userIds) {
-      for (UUID challengeId : challengeIds) {
-        Key key = new Key(participantId, challengeId);
-        int solvedCount = solvedCountByKey.getOrDefault(key, 0);
-        int totalCount = totalByChallenge.getOrDefault(challengeId, 0);
-        int maxPoints =
-            assigned.stream()
-                .filter(cc -> cc.getChallenge().getId().equals(challengeId))
-                .findFirst()
-                .map(cc -> cc.getChallenge().getMaxScore())
-                .orElse(0);
-        LocalDateTime completedAt =
-            totalCount > 0 && solvedCount == totalCount ? completedAtByKey.get(key) : null;
-
-        CourseChallengeSubmissionStatusEnum status;
-        if (totalCount <= 0 || solvedCount <= 0) {
-          status = CourseChallengeSubmissionStatusEnum.NOT_SUBMITTED;
-        } else if (solvedCount < totalCount) {
-          status = CourseChallengeSubmissionStatusEnum.IN_PROGRESS;
-        } else {
-          LocalDateTime dueAt = dueAtByChallenge.get(challengeId);
-          if (dueAt == null || completedAt == null || !completedAt.isAfter(dueAt)) {
-            status = CourseChallengeSubmissionStatusEnum.ON_TIME;
-          } else {
-            status = CourseChallengeSubmissionStatusEnum.LATE;
-          }
-        }
-
-        int autoPoints = autoPointsByKey.getOrDefault(key, 0);
-        // Late submissions receive 0 points by default (manual overrides can still apply).
-        if (status == CourseChallengeSubmissionStatusEnum.LATE) {
-          autoPoints = 0;
-        }
-        int awardedPoints = overridePointsByKey.getOrDefault(key, autoPoints);
-
-        int solvedBefore =
-            status == CourseChallengeSubmissionStatusEnum.LATE
-                ? solvedBeforeDeadlineByKey.getOrDefault(key, 0)
-                : 0;
+      for (UUID labId : challengeIds) {
         entries.add(
-            new CourseChallengeSubmissionEntryDto(
-                participantId,
-                challengeId,
-                solvedCount,
-                totalCount,
-                awardedPoints,
-                maxPoints,
-                solvedBefore,
-                completedAt,
-                status));
+            buildSubmissionEntry(participantId, labId, totalByLab, aggregates, dueAtByChallenge));
       }
     }
-
-    return new CourseChallengeSubmissionsResponseDto(
-        courseId, participants, challengesDto, entries);
+    return entries;
   }
 
-  @Override
-  @Transactional(readOnly = true)
-  public CourseChallengeSubmissionDetailDto getCourseChallengeSubmissionDetails(
-      UUID instructorId, UUID courseId, UUID participantId, UUID challengeId) {
-    Course course =
-        courseRepository
-            .findById(courseId)
-            .orElseThrow(
-                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
-    verifyInstructor(course, instructorId);
-
-    CourseChallenge assignedChallenge =
-        course.getCourseChallenges().stream()
-            .filter(cc -> cc.getChallenge().getId().equals(challengeId))
-            .findFirst()
-            .orElseThrow(
-                () ->
-                    new InvalidCourseChallengeException(
-                        String.format(
-                            "Challenge '%s' is not assigned to course '%s'", challengeId, courseId)));
-
-    if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId)) {
-      throw new CourseParticipantNotFoundException(
-          String.format("Participant '%s' is not enrolled in course '%s'", participantId, courseId));
-    }
-
-    User participant =
-        userRepository
-            .findByIdAndDeletedAtIsNull(participantId)
-            .orElseThrow(
-                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, participantId)));
-
-    List<SubTask> subTasks = subTaskRepository.findByChallengeIdOrderByOrderIndexAsc(challengeId);
-    List<UUID> subTaskIds = subTasks.stream().map(SubTask::getId).toList();
-    Set<UUID> completedIds =
-        subTaskIds.isEmpty()
-            ? Set.of()
-            : new HashSet<>(subTaskCompletionRepository.findSolvedSubTaskIds(participantId, subTaskIds));
-
-    Map<UUID, StudentOptionSubmission> mcBySubTask = new HashMap<>();
-    for (StudentOptionSubmission submission :
-        studentOptionSubmissionRepository.findByUserIdAndChallengeId(participantId, challengeId)) {
-      if (submission.getSubTask() != null && submission.getSubTask().getId() != null) {
-        mcBySubTask.put(submission.getSubTask().getId(), submission);
-      }
-    }
-
-    Map<UUID, StudentFlagSubmission> flagBySubTask = new HashMap<>();
-    for (StudentFlagSubmission submission :
-        studentFlagSubmissionRepository.findByUserIdAndChallengeId(participantId, challengeId)) {
-      if (submission.getSubTask() != null && submission.getSubTask().getId() != null) {
-        flagBySubTask.put(submission.getSubTask().getId(), submission);
-      }
-    }
-
-    int totalCount = subTasks.size();
-    int solvedCount = completedIds.size();
+  private CourseChallengeSubmissionEntryDto buildSubmissionEntry(
+      UUID participantId,
+      UUID labId,
+      Map<UUID, Integer> totalByLab,
+      SubmissionAggregates aggregates,
+      Map<UUID, LocalDateTime> dueAtByChallenge) {
+    SubmissionKey key = new SubmissionKey(participantId, labId);
+    int solvedCount = aggregates.solvedCountByKey().getOrDefault(key, 0);
+    int totalCount = totalByLab.getOrDefault(labId, 0);
     LocalDateTime completedAt =
-        totalCount > 0 && solvedCount == totalCount
-            ? subTaskCompletionRepository.findMaxSolvedAtForUserAndChallenge(participantId, challengeId)
-            : null;
+        totalCount > 0 && solvedCount == totalCount ? aggregates.completedAtByKey().get(key) : null;
+    CourseLabSubmissionStatusEnum status =
+        resolveSubmissionStatus(solvedCount, totalCount, completedAt, dueAtByChallenge.get(labId));
+    return new CourseChallengeSubmissionEntryDto(
+        participantId, labId, solvedCount, totalCount, completedAt, status);
+  }
 
-    CourseChallengeSubmissionStatusEnum status;
+  private CourseLabSubmissionStatusEnum resolveSubmissionStatus(
+      int solvedCount, int totalCount, LocalDateTime completedAt, LocalDateTime dueAt) {
     if (totalCount <= 0 || solvedCount <= 0) {
-      status = CourseChallengeSubmissionStatusEnum.NOT_SUBMITTED;
-    } else if (solvedCount < totalCount) {
-      status = CourseChallengeSubmissionStatusEnum.IN_PROGRESS;
-    } else {
-      LocalDateTime dueAt = assignedChallenge.getDueAt();
-      if (dueAt == null || completedAt == null || !completedAt.isAfter(dueAt)) {
-        status = CourseChallengeSubmissionStatusEnum.ON_TIME;
-      } else {
-        status = CourseChallengeSubmissionStatusEnum.LATE;
-      }
+      return CourseLabSubmissionStatusEnum.NOT_SUBMITTED;
     }
-
-    int autoPoints = 0;
-    if (!completedIds.isEmpty()) {
-      for (SubTask st : subTasks) {
-        if (st != null && st.getId() != null && completedIds.contains(st.getId())) {
-          autoPoints += st.getPoints();
-        }
-      }
+    if (solvedCount < totalCount) {
+      return CourseLabSubmissionStatusEnum.IN_PROGRESS;
     }
-    // Late submissions receive 0 points by default (manual overrides can still apply).
-    if (status == CourseChallengeSubmissionStatusEnum.LATE) {
-      autoPoints = 0;
+    if (dueAt == null || completedAt == null || !completedAt.isAfter(dueAt)) {
+      return CourseLabSubmissionStatusEnum.ON_TIME;
     }
-
-    Optional<CourseChallengeScoreOverride> overrideOpt =
-        courseChallengeScoreOverrideRepository.findByCourseIdAndParticipantIdAndChallengeId(
-            courseId, participantId, challengeId);
-    int awardedPoints = overrideOpt.map(CourseChallengeScoreOverride::getPoints).orElse(autoPoints);
-
-    List<CourseSubTaskSubmissionDetailDto> subTaskDtos =
-        subTasks.stream()
-            .map(
-                st -> {
-                  boolean completed = st.getId() != null && completedIds.contains(st.getId());
-                  CourseSubTaskSubmissionDetailDto dto = new CourseSubTaskSubmissionDetailDto();
-                  dto.setSubTaskId(st.getId());
-                  dto.setOrderIndex(st.getOrderIndex());
-                  dto.setTitle(st.getTitle());
-                  dto.setType(st.getType());
-                  dto.setPoints(st.getPoints());
-                  dto.setCompleted(completed);
-
-                  if (st.getType() == SubTaskType.MULTIPLE_CHOICE) {
-                    StudentOptionSubmission mc = mcBySubTask.get(st.getId());
-                    if (mc != null) {
-                      dto.setCorrect(mc.isCorrect());
-                      dto.setSubmittedAt(mc.getSubmittedAt());
-                      if (mc.getSelectedOption() != null) {
-                        dto.setSelectedOptionId(mc.getSelectedOption().getId());
-                        dto.setSelectedOptionText(mc.getSelectedOption().getText());
-                      }
-                    }
-                    List<SubTaskOptionResponseDto> options =
-                        (st.getOptions() == null)
-                            ? List.of()
-                            : st.getOptions().stream()
-                                .sorted((a, b) -> Integer.compare(a.getOrderIndex(), b.getOrderIndex()))
-                                .map(
-                                    o ->
-                                        new SubTaskOptionResponseDto(
-                                            o.getId(), o.getText(), o.isCorrect(), o.getOrderIndex()))
-                                .toList();
-                    dto.setOptions(options);
-                  } else {
-                    StudentFlagSubmission fs = flagBySubTask.get(st.getId());
-                    if (fs != null) {
-                      dto.setCorrect(fs.isCorrect());
-                      dto.setSubmittedAt(fs.getSubmittedAt());
-                      dto.setSubmittedFlag(fs.getSubmittedFlag());
-                    }
-                    dto.setOptions(null);
-                  }
-
-                  return dto;
-                })
-            .toList();
-
-    CourseChallengeSubmissionDetailDto result = new CourseChallengeSubmissionDetailDto();
-    result.setCourseId(courseId);
-    result.setParticipantId(participantId);
-    result.setParticipantName(participant.getName());
-    result.setParticipantEmail(participant.getEmail());
-    result.setChallengeId(challengeId);
-    result.setChallengeTitle(assignedChallenge.getChallenge().getTitle());
-    result.setAwardedPoints(awardedPoints);
-    result.setMaxPoints(assignedChallenge.getChallenge().getMaxScore());
-    result.setDueAt(assignedChallenge.getDueAt());
-    result.setCompletedAt(completedAt);
-    result.setStatus(status);
-    result.setSubTasks(subTaskDtos);
-    return result;
+    return CourseLabSubmissionStatusEnum.LATE;
   }
 
-  @Override
-  @Transactional
-  public CourseChallengeSubmissionEntryDto updateCourseChallengeScore(
-      UUID instructorId, UUID courseId, UUID participantId, UUID challengeId, int points) {
-    Course course =
-        courseRepository
-            .findById(courseId)
-            .orElseThrow(
-                () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
-    verifyInstructor(course, instructorId);
+  private record SubmissionKey(UUID userId, UUID labId) {}
 
-    CourseChallenge assignedChallenge =
-        course.getCourseChallenges().stream()
-            .filter(cc -> cc.getChallenge().getId().equals(challengeId))
-            .findFirst()
-            .orElseThrow(
-                () ->
-                    new InvalidCourseChallengeException(
-                        String.format(
-                            "Challenge '%s' is not assigned to course '%s'",
-                            challengeId, courseId)));
-
-    if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId)) {
-      throw new CourseParticipantNotFoundException(
-          String.format(
-              "Participant '%s' is not enrolled in course '%s'", participantId, courseId));
-    }
-
-    int maxPoints = assignedChallenge.getChallenge().getMaxScore();
-    if (points < 0 || points > maxPoints) {
-      throw new IllegalArgumentException(
-          String.format("Points must be between 0 and %d", maxPoints));
-    }
-
-    User participant =
-        userRepository
-            .findByIdAndDeletedAtIsNull(participantId)
-            .orElseThrow(
-                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, participantId)));
-    User instructor =
-        userRepository
-            .findByIdAndDeletedAtIsNull(instructorId)
-            .orElseThrow(
-                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, instructorId)));
-
-    CourseChallengeScoreOverride override =
-        courseChallengeScoreOverrideRepository
-            .findByCourseIdAndParticipantIdAndChallengeId(courseId, participantId, challengeId)
-            .orElseGet(CourseChallengeScoreOverride::new);
-    override.setCourse(course);
-    override.setParticipant(participant);
-    override.setChallenge(assignedChallenge.getChallenge());
-    override.setUpdatedByInstructor(instructor);
-    override.setPoints(points);
-    courseChallengeScoreOverrideRepository.save(override);
-
-    CourseChallengeSubmissionsResponseDto submissions =
-        getCourseChallengeSubmissions(instructorId, courseId);
-    return submissions.getSubmissions().stream()
-        .filter(
-            entry ->
-                participantId.equals(entry.getParticipantId())
-                    && challengeId.equals(entry.getChallengeId()))
-        .findFirst()
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Updated score could not be mapped back to a submission entry"));
-  }
+  private record SubmissionAggregates(
+      Map<SubmissionKey, Integer> solvedCountByKey,
+      Map<SubmissionKey, LocalDateTime> completedAtByKey) {}
 
   @Override
   @Transactional(readOnly = true)
-  public List<CourseChallengeDeadlineDto> listUpcomingDeadlines(UUID userId) {
-    List<Object[]> rows = courseChallengeRepository.findDeadlinesForUser(userId);
-    List<CourseChallengeDeadlineDto> result = new ArrayList<>(rows.size());
+  public List<CourseLabDeadlineDto> listUpcomingDeadlines(UUID userId) {
+    List<Object[]> rows = courseLabRepository.findDeadlinesForUser(userId);
+    List<CourseLabDeadlineDto> result = new ArrayList<>(rows.size());
     for (Object[] row : rows) {
       UUID courseId = (UUID) row[0];
       String courseTitle = (String) row[1];
-      UUID challengeId = (UUID) row[2];
-      String challengeTitle = (String) row[3];
+      UUID labId = (UUID) row[2];
+      String labTitle = (String) row[3];
       LocalDateTime dueAt = (LocalDateTime) row[4];
-      if (courseId == null || challengeId == null || dueAt == null) {
+      if (courseId == null || labId == null || dueAt == null) {
         continue;
       }
-      result.add(
-          new CourseChallengeDeadlineDto(
-              courseId, courseTitle, challengeId, challengeTitle, dueAt));
+      result.add(new CourseLabDeadlineDto(courseId, courseTitle, labId, labTitle, dueAt));
     }
     return result;
   }

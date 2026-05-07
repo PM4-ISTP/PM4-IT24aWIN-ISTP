@@ -1,23 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ActionIcon,
-  Affix,
-  Button,
-  Group,
-  Loader,
-  Modal,
-  Notification,
-  Stack,
-  Table,
-  Text,
-  TextInput,
-} from "@mantine/core";
-import { IconCheck, IconPlus, IconTrash, IconX } from "@tabler/icons-react";
+import { ActionIcon, Button, Group, Loader, Stack, Table, Text, TextInput } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
-import { useToast } from "@/src/shared/hooks/useToast";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
+import { slugify } from "@/src/shared/lib/utils";
+import { ConfirmModal } from "@/src/shared/components/ConfirmModal";
 
 const MIN_TOPIC_LENGTH = 3;
 const MAX_TOPIC_LENGTH = 24;
@@ -33,17 +23,6 @@ export default function AdminTopicManagement() {
 
   const [deleteOpened, setDeleteOpened] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
-
-  const {
-    visible: toastVisible,
-    show: showToastNotification,
-    hide: hideToastNotification,
-  } = useToast();
-  const [toastConfig, setToastConfig] = useState<{
-    color: "green" | "red" | "orange";
-    title: string;
-    message: string;
-  } | null>(null);
 
   const sortedTopics = useMemo(() => [...topics].sort((a, b) => a.localeCompare(b)), [topics]);
 
@@ -84,10 +63,14 @@ export default function AdminTopicManagement() {
 
   const showToast = useCallback(
     (color: "green" | "red" | "orange", title: string, message: string) => {
-      setToastConfig({ color, title, message });
-      showToastNotification();
+      notifications.show({
+        id: `admin-topic-management:${color}:${slugify(title)}`,
+        color,
+        title,
+        message,
+      });
     },
-    [showToastNotification]
+    []
   );
 
   useEffect(() => {
@@ -322,49 +305,24 @@ export default function AdminTopicManagement() {
         </Table.Tbody>
       </Table>
 
-      <Modal
+      <ConfirmModal
         opened={deleteOpened}
         onClose={() => setDeleteOpened(false)}
+        onConfirm={confirmDelete}
         title="Delete Topic"
-        centered
-      >
-        <Stack gap="md">
-          <Text size="sm">
+        message={
+          <>
             Delete{" "}
             <Text span fw={700}>
               {selected ?? ""}
             </Text>
             ? This will also clear the topic from any courses using it.
-          </Text>
-          <Group justify="flex-end">
-            <Button
-              variant="default"
-              radius="md"
-              onClick={() => setDeleteOpened(false)}
-              disabled={saving}
-            >
-              Cancel
-            </Button>
-            <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
-              Delete
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
-
-      {toastVisible && toastConfig && (
-        <Affix position={{ bottom: 20, right: 20 }} style={{ zIndex: 3000 }}>
-          <Notification
-            color={toastConfig.color}
-            title={toastConfig.title}
-            onClose={hideToastNotification}
-            withCloseButton
-            icon={toastConfig.color === "green" ? <IconCheck size={18} /> : <IconX size={18} />}
-          >
-            {toastConfig.message}
-          </Notification>
-        </Affix>
-      )}
+          </>
+        }
+        confirmLabel="Delete"
+        loading={saving}
+        danger
+      />
     </Stack>
   );
 }

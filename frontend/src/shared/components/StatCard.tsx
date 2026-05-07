@@ -1,4 +1,5 @@
 import { Group, Stack, Text, ThemeIcon } from "@mantine/core";
+import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
 import { labelStyle } from "./_shared";
 
 const accentColors: Record<string, string> = {
@@ -23,14 +24,13 @@ export default function StatCard({
 }) {
   const accent = accentColors[color] ?? "#3B82F6";
   return (
-    <div
+    <SurfaceCard
+      variant="strong"
+      elevation="sm"
+      radius="sm"
+      padding="1.25rem"
       style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
         borderTop: `3px solid ${accent}`,
-        borderRadius: 12,
-        padding: "1.25rem",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
         transition: "border-color 150ms ease, box-shadow 150ms ease",
       }}
     >
@@ -50,6 +50,6 @@ export default function StatCard({
           {icon}
         </ThemeIcon>
       </Group>
-    </div>
+    </SurfaceCard>
   );
 }

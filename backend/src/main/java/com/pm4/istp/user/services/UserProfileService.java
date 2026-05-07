@@ -14,4 +14,6 @@ public interface UserProfileService {
       Collection<? extends GrantedAuthority> actorAuthorities,
       UUID targetUserId,
       UpdateUserProfileRequestDto request);
+
+  long addOnlineTime(UUID userId, long seconds);
 }

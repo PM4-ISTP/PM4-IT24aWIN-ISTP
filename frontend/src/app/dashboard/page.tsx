@@ -16,7 +16,7 @@ import type {
   PublicCourseDetailResponseDto,
 } from "@/src/features/course/actions/courses";
 import Link from "next/link";
-import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
+import { CourseLabDetailsList } from "@/src/features/course/components/management/CourseLabDetailsList";
 import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
@@ -24,8 +24,8 @@ const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
 type DeadlineItem = {
   courseId: string;
   courseTitle: string;
-  challengeId: string;
-  challengeTitle: string;
+  labId: string;
+  labTitle: string;
   dueAt: string;
 };
 
@@ -35,7 +35,7 @@ async function fetchCompletedLabsCount(): Promise<number | null> {
     const accessToken = session?.accessToken;
     if (!accessToken) return null;
 
-    const res = await fetch(`${BACKEND_URL}/api/v1/challenges/my-completed-count`, {
+    const res = await fetch(`${BACKEND_URL}/api/v1/labs/my-completed-count`, {
       cache: "no-store",
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -61,17 +61,17 @@ async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
     const json = (await res.json()) as Array<{
       courseId?: string;
       courseTitle?: string;
-      challengeId?: string;
-      challengeTitle?: string;
+      labId?: string;
+      labTitle?: string;
       dueAt?: string;
     }>;
     return (json ?? [])
-      .filter((d) => d.courseId && d.challengeId && d.dueAt)
+      .filter((d) => d.courseId && d.labId && d.dueAt)
       .map((d) => ({
         courseId: String(d.courseId),
         courseTitle: String(d.courseTitle ?? ""),
-        challengeId: String(d.challengeId),
-        challengeTitle: String(d.challengeTitle ?? ""),
+        labId: String(d.labId),
+        labTitle: String(d.labTitle ?? ""),
         dueAt: String(d.dueAt),
       }))
       .filter((d) => !Number.isNaN(new Date(d.dueAt).getTime()))
@@ -134,8 +134,8 @@ function RunningLabs({
   return (
     <>
       {fetchCourseResult.success ? (
-        <CourseChallengeDetailsList
-          challenges={fetchCourseResult.data.courseChallenges ?? []}
+        <CourseLabDetailsList
+          labs={fetchCourseResult.data.courseLabs ?? []}
           title=""
           showIndex={false}
           courseId={fetchCourseResult.data.id}
@@ -153,8 +153,7 @@ export default async function Home() {
   const session = await getServerSession(authOptions);
   const name = session?.user?.name ?? "there";
   const firstName = name.split(" ")[0];
-  const userId =
-    (session?.user as { id?: string } | undefined)?.id ?? session?.user?.email ?? undefined;
+  const userId = session?.userId ?? undefined;
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
   const [deadlines, completedLabsCount] = await Promise.all([
     fetchMyDeadlines(),

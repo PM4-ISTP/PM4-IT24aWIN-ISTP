@@ -31,7 +31,7 @@ public class AdminSessionServiceImpl implements AdminSessionService {
       // Some Keycloak setups require extra permissions (e.g. view-clients) for /clients/*
       // endpoints.
       // Fallback: iterate users and aggregate /users/{id}/sessions (requires manage-users).
-      return listActiveSessionsViaUserSessions(clientId);
+      return listActiveSessionsViaUserSessions();
     }
   }
 
@@ -86,7 +86,7 @@ public class AdminSessionServiceImpl implements AdminSessionService {
         .toList();
   }
 
-  private List<AdminActiveSessionDto> listActiveSessionsViaUserSessions(String clientId) {
+  private List<AdminActiveSessionDto> listActiveSessionsViaUserSessions() {
     List<com.pm4.istp.shared.keycloak.KeycloakUserRepresentation> users =
         keycloakAdminClient.listUsers(null, 0, 200);
 

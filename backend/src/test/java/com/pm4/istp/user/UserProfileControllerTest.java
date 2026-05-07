@@ -1,8 +1,11 @@
 package com.pm4.istp.user;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,7 +13,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.pm4.istp.shared.util.GlobalExceptionHandler;
 import com.pm4.istp.user.controllers.UserProfileController;
 import com.pm4.istp.user.mappers.UserMapper;
+import com.pm4.istp.user.db.entities.User;
+import com.pm4.istp.user.dto.UserDto;
 import com.pm4.istp.user.services.UserProfileService;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +40,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 class UserProfileControllerTest {
 
   private MockMvc mockMvc;
+  private UUID subjectId;
 
   @Mock private UserProfileService userProfileService;
   @Mock private UserMapper userMapper;
@@ -42,7 +49,8 @@ class UserProfileControllerTest {
 
   @BeforeEach
   void setUp() {
-    String subject = java.util.UUID.randomUUID().toString();
+    subjectId = java.util.UUID.randomUUID();
+    String subject = subjectId.toString();
     Jwt jwt =
         Jwt.withTokenValue("token").header("alg", "none").subject(subject).build();
 
@@ -115,5 +123,94 @@ class UserProfileControllerTest {
         .andExpect(jsonPath("$.error").value("firstName: must not be blank"));
 
     verify(userProfileService, never()).updateProfile(any(), any(), any(), any());
+  }
+
+  @Test
+  void getMyProfile_returnsMappedUser() throws Exception {
+    User user = new User();
+    user.setId(subjectId);
+    UserDto dto = new UserDto(subjectId, "Alice", "a@example.com", "alice", "Alice", "A", "pic", "Student", 10);
+
+    when(userProfileService.getProfile(subjectId)).thenReturn(user);
+    when(userMapper.toUserDto(user)).thenReturn(dto);
+
+    mockMvc
+        .perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/users/me/profile"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(subjectId.toString()))
+        .andExpect(jsonPath("$.name").value("Alice"));
+  }
+
+  @Test
+  void updateProfiles_validInput_returnsMappedUser() throws Exception {
+    UUID targetId = UUID.randomUUID();
+    User updated = new User();
+    updated.setId(targetId);
+    UserDto dto = new UserDto(targetId, "Bob", "b@example.com", "bob", "Bob", "B", null, "Instructor", 0);
+    when(userProfileService.updateProfile(any(), any(), any(), any())).thenReturn(updated);
+    when(userMapper.toUserDto(updated)).thenReturn(dto);
+
+    String body =
+        """
+        {
+          "firstName": "Bob",
+          "lastName": "B",
+          "title": "Instructor",
+          "pictureUrl": "https://example.com/p.png"
+        }
+        """;
+
+    mockMvc
+        .perform(
+            put("/api/v1/users/me/profile")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(targetId.toString()));
+    mockMvc
+        .perform(
+            put("/api/v1/users/" + targetId + "/profile")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.firstName").value("Bob"));
+  }
+
+  @Test
+  void addOnlineTime_validSeconds_returnsNoContent() throws Exception {
+    when(userProfileService.addOnlineTime(any(), eq(30L))).thenReturn(630L);
+
+    mockMvc
+        .perform(
+            patch("/api/v1/users/me/online-time")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"seconds\": 30}"))
+        .andExpect(status().isNoContent());
+
+    verify(userProfileService).addOnlineTime(any(), eq(30L));
+  }
+
+  @Test
+  void addOnlineTime_negativeSeconds_returnsBadRequest() throws Exception {
+    mockMvc
+        .perform(
+            patch("/api/v1/users/me/online-time")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"seconds\": -1}"))
+        .andExpect(status().isBadRequest());
+
+    verify(userProfileService, never()).addOnlineTime(any(), any(long.class));
+  }
+
+  @Test
+  void addOnlineTime_exceedsMax_returnsBadRequest() throws Exception {
+    mockMvc
+        .perform(
+            patch("/api/v1/users/me/online-time")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"seconds\": 3601}"))
+        .andExpect(status().isBadRequest());
+
+    verify(userProfileService, never()).addOnlineTime(any(), any(long.class));
   }
 }

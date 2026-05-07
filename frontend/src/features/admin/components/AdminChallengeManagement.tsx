@@ -3,13 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionIcon,
-  Affix,
   Badge,
   Button,
   Group,
   Loader,
   Modal,
-  Notification,
   Pagination,
   Select,
   Stack,
@@ -18,23 +16,25 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IconPencil, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
+import { IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useAdminPagedList } from "@/src/features/admin/hooks/useAdminPagedList";
 import { cleanText, formatDate, wrapTextStyle } from "@/src/features/admin/lib/adminUi";
 import MyEditor from "@/src/shared/components/MyEditor";
-import { useToast } from "@/src/shared/hooks/useToast";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { slugify } from "@/src/shared/lib/utils";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC";
 type ChallengeDifficulty = "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
 
-type AdminChallengeListItem = {
+type AdminLabListItem = {
   id: string;
   title: string;
   description: string | null;
   status: ChallengeStatus;
   difficulty: ChallengeDifficulty;
+  dockerImage: string | null;
   courseCount: number;
   createdAt: string;
   updatedAt: string;
@@ -47,29 +47,19 @@ const PAGE_SIZE = 10;
 
 export default function AdminChallengeManagement() {
   const {
-    visible: toastVisible,
-    show: showToastNotification,
-    hide: hideToastNotification,
-  } = useToast();
-  const [toastConfig, setToastConfig] = useState<{
-    color: "red" | "orange";
-    title: string;
-    message: string;
-  } | null>(null);
-  const {
     query,
     onQueryChange,
     applyQueryNow,
     page,
     setPage,
-    items: challenges,
+    items: labs,
     totalPages,
     loading,
     error,
     setError,
     refresh,
-  } = useAdminPagedList<AdminChallengeListItem>({
-    endpoint: "/api/backend/api/admin/challenges",
+  } = useAdminPagedList<AdminLabListItem>({
+    endpoint: "/api/backend/api/admin/labs",
     label: "labs",
     pageSize: PAGE_SIZE,
     sort: "updatedAt,desc",
@@ -77,16 +67,17 @@ export default function AdminChallengeManagement() {
 
   const [editOpened, setEditOpened] = useState(false);
   const [deleteOpened, setDeleteOpened] = useState(false);
-  const [selected, setSelected] = useState<AdminChallengeListItem | null>(null);
+  const [selected, setSelected] = useState<AdminLabListItem | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const showToast = useCallback(
-    (color: "red" | "orange", title: string, message: string) => {
-      setToastConfig({ color, title, message });
-      showToastNotification();
-    },
-    [showToastNotification]
-  );
+  const showToast = useCallback((color: "red" | "orange", title: string, message: string) => {
+    notifications.show({
+      id: `admin-challenge-management:${color}:${slugify(title)}`,
+      color,
+      title,
+      message,
+    });
+  }, []);
 
   useEffect(() => {
     if (!error) return;
@@ -109,19 +100,19 @@ export default function AdminChallengeManagement() {
 
   const selectedTitle = useMemo(() => selected?.title ?? "", [selected]);
 
-  function openEdit(challenge: AdminChallengeListItem) {
-    setSelected(challenge);
+  function openEdit(lab: AdminLabListItem) {
+    setSelected(lab);
     form.setValues({
-      title: challenge.title ?? "",
-      description: challenge.description ?? "<p>Add a description...</p>",
-      status: challenge.status ?? "DRAFT",
-      difficulty: challenge.difficulty ?? "BEGINNER",
+      title: lab.title ?? "",
+      description: lab.description ?? "<p>Add a description...</p>",
+      status: lab.status ?? "DRAFT",
+      difficulty: lab.difficulty ?? "BEGINNER",
     });
     setEditOpened(true);
   }
 
-  function openDelete(challenge: AdminChallengeListItem) {
-    setSelected(challenge);
+  function openDelete(lab: AdminLabListItem) {
+    setSelected(lab);
     setDeleteOpened(true);
   }
 
@@ -130,7 +121,7 @@ export default function AdminChallengeManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/backend/api/admin/challenges/${selected.id}`, {
+      const res = await fetch(`/api/backend/api/admin/labs/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -162,7 +153,7 @@ export default function AdminChallengeManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/backend/api/admin/challenges/${selected.id}`, {
+      const res = await fetch(`/api/backend/api/admin/labs/${selected.id}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -226,7 +217,7 @@ export default function AdminChallengeManagement() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {challenges.length === 0 ? (
+          {labs.length === 0 ? (
             <Table.Tr>
               <Table.Td colSpan={5}>
                 <Text size="sm" c="dimmed" ta="center" py="md">
@@ -235,7 +226,7 @@ export default function AdminChallengeManagement() {
               </Table.Td>
             </Table.Tr>
           ) : (
-            challenges.map((c) => (
+            labs.map((c) => (
               <Table.Tr key={c.id}>
                 <Table.Td>
                   <Text fw={600} size="sm" lineClamp={2} style={wrapTextStyle} title={c.title}>
@@ -331,6 +322,12 @@ export default function AdminChallengeManagement() {
         <form onSubmit={form.onSubmit((values) => void submitEdit(values))}>
           <Stack gap="sm">
             <TextInput label="Title" required {...form.getInputProps("title")} />
+            <TextInput
+              label="Docker Image"
+              value={selected?.dockerImage ?? ""}
+              readOnly
+              styles={{ input: { fontFamily: "monospace", fontSize: "0.85rem" } }}
+            />
             <MyEditor
               description={form.values.description}
               setDescription={(value) => form.setFieldValue("description", value)}
@@ -418,20 +415,6 @@ export default function AdminChallengeManagement() {
           </Group>
         </Stack>
       </Modal>
-
-      {toastVisible && toastConfig && (
-        <Affix position={{ bottom: 20, right: 20 }} style={{ zIndex: 3000 }}>
-          <Notification
-            color={toastConfig.color}
-            title={toastConfig.title}
-            onClose={hideToastNotification}
-            withCloseButton
-            icon={<IconX size={18} />}
-          >
-            {toastConfig.message}
-          </Notification>
-        </Affix>
-      )}
     </Stack>
   );
 }

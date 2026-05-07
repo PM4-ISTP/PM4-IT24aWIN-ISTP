@@ -18,6 +18,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Slf4j
 @Configuration
 public class SecurityConfig {
+  private static final String ADMINISTRATOR_ROLE = "ADMINISTRATOR";
+
   @Value("${cors.allowed-origin}")
   private String allowedOrigin;
 
@@ -40,7 +42,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/v1/courses/*/badge/svg")
                     .permitAll()
                     .requestMatchers("/api/admin/**")
-                    .hasRole("ADMINISTRATOR")
+                    .hasRole(ADMINISTRATOR_ROLE)
                     .requestMatchers("/api/v1/users/me/badges")
                     .authenticated()
                     .requestMatchers("/api/v1/courses/my-enrollments", "/api/v1/courses/catalog")
@@ -49,10 +51,10 @@ public class SecurityConfig {
                     .authenticated()
                     .requestMatchers("/api/v1/courses/topics")
                     .authenticated()
-                    .requestMatchers("/api/v1/challenge-pods/**")
-                    .hasAnyRole("STUDENT", "INSTRUCTOR", "ADMINISTRATOR")
-                    .requestMatchers("/api/v1/courses/**", "/api/v1/challenges/**")
-                    .hasAnyRole("INSTRUCTOR", "ADMINISTRATOR")
+                    .requestMatchers("/api/v1/lab-pods/**")
+                    .hasAnyRole("STUDENT", "INSTRUCTOR", ADMINISTRATOR_ROLE)
+                    .requestMatchers("/api/v1/courses/**", "/api/v1/labs/**")
+                    .hasAnyRole("INSTRUCTOR", ADMINISTRATOR_ROLE)
                     // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
                     // catch-all rule to require authentication for all requests
                     .anyRequest()

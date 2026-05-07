@@ -29,13 +29,16 @@ import com.pm4.istp.course.controllers.CourseController;
 import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseRequest;
-import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
+import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.dto.ChallengeCreatorResponseDto;
-import com.pm4.istp.course.dto.ChallengeStudentDto;
+import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
+import com.pm4.istp.course.dto.CourseLabDeadlineDto;
+import com.pm4.istp.course.dto.CourseLabItemDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
 import com.pm4.istp.course.dto.CreateCourseRequestDto;
 import com.pm4.istp.course.dto.CreateCourseResponseDto;
@@ -43,6 +46,7 @@ import com.pm4.istp.course.dto.JoinByInviteCodeRequestDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.dto.PublicCourseDetailResponseDto;
 import com.pm4.istp.course.dto.UpdateCourseRequestDto;
+import com.pm4.istp.course.dto.UpdateCourseLabsRequestDto;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
@@ -57,6 +61,7 @@ import com.pm4.istp.user.dto.UserDto;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -93,11 +98,9 @@ class CourseControllerTest {
     @Mock
     private CourseTopicService courseTopicService;
     @Mock
-    private com.pm4.istp.course.repositories.SubTaskCompletionRepository subTaskCompletionRepository;
+    private com.pm4.istp.course.repositories.ChallengeCompletionRepository challengeCompletionRepository;
     @Mock
-    private com.pm4.istp.course.repositories.SubTaskRepository subTaskRepository;
-    @Mock
-    private com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
+    private com.pm4.istp.course.repositories.ChallengeRepository challengeRepository;
 
     @InjectMocks
     private CourseController courseController;
@@ -123,12 +126,6 @@ class CourseControllerTest {
                 }
                 return value.trim();
             });
-
-        lenient()
-            .when(
-                courseChallengeScoreOverrideRepository.findByCourseIdAndParticipantIdAndChallengeId(
-                    any(), any(), any()))
-            .thenReturn(java.util.Optional.empty());
 
         HandlerMethodArgumentResolver jwtResolver = new HandlerMethodArgumentResolver() {
             @Override
@@ -419,14 +416,14 @@ class CourseControllerTest {
 
     @Test
     void getPublicCourse_returnsOk() throws Exception {
-        ChallengeStudentDto challenge1 = generateChallengeStudentDto("Challenge 1",
-                ChallengeStatusEnum.PUBLIC, "Creator 1");
-        ChallengeStudentDto challenge2 = generateChallengeStudentDto("Challenge 2",
-                ChallengeStatusEnum.PRIVATE, "Creator 2");
-        ChallengeStudentDto challenge3 = generateChallengeStudentDto("Challenge 3",
-                ChallengeStatusEnum.DRAFT, "Creator 3");
-        ChallengeStudentDto challenge4 = generateChallengeStudentDto("Challenge 4",
-                ChallengeStatusEnum.PUBLIC, "Creator 4");
+        LabStudentDto challenge1 = generateChallengeStudentDto("Lab 1",
+                LabStatusEnum.PUBLIC, "Creator 1");
+        LabStudentDto challenge2 = generateChallengeStudentDto("Lab 2",
+                LabStatusEnum.PRIVATE, "Creator 2");
+        LabStudentDto challenge3 = generateChallengeStudentDto("Lab 3",
+                LabStatusEnum.DRAFT, "Creator 3");
+        LabStudentDto challenge4 = generateChallengeStudentDto("Lab 4",
+                LabStatusEnum.PUBLIC, "Creator 4");
 
         Course course = new Course();
         course.setId(courseId);
@@ -446,7 +443,7 @@ class CourseControllerTest {
         dto.setId(courseId);
         dto.setTitle("Public Course");
         dto.setCourseInstructors(List.of(instructor));
-        dto.setCourseChallenges(List.of(challenge1, challenge2, challenge3, challenge4));
+        dto.setCourseLabs(List.of(challenge1, challenge2, challenge3, challenge4));
         dto.setParticipants(
             List.of(new CourseParticipantResponseDto(UUID.randomUUID(), "Student", null, null)));
 
@@ -465,12 +462,12 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.courseInstructors[*].id").value(everyItem(nullValue())))
                 .andExpect(jsonPath("$.courseInstructors[*].instructor.id").value(everyItem(nullValue())))
                 .andExpect(jsonPath("$.courseInstructors[0].instructor.name").value("Instructor"))
-                .andExpect(jsonPath("$.courseChallenges").isArray())
-                .andExpect(jsonPath("$.courseChallenges", hasSize(3)))
-                .andExpect(jsonPath("$.courseChallenges[*].creator.id").value(everyItem(nullValue())))
-                .andExpect(jsonPath("$.courseChallenges[0].creator.name").value("Creator 1"))
-                .andExpect(jsonPath("$.courseChallenges[1].creator.name").value("Creator 2"))
-                .andExpect(jsonPath("$.courseChallenges[2].creator.name").value("Creator 4"))
+                .andExpect(jsonPath("$.courseLabs").isArray())
+                .andExpect(jsonPath("$.courseLabs", hasSize(3)))
+                .andExpect(jsonPath("$.courseLabs[*].creator.id").value(everyItem(nullValue())))
+                .andExpect(jsonPath("$.courseLabs[0].creator.name").value("Creator 1"))
+                .andExpect(jsonPath("$.courseLabs[1].creator.name").value("Creator 2"))
+                .andExpect(jsonPath("$.courseLabs[2].creator.name").value("Creator 4"))
                 .andExpect(jsonPath("$.participants").value(nullValue()));
     }
 
@@ -506,7 +503,7 @@ class CourseControllerTest {
         PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
         dto.setId(courseId);
         dto.setCourseInstructors(Collections.emptyList());
-        dto.setCourseChallenges(Collections.emptyList());
+        dto.setCourseLabs(Collections.emptyList());
 
         when(courseService.enrollInCourse(userId, courseId)).thenReturn(course);
         when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
@@ -530,9 +527,9 @@ class CourseControllerTest {
         PublicCourseDetailResponseDto dto = new PublicCourseDetailResponseDto();
         dto.setId(courseId);
         dto.setCourseInstructors(Collections.emptyList());
-        dto.setCourseChallenges(Collections.emptyList());
+        dto.setCourseLabs(Collections.emptyList());
 
-        when(courseService.joinByInviteCode(eq("ABC123"), eq(userId))).thenReturn(course);
+        when(courseService.joinByInviteCode("ABC123", userId)).thenReturn(course);
         when(courseMapper.toPublicCourseDetailDto(course)).thenReturn(dto);
         when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(1L);
         when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
@@ -551,7 +548,7 @@ class CourseControllerTest {
 
     @Test
     void joinByInviteCode_withInvalidCode_returnsNotFound() throws Exception {
-        when(courseService.joinByInviteCode(eq("BADCOD"), eq(userId)))
+        when(courseService.joinByInviteCode("BADCOD", userId))
                 .thenThrow(new InvalidInviteCodeException("Invalid invite code"));
 
         JoinByInviteCodeRequestDto requestDto = new JoinByInviteCodeRequestDto("BADCOD");
@@ -635,19 +632,79 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.error").value("Course not found"));
     }
 
+    @Test
+    void remainingCourseEndpoints_delegateToServices() throws Exception {
+        UUID participantId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        Course course = new Course();
+        course.setId(courseId);
+        CourseDetailResponseDto detailDto = new CourseDetailResponseDto();
+        detailDto.setId(courseId);
+        CourseLabSubmissionsResponseDto submissions =
+                new CourseLabSubmissionsResponseDto(courseId, List.of(), List.of(), List.of());
+        CourseLabDeadlineDto deadline =
+                new CourseLabDeadlineDto(courseId, "Course", labId, "Lab", LocalDateTime.now());
+
+        doNothing().when(courseService).removeParticipant(userId, courseId, participantId);
+        doNothing().when(courseService).leaveCourse(userId, courseId);
+        when(courseService.updateCourseChallenges(eq(userId), eq(courseId), any()))
+                .thenReturn(course);
+        when(courseMapper.toCourseDetailDto(course)).thenReturn(detailDto);
+        when(courseService.getCourseChallengeSubmissions(userId, courseId)).thenReturn(submissions);
+        when(courseService.listUpcomingDeadlines(userId)).thenReturn(List.of(deadline));
+        when(courseTopicService.listActiveTopics()).thenReturn(List.of("web", "crypto"));
+
+        mockMvc.perform(delete("/api/v1/courses/{id}/participants/{participantId}", courseId, participantId))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/v1/courses/catalog/{id}/leave", courseId))
+                .andExpect(status().isNoContent());
+        mockMvc
+                .perform(
+                        put("/api/v1/courses/{id}/labs", courseId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"labs":[{"labId":"%s","orderIndex":1,"dueAt":"2026-05-06T12:00:00"}]}
+                                        """
+                                                .formatted(labId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(courseId.toString()));
+        mockMvc.perform(get("/api/v1/courses/{id}/submissions", courseId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.courseId").value(courseId.toString()));
+        mockMvc.perform(get("/api/v1/courses/my-deadlines"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].courseId").value(courseId.toString()));
+        mockMvc.perform(get("/api/v1/courses/topics"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]").value("web"));
+    }
+
+    @Test
+    void listPublishedCourses_withTopic_normalizesTopic() throws Exception {
+        Page<ListCourseResponseDto> page = new PageImpl<>(List.of());
+
+        when(courseService.listPublishedCourses(eq("security"), eq("web"), any())).thenReturn(page);
+
+        mockMvc
+                .perform(get("/api/v1/courses/catalog").param("query", "security").param("topic", " web "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray());
+    }
+
     // ── Mock object generators ────────────────────────────────────────────────
-    private ChallengeStudentDto generateChallengeStudentDto(String title,
-            ChallengeStatusEnum challengeStatus, String creatorName) {
+    private LabStudentDto generateChallengeStudentDto(String title,
+            LabStatusEnum labStatus, String creatorName) {
         ChallengeCreatorResponseDto challengeCreatorResponseDto = new ChallengeCreatorResponseDto();
         challengeCreatorResponseDto.setId(UUID.randomUUID());
         challengeCreatorResponseDto.setName(creatorName);
 
-        ChallengeStudentDto dto = new ChallengeStudentDto();
+        LabStudentDto dto = new LabStudentDto();
         dto.setId(UUID.randomUUID());
         dto.setTitle(title);
         dto.setCreator(challengeCreatorResponseDto);
-        dto.setStatus(challengeStatus);
-        dto.setSubTasks(List.of());
+        dto.setStatus(labStatus);
+        dto.setChallenges(List.of());
         return dto;
     }
 
