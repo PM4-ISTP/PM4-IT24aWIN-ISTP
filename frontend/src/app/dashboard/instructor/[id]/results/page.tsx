@@ -279,9 +279,19 @@ export default function CourseResultsPage() {
       const byLabId = new Map<string, CourseChallengeSubmissionEntryDto>();
       for (const s of subs) byLabId.set(s.labId, s);
 
-      const effectiveSubs = labFilter ? (byLabId.get(labFilter) ? [byLabId.get(labFilter)!] : []) : subs;
-      const solvedChallenges = effectiveSubs.reduce((acc, s) => acc + (s.solvedChallengeCount ?? 0), 0);
-      const totalChallenges = effectiveSubs.reduce((acc, s) => acc + (s.totalChallengeCount ?? 0), 0);
+      const effectiveSubs = labFilter
+        ? byLabId.get(labFilter)
+          ? [byLabId.get(labFilter)!]
+          : []
+        : subs;
+      const solvedChallenges = effectiveSubs.reduce(
+        (acc, s) => acc + (s.solvedChallengeCount ?? 0),
+        0
+      );
+      const totalChallenges = effectiveSubs.reduce(
+        (acc, s) => acc + (s.totalChallengeCount ?? 0),
+        0
+      );
       const completionPct =
         totalChallenges > 0 ? Math.round((solvedChallenges / totalChallenges) * 100) : 0;
 
@@ -299,7 +309,7 @@ export default function CourseResultsPage() {
         completionPct,
         overallStatus,
         latestStatus: latest?.status ?? "NOT_SUBMITTED",
-        latestLabTitle: latest ? labTitleById.get(latest.labId) ?? null : null,
+        latestLabTitle: latest ? (labTitleById.get(latest.labId) ?? null) : null,
         latestCompletedAt: latest?.completedAt ?? null,
       };
     });
@@ -369,9 +379,7 @@ export default function CourseResultsPage() {
           value={`${statsOnTime} / ${totalParticipants}`}
           sub="overall on time"
           icon={<IconCheck size={12} color="#64748b" />}
-          progress={
-            totalParticipants > 0 ? Math.round((statsOnTime / totalParticipants) * 100) : 0
-          }
+          progress={totalParticipants > 0 ? Math.round((statsOnTime / totalParticipants) * 100) : 0}
         />
         <StatCard
           label="In Progress"
@@ -593,4 +601,3 @@ export default function CourseResultsPage() {
     </Container>
   );
 }
-
