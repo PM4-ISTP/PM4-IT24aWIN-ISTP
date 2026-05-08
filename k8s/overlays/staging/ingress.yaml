@@ -61,7 +61,7 @@ spec:
                 name: keycloak
                 port:
                   number: 8080
-    # Adminer on separate subdomain — staging only, not available in prod
+    # Adminer on separate subdomain
     - host: istp-staging-adminer.pm4.init-lab.ch
       http:
         paths:
