@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -41,11 +43,8 @@ public class StudentOptionSubmission {
   @JoinColumn(
       name = "selected_option_id",
       nullable = false,
-      foreignKey =
-          @ForeignKey(
-              name = "fk_student_option_submission_option",
-              foreignKeyDefinition =
-                  "FOREIGN KEY (selected_option_id) REFERENCES challenge_options(id) ON DELETE CASCADE"))
+      foreignKey = @ForeignKey(name = "fk_student_option_submission_option"))
+  @OnDelete(action = OnDeleteAction.CASCADE)
   private ChallengeOption selectedOption;
 
   @Column(name = "is_correct", nullable = false)
