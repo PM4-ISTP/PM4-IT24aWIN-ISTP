@@ -500,8 +500,6 @@ public class CourseServiceImpl implements CourseService {
       Integer awarded;
       if (override != null) {
         awarded = override;
-      } else if (status == CourseLabSubmissionStatusEnum.LATE) {
-        awarded = 0;
       } else if (completed) {
         awarded = cMax;
       } else {
@@ -776,8 +774,6 @@ public class CourseServiceImpl implements CourseService {
         Integer override = overrides.get(cid);
         if (override != null) {
           awardedPoints += override;
-        } else if (status == CourseLabSubmissionStatusEnum.LATE) {
-          // default late penalty = 0 unless overridden
         } else if (solvedIds.contains(cid)) {
           awardedPoints += cMax;
         }

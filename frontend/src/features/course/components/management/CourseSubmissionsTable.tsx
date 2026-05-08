@@ -8,8 +8,6 @@ function badgeColor(status: string): string {
   switch (status) {
     case "ON_TIME":
       return "teal";
-    case "LATE":
-      return "red";
     case "IN_PROGRESS":
       return "yellow";
     case "NOT_SUBMITTED":
@@ -92,7 +90,7 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
       <Stack gap="sm">
         <Group justify="space-between" align="center">
           <Text size="sm" fw={700} style={{ color: "#f1f5f9" }}>
-            Submissions (On-time / Late)
+            Submissions
           </Text>
           {loading ? <Loader size="sm" /> : null}
         </Group>
@@ -160,7 +158,7 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
                                 {progress}
                               </Text>
                             </Group>
-                            {status === "LATE" && completedAt ? (
+                            {completedAt ? (
                               <Text size="xs" c="dimmed">
                                 Submitted: {formatDue(completedAt)}
                               </Text>

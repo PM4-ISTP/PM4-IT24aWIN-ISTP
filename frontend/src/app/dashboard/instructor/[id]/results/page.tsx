@@ -77,7 +77,6 @@ function statusLabel(s: SubmissionStatus): string {
 function statusBadgeStyle(s: SubmissionStatus): React.CSSProperties {
   const map: Record<SubmissionStatus, { bg: string; color: string; border: string }> = {
     ON_TIME: { bg: "rgba(20,184,166,0.15)", color: "#2dd4bf", border: "rgba(20,184,166,0.3)" },
-    LATE: { bg: "rgba(20,184,166,0.15)", color: "#2dd4bf", border: "rgba(20,184,166,0.3)" },
     IN_PROGRESS: { bg: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "rgba(96,165,250,0.3)" },
     NOT_SUBMITTED: {
       bg: "rgba(148,163,184,0.1)",
@@ -107,8 +106,6 @@ function progressColor(s: SubmissionStatus): string {
   switch (s) {
     case "ON_TIME":
       return "#2dd4bf";
-    case "LATE":
-      return "#f87171";
     case "IN_PROGRESS":
       return "#60a5fa";
     default:
@@ -788,11 +785,6 @@ export default function CourseResultsPage() {
                       deadlineLabel = `Due: ${formatDateTime(l.dueAt)} — submitted on time`;
                       deadlineBg = "rgba(20,184,166,0.07)";
                       deadlineBorder = "rgba(20,184,166,0.2)";
-                    } else if (status === "LATE") {
-                      deadlineColor = "#f97316";
-                      deadlineLabel = `Due: ${formatDateTime(l.dueAt)} — submitted late`;
-                      deadlineBg = "rgba(249,115,22,0.09)";
-                      deadlineBorder = "rgba(249,115,22,0.28)";
                     } else {
                       deadlineColor = "#f87171";
                       deadlineLabel = `Due: ${formatDateTime(l.dueAt)} — expired`;
@@ -806,9 +798,7 @@ export default function CourseResultsPage() {
                       key={l.labId}
                       style={{
                         background: "rgba(255,255,255,0.03)",
-                        border: `1px solid ${
-                          status === "LATE" ? "rgba(249,115,22,0.28)" : "rgba(255,255,255,0.08)"
-                        }`,
+                        border: "1px solid rgba(255,255,255,0.08)",
                         borderRadius: 14,
                         padding: "0.95rem 1rem",
                       }}
@@ -940,27 +930,7 @@ export default function CourseResultsPage() {
               </Text>
             ) : (
               <Stack gap="sm">
-                {detail.status === "LATE" ? (
-                  <Box
-                    style={{
-                      background: "rgba(249,115,22,0.12)",
-                      border: "1px solid rgba(249,115,22,0.25)",
-                      borderRadius: 12,
-                      padding: "0.9rem 1rem",
-                    }}
-                  >
-                    <Text fw={700} style={{ color: "#fdba74" }}>
-                      Late submission
-                    </Text>
-                    <Text size="sm" style={{ color: "#94a3b8", marginTop: 4 }}>
-                      Due: {formatDateTime(detail.dueAt)} • Submitted:{" "}
-                      {formatDateTime(detail.completedAt)}
-                    </Text>
-                  </Box>
-                ) : null}
-
                 {detail.challenges.map((c: CourseLabChallengeSubmissionDetailDto, idx: number) => {
-                  const isLate = detail.status === "LATE";
                   const attempted =
                     Boolean(c.completed) ||
                     Boolean(c.submittedFlag && c.submittedFlag.trim().length > 0) ||
@@ -988,9 +958,7 @@ export default function CourseResultsPage() {
                       key={c.challengeId}
                       style={{
                         background: "rgba(255,255,255,0.03)",
-                        border: `1px solid ${
-                          isLate ? "rgba(249,115,22,0.25)" : "rgba(255,255,255,0.08)"
-                        }`,
+                        border: "1px solid rgba(255,255,255,0.08)",
                         borderRadius: 14,
                         padding: "1rem 1.1rem",
                       }}
