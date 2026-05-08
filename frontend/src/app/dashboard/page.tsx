@@ -29,9 +29,7 @@ const sectionLabelStyle: React.CSSProperties = {
 /**
  * Returns details for the first course when present in the already-fetched list.
  */
-async function getFirstCourseDetail(
-  fetchCourseResult: ActionResult<PageListCourseResponseDto>
-) {
+async function getFirstCourseDetail(fetchCourseResult: ActionResult<PageListCourseResponseDto>) {
   let firstCourse: ActionResult<PublicCourseDetailResponseDto> | undefined = undefined;
   if (
     fetchCourseResult.success &&
