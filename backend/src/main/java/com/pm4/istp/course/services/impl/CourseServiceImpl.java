@@ -794,17 +794,12 @@ public class CourseServiceImpl implements CourseService {
   private CourseLabSubmissionStatusEnum resolveSubmissionStatus(
       int solvedCount, int totalCount, LocalDateTime completedAt, LocalDateTime dueAt) {
     if (totalCount <= 0 || solvedCount <= 0) {
-      return CourseLabSubmissionStatusEnum.NOT_SUBMITTED;
+      return CourseLabSubmissionStatusEnum.NOT_STARTED;
     }
     if (solvedCount < totalCount) {
       return CourseLabSubmissionStatusEnum.IN_PROGRESS;
     }
-    if (dueAt == null || completedAt == null || !completedAt.isAfter(dueAt)) {
-      return CourseLabSubmissionStatusEnum.ON_TIME;
-    }
-    // No "late" status anymore: once dueAt is passed, submissions are blocked.
-    // For legacy data that may already be completed after the deadline, treat as ON_TIME.
-    return CourseLabSubmissionStatusEnum.ON_TIME;
+    return CourseLabSubmissionStatusEnum.SUBMITTED;
   }
 
   private record SubmissionKey(UUID userId, UUID labId) {}

@@ -40,7 +40,7 @@ import {
   type CourseParticipantDto,
 } from "@/src/shared/types/course";
 
-const statusValues: SubmissionStatus[] = ["NOT_SUBMITTED", "IN_PROGRESS", "ON_TIME"];
+const statusValues: SubmissionStatus[] = ["NOT_STARTED", "IN_PROGRESS", "SUBMITTED"];
 
 function initials(name: string): string {
   return name
@@ -59,13 +59,13 @@ function avatarColor(name: string): string {
 
 function worstStatus(statuses: SubmissionStatus[]): SubmissionStatus {
   if (statuses.includes("IN_PROGRESS")) return "IN_PROGRESS";
-  if (statuses.includes("ON_TIME")) return "ON_TIME";
-  return "NOT_SUBMITTED";
+  if (statuses.includes("SUBMITTED")) return "SUBMITTED";
+  return "NOT_STARTED";
 }
 
 function statusLabel(s: SubmissionStatus): string {
   switch (s) {
-    case "ON_TIME":
+    case "SUBMITTED":
       return "Submitted";
     case "IN_PROGRESS":
       return "In Progress";
@@ -76,9 +76,9 @@ function statusLabel(s: SubmissionStatus): string {
 
 function statusBadgeStyle(s: SubmissionStatus): React.CSSProperties {
   const map: Record<SubmissionStatus, { bg: string; color: string; border: string }> = {
-    ON_TIME: { bg: "rgba(20,184,166,0.15)", color: "#2dd4bf", border: "rgba(20,184,166,0.3)" },
+    SUBMITTED: { bg: "rgba(20,184,166,0.15)", color: "#2dd4bf", border: "rgba(20,184,166,0.3)" },
     IN_PROGRESS: { bg: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "rgba(96,165,250,0.3)" },
-    NOT_SUBMITTED: {
+    NOT_STARTED: {
       bg: "rgba(148,163,184,0.1)",
       color: "#94a3b8",
       border: "rgba(148,163,184,0.2)",
@@ -104,7 +104,7 @@ function statusBadgeStyle(s: SubmissionStatus): React.CSSProperties {
 
 function progressColor(s: SubmissionStatus): string {
   switch (s) {
-    case "ON_TIME":
+    case "SUBMITTED":
       return "#2dd4bf";
     case "IN_PROGRESS":
       return "#60a5fa";
@@ -310,7 +310,7 @@ export default function CourseResultsPage() {
 
       const overallStatus = worstStatus(effectiveSubs.map((s) => s.status));
       let currentLabId: string | null = null;
-      let currentLabStatus: SubmissionStatus = "NOT_SUBMITTED";
+      let currentLabStatus: SubmissionStatus = "NOT_STARTED";
       if (!labFilter) {
         const orderedLabIds = labs.map((l) => l.labId);
         for (const lid of orderedLabIds) {
@@ -327,7 +327,7 @@ export default function CourseResultsPage() {
         }
       } else {
         currentLabId = labFilter;
-        currentLabStatus = byLabId.get(labFilter)?.status ?? "NOT_SUBMITTED";
+        currentLabStatus = byLabId.get(labFilter)?.status ?? "NOT_STARTED";
       }
 
       const latest = [...subs]
@@ -346,7 +346,7 @@ export default function CourseResultsPage() {
         currentLabId,
         currentLabTitle: currentLabId ? (labTitleById.get(currentLabId) ?? null) : null,
         currentLabStatus,
-        latestStatus: latest?.status ?? "NOT_SUBMITTED",
+        latestStatus: latest?.status ?? "NOT_STARTED",
         latestLabTitle: latest ? (labTitleById.get(latest.labId) ?? null) : null,
         latestCompletedAt: latest?.completedAt ?? null,
       };
@@ -366,9 +366,9 @@ export default function CourseResultsPage() {
   }, [rows, search, statusFilter]);
 
   const totalParticipants = rows.length;
-  const statsOnTime = rows.filter((r) => r.overallStatus === "ON_TIME").length;
+  const statsSubmitted = rows.filter((r) => r.overallStatus === "SUBMITTED").length;
   const statsInProg = rows.filter((r) => r.overallStatus === "IN_PROGRESS").length;
-  const statsNotStarted = rows.filter((r) => r.overallStatus === "NOT_SUBMITTED").length;
+  const statsNotStarted = rows.filter((r) => r.overallStatus === "NOT_STARTED").length;
   const avgPct =
     totalParticipants > 0
       ? Math.round(rows.map((r) => r.completionPct).reduce((a, b) => a + b, 0) / totalParticipants)
@@ -447,10 +447,14 @@ export default function CourseResultsPage() {
         />
         <StatCard
           label="On-Time"
-          value={`${statsOnTime} / ${totalParticipants}`}
+              value={`${statsSubmitted} / ${totalParticipants}`}
           sub="overall on time"
           icon={<IconCheck size={12} color="#64748b" />}
-          progress={totalParticipants > 0 ? Math.round((statsOnTime / totalParticipants) * 100) : 0}
+              progress={
+                totalParticipants > 0
+                  ? Math.round((statsSubmitted / totalParticipants) * 100)
+                  : 0
+              }
         />
         <StatCard
           label="In Progress"
@@ -761,7 +765,7 @@ export default function CourseResultsPage() {
               <Stack gap="sm">
                 {labs.map((l, idx) => {
                   const sub = activeParticipant.byLabId.get(l.labId);
-                  const status = sub?.status ?? "NOT_SUBMITTED";
+    const status = sub?.status ?? "NOT_STARTED";
 
                   // Deadline logic
                   const now = new Date();
@@ -780,7 +784,7 @@ export default function CourseResultsPage() {
                       deadlineLabel = `Due: ${formatDateTime(l.dueAt)} — still open`;
                       deadlineBg = "rgba(20,184,166,0.07)";
                       deadlineBorder = "rgba(20,184,166,0.2)";
-                    } else if (status === "ON_TIME") {
+    } else if (status === "SUBMITTED") {
                       deadlineColor = "#2dd4bf";
                       deadlineLabel = `Due: ${formatDateTime(l.dueAt)} — submitted on time`;
                       deadlineBg = "rgba(20,184,166,0.07)";

@@ -6,13 +6,24 @@ import type { CourseLabSubmissionsResponseDto } from "@/src/shared/types/course"
 
 function badgeColor(status: string): string {
   switch (status) {
-    case "ON_TIME":
+    case "SUBMITTED":
       return "teal";
     case "IN_PROGRESS":
       return "yellow";
-    case "NOT_SUBMITTED":
+    case "NOT_STARTED":
     default:
       return "gray";
+  }
+}
+
+function statusLabel(status: string): string {
+  switch (status) {
+    case "SUBMITTED":
+      return "Submitted";
+    case "IN_PROGRESS":
+      return "In Progress";
+    default:
+      return "Not Started";
   }
 }
 
@@ -141,7 +152,7 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
                     </Table.Td>
                     {matrix.labs.map((c) => {
                       const s = matrix.byKey.get(`${p.id}:${c.labId}`);
-                      const status = s?.status ?? "NOT_SUBMITTED";
+                      const status = s?.status ?? "NOT_STARTED";
                       const progress =
                         s && s.totalChallengeCount > 0
                           ? `${s.solvedChallengeCount}/${s.totalChallengeCount}`
@@ -151,7 +162,7 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
                           <Stack gap={2}>
                             <Group gap="xs" wrap="nowrap">
                               <Badge variant="light" color={badgeColor(status)}>
-                                {status}
+                                {statusLabel(status)}
                               </Badge>
                               <Text size="xs" c="dimmed">
                                 {progress}

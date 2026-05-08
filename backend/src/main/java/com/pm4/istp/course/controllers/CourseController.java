@@ -264,7 +264,7 @@ public class CourseController {
   @Operation(
       summary = "Get course lab submissions",
       description =
-          "Returns a per-student/per-lab submission matrix with NOT_SUBMITTED/IN_PROGRESS/ON_TIME status based on challenge completion.")
+          "Returns a per-student/per-lab submission matrix with NOT_STARTED/IN_PROGRESS/SUBMITTED status based on challenge completion.")
   @ApiResponses(
       value = {
         @ApiResponse(

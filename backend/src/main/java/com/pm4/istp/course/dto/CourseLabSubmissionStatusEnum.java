@@ -1,7 +1,7 @@
 package com.pm4.istp.course.dto;
 
 public enum CourseLabSubmissionStatusEnum {
-  NOT_SUBMITTED,
+  NOT_STARTED,
   IN_PROGRESS,
-  ON_TIME
+  SUBMITTED
 }
