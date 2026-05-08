@@ -41,7 +41,7 @@ public class Challenge {
   @Column(name = "order_index", nullable = false)
   private int orderIndex;
 
-  @Column(name = "type", nullable = false, columnDefinition = "VARCHAR(50)")
+  @Column(name = "type", nullable = false, length = 50)
   @Enumerated(EnumType.STRING)
   @ColumnDefault("'FLAG'")
   private ChallengeType type = ChallengeType.FLAG;

@@ -96,7 +96,7 @@ public class Course {
    * Controls how many attempts students get for MULTIPLE_CHOICE challenges in this course. Defaults
    * to UNLIMITED (self-learning). Set to ONCE for graded / Praktikum courses.
    */
-  @Column(name = "mc_attempts_mode", nullable = false, columnDefinition = "VARCHAR(20)")
+  @Column(name = "mc_attempts_mode", nullable = false, length = 20)
   @Enumerated(EnumType.STRING)
   @ColumnDefault("'UNLIMITED'")
   private McAttemptsMode mcAttemptsMode = McAttemptsMode.UNLIMITED;
