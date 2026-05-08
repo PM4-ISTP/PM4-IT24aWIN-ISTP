@@ -27,9 +27,9 @@ const sectionLabelStyle: React.CSSProperties = {
 };
 
 /**
- * Fetches the first enrolled course detail, if available.
+ * Returns details for the first enrolled course when present in the already-fetched list.
  */
-async function fetchFirstEnrolledCourse(
+async function getFirstEnrolledCourseDetail(
   fetchCourseResult: ActionResult<PageListCourseResponseDto>
 ) {
   let firstCourse: ActionResult<PublicCourseDetailResponseDto> | undefined = undefined;
@@ -79,7 +79,7 @@ export default async function Home() {
   const firstName = name.split(" ")[0];
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
 
-  const firstCourse = await fetchFirstEnrolledCourse(result);
+  const firstCourse = await getFirstEnrolledCourseDetail(result);
   const enrolledCourseCount = result.success ? (result.data.content?.length ?? 0) : 0;
 
   const today = new Date();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Button, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -56,9 +56,12 @@ export default function ProfilePage() {
       },
     },
   });
-  const { setValues } = form;
+  const hasLoadedProfileRef = useRef(false);
 
   useEffect(() => {
+    if (hasLoadedProfileRef.current) return;
+    hasLoadedProfileRef.current = true;
+
     const load = async () => {
       try {
         setStatusMessage(null);
@@ -68,7 +71,7 @@ export default function ProfilePage() {
         }
         const data = (await res.json()) as UserProfile;
         setProfile(data);
-        setValues({
+        form.setValues({
           firstName: data.firstName ?? "",
           lastName: data.lastName ?? "",
           title: data.title ?? "",
@@ -89,7 +92,7 @@ export default function ProfilePage() {
       }
     };
     void load();
-  }, [setValues]);
+  }, [form]);
 
   const handleSubmit = async (values: UpdateProfilePayload) => {
     try {
