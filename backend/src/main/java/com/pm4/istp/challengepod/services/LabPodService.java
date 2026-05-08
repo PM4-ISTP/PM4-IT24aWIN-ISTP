@@ -664,7 +664,29 @@ public class LabPodService {
     if (prefix == null) {
       return "";
     }
-    return prefix.trim().toLowerCase().replaceAll("[^a-z0-9-]", "-").replaceAll("(^-+)|(-+$)", "");
+    String normalized = prefix.trim().toLowerCase();
+    StringBuilder hostPrefix = new StringBuilder(normalized.length());
+    for (int i = 0; i < normalized.length(); i++) {
+      char c = normalized.charAt(i);
+      if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-') {
+        hostPrefix.append(c);
+      } else {
+        hostPrefix.append('-');
+      }
+    }
+    return trimHyphens(hostPrefix);
+  }
+
+  private String trimHyphens(StringBuilder value) {
+    int start = 0;
+    int end = value.length();
+    while (start < end && value.charAt(start) == '-') {
+      start++;
+    }
+    while (end > start && value.charAt(end - 1) == '-') {
+      end--;
+    }
+    return value.substring(start, end);
   }
 
   private Optional<String> findIngressHost(String instanceName, int servicePort) {
