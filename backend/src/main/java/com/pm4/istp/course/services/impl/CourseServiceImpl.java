@@ -6,6 +6,7 @@ import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
 import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Challenge;
+import com.pm4.istp.course.db.entities.ChallengeType;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseChallengeScoreOverride;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
@@ -553,7 +554,7 @@ public class CourseServiceImpl implements CourseService {
     UUID challengeId = challenge.getId();
     boolean completed = solvedIds.contains(challengeId);
     Integer override = overridePointsByChallenge.get(challengeId);
-    int awarded = awardedPoints(challenge, completed, override);
+    int awarded = awardedPoints(challenge, completed, override, evidence);
     SubmissionDisplay display = submissionDisplay(challengeId, completed, evidence);
 
     CourseLabChallengeSubmissionDetailDto dto =
@@ -571,9 +572,14 @@ public class CourseServiceImpl implements CourseService {
     return new ChallengeDetail(awarded, dto);
   }
 
-  private int awardedPoints(Challenge challenge, boolean completed, Integer override) {
+  private int awardedPoints(
+      Challenge challenge, boolean completed, Integer override, SubmissionEvidence evidence) {
     if (override != null) {
       return override;
+    }
+    if (challenge.getType() == ChallengeType.MULTIPLE_CHOICE) {
+      StudentOptionSubmission option = evidence.optionByChallenge().get(challenge.getId());
+      return option != null && option.isCorrect() ? challenge.getPoints() : 0;
     }
     return completed ? challenge.getPoints() : 0;
   }
@@ -760,23 +766,34 @@ public class CourseServiceImpl implements CourseService {
       UUID courseId, List<UUID> userIds, List<UUID> labIds) {
     Map<UUID, List<Challenge>> challengesByLab = new HashMap<>();
     Map<UUID, Set<UUID>> solvedChallengeIdsByUser = new HashMap<>();
+    Map<UUID, Set<UUID>> correctChoiceChallengeIdsByUser = new HashMap<>();
     Map<UUID, Map<UUID, Integer>> overridesByUserByChallenge = new HashMap<>();
     if (userIds.isEmpty() || labIds.isEmpty()) {
       return new SubmissionScoringData(
-          challengesByLab, solvedChallengeIdsByUser, overridesByUserByChallenge);
+          challengesByLab,
+          solvedChallengeIdsByUser,
+          correctChoiceChallengeIdsByUser,
+          overridesByUserByChallenge);
     }
 
     List<Challenge> allChallenges =
         challengeRepository.findByLabIdsOrderByLabIdAndOrderIndexAsc(labIds);
     List<UUID> challengeIds = new ArrayList<>();
+    List<UUID> choiceChallengeIds = new ArrayList<>();
     for (Challenge challenge : allChallenges) {
       UUID labId = challenge.getLab().getId();
       challengesByLab.computeIfAbsent(labId, key -> new ArrayList<>()).add(challenge);
       challengeIds.add(challenge.getId());
+      if (challenge.getType() == ChallengeType.MULTIPLE_CHOICE) {
+        choiceChallengeIds.add(challenge.getId());
+      }
     }
     if (challengeIds.isEmpty()) {
       return new SubmissionScoringData(
-          challengesByLab, solvedChallengeIdsByUser, overridesByUserByChallenge);
+          challengesByLab,
+          solvedChallengeIdsByUser,
+          correctChoiceChallengeIdsByUser,
+          overridesByUserByChallenge);
     }
 
     for (Object[] row :
@@ -785,6 +802,28 @@ public class CourseServiceImpl implements CourseService {
       UUID challengeId = (UUID) row[1];
       if (userId != null && challengeId != null) {
         solvedChallengeIdsByUser.computeIfAbsent(userId, key -> new HashSet<>()).add(challengeId);
+      }
+    }
+
+    if (!choiceChallengeIds.isEmpty()) {
+      List<StudentOptionSubmission> correctSubmissions =
+          studentOptionSubmissionRepository.findByUserIdInAndChallengeIdInAndCorrectTrue(
+              userIds, choiceChallengeIds);
+      if (correctSubmissions == null) {
+        correctSubmissions = List.of();
+      }
+      for (StudentOptionSubmission submission : correctSubmissions) {
+        if (submission.getUser() == null || submission.getUser().getId() == null) {
+          continue;
+        }
+        if (submission.getChallenge() == null || submission.getChallenge().getId() == null) {
+          continue;
+        }
+        UUID userId = submission.getUser().getId();
+        UUID challengeId = submission.getChallenge().getId();
+        correctChoiceChallengeIdsByUser
+            .computeIfAbsent(userId, key -> new HashSet<>())
+            .add(challengeId);
       }
     }
 
@@ -802,7 +841,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     return new SubmissionScoringData(
-        challengesByLab, solvedChallengeIdsByUser, overridesByUserByChallenge);
+        challengesByLab, solvedChallengeIdsByUser, correctChoiceChallengeIdsByUser, overridesByUserByChallenge);
   }
 
   private List<CourseChallengeSubmissionEntryDto> buildSubmissionEntries(
@@ -843,6 +882,8 @@ public class CourseServiceImpl implements CourseService {
     List<Challenge> challenges = scoringData.challengesByLab().getOrDefault(labId, List.of());
     Set<UUID> solvedIds =
         scoringData.solvedChallengeIdsByUser().getOrDefault(participantId, Set.of());
+    Set<UUID> correctChoiceIds =
+        scoringData.correctChoiceChallengeIdsByUser().getOrDefault(participantId, Set.of());
     Map<UUID, Integer> overrides =
         scoringData.overridesByUserByChallenge().getOrDefault(participantId, Map.of());
 
@@ -852,6 +893,10 @@ public class CourseServiceImpl implements CourseService {
       Integer override = overrides.get(cid);
       if (override != null) {
         awardedPoints += override;
+      } else if (c.getType() == ChallengeType.MULTIPLE_CHOICE) {
+        if (correctChoiceIds.contains(cid)) {
+          awardedPoints += cMax;
+        }
       } else if (solvedIds.contains(cid)) {
         awardedPoints += cMax;
       }
@@ -899,6 +944,7 @@ public class CourseServiceImpl implements CourseService {
   private record SubmissionScoringData(
       Map<UUID, List<Challenge>> challengesByLab,
       Map<UUID, Set<UUID>> solvedChallengeIdsByUser,
+      Map<UUID, Set<UUID>> correctChoiceChallengeIdsByUser,
       Map<UUID, Map<UUID, Integer>> overridesByUserByChallenge) {}
 
   @Override

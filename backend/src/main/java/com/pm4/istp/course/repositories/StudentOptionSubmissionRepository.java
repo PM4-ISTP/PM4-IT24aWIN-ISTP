@@ -1,6 +1,8 @@
 package com.pm4.istp.course.repositories;
 
 import com.pm4.istp.course.db.entities.StudentOptionSubmission;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +15,7 @@ public interface StudentOptionSubmissionRepository
   boolean existsByUserIdAndChallengeId(UUID userId, UUID challengeId);
 
   Optional<StudentOptionSubmission> findByUserIdAndChallengeId(UUID userId, UUID challengeId);
+
+  List<StudentOptionSubmission> findByUserIdInAndChallengeIdInAndCorrectTrue(
+      Collection<UUID> userIds, Collection<UUID> challengeIds);
 }
