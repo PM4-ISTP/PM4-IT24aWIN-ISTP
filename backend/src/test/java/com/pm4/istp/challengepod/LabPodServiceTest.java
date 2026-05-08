@@ -72,6 +72,7 @@ class LabPodServiceTest {
     private Lab buildChallenge() {
         Lab lab = new Lab();
         lab.setDockerImage("ghcr.io/pm4-istp/test:latest");
+        lab.setContainerPort(8080);
         return lab;
     }
 
@@ -181,7 +182,7 @@ class LabPodServiceTest {
                             assertThat(container.getImage()).isEqualTo("ghcr.io/pm4-istp/test:latest");
                             assertThat(container.getPorts())
                                     .singleElement()
-                                    .satisfies(port -> assertThat(port.getContainerPort()).isEqualTo(80));
+                                    .satisfies(port -> assertThat(port.getContainerPort()).isEqualTo(8080));
                             assertThat(container.getResources().getLimits()).containsKeys("cpu", "memory");
                             assertThat(container.getSecurityContext()).isNull();
                         });
@@ -200,6 +201,7 @@ class LabPodServiceTest {
                         port -> {
                             assertThat(port.getName()).isEqualTo("app-port");
                             assertThat(port.getPort()).isEqualTo(80);
+                            assertThat(port.getTargetPort().getIntVal()).isEqualTo(8080);
                         });
 
         ArgumentCaptor<Ingress> ingressCaptor = ArgumentCaptor.forClass(Ingress.class);

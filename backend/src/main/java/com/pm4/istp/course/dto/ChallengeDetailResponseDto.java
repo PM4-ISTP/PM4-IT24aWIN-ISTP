@@ -21,6 +21,7 @@ public class ChallengeDetailResponseDto {
   private LabDifficultyEnum difficulty;
   private int maxScore;
   private String dockerImage;
+  private Integer containerPort;
   private ChallengeCreatorResponseDto creator;
   private long courseCount;
   private List<ChallengeResponseDto> challenges;

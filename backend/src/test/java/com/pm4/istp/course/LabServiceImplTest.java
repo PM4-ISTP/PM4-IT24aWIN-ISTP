@@ -125,7 +125,8 @@ class ChallengeServiceImplTest {
       LabStatusEnum status,
       LabDifficultyEnum difficulty,
       String dockerImage) {
-    return new CreateLabRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneChallenge());
+    return new CreateLabRequest(
+        title, shortDesc, desc, status, difficulty, dockerImage, null, oneChallenge());
   }
 
   private UpdateLabRequest updateRequest(
@@ -135,7 +136,8 @@ class ChallengeServiceImplTest {
       LabStatusEnum status,
       LabDifficultyEnum difficulty,
       String dockerImage) {
-    return new UpdateLabRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneChallenge());
+    return new UpdateLabRequest(
+        title, shortDesc, desc, status, difficulty, dockerImage, null, oneChallenge());
   }
 
   @Test
@@ -155,6 +157,7 @@ class ChallengeServiceImplTest {
             LabStatusEnum.DRAFT,
             LabDifficultyEnum.HARD,
             "ghcr.io/pm4-istp/buffer-overflow:latest",
+            8080,
             new ArrayList<>(
                 List.of(
                     new ChallengeRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0, ChallengeType.FLAG, 1, null, null),
@@ -168,6 +171,7 @@ class ChallengeServiceImplTest {
     assertThat(created.getStatus()).isEqualTo(LabStatusEnum.DRAFT);
     assertThat(created.getDifficulty()).isEqualTo(LabDifficultyEnum.HARD);
     assertThat(created.getDockerImage()).isEqualTo("ghcr.io/pm4-istp/buffer-overflow:latest");
+    assertThat(created.getContainerPort()).isEqualTo(8080);
     assertThat(created.getCreator()).isSameAs(creator);
     assertThat(created.getChallenges()).hasSize(2);
     assertThat(created.getChallenges().get(0).getTitle()).isEqualTo("Recon");
@@ -198,6 +202,7 @@ class ChallengeServiceImplTest {
             LabStatusEnum.DRAFT,
             LabDifficultyEnum.EASY,
             DEFAULT_DOCKER_IMAGE,
+            null,
             new ArrayList<>(List.of(new ChallengeRequest(null, "Only", "Just desc", "   ", 0, ChallengeType.FLAG, 1, null, null))));
 
     Lab created = labService.createChallenge(creatorId, request);
@@ -397,6 +402,7 @@ class ChallengeServiceImplTest {
             LabStatusEnum.PUBLIC,
             LabDifficultyEnum.EASY,
             DEFAULT_DOCKER_IMAGE,
+            null,
             new ArrayList<>(
                 List.of(
                     new ChallengeRequest(null, "New first", "desc", null, 0, ChallengeType.FLAG, 1, null, null),

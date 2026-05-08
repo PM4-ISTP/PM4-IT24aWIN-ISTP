@@ -19,6 +19,7 @@ public class ListLabResponseDto {
   private LabDifficultyEnum difficulty;
   private int maxScore;
   private String dockerImage;
+  private Integer containerPort;
   private String creatorName;
   private long courseCount;
   private LocalDateTime updatedAt;

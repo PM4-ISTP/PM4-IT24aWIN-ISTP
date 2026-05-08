@@ -62,6 +62,7 @@ export default function EditChallenge() {
     status: "DRAFT",
     difficulty: "MEDIUM",
     dockerImage: "",
+    containerPort: 80,
     challenges: [],
   });
   const [savedDockerImage, setSavedDockerImage] = useState<string | null>(null);
@@ -99,6 +100,7 @@ export default function EditChallenge() {
         status: loadedStatus,
         difficulty: lab.difficulty ?? "MEDIUM",
         dockerImage: loadedDockerImage,
+        containerPort: lab.containerPort ?? 80,
         challenges: toFormChallenges(lab.challenges),
       });
       setSavedDockerImage(loadedDockerImage);
@@ -130,6 +132,7 @@ export default function EditChallenge() {
       status: formValues.status,
       difficulty: formValues.difficulty,
       dockerImage: trimmedDockerImage,
+      containerPort: formValues.containerPort,
       challenges: toRequestChallenges(formValues.challenges),
     });
 
