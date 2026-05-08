@@ -13,6 +13,24 @@ type KeycloakProfileClaims = {
 
 type KeycloakBasicProfile = Pick<KeycloakProfileClaims, "name" | "email" | "picture">;
 
+const USERINFO_TIMEOUT_MS = 3_000;
+const TOKEN_REFRESH_TIMEOUT_MS = 5_000;
+const REFRESH_FAILURE_BACKOFF_MS = 30_000;
+const USERINFO_CACHE_TTL_MS = 120_000;
+
+const userInfoCache = new Map<string, { expiresAt: number; profile: KeycloakBasicProfile }>();
+const userInfoInProgress = new Map<string, Promise<KeycloakBasicProfile>>();
+
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const timeout: ReturnType<typeof setTimeout> = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function extractBasicProfile(
   claims: Pick<KeycloakJwt, "name" | "preferred_username" | "email" | "picture">
 ): KeycloakBasicProfile {
@@ -52,27 +70,51 @@ async function fetchUserInfo(accessToken: string): Promise<KeycloakBasicProfile>
     return {};
   }
 
+  const now = Date.now();
+  const cached = userInfoCache.get(accessToken);
+  if (cached && cached.expiresAt > now) {
+    return cached.profile;
+  }
+
+  const existing = userInfoInProgress.get(accessToken);
+  if (existing) {
+    return existing;
+  }
+
   try {
-    const response = await fetch(
-      `${process.env.AUTH_KEYCLOAK_ISSUER}/protocol/openid-connect/userinfo`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+    const promise = (async () => {
+      const response = await fetchWithTimeout(
+        `${process.env.AUTH_KEYCLOAK_ISSUER}/protocol/openid-connect/userinfo`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          cache: "no-store",
         },
-        cache: "no-store",
+        USERINFO_TIMEOUT_MS
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user info");
       }
-    );
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch user info");
-    }
+      const userInfo = (await response.json()) as Pick<
+        KeycloakJwt,
+        "name" | "preferred_username" | "email" | "picture"
+      >;
 
-    const userInfo = (await response.json()) as Pick<
-      KeycloakJwt,
-      "name" | "preferred_username" | "email" | "picture"
-    >;
+      const profile = extractBasicProfile(userInfo);
+      userInfoCache.set(accessToken, { expiresAt: Date.now() + USERINFO_CACHE_TTL_MS, profile });
+      if (userInfoCache.size > 2_000) {
+        userInfoCache.clear();
+      }
+      return profile;
+    })().finally(() => {
+      userInfoInProgress.delete(accessToken);
+    });
 
-    return extractBasicProfile(userInfo);
+    userInfoInProgress.set(accessToken, promise);
+    return await promise;
   } catch (error) {
     console.error("Error fetching user info:", error);
     return {};
@@ -104,7 +146,7 @@ const refreshInProgress = new Map<string, Promise<JWT>>();
  * the in-process deduplication guard.
  */
 async function doRefreshAccessToken(token: JWT): Promise<JWT> {
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${process.env.AUTH_KEYCLOAK_ISSUER}/protocol/openid-connect/token`,
     {
       method: "POST",
@@ -115,7 +157,8 @@ async function doRefreshAccessToken(token: JWT): Promise<JWT> {
         grant_type: "refresh_token",
         refresh_token: token.refreshToken!,
       }),
-    }
+    },
+    TOKEN_REFRESH_TIMEOUT_MS
   );
 
   if (!response.ok) {
@@ -150,7 +193,12 @@ async function doRefreshAccessToken(token: JWT): Promise<JWT> {
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   if (!token.refreshToken) {
     console.error("Missing refresh token");
-    return { ...token, error: "RefreshAccessTokenError" };
+    return { ...token, error: "RefreshAccessTokenError", refreshRetryAfter: Date.now() + REFRESH_FAILURE_BACKOFF_MS } as JWT;
+  }
+
+  const retryAfter = (token as JWT & { refreshRetryAfter?: number }).refreshRetryAfter;
+  if (typeof retryAfter === "number" && Date.now() < retryAfter) {
+    return token;
   }
 
   const key = token.refreshToken;
@@ -163,7 +211,11 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
   const refreshPromise = doRefreshAccessToken(token)
     .catch((error: unknown) => {
       console.error("Error refreshing access token:", error);
-      return { ...token, error: "RefreshAccessTokenError" } as JWT;
+      return {
+        ...token,
+        error: "RefreshAccessTokenError",
+        refreshRetryAfter: Date.now() + REFRESH_FAILURE_BACKOFF_MS,
+      } as JWT;
     })
     .finally(() => {
       refreshInProgress.delete(key);
