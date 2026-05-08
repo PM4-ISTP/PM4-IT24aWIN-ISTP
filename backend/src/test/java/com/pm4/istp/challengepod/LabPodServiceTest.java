@@ -17,6 +17,7 @@ import com.pm4.istp.challengepod.services.LabPodService;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
+import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.services.LabService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
@@ -63,6 +64,9 @@ class LabPodServiceTest {
     @Mock
     private DockerImageAvailabilityService dockerImageAvailabilityService;
 
+    @Mock
+    private CourseLabRepository courseLabRepository;
+
     private LabPodService service;
 
     private Lab buildChallenge() {
@@ -77,6 +81,7 @@ class LabPodServiceTest {
                 adminConfigurationService,
                 labService,
                 dockerImageAvailabilityService,
+                courseLabRepository,
                 "default",
                 "test.domain",
                 false,
@@ -314,6 +319,7 @@ class LabPodServiceTest {
                         adminConfigurationService,
                         labService,
                         dockerImageAvailabilityService,
+                        courseLabRepository,
                         "default",
                         "test.domain",
                         true,
@@ -342,6 +348,50 @@ class LabPodServiceTest {
 
         assertThat(response.status()).isEqualTo(PodStatusEnum.PROVISIONING);
         assertThat(response.appUrl()).isEqualTo("https://app-team-alpha-feedbeef.test.domain");
+    }
+
+    @Test
+    void listPods_returnsCurrentUserDeploymentsWithCourseAndLabMetadata() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        long createdAt = Instant.now().minusSeconds(30).getEpochSecond();
+        Map<String, String> labels = podLabels(userId, labId, createdAt);
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-cafebabe")
+                        .withLabels(labels)
+                        .endMetadata()
+                        .withNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build();
+        AdminConfig config = adminConfigWith("kubeconfig", 900);
+
+        stubFindDeployments(client, userId, List.of(deployment));
+        stubPodsForLabels(client, labels, List.of());
+        stubIngressGetThrows(client, "pod-cafebabe-ingress");
+        when(adminConfigurationService.getAdminConfiguration()).thenReturn(Optional.of(config));
+        when(courseLabRepository.findEnrolledCourseLabSummariesForUserAndLab(userId, labId))
+                .thenReturn(
+                        List.<Object[]>of(
+                                new Object[] {courseId, "Course title", labId, "Lab title"}));
+
+        var pods = service.listPods(userId);
+
+        assertThat(pods).singleElement()
+                .satisfies(
+                        pod -> {
+                            assertThat(pod.labId()).isEqualTo(labId);
+                            assertThat(pod.labTitle()).isEqualTo("Lab title");
+                            assertThat(pod.courseId()).isEqualTo(courseId);
+                            assertThat(pod.courseTitle()).isEqualTo("Course title");
+                            assertThat(pod.pod().status()).isEqualTo(PodStatusEnum.RUNNING);
+                            assertThat(pod.pod().appUrl()).isEqualTo("http://app-cafebabe.test.domain");
+                        });
     }
 
     @Test
@@ -517,6 +567,21 @@ class LabPodServiceTest {
         when(deploymentOperation.withLabel("istp.pm4.ch/user-id", userId.toString()))
                 .thenReturn(deploymentOperation);
         when(deploymentOperation.withLabel("istp.pm4.ch/lab-id", labId.toString()))
+                .thenReturn(deploymentOperation);
+        DeploymentList deploymentList = new DeploymentList();
+        deploymentList.setItems(deployments);
+        when(deploymentOperation.list()).thenReturn(deploymentList);
+        return deploymentOperation;
+    }
+
+    @SuppressWarnings("unchecked")
+    private NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> stubFindDeployments(
+            KubernetesClient client, UUID userId, List<Deployment> deployments) {
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        when(client.apps().deployments().inNamespace("default")).thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel("app", "istp-lab-pod")).thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel("istp.pm4.ch/user-id", userId.toString()))
                 .thenReturn(deploymentOperation);
         DeploymentList deploymentList = new DeploymentList();
         deploymentList.setItems(deployments);

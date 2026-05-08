@@ -4,9 +4,11 @@ import com.pm4.istp.admin.db.AdminConfig;
 import com.pm4.istp.admin.services.AdminConfigurationService;
 import com.pm4.istp.challengepod.dto.PodStatusEnum;
 import com.pm4.istp.challengepod.dto.PodStatusResponse;
+import com.pm4.istp.challengepod.dto.RunningPodResponse;
 import com.pm4.istp.challengepod.events.KubeconfigChangedEvent;
 import com.pm4.istp.challengepod.exceptions.LabPodException;
 import com.pm4.istp.course.db.entities.Lab;
+import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.course.services.LabService;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
@@ -28,6 +30,7 @@ import jakarta.annotation.PreDestroy;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
@@ -63,6 +66,7 @@ public class LabPodService {
   private final AdminConfigurationService adminConfigurationService;
   private final LabService labService;
   private final DockerImageAvailabilityService dockerImageAvailabilityService;
+  private final CourseLabRepository courseLabRepository;
   private final String defaultNamespace;
   private final String domain;
   private final boolean tls;
@@ -74,6 +78,7 @@ public class LabPodService {
       @NonNull AdminConfigurationService adminConfigurationService,
       @NonNull LabService labService,
       @NonNull DockerImageAvailabilityService dockerImageAvailabilityService,
+      @NonNull CourseLabRepository courseLabRepository,
       @Value("${k8s.default.namespace}") String defaultNamespace,
       @Value("${istp.domain}") String domain,
       @Value("${istp.tls}") boolean tls,
@@ -81,6 +86,7 @@ public class LabPodService {
     this.adminConfigurationService = adminConfigurationService;
     this.labService = labService;
     this.dockerImageAvailabilityService = dockerImageAvailabilityService;
+    this.courseLabRepository = courseLabRepository;
     this.defaultNamespace = defaultNamespace;
     this.domain = domain;
     this.tls = tls;
@@ -231,6 +237,24 @@ public class LabPodService {
     }
   }
 
+  public List<RunningPodResponse> listPods(UUID userId) {
+    try {
+      AdminConfig adminConfig = adminConfigurationService.getAdminConfiguration().orElse(null);
+      int ttl = adminConfig != null ? adminConfig.getPodTtlSeconds() : 3600;
+
+      return findDeployments(userId).stream()
+          .sorted(Comparator.comparing(this::createdAtOf).reversed())
+          .map(deployment -> buildRunningPodResponse(userId, deployment, ttl))
+          .flatMap(Optional::stream)
+          .toList();
+    } catch (LabPodException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error("Error listing pods for user {}", userId, e);
+      throw new LabPodException("Failed to list pods: " + e.getMessage(), e);
+    }
+  }
+
   /**
    * Delete the pod for (userId, labId).
    *
@@ -328,6 +352,57 @@ public class LabPodService {
         .withLabel(LABEL_CHALLENGE_ID, labId.toString())
         .list()
         .getItems();
+  }
+
+  private List<Deployment> findDeployments(UUID userId) {
+    return getClient()
+        .apps()
+        .deployments()
+        .inNamespace(defaultNamespace)
+        .withLabel("app", LABEL_APP)
+        .withLabel(LABEL_USER_ID, userId.toString())
+        .list()
+        .getItems();
+  }
+
+  private Optional<RunningPodResponse> buildRunningPodResponse(
+      UUID userId, Deployment deployment, int ttlSeconds) {
+    Map<String, String> labels = deployment.getMetadata().getLabels();
+    if (labels == null) {
+      return Optional.empty();
+    }
+
+    UUID labId;
+    try {
+      labId = UUID.fromString(labels.get(LABEL_CHALLENGE_ID));
+    } catch (Exception e) {
+      log.warn("Pod {} has no valid lab id label", deployment.getMetadata().getName());
+      return Optional.empty();
+    }
+
+    List<Object[]> summaries =
+        courseLabRepository.findEnrolledCourseLabSummariesForUserAndLab(userId, labId);
+    Object[] summary = summaries.isEmpty() ? null : summaries.get(0);
+
+    UUID courseId = summary != null ? (UUID) summary[0] : null;
+    String courseTitle = summary != null ? (String) summary[1] : null;
+    String labTitle = summary != null ? (String) summary[3] : null;
+
+    return Optional.of(
+        new RunningPodResponse(
+            labId, labTitle, courseId, courseTitle, buildResponse(deployment, ttlSeconds)));
+  }
+
+  private Instant createdAtOf(Deployment deployment) {
+    Map<String, String> labels = deployment.getMetadata().getLabels();
+    if (labels == null) {
+      return Instant.EPOCH;
+    }
+    try {
+      return Instant.ofEpochSecond(Long.parseLong(labels.get(LABEL_CREATED_AT)));
+    } catch (Exception e) {
+      return Instant.EPOCH;
+    }
   }
 
   private PodStatusResponse buildResponse(Deployment deployment, int ttlSeconds) {
