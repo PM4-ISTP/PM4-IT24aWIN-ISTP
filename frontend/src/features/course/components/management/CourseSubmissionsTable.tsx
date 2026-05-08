@@ -146,7 +146,6 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
                         s && s.totalChallengeCount > 0
                           ? `${s.solvedChallengeCount}/${s.totalChallengeCount}`
                           : "â€”";
-                      const completedAt = s?.completedAt ?? null;
                       return (
                         <Table.Td key={`${p.id}:${c.labId}`}>
                           <Stack gap={2}>
@@ -158,11 +157,6 @@ export function CourseSubmissionsTable({ courseId }: { courseId: string }) {
                                 {progress}
                               </Text>
                             </Group>
-                            {completedAt ? (
-                              <Text size="xs" c="dimmed">
-                                Submitted: {formatDue(completedAt)}
-                              </Text>
-                            ) : null}
                           </Stack>
                         </Table.Td>
                       );
