@@ -754,7 +754,7 @@ public class CourseServiceImpl implements CourseService {
     List<UUID> challengeIds = new ArrayList<>();
     for (com.pm4.istp.course.db.entities.Challenge challenge : allChallenges) {
       UUID labId = challenge.getLab().getId();
-      challengesByLab.computeIfAbsent(labId, ignored -> new ArrayList<>()).add(challenge);
+      challengesByLab.computeIfAbsent(labId, key -> new ArrayList<>()).add(challenge);
       challengeIds.add(challenge.getId());
     }
     if (challengeIds.isEmpty()) {
@@ -767,9 +767,7 @@ public class CourseServiceImpl implements CourseService {
       UUID userId = (UUID) row[0];
       UUID challengeId = (UUID) row[1];
       if (userId != null && challengeId != null) {
-        solvedChallengeIdsByUser
-            .computeIfAbsent(userId, ignored -> new HashSet<>())
-            .add(challengeId);
+        solvedChallengeIdsByUser.computeIfAbsent(userId, key -> new HashSet<>()).add(challengeId);
       }
     }
 
@@ -781,7 +779,7 @@ public class CourseServiceImpl implements CourseService {
       Integer points = (Integer) row[2];
       if (userId != null && challengeId != null && points != null) {
         overridesByUserByChallenge
-            .computeIfAbsent(userId, ignored -> new HashMap<>())
+            .computeIfAbsent(userId, key -> new HashMap<>())
             .put(challengeId, points);
       }
     }

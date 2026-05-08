@@ -15,10 +15,10 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
 
   @Query(
       """
-      select s
-      from Challenge s
-      where s.lab.id in :labIds
-      order by s.lab.id, s.orderIndex asc
+      select c
+      from Challenge c
+      where c.lab.id in :labIds
+      order by c.lab.id, c.orderIndex asc
       """)
   List<Challenge> findByLabIdsOrderByLabIdAndOrderIndexAsc(
       @Param("labIds") Collection<UUID> labIds);
