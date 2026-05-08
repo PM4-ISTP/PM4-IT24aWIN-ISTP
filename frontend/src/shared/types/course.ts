@@ -131,7 +131,7 @@ export interface CourseDetailResponseDto {
   updatedAt: string;
 }
 
-export type CourseLabSubmissionStatusEnum = "NOT_SUBMITTED" | "IN_PROGRESS" | "ON_TIME" | "LATE";
+export type CourseLabSubmissionStatusEnum = "NOT_STARTED" | "IN_PROGRESS" | "SUBMITTED";
 
 export interface CourseChallengeSubmissionEntryDto {
   participantId: string;
