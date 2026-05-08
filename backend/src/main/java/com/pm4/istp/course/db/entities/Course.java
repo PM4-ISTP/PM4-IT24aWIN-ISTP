@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -95,11 +96,9 @@ public class Course {
    * Controls how many attempts students get for MULTIPLE_CHOICE challenges in this course. Defaults
    * to UNLIMITED (self-learning). Set to ONCE for graded / Praktikum courses.
    */
-  @Column(
-      name = "mc_attempts_mode",
-      nullable = false,
-      columnDefinition = "VARCHAR(20) NOT NULL DEFAULT 'UNLIMITED'")
+  @Column(name = "mc_attempts_mode", nullable = false, columnDefinition = "VARCHAR(20)")
   @Enumerated(EnumType.STRING)
+  @ColumnDefault("'UNLIMITED'")
   private McAttemptsMode mcAttemptsMode = McAttemptsMode.UNLIMITED;
 
   @Column(name = "badge_enabled", nullable = false, columnDefinition = "boolean default true")
