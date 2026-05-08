@@ -133,6 +133,87 @@ class LabPodServiceTest {
     // ── Client cache: onKubeconfigChanged ────────────────────────────────────
 
     @Test
+    void startPod_whenDeploymentAlreadyExists_returnsExistingPodAndCreatedFalse() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        Map<String, String> labels = podLabels(userId, labId, Instant.now().getEpochSecond());
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-deadbeef")
+                        .withLabels(labels)
+                        .endMetadata()
+                        .withNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build();
+
+        when(labService.getChallenge(userId, labId)).thenReturn(buildChallenge());
+        when(adminConfigurationService.getAdminConfiguration())
+                .thenReturn(Optional.of(adminConfigWith("kubeconfig", 600)));
+        stubFindDeployments(client, userId, labId, List.of(deployment));
+        stubPodsForLabels(client, labels, List.of());
+        stubIngressGetThrows(client, "pod-deadbeef-ingress");
+
+        var result = service.startPod(userId, labId);
+
+        assertThat(result.getSecond()).isFalse();
+        assertThat(result.getFirst().status()).isEqualTo(PodStatusEnum.RUNNING);
+        assertThat(result.getFirst().podName()).isEqualTo("pod-deadbeef");
+        assertThat(result.getFirst().appUrl()).isEqualTo("http://app-deadbeef.test.domain");
+        verify(dockerImageAvailabilityService).assertImageExists("ghcr.io/pm4-istp/test:latest");
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void startPod_whenNoDeploymentExists_createsResourcesAndMarksCreatedTrue() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        NonNamespaceOperation serviceOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        NonNamespaceOperation ingressOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        RollableScalableResource deploymentResource = mock(RollableScalableResource.class);
+        ServiceResource serviceResource = mock(ServiceResource.class);
+        Resource ingressResource = mock(Resource.class);
+        DeploymentList emptyList = new DeploymentList();
+        emptyList.setItems(List.of());
+
+        when(client.apps().deployments().inNamespace("default")).thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel("app", "istp-lab-pod")).thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel(Mockito.eq("istp.pm4.ch/user-id"), Mockito.anyString()))
+                .thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel(Mockito.eq("istp.pm4.ch/lab-id"), Mockito.anyString()))
+                .thenReturn(deploymentOperation);
+        when(deploymentOperation.list()).thenReturn(emptyList);
+        when(deploymentOperation.resource(Mockito.any())).thenReturn(deploymentResource);
+        when(client.services().inNamespace("default")).thenReturn(serviceOperation);
+        when(serviceOperation.resource(Mockito.any())).thenReturn(serviceResource);
+        when(client.network().v1().ingresses().inNamespace("default")).thenReturn(ingressOperation);
+        when(ingressOperation.resource(Mockito.any())).thenReturn(ingressResource);
+
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        when(labService.getChallenge(userId, labId)).thenReturn(buildChallenge());
+        when(adminConfigurationService.getAdminConfiguration())
+                .thenReturn(Optional.of(adminConfigWith("kubeconfig", 900)));
+
+        var result = service.startPod(userId, labId);
+
+        assertThat(result.getSecond()).isTrue();
+        assertThat(result.getFirst().status()).isEqualTo(PodStatusEnum.PROVISIONING);
+        assertThat(result.getFirst().podName()).startsWith("pod-");
+        assertThat(result.getFirst().appUrl()).startsWith("http://app-");
+        verify(deploymentResource).create();
+        verify(serviceResource).create();
+        verify(ingressResource).create();
+    }
+
+    @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
     void createResources_createsOnlyAppContainerAppPortAndAppIngressRule() {
         KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
