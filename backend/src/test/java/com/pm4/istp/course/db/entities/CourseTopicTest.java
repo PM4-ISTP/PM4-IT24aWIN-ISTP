@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 class CourseTopicTest {
 
   @Test
-  void prePersistSetsTimestampsAndPreUpdateRefreshesUpdatedAt() throws Exception {
+  void prePersistSetsTimestampsAndPreUpdateRefreshesUpdatedAt() {
     CourseTopic topic = new CourseTopic();
     topic.setTopic("web");
     assertThat(topic.isActive()).isTrue();

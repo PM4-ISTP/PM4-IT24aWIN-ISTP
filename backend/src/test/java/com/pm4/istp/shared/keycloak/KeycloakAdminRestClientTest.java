@@ -115,7 +115,9 @@ class KeycloakAdminRestClientTest {
 
   @Test
   void createUserWithoutValidLocation_throws() {
-    assertThatThrownBy(() -> client.createUser(userWithUsername("invalid-location")))
+    KeycloakUserRepresentation user = userWithUsername("invalid-location");
+
+    assertThatThrownBy(() -> client.createUser(user))
         .isInstanceOf(KeycloakAdminApiException.class)
         .hasMessageContaining("Location header");
   }
