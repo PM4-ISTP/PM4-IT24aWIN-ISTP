@@ -78,9 +78,7 @@ function ChallengeListView({ challenges }: { challenges: ChallengeDetail[] }) {
         {sorted.map((st, i) => {
           const key = st.id ?? `local-${i}`;
           const isExpanded = expandedKey === key;
-          const description = st.description
-            ? getSanitizedHtml(st.description)
-            : null;
+          const description = st.description ? getSanitizedHtml(st.description) : null;
           const flag = st.flag?.trim();
           const hasFlag = Boolean(flag);
           const title = st.title?.trim() || `Lab ${i + 1}`;
@@ -170,9 +168,7 @@ function ChallengeListView({ challenges }: { challenges: ChallengeDetail[] }) {
 }
 
 function ChallengeDetailView({ detail }: { detail: ChallengeDetailResponseDto }) {
-  const sanitizedDescription = detail.description
-    ? getSanitizedHtml(detail.description)
-    : null;
+  const sanitizedDescription = detail.description ? getSanitizedHtml(detail.description) : null;
   const challenges = detail.challenges ?? [];
 
   return (
