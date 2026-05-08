@@ -16,8 +16,8 @@ class CourseTopicTest {
 
     assertThat(topic.getCreatedAt()).isNotNull();
     assertThat(topic.getUpdatedAt()).isNotNull();
+    topic.setUpdatedAt(topic.getUpdatedAt().minusNanos(1));
     var firstUpdatedAt = topic.getUpdatedAt();
-    Thread.sleep(2);
 
     topic.preUpdate();
 

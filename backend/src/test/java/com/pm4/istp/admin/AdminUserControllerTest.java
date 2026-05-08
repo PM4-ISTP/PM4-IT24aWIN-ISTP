@@ -25,7 +25,6 @@ import com.pm4.istp.admin.services.AdminUserService;
 import com.pm4.istp.shared.keycloak.KeycloakUserRepresentation;
 import com.pm4.istp.shared.keycloak.KeycloakUserSessionRepresentation;
 import com.pm4.istp.shared.util.GlobalExceptionHandler;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;

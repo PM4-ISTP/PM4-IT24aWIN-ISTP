@@ -1,6 +1,5 @@
 package com.pm4.istp.user;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -50,7 +49,7 @@ class UserPasswordControllerTest {
         .perform(post("/api/v1/users/me/password-reset-email"))
         .andExpect(status().isNoContent());
 
-    verify(keycloakAdminClient).executeActionsEmail(eq(USER_ID), eq(List.of("UPDATE_PASSWORD")));
+    verify(keycloakAdminClient).executeActionsEmail(USER_ID, List.of("UPDATE_PASSWORD"));
   }
 
   private static HandlerMethodArgumentResolver jwtResolver() {

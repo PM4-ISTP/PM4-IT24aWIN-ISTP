@@ -26,12 +26,15 @@ class KeycloakAdminRestClientTest {
   @BeforeEach
   void setUp() throws IOException {
     server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
-    server.createContext("/", this::handle);
+    TestKeycloakHandler handler = new TestKeycloakHandler(requests);
+    server.createContext("/", handler::handle);
     server.start();
 
     KeycloakAdminProperties properties = new KeycloakAdminProperties();
     properties.setBaseUrl("http://localhost:" + server.getAddress().getPort() + "/");
     properties.setRealm("istp");
+    properties.setUserByIdPath("/users/{id}");
+    properties.setUserRealmRoleMappingsPath("/users/{id}/role-mappings/realm");
 
     KeycloakServiceAccountTokenProvider tokenProvider =
         Mockito.mock(KeycloakServiceAccountTokenProvider.class);
@@ -115,10 +118,6 @@ class KeycloakAdminRestClientTest {
     assertThatThrownBy(() -> client.createUser(userWithUsername("invalid-location")))
         .isInstanceOf(KeycloakAdminApiException.class)
         .hasMessageContaining("Location header");
-  }
-
-  private void handle(HttpExchange exchange) throws IOException {
-    new TestKeycloakHandler(requests).handle(exchange);
   }
 
   private static KeycloakUserRepresentation userWithUsername(String username) {

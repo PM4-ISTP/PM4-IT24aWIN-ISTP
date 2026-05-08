@@ -390,7 +390,7 @@ public class LabServiceImpl implements LabService {
     // Attach due date/time from the course assignment (if any) for student visibility.
     courseLabRepository
         .findByCourseIdAndLabId(courseId, labId)
-        .ifPresent((courseLab) -> dto.setDueAt(courseLab.getDueAt()));
+        .ifPresent(courseLab -> dto.setDueAt(courseLab.getDueAt()));
 
     return dto;
   }
@@ -644,16 +644,6 @@ public class LabServiceImpl implements LabService {
     if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)) {
       throw new LabAccessDeniedException(
           String.format("User '%s' is not enrolled in course '%s'", userId, courseId));
-    }
-  }
-
-  private void verifyEnrolledInChallengeCourse(UUID userId, Lab lab) {
-    boolean enrolled =
-        courseLabRepository.existsByChallengeIdAndEnrolledUserId(lab.getId(), userId);
-    if (!enrolled) {
-      throw new LabAccessDeniedException(
-          String.format(
-              "User '%s' is not enrolled in any course containing lab '%s'", userId, lab.getId()));
     }
   }
 

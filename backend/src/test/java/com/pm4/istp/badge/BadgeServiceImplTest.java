@@ -208,6 +208,8 @@ class BadgeServiceImplTest {
         .thenThrow(new DataIntegrityViolationException("duplicate"));
 
     badgeService.tryAwardBadgesForChallenge(userId, labId);
+
+    verify(userCourseBadgeRepository).saveAndFlush(any());
   }
 
   private static Course course(UUID id, String title) {
