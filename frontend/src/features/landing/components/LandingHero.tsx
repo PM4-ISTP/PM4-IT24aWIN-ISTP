@@ -5,14 +5,7 @@ import HeroTerminal from "./HeroTerminal";
 import GradientText from "./parts/GradientText";
 import LandingButton from "./parts/LandingButton";
 import useSignInToDashboard from "../hooks/useSignInToDashboard";
-import {
-  FONT_MONO,
-  INK,
-  INK_DIM,
-  LINE_2,
-  MINT,
-  MUTED,
-} from "../theme";
+import { FONT_MONO, INK, INK_DIM, LINE_2, MINT, MUTED } from "../theme";
 
 const schools = ["ZHAW", "ZHAW", "ZHAW", "ZHAW", "ZHAW", "ZHAW", "ZHAW"];
 
@@ -83,9 +76,9 @@ export default function LandingHero() {
               color: INK_DIM,
             }}
           >
-            A self-hosted, open-source security training platform for universities.
-            Each student gets their own isolated Kubernetes pod — exploit real
-            vulnerabilities instead of just reading about them.
+            A self-hosted, open-source security training platform for universities. Each student
+            gets their own isolated Kubernetes pod — exploit real vulnerabilities instead of just
+            reading about them.
           </Text>
 
           <Group gap={12} justify="center" mt={36} wrap="wrap">
@@ -152,9 +145,7 @@ export default function LandingHero() {
                 >
                   {s}
                 </Text>
-                {i < schools.length - 1 && (
-                  <Text style={{ color: MUTED, opacity: 0.4 }}>·</Text>
-                )}
+                {i < schools.length - 1 && <Text style={{ color: MUTED, opacity: 0.4 }}>·</Text>}
               </Group>
             ))}
           </Group>

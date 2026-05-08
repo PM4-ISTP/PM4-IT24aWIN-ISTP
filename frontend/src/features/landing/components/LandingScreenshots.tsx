@@ -2,16 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import {
-  ActionIcon,
-  Box,
-  Container,
-  Group,
-  ScrollArea,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { ActionIcon, Box, Container, Group, ScrollArea, Stack, Text, Title } from "@mantine/core";
 import Kicker from "./parts/Kicker";
 import { FONT_MONO, INK, LINE, LINE_2, MUTED } from "../theme";
 
@@ -97,8 +88,7 @@ export default function LandingScreenshots() {
                 color: MUTED,
               }}
             >
-              {String(activeIndex + 1).padStart(2, "0")} /{" "}
-              {String(shots.length).padStart(2, "0")}
+              {String(activeIndex + 1).padStart(2, "0")} / {String(shots.length).padStart(2, "0")}
             </Text>
             <ActionIcon
               variant="default"
@@ -242,7 +232,6 @@ export default function LandingScreenshots() {
             ))}
           </Group>
         </ScrollArea>
-
       </Container>
     </Box>
   );

@@ -42,8 +42,8 @@ export default function LandingFooter() {
                 maxWidth: 280,
               }}
             >
-              Self-hosted, Kubernetes-based CTF training for universities. Built at ZHAW for
-              IT.PM4, FS2026.
+              Self-hosted, Kubernetes-based CTF training for universities. Built at ZHAW for IT.PM4,
+              FS2026.
             </Text>
           </Stack>
 

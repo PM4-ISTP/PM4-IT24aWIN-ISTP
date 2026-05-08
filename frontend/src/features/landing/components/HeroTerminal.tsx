@@ -36,15 +36,7 @@ const stats = [
   { label: "Time Online", value: "24.5h" },
 ];
 
-function SidebarItem({
-  icon,
-  label,
-  active,
-}: {
-  icon: string;
-  label: string;
-  active?: boolean;
-}) {
+function SidebarItem({ icon, label, active }: { icon: string; label: string; active?: boolean }) {
   return (
     <Group
       gap={10}
@@ -59,9 +51,7 @@ function SidebarItem({
         fontSize: 13,
       }}
     >
-      <Text style={{ color: active ? ACCENT : MUTED, fontSize: 14, lineHeight: 1 }}>
-        {icon}
-      </Text>
+      <Text style={{ color: active ? ACCENT : MUTED, fontSize: 14, lineHeight: 1 }}>{icon}</Text>
       <Text style={{ color: "inherit", fontSize: 13 }}>{label}</Text>
     </Group>
   );
@@ -69,19 +59,13 @@ function SidebarItem({
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <Paper
-      p={14}
-      radius={10}
-      style={{ border: `1px solid ${LINE}`, background: "transparent" }}
-    >
+    <Paper p={14} radius={10} style={{ border: `1px solid ${LINE}`, background: "transparent" }}>
       <Box mb={6}>
         <Kicker size={9.5} letterSpacing="0.16em">
           {label}
         </Kicker>
       </Box>
-      <Text style={{ fontSize: 22, fontWeight: 600, color: INK, lineHeight: 1 }}>
-        {value}
-      </Text>
+      <Text style={{ fontSize: 22, fontWeight: 600, color: INK, lineHeight: 1 }}>{value}</Text>
     </Paper>
   );
 }
@@ -113,8 +97,7 @@ export default function HeroTerminal() {
           position: "relative",
           border: `1px solid ${LINE_2}`,
           background: "linear-gradient(180deg,#0c1120 0%, #080c18 100%)",
-          boxShadow:
-            "0 30px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset",
+          boxShadow: "0 30px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset",
           overflow: "hidden",
           zIndex: 1,
         }}
@@ -213,11 +196,7 @@ export default function HeroTerminal() {
             >
               <Group justify="space-between" wrap="nowrap" mb={10}>
                 <Group gap={10} wrap="nowrap">
-                  <Box
-                    w={6}
-                    h={6}
-                    style={{ borderRadius: 99, background: MINT, marginTop: 4 }}
-                  />
+                  <Box w={6} h={6} style={{ borderRadius: 99, background: MINT, marginTop: 4 }} />
                   <Text
                     style={{
                       fontSize: 15,
@@ -274,10 +253,7 @@ export default function HeroTerminal() {
                 }}
               />
 
-              <Text
-                mb={12}
-                style={{ fontSize: 12.5, color: INK_DIM, lineHeight: 1.55 }}
-              >
+              <Text mb={12} style={{ fontSize: 12.5, color: INK_DIM, lineHeight: 1.55 }}>
                 Campus Helpdesk is an internal support web application for a school. Reconnaissance,
                 authentication, IDOR access control, SSRF, insecure API endpoints — find a way in.
               </Text>

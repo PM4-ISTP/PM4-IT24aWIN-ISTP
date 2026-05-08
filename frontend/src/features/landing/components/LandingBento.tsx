@@ -123,10 +123,7 @@ function CellHead({
   return (
     <Box>
       <Box mb={8}>
-        <Kicker
-          size={10}
-          style={accent ? { color: "rgba(255,255,255,0.85)" } : undefined}
-        >
+        <Kicker size={10} style={accent ? { color: "rgba(255,255,255,0.85)" } : undefined}>
           {tag}
         </Kicker>
       </Box>
@@ -157,13 +154,7 @@ function CellHead({
   );
 }
 
-function CodePeek({
-  children,
-  inverted,
-}: {
-  children: React.ReactNode;
-  inverted?: boolean;
-}) {
+function CodePeek({ children, inverted }: { children: React.ReactNode; inverted?: boolean }) {
   return (
     <Box
       px={11}
@@ -314,7 +305,9 @@ export default function LandingBento() {
                   py={9}
                   style={{ border: `1px solid ${LINE}`, borderRadius: 8 }}
                 >
-                  <Text style={{ fontFamily: FONT_MONO, fontSize: 16, color: INK, fontWeight: 600 }}>
+                  <Text
+                    style={{ fontFamily: FONT_MONO, fontSize: 16, color: INK, fontWeight: 600 }}
+                  >
                     {s.n}
                   </Text>
                   <Text
@@ -390,7 +383,10 @@ export default function LandingBento() {
               <Text component="span" style={{ color: ACCENT }}>
                 challenges:
               </Text>{" "}
-              5 <Text component="span" style={{ color: MUTED }}>·</Text>{" "}
+              5{" "}
+              <Text component="span" style={{ color: MUTED }}>
+                ·
+              </Text>{" "}
               <Text component="span" style={{ color: ACCENT }}>
                 port:
               </Text>{" "}

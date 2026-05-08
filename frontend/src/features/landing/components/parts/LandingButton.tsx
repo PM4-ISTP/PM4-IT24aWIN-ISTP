@@ -14,8 +14,7 @@ const PRIMARY_STYLE: CSSProperties = {
   border: "none",
   color: "#fff",
   fontWeight: 500,
-  boxShadow:
-    "0 8px 24px -8px rgba(93,110,240,0.7), 0 0 0 1px rgba(255,255,255,0.1) inset",
+  boxShadow: "0 8px 24px -8px rgba(93,110,240,0.7), 0 0 0 1px rgba(255,255,255,0.1) inset",
 };
 
 const GHOST_STYLE: CSSProperties = {

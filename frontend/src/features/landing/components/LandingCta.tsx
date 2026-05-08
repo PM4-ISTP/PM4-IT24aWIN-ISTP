@@ -54,8 +54,8 @@ export default function LandingCta() {
                 lineHeight: 1.5,
               }}
             >
-              Free for universities. On-premises in your own Kubernetes cluster — no SaaS
-              lock-in, no per-seat pricing, no student data leaving campus.
+              Free for universities. On-premises in your own Kubernetes cluster — no SaaS lock-in,
+              no per-seat pricing, no student data leaving campus.
             </Text>
             <Group gap={12} justify="center" wrap="wrap">
               <LandingButton
