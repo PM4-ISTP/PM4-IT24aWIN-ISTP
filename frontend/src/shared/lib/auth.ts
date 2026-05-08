@@ -179,6 +179,8 @@ async function doRefreshAccessToken(token: JWT): Promise<JWT> {
       accessToken: refreshedTokens.access_token,
       accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
       refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+      error: undefined,
+      refreshRetryAfter: undefined,
     },
     refreshedClaims
   );
@@ -197,10 +199,10 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
       ...token,
       error: "RefreshAccessTokenError",
       refreshRetryAfter: Date.now() + REFRESH_FAILURE_BACKOFF_MS,
-    } as JWT;
+    };
   }
 
-  const retryAfter = (token as JWT & { refreshRetryAfter?: number }).refreshRetryAfter;
+  const retryAfter = token.refreshRetryAfter;
   if (typeof retryAfter === "number" && Date.now() < retryAfter) {
     return token;
   }
@@ -219,7 +221,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
         ...token,
         error: "RefreshAccessTokenError",
         refreshRetryAfter: Date.now() + REFRESH_FAILURE_BACKOFF_MS,
-      } as JWT;
+      };
     })
     .finally(() => {
       refreshInProgress.delete(key);
