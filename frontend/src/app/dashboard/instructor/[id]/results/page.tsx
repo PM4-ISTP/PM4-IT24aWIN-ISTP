@@ -447,14 +447,12 @@ export default function CourseResultsPage() {
         />
         <StatCard
           label="On-Time"
-              value={`${statsSubmitted} / ${totalParticipants}`}
+          value={`${statsSubmitted} / ${totalParticipants}`}
           sub="overall on time"
           icon={<IconCheck size={12} color="#64748b" />}
-              progress={
-                totalParticipants > 0
-                  ? Math.round((statsSubmitted / totalParticipants) * 100)
-                  : 0
-              }
+          progress={
+            totalParticipants > 0 ? Math.round((statsSubmitted / totalParticipants) * 100) : 0
+          }
         />
         <StatCard
           label="In Progress"
@@ -765,7 +763,7 @@ export default function CourseResultsPage() {
               <Stack gap="sm">
                 {labs.map((l, idx) => {
                   const sub = activeParticipant.byLabId.get(l.labId);
-    const status = sub?.status ?? "NOT_STARTED";
+                  const status = sub?.status ?? "NOT_STARTED";
 
                   // Deadline logic
                   const now = new Date();
@@ -784,7 +782,7 @@ export default function CourseResultsPage() {
                       deadlineLabel = `Due: ${formatDateTime(l.dueAt)} — still open`;
                       deadlineBg = "rgba(20,184,166,0.07)";
                       deadlineBorder = "rgba(20,184,166,0.2)";
-    } else if (status === "SUBMITTED") {
+                    } else if (status === "SUBMITTED") {
                       deadlineColor = "#2dd4bf";
                       deadlineLabel = `Due: ${formatDateTime(l.dueAt)} — submitted on time`;
                       deadlineBg = "rgba(20,184,166,0.07)";
