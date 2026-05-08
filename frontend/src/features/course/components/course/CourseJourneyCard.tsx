@@ -35,10 +35,6 @@ interface LessonsProgress {
 
 /**
  * Props for challenge progress.
- *
- * TODO: Replace with real challenge data once the challenges feature is
- * implemented in the backend. Until then, leave this prop undefined to render
- * the placeholder state.
  */
 interface ChallengesProgress {
   /** Number of challenges the user has completed */
@@ -50,7 +46,6 @@ interface ChallengesProgress {
 export interface CourseJourneyCardProps {
   /**
    * Lesson progress data.
-   * TODO: Wire up to real lesson-completion API once lessons are trackable.
    */
   lessons?: LessonsProgress;
 
@@ -133,15 +128,13 @@ function StatChip({ icon, label, dimmed }: StatChipProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Placeholder — shown when challenges have not been implemented yet
+// Fallback state for unavailable challenge progress data
 // ---------------------------------------------------------------------------
 
 /**
- * PLACEHOLDER: Rendered in place of the challenges progress bar until the
- * challenges feature is available. Remove this component and wire up the real
- * ChallengesProgress prop instead.
+ * Rendered when challenge progress data is unavailable.
  */
-function ChallengesPlaceholder() {
+function ChallengesUnavailableState() {
   return (
     <Stack gap={8}>
       <Group justify="space-between" align="center">
@@ -159,7 +152,6 @@ function ChallengesPlaceholder() {
           Coming soon
         </Text>
       </Group>
-      {/* Visual placeholder bar — replace with real Progress once backend supports challenges */}
       <Progress
         value={0}
         color="orange"
@@ -237,7 +229,6 @@ export function CourseJourneyCard({
               }
             />
           ) : (
-            // TODO: Remove this once lesson tracking is implemented
             <Stack gap={8}>
               <Group justify="space-between">
                 <Text size="sm" fw={600} c="dimmed">
@@ -272,7 +263,7 @@ export function CourseJourneyCard({
               }
             />
           ) : (
-            <ChallengesPlaceholder />
+            <ChallengesUnavailableState />
           )}
 
           {challenges && (

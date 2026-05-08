@@ -345,8 +345,7 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
       });
       if (updated) onChange(hydrated);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [challenges.length]);
+  }, [challenges, onChange]);
 
   async function handleToggleExpand(challengeId: string) {
     if (expandedId === challengeId) {

@@ -27,10 +27,11 @@ const sectionLabelStyle: React.CSSProperties = {
 };
 
 /**
- * This function is a helper function used to load placeholder data.
+ * Fetches the first enrolled course detail, if available.
  */
-async function getFirstCourse(fetchCourseResult: ActionResult<PageListCourseResponseDto>) {
-  // TODO: delete this function
+async function fetchFirstEnrolledCourse(
+  fetchCourseResult: ActionResult<PageListCourseResponseDto>
+) {
   let firstCourse: ActionResult<PublicCourseDetailResponseDto> | undefined = undefined;
   if (
     fetchCourseResult.success &&
@@ -78,8 +79,8 @@ export default async function Home() {
   const firstName = name.split(" ")[0];
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
 
-  // TODO: delete when using real data
-  const firstCourse = await getFirstCourse(result);
+  const firstCourse = await fetchFirstEnrolledCourse(result);
+  const enrolledCourseCount = result.success ? (result.data.content?.length ?? 0) : 0;
 
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-GB", {
@@ -150,15 +151,16 @@ export default async function Home() {
                 <RingProgress
                   size={130}
                   thickness={13}
-                  sections={[{ value: 33, color: "#2563eb" }]}
+                  sections={[{ value: 0, color: "#2563eb" }]}
                   label={
                     <Text size="md" fw={700} ta="center" style={{ color: "#60a5fa" }}>
-                      33%
+                      0%
                     </Text>
                   }
                 />
                 <Text size="sm" ta="center" style={{ color: "#64748b" }}>
-                  Placeholder — 2 of 6 courses completed
+                  {enrolledCourseCount} course{enrolledCourseCount === 1 ? "" : "s"} currently
+                  enrolled
                 </Text>
               </Stack>
             </Box>

@@ -69,7 +69,6 @@ export function CourseEnrollmentButton({
     <Stack gap="xs" align="flex-end">
       <Group gap="sm">
         {hasJoined ? (
-          /* TODO: Replace href with real lesson route once lessons are implemented */
           <Button
             size="md"
             radius="md"

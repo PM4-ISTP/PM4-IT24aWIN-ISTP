@@ -56,6 +56,7 @@ export default function ProfilePage() {
       },
     },
   });
+  const { setValues } = form;
 
   useEffect(() => {
     const load = async () => {
@@ -67,7 +68,7 @@ export default function ProfilePage() {
         }
         const data = (await res.json()) as UserProfile;
         setProfile(data);
-        form.setValues({
+        setValues({
           firstName: data.firstName ?? "",
           lastName: data.lastName ?? "",
           title: data.title ?? "",
@@ -88,8 +89,7 @@ export default function ProfilePage() {
       }
     };
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setValues]);
 
   const handleSubmit = async (values: UpdateProfilePayload) => {
     try {
