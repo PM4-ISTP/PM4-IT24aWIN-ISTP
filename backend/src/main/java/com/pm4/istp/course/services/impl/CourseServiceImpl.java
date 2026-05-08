@@ -841,7 +841,10 @@ public class CourseServiceImpl implements CourseService {
     }
 
     return new SubmissionScoringData(
-        challengesByLab, solvedChallengeIdsByUser, correctChoiceChallengeIdsByUser, overridesByUserByChallenge);
+        challengesByLab,
+        solvedChallengeIdsByUser,
+        correctChoiceChallengeIdsByUser,
+        overridesByUserByChallenge);
   }
 
   private List<CourseChallengeSubmissionEntryDto> buildSubmissionEntries(
