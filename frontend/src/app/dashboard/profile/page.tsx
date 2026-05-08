@@ -57,6 +57,11 @@ export default function ProfilePage() {
     },
   });
   const hasLoadedProfileRef = useRef(false);
+  const setValuesRef = useRef(form.setValues);
+
+  useEffect(() => {
+    setValuesRef.current = form.setValues;
+  }, [form.setValues]);
 
   useEffect(() => {
     if (hasLoadedProfileRef.current) return;
@@ -71,7 +76,7 @@ export default function ProfilePage() {
         }
         const data = (await res.json()) as UserProfile;
         setProfile(data);
-        form.setValues({
+        setValuesRef.current({
           firstName: data.firstName ?? "",
           lastName: data.lastName ?? "",
           title: data.title ?? "",
@@ -92,7 +97,7 @@ export default function ProfilePage() {
       }
     };
     void load();
-  }, [form]);
+  }, []);
 
   const handleSubmit = async (values: UpdateProfilePayload) => {
     try {

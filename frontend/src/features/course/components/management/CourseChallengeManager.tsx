@@ -358,7 +358,7 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
       });
       if (updated) onChangeRef.current(hydrated);
     })();
-  }, [challenges.length]);
+  }, [challenges]);
 
   async function handleToggleExpand(challengeId: string) {
     if (expandedId === challengeId) {
