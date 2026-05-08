@@ -1,23 +1,30 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/shared/lib/auth";
-import { Grid, GridCol, Group, Stack, Text, Box, Alert, ThemeIcon } from "@mantine/core";
-import { IconArrowRight, IconBolt, IconClock } from "@tabler/icons-react";
-// IconBolt used in RunningLabs, IconClock in deadline section
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  Grid,
+  GridCol,
+  Group,
+  Stack,
+  Text,
+  ThemeIcon,
+} from "@mantine/core";
+import {
+  IconArrowRight,
+  IconBolt,
+  IconClock,
+  IconExternalLink,
+  IconPlayerPlay,
+} from "@tabler/icons-react";
 import DashboardStyles from "@/src/shared/components/DashboardStyles";
 import DashboardHero from "@/src/shared/components/DashboardHero";
 import { DeadlineWidget } from "@/src/shared/components/DeadlineWidget";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
-import {
-  fetchEnrolledCoursesOfLoggedInUser,
-  fetchPublicCourse,
-} from "@/src/features/course/actions/courses";
-import type {
-  PageListCourseResponseDto,
-  PublicCourseDetailResponseDto,
-} from "@/src/features/course/actions/courses";
+import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/features/course/actions/courses";
 import Link from "next/link";
-import { CourseLabDetailsList } from "@/src/features/course/components/management/CourseLabDetailsList";
-import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
 
@@ -27,6 +34,22 @@ type DeadlineItem = {
   labId: string;
   labTitle: string;
   dueAt: string;
+};
+
+type PodStatusEnum = "NOT_FOUND" | "PROVISIONING" | "RUNNING" | "FAILED" | "TERMINATING";
+
+type RunningPod = {
+  labId: string;
+  labTitle?: string | null;
+  courseId?: string | null;
+  courseTitle?: string | null;
+  pod: {
+    status: PodStatusEnum;
+    podName?: string | null;
+    appUrl?: string | null;
+    createdAt?: string | null;
+    expiresAt?: string | null;
+  };
 };
 
 async function fetchCompletedLabsCount(): Promise<number | null> {
@@ -81,6 +104,24 @@ async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
   }
 }
 
+async function fetchMyRunningPods(): Promise<RunningPod[]> {
+  try {
+    const session = await getServerSession(authOptions);
+    const accessToken = session?.accessToken;
+    if (!accessToken) return [];
+
+    const res = await fetch(`${BACKEND_URL}/api/v1/lab-pods`, {
+      cache: "no-store",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) return [];
+    const json = (await res.json()) as RunningPod[];
+    return Array.isArray(json) ? json : [];
+  } catch {
+    return [];
+  }
+}
+
 const sectionLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-space-grotesk), sans-serif",
   textTransform: "uppercase",
@@ -90,31 +131,37 @@ const sectionLabelStyle: React.CSSProperties = {
   color: "rgba(255,255,255,0.45)",
 };
 
-/**
- * This function is a helper function used to load placeholder data.
- */
-async function getFirstCourse(fetchCourseResult: ActionResult<PageListCourseResponseDto>) {
-  // TODO: delete this function
-  let firstCourse: ActionResult<PublicCourseDetailResponseDto> | undefined = undefined;
-  if (
-    fetchCourseResult.success &&
-    fetchCourseResult.data !== undefined &&
-    fetchCourseResult.data.content !== undefined
-  ) {
-    const firstEnrolledCourse = fetchCourseResult.data.content[0];
-    if (firstEnrolledCourse !== undefined && firstEnrolledCourse.id !== undefined) {
-      firstCourse = await fetchPublicCourse(firstEnrolledCourse.id);
-    }
-  }
-  return firstCourse;
+function podStatusColor(status: PodStatusEnum): string {
+  if (status === "RUNNING") return "teal";
+  if (status === "PROVISIONING") return "blue";
+  if (status === "FAILED") return "red";
+  if (status === "TERMINATING") return "orange";
+  return "gray";
 }
 
-function RunningLabs({
-  fetchCourseResult,
-}: {
-  fetchCourseResult: ActionResult<PublicCourseDetailResponseDto> | undefined;
-}) {
-  if (fetchCourseResult === undefined) {
+function podStatusLabel(status: PodStatusEnum): string {
+  return status
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatDateTime(value?: string | null): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString("de-CH", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function RunningLabs({ pods }: { pods: RunningPod[] }) {
+  if (pods.length === 0) {
     return (
       <div className="ds-empty-state" style={{ padding: "2rem", width: "100%" }}>
         <ThemeIcon size={44} radius="xl" variant="light" color="gray">
@@ -131,21 +178,82 @@ function RunningLabs({
       </div>
     );
   }
+
   return (
-    <>
-      {fetchCourseResult.success ? (
-        <CourseLabDetailsList
-          labs={fetchCourseResult.data.courseLabs ?? []}
-          title=""
-          showIndex={false}
-          courseId={fetchCourseResult.data.id}
-        />
-      ) : (
-        <Alert color="red" title="Could not load labs" variant="light">
-          Something went wrong loading your labs. Please refresh the page.
-        </Alert>
-      )}
-    </>
+    <Grid style={{ width: "100%" }}>
+      {pods.map((item) => {
+        const expiresAt = formatDateTime(item.pod.expiresAt);
+        const playHref =
+          item.courseId && item.labId
+            ? `/dashboard/courses/${item.courseId}/labs/${item.labId}/play`
+            : null;
+
+        return (
+          <GridCol key={item.pod.podName ?? item.labId} span={{ base: 12, md: 6, lg: 4 }}>
+            <Box
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 10,
+                padding: "1rem",
+                height: "100%",
+              }}
+            >
+              <Stack gap="sm" h="100%">
+                <Group justify="space-between" align="flex-start" wrap="nowrap">
+                  <Stack gap={2} style={{ minWidth: 0 }}>
+                    <Text fw={700} truncate style={{ color: "#e2e8f0" }}>
+                      {item.labTitle ?? "Running lab"}
+                    </Text>
+                    {item.courseTitle ? (
+                      <Text size="sm" c="dimmed" truncate>
+                        {item.courseTitle}
+                      </Text>
+                    ) : null}
+                  </Stack>
+                  <Badge color={podStatusColor(item.pod.status)} variant="light">
+                    {podStatusLabel(item.pod.status)}
+                  </Badge>
+                </Group>
+
+                {expiresAt ? (
+                  <Text size="sm" c="dimmed">
+                    Expires {expiresAt}
+                  </Text>
+                ) : null}
+
+                <Group gap="xs" mt="auto">
+                  {playHref ? (
+                    <Button
+                      component="a"
+                      href={playHref}
+                      size="xs"
+                      variant="light"
+                      leftSection={<IconPlayerPlay size={14} />}
+                    >
+                      Open lab
+                    </Button>
+                  ) : null}
+                  {item.pod.appUrl ? (
+                    <Button
+                      component="a"
+                      href={item.pod.appUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      size="xs"
+                      variant="subtle"
+                      leftSection={<IconExternalLink size={14} />}
+                    >
+                      Open pod
+                    </Button>
+                  ) : null}
+                </Group>
+              </Stack>
+            </Box>
+          </GridCol>
+        );
+      })}
+    </Grid>
   );
 }
 
@@ -155,13 +263,11 @@ export default async function Home() {
   const firstName = name.split(" ")[0];
   const userId = session?.userId ?? undefined;
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
-  const [deadlines, completedLabsCount] = await Promise.all([
+  const [deadlines, completedLabsCount, runningPods] = await Promise.all([
     fetchMyDeadlines(),
     fetchCompletedLabsCount(),
+    fetchMyRunningPods(),
   ]);
-
-  // TODO: delete when using real data
-  const firstCourse = await getFirstCourse(result);
 
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-GB", {
@@ -252,7 +358,7 @@ export default async function Home() {
 
       <Stack gap="sm" align="flex-start">
         <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>Active Labs</Text>
-        <RunningLabs fetchCourseResult={firstCourse} />
+        <RunningLabs pods={runningPods} />
       </Stack>
     </Stack>
   );

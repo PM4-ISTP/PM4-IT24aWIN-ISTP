@@ -17,5 +17,6 @@ public class CreateLabRequest {
   private LabStatusEnum status;
   private LabDifficultyEnum difficulty;
   private String dockerImage;
+  private Integer containerPort;
   private List<ChallengeRequest> challenges;
 }

@@ -17,6 +17,7 @@ import com.pm4.istp.challengepod.services.LabPodService;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
+import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.services.LabService;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
@@ -63,11 +64,15 @@ class LabPodServiceTest {
     @Mock
     private DockerImageAvailabilityService dockerImageAvailabilityService;
 
+    @Mock
+    private CourseLabRepository courseLabRepository;
+
     private LabPodService service;
 
     private Lab buildChallenge() {
         Lab lab = new Lab();
         lab.setDockerImage("ghcr.io/pm4-istp/test:latest");
+        lab.setContainerPort(8080);
         return lab;
     }
 
@@ -77,6 +82,7 @@ class LabPodServiceTest {
                 adminConfigurationService,
                 labService,
                 dockerImageAvailabilityService,
+                courseLabRepository,
                 "default",
                 "test.domain",
                 false,
@@ -127,6 +133,87 @@ class LabPodServiceTest {
     // ── Client cache: onKubeconfigChanged ────────────────────────────────────
 
     @Test
+    void startPod_whenDeploymentAlreadyExists_returnsExistingPodAndCreatedFalse() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        Map<String, String> labels = podLabels(userId, labId, Instant.now().getEpochSecond());
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-deadbeef")
+                        .withLabels(labels)
+                        .endMetadata()
+                        .withNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build();
+
+        when(labService.getChallenge(userId, labId)).thenReturn(buildChallenge());
+        when(adminConfigurationService.getAdminConfiguration())
+                .thenReturn(Optional.of(adminConfigWith("kubeconfig", 600)));
+        stubFindDeployments(client, userId, labId, List.of(deployment));
+        stubPodsForLabels(client, labels, List.of());
+        stubIngressGetThrows(client, "pod-deadbeef-ingress");
+
+        var result = service.startPod(userId, labId);
+
+        assertThat(result.getSecond()).isFalse();
+        assertThat(result.getFirst().status()).isEqualTo(PodStatusEnum.RUNNING);
+        assertThat(result.getFirst().podName()).isEqualTo("pod-deadbeef");
+        assertThat(result.getFirst().appUrl()).isEqualTo("http://app-deadbeef.test.domain");
+        verify(dockerImageAvailabilityService).assertImageExists("ghcr.io/pm4-istp/test:latest");
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void startPod_whenNoDeploymentExists_createsResourcesAndMarksCreatedTrue() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        NonNamespaceOperation serviceOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        NonNamespaceOperation ingressOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        RollableScalableResource deploymentResource = mock(RollableScalableResource.class);
+        ServiceResource serviceResource = mock(ServiceResource.class);
+        Resource ingressResource = mock(Resource.class);
+        DeploymentList emptyList = new DeploymentList();
+        emptyList.setItems(List.of());
+
+        when(client.apps().deployments().inNamespace("default")).thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel("app", "istp-lab-pod")).thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel(Mockito.eq("istp.pm4.ch/user-id"), Mockito.anyString()))
+                .thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel(Mockito.eq("istp.pm4.ch/lab-id"), Mockito.anyString()))
+                .thenReturn(deploymentOperation);
+        when(deploymentOperation.list()).thenReturn(emptyList);
+        when(deploymentOperation.resource(Mockito.any())).thenReturn(deploymentResource);
+        when(client.services().inNamespace("default")).thenReturn(serviceOperation);
+        when(serviceOperation.resource(Mockito.any())).thenReturn(serviceResource);
+        when(client.network().v1().ingresses().inNamespace("default")).thenReturn(ingressOperation);
+        when(ingressOperation.resource(Mockito.any())).thenReturn(ingressResource);
+
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        when(labService.getChallenge(userId, labId)).thenReturn(buildChallenge());
+        when(adminConfigurationService.getAdminConfiguration())
+                .thenReturn(Optional.of(adminConfigWith("kubeconfig", 900)));
+
+        var result = service.startPod(userId, labId);
+
+        assertThat(result.getSecond()).isTrue();
+        assertThat(result.getFirst().status()).isEqualTo(PodStatusEnum.PROVISIONING);
+        assertThat(result.getFirst().podName()).startsWith("pod-");
+        assertThat(result.getFirst().appUrl()).startsWith("http://app-");
+        verify(deploymentResource).create();
+        verify(serviceResource).create();
+        verify(ingressResource).create();
+    }
+
+    @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
     void createResources_createsOnlyAppContainerAppPortAndAppIngressRule() {
         KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
@@ -166,8 +253,19 @@ class LabPodServiceTest {
 
         ArgumentCaptor<Deployment> deploymentCaptor = ArgumentCaptor.forClass(Deployment.class);
         verify(deploymentOperation).resource(deploymentCaptor.capture());
-        Deployment deployment = deploymentCaptor.getValue();
+        assertCreatedDeployment(deploymentCaptor.getValue());
 
+        ArgumentCaptor<Service> serviceCaptor = ArgumentCaptor.forClass(Service.class);
+        verify(serviceOperation).resource(serviceCaptor.capture());
+        assertCreatedService(serviceCaptor.getValue());
+
+        ArgumentCaptor<Ingress> ingressCaptor = ArgumentCaptor.forClass(Ingress.class);
+        verify(ingressOperation).resource(ingressCaptor.capture());
+        assertCreatedIngress(ingressCaptor.getValue());
+        assertCreatedResponse(response);
+    }
+
+    private void assertCreatedDeployment(Deployment deployment) {
         assertThat(deployment.getSpec().getTemplate().getSpec().getContainers())
                 .singleElement()
                 .satisfies(
@@ -176,7 +274,7 @@ class LabPodServiceTest {
                             assertThat(container.getImage()).isEqualTo("ghcr.io/pm4-istp/test:latest");
                             assertThat(container.getPorts())
                                     .singleElement()
-                                    .satisfies(port -> assertThat(port.getContainerPort()).isEqualTo(80));
+                                    .satisfies(port -> assertThat(port.getContainerPort()).isEqualTo(8080));
                             assertThat(container.getResources().getLimits()).containsKeys("cpu", "memory");
                             assertThat(container.getSecurityContext()).isNull();
                         });
@@ -186,20 +284,21 @@ class LabPodServiceTest {
                 .singleElement()
                 .satisfies(secret -> assertThat(secret.getName()).isEqualTo("ghcr-pull-secret"));
         assertThat(deployment.getMetadata().getAnnotations()).isNullOrEmpty();
+    }
 
-        ArgumentCaptor<Service> serviceCaptor = ArgumentCaptor.forClass(Service.class);
-        verify(serviceOperation).resource(serviceCaptor.capture());
-        assertThat(serviceCaptor.getValue().getSpec().getPorts())
+    private void assertCreatedService(Service service) {
+        assertThat(service.getSpec().getPorts())
                 .singleElement()
                 .satisfies(
                         port -> {
                             assertThat(port.getName()).isEqualTo("app-port");
                             assertThat(port.getPort()).isEqualTo(80);
+                            assertThat(port.getTargetPort().getIntVal()).isEqualTo(8080);
                         });
+    }
 
-        ArgumentCaptor<Ingress> ingressCaptor = ArgumentCaptor.forClass(Ingress.class);
-        verify(ingressOperation).resource(ingressCaptor.capture());
-        assertThat(ingressCaptor.getValue().getSpec().getRules())
+    private void assertCreatedIngress(Ingress ingress) {
+        assertThat(ingress.getSpec().getRules())
                 .singleElement()
                 .satisfies(
                         rule -> {
@@ -211,7 +310,9 @@ class LabPodServiceTest {
                                                     assertThat(path.getBackend().getService().getPort().getNumber())
                                                             .isEqualTo(80));
                         });
+    }
 
+    private void assertCreatedResponse(PodStatusResponse response) {
         assertThat(response.status()).isEqualTo(PodStatusEnum.PROVISIONING);
         assertThat(response.appUrl()).isEqualTo("http://app-12345678.test.domain");
         assertThat(response.terminalUrl()).isNull();
@@ -314,6 +415,7 @@ class LabPodServiceTest {
                         adminConfigurationService,
                         labService,
                         dockerImageAvailabilityService,
+                        courseLabRepository,
                         "default",
                         "test.domain",
                         true,
@@ -342,6 +444,50 @@ class LabPodServiceTest {
 
         assertThat(response.status()).isEqualTo(PodStatusEnum.PROVISIONING);
         assertThat(response.appUrl()).isEqualTo("https://app-team-alpha-feedbeef.test.domain");
+    }
+
+    @Test
+    void listPods_returnsCurrentUserDeploymentsWithCourseAndLabMetadata() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        long createdAt = Instant.now().minusSeconds(30).getEpochSecond();
+        Map<String, String> labels = podLabels(userId, labId, createdAt);
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-cafebabe")
+                        .withLabels(labels)
+                        .endMetadata()
+                        .withNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build();
+        AdminConfig config = adminConfigWith("kubeconfig", 900);
+
+        stubFindDeployments(client, userId, List.of(deployment));
+        stubPodsForLabels(client, labels, List.of());
+        stubIngressGetThrows(client, "pod-cafebabe-ingress");
+        when(adminConfigurationService.getAdminConfiguration()).thenReturn(Optional.of(config));
+        when(courseLabRepository.findEnrolledCourseLabSummariesForUserAndLab(userId, labId))
+                .thenReturn(
+                        List.<Object[]>of(
+                                new Object[] {courseId, "Course title", labId, "Lab title"}));
+
+        var pods = service.listPods(userId);
+
+        assertThat(pods).singleElement()
+                .satisfies(
+                        pod -> {
+                            assertThat(pod.labId()).isEqualTo(labId);
+                            assertThat(pod.labTitle()).isEqualTo("Lab title");
+                            assertThat(pod.courseId()).isEqualTo(courseId);
+                            assertThat(pod.courseTitle()).isEqualTo("Course title");
+                            assertThat(pod.pod().status()).isEqualTo(PodStatusEnum.RUNNING);
+                            assertThat(pod.pod().appUrl()).isEqualTo("http://app-cafebabe.test.domain");
+                        });
     }
 
     @Test
@@ -517,6 +663,21 @@ class LabPodServiceTest {
         when(deploymentOperation.withLabel("istp.pm4.ch/user-id", userId.toString()))
                 .thenReturn(deploymentOperation);
         when(deploymentOperation.withLabel("istp.pm4.ch/lab-id", labId.toString()))
+                .thenReturn(deploymentOperation);
+        DeploymentList deploymentList = new DeploymentList();
+        deploymentList.setItems(deployments);
+        when(deploymentOperation.list()).thenReturn(deploymentList);
+        return deploymentOperation;
+    }
+
+    @SuppressWarnings("unchecked")
+    private NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> stubFindDeployments(
+            KubernetesClient client, UUID userId, List<Deployment> deployments) {
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        when(client.apps().deployments().inNamespace("default")).thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel("app", "istp-lab-pod")).thenReturn(deploymentOperation);
+        when(deploymentOperation.withLabel("istp.pm4.ch/user-id", userId.toString()))
                 .thenReturn(deploymentOperation);
         DeploymentList deploymentList = new DeploymentList();
         deploymentList.setItems(deployments);

@@ -9,12 +9,14 @@ import static org.mockito.Mockito.when;
 import com.pm4.istp.challengepod.controllers.LabPodController;
 import com.pm4.istp.challengepod.dto.PodStatusEnum;
 import com.pm4.istp.challengepod.dto.PodStatusResponse;
+import com.pm4.istp.challengepod.dto.RunningPodResponse;
 import com.pm4.istp.challengepod.exceptions.LabPodException;
 import com.pm4.istp.challengepod.services.LabPodService;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -126,6 +128,24 @@ class LabPodControllerTest {
     }
 
     // ── GET /{labId} ───────────────────────────────────────────────────
+
+    @Test
+    void listMyPods_returnsOk_withPodsFromService() {
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        Jwt jwt = jwtFor(userId);
+        RunningPodResponse response =
+                new RunningPodResponse(labId, "Lab", courseId, "Course", runningResponse());
+
+        when(labPodService.listPods(userId)).thenReturn(List.of(response));
+
+        ResponseEntity<List<RunningPodResponse>> result = controller.listMyPods(jwt);
+
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getBody()).containsExactly(response);
+        verify(labPodService).listPods(userId);
+    }
 
     @Test
     void getPod_returnsOk_withStatusFromService() {

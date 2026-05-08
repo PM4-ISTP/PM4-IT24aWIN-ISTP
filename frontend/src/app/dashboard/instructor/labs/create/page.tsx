@@ -36,6 +36,7 @@ export default function CreateLab() {
     status: "DRAFT",
     difficulty: "MEDIUM",
     dockerImage: "",
+    containerPort: 80,
     challenges: [
       {
         title: "",
@@ -107,6 +108,7 @@ export default function CreateLab() {
       status: formValues.status,
       difficulty: formValues.difficulty,
       dockerImage: trimmedDockerImage,
+      containerPort: formValues.containerPort,
       challenges: toRequestChallenges(formValues.challenges),
     });
 

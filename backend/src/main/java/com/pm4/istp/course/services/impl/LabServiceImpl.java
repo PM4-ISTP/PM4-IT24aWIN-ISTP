@@ -102,6 +102,7 @@ public class LabServiceImpl implements LabService {
     lab.setStatus(request.getStatus());
     lab.setDifficulty(request.getDifficulty());
     lab.setDockerImage(request.getDockerImage());
+    lab.setContainerPort(resolveContainerPort(request.getContainerPort()));
     lab.setCreator(creator);
 
     List<Challenge> challenges = buildChallengesForCreate(request.getChallenges(), lab);
@@ -145,6 +146,7 @@ public class LabServiceImpl implements LabService {
     lab.setStatus(newStatus);
     lab.setDifficulty(request.getDifficulty());
     lab.setDockerImage(request.getDockerImage());
+    lab.setContainerPort(resolveContainerPort(request.getContainerPort()));
 
     applyChallengeUpdates(lab, request.getChallenges());
     lab.setMaxScore(totalPoints(lab.getChallenges()));
@@ -179,6 +181,10 @@ public class LabServiceImpl implements LabService {
       result.add(st);
     }
     return result;
+  }
+
+  private int resolveContainerPort(Integer containerPort) {
+    return containerPort != null ? containerPort : Lab.DEFAULT_CONTAINER_PORT;
   }
 
   private void applyChallengeUpdates(Lab lab, List<ChallengeRequest> requests) {
@@ -384,7 +390,7 @@ public class LabServiceImpl implements LabService {
     // Attach due date/time from the course assignment (if any) for student visibility.
     courseLabRepository
         .findByCourseIdAndLabId(courseId, labId)
-        .ifPresent((courseLab) -> dto.setDueAt(courseLab.getDueAt()));
+        .ifPresent(courseLab -> dto.setDueAt(courseLab.getDueAt()));
 
     return dto;
   }
@@ -638,16 +644,6 @@ public class LabServiceImpl implements LabService {
     if (!courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId)) {
       throw new LabAccessDeniedException(
           String.format("User '%s' is not enrolled in course '%s'", userId, courseId));
-    }
-  }
-
-  private void verifyEnrolledInChallengeCourse(UUID userId, Lab lab) {
-    boolean enrolled =
-        courseLabRepository.existsByChallengeIdAndEnrolledUserId(lab.getId(), userId);
-    if (!enrolled) {
-      throw new LabAccessDeniedException(
-          String.format(
-              "User '%s' is not enrolled in any course containing lab '%s'", userId, lab.getId()));
     }
   }
 

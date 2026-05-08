@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Button, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -57,39 +57,40 @@ export default function ProfilePage() {
     },
   });
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setStatusMessage(null);
-        const res = await fetch("/api/backend/api/v1/users/me/profile", { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error(await safeErrorMessage(res));
-        }
-        const data = (await res.json()) as UserProfile;
-        setProfile(data);
-        form.setValues({
-          firstName: data.firstName ?? "",
-          lastName: data.lastName ?? "",
-          title: data.title ?? "",
-          pictureUrl: data.picture ?? "",
-        });
-      } catch (e) {
-        setStatusMessage({
-          kind: "error",
-          text: "Failed to load profile: " + (e as Error).message,
-        });
-        notifications.show({
-          title: "Error",
-          message: "Failed to load profile: " + (e as Error).message,
-          color: "red",
-        });
-      } finally {
-        setLoadingProfile(false);
+  const loadProfile = useCallback(async () => {
+    setLoadingProfile(true);
+    try {
+      setStatusMessage(null);
+      const res = await fetch("/api/backend/api/v1/users/me/profile", { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error(await safeErrorMessage(res));
       }
-    };
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      const data = (await res.json()) as UserProfile;
+      setProfile(data);
+      form.setValues({
+        firstName: data.firstName ?? "",
+        lastName: data.lastName ?? "",
+        title: data.title ?? "",
+        pictureUrl: data.picture ?? "",
+      });
+    } catch (e) {
+      setStatusMessage({
+        kind: "error",
+        text: "Failed to load profile: " + (e as Error).message,
+      });
+      notifications.show({
+        title: "Error",
+        message: "Failed to load profile: " + (e as Error).message,
+        color: "red",
+      });
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, [form]);
+
+  useEffect(() => {
+    void loadProfile();
+  }, [loadProfile]);
 
   const submitAction = useAsyncAction(
     async (values: UpdateProfilePayload) => {

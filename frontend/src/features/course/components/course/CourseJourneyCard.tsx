@@ -17,35 +17,17 @@ import type { CourseDetailInstructorResponseDto } from "@/src/features/course/ac
 // Types
 // ---------------------------------------------------------------------------
 
-interface LessonsProgress {
-  /** Number of lessons the user has completed */
-  finished: number;
-  /** Total number of lessons in the course */
-  total: number;
-}
-
 interface SimpleProgress {
   completed: number;
   total: number;
 }
 
 export interface CourseJourneyCardProps {
-  /**
-   * Lesson progress data.
-   * TODO: Wire up to real lesson-completion API once lessons are trackable.
-   */
-  lessons?: LessonsProgress;
-
   /** How many labs (top-level) the student has fully solved. */
   labs?: SimpleProgress;
 
   /** How many individual challenges across all labs the student has solved. */
   challenges?: SimpleProgress;
-
-  /**
-   * Deprecated. The primary course CTA lives in the banner header.
-   */
-  nextChallengeHref?: string;
 
   /**
    * When provided, renders an "Instructor" section to the right of the
@@ -112,49 +94,31 @@ function StatChip({ icon, label, dimmed }: StatChipProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Placeholder — shown when labs have not been implemented yet
-// ---------------------------------------------------------------------------
+interface UnavailableProgressSectionProps {
+  label: string;
+  color: string;
+  hint: string;
+}
 
-/**
- * PLACEHOLDER: Rendered in place of the labs progress bar until the
- * labs feature is available. Remove this component and wire up the real
- * ChallengesProgress prop instead.
- */
-function ChallengesPlaceholder() {
+function UnavailableProgressSection({ label, color, hint }: UnavailableProgressSectionProps) {
   return (
     <Stack gap={8}>
       <Group justify="space-between" align="center">
         <Group gap={6}>
           <Text size="sm" fw={600} c="dimmed">
-            Challenges
+            {label}
           </Text>
-          <Tooltip label="Challenges are coming soon!" withArrow>
+          <Tooltip label={hint} withArrow>
             <ThemeIcon size="xs" variant="transparent" color="dimmed" style={{ cursor: "default" }}>
               <IconLock size={12} />
             </ThemeIcon>
           </Tooltip>
         </Group>
         <Text size="xs" c="dimmed" fs="italic">
-          Coming soon
+          Not available
         </Text>
       </Group>
-      {/* Visual placeholder bar — replace with real Progress once backend supports labs */}
-      <Progress
-        value={0}
-        color="orange"
-        radius="xl"
-        size="md"
-        style={{ opacity: 0.35 }}
-        aria-label="Challenges progress — not yet available"
-      />
-      <Group gap="lg">
-        <StatChip
-          icon={<IconFlame size={13} color="var(--mantine-color-dimmed)" />}
-          label="0 Challenges Completed"
-          dimmed
-        />
-      </Group>
+      <Progress value={0} color={color} radius="xl" size="md" style={{ opacity: 0.35 }} />
     </Stack>
   );
 }
@@ -166,6 +130,10 @@ function ChallengesPlaceholder() {
 export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourneyCardProps) {
   const labPercent = labs ? calcPercent(labs.completed, labs.total) : 0;
   const challengePercent = challenges ? calcPercent(challenges.completed, challenges.total) : 0;
+  const unavailableHint =
+    !labs && !challenges
+      ? "Enroll to start tracking your progress."
+      : "Progress data is unavailable.";
 
   return (
     <Box
@@ -178,9 +146,8 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
       }}
     >
       <div style={{ display: "flex", alignItems: "stretch" }}>
-        {/* ── Journey section ── */}
+        {/* —— Journey section —— */}
         <Stack gap="md" style={{ flex: 1, minWidth: 0, padding: "2rem" }}>
-          {/* Header */}
           <Group justify="space-between" align="center">
             <Text size="xs" tt="uppercase" fw={700} c="dimmed" style={{ letterSpacing: "0.08em" }}>
               Course Journey
@@ -189,7 +156,7 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
 
           <Divider />
 
-          {/* ── Labs progress ── */}
+          {/* —— Labs progress —— */}
           {labs ? (
             <ProgressSection
               label="Labs"
@@ -210,20 +177,10 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
               }
             />
           ) : (
-            <Stack gap={8}>
-              <Group justify="space-between">
-                <Text size="sm" fw={600} c="dimmed">
-                  Labs
-                </Text>
-                <Text size="xs" c="dimmed" fs="italic">
-                  Coming soon
-                </Text>
-              </Group>
-              <Progress value={0} color="orange" radius="xl" size="md" style={{ opacity: 0.35 }} />
-            </Stack>
+            <UnavailableProgressSection label="Labs" color="orange" hint={unavailableHint} />
           )}
 
-          {/* ── Challenges progress ── */}
+          {/* —— Challenges progress —— */}
           {challenges ? (
             <ProgressSection
               label="Challenges"
@@ -232,7 +189,9 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
               statLeft={
                 <StatChip
                   icon={<IconListCheck size={13} color="var(--mantine-color-blue-5)" />}
-                  label={`${challenges.completed} Challenge${challenges.completed !== 1 ? "s" : ""} Solved`}
+                  label={`${
+                    challenges.completed
+                  } Challenge${challenges.completed !== 1 ? "s" : ""} Solved`}
                 />
               }
               statRight={
@@ -244,11 +203,11 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
               }
             />
           ) : (
-            <ChallengesPlaceholder />
+            <UnavailableProgressSection label="Challenges" color="blue" hint={unavailableHint} />
           )}
         </Stack>
 
-        {/* ── Instructor section (optional) ── */}
+        {/* —— Instructor section (optional) —— */}
         {instructor && (
           <>
             <div

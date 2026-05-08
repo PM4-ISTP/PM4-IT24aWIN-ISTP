@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.lenient;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +47,7 @@ import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
+import com.pm4.istp.course.exceptions.LabSubmissionClosedException;
 import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.mappers.LabMapper;
@@ -125,7 +127,8 @@ class ChallengeServiceImplTest {
       LabStatusEnum status,
       LabDifficultyEnum difficulty,
       String dockerImage) {
-    return new CreateLabRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneChallenge());
+    return new CreateLabRequest(
+        title, shortDesc, desc, status, difficulty, dockerImage, null, oneChallenge());
   }
 
   private UpdateLabRequest updateRequest(
@@ -135,7 +138,8 @@ class ChallengeServiceImplTest {
       LabStatusEnum status,
       LabDifficultyEnum difficulty,
       String dockerImage) {
-    return new UpdateLabRequest(title, shortDesc, desc, status, difficulty, dockerImage, oneChallenge());
+    return new UpdateLabRequest(
+        title, shortDesc, desc, status, difficulty, dockerImage, null, oneChallenge());
   }
 
   @Test
@@ -155,6 +159,7 @@ class ChallengeServiceImplTest {
             LabStatusEnum.DRAFT,
             LabDifficultyEnum.HARD,
             "ghcr.io/pm4-istp/buffer-overflow:latest",
+            8080,
             new ArrayList<>(
                 List.of(
                     new ChallengeRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0, ChallengeType.FLAG, 1, null, null),
@@ -168,6 +173,7 @@ class ChallengeServiceImplTest {
     assertThat(created.getStatus()).isEqualTo(LabStatusEnum.DRAFT);
     assertThat(created.getDifficulty()).isEqualTo(LabDifficultyEnum.HARD);
     assertThat(created.getDockerImage()).isEqualTo("ghcr.io/pm4-istp/buffer-overflow:latest");
+    assertThat(created.getContainerPort()).isEqualTo(8080);
     assertThat(created.getCreator()).isSameAs(creator);
     assertThat(created.getChallenges()).hasSize(2);
     assertThat(created.getChallenges().get(0).getTitle()).isEqualTo("Recon");
@@ -198,6 +204,7 @@ class ChallengeServiceImplTest {
             LabStatusEnum.DRAFT,
             LabDifficultyEnum.EASY,
             DEFAULT_DOCKER_IMAGE,
+            null,
             new ArrayList<>(List.of(new ChallengeRequest(null, "Only", "Just desc", "   ", 0, ChallengeType.FLAG, 1, null, null))));
 
     Lab created = labService.createChallenge(creatorId, request);
@@ -397,6 +404,7 @@ class ChallengeServiceImplTest {
             LabStatusEnum.PUBLIC,
             LabDifficultyEnum.EASY,
             DEFAULT_DOCKER_IMAGE,
+            null,
             new ArrayList<>(
                 List.of(
                     new ChallengeRequest(null, "New first", "desc", null, 0, ChallengeType.FLAG, 1, null, null),
@@ -965,6 +973,36 @@ class ChallengeServiceImplTest {
     assertThatThrownBy(
         () -> labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{secret}"))
         .isInstanceOf(ChallengeAlreadySolvedException.class);
+  }
+
+  @Test
+  void submitChallengeFlag_whenDeadlinePassed_throwsSubmissionClosed() {
+    stubDefaultSubmissionRepos();
+    UUID userId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    Lab lab = buildChallengeWithCourses(labId, courseId);
+    Challenge challenge = buildChallenge(challengeId, lab, "ISTP{secret}");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId))
+        .thenReturn(Optional.of(buildUser(userId)));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(true);
+    CourseLab courseLab = new CourseLab();
+    courseLab.setDueAt(LocalDateTime.now().minusMinutes(1));
+    when(courseLabRepository.findByCourseIdAndLabId(courseId, labId))
+        .thenReturn(Optional.of(courseLab));
+
+    assertThatThrownBy(
+            () ->
+                labService.submitChallengeFlag(
+                    userId, courseId, labId, challengeId, "ISTP{secret}"))
+        .isInstanceOf(LabSubmissionClosedException.class)
+        .hasMessageContaining("deadline");
+
+    verify(challengeCompletionRepository, never()).saveAndFlush(any());
   }
 
   @Test

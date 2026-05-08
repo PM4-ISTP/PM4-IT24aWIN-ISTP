@@ -60,19 +60,26 @@ class CourseMapperCoverageTest {
             List.of(optionDto));
     CreateChallengeRequestDto createDto =
         new CreateChallengeRequestDto(
-            "Lab", "Short", "Long", LabStatusEnum.PUBLIC, LabDifficultyEnum.EASY, "ghcr.io/acme/lab:latest", List.of(challengeDto));
+            "Lab",
+            "Short",
+            "Long",
+            LabStatusEnum.PUBLIC,
+            LabDifficultyEnum.EASY,
+            "ghcr.io/acme/lab:latest",
+            8080,
+            List.of(challengeDto));
     UpdateChallengeRequestDto updateDto =
         new UpdateChallengeRequestDto(
-            "Lab 2", "Short 2", "Long 2", LabStatusEnum.DRAFT, LabDifficultyEnum.HARD, "ghcr.io/acme/lab:2", List.of(challengeDto));
+            "Lab 2",
+            "Short 2",
+            "Long 2",
+            LabStatusEnum.DRAFT,
+            LabDifficultyEnum.HARD,
+            "ghcr.io/acme/lab:2",
+            8081,
+            List.of(challengeDto));
 
-    assertThat(labMapper.fromDto((CreateChallengeRequestDto) null)).isNull();
-    assertThat(labMapper.fromDto((UpdateChallengeRequestDto) null)).isNull();
-    assertThat(labMapper.fromDto((ChallengeRequestDto) null)).isNull();
-    assertThat(labMapper.fromDto((ChallengeOptionRequestDto) null)).isNull();
-    assertThat(labMapper.fromDto(createDto).getChallenges()).hasSize(1);
-    assertThat(labMapper.fromDto(updateDto).getStatus()).isEqualTo(LabStatusEnum.DRAFT);
-    assertThat(labMapper.fromDto(challengeDto).getOptions().get(0).isCorrect()).isTrue();
-    assertThat(labMapper.fromDto(optionDto).getText()).isEqualTo("Option A");
+    assertLabRequestMappings(optionDto, challengeDto, createDto, updateDto);
 
     Lab lab = labFixture();
     Challenge challenge = lab.getChallenges().get(0);
@@ -82,27 +89,10 @@ class CourseMapperCoverageTest {
     courseLab.setOrderIndex(3);
     courseLab.setDueAt(LocalDateTime.now());
 
-    assertThat(labMapper.toCreateResponseDto(null)).isNull();
-    assertThat(labMapper.toDetailResponseDto(null)).isNull();
-    assertThat(labMapper.toCreatorDto(null)).isNull();
-    assertThat(labMapper.toChallengeResponseDto(null)).isNull();
-    assertThat(labMapper.toOptionStudentDto(null)).isNull();
-    assertThat(labMapper.toOptionResponseDto(null)).isNull();
-    assertThat(labMapper.toChallengeStudentDto(null)).isNull();
-    assertThat(labMapper.toStudentDto(null)).isNull();
-    assertThat(labMapper.toCourseLabResponseDto(null)).isNull();
-
-    assertThat(labMapper.toCreateResponseDto(lab).getCreatorId()).isEqualTo(lab.getCreator().getId());
-    assertThat(labMapper.toDetailResponseDto(lab).getChallenges()).hasSize(1);
-    assertThat(labMapper.toCreatorDto(lab.getCreator()).getName()).isEqualTo("Alice");
-    assertThat(labMapper.toChallengeResponseDto(challenge).getOptions()).hasSize(1);
-    assertThat(labMapper.toOptionStudentDto(option).getText()).isEqualTo("Answer");
-    assertThat(labMapper.toOptionResponseDto(option).isCorrect()).isTrue();
-    assertThat(labMapper.toChallengeStudentDto(challenge).isTheory()).isFalse();
+    assertLabNullMappings();
+    assertLabEntityMappings(lab, challenge, option, courseLab);
     challenge.setFlag(" ");
     assertThat(labMapper.toChallengeStudentDto(challenge).isTheory()).isTrue();
-    assertThat(labMapper.toStudentDto(lab).getCreator().getName()).isEqualTo("Alice");
-    assertThat(labMapper.toCourseLabResponseDto(courseLab).getLabTitle()).isEqualTo("Lab");
 
     courseLab.setLab(null);
     assertThat(labMapper.toCourseLabResponseDto(courseLab).getLabId()).isNull();
@@ -121,33 +111,13 @@ class CourseMapperCoverageTest {
         new UpdateCourseRequestDto(
             "Course 2", "Description 2", "Short 2", false, true, "image2", "crypto", List.of(updateInstructorDto), "UNLIMITED");
 
-    assertThat(courseMapper.fromDto((CreateCourseInstructorRequestDto) null)).isNull();
-    assertThat(courseMapper.fromDto((CreateCourseRequestDto) null)).isNull();
-    assertThat(courseMapper.fromDto((UpdateCourseInstructorRequestDto) null)).isNull();
-    assertThat(courseMapper.fromDto((UpdateCourseRequestDto) null)).isNull();
-    assertThat(courseMapper.fromDto(instructorDto).getInstructorRole()).isEqualTo(InstructorRoleEnum.OWNER);
-    assertThat(courseMapper.fromDto(createDto).getMcAttemptsMode()).isEqualTo(McAttemptsMode.ONCE);
-    assertThat(courseMapper.fromDto(updateInstructorDto).getInstructorRole()).isEqualTo(InstructorRoleEnum.COLLABORATOR);
-    assertThat(courseMapper.fromDto(updateDto).getMcAttemptsMode()).isEqualTo(McAttemptsMode.UNLIMITED);
+    assertCourseRequestMappings(instructorDto, createDto, updateInstructorDto, updateDto);
 
     Course course = courseFixture();
     CourseLab courseLab = course.getCourseLabs().get(0);
 
-    assertThat(courseMapper.toDto(null)).isNull();
-    assertThat(courseMapper.toCourseDetailDto(null)).isNull();
-    assertThat(courseMapper.toPublicCourseDetailDto(null)).isNull();
-    assertThat(courseMapper.toChallengeDetailResponseDto(null)).isNull();
-    assertThat(courseMapper.toChallengeStudentDto(null)).isNull();
-    assertThat(courseMapper.toListCourseResponseDto(null)).isNull();
-
-    assertThat(courseMapper.toDto(course).getCourseInstructors()).hasSize(1);
-    assertThat(courseMapper.toCourseDetailDto(course).getCourseLabs()).hasSize(1);
-    assertThat(courseMapper.toCourseDetailDto(course).getMcAttemptsMode()).isEqualTo("ONCE");
-    assertThat(courseMapper.toPublicCourseDetailDto(course).getCourseLabs()).hasSize(1);
-    assertThat(courseMapper.toChallengeDetailResponseDto(courseLab).getCreator().getName()).isEqualTo("Alice");
-    assertThat(courseMapper.toChallengeStudentDto(courseLab).getChallenges()).hasSize(1);
-    assertThat(courseMapper.toListCourseResponseDto(course).getInstructorCount()).isEqualTo(1);
-    assertThat(courseMapper.mapInstructorCount(null)).isZero();
+    assertCourseNullMappings();
+    assertCourseEntityMappings(course, courseLab);
 
     courseLab.setLab(null);
     assertThat(courseMapper.toChallengeDetailResponseDto(courseLab).getId()).isNull();
@@ -159,6 +129,82 @@ class CourseMapperCoverageTest {
     assertThat(courseMapper.toCourseDetailDto(course).getCourseInstructors()).isNull();
     assertThat(courseMapper.toPublicCourseDetailDto(course).getCourseLabs()).isNull();
     assertThat(courseMapper.toListCourseResponseDto(course).getInstructorCount()).isZero();
+  }
+
+  private void assertLabRequestMappings(
+      ChallengeOptionRequestDto optionDto,
+      ChallengeRequestDto challengeDto,
+      CreateChallengeRequestDto createDto,
+      UpdateChallengeRequestDto updateDto) {
+    assertThat(labMapper.fromDto((CreateChallengeRequestDto) null)).isNull();
+    assertThat(labMapper.fromDto((UpdateChallengeRequestDto) null)).isNull();
+    assertThat(labMapper.fromDto((ChallengeRequestDto) null)).isNull();
+    assertThat(labMapper.fromDto((ChallengeOptionRequestDto) null)).isNull();
+    assertThat(labMapper.fromDto(createDto).getChallenges()).hasSize(1);
+    assertThat(labMapper.fromDto(createDto).getContainerPort()).isEqualTo(8080);
+    assertThat(labMapper.fromDto(updateDto).getStatus()).isEqualTo(LabStatusEnum.DRAFT);
+    assertThat(labMapper.fromDto(challengeDto).getOptions().get(0).isCorrect()).isTrue();
+    assertThat(labMapper.fromDto(optionDto).getText()).isEqualTo("Option A");
+  }
+
+  private void assertLabNullMappings() {
+    assertThat(labMapper.toCreateResponseDto(null)).isNull();
+    assertThat(labMapper.toDetailResponseDto(null)).isNull();
+    assertThat(labMapper.toCreatorDto(null)).isNull();
+    assertThat(labMapper.toChallengeResponseDto(null)).isNull();
+    assertThat(labMapper.toOptionStudentDto(null)).isNull();
+    assertThat(labMapper.toOptionResponseDto(null)).isNull();
+    assertThat(labMapper.toChallengeStudentDto(null)).isNull();
+    assertThat(labMapper.toStudentDto(null)).isNull();
+    assertThat(labMapper.toCourseLabResponseDto(null)).isNull();
+  }
+
+  private void assertLabEntityMappings(
+      Lab lab, Challenge challenge, ChallengeOption option, CourseLab courseLab) {
+    assertThat(labMapper.toCreateResponseDto(lab).getCreatorId()).isEqualTo(lab.getCreator().getId());
+    assertThat(labMapper.toDetailResponseDto(lab).getChallenges()).hasSize(1);
+    assertThat(labMapper.toCreatorDto(lab.getCreator()).getName()).isEqualTo("Alice");
+    assertThat(labMapper.toChallengeResponseDto(challenge).getOptions()).hasSize(1);
+    assertThat(labMapper.toOptionStudentDto(option).getText()).isEqualTo("Answer");
+    assertThat(labMapper.toOptionResponseDto(option).isCorrect()).isTrue();
+    assertThat(labMapper.toChallengeStudentDto(challenge).isTheory()).isFalse();
+    assertThat(labMapper.toStudentDto(lab).getCreator().getName()).isEqualTo("Alice");
+    assertThat(labMapper.toCourseLabResponseDto(courseLab).getLabTitle()).isEqualTo("Lab");
+  }
+
+  private void assertCourseRequestMappings(
+      CreateCourseInstructorRequestDto instructorDto,
+      CreateCourseRequestDto createDto,
+      UpdateCourseInstructorRequestDto updateInstructorDto,
+      UpdateCourseRequestDto updateDto) {
+    assertThat(courseMapper.fromDto((CreateCourseInstructorRequestDto) null)).isNull();
+    assertThat(courseMapper.fromDto((CreateCourseRequestDto) null)).isNull();
+    assertThat(courseMapper.fromDto((UpdateCourseInstructorRequestDto) null)).isNull();
+    assertThat(courseMapper.fromDto((UpdateCourseRequestDto) null)).isNull();
+    assertThat(courseMapper.fromDto(instructorDto).getInstructorRole()).isEqualTo(InstructorRoleEnum.OWNER);
+    assertThat(courseMapper.fromDto(createDto).getMcAttemptsMode()).isEqualTo(McAttemptsMode.ONCE);
+    assertThat(courseMapper.fromDto(updateInstructorDto).getInstructorRole()).isEqualTo(InstructorRoleEnum.COLLABORATOR);
+    assertThat(courseMapper.fromDto(updateDto).getMcAttemptsMode()).isEqualTo(McAttemptsMode.UNLIMITED);
+  }
+
+  private void assertCourseNullMappings() {
+    assertThat(courseMapper.toDto(null)).isNull();
+    assertThat(courseMapper.toCourseDetailDto(null)).isNull();
+    assertThat(courseMapper.toPublicCourseDetailDto(null)).isNull();
+    assertThat(courseMapper.toChallengeDetailResponseDto(null)).isNull();
+    assertThat(courseMapper.toChallengeStudentDto(null)).isNull();
+    assertThat(courseMapper.toListCourseResponseDto(null)).isNull();
+  }
+
+  private void assertCourseEntityMappings(Course course, CourseLab courseLab) {
+    assertThat(courseMapper.toDto(course).getCourseInstructors()).hasSize(1);
+    assertThat(courseMapper.toCourseDetailDto(course).getCourseLabs()).hasSize(1);
+    assertThat(courseMapper.toCourseDetailDto(course).getMcAttemptsMode()).isEqualTo("ONCE");
+    assertThat(courseMapper.toPublicCourseDetailDto(course).getCourseLabs()).hasSize(1);
+    assertThat(courseMapper.toChallengeDetailResponseDto(courseLab).getCreator().getName()).isEqualTo("Alice");
+    assertThat(courseMapper.toChallengeStudentDto(courseLab).getChallenges()).hasSize(1);
+    assertThat(courseMapper.toListCourseResponseDto(course).getInstructorCount()).isEqualTo(1);
+    assertThat(courseMapper.mapInstructorCount(null)).isZero();
   }
 
   private static Course courseFixture() {

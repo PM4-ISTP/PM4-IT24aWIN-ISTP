@@ -34,11 +34,21 @@ import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
 import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
+import com.pm4.istp.course.db.entities.Challenge;
+import com.pm4.istp.course.db.entities.ChallengeOption;
+import com.pm4.istp.course.db.entities.ChallengeType;
 import com.pm4.istp.course.db.entities.Course;
+import com.pm4.istp.course.db.entities.CourseChallengeScoreOverride;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
+import com.pm4.istp.course.db.entities.CourseLab;
+import com.pm4.istp.course.db.entities.StudentFlagSubmission;
+import com.pm4.istp.course.db.entities.StudentOptionSubmission;
 import com.pm4.istp.course.dto.CourseLabItemDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionStatusEnum;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
+import com.pm4.istp.course.dto.UpdateCourseChallengeScoreRequestDto;
+import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
@@ -52,6 +62,10 @@ import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.ChallengeRepository;
+import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
+import com.pm4.istp.course.repositories.CourseLabRepository;
+import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
+import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.course.services.impl.CourseServiceImpl;
@@ -69,11 +83,19 @@ class CourseServiceImplTest {
   @Mock
   private CourseEnrollmentRepository courseEnrollmentRepository;
   @Mock
+  private CourseLabRepository courseLabRepository;
+  @Mock
   private LabRepository labRepository;
   @Mock
   private ChallengeRepository challengeRepository;
   @Mock
   private ChallengeCompletionRepository challengeCompletionRepository;
+  @Mock
+  private StudentOptionSubmissionRepository studentOptionSubmissionRepository;
+  @Mock
+  private StudentFlagSubmissionRepository studentFlagSubmissionRepository;
+  @Mock
+  private CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
   @Mock
   private CourseInviteCodeHelper courseInviteCodeHelper;
   @Mock
@@ -772,6 +794,17 @@ class CourseServiceImplTest {
     return lab;
   }
 
+  private Challenge buildCourseChallenge(
+      UUID id, Lab lab, String title, ChallengeType type, int points) {
+    Challenge challenge = new Challenge();
+    challenge.setId(id);
+    challenge.setLab(lab);
+    challenge.setTitle(title);
+    challenge.setType(type);
+    challenge.setPoints(points);
+    return challenge;
+  }
+
   @Test
   void updateCourseChallenges_replacesAssignmentsWithOwnPrivateChallenge() {
     UUID ownerId = UUID.randomUUID();
@@ -821,6 +854,55 @@ class CourseServiceImplTest {
 
     assertThat(updated.getCourseLabs()).hasSize(1);
     assertThat(updated.getCourseLabs().getFirst().getDueAt()).isEqualTo(dueAt);
+  }
+
+  @Test
+  void updateCourseChallenges_diffsExistingAssignments() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID keptLabId = UUID.randomUUID();
+    UUID removedLabId = UUID.randomUUID();
+    UUID addedLabId = UUID.randomUUID();
+    LocalDateTime dueAt = LocalDateTime.of(2026, 5, 2, 12, 0);
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = buildCourseWithOwner(courseId, owner);
+    Lab keptLab = buildChallenge(keptLabId, owner, LabStatusEnum.PUBLIC);
+    Lab removedLab = buildChallenge(removedLabId, owner, LabStatusEnum.PUBLIC);
+    Lab addedLab = buildChallenge(addedLabId, owner, LabStatusEnum.PUBLIC);
+
+    CourseLab keptAssignment = new CourseLab();
+    keptAssignment.setLab(keptLab);
+    keptAssignment.setOrderIndex(0);
+    course.addCourseChallenge(keptAssignment);
+
+    CourseLab removedAssignment = new CourseLab();
+    removedAssignment.setLab(removedLab);
+    removedAssignment.setOrderIndex(1);
+    course.addCourseChallenge(removedAssignment);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(labRepository.findById(keptLabId)).thenReturn(Optional.of(keptLab));
+    when(labRepository.findById(addedLabId)).thenReturn(Optional.of(addedLab));
+    when(courseRepository.save(any(Course.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Course updated =
+        courseService.updateCourseChallenges(
+            ownerId,
+            courseId,
+            List.of(new CourseLabItemDto(addedLabId, 0, null), new CourseLabItemDto(keptLabId, 1, dueAt)));
+
+    assertThat(updated.getCourseLabs()).hasSize(2);
+    assertThat(updated.getCourseLabs()).extracting(courseLab -> courseLab.getLab().getId())
+        .containsExactly(addedLabId, keptLabId);
+    assertThat(updated.getCourseLabs().get(1)).isSameAs(keptAssignment);
+    assertThat(keptAssignment.getOrderIndex()).isEqualTo(1);
+    assertThat(keptAssignment.getDueAt()).isEqualTo(dueAt);
+    assertThat(removedAssignment.getCourse()).isNull();
+    verify(labRepository, never()).findById(removedLabId);
+    verify(courseRepository).save(course);
   }
 
   @Test
@@ -1054,15 +1136,350 @@ class CourseServiceImplTest {
         result.getSubmissions().stream()
             .collect(java.util.stream.Collectors.toMap(s -> s.getParticipantId(), s -> s));
 
-    assertThat(byStudent.get(studentOnTime.getId()).getStatus().name()).isEqualTo("ON_TIME");
-    // Late submissions are no longer a concept. If someone completed after the due date, it's still ON_TIME.
-    assertThat(byStudent.get(studentLate.getId()).getStatus().name()).isEqualTo("ON_TIME");
+    assertThat(byStudent.get(studentOnTime.getId()).getStatus().name()).isEqualTo("SUBMITTED");
+    // Late submissions are no longer a concept. If someone completed after the due date, it's still SUBMITTED.
+    assertThat(byStudent.get(studentLate.getId()).getStatus().name()).isEqualTo("SUBMITTED");
     assertThat(byStudent.get(studentInProgress.getId()).getStatus().name()).isEqualTo("IN_PROGRESS");
     assertThat(byStudent.get(studentNotSubmitted.getId()).getStatus().name())
-        .isEqualTo("NOT_SUBMITTED");
+        .isEqualTo("NOT_STARTED");
   }
 
   // ── joinByInviteCode ───────────────────────────────────────────────────────
+
+  @Test
+  void getCourseLabSubmissionDetails_combinesSolvedEvidenceAndOverrides() {
+    UUID instructorId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID optionChallengeId = UUID.randomUUID();
+    UUID flagChallengeId = UUID.randomUUID();
+    LocalDateTime dueAt = LocalDateTime.of(2026, 5, 12, 16, 30);
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+    Course course = buildCourseWithOwner(courseId, instructor);
+    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    lab.setTitle("Evidence lab");
+    lab.setMaxScore(8);
+    CourseLab assignment = new CourseLab();
+    assignment.setLab(lab);
+    assignment.setDueAt(dueAt);
+    course.addCourseChallenge(assignment);
+
+    Challenge optionChallenge =
+        buildCourseChallenge(optionChallengeId, lab, "Choose wisely", ChallengeType.MULTIPLE_CHOICE, 5);
+    Challenge flagChallenge =
+        buildCourseChallenge(flagChallengeId, lab, "Capture flag", ChallengeType.FLAG, 3);
+
+    ChallengeOption selectedOption = new ChallengeOption();
+    selectedOption.setText("Sanitize input");
+    StudentOptionSubmission optionSubmission = new StudentOptionSubmission();
+    optionSubmission.setSelectedOption(selectedOption);
+    optionSubmission.setCorrect(true);
+    StudentFlagSubmission flagSubmission = new StudentFlagSubmission();
+    flagSubmission.setSubmittedFlag("pm4{almost}");
+    flagSubmission.setCorrect(false);
+
+    List<UUID> challengeIds = List.of(optionChallengeId, flagChallengeId);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(true);
+    when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId))
+        .thenReturn(List.of(optionChallenge, flagChallenge));
+    when(challengeCompletionRepository.findSolvedChallengeIds(participantId, challengeIds))
+        .thenReturn(List.of(optionChallengeId));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.of(optionSubmission));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(participantId, flagChallengeId))
+        .thenReturn(Optional.empty());
+    when(studentFlagSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.empty());
+    when(studentFlagSubmissionRepository.findByUserIdAndChallengeId(participantId, flagChallengeId))
+        .thenReturn(Optional.of(flagSubmission));
+    when(
+            courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+                courseId, List.of(participantId), challengeIds))
+        .thenReturn(
+            List.of(
+                new Object[] {participantId, flagChallengeId, 2},
+                new Object[] {UUID.randomUUID(), optionChallengeId, 99},
+                new Object[] {participantId, optionChallengeId, null}));
+
+    var detail =
+        courseService.getCourseLabSubmissionDetails(
+            instructorId, courseId, participantId, labId);
+
+    assertThat(detail.getStatus()).isEqualTo(CourseLabSubmissionStatusEnum.IN_PROGRESS);
+    assertThat(detail.getCompletedAt()).isNull();
+    assertThat(detail.getAwardedPoints()).isEqualTo(7);
+    assertThat(detail.getMaxPoints()).isEqualTo(8);
+    assertThat(detail.getDueAt()).isEqualTo(dueAt);
+    assertThat(detail.getChallenges())
+        .extracting(challenge -> challenge.getChallengeId())
+        .containsExactly(optionChallengeId, flagChallengeId);
+    assertThat(detail.getChallenges().get(0).getSelectedOptionText()).isEqualTo("Sanitize input");
+    assertThat(detail.getChallenges().get(0).getCorrect()).isTrue();
+    assertThat(detail.getChallenges().get(0).getAwardedPoints()).isEqualTo(5);
+    assertThat(detail.getChallenges().get(1).getSubmittedFlag()).isEqualTo("pm4{almost}");
+    assertThat(detail.getChallenges().get(1).getCorrect()).isFalse();
+    assertThat(detail.getChallenges().get(1).getOverridePoints()).isEqualTo(2);
+  }
+
+  @Test
+  void getCourseLabSubmissionDetails_whenAllChallengesSolved_setsCompletedAt() {
+    UUID instructorId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    LocalDateTime completedAt = LocalDateTime.of(2026, 5, 12, 17, 45);
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+    Course course = buildCourseWithOwner(courseId, instructor);
+    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    CourseLab assignment = new CourseLab();
+    assignment.setLab(lab);
+    course.addCourseChallenge(assignment);
+    Challenge challenge = buildCourseChallenge(challengeId, lab, "Solved", ChallengeType.FLAG, 1);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(true);
+    when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId)).thenReturn(List.of(challenge));
+    when(challengeCompletionRepository.findSolvedChallengeIds(participantId, List.of(challengeId)))
+        .thenReturn(List.of(challengeId));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(participantId, challengeId))
+        .thenReturn(Optional.empty());
+    when(studentFlagSubmissionRepository.findByUserIdAndChallengeId(participantId, challengeId))
+        .thenReturn(Optional.empty());
+    when(
+            courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+                courseId, List.of(participantId), List.of(challengeId)))
+        .thenReturn(List.of());
+    when(
+            challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+                List.of(participantId), List.of(labId)))
+        .thenReturn(List.<Object[]>of(new Object[] {participantId, labId, 1L, completedAt}));
+
+    var detail =
+        courseService.getCourseLabSubmissionDetails(
+            instructorId, courseId, participantId, labId);
+
+    assertThat(detail.getStatus()).isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
+    assertThat(detail.getCompletedAt()).isEqualTo(completedAt);
+    assertThat(detail.getChallenges().getFirst().getCorrect()).isTrue();
+  }
+
+  @Test
+  void getCourseLabSubmissionDetails_whenMultipleChoiceCompletedButWrong_awardsZeroPoints() {
+    UUID instructorId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID optionChallengeId = UUID.randomUUID();
+    LocalDateTime completedAt = LocalDateTime.of(2026, 5, 12, 19, 15);
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+    Course course = buildCourseWithOwner(courseId, instructor);
+
+    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    lab.setMaxScore(5);
+    CourseLab assignment = new CourseLab();
+    assignment.setLab(lab);
+    course.addCourseChallenge(assignment);
+
+    Challenge optionChallenge =
+        buildCourseChallenge(
+            optionChallengeId, lab, "Pick one", ChallengeType.MULTIPLE_CHOICE, 5);
+
+    StudentOptionSubmission optionSubmission = new StudentOptionSubmission();
+    optionSubmission.setCorrect(false);
+    ChallengeOption selected = new ChallengeOption();
+    selected.setText("Wrong answer");
+    optionSubmission.setSelectedOption(selected);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(true);
+    when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId)).thenReturn(List.of(optionChallenge));
+    when(challengeCompletionRepository.findSolvedChallengeIds(participantId, List.of(optionChallengeId)))
+        .thenReturn(List.of(optionChallengeId));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.of(optionSubmission));
+    when(studentFlagSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.empty());
+    when(
+            courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+                courseId, List.of(participantId), List.of(optionChallengeId)))
+        .thenReturn(List.of());
+    when(
+            challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+                List.of(participantId), List.of(labId)))
+        .thenReturn(List.<Object[]>of(new Object[] {participantId, labId, 1L, completedAt}));
+
+    var detail =
+        courseService.getCourseLabSubmissionDetails(instructorId, courseId, participantId, labId);
+
+    assertThat(detail.getStatus()).isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
+    assertThat(detail.getAwardedPoints()).isEqualTo(0);
+    assertThat(detail.getChallenges()).singleElement().satisfies(challenge -> {
+      assertThat(challenge.getCorrect()).isFalse();
+      assertThat(challenge.getAwardedPoints()).isEqualTo(0);
+      assertThat(challenge.getSelectedOptionText()).isEqualTo("Wrong answer");
+    });
+  }
+
+  @Test
+  void getCourseLabSubmissionDetails_whenLabNotAssigned_throwsLabNotFound() {
+    UUID instructorId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+    Course course = buildCourseWithOwner(courseId, instructor);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(true);
+
+    assertThatThrownBy(
+            () ->
+                courseService.getCourseLabSubmissionDetails(
+                    instructorId, courseId, participantId, labId))
+        .isInstanceOf(LabNotFoundException.class);
+  }
+
+  @Test
+  void updateCourseChallengeScore_createsOverrideAndReturnsRefreshedEntry() {
+    UUID instructorId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID solvedChallengeId = UUID.randomUUID();
+    LocalDateTime completedAt = LocalDateTime.of(2026, 5, 12, 18, 0);
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+    User participant = new User();
+    participant.setId(participantId);
+    Course course = buildCourseWithOwner(courseId, instructor);
+    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    lab.setMaxScore(8);
+    CourseLab assignment = new CourseLab();
+    assignment.setLab(lab);
+    course.addCourseChallenge(assignment);
+
+    Challenge overridden =
+        buildCourseChallenge(challengeId, lab, "Manual review", ChallengeType.FLAG, 5);
+    Challenge solved =
+        buildCourseChallenge(solvedChallengeId, lab, "Auto solved", ChallengeType.FLAG, 3);
+    List<UUID> challengeIds = List.of(challengeId, solvedChallengeId);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(true);
+    when(userRepository.findByIdAndDeletedAtIsNull(instructorId)).thenReturn(Optional.of(instructor));
+    when(userRepository.findByIdAndDeletedAtIsNull(participantId)).thenReturn(Optional.of(participant));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(overridden));
+    when(
+            courseChallengeScoreOverrideRepository
+                .findByCourseIdAndParticipantIdAndChallengeId(courseId, participantId, challengeId))
+        .thenReturn(Optional.empty());
+    when(courseChallengeScoreOverrideRepository.save(any(CourseChallengeScoreOverride.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+    when(challengeRepository.countByLabIds(List.of(labId)))
+        .thenReturn(List.<Object[]>of(new Object[] {labId, 2L}));
+    when(
+            challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+                List.of(participantId), List.of(labId)))
+        .thenReturn(List.<Object[]>of(new Object[] {participantId, labId, 2L, completedAt}));
+    when(challengeRepository.findByLabIdsOrderByLabIdAndOrderIndexAsc(List.of(labId)))
+        .thenReturn(List.of(overridden, solved));
+    when(challengeCompletionRepository.findSolvedChallengePairs(List.of(participantId), challengeIds))
+        .thenReturn(List.<Object[]>of(new Object[] {participantId, solvedChallengeId}));
+    when(
+            courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+                courseId, List.of(participantId), challengeIds))
+        .thenReturn(List.<Object[]>of(new Object[] {participantId, challengeId, 4}));
+
+    var entry =
+        courseService.updateCourseChallengeScore(
+            instructorId,
+            courseId,
+            participantId,
+            challengeId,
+            new UpdateCourseChallengeScoreRequestDto(4));
+
+    assertThat(entry.getStatus()).isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
+    assertThat(entry.getAwardedPoints()).isEqualTo(7);
+    assertThat(entry.getMaxPoints()).isEqualTo(8);
+    assertThat(entry.getCompletedAt()).isEqualTo(completedAt);
+    verify(courseChallengeScoreOverrideRepository).save(any(CourseChallengeScoreOverride.class));
+  }
+
+  @Test
+  void updateCourseChallengeScore_whenChallengeNotInCourse_throwsChallengeNotFound() {
+    UUID instructorId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+    User participant = new User();
+    participant.setId(participantId);
+    Course course = buildCourseWithOwner(courseId, instructor);
+    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    Challenge challenge =
+        buildCourseChallenge(challengeId, lab, "Detached challenge", ChallengeType.FLAG, 5);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(true);
+    when(userRepository.findByIdAndDeletedAtIsNull(instructorId)).thenReturn(Optional.of(instructor));
+    when(userRepository.findByIdAndDeletedAtIsNull(participantId)).thenReturn(Optional.of(participant));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+
+    assertThatThrownBy(
+            () ->
+                courseService.updateCourseChallengeScore(
+                    instructorId,
+                    courseId,
+                    participantId,
+                    challengeId,
+                    new UpdateCourseChallengeScoreRequestDto(1)))
+        .isInstanceOf(ChallengeNotFoundException.class)
+        .hasMessageContaining("not part of this course");
+  }
+
+  @Test
+  void listUpcomingDeadlines_filtersIncompleteRows() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    LocalDateTime dueAt = LocalDateTime.of(2026, 5, 13, 8, 0);
+
+    when(courseLabRepository.findDeadlinesForUser(userId))
+        .thenReturn(
+            List.of(
+                new Object[] {courseId, "Course", labId, "Lab", dueAt},
+                new Object[] {null, "Missing course", labId, "Lab", dueAt},
+                new Object[] {courseId, "Missing due date", labId, "Lab", null}));
+
+    var deadlines = courseService.listUpcomingDeadlines(userId);
+
+    assertThat(deadlines).singleElement();
+    assertThat(deadlines.getFirst().getCourseId()).isEqualTo(courseId);
+    assertThat(deadlines.getFirst().getLabId()).isEqualTo(labId);
+    assertThat(deadlines.getFirst().getDueAt()).isEqualTo(dueAt);
+  }
 
   @Test
   void joinByInviteCode_withInvalidCode_throwsInvalidInviteCodeException() {

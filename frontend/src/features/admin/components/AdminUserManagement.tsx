@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Badge,
   Button,
@@ -93,31 +93,34 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
     },
   });
 
-  const loadUsers = async (q?: string) => {
-    try {
-      setLoadingUsers(true);
-      const query = (q ?? listQuery).trim();
-      const url = new URL("/api/backend/api/admin/users/directory", window.location.origin);
-      if (query) url.searchParams.set("q", query);
-      url.searchParams.set("first", "0");
-      url.searchParams.set("max", "50");
+  const loadUsers = useCallback(
+    async (q?: string) => {
+      try {
+        setLoadingUsers(true);
+        const query = (q ?? listQuery).trim();
+        const url = new URL("/api/backend/api/admin/users/directory", window.location.origin);
+        if (query) url.searchParams.set("q", query);
+        url.searchParams.set("first", "0");
+        url.searchParams.set("max", "50");
 
-      const res = await fetch(url.toString(), { cache: "no-store" });
-      if (!res.ok) {
-        throw new Error(await safeErrorMessage(res));
+        const res = await fetch(url.toString(), { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error(await safeErrorMessage(res));
+        }
+        const data = (await res.json()) as AdminUserListResponse;
+        setUsers(data);
+      } catch (e) {
+        notifications.show({
+          title: "Error",
+          message: "Failed to load users: " + (e as Error).message,
+          color: "red",
+        });
+      } finally {
+        setLoadingUsers(false);
       }
-      const data = (await res.json()) as AdminUserListResponse;
-      setUsers(data);
-    } catch (e) {
-      notifications.show({
-        title: "Error",
-        message: "Failed to load users: " + (e as Error).message,
-        color: "red",
-      });
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
+    },
+    [listQuery]
+  );
 
   const formatEpoch = (value?: number) => {
     if (!value) return "-";
@@ -130,8 +133,7 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
 
   useEffect(() => {
     void loadUsers("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadUsers]);
 
   const onSubmit = async (values: CreateUserPayload) => {
     const notificationId = "create-user";

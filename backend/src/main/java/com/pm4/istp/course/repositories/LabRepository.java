@@ -27,6 +27,7 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
             c.difficulty,
             c.maxScore,
             c.dockerImage,
+            c.containerPort,
             c.creator.name,
             (select count(cc) from CourseLab cc where cc.lab = c),
             c.updatedAt
@@ -54,6 +55,7 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
             c.difficulty,
             c.maxScore,
             c.dockerImage,
+            c.containerPort,
             c.creator.name,
             (select count(cc) from CourseLab cc where cc.lab = c),
             c.updatedAt
@@ -89,6 +91,7 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
             c.status,
             c.difficulty,
             c.dockerImage,
+            c.containerPort,
             c.maxScore,
             (select count(cc) from CourseLab cc where cc.lab = c),
             c.createdAt,
@@ -117,6 +120,7 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
             c.status,
             c.difficulty,
             c.dockerImage,
+            c.containerPort,
             c.maxScore,
             (select count(cc) from CourseLab cc where cc.lab = c),
             c.createdAt,

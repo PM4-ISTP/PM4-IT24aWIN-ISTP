@@ -1,8 +1,10 @@
 package com.pm4.istp.challengepod.controllers;
 
 import com.pm4.istp.challengepod.dto.PodStatusResponse;
+import com.pm4.istp.challengepod.dto.RunningPodResponse;
 import com.pm4.istp.challengepod.services.LabPodService;
 import com.pm4.istp.shared.util.JwtUtil;
+import java.util.List;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,12 @@ public class LabPodController {
 
   public LabPodController(@NonNull LabPodService labPodService) {
     this.labPodService = labPodService;
+  }
+
+  @GetMapping
+  public ResponseEntity<List<RunningPodResponse>> listMyPods(@AuthenticationPrincipal Jwt jwt) {
+    UUID userId = JwtUtil.parseUserId(jwt);
+    return ResponseEntity.ok(labPodService.listPods(userId));
   }
 
   @PostMapping("/{labId}")

@@ -4,9 +4,11 @@ import com.pm4.istp.admin.db.AdminConfig;
 import com.pm4.istp.admin.services.AdminConfigurationService;
 import com.pm4.istp.challengepod.dto.PodStatusEnum;
 import com.pm4.istp.challengepod.dto.PodStatusResponse;
+import com.pm4.istp.challengepod.dto.RunningPodResponse;
 import com.pm4.istp.challengepod.events.KubeconfigChangedEvent;
 import com.pm4.istp.challengepod.exceptions.LabPodException;
 import com.pm4.istp.course.db.entities.Lab;
+import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
 import com.pm4.istp.course.services.LabService;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
@@ -28,6 +30,7 @@ import jakarta.annotation.PreDestroy;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
@@ -54,15 +57,13 @@ public class LabPodService {
   private static final String LABEL_CHALLENGE_ID = "istp.pm4.ch/lab-id";
   private static final String LABEL_CREATED_AT = "istp.pm4.ch/created-at-epoch";
 
-  // TODO(#163): replace with Lab.containerPort when the model supports it.
-  private static final int DEFAULT_APP_PORT = 80;
-
   private static final int POD_NAME_HASH_LENGTH = 8;
   private static final String INGRESS_NAME_SUFFIX = "-ingress";
 
   private final AdminConfigurationService adminConfigurationService;
   private final LabService labService;
   private final DockerImageAvailabilityService dockerImageAvailabilityService;
+  private final CourseLabRepository courseLabRepository;
   private final String defaultNamespace;
   private final String domain;
   private final boolean tls;
@@ -74,6 +75,7 @@ public class LabPodService {
       @NonNull AdminConfigurationService adminConfigurationService,
       @NonNull LabService labService,
       @NonNull DockerImageAvailabilityService dockerImageAvailabilityService,
+      @NonNull CourseLabRepository courseLabRepository,
       @Value("${k8s.default.namespace}") String defaultNamespace,
       @Value("${istp.domain}") String domain,
       @Value("${istp.tls}") boolean tls,
@@ -81,6 +83,7 @@ public class LabPodService {
     this.adminConfigurationService = adminConfigurationService;
     this.labService = labService;
     this.dockerImageAvailabilityService = dockerImageAvailabilityService;
+    this.courseLabRepository = courseLabRepository;
     this.defaultNamespace = defaultNamespace;
     this.domain = domain;
     this.tls = tls;
@@ -231,6 +234,24 @@ public class LabPodService {
     }
   }
 
+  public List<RunningPodResponse> listPods(UUID userId) {
+    try {
+      AdminConfig adminConfig = adminConfigurationService.getAdminConfiguration().orElse(null);
+      int ttl = adminConfig != null ? adminConfig.getPodTtlSeconds() : 3600;
+
+      return findDeployments(userId).stream()
+          .sorted(Comparator.comparing(this::createdAtOf).reversed())
+          .map(deployment -> buildRunningPodResponse(userId, deployment, ttl))
+          .flatMap(Optional::stream)
+          .toList();
+    } catch (LabPodException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error("Error listing pods for user {}", userId, e);
+      throw new LabPodException("Failed to list pods: " + e.getMessage(), e);
+    }
+  }
+
   /**
    * Delete the pod for (userId, labId).
    *
@@ -328,6 +349,57 @@ public class LabPodService {
         .withLabel(LABEL_CHALLENGE_ID, labId.toString())
         .list()
         .getItems();
+  }
+
+  private List<Deployment> findDeployments(UUID userId) {
+    return getClient()
+        .apps()
+        .deployments()
+        .inNamespace(defaultNamespace)
+        .withLabel("app", LABEL_APP)
+        .withLabel(LABEL_USER_ID, userId.toString())
+        .list()
+        .getItems();
+  }
+
+  private Optional<RunningPodResponse> buildRunningPodResponse(
+      UUID userId, Deployment deployment, int ttlSeconds) {
+    Map<String, String> labels = deployment.getMetadata().getLabels();
+    if (labels == null) {
+      return Optional.empty();
+    }
+
+    UUID labId;
+    try {
+      labId = UUID.fromString(labels.get(LABEL_CHALLENGE_ID));
+    } catch (Exception e) {
+      log.warn("Pod {} has no valid lab id label", deployment.getMetadata().getName());
+      return Optional.empty();
+    }
+
+    List<Object[]> summaries =
+        courseLabRepository.findEnrolledCourseLabSummariesForUserAndLab(userId, labId);
+    Object[] summary = summaries.isEmpty() ? null : summaries.get(0);
+
+    UUID courseId = summary != null ? (UUID) summary[0] : null;
+    String courseTitle = summary != null ? (String) summary[1] : null;
+    String labTitle = summary != null ? (String) summary[3] : null;
+
+    return Optional.of(
+        new RunningPodResponse(
+            labId, labTitle, courseId, courseTitle, buildResponse(deployment, ttlSeconds)));
+  }
+
+  private Instant createdAtOf(Deployment deployment) {
+    Map<String, String> labels = deployment.getMetadata().getLabels();
+    if (labels == null) {
+      return Instant.EPOCH;
+    }
+    try {
+      return Instant.ofEpochSecond(Long.parseLong(labels.get(LABEL_CREATED_AT)));
+    } catch (Exception e) {
+      return Instant.EPOCH;
+    }
   }
 
   private PodStatusResponse buildResponse(Deployment deployment, int ttlSeconds) {
@@ -445,6 +517,7 @@ public class LabPodService {
     labels.put(LABEL_USER_ID, userId.toString());
     labels.put(LABEL_CHALLENGE_ID, labId.toString());
     labels.put(LABEL_CREATED_AT, String.valueOf(nowEpoch));
+    int containerPort = resolveContainerPort(lab);
 
     // 1. Deployment
     Deployment deployment =
@@ -479,7 +552,7 @@ public class LabPodService {
                     : null)
             .endResources()
             .addNewPort()
-            .withContainerPort(DEFAULT_APP_PORT) // TODO(#163): lab.getContainerPort()
+            .withContainerPort(containerPort)
             .endPort()
             .endContainer()
             .endSpec()
@@ -513,7 +586,7 @@ public class LabPodService {
             .withName("app-port")
             .withProtocol("TCP")
             .withPort(80)
-            .withTargetPort(new IntOrString(DEFAULT_APP_PORT))
+            .withTargetPort(new IntOrString(containerPort))
             .endPort()
             .withType("ClusterIP")
             .endSpec()
@@ -576,11 +649,44 @@ public class LabPodService {
     return hostPrefix + "." + domain;
   }
 
+  private int resolveContainerPort(Lab lab) {
+    Integer containerPort = lab.getContainerPort();
+    if (containerPort == null) {
+      return Lab.DEFAULT_CONTAINER_PORT;
+    }
+    if (containerPort < 1 || containerPort > 65_535) {
+      throw new LabPodException("Lab container port must be between 1 and 65535.");
+    }
+    return containerPort;
+  }
+
   private String normalizeHostPrefix(String prefix) {
     if (prefix == null) {
       return "";
     }
-    return prefix.trim().toLowerCase().replaceAll("[^a-z0-9-]", "-").replaceAll("(^-+)|(-+$)", "");
+    String normalized = prefix.trim().toLowerCase();
+    StringBuilder hostPrefix = new StringBuilder(normalized.length());
+    for (int i = 0; i < normalized.length(); i++) {
+      char c = normalized.charAt(i);
+      if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-') {
+        hostPrefix.append(c);
+      } else {
+        hostPrefix.append('-');
+      }
+    }
+    return trimHyphens(hostPrefix);
+  }
+
+  private String trimHyphens(StringBuilder value) {
+    int start = 0;
+    int end = value.length();
+    while (start < end && value.charAt(start) == '-') {
+      start++;
+    }
+    while (end > start && value.charAt(end - 1) == '-') {
+      end--;
+    }
+    return value.substring(start, end);
   }
 
   private Optional<String> findIngressHost(String instanceName, int servicePort) {

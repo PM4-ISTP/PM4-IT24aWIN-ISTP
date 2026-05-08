@@ -115,8 +115,7 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
         onChange(loaded);
       })
       .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId]);
+  }, [courseId, onChange]);
 
   const update = (patch: Partial<BadgeConfig>) => {
     setConfig((prev) => {

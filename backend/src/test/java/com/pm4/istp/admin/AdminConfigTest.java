@@ -18,11 +18,12 @@ class AdminConfigTest {
     AdminConfig fullConstructor =
         new AdminConfig(id, "1", "512Mi", "pull-secret", "kube-2", 3600, updatedAt);
 
-    assertThat(oldConstructor.getImagePullSecretName()).isNull();
-    assertThat(oldConstructor.getPodTtlSeconds()).isEqualTo(1800);
-    assertThat(oldConstructor).isEqualTo(fullConstructor);
-    assertThat(oldConstructor).hasSameHashCodeAs(fullConstructor);
-    assertThat(oldConstructor).isNotEqualTo(new AdminConfig(UUID.randomUUID(), null, null, null, 3600, updatedAt));
-    assertThat(oldConstructor).isNotEqualTo("not-config");
+    assertThat(oldConstructor)
+        .returns(null, AdminConfig::getImagePullSecretName)
+        .returns(1800, AdminConfig::getPodTtlSeconds)
+        .isEqualTo(fullConstructor)
+        .hasSameHashCodeAs(fullConstructor)
+        .isNotEqualTo(new AdminConfig(UUID.randomUUID(), null, null, null, 3600, updatedAt))
+        .isNotEqualTo("not-config");
   }
 }

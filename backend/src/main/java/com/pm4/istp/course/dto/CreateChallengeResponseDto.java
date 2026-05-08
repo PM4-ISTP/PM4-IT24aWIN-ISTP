@@ -21,6 +21,7 @@ public class CreateChallengeResponseDto {
   private LabDifficultyEnum difficulty;
   private int maxScore;
   private String dockerImage;
+  private Integer containerPort;
   private UUID creatorId;
   private List<ChallengeResponseDto> challenges;
   private LocalDateTime createdAt;

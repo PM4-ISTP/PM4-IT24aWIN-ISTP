@@ -6,6 +6,8 @@ namespace: istp-prod
 resources:
   - ../../base
   - ingress.yaml
+  - adminer/deployment.yaml
+  - adminer/service.yaml
 
 images:
   - name: istp-backend
@@ -20,7 +22,7 @@ configMapGenerator:
     literals:
       - keycloak-hostname=istp-auth.pm4.init-lab.ch
       - keycloak-issuer-uri=https://istp-auth.pm4.init-lab.ch/realms/interactive-security-training-platform
-      - keycloak-admin-base-url=https://istp-auth.pm4.init-lab.ch
+      - keycloak-admin-base-url=http://keycloak:8080
       - keycloak-realm=interactive-security-training-platform
       - keycloak-admin-client-id=istp-backend
       - app-namespace=istp-prod

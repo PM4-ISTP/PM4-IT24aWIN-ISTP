@@ -4,6 +4,8 @@ import com.pm4.istp.course.db.entities.LabDifficultyEnum;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.validation.DockerImageReference;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -39,6 +41,10 @@ public class CreateChallengeRequestDto {
       regexp = DockerImageReference.GHCR_IMAGE_REGEXP,
       message = DockerImageReference.GHCR_IMAGE_MESSAGE)
   private String dockerImage;
+
+  @Min(value = 1, message = "Container port must be between 1 and 65535")
+  @Max(value = 65535, message = "Container port must be between 1 and 65535")
+  private Integer containerPort;
 
   @NotEmpty(message = "At least one sub task is required")
   @Valid

@@ -21,6 +21,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Lab {
+  public static final int DEFAULT_CONTAINER_PORT = 80;
+
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "id", updatable = false, nullable = false, unique = true)
@@ -45,6 +47,9 @@ public class Lab {
 
   @Column(name = "docker_image", nullable = false)
   private String dockerImage;
+
+  @Column(name = "container_port", nullable = false)
+  private Integer containerPort = DEFAULT_CONTAINER_PORT;
 
   // This field will be filled by the Challenges which will come later, for now we
   // will set it manually
