@@ -193,7 +193,11 @@ async function doRefreshAccessToken(token: JWT): Promise<JWT> {
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   if (!token.refreshToken) {
     console.error("Missing refresh token");
-    return { ...token, error: "RefreshAccessTokenError", refreshRetryAfter: Date.now() + REFRESH_FAILURE_BACKOFF_MS } as JWT;
+    return {
+      ...token,
+      error: "RefreshAccessTokenError",
+      refreshRetryAfter: Date.now() + REFRESH_FAILURE_BACKOFF_MS,
+    } as JWT;
   }
 
   const retryAfter = (token as JWT & { refreshRetryAfter?: number }).refreshRetryAfter;
