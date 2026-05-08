@@ -5,12 +5,15 @@ import { Alert, Button, Group, Stack, Text } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useApiClient } from "@/src/shared/lib/api/client";
+import { LeaveCourseButton } from "./LeaveCourseButton";
 
 interface CourseEnrollmentButtonProps {
   courseId: string;
   isEnrolled: boolean;
   participantCount: number;
   isPublished: boolean;
+  isPrivate?: boolean;
+  nextChallengeHref?: string;
 }
 
 export function CourseEnrollmentButton({
@@ -18,6 +21,8 @@ export function CourseEnrollmentButton({
   isEnrolled,
   participantCount,
   isPublished,
+  isPrivate = false,
+  nextChallengeHref,
 }: CourseEnrollmentButtonProps) {
   const router = useRouter();
   const client = useApiClient();
@@ -61,7 +66,9 @@ export function CourseEnrollmentButton({
     }
   }
 
-  if (!isPublished) {
+  // Show nothing only for draft courses (not published, not private).
+  // Private courses: accessible via invite code — enroll button should still appear.
+  if (!isPublished && !isPrivate) {
     return null;
   }
 
@@ -69,12 +76,16 @@ export function CourseEnrollmentButton({
     <Stack gap="xs" align="flex-end">
       <Group gap="sm">
         {hasJoined ? (
-          /* TODO: Replace href with real lesson route once lessons are implemented */
           <Button
             size="md"
             radius="md"
             rightSection={<IconArrowRight size={16} />}
-            onClick={() => router.push(`/dashboard/learn/${courseId}`)}
+            disabled={!nextChallengeHref}
+            onClick={() => {
+              if (nextChallengeHref) {
+                router.push(nextChallengeHref);
+              }
+            }}
             style={{
               background: "linear-gradient(90deg, #2563eb, #4f46e5)",
               border: "none",
@@ -83,7 +94,7 @@ export function CourseEnrollmentButton({
               boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
             }}
           >
-            Start Next Lesson
+            {nextChallengeHref ? "Continue Course" : "All Labs Completed"}
           </Button>
         ) : (
           <Button
@@ -109,6 +120,15 @@ export function CourseEnrollmentButton({
       <Text size="xs" c="dimmed">
         {currentParticipantCount} participant{currentParticipantCount === 1 ? "" : "s"}
       </Text>
+      {hasJoined && (
+        <LeaveCourseButton
+          courseId={courseId}
+          onLeave={() => {
+            setHasJoined(false);
+            setCurrentParticipantCount((c) => c - 1);
+          }}
+        />
+      )}
       {joinError && (
         <Alert color="red" variant="light" title="Enrollment failed">
           {joinError}

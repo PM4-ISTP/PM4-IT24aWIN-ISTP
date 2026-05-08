@@ -81,6 +81,12 @@ spec:
                 configMapKeyRef:
                   name: istp-config
                   key: istp-tls
+            - name: ISTP_LAB_HOST_PREFIX
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: istp-lab-host-prefix
+                  optional: true
           resources:
             requests:
               cpu: 250m

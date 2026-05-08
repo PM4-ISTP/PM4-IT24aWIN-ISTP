@@ -1,5 +1,6 @@
 package com.pm4.istp.course.services;
 
+import com.pm4.istp.admin.services.AdminConfigurationService;
 import com.pm4.istp.course.validation.DockerImageReference;
 import java.io.IOException;
 import java.net.URI;
@@ -12,6 +13,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,10 +32,27 @@ public class DockerImageAvailabilityService {
   private static final Pattern TOKEN_PATTERN =
       Pattern.compile("\"(?:token|access_token)\"\\s*:\\s*\"([^\"]+)\"");
 
-  private final HttpClient httpClient =
-      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+  private final HttpClient httpClient;
+  private final AdminConfigurationService adminConfigurationService;
+
+  @Autowired
+  public DockerImageAvailabilityService(AdminConfigurationService adminConfigurationService) {
+    this(
+        adminConfigurationService,
+        HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build());
+  }
+
+  DockerImageAvailabilityService(
+      AdminConfigurationService adminConfigurationService, HttpClient httpClient) {
+    this.adminConfigurationService = adminConfigurationService;
+    this.httpClient = httpClient;
+  }
 
   public void assertImageExists(String imageReference) {
+    checkImageAvailability(imageReference);
+  }
+
+  public DockerImageAvailabilityResult checkImageAvailability(String imageReference) {
     if (imageReference == null || !GHCR_IMAGE_PATTERN.matcher(imageReference).matches()) {
       throw new IllegalArgumentException(DockerImageReference.GHCR_IMAGE_MESSAGE);
     }
@@ -50,11 +69,16 @@ public class DockerImageAvailabilityService {
 
       int status = response.statusCode();
       if (status == 200) {
-        return;
+        return DockerImageAvailabilityResult.publicGhcrImage();
       }
       if (status == 401 || status == 403) {
+        if (hasImagePullSecretConfigured()) {
+          return DockerImageAvailabilityResult.privateGhcrImage();
+        }
         throw new IllegalArgumentException(
-            "Docker image is private or not readable by the registry: " + imageReference);
+            "Docker image must be public and anonymously readable. Private GHCR images are not "
+                + "supported unless an image pull secret is configured: "
+                + imageReference);
       }
       if (status == 404) {
         throw new IllegalArgumentException("Docker image does not exist: " + imageReference);
@@ -131,18 +155,46 @@ public class DockerImageAvailabilityService {
     return matcher.find() ? Optional.of(matcher.group(1)) : Optional.empty();
   }
 
+  private boolean hasImagePullSecretConfigured() {
+    return adminConfigurationService
+        .getAdminConfiguration()
+        .map(
+            config ->
+                config.getImagePullSecretName() != null
+                    && !config.getImagePullSecretName().isBlank())
+        .orElse(false);
+  }
+
   private GhcrImageReference parseGhcrReference(String imageReference) {
     String pathAndTag = imageReference.substring(GHCR_PREFIX.length());
     int lastSlash = pathAndTag.lastIndexOf('/');
+    int digestSeparator = pathAndTag.lastIndexOf("@sha256:");
     int tagSeparator = pathAndTag.lastIndexOf(':');
 
-    String repository =
-        tagSeparator > lastSlash ? pathAndTag.substring(0, tagSeparator) : pathAndTag;
-    String tag = tagSeparator > lastSlash ? pathAndTag.substring(tagSeparator + 1) : "latest";
+    String repository;
+    String manifestReference;
+    if (digestSeparator > lastSlash) {
+      repository = pathAndTag.substring(0, digestSeparator);
+      manifestReference = pathAndTag.substring(digestSeparator + 1);
+    } else {
+      repository = tagSeparator > lastSlash ? pathAndTag.substring(0, tagSeparator) : pathAndTag;
+      manifestReference =
+          tagSeparator > lastSlash ? pathAndTag.substring(tagSeparator + 1) : "latest";
+    }
 
     return new GhcrImageReference(
-        URI.create("https://ghcr.io/v2/" + repository + "/manifests/" + tag));
+        URI.create("https://ghcr.io/v2/" + repository + "/manifests/" + manifestReference));
   }
 
   private record GhcrImageReference(URI manifestUri) {}
+
+  public record DockerImageAvailabilityResult(boolean privateImage) {
+    public static DockerImageAvailabilityResult publicGhcrImage() {
+      return new DockerImageAvailabilityResult(false);
+    }
+
+    public static DockerImageAvailabilityResult privateGhcrImage() {
+      return new DockerImageAvailabilityResult(true);
+    }
+  }
 }

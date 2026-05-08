@@ -7,11 +7,32 @@
 
 /* ── Design system tokens ─────────────────────────────────────────────────── */
 :root {
+  /* Backgrounds */
   --ds-card-bg: rgba(255, 255, 255, 0.04);
+  --ds-card-bg-hover: rgba(255, 255, 255, 0.06);
   --ds-card-border: rgba(255, 255, 255, 0.08);
+  --ds-card-border-hover: rgba(255, 255, 255, 0.13);
+
+  /* Accent & text */
   --ds-accent: #60a5fa;
+  --ds-accent-dim: rgba(96, 165, 250, 0.15);
   --ds-text-primary: #e2e8f0;
   --ds-text-secondary: #94a3b8;
+  --ds-text-muted: rgba(255, 255, 255, 0.35);
+
+  /* Shadows */
+  --ds-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --ds-shadow-md: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --ds-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* Radii */
+  --ds-radius-sm: 8px;
+  --ds-radius-md: 10px;
+  --ds-radius-lg: 14px;
+
+  /* Button */
+  --ds-btn-primary: linear-gradient(90deg, #2563eb, #4f46e5);
+  --ds-btn-primary-shadow: 0 2px 12px rgba(79, 70, 229, 0.3);
 }
 
 /* ── Global dark base ─────────────────────────────────────────────────────── */
@@ -65,6 +86,23 @@ body {
   color: var(--ds-text-primary);
   min-height: 160px;
 }
+.mantine-RichTextEditor-content .ProseMirror ul,
+.course-description ul {
+  list-style: disc;
+}
+.mantine-RichTextEditor-content .ProseMirror ol,
+.course-description ol {
+  list-style: decimal;
+}
+.mantine-RichTextEditor-content .ProseMirror ul,
+.mantine-RichTextEditor-content .ProseMirror ol {
+  padding-left: 1.5em;
+  margin-bottom: 0.75em;
+}
+.mantine-RichTextEditor-content .ProseMirror li {
+  margin-bottom: 0.25em;
+  line-height: 1.5;
+}
 
 /* ── Mantine Select / Combobox dropdown dark style ───────────────────────── */
 .mantine-Select-dropdown,
@@ -82,6 +120,228 @@ body {
 .mantine-Combobox-option:hover,
 .mantine-Combobox-option[data-combobox-active] {
   background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── Global focus ring ───────────────────────────────────────────────────── */
+/* Consistent, high-visibility focus outline for all keyboard-navigable        */
+/* elements. Suppressed on mouse-clicked elements by :focus:not(:focus-visible).*/
+*:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.75) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+/* ── Navigation hover state ──────────────────────────────────────────────── */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  transition:
+    color 150ms ease,
+    background 150ms ease;
+  border-radius: 0;
+}
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ── Mantine Accordion dark theme ────────────────────────────────────────── */
+.mantine-Accordion-item {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-radius: var(--ds-radius-md) !important;
+  overflow: hidden;
+  transition: border-color 150ms ease;
+}
+.mantine-Accordion-item + .mantine-Accordion-item {
+  margin-top: 6px;
+}
+.mantine-Accordion-item:hover {
+  border-color: rgba(255, 255, 255, 0.13) !important;
+}
+.mantine-Accordion-control {
+  background: transparent !important;
+}
+.mantine-Accordion-control:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+.mantine-Accordion-panel {
+  background: rgba(255, 255, 255, 0.01) !important;
+}
+
+/* ── Mantine Modal dark theme ────────────────────────────────────────────── */
+.mantine-Modal-content {
+  background: #0e1a2e !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+}
+.mantine-Modal-header {
+  background: #0e1a2e !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  padding-bottom: 0.75rem !important;
+}
+.mantine-Modal-title {
+  font-family: var(--font-space-grotesk), sans-serif !important;
+  font-weight: 700 !important;
+  color: #f1f5f9 !important;
+  font-size: 1rem !important;
+}
+.mantine-Modal-close {
+  color: rgba(255, 255, 255, 0.45) !important;
+  transition: color 150ms ease !important;
+}
+.mantine-Modal-close:hover {
+  color: #e2e8f0 !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── Mantine Table dark theme ────────────────────────────────────────────── */
+.mantine-Table-table {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+.mantine-Table-th {
+  background: rgba(255, 255, 255, 0.025) !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-family: var(--font-space-grotesk), sans-serif !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+.mantine-Table-td {
+  border-color: rgba(255, 255, 255, 0.04) !important;
+  color: var(--ds-text-primary);
+  font-size: 0.875rem;
+}
+.mantine-Table-tr[data-hover]:hover td {
+  background: rgba(255, 255, 255, 0.03) !important;
+  cursor: pointer;
+}
+
+/* ── Mantine Tabs dark theme ─────────────────────────────────────────────── */
+.mantine-Tabs-tab {
+  font-family: var(--font-space-grotesk), sans-serif !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  transition: color 150ms ease !important;
+  letter-spacing: 0.01em;
+}
+.mantine-Tabs-tab:hover {
+  color: #94a3b8 !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+.mantine-Tabs-tab[data-active] {
+  color: #e2e8f0 !important;
+}
+.mantine-Tabs-list {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── Mantine Pagination dark theme ──────────────────────────────────────── */
+.mantine-Pagination-control {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #94a3b8 !important;
+  font-family: var(--font-space-grotesk), sans-serif !important;
+  font-weight: 600 !important;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease !important;
+}
+.mantine-Pagination-control:hover:not([data-disabled]) {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #e2e8f0 !important;
+}
+.mantine-Pagination-control[data-active] {
+  background: rgba(96, 165, 250, 0.15) !important;
+  border-color: rgba(96, 165, 250, 0.35) !important;
+  color: #60a5fa !important;
+}
+
+/* ── Mantine SegmentedControl dark theme ─────────────────────────────────── */
+.mantine-SegmentedControl-root {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: var(--ds-radius-md) !important;
+}
+.mantine-SegmentedControl-label {
+  font-family: var(--font-space-grotesk), sans-serif !important;
+  font-weight: 600 !important;
+  transition: color 150ms ease !important;
+}
+.mantine-SegmentedControl-indicator {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* ── Mantine ActionIcon hover ────────────────────────────────────────────── */
+.mantine-ActionIcon-root {
+  transition:
+    background 150ms ease,
+    color 150ms ease !important;
+}
+
+/* ── Mantine Alert improvements ──────────────────────────────────────────── */
+.mantine-Alert-root {
+  border-radius: var(--ds-radius-md) !important;
+  border-width: 1px !important;
+}
+
+/* ── Mantine Paper ───────────────────────────────────────────────────────── */
+.mantine-Paper-root[data-with-border] {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── Mantine Badge ───────────────────────────────────────────────────────── */
+.mantine-Badge-root {
+  font-family: var(--font-space-grotesk), sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* ── Empty state utility ──────────────────────────────────────────────────── */
+.ds-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+/* ── Page section label ───────────────────────────────────────────────────── */
+.ds-section-label {
+  font-family: var(--font-space-grotesk), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ── Skeleton shimmer ─────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  from {
+    background-position: -400px 0;
+  }
+  to {
+    background-position: 400px 0;
+  }
+}
+.ds-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: var(--ds-radius-sm);
 }
 
 /* Course description rendered HTML (from rich text editor) */

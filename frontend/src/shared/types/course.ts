@@ -1,9 +1,12 @@
 import type { components } from "@/src/shared/lib/api/schema";
 
-export type SubTaskStudentDto = components["schemas"]["SubTaskStudentDto"];
 export type ChallengeStudentDto = components["schemas"]["ChallengeStudentDto"];
-export type SubTaskSubmissionRequestDto = components["schemas"]["SubTaskSubmissionRequestDto"];
-export type SubTaskSubmissionResponseDto = components["schemas"]["SubTaskSubmissionResponseDto"];
+export type ChallengeOptionStudentDto = components["schemas"]["ChallengeOptionStudentDto"];
+export type LabStudentDto = components["schemas"]["LabStudentDto"];
+export type ChallengeSubmissionRequestDto = components["schemas"]["ChallengeSubmissionRequestDto"];
+export type ChallengeSubmissionResponseDto =
+  components["schemas"]["ChallengeSubmissionResponseDto"];
+export type ChoiceSubmissionResponseDto = components["schemas"]["ChoiceSubmissionResponseDto"];
 
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
 export type PlatformRole = "ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT";
@@ -34,6 +37,7 @@ export interface CreateCourseDto {
   isPrivate: boolean;
   imageUrl?: string | null;
   topic?: string | null;
+  mcAttemptsMode?: string | null;
   instructors: InstructorAssignment[];
 }
 
@@ -76,6 +80,7 @@ export interface UpdateCourseDto {
   isPrivate: boolean;
   imageUrl?: string | null;
   topic?: string | null;
+  mcAttemptsMode?: string | null;
   instructors: InstructorAssignment[];
 }
 
@@ -94,13 +99,16 @@ export interface CourseParticipantDto {
   id: string;
   name: string;
   picture: string | null;
+  email?: string | null;
 }
 
-export interface CourseChallengeResponseDto {
-  challengeId: string;
-  challengeTitle: string;
+export interface CourseLabResponseDto {
+  labId: string;
+  labTitle: string;
   difficulty: string;
   orderIndex: number;
+  dueAt?: string | null;
+  maxScore?: number | null;
 }
 
 export interface CourseDetailResponseDto {
@@ -115,11 +123,58 @@ export interface CourseDetailResponseDto {
   inviteCode?: string | null;
   imageUrl?: string | null;
   topic?: string | null;
+  mcAttemptsMode?: string | null;
   courseInstructors: CourseInstructorResponseDto[];
   participants: CourseParticipantDto[];
-  courseChallenges: CourseChallengeResponseDto[];
+  courseLabs: CourseLabResponseDto[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type CourseLabSubmissionStatusEnum = "NOT_STARTED" | "IN_PROGRESS" | "SUBMITTED";
+
+export interface CourseChallengeSubmissionEntryDto {
+  participantId: string;
+  labId: string;
+  solvedChallengeCount: number;
+  totalChallengeCount: number;
+  awardedPoints: number;
+  maxPoints: number;
+  completedAt: string | null;
+  status: CourseLabSubmissionStatusEnum;
+}
+
+export interface CourseLabChallengeSubmissionDetailDto {
+  challengeId: string;
+  title: string;
+  type: string;
+  maxPoints: number;
+  completed: boolean;
+  correct: boolean | null;
+  awardedPoints: number | null;
+  overridePoints: number | null;
+  submittedFlag: string | null;
+  selectedOptionText: string | null;
+}
+
+export interface CourseLabSubmissionDetailDto {
+  courseId: string;
+  participantId: string;
+  labId: string;
+  labTitle: string;
+  dueAt: string | null;
+  completedAt: string | null;
+  status: CourseLabSubmissionStatusEnum;
+  awardedPoints: number;
+  maxPoints: number;
+  challenges: CourseLabChallengeSubmissionDetailDto[];
+}
+
+export interface CourseLabSubmissionsResponseDto {
+  courseId: string;
+  participants: CourseParticipantDto[];
+  labs: CourseLabResponseDto[];
+  submissions: CourseChallengeSubmissionEntryDto[];
 }
 
 export interface PublicCourseDetailResponseDto {
@@ -134,7 +189,7 @@ export interface PublicCourseDetailResponseDto {
   topic?: string | null;
   courseInstructors: CourseInstructorResponseDto[];
   participants: null;
-  courseChallenges: ChallengeStudentDto[];
+  courseLabs: LabStudentDto[];
   createdAt: string;
   updatedAt: string;
 }

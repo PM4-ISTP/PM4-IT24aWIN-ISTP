@@ -34,7 +34,10 @@ public class CourseDetailResponseDto {
 
   private List<CourseDetailInstructorResponseDto> courseInstructors;
   private List<CourseParticipantResponseDto> participants;
-  private List<CourseChallengeResponseDto> courseChallenges;
+  private List<CourseLabResponseDto> courseLabs;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
+
+  /** "ONCE" or "UNLIMITED" – controls MC attempt behaviour for students. */
+  private String mcAttemptsMode;
 }

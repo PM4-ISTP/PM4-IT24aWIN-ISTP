@@ -13,6 +13,8 @@ interface CourseBannerHeaderProps {
   isEnrolled: boolean;
   participantCount: number;
   isPublished: boolean;
+  isPrivate?: boolean;
+  nextChallengeHref?: string;
   backPageName: string;
   backHref: string;
 }
@@ -26,6 +28,8 @@ export function CourseBannerHeader({
   isEnrolled,
   participantCount,
   isPublished,
+  isPrivate = false,
+  nextChallengeHref,
   backPageName,
   backHref,
 }: CourseBannerHeaderProps) {
@@ -138,6 +142,8 @@ export function CourseBannerHeader({
                 isEnrolled={isEnrolled}
                 participantCount={participantCount}
                 isPublished={isPublished}
+                isPrivate={isPrivate}
+                nextChallengeHref={nextChallengeHref}
               />
             </div>
           </div>

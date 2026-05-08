@@ -2,28 +2,38 @@ import { Alert, Box, Container, Group, Stack, Title } from "@mantine/core";
 import { IconArrowLeft, IconBook2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseBannerHeader } from "@/src/features/course/components/course/CourseBannerHeader";
-import { CourseChallengeDetailsList } from "@/src/features/course/components/management/CourseChallengeDetailsList";
+import { CourseLabDetailsList } from "@/src/features/course/components/management/CourseLabDetailsList";
 import { CourseJourneyCard } from "@/src/features/course/components/course/CourseJourneyCard";
 import { fetchPublicCourse } from "@/src/features/course/actions/courses";
 import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
-import type { ChallengeStudentDto, InstructorRoleEnum } from "@/src/shared/types/course";
+import type { LabStudentDto, InstructorRoleEnum } from "@/src/shared/types/course";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
 
-function findNextChallenge(challenges: ChallengeStudentDto[]): ChallengeStudentDto | null {
-  return challenges.find((c) => !c.isSolved) ?? null;
+function findNextChallenge(labs: LabStudentDto[]): LabStudentDto | null {
+  return labs.find((c) => !c.isSolved) ?? null;
 }
 
-function aggregateSubTaskProgress(challenges: ChallengeStudentDto[]): {
+function aggregateChallengeProgress(labs: LabStudentDto[]): {
   completed: number;
   total: number;
 } {
   let completed = 0;
   let total = 0;
-  for (const challenge of challenges) {
-    completed += challenge.solvedSubTaskCount ?? 0;
-    total += challenge.totalSubTaskCount ?? challenge.subTasks?.length ?? 0;
+  for (const lab of labs) {
+    completed += lab.solvedChallengeCount ?? 0;
+    total += lab.totalChallengeCount ?? lab.challenges?.length ?? 0;
   }
   return { completed, total };
+}
+
+function aggregateLabProgress(labs: LabStudentDto[]): {
+  completed: number;
+  total: number;
+} {
+  return {
+    completed: labs.filter((l) => l.isSolved).length,
+    total: labs.length,
+  };
 }
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
@@ -77,19 +87,28 @@ export default async function CourseDetails({
   const isEnrolled = course.isEnrolled ?? false;
   const participantCount = course.participantCount ?? 0;
   const isPublished = course.isPublished ?? false;
+  const isPrivate = (course as { isPrivate?: boolean }).isPrivate ?? false;
   const owner = getOwner(course.courseInstructors);
+  const nextChallengeHref = isEnrolled
+    ? (() => {
+        const next = findNextChallenge(course.courseLabs ?? []);
+        return next?.id ? `/dashboard/courses/${course.id}/labs/${next.id}/play` : undefined;
+      })()
+    : undefined;
 
   return (
     <>
       <CourseBannerHeader
         title={title}
         topic={course.topic}
-        shortDescription={course.shortDescription}
-        description={sanitizedDescription}
+        shortDescription={null}
+        description={null}
         courseId={course.id!} // already checked, that ID is not undefined
         isEnrolled={isEnrolled}
         participantCount={participantCount}
         isPublished={isPublished}
+        isPrivate={isPrivate}
+        nextChallengeHref={nextChallengeHref}
         backPageName={backPageName}
         backHref={backHref}
       />
@@ -99,30 +118,13 @@ export default async function CourseDetails({
         <Stack gap="lg">
           <CourseJourneyCard
             instructor={owner}
-            // lessons={undefined}    ← wire up when lesson API is ready
+            labs={isEnrolled ? aggregateLabProgress(course.courseLabs ?? []) : undefined}
             challenges={
-              isEnrolled ? aggregateSubTaskProgress(course.courseChallenges ?? []) : undefined
-            }
-            nextChallengeHref={
-              isEnrolled
-                ? (() => {
-                    const next = findNextChallenge(course.courseChallenges ?? []);
-                    return next?.id
-                      ? `/dashboard/courses/${course.id}/challenges/${next.id}/play`
-                      : undefined;
-                  })()
-                : undefined
+              isEnrolled ? aggregateChallengeProgress(course.courseLabs ?? []) : undefined
             }
           />
 
-          <CourseChallengeDetailsList
-            challenges={course.courseChallenges ?? []}
-            title="Course Challenges"
-            showIndex={true}
-            courseId={isEnrolled ? course.id : undefined}
-          />
-
-          {/* About this course */}
+          {/* Course description */}
           {sanitizedDescription && (
             <Box
               style={{
@@ -145,7 +147,7 @@ export default async function CourseDetails({
                       fontSize: "1.1rem",
                     }}
                   >
-                    About this Course
+                    Course Description
                   </Title>
                 </Group>
                 <div
@@ -156,6 +158,13 @@ export default async function CourseDetails({
               </Stack>
             </Box>
           )}
+
+          <CourseLabDetailsList
+            labs={course.courseLabs ?? []}
+            title="Course Labs"
+            showIndex={true}
+            courseId={isEnrolled ? course.id : undefined}
+          />
         </Stack>
       </Container>
     </>

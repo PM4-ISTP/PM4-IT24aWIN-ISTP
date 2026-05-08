@@ -10,4 +10,6 @@ public class KeycloakAdminProperties {
   private String realm;
   private String clientId;
   private String clientSecret;
+  private String userByIdPath;
+  private String userRealmRoleMappingsPath;
 }

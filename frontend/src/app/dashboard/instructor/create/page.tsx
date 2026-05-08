@@ -4,13 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ActionIcon,
-  Affix,
   Alert,
-  Box,
   Button,
   Container,
   Group,
-  Notification,
   Select,
   Stack,
   Text,
@@ -18,8 +15,10 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { IconArrowLeft, IconX } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
+import { IconArrowLeft } from "@tabler/icons-react";
 import MyEditor from "@/src/shared/components/MyEditor";
+import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
 import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
 import { createCourse } from "@/src/features/course/actions/courses";
 import {
@@ -27,7 +26,6 @@ import {
   normalizeShortDescription,
 } from "@/src/features/course/utils/courseText";
 import { visibilityToFlags } from "@/src/features/course/utils/courseVisibility";
-import { useToast } from "@/src/shared/hooks/useToast";
 import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 import type { CourseVisibility } from "@/src/shared/types/course";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
@@ -42,11 +40,11 @@ export default function CreateCourse() {
   const [imageUrl, setImageUrl] = useState("");
   const [topic, setTopic] = useState<string | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
+  const [mcAttemptsMode, setMcAttemptsMode] = useState<string>("UNLIMITED");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [shortDescriptionError, setShortDescriptionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const charLimitToast = useToast();
   const topicOptions = useCourseTopicOptions();
 
   const shortDescriptionCharCount = shortDescription.length;
@@ -80,6 +78,7 @@ export default function CreateCourse() {
       imageUrl: imageUrl.trim() || null,
       topic: topic,
       collaboratorIds: selectedInstructors,
+      mcAttemptsMode,
     });
 
     setIsSubmitting(false);
@@ -125,15 +124,7 @@ export default function CreateCourse() {
           </Group>
         </Group>
 
-        <Box
-          style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 14,
-            padding: "2rem",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-          }}
-        >
+        <SurfaceCard variant="strong" elevation="md" padding="2rem">
           <Stack gap="lg">
             <TextInput
               label="Course Title"
@@ -151,7 +142,12 @@ export default function CreateCourse() {
               onChange={(e) => {
                 const newVal = e.currentTarget.value;
                 if (newVal.length > COURSE_SHORT_DESCRIPTION_MAX_CHARS) {
-                  charLimitToast.show();
+                  notifications.show({
+                    id: "course-short-description-char-limit",
+                    color: "orange",
+                    title: "Character limit reached",
+                    message: `The short description cannot exceed ${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters (including spaces).`,
+                  });
                   return;
                 }
                 setShortDescription(newVal);
@@ -209,8 +205,25 @@ export default function CreateCourse() {
               allowDeselect={false}
             />
 
+            <Select
+              label="Multiple-Choice Attempts"
+              value={mcAttemptsMode}
+              onChange={(value) => {
+                if (value) setMcAttemptsMode(value);
+              }}
+              data={[
+                { value: "UNLIMITED", label: "Unlimited — retry until correct (self-learning)" },
+                {
+                  value: "ONCE",
+                  label: "Once — one attempt, graded regardless of correctness (Praktikum / exam)",
+                },
+              ]}
+              description="Controls how many times students can attempt MC questions in this course."
+              allowDeselect={false}
+            />
+
             {formError && (
-              <Alert color="red" title="Failed to create course">
+              <Alert color="red" title="Could not create course" variant="light">
                 {formError}
               </Alert>
             )}
@@ -233,23 +246,8 @@ export default function CreateCourse() {
               Create Course
             </Button>
           </Stack>
-        </Box>
+        </SurfaceCard>
       </Stack>
-
-      <Affix position={{ bottom: 20, right: 20 }}>
-        {charLimitToast.visible && (
-          <Notification
-            color="orange"
-            title="Character limit reached"
-            onClose={charLimitToast.hide}
-            withCloseButton
-            icon={<IconX size={18} />}
-          >
-            The short description cannot exceed {COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters
-            (including spaces).
-          </Notification>
-        )}
-      </Affix>
     </Container>
   );
 }

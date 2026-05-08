@@ -3,11 +3,13 @@ package com.pm4.istp.user.filters;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.db.entities.UserRoleEnum;
 import com.pm4.istp.user.repositories.UserRepository;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,209 +47,325 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       "{\"error\":\"User is missing required application role.\"}";
   private static final String USER_IDENTIFIER_CONFLICT_ERROR =
       "{\"error\":\"Account conflict detected. Contact an administrator.\"}";
+  private static final String EMAIL_CLAIM = "email";
+  private static final String PICTURE_CLAIM = "picture";
+  private static final String TITLE_CLAIM = "title";
 
   private final UserRepository userRepository;
 
   @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}")
   private String issuerUri;
 
+  @Value("${istp.userinfo.enabled:true}")
+  private boolean userInfoEnabled = true;
+
+  @Value("${istp.userinfo.timeout:2s}")
+  private Duration userInfoTimeout = Duration.ofSeconds(2);
+
+  private RestClient userInfoRestClient;
+
+  @PostConstruct
+  void init() {
+    Duration timeout = userInfoTimeout == null ? Duration.ofSeconds(2) : userInfoTimeout;
+    int timeoutMs = Math.clamp(timeout.toMillis(), 1, Integer.MAX_VALUE);
+
+    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+    requestFactory.setConnectTimeout(timeoutMs);
+    requestFactory.setReadTimeout(timeoutMs);
+
+    userInfoRestClient = RestClient.builder().requestFactory(requestFactory).build();
+  }
+
   @Override
   public void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-    if (authentication != null
-        && authentication.isAuthenticated()
-        && authentication.getPrincipal() instanceof Jwt jwt) {
-
-      UUID keycloakId = UUID.fromString(jwt.getSubject());
-      Optional<User> existingUser = userRepository.findById(keycloakId);
-
-      String fullName =
-          discardIfTooLong(
-              normalize(jwt.getClaimAsString("name")), MAX_COLUMN_LENGTH, "name", keycloakId);
-      String givenName =
-          discardIfTooLong(
-              normalize(jwt.getClaimAsString("given_name")),
-              MAX_COLUMN_LENGTH,
-              "given_name",
-              keycloakId);
-      String familyName =
-          discardIfTooLong(
-              normalize(jwt.getClaimAsString("family_name")),
-              MAX_COLUMN_LENGTH,
-              "family_name",
-              keycloakId);
-      String username =
-          discardIfTooLong(
-              normalizeLowercase(jwt.getClaimAsString("preferred_username")),
-              MAX_COLUMN_LENGTH,
-              "preferred_username",
-              keycloakId);
-      String emailClaim =
-          discardIfTooLong(
-              normalizeLowercase(jwt.getClaimAsString("email")),
-              MAX_COLUMN_LENGTH,
-              "email",
-              keycloakId);
-      String pictureClaim =
-          discardIfTooLong(
-              normalize(jwt.getClaimAsString("picture")),
-              MAX_PICTURE_LENGTH,
-              "picture",
-              keycloakId);
-      String titleClaim =
-          discardIfTooLong(
-              normalize(jwt.getClaimAsString("title")), MAX_COLUMN_LENGTH, "title", keycloakId);
-      String combinedName = combineNameParts(givenName, familyName);
-
-      Optional<UserInfoProfile> userInfoProfile =
-          shouldFetchUserInfo(
-                  existingUser.orElse(null),
-                  fullName,
-                  combinedName,
-                  username,
-                  emailClaim,
-                  pictureClaim,
-                  titleClaim)
-              ? fetchUserInfoProfile(jwt)
-              : Optional.empty();
-
-      String email =
-          normalizeLowercase(
-              firstNonBlank(
-                  emailClaim,
-                  discardIfTooLong(
-                      userInfoProfile.map(UserInfoProfile::email).orElse(null),
-                      MAX_COLUMN_LENGTH,
-                      "email",
-                      keycloakId),
-                  existingUser.map(User::getEmail).map(this::normalize).orElse(null)));
-
-      if (email == null) {
-        log.error("Cannot provision user {}: email is missing", keycloakId);
-        response.sendError(
-            HttpServletResponse.SC_BAD_REQUEST, "Unable to provision user: email is required");
-        return;
-      }
-
-      String displayName =
-          discardIfTooLong(
-              resolveDisplayName(
-                  fullName,
-                  combinedName,
-                  userInfoProfile.map(UserInfoProfile::name).orElse(null),
-                  existingUser.map(User::getName).map(this::normalize).orElse(null),
-                  username,
-                  email,
-                  keycloakId),
-              MAX_COLUMN_LENGTH,
-              "displayName",
-              keycloakId);
-      String picture =
-          firstNonBlank(
-              pictureClaim,
-              discardIfTooLong(
-                  userInfoProfile.map(UserInfoProfile::picture).orElse(null),
-                  MAX_PICTURE_LENGTH,
-                  "picture",
-                  keycloakId),
-              existingUser.map(User::getPicture).map(this::normalize).orElse(null));
-      String title =
-          firstNonBlank(
-              titleClaim,
-              discardIfTooLong(
-                  userInfoProfile.map(UserInfoProfile::title).orElse(null),
-                  MAX_COLUMN_LENGTH,
-                  "title",
-                  keycloakId),
-              existingUser.map(User::getTitle).map(this::normalize).orElse(null));
-
-      Set<UserRoleEnum> roles =
-          authentication.getAuthorities().stream()
-              .map(GrantedAuthority::getAuthority)
-              .map(UserRoleEnum::fromString)
-              .filter(Optional::isPresent)
-              .map(Optional::get)
-              .collect(Collectors.toSet());
-
-      // Defense-in-depth:
-      // Never allow access to the application domain unless the user has a known app role.
-      boolean hasAppRole =
-          roles.contains(UserRoleEnum.ROLE_STUDENT)
-              || roles.contains(UserRoleEnum.ROLE_INSTRUCTOR)
-              || roles.contains(UserRoleEnum.ROLE_ADMINISTRATOR);
-      if (!hasAppRole) {
-        respondForbiddenJson(response, USER_MISSING_ROLE_ERROR);
-        return;
-      }
-
-      existingUser.ifPresentOrElse(
-          user -> {
-            if (user.isDeleted()) {
-              respondForbiddenJson(response, USER_DISABLED_ERROR);
-              return;
-            }
-            if (hasIdentifierConflict(keycloakId, email, username)) {
-              respondConflictJson(response, USER_IDENTIFIER_CONFLICT_ERROR);
-              return;
-            }
-            boolean profileChanged =
-                !Objects.equals(user.getName(), displayName)
-                    || !Objects.equals(user.getEmail(), email)
-                    || !Objects.equals(user.getUsername(), username)
-                    || !Objects.equals(user.getFirstName(), givenName)
-                    || !Objects.equals(user.getLastName(), familyName)
-                    || !Objects.equals(user.getPicture(), picture)
-                    || !Objects.equals(user.getTitle(), title)
-                    || !Objects.equals(user.getRoles(), roles);
-            if (profileChanged) {
-              user.setName(displayName);
-              user.setEmail(email);
-              user.setUsername(username);
-              user.setFirstName(givenName);
-              user.setLastName(familyName);
-              user.setPicture(picture);
-              user.setTitle(title);
-              user.setRoles(roles);
-              userRepository.save(user);
-            }
-          },
-          () -> {
-            // Just-in-time provisioning:
-            // If a self-registered user has the STUDENT role, create the shadow DB row on first
-            // request.
-            if (roles.contains(UserRoleEnum.ROLE_STUDENT)) {
-              if (hasIdentifierConflict(keycloakId, email, username)) {
-                respondConflictJson(response, USER_IDENTIFIER_CONFLICT_ERROR);
-                return;
-              }
-
-              User newUser = new User();
-              newUser.setId(keycloakId);
-              newUser.setName(displayName);
-              newUser.setEmail(email);
-              newUser.setUsername(username);
-              newUser.setFirstName(givenName);
-              newUser.setLastName(familyName);
-              newUser.setPicture(picture);
-              newUser.setTitle(title);
-              newUser.setRoles(roles);
-              userRepository.save(newUser);
-              return;
-            }
-
-            // Non-students (e.g. admins/instructors) must be provisioned explicitly.
-            respondUserNotProvisioned(response);
-          });
-      if (response.isCommitted()) {
-        return;
-      }
+    Optional<Jwt> jwt = authenticatedJwt();
+    if (jwt.isPresent() && !provisionJwtUser(jwt.get(), response)) {
+      return;
     }
 
     filterChain.doFilter(request, response);
+  }
+
+  private Optional<Jwt> authenticatedJwt() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null
+        && authentication.isAuthenticated()
+        && authentication.getPrincipal() instanceof Jwt jwt) {
+      return Optional.of(jwt);
+    }
+    return Optional.empty();
+  }
+
+  private boolean provisionJwtUser(Jwt jwt, HttpServletResponse response) {
+    UUID keycloakId = UUID.fromString(jwt.getSubject());
+    Optional<User> existingUser = userRepository.findById(keycloakId);
+    UserClaims claims = extractClaims(jwt, keycloakId);
+    Optional<UserInfoProfile> userInfoProfile = loadUserInfoProfile(jwt, existingUser, claims);
+    ProvisioningProfile profile =
+        resolveProvisioningProfile(keycloakId, existingUser, claims, userInfoProfile);
+
+    if (profile.email() == null) {
+      log.error("Cannot provision user {}: email is missing", keycloakId);
+      try {
+        response.sendError(
+            HttpServletResponse.SC_BAD_REQUEST, "Unable to provision user: email is required");
+      } catch (IOException ex) {
+        log.warn("Failed to send missing-email response", ex);
+      }
+      return false;
+    }
+
+    Set<UserRoleEnum> roles = resolveApplicationRoles();
+    if (!hasAppRole(roles)) {
+      respondForbiddenJson(response, USER_MISSING_ROLE_ERROR);
+      return false;
+    }
+
+    if (existingUser.isPresent()) {
+      return provisionExistingUser(existingUser.get(), keycloakId, profile, roles, response);
+    }
+    return provisionNewUser(keycloakId, profile, roles, response);
+  }
+
+  private UserClaims extractClaims(Jwt jwt, UUID keycloakId) {
+    String fullName =
+        discardIfTooLong(
+            normalize(jwt.getClaimAsString("name")), MAX_COLUMN_LENGTH, "name", keycloakId);
+    String givenName =
+        discardIfTooLong(
+            normalize(jwt.getClaimAsString("given_name")),
+            MAX_COLUMN_LENGTH,
+            "given_name",
+            keycloakId);
+    String familyName =
+        discardIfTooLong(
+            normalize(jwt.getClaimAsString("family_name")),
+            MAX_COLUMN_LENGTH,
+            "family_name",
+            keycloakId);
+    String username =
+        discardIfTooLong(
+            normalizeLowercase(jwt.getClaimAsString("preferred_username")),
+            MAX_COLUMN_LENGTH,
+            "preferred_username",
+            keycloakId);
+    String email =
+        discardIfTooLong(
+            normalizeLowercase(jwt.getClaimAsString(EMAIL_CLAIM)),
+            MAX_COLUMN_LENGTH,
+            EMAIL_CLAIM,
+            keycloakId);
+    String picture =
+        discardIfTooLong(
+            normalize(jwt.getClaimAsString(PICTURE_CLAIM)),
+            MAX_PICTURE_LENGTH,
+            PICTURE_CLAIM,
+            keycloakId);
+    String title =
+        discardIfTooLong(
+            normalize(jwt.getClaimAsString(TITLE_CLAIM)),
+            MAX_COLUMN_LENGTH,
+            TITLE_CLAIM,
+            keycloakId);
+    return new UserClaims(fullName, givenName, familyName, username, email, picture, title);
+  }
+
+  private Optional<UserInfoProfile> loadUserInfoProfile(
+      Jwt jwt, Optional<User> existingUser, UserClaims claims) {
+    String combinedName = combineNameParts(claims.givenName(), claims.familyName());
+    return shouldFetchUserInfo(
+            existingUser.orElse(null),
+            claims.fullName(),
+            combinedName,
+            claims.username(),
+            claims.email(),
+            claims.picture(),
+            claims.title())
+        ? fetchUserInfoProfile(jwt)
+        : Optional.empty();
+  }
+
+  private ProvisioningProfile resolveProvisioningProfile(
+      UUID keycloakId,
+      Optional<User> existingUser,
+      UserClaims claims,
+      Optional<UserInfoProfile> userInfoProfile) {
+    String email = resolveEmail(existingUser, userInfoProfile, claims, keycloakId);
+    String displayName =
+        resolveStoredDisplayName(existingUser, userInfoProfile, claims, email, keycloakId);
+    String picture =
+        resolveManagedProfileValue(
+            existingUser,
+            claims.picture(),
+            userInfoProfile.map(UserInfoProfile::picture).orElse(null),
+            MAX_PICTURE_LENGTH,
+            PICTURE_CLAIM,
+            keycloakId,
+            User::getPicture);
+    String title =
+        resolveManagedProfileValue(
+            existingUser,
+            claims.title(),
+            userInfoProfile.map(UserInfoProfile::title).orElse(null),
+            MAX_COLUMN_LENGTH,
+            TITLE_CLAIM,
+            keycloakId,
+            User::getTitle);
+    return new ProvisioningProfile(
+        displayName,
+        email,
+        claims.username(),
+        claims.givenName(),
+        claims.familyName(),
+        picture,
+        title);
+  }
+
+  private String resolveEmail(
+      Optional<User> existingUser,
+      Optional<UserInfoProfile> userInfoProfile,
+      UserClaims claims,
+      UUID keycloakId) {
+    return normalizeLowercase(
+        firstNonBlank(
+            claims.email(),
+            discardIfTooLong(
+                userInfoProfile.map(UserInfoProfile::email).orElse(null),
+                MAX_COLUMN_LENGTH,
+                EMAIL_CLAIM,
+                keycloakId),
+            existingUser.map(User::getEmail).map(this::normalize).orElse(null)));
+  }
+
+  private String resolveStoredDisplayName(
+      Optional<User> existingUser,
+      Optional<UserInfoProfile> userInfoProfile,
+      UserClaims claims,
+      String email,
+      UUID keycloakId) {
+    String combinedName = combineNameParts(claims.givenName(), claims.familyName());
+    return discardIfTooLong(
+        resolveDisplayName(
+            claims.fullName(),
+            combinedName,
+            userInfoProfile.map(UserInfoProfile::name).orElse(null),
+            existingUser.map(User::getName).map(this::normalize).orElse(null),
+            claims.username(),
+            email,
+            keycloakId),
+        MAX_COLUMN_LENGTH,
+        "displayName",
+        keycloakId);
+  }
+
+  private String resolveManagedProfileValue(
+      Optional<User> existingUser,
+      String claimValue,
+      String userInfoValue,
+      int maxLength,
+      String fieldName,
+      UUID keycloakId,
+      java.util.function.Function<User, String> existingAccessor) {
+    String existingValue = existingUser.map(existingAccessor).map(this::normalize).orElse(null);
+    if (existingUser.isPresent()) {
+      return existingValue;
+    }
+    return firstNonBlank(
+        claimValue,
+        discardIfTooLong(userInfoValue, maxLength, fieldName, keycloakId),
+        existingValue);
+  }
+
+  private Set<UserRoleEnum> resolveApplicationRoles() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null) {
+      return Set.of();
+    }
+    Set<UserRoleEnum> rawRoles =
+        authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .map(UserRoleEnum::fromString)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toSet());
+    return reduceToSingleAppRole(rawRoles);
+  }
+
+  private boolean hasAppRole(Set<UserRoleEnum> roles) {
+    return roles.contains(UserRoleEnum.ROLE_STUDENT)
+        || roles.contains(UserRoleEnum.ROLE_INSTRUCTOR)
+        || roles.contains(UserRoleEnum.ROLE_ADMINISTRATOR);
+  }
+
+  private boolean provisionExistingUser(
+      User user,
+      UUID keycloakId,
+      ProvisioningProfile profile,
+      Set<UserRoleEnum> roles,
+      HttpServletResponse response) {
+    if (user.isDeleted()) {
+      respondForbiddenJson(response, USER_DISABLED_ERROR);
+      return false;
+    }
+    if (hasIdentifierConflict(keycloakId, profile.email(), profile.username())) {
+      respondConflictJson(response, USER_IDENTIFIER_CONFLICT_ERROR);
+      return false;
+    }
+    updateProfileIfChanged(user, profile, roles);
+    return !response.isCommitted();
+  }
+
+  private boolean provisionNewUser(
+      UUID keycloakId,
+      ProvisioningProfile profile,
+      Set<UserRoleEnum> roles,
+      HttpServletResponse response) {
+    if (!roles.contains(UserRoleEnum.ROLE_STUDENT)) {
+      respondUserNotProvisioned(response);
+      return false;
+    }
+    if (hasIdentifierConflict(keycloakId, profile.email(), profile.username())) {
+      respondConflictJson(response, USER_IDENTIFIER_CONFLICT_ERROR);
+      return false;
+    }
+    User newUser = new User();
+    newUser.setId(keycloakId);
+    applyProfile(newUser, profile, roles);
+    userRepository.save(newUser);
+    return true;
+  }
+
+  private void updateProfileIfChanged(
+      User user, ProvisioningProfile profile, Set<UserRoleEnum> roles) {
+    if (profileChanged(user, profile, roles)) {
+      applyProfile(user, profile, roles);
+      userRepository.save(user);
+    }
+  }
+
+  private boolean profileChanged(User user, ProvisioningProfile profile, Set<UserRoleEnum> roles) {
+    return !Objects.equals(user.getName(), profile.displayName())
+        || !Objects.equals(user.getEmail(), profile.email())
+        || !Objects.equals(user.getUsername(), profile.username())
+        || !Objects.equals(user.getFirstName(), profile.givenName())
+        || !Objects.equals(user.getLastName(), profile.familyName())
+        || !Objects.equals(user.getPicture(), profile.picture())
+        || !Objects.equals(user.getTitle(), profile.title())
+        || !Objects.equals(user.getRoles(), roles);
+  }
+
+  private void applyProfile(User user, ProvisioningProfile profile, Set<UserRoleEnum> roles) {
+    user.setName(profile.displayName());
+    user.setEmail(profile.email());
+    user.setUsername(profile.username());
+    user.setFirstName(profile.givenName());
+    user.setLastName(profile.familyName());
+    user.setPicture(profile.picture());
+    user.setTitle(profile.title());
+    user.setRoles(roles);
   }
 
   private void respondUserNotProvisioned(HttpServletResponse response) {
@@ -315,6 +434,10 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
   }
 
   private Optional<UserInfoProfile> fetchUserInfoProfile(Jwt jwt) {
+    if (!userInfoEnabled) {
+      return Optional.empty();
+    }
+
     String tokenValue = normalize(jwt.getTokenValue());
     String normalizedIssuerUri = normalize(issuerUri);
 
@@ -324,7 +447,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
 
     try {
       UserInfoProfile profile =
-          RestClient.create()
+          userInfoRestClient
               .get()
               .uri(normalizedIssuerUri + "/protocol/openid-connect/userinfo")
               .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenValue)
@@ -419,6 +542,40 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
     }
     return false;
   }
+
+  private Set<UserRoleEnum> reduceToSingleAppRole(Set<UserRoleEnum> roles) {
+    if (roles == null || roles.isEmpty()) {
+      return Set.of();
+    }
+    if (roles.contains(UserRoleEnum.ROLE_ADMINISTRATOR)) {
+      return Set.of(UserRoleEnum.ROLE_ADMINISTRATOR);
+    }
+    if (roles.contains(UserRoleEnum.ROLE_INSTRUCTOR)) {
+      return Set.of(UserRoleEnum.ROLE_INSTRUCTOR);
+    }
+    if (roles.contains(UserRoleEnum.ROLE_STUDENT)) {
+      return Set.of(UserRoleEnum.ROLE_STUDENT);
+    }
+    return Set.of();
+  }
+
+  private record UserClaims(
+      String fullName,
+      String givenName,
+      String familyName,
+      String username,
+      String email,
+      String picture,
+      String title) {}
+
+  private record ProvisioningProfile(
+      String displayName,
+      String email,
+      String username,
+      String givenName,
+      String familyName,
+      String picture,
+      String title) {}
 
   private record UserInfoProfile(String name, String email, String picture, String title) {}
 }

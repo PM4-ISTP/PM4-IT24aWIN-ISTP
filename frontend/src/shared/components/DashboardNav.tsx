@@ -18,9 +18,9 @@ const labelStyle: React.CSSProperties = {
 
 const sectionLabelStyle: React.CSSProperties = {
   ...labelStyle,
-  fontSize: "0.6rem",
-  color: "rgba(255,255,255,0.3)",
-  letterSpacing: "0.18em",
+  fontSize: "0.58rem",
+  color: "rgba(255,255,255,0.28)",
+  letterSpacing: "0.2em",
 };
 
 function NavItem({
@@ -38,26 +38,26 @@ function NavItem({
     <div style={{ position: "relative" }}>
       <Link
         href={href}
+        className="nav-link"
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "0.75rem",
-          paddingLeft: "2rem",
-          paddingTop: "0.75rem",
-          paddingBottom: "0.75rem",
-          paddingRight: "1rem",
-          textDecoration: "none",
-          transition: "color 0.15s",
-          color: active ? "#60a5fa" : "rgba(255,255,255,0.55)",
-          fontWeight: active ? 700 : 400,
+          paddingLeft: "1.75rem",
+          paddingTop: "0.7rem",
+          paddingBottom: "0.7rem",
+          paddingRight: "1.5rem",
+          color: active ? "#60a5fa" : "rgba(255,255,255,0.52)",
+          fontWeight: active ? 700 : 500,
+          background: active ? "rgba(96,165,250,0.07)" : undefined,
         }}
       >
         <span
           className="material-symbols-outlined"
           style={{
-            fontSize: "1.25rem",
+            fontSize: "1.2rem",
             lineHeight: 1,
-            fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
+            flexShrink: 0,
+            fontVariationSettings: active
+              ? "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"
+              : "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
           }}
         >
           {icon}
@@ -75,6 +75,7 @@ function NavItem({
             height: "55%",
             background: "#60a5fa",
             borderRadius: "4px 0 0 4px",
+            boxShadow: "0 0 10px rgba(96,165,250,0.5)",
           }}
         />
       )}
@@ -87,6 +88,10 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
 
   const isAdmin = roles.includes(ROLES.ADMINISTRATOR);
   const isInstructor = roles.includes(ROLES.INSTRUCTOR) || isAdmin;
+
+  const isInstructorResults =
+    pathname === "/dashboard/instructor/results" ||
+    /^\/dashboard\/instructor\/[^/]+\/results/.test(pathname);
 
   return (
     <nav style={{ display: "flex", flexDirection: "column", gap: 0, paddingTop: "0.5rem" }}>
@@ -106,7 +111,9 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
 
       {isInstructor && (
         <>
-          <p style={{ ...sectionLabelStyle, padding: "1.5rem 2rem 0.5rem" }}>Course Management</p>
+          <p style={{ ...sectionLabelStyle, padding: "1.5rem 1.75rem 0.4rem" }}>
+            Course Management
+          </p>
           <NavItem
             href="/dashboard/instructor"
             label="Dashboard"
@@ -114,21 +121,28 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
             active={
               pathname === "/dashboard/instructor" ||
               (pathname.startsWith("/dashboard/instructor/") &&
-                !pathname.startsWith("/dashboard/instructor/challenges"))
+                !pathname.startsWith("/dashboard/instructor/labs") &&
+                !isInstructorResults)
             }
           />
           <NavItem
-            href="/dashboard/instructor/challenges"
-            label="Challenges"
+            href="/dashboard/instructor/results"
+            label="Results"
+            icon="analytics"
+            active={isInstructorResults}
+          />
+          <NavItem
+            href="/dashboard/instructor/labs"
+            label="Labs"
             icon="flag"
-            active={pathname.startsWith("/dashboard/instructor/challenges")}
+            active={pathname.startsWith("/dashboard/instructor/labs")}
           />
         </>
       )}
 
       {isAdmin && (
         <>
-          <p style={{ ...sectionLabelStyle, padding: "1.5rem 2rem 0.5rem" }}>Admin</p>
+          <p style={{ ...sectionLabelStyle, padding: "1.5rem 1.75rem 0.4rem" }}>Admin</p>
           <NavItem
             href="/dashboard/admin"
             label="Dashboard"

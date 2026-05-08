@@ -1,7 +1,5 @@
 package com.pm4.istp.admin;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -166,7 +164,7 @@ class AdminTopicControllerTest {
 
   @Test
   void deleteTopic_withExistingTopic_returns200WithMessage() throws Exception {
-    doNothing().when(adminTopicService).deleteTopic(eq("Docker"));
+    doNothing().when(adminTopicService).deleteTopic("Docker");
 
     mockMvc
         .perform(delete("/api/admin/topics/Docker"))
@@ -178,7 +176,7 @@ class AdminTopicControllerTest {
 
   @Test
   void deleteTopic_withNonExistingTopic_returns200BecauseIdempotent() throws Exception {
-    doNothing().when(adminTopicService).deleteTopic(eq("NonExistent"));
+    doNothing().when(adminTopicService).deleteTopic("NonExistent");
 
     mockMvc
         .perform(delete("/api/admin/topics/NonExistent"))

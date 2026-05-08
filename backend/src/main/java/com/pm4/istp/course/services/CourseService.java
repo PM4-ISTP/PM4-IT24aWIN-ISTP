@@ -3,8 +3,13 @@ package com.pm4.istp.course.services;
 import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Course;
-import com.pm4.istp.course.dto.CourseChallengeItemDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
+import com.pm4.istp.course.dto.CourseLabDeadlineDto;
+import com.pm4.istp.course.dto.CourseLabItemDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionDetailDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
+import com.pm4.istp.course.dto.UpdateCourseChallengeScoreRequestDto;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -21,8 +26,21 @@ public interface CourseService {
 
   void deleteCourse(UUID userId, UUID courseId);
 
-  Course updateCourseChallenges(
-      UUID userId, UUID courseId, List<CourseChallengeItemDto> challenges);
+  Course updateCourseChallenges(UUID userId, UUID courseId, List<CourseLabItemDto> labs);
+
+  CourseLabSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId);
+
+  CourseLabSubmissionDetailDto getCourseLabSubmissionDetails(
+      UUID instructorUserId, UUID courseId, UUID participantId, UUID labId);
+
+  CourseChallengeSubmissionEntryDto updateCourseChallengeScore(
+      UUID instructorUserId,
+      UUID courseId,
+      UUID participantId,
+      UUID challengeId,
+      UpdateCourseChallengeScoreRequestDto request);
+
+  List<CourseLabDeadlineDto> listUpcomingDeadlines(UUID userId);
 
   Page<ListCourseResponseDto> listCoursesForInstructors(UUID instructorId, Pageable pageable);
 
@@ -35,4 +53,7 @@ public interface CourseService {
   Course regenerateInviteCode(UUID courseId, UUID userId);
 
   void removeParticipant(UUID ownerId, UUID courseId, UUID participantId);
+
+  /** Allows a student to remove themselves from a course they are enrolled in. */
+  void leaveCourse(UUID userId, UUID courseId);
 }

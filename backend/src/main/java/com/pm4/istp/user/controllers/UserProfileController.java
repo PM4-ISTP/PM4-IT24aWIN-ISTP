@@ -2,6 +2,7 @@ package com.pm4.istp.user.controllers;
 
 import static com.pm4.istp.shared.util.JwtUtil.parseUserId;
 
+import com.pm4.istp.user.dto.AddOnlineTimeRequestDto;
 import com.pm4.istp.user.dto.UpdateUserProfileRequestDto;
 import com.pm4.istp.user.dto.UserDto;
 import com.pm4.istp.user.mappers.UserMapper;
@@ -15,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -64,5 +66,13 @@ public class UserProfileController {
                 authentication == null ? null : authentication.getAuthorities(),
                 userId,
                 request)));
+  }
+
+  @PatchMapping("/me/online-time")
+  public ResponseEntity<Void> addOnlineTime(
+      @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody AddOnlineTimeRequestDto request) {
+    UUID userId = parseUserId(jwt);
+    userProfileService.addOnlineTime(userId, request.getSeconds());
+    return ResponseEntity.noContent().build();
   }
 }

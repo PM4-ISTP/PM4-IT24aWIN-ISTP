@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Badge,
@@ -35,6 +35,7 @@ type AdminUserDetailResponse = {
   provisioned?: boolean;
   keycloak?: {
     enabled?: boolean;
+    emailVerified?: boolean;
   } | null;
 };
 
@@ -103,7 +104,7 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
     },
   });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch(`/api/backend/api/admin/users/${encodeURIComponent(userId)}`, {
@@ -138,12 +139,11 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [profileForm, rolesForm, userId]);
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [load]);
 
   const saveProfile = async () => {
     const valid = profileForm.validate();
@@ -419,6 +419,12 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
   const isSoftDeleted = Boolean(user?.anonymizedAt);
   const isDisabled = Boolean(user?.deletedAt) || user?.keycloak?.enabled === false;
   const canRestore = !isSoftDeleted && isDisabled;
+  const emailVerifiedBadge =
+    user?.keycloak?.emailVerified === true ? (
+      <Badge color="green">EMAIL VERIFIED</Badge>
+    ) : user?.keycloak?.emailVerified === false ? (
+      <Badge color="yellow">EMAIL NOT VERIFIED</Badge>
+    ) : null;
   const statusBadge = (() => {
     if (isSoftDeleted) return <Badge color="red">SOFT DELETED</Badge>;
     if (user?.deletedAt) return <Badge color="red">DELETED</Badge>;
@@ -442,6 +448,7 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
           ) : (
             <Badge color="yellow">NOT PROVISIONED</Badge>
           )}
+          {emailVerifiedBadge}
         </Group>
         <Group gap="sm">
           {!isSoftDeleted && !isDisabled ? (
@@ -495,34 +502,6 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
           ) : null}
         </Group>
       </Group>
-
-      <Paper
-        p="md"
-        radius="md"
-        style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          maxWidth: 900,
-        }}
-      >
-        <Stack gap={6}>
-          <Text fw={700} style={{ color: "#e2e8f0" }}>
-            What these actions do
-          </Text>
-          <Text size="sm" c="dimmed">
-            <b>Provision</b>: Creates the ISTP database user record for an existing Keycloak account
-            (idempotent). Required for profile/role management in the app.
-          </Text>
-          <Text size="sm" c="dimmed">
-            <b>Disable</b>: Temporarily disables the account (Keycloak login blocked) and marks the
-            user as disabled in ISTP. Can be reverted with <b>Restore</b>.
-          </Text>
-          <Text size="sm" c="dimmed">
-            <b>Soft delete</b>: Permanently anonymizes email/username and disables the account to
-            free identifiers for reuse. This cannot be undone.
-          </Text>
-        </Stack>
-      </Paper>
 
       <Paper
         p="lg"
@@ -592,6 +571,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
               onClick={() => void saveProfile()}
               loading={savingProfile}
               disabled={isSoftDeleted}
+              style={{
+                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                border: "none",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                fontWeight: 600,
+                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+              }}
             >
               Save profile
             </Button>
@@ -634,6 +620,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
               onClick={() => void saveRoles()}
               loading={savingRoles}
               disabled={isSoftDeleted}
+              style={{
+                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                border: "none",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                fontWeight: 600,
+                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+              }}
             >
               Save roles
             </Button>
@@ -702,6 +695,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
               onClick={() => void setPassword()}
               loading={settingPassword}
               disabled={isSoftDeleted}
+              style={{
+                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
+                border: "none",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                fontWeight: 600,
+                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
+              }}
             >
               Save password
             </Button>

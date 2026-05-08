@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core";
+import { Alert, Button, Group, Modal, PinInput, Stack, Text } from "@mantine/core";
 import { joinCourseByCode } from "@/src/features/course/actions/courses";
 
 interface JoinCourseModalProps {
@@ -78,37 +78,32 @@ export default function JoinCourseModal({ opened, onClose }: JoinCourseModalProp
           Enter the 6-character invite code provided by your instructor.
         </Text>
 
-        <TextInput
-          placeholder="ABC123"
-          value={code}
-          onChange={(e) => {
-            setCode(
-              e.currentTarget.value
-                .toUpperCase()
-                .replace(/[^A-Z0-9]/g, "")
-                .slice(0, 6)
-            );
-            if (error) setError(null);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") void handleSubmit();
-          }}
-          maxLength={6}
-          error={error}
-          autoFocus
-          styles={{
-            input: {
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "#f1f5f9",
-              letterSpacing: "0.25em",
-              fontSize: "1.25rem",
-              fontWeight: 700,
-              textAlign: "center",
-              fontFamily: "var(--font-space-grotesk), monospace",
-            },
-          }}
-        />
+        <Group justify="center">
+          <PinInput
+            length={6}
+            type="alphanumeric"
+            placeholder="•"
+            value={code}
+            onChange={(value) => {
+              setCode(value.toUpperCase().replace(/[^A-Z0-9]/g, ""));
+              if (error) setError(null);
+            }}
+            aria-label="Invite code"
+            autoFocus
+            size="lg"
+            styles={{
+              input: {
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "#f1f5f9",
+                fontSize: "1.25rem",
+                fontWeight: 700,
+                textAlign: "center",
+                fontFamily: "var(--font-space-grotesk), monospace",
+              },
+            }}
+          />
+        </Group>
 
         {error && (
           <Alert color="red" variant="light">

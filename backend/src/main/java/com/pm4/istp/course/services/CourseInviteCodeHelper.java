@@ -9,13 +9,14 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * Owns all invite-code generation and assignment. Each assignment attempt runs in its own {@link
- * Propagation#REQUIRES_NEW} transaction so a unique-constraint violation only rolls back that
- * attempt, leaving the caller's transaction intact for a retry.
+ * Owns all invite-code generation and assignment. Each assignment attempt runs in a dedicated
+ * transaction so a unique-constraint violation only rolls back that attempt, leaving the caller's
+ * transaction intact for a retry.
  */
 @Component
 @RequiredArgsConstructor
@@ -26,12 +27,13 @@ public class CourseInviteCodeHelper {
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   private final CourseRepository courseRepository;
+  private final PlatformTransactionManager transactionManager;
 
   public String generateAndAssign(UUID courseId) {
     for (int attempt = 0; attempt < 10; attempt++) {
       String code = generateCode();
       try {
-        assignInviteCode(courseId, code);
+        runInNewTransaction(() -> assignInviteCode(courseId, code));
         return code;
       } catch (DataIntegrityViolationException ex) {
         if (!isInviteCodeConstraintViolation(ex)) {
@@ -47,7 +49,6 @@ public class CourseInviteCodeHelper {
         "Could not generate a unique invite code after 10 attempts");
   }
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void assignInviteCode(UUID courseId, String code) {
     Course course =
         courseRepository
@@ -64,7 +65,7 @@ public class CourseInviteCodeHelper {
     for (int attempt = 0; attempt < 10; attempt++) {
       String code = generateCode();
       try {
-        return saveNewCourse(course, code);
+        return runInNewTransaction(() -> saveNewCourse(course, code));
       } catch (DataIntegrityViolationException ex) {
         if (!isInviteCodeConstraintViolation(ex)) {
           throw ex;
@@ -79,8 +80,7 @@ public class CourseInviteCodeHelper {
         "Could not generate a unique invite code after 10 attempts");
   }
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public Course saveNewCourse(Course course, String code) {
+  private Course saveNewCourse(Course course, String code) {
     course.setInviteCode(code);
     return courseRepository.save(course);
   }
@@ -103,5 +103,21 @@ public class CourseInviteCodeHelper {
       current = current.getCause();
     }
     return false;
+  }
+
+  private void runInNewTransaction(Runnable action) {
+    TransactionTemplate template = newTransactionTemplate();
+    template.executeWithoutResult(status -> action.run());
+  }
+
+  private <T> T runInNewTransaction(java.util.function.Supplier<T> action) {
+    TransactionTemplate template = newTransactionTemplate();
+    return template.execute(status -> action.get());
+  }
+
+  private TransactionTemplate newTransactionTemplate() {
+    TransactionTemplate template = new TransactionTemplate(transactionManager);
+    template.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    return template;
   }
 }

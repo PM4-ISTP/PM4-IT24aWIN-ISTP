@@ -6,6 +6,8 @@ namespace: istp-prod
 resources:
   - ../../base
   - ingress.yaml
+  - adminer/deployment.yaml
+  - adminer/service.yaml
 
 images:
   - name: istp-backend

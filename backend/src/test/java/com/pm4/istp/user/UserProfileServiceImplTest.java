@@ -3,6 +3,7 @@ package com.pm4.istp.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -93,11 +94,11 @@ class UserProfileServiceImplTest {
   void updateProfile_otherUser_withoutAdminRole_isForbidden() {
     UUID actorId = UUID.randomUUID();
     UUID targetId = UUID.randomUUID();
+    List<GrantedAuthority> authorities = List.of();
+    UpdateUserProfileRequestDto request = new UpdateUserProfileRequestDto();
 
     assertThatThrownBy(
-            () ->
-                userProfileService.updateProfile(
-                    actorId, List.of(), targetId, new UpdateUserProfileRequestDto()))
+            () -> userProfileService.updateProfile(actorId, authorities, targetId, request))
         .isInstanceOf(AccessDeniedException.class);
 
     verify(userRepository, never()).findByIdAndDeletedAtIsNull(any());
@@ -158,7 +159,9 @@ class UserProfileServiceImplTest {
     when(keycloakAdminClient.getUser(userId)).thenReturn(before);
     doThrow(new KeycloakAdminApiException("boom")).when(keycloakAdminClient).updateUser(eq(userId), any());
 
-    assertThatThrownBy(() -> userProfileService.updateProfile(userId, List.of(), userId, request))
+    List<GrantedAuthority> authorities = List.of();
+
+    assertThatThrownBy(() -> userProfileService.updateProfile(userId, authorities, userId, request))
         .isInstanceOf(KeycloakAdminApiException.class);
 
     verify(userRepository, never()).save(any());
@@ -188,9 +191,52 @@ class UserProfileServiceImplTest {
     when(keycloakAdminClient.getUser(userId)).thenReturn(before);
     when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("db down"));
 
-    assertThatThrownBy(() -> userProfileService.updateProfile(userId, List.of(), userId, request))
+    List<GrantedAuthority> authorities = List.of();
+
+    assertThatThrownBy(() -> userProfileService.updateProfile(userId, authorities, userId, request))
         .isInstanceOf(UserProfileSyncException.class);
 
     verify(keycloakAdminClient, times(2)).updateUser(eq(userId), any(KeycloakUserRepresentation.class));
+  }
+
+  @Test
+  void addOnlineTime_accumulates() {
+    UUID userId = UUID.randomUUID();
+
+    User dbUser = new User();
+    dbUser.setId(userId);
+    dbUser.setTotalSecondsOnline(100L);
+
+    User updatedUser = new User();
+    updatedUser.setId(userId);
+    updatedUser.setTotalSecondsOnline(150L);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId))
+        .thenReturn(Optional.of(dbUser))
+        .thenReturn(Optional.of(updatedUser));
+    when(userRepository.incrementTotalSecondsOnlineById(userId, 50L)).thenReturn(1);
+
+    long result = userProfileService.addOnlineTime(userId, 50L);
+
+    assertThat(result).isEqualTo(150L);
+    verify(userRepository).incrementTotalSecondsOnlineById(userId, 50L);
+    verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  void addOnlineTime_zeroSeconds_doesNotSave() {
+    UUID userId = UUID.randomUUID();
+
+    User dbUser = new User();
+    dbUser.setId(userId);
+    dbUser.setTotalSecondsOnline(200L);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(dbUser));
+
+    long result = userProfileService.addOnlineTime(userId, 0L);
+
+    assertThat(result).isEqualTo(200L);
+    verify(userRepository, never()).incrementTotalSecondsOnlineById(any(), anyLong());
+    verify(userRepository, never()).save(any());
   }
 }

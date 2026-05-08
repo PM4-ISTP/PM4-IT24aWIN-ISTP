@@ -19,9 +19,21 @@ public class AdminConfigRequest {
       message = "Memory limit must be a number followed by optional unit (Mi, Gi, or Ti)")
   private String memoryLimit;
 
+  @Pattern(
+      regexp = "^$|[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+      message =
+          "Image pull secret name must be a valid Kubernetes resource name "
+              + "(lowercase letters, numbers, and '-')")
+  private String imagePullSecretName;
+
   private String kubeconfig;
 
   @Min(value = 60, message = "Pod TTL must be at least 60 seconds")
   @Max(value = 86400, message = "Pod TTL must not exceed 86400 seconds (24h)")
   private Integer podTtlSeconds;
+
+  public AdminConfigRequest(
+      String cpuLimit, String memoryLimit, String kubeconfig, Integer podTtlSeconds) {
+    this(cpuLimit, memoryLimit, null, kubeconfig, podTtlSeconds);
+  }
 }

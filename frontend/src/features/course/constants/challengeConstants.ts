@@ -1,21 +1,19 @@
-import type {
-  ChallengeStatusEnum,
-  ChallengeDifficultyEnum,
-} from "@/src/features/course/actions/challenges";
+import type { LabStatusEnum, LabDifficultyEnum } from "@/src/features/course/actions/labs";
 
 export const CHALLENGE_SHORT_DESCRIPTION_MAX_CHARS = 200;
 
-export const DOCKER_IMAGE_PATTERN = /^ghcr\.io\/[\w.-]+\/[\w./-]+(:[\w.-]+)?$/;
+export const DOCKER_IMAGE_PATTERN =
+  /^ghcr\.io\/[\w.-]+\/[\w./-]+((:[\w.-]+)|(@sha256:[A-Fa-f0-9]{64}))?$/;
 export const DOCKER_IMAGE_ERROR =
-  "Docker image must be a valid GHCR reference (e.g. ghcr.io/pm4-istp/test:latest)";
+  "Docker image must be a public GHCR reference (e.g. ghcr.io/school-org/lab:1.0.0)";
 
-export const STATUS_OPTIONS: { value: ChallengeStatusEnum; label: string }[] = [
+export const STATUS_OPTIONS: { value: LabStatusEnum; label: string }[] = [
   { value: "DRAFT", label: "Draft" },
   { value: "PRIVATE", label: "Private" },
   { value: "PUBLIC", label: "Public" },
 ];
 
-export const DIFFICULTY_OPTIONS: { value: ChallengeDifficultyEnum; label: string }[] = [
+export const DIFFICULTY_OPTIONS: { value: LabDifficultyEnum; label: string }[] = [
   { value: "BEGINNER", label: "Beginner" },
   { value: "EASY", label: "Easy" },
   { value: "MEDIUM", label: "Medium" },
@@ -23,13 +21,13 @@ export const DIFFICULTY_OPTIONS: { value: ChallengeDifficultyEnum; label: string
   { value: "EXPERT", label: "Expert" },
 ];
 
-export const STATUS_COLORS: Record<ChallengeStatusEnum, string> = {
+export const STATUS_COLORS: Record<LabStatusEnum, string> = {
   DRAFT: "gray",
   PRIVATE: "yellow",
   PUBLIC: "teal",
 };
 
-export const DIFFICULTY_COLORS: Record<ChallengeDifficultyEnum, string> = {
+export const DIFFICULTY_COLORS: Record<LabDifficultyEnum, string> = {
   BEGINNER: "green",
   EASY: "blue",
   MEDIUM: "yellow",
@@ -38,9 +36,9 @@ export const DIFFICULTY_COLORS: Record<ChallengeDifficultyEnum, string> = {
 };
 
 export function getStatusColor(status: string): string {
-  return STATUS_COLORS[status as ChallengeStatusEnum] ?? "gray";
+  return STATUS_COLORS[status as LabStatusEnum] ?? "gray";
 }
 
 export function getDifficultyColor(difficulty: string): string {
-  return DIFFICULTY_COLORS[difficulty as ChallengeDifficultyEnum] ?? "gray";
+  return DIFFICULTY_COLORS[difficulty as LabDifficultyEnum] ?? "gray";
 }

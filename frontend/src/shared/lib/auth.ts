@@ -79,53 +79,100 @@ async function fetchUserInfo(accessToken: string): Promise<KeycloakBasicProfile>
   }
 }
 /**
- * Refreshes an expired access token using the refresh token.
+ * How many milliseconds before expiry we proactively refresh the access token.
+ * Refreshing slightly early reduces the window during which multiple concurrent
+ * requests can all see an expired token and race to refresh it simultaneously.
+ */
+const REFRESH_BUFFER_MS = 60_000;
+
+/**
+ * In-process deduplication map for concurrent refresh calls.
+ *
+ * When multiple requests arrive at the same time and the token is expired,
+ * the first one starts the refresh and stores its Promise here. Every
+ * subsequent request for the **same** refresh token awaits the existing
+ * Promise instead of issuing a second (doomed) Keycloak request.
+ * Keycloak invalidates a refresh token on first use (token rotation), so any
+ * parallel request that uses the same refresh token would receive
+ * REFRESH_TOKEN_ERROR. The map entry is removed once the refresh settles.
+ */
+const refreshInProgress = new Map<string, Promise<JWT>>();
+
+/**
+ * Performs a single token-refresh request against Keycloak.
+ * Not exported – callers should use refreshAccessToken() which adds
+ * the in-process deduplication guard.
+ */
+async function doRefreshAccessToken(token: JWT): Promise<JWT> {
+  const response = await fetch(
+    `${process.env.AUTH_KEYCLOAK_ISSUER}/protocol/openid-connect/token`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: process.env.AUTH_KEYCLOAK_ID!,
+        client_secret: process.env.AUTH_KEYCLOAK_SECRET!,
+        grant_type: "refresh_token",
+        refresh_token: token.refreshToken!,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to refresh access token");
+  }
+
+  const refreshedTokens = (await response.json()) as {
+    access_token: string;
+    expires_in: number;
+    refresh_token?: string;
+  };
+
+  const refreshedClaims = extractProfileClaims(refreshedTokens.access_token);
+
+  return mergeProfileClaims(
+    {
+      ...token,
+      accessToken: refreshedTokens.access_token,
+      accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
+      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+    },
+    refreshedClaims
+  );
+}
+
+/**
+ * Refreshes an expired (or soon-to-expire) access token using the refresh
+ * token. Concurrent calls for the same refresh token are deduplicated: only
+ * one HTTP request is sent to Keycloak and all callers receive the result of
+ * that single request.
  */
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   if (!token.refreshToken) {
     console.error("Missing refresh token");
     return { ...token, error: "RefreshAccessTokenError" };
   }
-  try {
-    const response = await fetch(
-      `${process.env.AUTH_KEYCLOAK_ISSUER}/protocol/openid-connect/token`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          client_id: process.env.AUTH_KEYCLOAK_ID!,
-          client_secret: process.env.AUTH_KEYCLOAK_SECRET!,
-          grant_type: "refresh_token",
-          refresh_token: token.refreshToken,
-        }),
-      }
-    );
 
-    const refreshedTokens = (await response.json()) as {
-      access_token: string;
-      expires_in: number;
-      refresh_token?: string;
-    };
+  const key = token.refreshToken;
 
-    if (!response.ok) {
-      throw new Error("Failed to refresh access token");
-    }
-
-    const refreshedClaims = extractProfileClaims(refreshedTokens.access_token);
-
-    return mergeProfileClaims(
-      {
-        ...token,
-        accessToken: refreshedTokens.access_token,
-        accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
-        refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
-      },
-      refreshedClaims
-    );
-  } catch (error) {
-    console.error("Error refreshing access token:", error);
-    return { ...token, error: "RefreshAccessTokenError" };
+  const existing = refreshInProgress.get(key);
+  if (existing) {
+    return existing;
   }
+
+  const refreshPromise = doRefreshAccessToken(token)
+    .catch((error: unknown) => {
+      console.error("Error refreshing access token:", error);
+      return { ...token, error: "RefreshAccessTokenError" } as JWT;
+    })
+    .finally(() => {
+      refreshInProgress.delete(key);
+    });
+
+  // Register the in-flight Promise before any await so that concurrent calls
+  // that arrive synchronously (before the first microtask tick) find it.
+  refreshInProgress.set(key, refreshPromise);
+  return refreshPromise;
 }
 
 export const authOptions: AuthOptions = {
@@ -159,18 +206,20 @@ export const authOptions: AuthOptions = {
         );
       }
 
-      // Return token if it hasn't expired yet
-      if (Date.now() < (token.accessTokenExpires as number)) {
+      // Return token if it is still valid with enough time to spare.
+      // We refresh REFRESH_BUFFER_MS early to avoid a window where multiple
+      // concurrent requests simultaneously see an expired token.
+      if (Date.now() < (token.accessTokenExpires as number) - REFRESH_BUFFER_MS) {
         return token;
       }
 
-      // Token has expired — refresh it
+      // Token has expired (or is about to) — refresh it.
       return refreshAccessToken(token);
     },
     async session({ session, token }) {
-      // Access token is intentionally NOT exposed to the client.
-      // Use getServerSession() + fetchBackend() for backend calls.
-      // Roles used for server-side authorization checks.
+      // Access token is exposed on the session for use by the client-side
+      // openapi-fetch wrapper (useApiClient) when calling the /api/backend
+      // proxy. Roles are used for server-side authorization checks.
       session.accessToken = token.accessToken;
       session.roles = token.roles as string[];
       session.error = token.error;

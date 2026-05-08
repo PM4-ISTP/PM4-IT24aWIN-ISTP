@@ -1,11 +1,9 @@
 "use server";
 
-import { fetchBackend } from "@/src/shared/lib/api";
-import { withActionResult } from "@/src/shared/lib/api/actionResult";
+import { withActionResult, withActionResultNoContent } from "@/src/shared/lib/api/actionResult";
 import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers";
 import type { components } from "@/src/shared/lib/api/schema";
-import { extractErrorMessage } from "@/src/shared/lib/utils";
 
 import type {
   CourseDetailResponseDto as OldCourseDetailResponseDto,
@@ -21,43 +19,39 @@ export type CourseDetailInstructorResponseDto =
 export type PageListCourseResponseDto = components["schemas"]["PageListCourseResponseDto"];
 export type ListCourseResponseDto = components["schemas"]["ListCourseResponseDto"];
 
+type CreateCourseRequestDto = components["schemas"]["CreateCourseRequestDto"];
+type UpdateCourseRequestDto = components["schemas"]["UpdateCourseRequestDto"];
+
+// The OpenAPI generator marks every response field optional, but the backend
+// guarantees them. Consumers (e.g. dashboard pages) rely on the stricter
+// handwritten shapes, so we cast at the action boundary.
+function castResult<T>(result: ActionResult<unknown>): ActionResult<T> {
+  return result as ActionResult<T>;
+}
+
 export async function createCourse(
   dto: Omit<CreateCourseDto, "instructors"> & { collaboratorIds: string[] }
 ): Promise<ActionResult<CourseResponseDto>> {
-  try {
-    const payload: CreateCourseDto = {
-      title: dto.title,
-      description: dto.description,
-      shortDescription: dto.shortDescription,
-      isPublished: dto.isPublished,
-      isPrivate: dto.isPrivate,
-      imageUrl: dto.imageUrl,
-      topic: dto.topic,
-      instructors: dto.collaboratorIds.map((id) => ({
-        instructorId: id,
-        instructorRole: "COLLABORATOR" as const,
-      })),
-    };
+  const body: CreateCourseRequestDto = {
+    title: dto.title,
+    description: dto.description,
+    shortDescription: dto.shortDescription ?? "",
+    isPublished: dto.isPublished,
+    isPrivate: dto.isPrivate,
+    imageUrl: dto.imageUrl ?? undefined,
+    topic: dto.topic ?? undefined,
+    mcAttemptsMode: dto.mcAttemptsMode ?? "UNLIMITED",
+    instructors: dto.collaboratorIds.map((id) => ({
+      instructorId: id,
+      instructorRole: "COLLABORATOR",
+    })),
+  };
 
-    const res = await fetchBackend("/api/v1/courses", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: message };
-    }
-
-    const data = (await res.json()) as CourseResponseDto;
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  const result = await withActionResult(
+    (client) => client.POST("/api/v1/courses", { body }),
+    "Failed to create course"
+  );
+  return castResult<CourseResponseDto>(result);
 }
 
 export async function fetchPublicCourse(
@@ -85,110 +79,67 @@ export async function enrollInCourse(
 }
 
 export async function fetchCourse(id: string): Promise<ActionResult<OldCourseDetailResponseDto>> {
-  try {
-    const res = await fetchBackend(`/api/v1/courses/${id}`, {
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: message };
-    }
-
-    const data = (await res.json()) as OldCourseDetailResponseDto;
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  const result = await withActionResult(
+    (client) =>
+      client.GET("/api/v1/courses/{id}", {
+        params: { path: { id } },
+      }),
+    "Failed to load course"
+  );
+  return castResult<OldCourseDetailResponseDto>(result);
 }
 
 export async function updateCourse(
   id: string,
   dto: Omit<UpdateCourseDto, "instructors"> & { collaboratorIds: string[] }
 ): Promise<ActionResult<OldCourseDetailResponseDto>> {
-  try {
-    const payload: UpdateCourseDto = {
-      title: dto.title,
-      description: dto.description,
-      shortDescription: dto.shortDescription,
-      isPublished: dto.isPublished,
-      isPrivate: dto.isPrivate,
-      imageUrl: dto.imageUrl,
-      topic: dto.topic,
-      instructors: dto.collaboratorIds.map((cid) => ({
-        instructorId: cid,
-        instructorRole: "COLLABORATOR" as const,
-      })),
-    };
+  const body: UpdateCourseRequestDto = {
+    title: dto.title,
+    description: dto.description,
+    shortDescription: dto.shortDescription ?? "",
+    isPublished: dto.isPublished,
+    isPrivate: dto.isPrivate,
+    imageUrl: dto.imageUrl ?? undefined,
+    topic: dto.topic ?? undefined,
+    mcAttemptsMode: dto.mcAttemptsMode ?? "UNLIMITED",
+    instructors: dto.collaboratorIds.map((cid) => ({
+      instructorId: cid,
+      instructorRole: "COLLABORATOR",
+    })),
+  };
 
-    const res = await fetchBackend(`/api/v1/courses/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: message };
-    }
-
-    const data = (await res.json()) as OldCourseDetailResponseDto;
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  const result = await withActionResult(
+    (client) =>
+      client.PUT("/api/v1/courses/{id}", {
+        params: { path: { id } },
+        body,
+      }),
+    "Failed to update course"
+  );
+  return castResult<OldCourseDetailResponseDto>(result);
 }
 
 export async function deleteCourse(id: string): Promise<ActionResult<void>> {
-  try {
-    const res = await fetchBackend(`/api/v1/courses/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: message };
-    }
-
-    return { success: true, data: undefined };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withActionResultNoContent(
+    (client) =>
+      client.DELETE("/api/v1/courses/{id}", {
+        params: { path: { id } },
+      }),
+    "Failed to delete course"
+  );
 }
 
 export async function removeCourseParticipant(
   courseId: string,
   participantId: string
 ): Promise<ActionResult<void>> {
-  try {
-    const res = await fetchBackend(`/api/v1/courses/${courseId}/participants/${participantId}`, {
-      method: "DELETE",
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: message };
-    }
-
-    return { success: true, data: undefined };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withActionResultNoContent(
+    (client) =>
+      client.DELETE("/api/v1/courses/{id}/participants/{participantId}", {
+        params: { path: { id: courseId, participantId } },
+      }),
+    "Failed to remove participant"
+  );
 }
 
 export async function fetchInstructorCourses(
@@ -231,6 +182,16 @@ export async function joinCourseByCode(
   );
 }
 
+export async function leaveCourse(id: string): Promise<ActionResult<void>> {
+  return await withActionResultNoContent(
+    (client) =>
+      client.DELETE("/api/v1/courses/catalog/{id}/leave", {
+        params: { path: { id } },
+      }),
+    "Failed to leave course"
+  );
+}
+
 export async function regenerateInviteCode(
   id: string
 ): Promise<ActionResult<CourseDetailResponseDto>> {
@@ -249,48 +210,25 @@ export async function fetchPublishedCourses(
   size = 12,
   topic = ""
 ): Promise<ActionResult<PageListCourseResponseDto>> {
-  try {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      size: size.toString(),
-      ...(query.trim() ? { query: query.trim() } : {}),
-      ...(topic.trim() ? { topic: topic.trim() } : {}),
-    });
-
-    const res = await fetchBackend(`/api/v1/courses/catalog?${params}`, {
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: message };
-    }
-
-    const data = (await res.json()) as PageListCourseResponseDto;
-    return { success: true, data };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withActionResult(
+    (client) =>
+      client.GET("/api/v1/courses/catalog", {
+        params: {
+          query: {
+            pageable: { page, size },
+            ...(query.trim() ? { query: query.trim() } : {}),
+            ...(topic.trim() ? { topic: topic.trim() } : {}),
+          },
+        },
+        querySerializer: springPageableSerializer,
+      }),
+    "Failed to load published courses"
+  );
 }
 
 export async function fetchCourseTopics(): Promise<ActionResult<string[]>> {
-  try {
-    const res = await fetchBackend("/api/v1/courses/topics", { cache: "no-store" });
-    if (!res.ok) {
-      const text = await res.text();
-      const message = extractErrorMessage(text, res.statusText);
-      return { success: false, error: message };
-    }
-    const data = (await res.json()) as string[];
-    return { success: true, data: Array.isArray(data) ? data : [] };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
-    };
-  }
+  return await withActionResult(
+    (client) => client.GET("/api/v1/courses/topics"),
+    "Failed to load course topics"
+  );
 }

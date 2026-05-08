@@ -44,14 +44,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminUserServiceImpl implements AdminUserService {
   private static final String DEFAULT_NEW_USER_ROLE = "ROLE_STUDENT";
   private static final Set<String> MANAGED_APP_ROLES =
-      Set.of("ROLE_STUDENT", "ROLE_INSTRUCTOR", "ROLE_ADMINISTRATOR");
+      Set.of(DEFAULT_NEW_USER_ROLE, "ROLE_INSTRUCTOR", "ROLE_ADMINISTRATOR");
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
+  private static final String EMAIL_ATTRIBUTE = "email";
+  private static final String PICTURE_ATTRIBUTE = "picture";
+  private static final String TITLE_ATTRIBUTE = "title";
+  private static final String UNKNOWN_IDENTIFIER = "unknown";
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-  private static final String TEMP_PASSWORD_LOWER = "abcdefghjkmnpqrstuvwxyz";
-  private static final String TEMP_PASSWORD_UPPER = "ABCDEFGHJKMNPQRSTUVWXYZ";
-  private static final String TEMP_PASSWORD_DIGIT = "23456789";
+  private static final String LOWERCASE_CHARS = "abcdefghjkmnpqrstuvwxyz";
+  private static final String UPPERCASE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ";
+  private static final String DIGIT_CHARS = "23456789";
   // avoid ambiguous/shell-problematic chars; still counts as "special" for most policies
-  private static final String TEMP_PASSWORD_SPECIAL = "!@$%*_-+";
+  private static final String SYMBOL_CHARS = "!@$%*_-+";
   private static final DateTimeFormatter SOFT_DELETE_TS_FORMAT =
       DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -96,11 +100,13 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     String title =
-        user != null ? user.getTitle() : getSingleAttribute(keycloakUser.getAttributes(), "title");
+        user != null
+            ? user.getTitle()
+            : getSingleAttribute(keycloakUser.getAttributes(), TITLE_ATTRIBUTE);
     String picture =
         user != null
             ? user.getPicture()
-            : getSingleAttribute(keycloakUser.getAttributes(), "picture");
+            : getSingleAttribute(keycloakUser.getAttributes(), PICTURE_ATTRIBUTE);
 
     Set<String> roles =
         user != null
@@ -139,28 +145,7 @@ public class AdminUserServiceImpl implements AdminUserService {
   @Override
   @Transactional
   public AdminUserDetailDto updateUserRole(UUID userId, AdminUpdateUserRoleRequestDto request) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
-    if (request == null || request.getRoles() == null || request.getRoles().isEmpty()) {
-      throw new IllegalArgumentException("roles is required");
-    }
-    if (request.getRoles().size() != 1) {
-      throw new IllegalArgumentException("Exactly one role must be provided");
-    }
-
-    Set<String> desired =
-        request.getRoles().stream()
-            .map(this::normalizeOptional)
-            .filter(java.util.Objects::nonNull)
-            .collect(Collectors.toSet());
-
-    if (desired.size() != 1) {
-      throw new IllegalArgumentException("Exactly one role must be provided");
-    }
-    if (desired.isEmpty() || !MANAGED_APP_ROLES.containsAll(desired)) {
-      throw new IllegalArgumentException("Invalid app roles");
-    }
+    Set<String> desired = validateRoleUpdateRequest(userId, request);
 
     // Keycloak is source of truth for roles. Snapshot current app roles for rollback.
     List<KeycloakRoleRepresentation> currentRoleReps =
@@ -204,7 +189,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
       dbUser = new User();
       dbUser.setId(userId);
-      dbUser.setEmail(normalizeRequired(keycloakUser.getEmail(), "email"));
+      dbUser.setEmail(normalizeRequired(keycloakUser.getEmail(), EMAIL_ATTRIBUTE));
       dbUser.setUsername(normalizeOptional(keycloakUser.getUsername()));
       dbUser.setFirstName(normalizeOptional(keycloakUser.getFirstName()));
       dbUser.setLastName(normalizeOptional(keycloakUser.getLastName()));
@@ -214,8 +199,8 @@ public class AdminUserServiceImpl implements AdminUserService {
               dbUser.getLastName(),
               dbUser.getUsername(),
               dbUser.getEmail()));
-      dbUser.setTitle(getSingleAttribute(keycloakUser.getAttributes(), "title"));
-      dbUser.setPicture(getSingleAttribute(keycloakUser.getAttributes(), "picture"));
+      dbUser.setTitle(getSingleAttribute(keycloakUser.getAttributes(), TITLE_ATTRIBUTE));
+      dbUser.setPicture(getSingleAttribute(keycloakUser.getAttributes(), PICTURE_ATTRIBUTE));
     }
 
     try {
@@ -245,10 +230,37 @@ public class AdminUserServiceImpl implements AdminUserService {
     return getUser(userId);
   }
 
+  private Set<String> validateRoleUpdateRequest(
+      UUID userId, AdminUpdateUserRoleRequestDto request) {
+    if (userId == null) {
+      throw new IllegalArgumentException("userId is required");
+    }
+    if (request == null || request.getRoles() == null || request.getRoles().isEmpty()) {
+      throw new IllegalArgumentException("roles is required");
+    }
+    if (request.getRoles().size() != 1) {
+      throw new IllegalArgumentException("Exactly one role must be provided");
+    }
+
+    Set<String> desired =
+        request.getRoles().stream()
+            .map(this::normalizeOptional)
+            .filter(java.util.Objects::nonNull)
+            .collect(Collectors.toSet());
+
+    if (desired.size() != 1) {
+      throw new IllegalArgumentException("Exactly one role must be provided");
+    }
+    if (!MANAGED_APP_ROLES.containsAll(desired)) {
+      throw new IllegalArgumentException("Invalid app roles");
+    }
+    return desired;
+  }
+
   @Override
   @Transactional
   public AdminCreateUserResponseDto createUser(AdminCreateUserRequestDto request) {
-    String email = normalizeRequired(request.getEmail(), "email");
+    String email = normalizeRequired(request.getEmail(), EMAIL_ATTRIBUTE);
     String username = normalizeRequired(request.getUsername(), "username");
     String firstName = normalizeRequired(request.getFirstName(), "firstName");
     String lastName = normalizeRequired(request.getLastName(), "lastName");
@@ -272,7 +284,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     UUID createdUserId = keycloakAdminClient.createUser(keycloakUser);
 
-    String tempPassword = generateTemporaryPassword();
+    String tempPassword = generateTemporaryCredential();
     try {
       keycloakAdminClient.resetPassword(createdUserId, tempPassword, true);
 
@@ -343,13 +355,13 @@ public class AdminUserServiceImpl implements AdminUserService {
       throw new UserProfileSyncException("Failed to assign Keycloak role during provisioning", ex);
     }
 
-    String email = normalizeRequired(keycloakUser.getEmail(), "email");
+    String email = normalizeRequired(keycloakUser.getEmail(), EMAIL_ATTRIBUTE);
     String username = normalizeOptional(keycloakUser.getUsername());
     String firstName = normalizeOptional(keycloakUser.getFirstName());
     String lastName = normalizeOptional(keycloakUser.getLastName());
 
-    String title = getSingleAttribute(keycloakUser.getAttributes(), "title");
-    String picture = getSingleAttribute(keycloakUser.getAttributes(), "picture");
+    String title = getSingleAttribute(keycloakUser.getAttributes(), TITLE_ATTRIBUTE);
+    String picture = getSingleAttribute(keycloakUser.getAttributes(), PICTURE_ATTRIBUTE);
 
     User user = new User();
     user.setId(userId);
@@ -446,8 +458,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     String timestamp = SOFT_DELETE_TS_FORMAT.format(Instant.now().atOffset(ZoneOffset.UTC));
-    String anonymizedEmail = toSoftDeletedEmail(before.getEmail(), timestamp, userId);
-    String anonymizedUsername = toSoftDeletedUsername(before.getUsername(), timestamp, userId);
+    String anonymizedEmail = toSoftDeletedEmail(before.getEmail(), timestamp);
+    String anonymizedUsername = toSoftDeletedUsername(before.getUsername(), timestamp);
 
     KeycloakUserRepresentation after = deepCopy(before);
     after.setEmail(anonymizedEmail);
@@ -502,10 +514,10 @@ public class AdminUserServiceImpl implements AdminUserService {
   private Map<String, List<String>> buildAttributes(String title, String pictureUrl) {
     Map<String, List<String>> attributes = new HashMap<>();
     if (title != null) {
-      attributes.put("title", List.of(title));
+      attributes.put(TITLE_ATTRIBUTE, List.of(title));
     }
     if (pictureUrl != null) {
-      attributes.put("picture", List.of(pictureUrl));
+      attributes.put(PICTURE_ATTRIBUTE, List.of(pictureUrl));
     }
     return attributes;
   }
@@ -542,19 +554,18 @@ public class AdminUserServiceImpl implements AdminUserService {
     return email;
   }
 
-  private String generateTemporaryPassword() {
+  private String generateTemporaryCredential() {
     // Generates a strong password that satisfies common Keycloak password policies
     // (uppercase/lowercase/digit/special + length).
     int length = 18;
     char[] password = new char[length];
 
-    password[0] = randomChar(TEMP_PASSWORD_LOWER);
-    password[1] = randomChar(TEMP_PASSWORD_UPPER);
-    password[2] = randomChar(TEMP_PASSWORD_DIGIT);
-    password[3] = randomChar(TEMP_PASSWORD_SPECIAL);
+    password[0] = randomChar(LOWERCASE_CHARS);
+    password[1] = randomChar(UPPERCASE_CHARS);
+    password[2] = randomChar(DIGIT_CHARS);
+    password[3] = randomChar(SYMBOL_CHARS);
 
-    String all =
-        TEMP_PASSWORD_LOWER + TEMP_PASSWORD_UPPER + TEMP_PASSWORD_DIGIT + TEMP_PASSWORD_SPECIAL;
+    String all = LOWERCASE_CHARS + UPPERCASE_CHARS + DIGIT_CHARS + SYMBOL_CHARS;
     for (int i = 4; i < length; i++) {
       password[i] = randomChar(all);
     }
@@ -623,11 +634,11 @@ public class AdminUserServiceImpl implements AdminUserService {
         user.getAnonymizedAt());
   }
 
-  private String toSoftDeletedEmail(String originalEmail, String timestamp, UUID userId) {
+  private String toSoftDeletedEmail(String originalEmail, String timestamp) {
     String normalized = normalizeOptional(originalEmail);
     String token =
         normalized == null
-            ? "unknown"
+            ? UNKNOWN_IDENTIFIER
             : normalized.toLowerCase().replace("@", "_at_").replace("+", "_");
 
     String prefix = "deleted+" + timestamp + "+";
@@ -640,14 +651,16 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     int maxTokenLen = 255 - prefix.length() - suffix.length();
     String truncated =
-        maxTokenLen > 0 ? token.substring(0, Math.min(token.length(), maxTokenLen)) : "unknown";
+        maxTokenLen > 0
+            ? token.substring(0, Math.min(token.length(), maxTokenLen))
+            : UNKNOWN_IDENTIFIER;
     if (truncated.isBlank()) {
-      truncated = "unknown";
+      truncated = UNKNOWN_IDENTIFIER;
     }
     return prefix + truncated + suffix;
   }
 
-  private String toSoftDeletedUsername(String originalUsername, String timestamp, UUID userId) {
+  private String toSoftDeletedUsername(String originalUsername, String timestamp) {
     String normalized = normalizeOptional(originalUsername);
     String base = normalized == null ? "user" : normalized;
     String prefix = "deleted_" + timestamp + "_";

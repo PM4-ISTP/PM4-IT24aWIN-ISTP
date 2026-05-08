@@ -1,6 +1,6 @@
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/features/course/actions/courses";
-import { Alert, Stack, Title } from "@mantine/core";
+import { Alert, Stack, Text, Title } from "@mantine/core";
 
 export default async function CoursesPage(props: { searchParams: Promise<{ page?: string }> }) {
   const searchParams = await props.searchParams;
@@ -10,8 +10,23 @@ export default async function CoursesPage(props: { searchParams: Promise<{ page?
   const result = await fetchEnrolledCoursesOfLoggedInUser(currentPage - 1, pageSize);
 
   return (
-    <Stack p="xl" gap="md">
-      <Title order={1}>Courses</Title>
+    <Stack p="xl" gap="lg">
+      <div>
+        <Title
+          order={1}
+          size="h2"
+          style={{
+            color: "#f1f5f9",
+            fontFamily: "var(--font-space-grotesk), sans-serif",
+            fontWeight: 700,
+          }}
+        >
+          My Courses
+        </Title>
+        <Text size="sm" style={{ color: "#94a3b8" }} mt={4}>
+          Your enrolled courses and learning progress.
+        </Text>
+      </div>
 
       {result.success ? (
         <CourseGrid
@@ -21,8 +36,8 @@ export default async function CoursesPage(props: { searchParams: Promise<{ page?
           coursePathPrefix="/dashboard/courses"
         />
       ) : (
-        <Alert color="red" title="Failed to load courses">
-          {result.error}
+        <Alert color="red" title="Could not load your courses" variant="light">
+          Something went wrong loading your courses. Please refresh the page.
         </Alert>
       )}
     </Stack>

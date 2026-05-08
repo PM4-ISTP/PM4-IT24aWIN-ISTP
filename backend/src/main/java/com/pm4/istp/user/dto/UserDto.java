@@ -17,4 +17,5 @@ public class UserDto {
   private String lastName;
   private String picture;
   private String title;
+  private long totalSecondsOnline;
 }

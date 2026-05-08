@@ -79,17 +79,43 @@ public class Course {
   @JsonIgnore
   @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
   @OrderBy("orderIndex ASC")
-  private List<CourseChallenge> courseChallenges = new ArrayList<>();
+  private List<CourseLab> courseLabs = new ArrayList<>();
 
-  public void addCourseChallenge(CourseChallenge courseChallenge) {
-    courseChallenges.add(courseChallenge);
-    courseChallenge.setCourse(this);
+  public void addCourseChallenge(CourseLab courseLab) {
+    courseLabs.add(courseLab);
+    courseLab.setCourse(this);
   }
 
-  public void removeCourseChallenge(CourseChallenge courseChallenge) {
-    courseChallenges.remove(courseChallenge);
-    courseChallenge.setCourse(null);
+  public void removeCourseChallenge(CourseLab courseLab) {
+    courseLabs.remove(courseLab);
+    courseLab.setCourse(null);
   }
+
+  /**
+   * Controls how many attempts students get for MULTIPLE_CHOICE challenges in this course. Defaults
+   * to UNLIMITED (self-learning). Set to ONCE for graded / Praktikum courses.
+   */
+  @Column(
+      name = "mc_attempts_mode",
+      nullable = false,
+      columnDefinition = "VARCHAR(20) NOT NULL DEFAULT 'UNLIMITED'")
+  @Enumerated(EnumType.STRING)
+  private McAttemptsMode mcAttemptsMode = McAttemptsMode.UNLIMITED;
+
+  @Column(name = "badge_enabled", nullable = false, columnDefinition = "boolean default true")
+  private boolean badgeEnabled = true;
+
+  @Column(name = "badge_primary_color", nullable = true, length = 7)
+  private String badgePrimaryColor;
+
+  @Column(name = "badge_text_color", nullable = true, length = 7)
+  private String badgeTextColor;
+
+  @Column(name = "badge_template", nullable = true)
+  private Integer badgeTemplate;
+
+  @Column(name = "badge_icon", nullable = true, length = 16)
+  private String badgeIcon;
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)

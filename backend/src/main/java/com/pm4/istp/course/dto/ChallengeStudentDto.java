@@ -1,9 +1,7 @@
 package com.pm4.istp.course.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.pm4.istp.course.db.entities.ChallengeDifficultyEnum;
-import com.pm4.istp.course.db.entities.ChallengeStatusEnum;
-import java.time.LocalDateTime;
+import com.pm4.istp.course.db.entities.ChallengeType;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -11,9 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Student-facing challenge DTO — used both on the public course detail page and on the play view.
- * Carries no sub-task flags; instead includes per-student progress ({@code solvedSubTaskCount},
- * {@code totalSubTaskCount}, {@code solved}).
+ * Student-facing challenge DTO. Intentionally omits the {@code flag} and option {@code isCorrect}
+ * fields so answers are never leaked.
  */
 @Data
 @AllArgsConstructor
@@ -21,20 +18,39 @@ import lombok.NoArgsConstructor;
 public class ChallengeStudentDto {
   private UUID id;
   private String title;
-  private String shortDescription;
   private String description;
-  private ChallengeStatusEnum status;
-  private ChallengeDifficultyEnum difficulty;
-  private String dockerImage;
-  private int maxScore;
-  private ChallengeCreatorResponseDto creator;
-  private List<SubTaskStudentDto> subTasks;
-  private int solvedSubTaskCount;
-  private int totalSubTaskCount;
+  private int orderIndex;
+  private ChallengeType type;
+  private int points;
+  private String hint;
+
+  /** Options for MULTIPLE_CHOICE challenges. Empty / null for FLAG type. */
+  private List<ChallengeOptionStudentDto> options;
+
+  /**
+   * True when this is a theory challenge (FLAG type with no flag set). The student can complete it
+   * by simply reading and clicking Next — no submission required.
+   */
+  @JsonProperty("isTheory")
+  private boolean theory;
 
   @JsonProperty("isSolved")
   private boolean solved;
 
-  private LocalDateTime createdAt;
-  private LocalDateTime updatedAt;
+  /**
+   * The plaintext flag. Populated only when the requesting user has solved this challenge (FLAG
+   * type); {@code null} otherwise.
+   */
+  private String solvedFlag;
+
+  /**
+   * ID of the option the student selected (MULTIPLE_CHOICE type). Populated only after submission.
+   */
+  private UUID selectedOptionId;
+
+  /**
+   * ID of the correct option (MULTIPLE_CHOICE type). Only populated when the student has submitted
+   * a wrong answer, so they can see which option was correct.
+   */
+  private UUID correctOptionId;
 }
