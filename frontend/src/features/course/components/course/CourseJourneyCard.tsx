@@ -1,4 +1,14 @@
-import { Avatar, Box, Divider, Group, Progress, Stack, Text, ThemeIcon, Tooltip } from "@mantine/core";
+import {
+  Avatar,
+  Box,
+  Divider,
+  Group,
+  Progress,
+  Stack,
+  Text,
+  ThemeIcon,
+  Tooltip,
+} from "@mantine/core";
 import { IconClock, IconFlame, IconListCheck, IconLock } from "@tabler/icons-react";
 import { getInitials } from "@/src/shared/lib/utils";
 import type { CourseDetailInstructorResponseDto } from "@/src/features/course/actions/courses";
@@ -121,7 +131,9 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
   const labPercent = labs ? calcPercent(labs.completed, labs.total) : 0;
   const challengePercent = challenges ? calcPercent(challenges.completed, challenges.total) : 0;
   const unavailableHint =
-    !labs && !challenges ? "Enroll to start tracking your progress." : "Progress data is unavailable.";
+    !labs && !challenges
+      ? "Enroll to start tracking your progress."
+      : "Progress data is unavailable.";
 
   return (
     <Box
