@@ -1,11 +1,15 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/shared/lib/auth";
 import { redirect } from "next/navigation";
-import { Box, Container, Stack, Title, Text, Badge } from "@mantine/core";
-import Login from "@/src/features/user/components/Login";
-import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
-
-const heroBackground = "linear-gradient(160deg, #0b1120 0%, #0e1a2e 45%, #0b1624 100%)";
+import { Box } from "@mantine/core";
+import LandingNav from "@/src/features/landing/components/LandingNav";
+import LandingHero from "@/src/features/landing/components/LandingHero";
+import LandingVideo from "@/src/features/landing/components/LandingVideo";
+import LandingBento from "@/src/features/landing/components/LandingBento";
+import LandingScreenshots from "@/src/features/landing/components/LandingScreenshots";
+import LandingCta from "@/src/features/landing/components/LandingCta";
+import LandingFooter from "@/src/features/landing/components/LandingFooter";
+import { FONT_SANS, INK, LANDING_BG } from "@/src/features/landing/theme";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -18,156 +22,45 @@ export default async function Home() {
     <Box
       style={{
         minHeight: "100vh",
-        background: heroBackground,
+        background: `
+          radial-gradient(900px 500px at 80% -10%, rgba(93,110,240,0.18), transparent 60%),
+          radial-gradient(700px 460px at 10% 8%, rgba(109,240,200,0.06), transparent 60%),
+          ${LANDING_BG}
+        `,
+        color: INK,
+        fontFamily: FONT_SANS,
         WebkitFontSmoothing: "antialiased",
-        MozOsxFontSmoothing: "grayscale",
-        fontFamily: "var(--font-space-grotesk), sans-serif",
-        display: "flex",
-        flexDirection: "column",
+        position: "relative",
+        overflowX: "hidden",
       }}
     >
-      {/* Top nav */}
+      {/* Subtle 48px grid scaffolding with radial mask */}
       <Box
-        component="header"
+        aria-hidden
         style={{
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          padding: "18px 40px",
-          display: "flex",
-          alignItems: "center",
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)
+          `,
+          backgroundSize: "48px 48px",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 1100px 700px at 50% 200px, #000 30%, transparent 75%)",
+          maskImage:
+            "radial-gradient(ellipse 1100px 700px at 50% 200px, #000 30%, transparent 75%)",
         }}
-      >
-        <Text
-          style={{
-            color: "#e2e8f0",
-            fontFamily: "var(--font-space-grotesk), sans-serif",
-            fontWeight: 700,
-            fontSize: "1rem",
-            letterSpacing: "0.04em",
-          }}
-        >
-          ISTP
-        </Text>
-      </Box>
+      />
 
-      {/* Hero */}
-      <Container
-        size="sm"
-        style={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          paddingTop: 64,
-          paddingBottom: 64,
-        }}
-      >
-        <Stack gap="xl" align="center" style={{ textAlign: "center", width: "100%" }}>
-          <Badge
-            variant="outline"
-            size="sm"
-            style={{
-              color: "#60a5fa",
-              borderColor: "rgba(96,165,250,0.25)",
-              background: "rgba(96,165,250,0.06)",
-              fontSize: "0.7rem",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-            }}
-          >
-            Cybersecurity Training Platform
-          </Badge>
-
-          <Title
-            order={1}
-            style={{
-              color: "#f1f5f9",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 700,
-              fontSize: "clamp(2rem, 5vw, 3.25rem)",
-              lineHeight: 1.2,
-              letterSpacing: "-0.02em",
-              maxWidth: 540,
-            }}
-          >
-            Learn Security{" "}
-            <span
-              style={{
-                background: "linear-gradient(90deg, #60a5fa, #818cf8)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              Hands-On
-            </span>
-          </Title>
-
-          <Text
-            style={{
-              color: "#94a3b8",
-              fontSize: "1.05rem",
-              lineHeight: 1.75,
-              maxWidth: 460,
-            }}
-          >
-            Structured courses, interactive exercises, and real-world scenarios to build practical
-            cybersecurity skills.
-          </Text>
-
-          {/* Login card */}
-          <SurfaceCard
-            variant="strong"
-            elevation="lg"
-            padding="32px 28px"
-            style={{ width: "100%", maxWidth: 360 }}
-          >
-            <Stack gap="md">
-              <Stack gap={4} align="center">
-                <Text
-                  style={{
-                    color: "#e2e8f0",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
-                  }}
-                >
-                  Sign in to your account
-                </Text>
-                <Text
-                  style={{
-                    color: "#64748b",
-                    fontSize: "0.82rem",
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
-                  }}
-                >
-                  Continue your learning journey
-                </Text>
-              </Stack>
-              <Login />
-            </Stack>
-          </SurfaceCard>
-        </Stack>
-      </Container>
-
-      {/* Footer */}
-      <Box
-        component="footer"
-        style={{
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          padding: "16px 40px",
-          textAlign: "center",
-        }}
-      >
-        <Text
-          style={{
-            color: "rgba(255,255,255,0.35)",
-            fontSize: "0.78rem",
-            fontFamily: "var(--font-space-grotesk), sans-serif",
-          }}
-        >
-          Interactive Security Training Platform
-        </Text>
+      <Box style={{ position: "relative", zIndex: 1 }}>
+        <LandingNav />
+        <LandingHero />
+        <LandingVideo />
+        <LandingBento />
+        <LandingScreenshots />
+        <LandingCta />
+        <LandingFooter />
       </Box>
     </Box>
   );
