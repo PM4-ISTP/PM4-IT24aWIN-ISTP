@@ -225,7 +225,7 @@ function RunningLabs({ pods }: { pods: RunningPod[] }) {
                 <Group gap="xs" mt="auto">
                   {playHref ? (
                     <Button
-                      component={Link}
+                      component="a"
                       href={playHref}
                       size="xs"
                       variant="light"
