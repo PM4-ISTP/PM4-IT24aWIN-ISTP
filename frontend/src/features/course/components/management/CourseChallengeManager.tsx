@@ -240,16 +240,6 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [detailsCache, setDetailsCache] = useState<Record<string, ChallengeDetailResponseDto>>({});
   const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
-  const challengesRef = useRef(challenges);
-  const onChangeRef = useRef(onChange);
-
-  useEffect(() => {
-    challengesRef.current = challenges;
-  }, [challenges]);
-
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
 
   function handleAddChallenge(challenge: ListChallengeResponseDto) {
     if (!challenge.id) return;
@@ -310,10 +300,7 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
   // Preload details for challenges that are missing metadata (e.g. loaded from course API)
   const preloadedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    const currentChallenges = challengesRef.current;
-    const missing = currentChallenges.filter(
-      (c) => !c.status && !preloadedRef.current.has(c.challengeId)
-    );
+    const missing = challenges.filter((c) => !c.status && !preloadedRef.current.has(c.challengeId));
     if (missing.length === 0) return;
 
     missing.forEach((c) => preloadedRef.current.add(c.challengeId));
@@ -342,7 +329,7 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
 
       // Batch-hydrate all entries in a single onChange call
       let updated = false;
-      const hydrated = currentChallenges.map((entry) => {
+      const hydrated = challenges.map((entry) => {
         const detail = fetched.get(entry.challengeId);
         if (!detail) return entry;
         if (entry.shortDescription && entry.creatorName && entry.status && entry.creatorId)
@@ -356,9 +343,9 @@ export function CourseChallengeManager({ challenges, onChange }: CourseChallenge
           status: entry.status ?? detail.status ?? undefined,
         };
       });
-      if (updated) onChangeRef.current(hydrated);
+      if (updated) onChange(hydrated);
     })();
-  }, [challenges]);
+  }, [challenges, onChange]);
 
   async function handleToggleExpand(challengeId: string) {
     if (expandedId === challengeId) {
