@@ -158,6 +158,17 @@ k3d cluster list
 kubectl cluster-info
 ```
 
+#### Adminer (Kubernetes)
+
+Adminer is included in the `k8s/overlays/staging` and `k8s/overlays/prod` overlays as a `ClusterIP` service (not exposed via Ingress).
+Access it via port-forwarding:
+
+```bash
+kubectl -n istp-prod port-forward svc/adminer 8888:8080
+```
+
+Then open `http://localhost:8888` and connect to Postgres using host `postgres` and your namespace credentials.
+
 #### kubectl on Windows 11
 
 If you want to use kubectl on Windows, you need to go to the file `.kube/config` in your local user folder. There you need to replace `server: https://host.docker.internal:62824` with `server: https://127.0.0.1:62824`. The port might differ. Just use the port that is specified by the `config` file.
