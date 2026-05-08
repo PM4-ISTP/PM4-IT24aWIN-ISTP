@@ -51,6 +51,7 @@ import com.pm4.istp.user.repositories.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -399,12 +400,20 @@ public class CourseServiceImpl implements CourseService {
     List<UUID> challengeIds = assigned.stream().map(cc -> cc.getLab().getId()).toList();
 
     Map<UUID, Integer> totalByLab = loadChallengeTotals(challengeIds);
+    Map<UUID, Integer> maxPointsByLab = loadMaxPoints(assigned);
 
     SubmissionAggregates aggregates = loadSubmissionAggregates(userIds, challengeIds);
     Map<UUID, LocalDateTime> dueAtByChallenge = loadDueDates(assigned);
+    SubmissionScoringData scoringData = loadSubmissionScoringData(courseId, userIds, challengeIds);
     List<CourseChallengeSubmissionEntryDto> entries =
         buildSubmissionEntries(
-            courseId, userIds, challengeIds, totalByLab, aggregates, dueAtByChallenge);
+            userIds,
+            challengeIds,
+            totalByLab,
+            maxPointsByLab,
+            aggregates,
+            dueAtByChallenge,
+            scoringData);
 
     return new CourseLabSubmissionsResponseDto(courseId, participants, challengesDto, entries);
   }
@@ -632,11 +641,20 @@ public class CourseServiceImpl implements CourseService {
 
     // Return refreshed per-lab entry for this participant so the frontend can update totals
     Map<UUID, Integer> totalByLab = loadChallengeTotals(List.of(labId));
+    Map<UUID, Integer> maxPointsByLab = loadMaxPoints(List.of(courseLab));
     SubmissionAggregates aggregates =
         loadSubmissionAggregates(List.of(participantId), List.of(labId));
     Map<UUID, LocalDateTime> dueAtByChallenge = Map.of(labId, courseLab.getDueAt());
+    SubmissionScoringData scoringData =
+        loadSubmissionScoringData(courseId, List.of(participantId), List.of(labId));
     return buildSubmissionEntry(
-        courseId, participantId, labId, totalByLab, aggregates, dueAtByChallenge);
+        participantId,
+        labId,
+        totalByLab,
+        maxPointsByLab,
+        aggregates,
+        dueAtByChallenge,
+        scoringData);
   }
 
   private List<CourseParticipantResponseDto> loadParticipants(UUID courseId) {
@@ -710,31 +728,99 @@ public class CourseServiceImpl implements CourseService {
     return dueAtByChallenge;
   }
 
+  private Map<UUID, Integer> loadMaxPoints(List<CourseLab> assigned) {
+    Map<UUID, Integer> maxPointsByChallenge = new HashMap<>();
+    for (CourseLab courseLab : assigned) {
+      if (courseLab.getLab() == null || courseLab.getLab().getId() == null) {
+        continue;
+      }
+      maxPointsByChallenge.put(courseLab.getLab().getId(), courseLab.getLab().getMaxScore());
+    }
+    return maxPointsByChallenge;
+  }
+
+  private SubmissionScoringData loadSubmissionScoringData(
+      UUID courseId, List<UUID> userIds, List<UUID> labIds) {
+    Map<UUID, List<com.pm4.istp.course.db.entities.Challenge>> challengesByLab = new HashMap<>();
+    Map<UUID, Set<UUID>> solvedChallengeIdsByUser = new HashMap<>();
+    Map<UUID, Map<UUID, Integer>> overridesByUserByChallenge = new HashMap<>();
+    if (userIds.isEmpty() || labIds.isEmpty()) {
+      return new SubmissionScoringData(
+          challengesByLab, solvedChallengeIdsByUser, overridesByUserByChallenge);
+    }
+
+    List<com.pm4.istp.course.db.entities.Challenge> allChallenges =
+        challengeRepository.findByLabIdsOrderByLabIdAndOrderIndexAsc(labIds);
+    List<UUID> challengeIds = new ArrayList<>();
+    for (com.pm4.istp.course.db.entities.Challenge challenge : allChallenges) {
+      UUID labId = challenge.getLab().getId();
+      challengesByLab.computeIfAbsent(labId, key -> new ArrayList<>()).add(challenge);
+      challengeIds.add(challenge.getId());
+    }
+    if (challengeIds.isEmpty()) {
+      return new SubmissionScoringData(
+          challengesByLab, solvedChallengeIdsByUser, overridesByUserByChallenge);
+    }
+
+    for (Object[] row :
+        challengeCompletionRepository.findSolvedChallengePairs(userIds, challengeIds)) {
+      UUID userId = (UUID) row[0];
+      UUID challengeId = (UUID) row[1];
+      if (userId != null && challengeId != null) {
+        solvedChallengeIdsByUser.computeIfAbsent(userId, key -> new HashSet<>()).add(challengeId);
+      }
+    }
+
+    for (Object[] row :
+        courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+            courseId, userIds, challengeIds)) {
+      UUID userId = (UUID) row[0];
+      UUID challengeId = (UUID) row[1];
+      Integer points = (Integer) row[2];
+      if (userId != null && challengeId != null && points != null) {
+        overridesByUserByChallenge
+            .computeIfAbsent(userId, key -> new HashMap<>())
+            .put(challengeId, points);
+      }
+    }
+
+    return new SubmissionScoringData(
+        challengesByLab, solvedChallengeIdsByUser, overridesByUserByChallenge);
+  }
+
   private List<CourseChallengeSubmissionEntryDto> buildSubmissionEntries(
-      UUID courseId,
       List<UUID> userIds,
       List<UUID> challengeIds,
       Map<UUID, Integer> totalByLab,
+      Map<UUID, Integer> maxPointsByLab,
       SubmissionAggregates aggregates,
-      Map<UUID, LocalDateTime> dueAtByChallenge) {
+      Map<UUID, LocalDateTime> dueAtByChallenge,
+      SubmissionScoringData scoringData) {
     List<CourseChallengeSubmissionEntryDto> entries = new ArrayList<>();
     for (UUID participantId : userIds) {
       for (UUID labId : challengeIds) {
         entries.add(
             buildSubmissionEntry(
-                courseId, participantId, labId, totalByLab, aggregates, dueAtByChallenge));
+                participantId,
+                labId,
+                totalByLab,
+                maxPointsByLab,
+                aggregates,
+                dueAtByChallenge,
+                scoringData));
       }
     }
     return entries;
   }
 
   private CourseChallengeSubmissionEntryDto buildSubmissionEntry(
-      UUID courseId,
       UUID participantId,
       UUID labId,
       Map<UUID, Integer> totalByLab,
+      Map<UUID, Integer> maxPointsByLab,
       SubmissionAggregates aggregates,
-      Map<UUID, LocalDateTime> dueAtByChallenge) {
+      Map<UUID, LocalDateTime> dueAtByChallenge,
+      SubmissionScoringData scoringData) {
     SubmissionKey key = new SubmissionKey(participantId, labId);
     int solvedCount = aggregates.solvedCountByKey().getOrDefault(key, 0);
     int totalCount = totalByLab.getOrDefault(labId, 0);
@@ -744,39 +830,23 @@ public class CourseServiceImpl implements CourseService {
         resolveSubmissionStatus(solvedCount, totalCount, completedAt, dueAtByChallenge.get(labId));
 
     // Points (summary): per challenge points, with manual overrides taking precedence.
-    int maxPoints = 0;
+    int maxPoints = maxPointsByLab.getOrDefault(labId, 0);
     int awardedPoints = 0;
-    Lab lab = labRepository.findById(labId).orElse(null);
-    if (lab != null) {
-      maxPoints = lab.getMaxScore();
-      List<com.pm4.istp.course.db.entities.Challenge> challenges =
-          challengeRepository.findByLabIdOrderByOrderIndexAsc(labId);
-      List<UUID> challengeIds =
-          challenges.stream().map(com.pm4.istp.course.db.entities.Challenge::getId).toList();
-      Set<UUID> solvedIds =
-          Set.copyOf(
-              challengeCompletionRepository.findSolvedChallengeIds(participantId, challengeIds));
+    List<com.pm4.istp.course.db.entities.Challenge> challenges =
+        scoringData.challengesByLab().getOrDefault(labId, List.of());
+    Set<UUID> solvedIds =
+        scoringData.solvedChallengeIdsByUser().getOrDefault(participantId, Set.of());
+    Map<UUID, Integer> overrides =
+        scoringData.overridesByUserByChallenge().getOrDefault(participantId, Map.of());
 
-      Map<UUID, Integer> overrides = new HashMap<>();
-      for (Object[] row :
-          courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
-              courseId, List.of(participantId), challengeIds)) {
-        UUID cid = (UUID) row[1];
-        Integer pts = (Integer) row[2];
-        if (cid != null && pts != null) {
-          overrides.put(cid, pts);
-        }
-      }
-
-      for (com.pm4.istp.course.db.entities.Challenge c : challenges) {
-        UUID cid = c.getId();
-        int cMax = c.getPoints();
-        Integer override = overrides.get(cid);
-        if (override != null) {
-          awardedPoints += override;
-        } else if (solvedIds.contains(cid)) {
-          awardedPoints += cMax;
-        }
+    for (com.pm4.istp.course.db.entities.Challenge c : challenges) {
+      UUID cid = c.getId();
+      int cMax = c.getPoints();
+      Integer override = overrides.get(cid);
+      if (override != null) {
+        awardedPoints += override;
+      } else if (solvedIds.contains(cid)) {
+        awardedPoints += cMax;
       }
     }
 
@@ -807,6 +877,11 @@ public class CourseServiceImpl implements CourseService {
   private record SubmissionAggregates(
       Map<SubmissionKey, Integer> solvedCountByKey,
       Map<SubmissionKey, LocalDateTime> completedAtByKey) {}
+
+  private record SubmissionScoringData(
+      Map<UUID, List<com.pm4.istp.course.db.entities.Challenge>> challengesByLab,
+      Map<UUID, Set<UUID>> solvedChallengeIdsByUser,
+      Map<UUID, Map<UUID, Integer>> overridesByUserByChallenge) {}
 
   @Override
   @Transactional(readOnly = true)

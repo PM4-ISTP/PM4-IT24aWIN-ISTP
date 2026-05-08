@@ -25,6 +25,16 @@ public interface ChallengeCompletionRepository extends JpaRepository<ChallengeCo
 
   @Query(
       """
+      select c.user.id, c.challenge.id
+      from ChallengeCompletion c
+      where c.user.id in :userIds and c.challenge.id in :challengeIds
+      """)
+  List<Object[]> findSolvedChallengePairs(
+      @Param("userIds") Collection<UUID> userIds,
+      @Param("challengeIds") Collection<UUID> challengeIds);
+
+  @Query(
+      """
       select c.challenge.id
       from ChallengeCompletion c
       where c.user.id = :userId and c.challenge.lab.id in :challengeIds
