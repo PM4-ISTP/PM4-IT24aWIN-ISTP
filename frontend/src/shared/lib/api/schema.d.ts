@@ -788,6 +788,8 @@ export interface components {
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage: string;
+      /** Format: int32 */
+      containerPort?: number;
       challenges: components["schemas"]["ChallengeRequestDto"][];
     };
     ChallengeCreatorResponseDto: {
@@ -807,8 +809,9 @@ export interface components {
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage?: string;
       /** Format: int32 */
+      containerPort?: number;
+      /** Format: int32 */
       maxScore?: number;
-      dockerImage?: string;
       creator?: components["schemas"]["ChallengeCreatorResponseDto"];
       /** Format: int64 */
       courseCount?: number;
@@ -944,6 +947,8 @@ export interface components {
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage?: string;
       /** Format: int32 */
+      containerPort?: number;
+      /** Format: int32 */
       maxScore?: number;
       creator?: components["schemas"]["ChallengeCreatorResponseDto"];
       challenges?: components["schemas"]["ChallengeStudentDto"][];
@@ -1046,6 +1051,8 @@ export interface components {
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage: string;
+      /** Format: int32 */
+      containerPort?: number;
       challenges: components["schemas"]["ChallengeRequestDto"][];
     };
     CreateChallengeResponseDto: {
@@ -1061,6 +1068,8 @@ export interface components {
       /** Format: int32 */
       maxScore?: number;
       dockerImage?: string;
+      /** Format: int32 */
+      containerPort?: number;
       /** Format: uuid */
       creatorId?: string;
       challenges?: components["schemas"]["ChallengeResponseDto"][];
@@ -1214,6 +1223,8 @@ export interface components {
       /** Format: int32 */
       maxScore?: number;
       dockerImage?: string;
+      /** Format: int32 */
+      containerPort?: number;
       creatorName?: string;
       /** Format: int64 */
       courseCount?: number;
@@ -1291,6 +1302,9 @@ export interface components {
       status?: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
+      dockerImage?: string;
+      /** Format: int32 */
+      containerPort?: number;
       /** Format: int32 */
       maxScore?: number;
       /** Format: int64 */

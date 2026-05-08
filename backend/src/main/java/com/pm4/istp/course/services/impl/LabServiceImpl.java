@@ -102,6 +102,7 @@ public class LabServiceImpl implements LabService {
     lab.setStatus(request.getStatus());
     lab.setDifficulty(request.getDifficulty());
     lab.setDockerImage(request.getDockerImage());
+    lab.setContainerPort(resolveContainerPort(request.getContainerPort()));
     lab.setCreator(creator);
 
     List<Challenge> challenges = buildChallengesForCreate(request.getChallenges(), lab);
@@ -145,6 +146,7 @@ public class LabServiceImpl implements LabService {
     lab.setStatus(newStatus);
     lab.setDifficulty(request.getDifficulty());
     lab.setDockerImage(request.getDockerImage());
+    lab.setContainerPort(resolveContainerPort(request.getContainerPort()));
 
     applyChallengeUpdates(lab, request.getChallenges());
     lab.setMaxScore(totalPoints(lab.getChallenges()));
@@ -179,6 +181,10 @@ public class LabServiceImpl implements LabService {
       result.add(st);
     }
     return result;
+  }
+
+  private int resolveContainerPort(Integer containerPort) {
+    return containerPort != null ? containerPort : Lab.DEFAULT_CONTAINER_PORT;
   }
 
   private void applyChallengeUpdates(Lab lab, List<ChallengeRequest> requests) {

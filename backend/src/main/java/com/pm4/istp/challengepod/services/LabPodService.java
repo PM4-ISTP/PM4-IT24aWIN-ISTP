@@ -57,9 +57,6 @@ public class LabPodService {
   private static final String LABEL_CHALLENGE_ID = "istp.pm4.ch/lab-id";
   private static final String LABEL_CREATED_AT = "istp.pm4.ch/created-at-epoch";
 
-  // TODO(#163): replace with Lab.containerPort when the model supports it.
-  private static final int DEFAULT_APP_PORT = 80;
-
   private static final int POD_NAME_HASH_LENGTH = 8;
   private static final String INGRESS_NAME_SUFFIX = "-ingress";
 
@@ -520,6 +517,7 @@ public class LabPodService {
     labels.put(LABEL_USER_ID, userId.toString());
     labels.put(LABEL_CHALLENGE_ID, labId.toString());
     labels.put(LABEL_CREATED_AT, String.valueOf(nowEpoch));
+    int containerPort = resolveContainerPort(lab);
 
     // 1. Deployment
     Deployment deployment =
@@ -554,7 +552,7 @@ public class LabPodService {
                     : null)
             .endResources()
             .addNewPort()
-            .withContainerPort(DEFAULT_APP_PORT) // TODO(#163): lab.getContainerPort()
+            .withContainerPort(containerPort)
             .endPort()
             .endContainer()
             .endSpec()
@@ -588,7 +586,7 @@ public class LabPodService {
             .withName("app-port")
             .withProtocol("TCP")
             .withPort(80)
-            .withTargetPort(new IntOrString(DEFAULT_APP_PORT))
+            .withTargetPort(new IntOrString(containerPort))
             .endPort()
             .withType("ClusterIP")
             .endSpec()
@@ -649,6 +647,17 @@ public class LabPodService {
     String hostPrefix =
         labHostPrefix.isBlank() ? service + "-" + hash : service + "-" + labHostPrefix + "-" + hash;
     return hostPrefix + "." + domain;
+  }
+
+  private int resolveContainerPort(Lab lab) {
+    Integer containerPort = lab.getContainerPort();
+    if (containerPort == null) {
+      return Lab.DEFAULT_CONTAINER_PORT;
+    }
+    if (containerPort < 1 || containerPort > 65_535) {
+      throw new LabPodException("Lab container port must be between 1 and 65535.");
+    }
+    return containerPort;
   }
 
   private String normalizeHostPrefix(String prefix) {

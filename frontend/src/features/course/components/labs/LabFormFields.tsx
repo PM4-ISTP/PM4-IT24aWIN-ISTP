@@ -1,6 +1,6 @@
 "use client";
 
-import { Input, Loader, SegmentedControl, Stack, TextInput } from "@mantine/core";
+import { Input, Loader, NumberInput, SegmentedControl, Stack, TextInput } from "@mantine/core";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import MyEditor from "@/src/shared/components/MyEditor";
 import {
@@ -24,6 +24,7 @@ export interface ChallengeFormValues {
   status: LabStatusEnum;
   difficulty: LabDifficultyEnum;
   dockerImage: string;
+  containerPort: number;
   challenges: ChallengeItemFormValues[];
 }
 
@@ -94,6 +95,16 @@ export function LabFormFields({
             <IconX size={16} color="var(--mantine-color-red-5)" />
           ) : undefined
         }
+        required
+      />
+
+      <NumberInput
+        label="Container Port"
+        min={1}
+        max={65535}
+        clampBehavior="strict"
+        value={values.containerPort}
+        onChange={(value) => onChange({ ...values, containerPort: Number(value) || 80 })}
         required
       />
 
