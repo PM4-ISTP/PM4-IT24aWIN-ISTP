@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import sanitizeHtml from "sanitize-html";
 import { useSession } from "next-auth/react";
 import {
   ActionIcon,
@@ -40,6 +39,7 @@ import {
   getDifficultyColor,
   getStatusColor,
 } from "@/src/features/course/constants/challengeConstants";
+import { getSanitizedHtml } from "@/src/shared/lib/utils";
 
 export interface CourseChallengeEntry {
   labId: string;
@@ -57,14 +57,6 @@ interface CourseChallengeManagerProps {
   labs: CourseChallengeEntry[];
   onChange: (labs: CourseChallengeEntry[]) => void;
 }
-
-const RICH_TEXT_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
-  allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2"]),
-  allowedAttributes: {
-    ...sanitizeHtml.defaults.allowedAttributes,
-    img: ["src", "alt", "width", "height"],
-  },
-};
 
 type ChallengeDetail = NonNullable<ChallengeDetailResponseDto["challenges"]>[number];
 
@@ -87,7 +79,7 @@ function ChallengeListView({ challenges }: { challenges: ChallengeDetail[] }) {
           const key = st.id ?? `local-${i}`;
           const isExpanded = expandedKey === key;
           const description = st.description
-            ? sanitizeHtml(st.description, RICH_TEXT_SANITIZE_OPTIONS)
+            ? getSanitizedHtml(st.description)
             : null;
           const flag = st.flag?.trim();
           const hasFlag = Boolean(flag);
@@ -179,7 +171,7 @@ function ChallengeListView({ challenges }: { challenges: ChallengeDetail[] }) {
 
 function ChallengeDetailView({ detail }: { detail: ChallengeDetailResponseDto }) {
   const sanitizedDescription = detail.description
-    ? sanitizeHtml(detail.description, RICH_TEXT_SANITIZE_OPTIONS)
+    ? getSanitizedHtml(detail.description)
     : null;
   const challenges = detail.challenges ?? [];
 
@@ -357,8 +349,7 @@ export function CourseLabManager({ labs, onChange }: CourseChallengeManagerProps
       });
       if (updated) onChange(hydrated);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [labs.length]);
+  }, [labs, onChange]);
 
   async function handleToggleExpand(labId: string) {
     if (expandedId === labId) {

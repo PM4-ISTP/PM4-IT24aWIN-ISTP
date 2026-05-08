@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Badge,
@@ -104,7 +104,7 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
     },
   });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch(`/api/backend/api/admin/users/${encodeURIComponent(userId)}`, {
@@ -139,12 +139,11 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [profileForm, rolesForm, userId]);
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [load]);
 
   const saveProfile = async () => {
     const valid = profileForm.validate();

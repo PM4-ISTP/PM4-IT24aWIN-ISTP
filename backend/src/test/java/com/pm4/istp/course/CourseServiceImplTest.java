@@ -1273,6 +1273,66 @@ class CourseServiceImplTest {
   }
 
   @Test
+  void getCourseLabSubmissionDetails_whenMultipleChoiceCompletedButWrong_awardsZeroPoints() {
+    UUID instructorId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID optionChallengeId = UUID.randomUUID();
+    LocalDateTime completedAt = LocalDateTime.of(2026, 5, 12, 19, 15);
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+    Course course = buildCourseWithOwner(courseId, instructor);
+
+    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    lab.setMaxScore(5);
+    CourseLab assignment = new CourseLab();
+    assignment.setLab(lab);
+    course.addCourseChallenge(assignment);
+
+    Challenge optionChallenge =
+        buildCourseChallenge(
+            optionChallengeId, lab, "Pick one", ChallengeType.MULTIPLE_CHOICE, 5);
+
+    StudentOptionSubmission optionSubmission = new StudentOptionSubmission();
+    optionSubmission.setCorrect(false);
+    ChallengeOption selected = new ChallengeOption();
+    selected.setText("Wrong answer");
+    optionSubmission.setSelectedOption(selected);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(true);
+    when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId)).thenReturn(List.of(optionChallenge));
+    when(challengeCompletionRepository.findSolvedChallengeIds(participantId, List.of(optionChallengeId)))
+        .thenReturn(List.of(optionChallengeId));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.of(optionSubmission));
+    when(studentFlagSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.empty());
+    when(
+            courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+                courseId, List.of(participantId), List.of(optionChallengeId)))
+        .thenReturn(List.of());
+    when(
+            challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+                List.of(participantId), List.of(labId)))
+        .thenReturn(List.<Object[]>of(new Object[] {participantId, labId, 1L, completedAt}));
+
+    var detail =
+        courseService.getCourseLabSubmissionDetails(instructorId, courseId, participantId, labId);
+
+    assertThat(detail.getStatus()).isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
+    assertThat(detail.getAwardedPoints()).isEqualTo(0);
+    assertThat(detail.getChallenges()).singleElement().satisfies(challenge -> {
+      assertThat(challenge.getCorrect()).isFalse();
+      assertThat(challenge.getAwardedPoints()).isEqualTo(0);
+      assertThat(challenge.getSelectedOptionText()).isEqualTo("Wrong answer");
+    });
+  }
+
+  @Test
   void getCourseLabSubmissionDetails_whenLabNotAssigned_throwsLabNotFound() {
     UUID instructorId = UUID.randomUUID();
     UUID participantId = UUID.randomUUID();
