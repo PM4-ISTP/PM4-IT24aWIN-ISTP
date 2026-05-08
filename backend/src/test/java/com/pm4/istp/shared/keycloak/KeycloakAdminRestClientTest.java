@@ -61,6 +61,8 @@ class KeycloakAdminRestClientTest {
     client.removeRealmRoles(userId, List.of(role));
 
     assertThat(user.getId()).isEqualTo(userId.toString());
+    assertThat(user.getAttributes())
+        .containsEntry("cibaBackchannelTokenDeliveryMode", List.of("poll"));
     assertThat(createdId).isEqualTo(TestKeycloakHandler.CREATED_ID);
     assertThat(role.getName()).isEqualTo("ROLE_STUDENT");
     assertThat(requests)
@@ -171,7 +173,13 @@ class KeycloakAdminRestClientTest {
       }
       if ("GET".equals(exchange.getRequestMethod()) && path.matches(".*/users/[0-9a-f-]+$")) {
         String id = path.substring(path.lastIndexOf('/') + 1);
-        write(exchange, 200, "{\"id\":\"" + id + "\",\"username\":\"alice\",\"enabled\":true}");
+        write(
+            exchange,
+            200,
+            "{\"id\":\""
+                + id
+                + "\",\"username\":\"alice\",\"enabled\":true,"
+                + "\"attributes\":{\"cibaBackchannelTokenDeliveryMode\":\"poll\"}}");
         return;
       }
       if (path.endsWith("/roles/ROLE_STUDENT")) {
