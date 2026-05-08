@@ -172,8 +172,19 @@ class LabPodServiceTest {
 
         ArgumentCaptor<Deployment> deploymentCaptor = ArgumentCaptor.forClass(Deployment.class);
         verify(deploymentOperation).resource(deploymentCaptor.capture());
-        Deployment deployment = deploymentCaptor.getValue();
+        assertCreatedDeployment(deploymentCaptor.getValue());
 
+        ArgumentCaptor<Service> serviceCaptor = ArgumentCaptor.forClass(Service.class);
+        verify(serviceOperation).resource(serviceCaptor.capture());
+        assertCreatedService(serviceCaptor.getValue());
+
+        ArgumentCaptor<Ingress> ingressCaptor = ArgumentCaptor.forClass(Ingress.class);
+        verify(ingressOperation).resource(ingressCaptor.capture());
+        assertCreatedIngress(ingressCaptor.getValue());
+        assertCreatedResponse(response);
+    }
+
+    private void assertCreatedDeployment(Deployment deployment) {
         assertThat(deployment.getSpec().getTemplate().getSpec().getContainers())
                 .singleElement()
                 .satisfies(
@@ -192,10 +203,10 @@ class LabPodServiceTest {
                 .singleElement()
                 .satisfies(secret -> assertThat(secret.getName()).isEqualTo("ghcr-pull-secret"));
         assertThat(deployment.getMetadata().getAnnotations()).isNullOrEmpty();
+    }
 
-        ArgumentCaptor<Service> serviceCaptor = ArgumentCaptor.forClass(Service.class);
-        verify(serviceOperation).resource(serviceCaptor.capture());
-        assertThat(serviceCaptor.getValue().getSpec().getPorts())
+    private void assertCreatedService(Service service) {
+        assertThat(service.getSpec().getPorts())
                 .singleElement()
                 .satisfies(
                         port -> {
@@ -203,10 +214,10 @@ class LabPodServiceTest {
                             assertThat(port.getPort()).isEqualTo(80);
                             assertThat(port.getTargetPort().getIntVal()).isEqualTo(8080);
                         });
+    }
 
-        ArgumentCaptor<Ingress> ingressCaptor = ArgumentCaptor.forClass(Ingress.class);
-        verify(ingressOperation).resource(ingressCaptor.capture());
-        assertThat(ingressCaptor.getValue().getSpec().getRules())
+    private void assertCreatedIngress(Ingress ingress) {
+        assertThat(ingress.getSpec().getRules())
                 .singleElement()
                 .satisfies(
                         rule -> {
@@ -218,7 +229,9 @@ class LabPodServiceTest {
                                                     assertThat(path.getBackend().getService().getPort().getNumber())
                                                             .isEqualTo(80));
                         });
+    }
 
+    private void assertCreatedResponse(PodStatusResponse response) {
         assertThat(response.status()).isEqualTo(PodStatusEnum.PROVISIONING);
         assertThat(response.appUrl()).isEqualTo("http://app-12345678.test.domain");
         assertThat(response.terminalUrl()).isNull();

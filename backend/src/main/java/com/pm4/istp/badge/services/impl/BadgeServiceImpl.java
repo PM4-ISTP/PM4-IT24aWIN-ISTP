@@ -94,16 +94,15 @@ public class BadgeServiceImpl implements BadgeService {
         courseRepository.findCoursesByChallengeIdAndEnrolledUserId(labId, userId);
 
     for (Course course : courses) {
-      if (!course.isBadgeEnabled()) {
-        continue;
-      }
-      if (userCourseBadgeRepository.existsByUserIdAndCourseId(userId, course.getId())) {
-        continue;
-      }
-      if (isCourseCompleted(userId, course)) {
+      if (canAwardBadge(userId, course) && isCourseCompleted(userId, course)) {
         awardBadge(userId, course);
       }
     }
+  }
+
+  private boolean canAwardBadge(UUID userId, Course course) {
+    return course.isBadgeEnabled()
+        && !userCourseBadgeRepository.existsByUserIdAndCourseId(userId, course.getId());
   }
 
   private boolean isCourseCompleted(UUID userId, Course course) {

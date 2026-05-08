@@ -46,13 +46,15 @@ class KeycloakServiceAccountTokenProviderTest {
   @Test
   void getAccessToken_emptyResponseAndHttpError_throwKeycloakException() throws Exception {
     startServer(exchange -> write(exchange, 200, "{}"));
-    assertThatThrownBy(() -> providerForServer().getAccessToken())
+    KeycloakServiceAccountTokenProvider emptyResponseProvider = providerForServer();
+    assertThatThrownBy(emptyResponseProvider::getAccessToken)
         .isInstanceOf(KeycloakAdminApiException.class)
         .hasMessageContaining("empty response");
     server.stop(0);
 
     startServer(exchange -> write(exchange, 500, "{}"));
-    assertThatThrownBy(() -> providerForServer().getAccessToken())
+    KeycloakServiceAccountTokenProvider httpErrorProvider = providerForServer();
+    assertThatThrownBy(httpErrorProvider::getAccessToken)
         .isInstanceOf(KeycloakAdminApiException.class)
         .hasMessageContaining("Failed to fetch");
   }
@@ -84,7 +86,7 @@ class KeycloakServiceAccountTokenProviderTest {
 
   private void startServer(ThrowingHandler handler) throws IOException {
     server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
-    server.createContext("/realms/istp/protocol/openid-connect/token", exchange -> handler.handle(exchange));
+    server.createContext("/realms/istp/protocol/openid-connect/token", handler::handle);
     server.start();
   }
 
