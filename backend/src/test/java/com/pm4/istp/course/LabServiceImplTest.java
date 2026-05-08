@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.lenient;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +47,7 @@ import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
+import com.pm4.istp.course.exceptions.LabSubmissionClosedException;
 import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.mappers.LabMapper;
@@ -971,6 +973,36 @@ class ChallengeServiceImplTest {
     assertThatThrownBy(
         () -> labService.submitChallengeFlag(userId, courseId, labId, challengeId, "ISTP{secret}"))
         .isInstanceOf(ChallengeAlreadySolvedException.class);
+  }
+
+  @Test
+  void submitChallengeFlag_whenDeadlinePassed_throwsSubmissionClosed() {
+    stubDefaultSubmissionRepos();
+    UUID userId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    Lab lab = buildChallengeWithCourses(labId, courseId);
+    Challenge challenge = buildChallenge(challengeId, lab, "ISTP{secret}");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId))
+        .thenReturn(Optional.of(buildUser(userId)));
+    when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
+        .thenReturn(true);
+    CourseLab courseLab = new CourseLab();
+    courseLab.setDueAt(LocalDateTime.now().minusMinutes(1));
+    when(courseLabRepository.findByCourseIdAndLabId(courseId, labId))
+        .thenReturn(Optional.of(courseLab));
+
+    assertThatThrownBy(
+            () ->
+                labService.submitChallengeFlag(
+                    userId, courseId, labId, challengeId, "ISTP{secret}"))
+        .isInstanceOf(LabSubmissionClosedException.class)
+        .hasMessageContaining("deadline");
+
+    verify(challengeCompletionRepository, never()).saveAndFlush(any());
   }
 
   @Test
