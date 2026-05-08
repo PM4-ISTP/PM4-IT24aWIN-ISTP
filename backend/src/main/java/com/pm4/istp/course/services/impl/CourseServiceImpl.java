@@ -328,8 +328,7 @@ public class CourseServiceImpl implements CourseService {
               .findById(item.getLabId())
               .orElseThrow(
                   () ->
-                      new LabNotFoundException(
-                          String.format(LAB_NOT_FOUND_MSG, item.getLabId())));
+                      new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, item.getLabId())));
 
       // DRAFT labs cannot be added to any course, even by their creator
       if (lab.getStatus() == LabStatusEnum.DRAFT) {
@@ -341,8 +340,7 @@ public class CourseServiceImpl implements CourseService {
       boolean isCreator = lab.getCreator().getId().equals(userId);
       boolean isPublic = lab.getStatus() == LabStatusEnum.PUBLIC;
       if (!isCreator && !isPublic) {
-        throw new LabNotFoundException(
-            String.format(LAB_NOT_FOUND_MSG, item.getLabId()));
+        throw new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, item.getLabId()));
       }
 
       requestedByLabId.put(item.getLabId(), item);
@@ -408,12 +406,7 @@ public class CourseServiceImpl implements CourseService {
     SubmissionScoringData scoringData = loadSubmissionScoringData(courseId, userIds, challengeIds);
     List<CourseChallengeSubmissionEntryDto> entries =
         buildSubmissionEntries(
-            userIds,
-            challengeIds,
-            totalByLab,
-            maxPointsByLab,
-            aggregates,
-            scoringData);
+            userIds, challengeIds, totalByLab, maxPointsByLab, aggregates, scoringData);
 
     return new CourseLabSubmissionsResponseDto(courseId, participants, challengesDto, entries);
   }
@@ -441,8 +434,7 @@ public class CourseServiceImpl implements CourseService {
     int totalCount = challenges.size();
     LocalDateTime completedAt = resolveCompletedAt(participantId, labId, solvedCount, totalCount);
 
-    CourseLabSubmissionStatusEnum status =
-        resolveSubmissionStatus(solvedCount, totalCount);
+    CourseLabSubmissionStatusEnum status = resolveSubmissionStatus(solvedCount, totalCount);
 
     ChallengeDetailResult detailResult =
         buildChallengeSubmissionDetails(challenges, solvedIds, evidence, overridePointsByChallenge);
@@ -482,8 +474,7 @@ public class CourseServiceImpl implements CourseService {
         .stream()
             .filter(courseLab -> labMatches(courseLab, labId))
             .findFirst()
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
   }
 
   private boolean labMatches(CourseLab courseLab, UUID labId) {
@@ -491,7 +482,8 @@ public class CourseServiceImpl implements CourseService {
   }
 
   private Set<UUID> loadSolvedChallengeIds(UUID participantId, List<UUID> challengeIds) {
-    return Set.copyOf(challengeCompletionRepository.findSolvedChallengeIds(participantId, challengeIds));
+    return Set.copyOf(
+        challengeCompletionRepository.findSolvedChallengeIds(participantId, challengeIds));
   }
 
   private SubmissionEvidence loadSubmissionEvidence(UUID participantId, List<UUID> challengeIds) {
@@ -546,8 +538,7 @@ public class CourseServiceImpl implements CourseService {
     List<CourseLabChallengeSubmissionDetailDto> details = new ArrayList<>();
     for (Challenge challenge : challenges) {
       ChallengeDetail detail =
-          buildChallengeSubmissionDetail(
-              challenge, solvedIds, evidence, overridePointsByChallenge);
+          buildChallengeSubmissionDetail(challenge, solvedIds, evidence, overridePointsByChallenge);
       awardedPoints += detail.awardedPoints();
       details.add(detail.dto());
     }
@@ -688,12 +679,7 @@ public class CourseServiceImpl implements CourseService {
     SubmissionScoringData scoringData =
         loadSubmissionScoringData(courseId, List.of(participantId), List.of(labId));
     return buildSubmissionEntry(
-        participantId,
-        labId,
-        totalByLab,
-        maxPointsByLab,
-        aggregates,
-        scoringData);
+        participantId, labId, totalByLab, maxPointsByLab, aggregates, scoringData);
   }
 
   private List<CourseParticipantResponseDto> loadParticipants(UUID courseId) {
@@ -831,12 +817,7 @@ public class CourseServiceImpl implements CourseService {
       for (UUID labId : challengeIds) {
         entries.add(
             buildSubmissionEntry(
-                participantId,
-                labId,
-                totalByLab,
-                maxPointsByLab,
-                aggregates,
-                scoringData));
+                participantId, labId, totalByLab, maxPointsByLab, aggregates, scoringData));
       }
     }
     return entries;
@@ -854,14 +835,12 @@ public class CourseServiceImpl implements CourseService {
     int totalCount = totalByLab.getOrDefault(labId, 0);
     LocalDateTime completedAt =
         totalCount > 0 && solvedCount == totalCount ? aggregates.completedAtByKey().get(key) : null;
-    CourseLabSubmissionStatusEnum status =
-        resolveSubmissionStatus(solvedCount, totalCount);
+    CourseLabSubmissionStatusEnum status = resolveSubmissionStatus(solvedCount, totalCount);
 
     // Points (summary): per challenge points, with manual overrides taking precedence.
     int maxPoints = maxPointsByLab.getOrDefault(labId, 0);
     int awardedPoints = 0;
-    List<Challenge> challenges =
-        scoringData.challengesByLab().getOrDefault(labId, List.of());
+    List<Challenge> challenges = scoringData.challengesByLab().getOrDefault(labId, List.of());
     Set<UUID> solvedIds =
         scoringData.solvedChallengeIdsByUser().getOrDefault(participantId, Set.of());
     Map<UUID, Integer> overrides =
@@ -908,8 +887,7 @@ public class CourseServiceImpl implements CourseService {
   private record SubmissionDisplay(
       Boolean correct, String submittedFlag, String selectedOptionText) {}
 
-  private record ChallengeDetail(
-      int awardedPoints, CourseLabChallengeSubmissionDetailDto dto) {}
+  private record ChallengeDetail(int awardedPoints, CourseLabChallengeSubmissionDetailDto dto) {}
 
   private record ChallengeDetailResult(
       int awardedPoints, List<CourseLabChallengeSubmissionDetailDto> details) {}
