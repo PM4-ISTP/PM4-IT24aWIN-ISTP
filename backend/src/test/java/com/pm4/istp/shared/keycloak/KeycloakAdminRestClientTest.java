@@ -16,6 +16,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import tools.jackson.databind.ObjectMapper;
 
 class KeycloakAdminRestClientTest {
 
@@ -39,7 +40,7 @@ class KeycloakAdminRestClientTest {
     KeycloakServiceAccountTokenProvider tokenProvider =
         Mockito.mock(KeycloakServiceAccountTokenProvider.class);
     when(tokenProvider.getAccessToken()).thenReturn("admin-token");
-    client = new KeycloakAdminRestClient(properties, tokenProvider);
+    client = new KeycloakAdminRestClient(properties, tokenProvider, new ObjectMapper());
   }
 
   @AfterEach
