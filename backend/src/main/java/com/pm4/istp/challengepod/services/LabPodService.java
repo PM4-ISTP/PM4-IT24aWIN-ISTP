@@ -193,6 +193,11 @@ public class LabPodService {
         return Pair.of(buildResponse(d, adminConfig.getPodTtlSeconds()), false);
       }
 
+      List<Deployment> existingForUser = findDeployments(userId);
+      if (!existingForUser.isEmpty()) {
+        throw new LabPodException("Only one lab pod can be active per student.");
+      }
+
       // Create new pod resources
       return Pair.of(createResources(userId, labId, instanceName, adminConfig, lab), true);
 

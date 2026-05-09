@@ -35,7 +35,7 @@ import {
   IconWorld,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { LabPodStatusBadge } from "@/src/features/lab-pod/components/LabPodStatusBadge";
 import { useLabPodStatus } from "@/src/features/lab-pod/hooks/useLabPodStatus";
 import {
@@ -148,7 +148,6 @@ export function LabPlayView({
   const [labCollapsed, setLabCollapsed] = useState(false);
   const [podActionLoading, setPodActionLoading] = useState(false);
   const [podActionError, setPodActionError] = useState<string | null>(null);
-  const autoStartAttempted = useRef(false);
 
   const {
     data: pod,
@@ -247,14 +246,6 @@ export function LabPlayView({
       setPodActionLoading(false);
     }
   }, [apiClient, labId, refetchPodStatus]);
-
-  useEffect(() => {
-    if (podStatusLoading || autoStartAttempted.current) return;
-    if (podStatus !== "NOT_FOUND" && podStatus !== "FAILED") return;
-    if (dockerImageCheck.status === "checking") return;
-    autoStartAttempted.current = true;
-    void handleStartPod();
-  }, [dockerImageCheck.status, handleStartPod, podStatus, podStatusLoading]);
 
   function updateChallengeSolved(challengeId: string, patch: Partial<ChallengeStudentDto>) {
     setChallenge((prev) => {

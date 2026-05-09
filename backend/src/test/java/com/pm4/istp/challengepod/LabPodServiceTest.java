@@ -167,6 +167,50 @@ class LabPodServiceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void startPod_rejectsNewLab_whenUserAlreadyHasAnotherActivePod() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> baseOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> userOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> labOperation =
+                mock(NonNamespaceOperation.class, Mockito.RETURNS_DEEP_STUBS);
+
+        UUID userId = UUID.randomUUID();
+        UUID requestedLabId = UUID.randomUUID();
+        UUID otherLabId = UUID.randomUUID();
+        Deployment otherDeployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-cafebabe")
+                        .withLabels(podLabels(userId, otherLabId, Instant.now().getEpochSecond()))
+                        .endMetadata()
+                        .build();
+        DeploymentList emptyLabList = new DeploymentList();
+        emptyLabList.setItems(List.of());
+        DeploymentList userPodList = new DeploymentList();
+        userPodList.setItems(List.of(otherDeployment));
+
+        when(client.apps().deployments().inNamespace("default")).thenReturn(baseOperation);
+        when(baseOperation.withLabel("app", "istp-lab-pod")).thenReturn(userOperation);
+        when(userOperation.withLabel("istp.pm4.ch/user-id", userId.toString()))
+                .thenReturn(userOperation);
+        when(userOperation.withLabel("istp.pm4.ch/lab-id", requestedLabId.toString()))
+                .thenReturn(labOperation);
+        when(labOperation.list()).thenReturn(emptyLabList);
+        when(userOperation.list()).thenReturn(userPodList);
+        when(labService.getChallenge(userId, requestedLabId)).thenReturn(buildChallenge());
+        when(adminConfigurationService.getAdminConfiguration())
+                .thenReturn(Optional.of(adminConfigWith("kubeconfig", 900)));
+
+        assertThatThrownBy(() -> service.startPod(userId, requestedLabId))
+                .isInstanceOf(LabPodException.class)
+                .hasMessageContaining("Only one lab pod can be active per student");
+    }
+
+    @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
     void startPod_whenNoDeploymentExists_createsResourcesAndMarksCreatedTrue() {
         KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
