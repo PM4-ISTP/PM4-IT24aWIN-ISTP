@@ -27,7 +27,6 @@ import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseLabException;
 import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
-import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
 import com.pm4.istp.shared.dto.ErrorDto;
@@ -130,16 +129,6 @@ class GlobalExceptionHandlerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getError()).isEqualTo("invalid collaborator");
-  }
-
-  @Test
-  void handleInvalidCourseShortDescriptionException_returnsBadRequest() {
-    ResponseEntity<ErrorDto> response = handler.handleInvalidCourseShortDescriptionException(
-        new InvalidCourseShortDescriptionException("short description too long"));
-
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(response.getBody()).isNotNull();
-    assertThat(response.getBody().getError()).isEqualTo("short description too long");
   }
 
   @Test

@@ -32,7 +32,6 @@ import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseLabException;
-import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
@@ -70,8 +69,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class CourseServiceImpl implements CourseService {
-  private static final int SHORT_DESCRIPTION_MAX_CHARS = 200;
-
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
   private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
   private static final String LAB_NOT_FOUND_MSG = "Lab with ID '%s' not found";
@@ -1152,13 +1149,7 @@ public class CourseServiceImpl implements CourseService {
     if (shortDescription == null || shortDescription.isBlank()) {
       return null;
     }
-    String normalized = shortDescription.trim().replaceAll("\\s+", " ");
-    if (normalized.length() > SHORT_DESCRIPTION_MAX_CHARS) {
-      throw new InvalidCourseShortDescriptionException(
-          String.format(
-              "Short description must be at most %d characters", SHORT_DESCRIPTION_MAX_CHARS));
-    }
-    return normalized;
+    return shortDescription.trim().replaceAll("\\s+", " ");
   }
 
   private void validateVisibilityState(boolean published, boolean privateCourse) {

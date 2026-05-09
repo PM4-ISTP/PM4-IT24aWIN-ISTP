@@ -11,7 +11,6 @@ import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
 import com.pm4.istp.course.exceptions.InvalidCourseLabException;
-import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
@@ -94,7 +93,6 @@ class CourseDtoAndExceptionTest {
     assertThat(new LabNotFoundException("missing")).hasMessage("missing");
     assertThat(new LabNotFoundException("missing", cause)).hasCause(cause);
     assertThat(new LabNotFoundException(cause)).hasCause(cause);
-    assertThat(new InvalidCourseShortDescriptionException("too short")).hasMessage("too short");
   }
 
   @Test
