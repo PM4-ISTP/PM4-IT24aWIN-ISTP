@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Button, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -56,10 +56,7 @@ export default function ProfilePage() {
       },
     },
   });
-  const setFormValuesRef = useRef(form.setValues);
-  useEffect(() => {
-    setFormValuesRef.current = form.setValues;
-  }, [form.setValues]);
+  const { setValues } = form;
 
   const loadProfile = useCallback(async () => {
     setLoadingProfile(true);
@@ -71,7 +68,7 @@ export default function ProfilePage() {
       }
       const data = (await res.json()) as UserProfile;
       setProfile(data);
-      setFormValuesRef.current({
+      setValues({
         firstName: data.firstName ?? "",
         lastName: data.lastName ?? "",
         title: data.title ?? "",
@@ -90,7 +87,7 @@ export default function ProfilePage() {
     } finally {
       setLoadingProfile(false);
     }
-  }, []);
+  }, [setValues]);
 
   useEffect(() => {
     void loadProfile();
