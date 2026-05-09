@@ -57,6 +57,9 @@ export default function ProfilePage() {
     },
   });
   const setFormValuesRef = useRef(form.setValues);
+  useEffect(() => {
+    setFormValuesRef.current = form.setValues;
+  }, [form.setValues]);
 
   const loadProfile = useCallback(async () => {
     setLoadingProfile(true);
