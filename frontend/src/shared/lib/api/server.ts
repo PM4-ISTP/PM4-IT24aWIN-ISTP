@@ -48,7 +48,10 @@ async function doRefreshAccessToken(refreshToken: string): Promise<string> {
     refresh_token?: string;
   };
 
-  if (typeof refreshedTokens.access_token !== "string" || refreshedTokens.access_token.length === 0) {
+  if (
+    typeof refreshedTokens.access_token !== "string" ||
+    refreshedTokens.access_token.length === 0
+  ) {
     throw new Error("Failed to refresh access token");
   }
 
