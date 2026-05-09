@@ -310,7 +310,7 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       respondForbiddenJson(response, USER_DISABLED_ERROR);
       return false;
     }
-    if (hasIdentifierConflict(keycloakId, profile.email(), profile.username())) {
+    if (hasChangedIdentifierConflict(user, keycloakId, profile.email(), profile.username())) {
       respondConflictJson(response, USER_IDENTIFIER_CONFLICT_ERROR);
       return false;
     }
@@ -540,6 +540,35 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
       log.warn("Login blocked due to conflicting username for user {}", currentUserId);
       return true;
     }
+    return false;
+  }
+
+  private boolean hasChangedIdentifierConflict(
+      User existingUser, UUID currentUserId, String email, String username) {
+    if (existingUser == null) {
+      return hasIdentifierConflict(currentUserId, email, username);
+    }
+
+    String existingEmail = normalizeLowercase(existingUser.getEmail());
+    String normalizedEmail = normalizeLowercase(email);
+    if (normalizedEmail != null
+        && !Objects.equals(existingEmail, normalizedEmail)
+        && userRepository.findByEmailIgnoreCaseAndIdNot(normalizedEmail, currentUserId).isPresent()) {
+      log.warn("Login blocked due to conflicting email for user {}", currentUserId);
+      return true;
+    }
+
+    String existingUsername = normalizeLowercase(existingUser.getUsername());
+    String normalizedUsername = normalizeLowercase(username);
+    if (normalizedUsername != null
+        && !Objects.equals(existingUsername, normalizedUsername)
+        && userRepository
+            .findByUsernameIgnoreCaseAndIdNot(normalizedUsername, currentUserId)
+            .isPresent()) {
+      log.warn("Login blocked due to conflicting username for user {}", currentUserId);
+      return true;
+    }
+
     return false;
   }
 

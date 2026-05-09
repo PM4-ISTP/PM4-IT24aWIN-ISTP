@@ -252,6 +252,8 @@ class UserProvisioningFilterTest {
 
     verify(filterChain).doFilter(any(), any());
     verify(userRepository, never()).save(any(User.class));
+    verify(userRepository, never()).findByEmailIgnoreCaseAndIdNot(anyString(), any(UUID.class));
+    verify(userRepository, never()).findByUsernameIgnoreCaseAndIdNot(anyString(), any(UUID.class));
     assertThat(response.getStatus()).isEqualTo(200);
   }
 
@@ -298,13 +300,13 @@ class UserProvisioningFilterTest {
     User conflicting = new User();
     conflicting.setId(UUID.randomUUID());
 
-    when(jwt.getClaimAsString("preferred_username")).thenReturn("testuser");
+    when(jwt.getClaimAsString("preferred_username")).thenReturn("otheruser");
     when(jwt.getClaimAsString("email")).thenReturn("test@example.com");
     when(authentication.getAuthorities())
         .thenReturn(
             (java.util.Collection) List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
     when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existing));
-    when(userRepository.findByUsernameIgnoreCaseAndIdNot("testuser", USER_ID))
+    when(userRepository.findByUsernameIgnoreCaseAndIdNot("otheruser", USER_ID))
         .thenReturn(Optional.of(conflicting));
 
     MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/courses/catalog");
