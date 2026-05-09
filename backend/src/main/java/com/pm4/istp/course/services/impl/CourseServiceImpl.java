@@ -654,7 +654,7 @@ public class CourseServiceImpl implements CourseService {
 
     int max = Math.max(0, challenge.getPoints());
     int points = request.getPoints() == null ? 0 : request.getPoints();
-    if (points < 0 || points > max) {
+    if (points > max) {
       throw new IllegalArgumentException(String.format("Points must be between 0 and %d", max));
     }
 

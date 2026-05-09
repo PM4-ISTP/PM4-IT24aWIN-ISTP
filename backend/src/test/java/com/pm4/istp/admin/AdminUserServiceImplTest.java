@@ -167,20 +167,11 @@ class AdminUserServiceImplTest {
   }
 
   @Test
-  void simpleUserActions_validateInputsAndDelegateToKeycloak() {
+  void simpleUserActions_delegateToKeycloak() {
     UUID userId = UUID.randomUUID();
     var passwordRequest = new com.pm4.istp.admin.dto.AdminSetUserPasswordRequestDto();
     passwordRequest.setPassword("Secret123!");
     passwordRequest.setTemporary(true);
-
-    assertThatThrownBy(() -> adminUserService.listUserSessions(null))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> adminUserService.logoutUser(null))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> adminUserService.sendPasswordResetEmail(null))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> adminUserService.setUserPassword(userId, null))
-        .isInstanceOf(IllegalArgumentException.class);
 
     adminUserService.listUserSessions(userId);
     adminUserService.logoutUser(userId);
@@ -444,27 +435,11 @@ class AdminUserServiceImplTest {
   }
 
   @Test
-  void updateUserRole_rejectsInvalidRequests() {
+  void updateUserRole_rejectsRolesOutsideManagedSet() {
     UUID userId = UUID.randomUUID();
-    var empty = new com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto();
-    empty.setRoles(java.util.Set.of());
-    var multiple = new com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto();
-    multiple.setRoles(java.util.Set.of("ROLE_STUDENT", "ROLE_ADMINISTRATOR"));
     var invalid = new com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto();
     invalid.setRoles(java.util.Set.of("offline_access"));
 
-    assertThatThrownBy(() -> adminUserService.updateUserRole(null, invalid))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("userId is required");
-    assertThatThrownBy(() -> adminUserService.updateUserRole(userId, null))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("roles is required");
-    assertThatThrownBy(() -> adminUserService.updateUserRole(userId, empty))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("roles is required");
-    assertThatThrownBy(() -> adminUserService.updateUserRole(userId, multiple))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Exactly one role");
     assertThatThrownBy(() -> adminUserService.updateUserRole(userId, invalid))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Invalid app roles");

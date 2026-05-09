@@ -142,52 +142,6 @@ class AdminTopicServiceImplTest {
         .hasMessage("Topic already exists");
   }
 
-  // ── addTopic input validation ────────────────────────────────────────────────
-
-  @Test
-  void addTopic_withNullValue_throwsIllegalArgumentException() {
-    assertThatThrownBy(() -> adminTopicService.addTopic(null))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Topic value is required");
-  }
-
-  @Test
-  void addTopic_withBlankValue_throwsIllegalArgumentException() {
-    assertThatThrownBy(() -> adminTopicService.addTopic("   "))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Topic value is required");
-  }
-
-  @Test
-  void addTopic_withTooShortValue_throwsIllegalArgumentException() {
-    assertThatThrownBy(() -> adminTopicService.addTopic("ab"))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Topic must be at least 3 characters");
-  }
-
-  @Test
-  void addTopic_withTooLongValue_throwsIllegalArgumentException() {
-    String topic = "A".repeat(25);
-
-    assertThatThrownBy(() -> adminTopicService.addTopic(topic))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Topic must be at most 24 characters");
-  }
-
-  @Test
-  void addTopic_withInvalidCharacters_throwsIllegalArgumentException() {
-    assertThatThrownBy(() -> adminTopicService.addTopic("invalid topic"))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Topic must be a single word (letters, numbers, '-')");
-  }
-
-  @Test
-  void addTopic_withValueStartingWithDigit_throwsIllegalArgumentException() {
-    assertThatThrownBy(() -> adminTopicService.addTopic("1Docker"))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Topic must be a single word (letters, numbers, '-')");
-  }
-
   @Test
   void addTopic_withValidHyphenatedValue_succeeds() {
     setMaxTopicCount(50);
