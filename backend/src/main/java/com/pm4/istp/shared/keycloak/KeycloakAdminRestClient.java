@@ -284,7 +284,8 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
     try {
       return objectMapper.writeValueAsString(body);
     } catch (Exception ex) {
-      throw new KeycloakAdminApiException("Failed to serialize Keycloak Admin API request body", ex);
+      throw new KeycloakAdminApiException(
+          "Failed to serialize Keycloak Admin API request body", ex);
     }
   }
 
