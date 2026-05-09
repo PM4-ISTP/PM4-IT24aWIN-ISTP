@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Button, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -30,6 +30,7 @@ export const dynamic = "force-dynamic";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const didLoadProfileRef = useRef(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [statusMessage, setStatusMessage] = useState<{
@@ -89,6 +90,8 @@ export default function ProfilePage() {
   }, [form]);
 
   useEffect(() => {
+    if (didLoadProfileRef.current) return;
+    didLoadProfileRef.current = true;
     void loadProfile();
   }, [loadProfile]);
 
