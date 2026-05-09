@@ -30,7 +30,6 @@ export const dynamic = "force-dynamic";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const didLoadProfileRef = useRef(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [statusMessage, setStatusMessage] = useState<{
@@ -57,6 +56,7 @@ export default function ProfilePage() {
       },
     },
   });
+  const setFormValuesRef = useRef(form.setValues);
 
   const loadProfile = useCallback(async () => {
     setLoadingProfile(true);
@@ -68,7 +68,7 @@ export default function ProfilePage() {
       }
       const data = (await res.json()) as UserProfile;
       setProfile(data);
-      form.setValues({
+      setFormValuesRef.current({
         firstName: data.firstName ?? "",
         lastName: data.lastName ?? "",
         title: data.title ?? "",
@@ -87,11 +87,9 @@ export default function ProfilePage() {
     } finally {
       setLoadingProfile(false);
     }
-  }, [form]);
+  }, []);
 
   useEffect(() => {
-    if (didLoadProfileRef.current) return;
-    didLoadProfileRef.current = true;
     void loadProfile();
   }, [loadProfile]);
 
