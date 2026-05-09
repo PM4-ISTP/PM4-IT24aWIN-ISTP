@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -40,8 +41,9 @@ public class Challenge {
   @Column(name = "order_index", nullable = false)
   private int orderIndex;
 
-  @Column(name = "type", nullable = false, columnDefinition = "VARCHAR(50) NOT NULL DEFAULT 'FLAG'")
+  @Column(name = "type", nullable = false, length = 50)
   @Enumerated(EnumType.STRING)
+  @ColumnDefault("'FLAG'")
   private ChallengeType type = ChallengeType.FLAG;
 
   /** Points awarded automatically when this challenge is solved correctly. */
