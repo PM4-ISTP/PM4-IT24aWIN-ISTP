@@ -553,7 +553,9 @@ public class UserProvisioningFilter extends OncePerRequestFilter {
     String normalizedEmail = normalizeLowercase(email);
     if (normalizedEmail != null
         && !Objects.equals(existingEmail, normalizedEmail)
-        && userRepository.findByEmailIgnoreCaseAndIdNot(normalizedEmail, currentUserId).isPresent()) {
+        && userRepository
+            .findByEmailIgnoreCaseAndIdNot(normalizedEmail, currentUserId)
+            .isPresent()) {
       log.warn("Login blocked due to conflicting email for user {}", currentUserId);
       return true;
     }
