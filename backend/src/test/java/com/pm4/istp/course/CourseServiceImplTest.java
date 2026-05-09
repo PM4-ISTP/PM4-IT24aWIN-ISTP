@@ -1324,10 +1324,10 @@ class CourseServiceImplTest {
         courseService.getCourseLabSubmissionDetails(instructorId, courseId, participantId, labId);
 
     assertThat(detail.getStatus()).isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
-    assertThat(detail.getAwardedPoints()).isEqualTo(0);
+    assertThat(detail.getAwardedPoints()).isZero();
     assertThat(detail.getChallenges()).singleElement().satisfies(challenge -> {
       assertThat(challenge.getCorrect()).isFalse();
-      assertThat(challenge.getAwardedPoints()).isEqualTo(0);
+      assertThat(challenge.getAwardedPoints()).isZero();
       assertThat(challenge.getSelectedOptionText()).isEqualTo("Wrong answer");
     });
   }
@@ -1447,14 +1447,12 @@ class CourseServiceImplTest {
     when(userRepository.findByIdAndDeletedAtIsNull(participantId)).thenReturn(Optional.of(participant));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
 
+    UpdateCourseChallengeScoreRequestDto request = new UpdateCourseChallengeScoreRequestDto(1);
+
     assertThatThrownBy(
             () ->
                 courseService.updateCourseChallengeScore(
-                    instructorId,
-                    courseId,
-                    participantId,
-                    challengeId,
-                    new UpdateCourseChallengeScoreRequestDto(1)))
+                    instructorId, courseId, participantId, challengeId, request))
         .isInstanceOf(ChallengeNotFoundException.class)
         .hasMessageContaining("not part of this course");
   }
