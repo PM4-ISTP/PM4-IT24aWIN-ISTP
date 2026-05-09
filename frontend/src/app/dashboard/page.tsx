@@ -1,8 +1,6 @@
 import { getServerSession } from "next-auth";
-import { getToken } from "next-auth/jwt";
 import { authOptions } from "@/src/shared/lib/auth";
-import { cookies, headers } from "next/headers";
-import type { GetTokenParams } from "next-auth/jwt";
+import { getValidAccessToken } from "@/src/shared/lib/api/server";
 import {
   Alert,
   Badge,
@@ -55,30 +53,9 @@ type RunningPod = {
   };
 };
 
-async function getAccessToken(): Promise<string | null> {
-  // Trigger NextAuth callbacks (incl. refresh logic) before reading the JWT.
-  // The access token is intentionally not exposed on the Session object.
-  await getServerSession(authOptions);
-
-  const req_ = {
-    headers: Object.fromEntries((await headers()).entries()),
-    cookies: Object.fromEntries((await cookies()).getAll().map((c) => [c.name, c.value])),
-  };
-
-  const token = await getToken({
-    req: req_ as GetTokenParams["req"],
-    secret: process.env.NEXTAUTH_SECRET,
-  });
-
-  return typeof token?.accessToken === "string" && token.accessToken.length > 0
-    ? token.accessToken
-    : null;
-}
-
 async function fetchCompletedLabsCount(): Promise<number | null> {
   try {
-    const accessToken = await getAccessToken();
-    if (!accessToken) return null;
+    const accessToken = await getValidAccessToken();
 
     const res = await fetch(`${BACKEND_URL}/api/v1/labs/my-completed-count`, {
       cache: "no-store",
@@ -94,8 +71,7 @@ async function fetchCompletedLabsCount(): Promise<number | null> {
 
 async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
   try {
-    const accessToken = await getAccessToken();
-    if (!accessToken) return [];
+    const accessToken = await getValidAccessToken();
 
     const res = await fetch(`${BACKEND_URL}/api/v1/courses/my-deadlines`, {
       cache: "no-store",
@@ -127,8 +103,7 @@ async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
 
 async function fetchMyRunningPods(): Promise<RunningPod[]> {
   try {
-    const accessToken = await getAccessToken();
-    if (!accessToken) return [];
+    const accessToken = await getValidAccessToken();
 
     const res = await fetch(`${BACKEND_URL}/api/v1/lab-pods`, {
       cache: "no-store",
