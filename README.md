@@ -29,6 +29,10 @@ cd infra
 docker compose up -d
 ```
 
+Create `infra/.env` first (see `infra/.env.example`).  
+On macOS/Linux: `cp .env.example .env`  
+On Windows PowerShell: `Copy-Item .env.example .env`
+
 To stop services:
 
 ```bash
@@ -47,6 +51,10 @@ cd backend
 ```
 
 The Spring Boot application starts on `http://localhost:8080`.
+
+The backend needs the DB password via `DB_PASSWORD` (match `POSTGRES_PASSWORD` from `infra/.env`).  
+On Windows PowerShell: `$env:DB_PASSWORD="..."`  
+On macOS/Linux: `export DB_PASSWORD="..."`
 
 **Keycloak Admin API (required for profile sync + admin features):**
 

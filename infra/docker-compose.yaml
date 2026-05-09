@@ -3,17 +3,17 @@ services:
   db:
     # WARNING: No volume configured - data will be lost after container restart!
     # For persistent data, add: volumes: - postgres-data:/var/lib/postgresql/data
-    image: postgres:latest
+    image: postgres:17
     ports:
       - "5432:5432"
     restart: always
     environment:
-      POSTGRES_PASSWORD: root
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   # Database management interface (Adminer)
   # Access at http://localhost:8888
   adminer:
-    image: adminer:latest
+    image: adminer:4.8.1
     restart: always
     ports:
       - 8888:8080
@@ -26,7 +26,7 @@ services:
     environment:
       # Change this in prod!
       KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     volumes:
       - ./keycloak-export:/opt/keycloak/data/import:ro
       - keycloak-data:/opt/keycloak/data

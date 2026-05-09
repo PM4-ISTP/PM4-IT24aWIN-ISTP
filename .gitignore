@@ -17,3 +17,6 @@ frontend/out/
 ### Claude ###
 .claude/
 CLAUDE.md
+
+### Infra ###
+infra/.env

@@ -1,5 +1,8 @@
 import { getServerSession } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import { authOptions } from "@/src/shared/lib/auth";
+import { cookies, headers } from "next/headers";
+import type { GetTokenParams } from "next-auth/jwt";
 import {
   Alert,
   Badge,
@@ -52,10 +55,29 @@ type RunningPod = {
   };
 };
 
+async function getAccessToken(): Promise<string | null> {
+  // Trigger NextAuth callbacks (incl. refresh logic) before reading the JWT.
+  // The access token is intentionally not exposed on the Session object.
+  await getServerSession(authOptions);
+
+  const req_ = {
+    headers: Object.fromEntries((await headers()).entries()),
+    cookies: Object.fromEntries((await cookies()).getAll().map((c) => [c.name, c.value])),
+  };
+
+  const token = await getToken({
+    req: req_ as GetTokenParams["req"],
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  return typeof token?.accessToken === "string" && token.accessToken.length > 0
+    ? token.accessToken
+    : null;
+}
+
 async function fetchCompletedLabsCount(): Promise<number | null> {
   try {
-    const session = await getServerSession(authOptions);
-    const accessToken = session?.accessToken;
+    const accessToken = await getAccessToken();
     if (!accessToken) return null;
 
     const res = await fetch(`${BACKEND_URL}/api/v1/labs/my-completed-count`, {
@@ -72,8 +94,7 @@ async function fetchCompletedLabsCount(): Promise<number | null> {
 
 async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
   try {
-    const session = await getServerSession(authOptions);
-    const accessToken = session?.accessToken;
+    const accessToken = await getAccessToken();
     if (!accessToken) return [];
 
     const res = await fetch(`${BACKEND_URL}/api/v1/courses/my-deadlines`, {
@@ -106,8 +127,7 @@ async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
 
 async function fetchMyRunningPods(): Promise<RunningPod[]> {
   try {
-    const session = await getServerSession(authOptions);
-    const accessToken = session?.accessToken;
+    const accessToken = await getAccessToken();
     if (!accessToken) return [];
 
     const res = await fetch(`${BACKEND_URL}/api/v1/lab-pods`, {
@@ -239,7 +259,7 @@ function RunningLabs({ pods }: { pods: RunningPod[] }) {
                       component="a"
                       href={item.pod.appUrl}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       size="xs"
                       variant="subtle"
                       leftSection={<IconExternalLink size={14} />}
