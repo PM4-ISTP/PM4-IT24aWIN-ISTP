@@ -122,8 +122,9 @@ function printCertificate(badge: UserBadge, userName: string) {
 </body>
 </html>`;
 
-  const win = window.open("", "_blank");
+  const win = window.open("", "_blank", "noopener,noreferrer");
   if (win) {
+    win.opener = null;
     win.document.write(html);
     win.document.close();
   }

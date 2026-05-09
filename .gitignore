@@ -1,6 +1,7 @@
 .idea
 backend/src/main/resources/Kubeconfig
 backend/src/main/resources/application-local.properties
+backend/application-secrets.properties
 
 .gradle
 backend/build/
@@ -17,3 +18,6 @@ frontend/out/
 ### Claude ###
 .claude/
 CLAUDE.md
+
+### Infra ###
+infra/.env

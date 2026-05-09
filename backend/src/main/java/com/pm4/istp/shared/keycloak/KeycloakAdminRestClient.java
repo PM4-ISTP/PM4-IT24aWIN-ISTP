@@ -12,12 +12,14 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @RequiredArgsConstructor
 public class KeycloakAdminRestClient implements KeycloakAdminClient {
   private final KeycloakAdminProperties properties;
   private final KeycloakServiceAccountTokenProvider tokenProvider;
+  private final ObjectMapper objectMapper;
 
   @Override
   public KeycloakUserRepresentation getUser(UUID userId) {
@@ -44,7 +46,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
           .put()
           .uri(properties.getUserByIdPath(), userId)
           .contentType(MediaType.APPLICATION_JSON)
-          .body(updatedUser)
+          .body(writeJson(updatedUser))
           .retrieve()
           .toBodilessEntity();
     } catch (RestClientException ex) {
@@ -60,7 +62,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
               .post()
               .uri("/users")
               .contentType(MediaType.APPLICATION_JSON)
-              .body(newUser)
+              .body(writeJson(newUser))
               .retrieve()
               .toBodilessEntity();
 
@@ -96,7 +98,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
           .put()
           .uri("/users/{id}/reset-password", userId)
           .contentType(MediaType.APPLICATION_JSON)
-          .body(credential)
+          .body(writeJson(credential))
           .retrieve()
           .toBodilessEntity();
     } catch (RestClientException ex) {
@@ -129,7 +131,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
           .post()
           .uri(properties.getUserRealmRoleMappingsPath(), userId)
           .contentType(MediaType.APPLICATION_JSON)
-          .body(roles)
+          .body(writeJson(roles))
           .retrieve()
           .toBodilessEntity();
     } catch (RestClientException ex) {
@@ -159,7 +161,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
           .method(org.springframework.http.HttpMethod.DELETE)
           .uri(properties.getUserRealmRoleMappingsPath(), userId)
           .contentType(MediaType.APPLICATION_JSON)
-          .body(roles)
+          .body(writeJson(roles))
           .retrieve()
           .toBodilessEntity();
     } catch (RestClientException ex) {
@@ -218,7 +220,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
           .put()
           .uri("/users/{id}/execute-actions-email", userId)
           .contentType(MediaType.APPLICATION_JSON)
-          .body(safeActions)
+          .body(writeJson(safeActions))
           .retrieve()
           .toBodilessEntity();
     } catch (RestClientException ex) {
@@ -276,6 +278,15 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
         .baseUrl(adminBase)
         .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token)
         .build();
+  }
+
+  private String writeJson(Object body) {
+    try {
+      return objectMapper.writeValueAsString(body);
+    } catch (Exception ex) {
+      throw new KeycloakAdminApiException(
+          "Failed to serialize Keycloak Admin API request body", ex);
+    }
   }
 
   private String normalizeBaseUrl(String baseUrl) {
