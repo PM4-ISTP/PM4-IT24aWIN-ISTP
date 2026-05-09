@@ -93,34 +93,31 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
     },
   });
 
-  const loadUsers = useCallback(
-    async (q?: string) => {
-      try {
-        setLoadingUsers(true);
-        const query = (q ?? listQuery).trim();
-        const url = new URL("/api/backend/api/admin/users/directory", window.location.origin);
-        if (query) url.searchParams.set("q", query);
-        url.searchParams.set("first", "0");
-        url.searchParams.set("max", "50");
+  const loadUsers = useCallback(async (queryValue: string) => {
+    try {
+      setLoadingUsers(true);
+      const query = queryValue.trim();
+      const url = new URL("/api/backend/api/admin/users/directory", window.location.origin);
+      if (query) url.searchParams.set("q", query);
+      url.searchParams.set("first", "0");
+      url.searchParams.set("max", "50");
 
-        const res = await fetch(url.toString(), { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error(await safeErrorMessage(res));
-        }
-        const data = (await res.json()) as AdminUserListResponse;
-        setUsers(data);
-      } catch (e) {
-        notifications.show({
-          title: "Error",
-          message: "Failed to load users: " + (e as Error).message,
-          color: "red",
-        });
-      } finally {
-        setLoadingUsers(false);
+      const res = await fetch(url.toString(), { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error(await safeErrorMessage(res));
       }
-    },
-    [listQuery]
-  );
+      const data = (await res.json()) as AdminUserListResponse;
+      setUsers(data);
+    } catch (e) {
+      notifications.show({
+        title: "Error",
+        message: "Failed to load users: " + (e as Error).message,
+        color: "red",
+      });
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, []);
 
   const formatEpoch = (value?: number) => {
     if (!value) return "-";
@@ -333,12 +330,16 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !loadingUsers) {
                       e.preventDefault();
-                      void loadUsers();
+                      void loadUsers(listQuery);
                     }
                   }}
                   disabled={loadingUsers}
                 />
-                <Button onClick={() => void loadUsers()} radius="md" loading={loadingUsers}>
+                <Button
+                  onClick={() => void loadUsers(listQuery)}
+                  radius="md"
+                  loading={loadingUsers}
+                >
                   Search
                 </Button>
               </Group>
