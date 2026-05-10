@@ -117,6 +117,64 @@ class KeycloakAdminRestClientTest {
   }
 
   @Test
+  void writeAndSessionOperations_wrapServerErrors() {
+    UUID userId = TestKeycloakHandler.ERROR_ID;
+    KeycloakRoleRepresentation role = new KeycloakRoleRepresentation();
+    role.setName("ROLE_STUDENT");
+
+    assertThatThrownBy(() -> client.updateUser(userId, new KeycloakUserRepresentation()))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to update user");
+    assertThatThrownBy(() -> client.createUser(userWithUsername("server-error")))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to create user");
+    assertThatThrownBy(() -> client.deleteUser(userId))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to delete user");
+    assertThatThrownBy(() -> client.resetPassword(userId, "secret", false))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to reset");
+    assertThatThrownBy(() -> client.getRealmRoleByName("error"))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to read Keycloak realm role");
+    assertThatThrownBy(() -> client.addRealmRoles(userId, List.of(role)))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to assign");
+    assertThatThrownBy(() -> client.listUserRealmRoles(userId))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to list Keycloak user realm roles");
+    assertThatThrownBy(() -> client.removeRealmRoles(userId, List.of(role)))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to remove");
+    assertThatThrownBy(() -> client.listUserSessions(userId))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to list Keycloak user sessions");
+    assertThatThrownBy(() -> client.logoutUser(userId))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to logout");
+    assertThatThrownBy(() -> client.executeActionsEmail(userId, List.of("UPDATE_PASSWORD")))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to execute");
+    assertThatThrownBy(() -> client.listClients("server-error"))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to list Keycloak clients");
+    assertThatThrownBy(() -> client.listClientUserSessions("error"))
+        .isInstanceOf(KeycloakAdminApiException.class)
+        .hasMessageContaining("Failed to list Keycloak client user sessions");
+  }
+
+  @Test
+  void listOperations_returnEmptyListsWhenKeycloakReturnsNoBody() {
+    UUID userId = TestKeycloakHandler.EMPTY_BODY_ID;
+
+    assertThat(client.listUsers("empty-body", null, null)).isEmpty();
+    assertThat(client.listUserRealmRoles(userId)).isEmpty();
+    assertThat(client.listUserSessions(userId)).isEmpty();
+    assertThat(client.listClients("empty-body")).isEmpty();
+    assertThat(client.listClientUserSessions("empty-body")).isEmpty();
+  }
+
+  @Test
   void createUserWithoutValidLocation_throws() {
     KeycloakUserRepresentation user = userWithUsername("invalid-location");
 
@@ -135,6 +193,7 @@ class KeycloakAdminRestClientTest {
     static final UUID CREATED_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
     static final UUID NOT_FOUND_ID = UUID.fromString("40440440-4040-4040-4040-404404404040");
     static final UUID ERROR_ID = UUID.fromString("50050050-5000-5000-5000-500500500500");
+    static final UUID EMPTY_BODY_ID = UUID.fromString("20420420-2040-2040-2040-204204204020");
 
     private final List<String> requests;
 
@@ -156,12 +215,30 @@ class KeycloakAdminRestClientTest {
         write(exchange, 500, "{}");
         return;
       }
+      if (path.endsWith("/roles/error")
+          || path.endsWith("/clients/error/user-sessions")
+          || "server-error".equals(queryValue(exchange, "search"))
+          || "server-error".equals(queryValue(exchange, "clientId"))) {
+        write(exchange, 500, "{}");
+        return;
+      }
+      if (path.contains(EMPTY_BODY_ID.toString())
+          || "empty-body".equals(queryValue(exchange, "search"))
+          || "empty-body".equals(queryValue(exchange, "clientId"))
+          || path.endsWith("/clients/empty-body/user-sessions")) {
+        write(exchange, 204, "");
+        return;
+      }
       if (path.contains(NOT_FOUND_ID.toString()) || path.endsWith("/roles/missing")) {
         write(exchange, 404, "{}");
         return;
       }
       if ("POST".equals(exchange.getRequestMethod()) && path.endsWith("/users")) {
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        if (body.contains("server-error")) {
+          write(exchange, 500, "{}");
+          return;
+        }
         exchange
             .getResponseHeaders()
             .add(
@@ -208,6 +285,20 @@ class KeycloakAdminRestClientTest {
         return;
       }
       write(exchange, 204, "");
+    }
+
+    private static String queryValue(HttpExchange exchange, String name) {
+      String query = exchange.getRequestURI().getRawQuery();
+      if (query == null) {
+        return null;
+      }
+      for (String parameter : query.split("&")) {
+        String[] parts = parameter.split("=", 2);
+        if (parts.length == 2 && name.equals(parts[0])) {
+          return parts[1];
+        }
+      }
+      return null;
     }
 
     private static void write(HttpExchange exchange, int status, String body) throws IOException {

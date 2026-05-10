@@ -679,6 +679,149 @@ class LabPodServiceTest {
         assertThat(failed).isFalse();
     }
 
+    @Test
+    void constructor_rejectsRequiredCollaboratorsWhenNull() {
+        assertThatThrownBy(
+                        () ->
+                                new LabPodService(
+                                        null,
+                                        labService,
+                                        dockerImageAvailabilityService,
+                                        courseLabRepository,
+                                        "default",
+                                        "test.domain",
+                                        false,
+                                        ""))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(
+                        () ->
+                                new LabPodService(
+                                        adminConfigurationService,
+                                        null,
+                                        dockerImageAvailabilityService,
+                                        courseLabRepository,
+                                        "default",
+                                        "test.domain",
+                                        false,
+                                        ""))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(
+                        () ->
+                                new LabPodService(
+                                        adminConfigurationService,
+                                        labService,
+                                        null,
+                                        courseLabRepository,
+                                        "default",
+                                        "test.domain",
+                                        false,
+                                        ""))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(
+                        () ->
+                                new LabPodService(
+                                        adminConfigurationService,
+                                        labService,
+                                        dockerImageAvailabilityService,
+                                        null,
+                                        "default",
+                                        "test.domain",
+                                        false,
+                                        ""))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void mapDeploymentStatus_coversDeletionReplicaFailureRunningAndProvisioningStates() {
+        Deployment terminating =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withDeletionTimestamp("2026-05-09T17:00:00Z")
+                        .endMetadata()
+                        .build();
+        Deployment replicaFailure =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .endMetadata()
+                        .withNewStatus()
+                        .addNewCondition()
+                        .withType("ReplicaFailure")
+                        .withStatus("True")
+                        .endCondition()
+                        .endStatus()
+                        .build();
+        Deployment running =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .endMetadata()
+                        .withNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build();
+        Deployment provisioning = new DeploymentBuilder().withNewMetadata().endMetadata().build();
+
+        assertThat((PodStatusEnum) ReflectionTestUtils.invokeMethod(service, "mapDeploymentStatus", terminating))
+                .isEqualTo(PodStatusEnum.TERMINATING);
+        assertThat((PodStatusEnum) ReflectionTestUtils.invokeMethod(service, "mapDeploymentStatus", replicaFailure))
+                .isEqualTo(PodStatusEnum.FAILED);
+        assertThat((PodStatusEnum) ReflectionTestUtils.invokeMethod(service, "mapDeploymentStatus", running))
+                .isEqualTo(PodStatusEnum.RUNNING);
+        assertThat((PodStatusEnum) ReflectionTestUtils.invokeMethod(service, "mapDeploymentStatus", provisioning))
+                .isEqualTo(PodStatusEnum.PROVISIONING);
+    }
+
+    @Test
+    void resolveContainerPort_returnsDefaultValidPortAndRejectsOutOfRangeValues() {
+        Lab defaultPort = new Lab();
+        Lab customPort = new Lab();
+        customPort.setContainerPort(65535);
+        Lab tooLow = new Lab();
+        tooLow.setContainerPort(0);
+        Lab tooHigh = new Lab();
+        tooHigh.setContainerPort(65536);
+
+        assertThat((Integer) ReflectionTestUtils.invokeMethod(service, "resolveContainerPort", defaultPort))
+                .isEqualTo(Lab.DEFAULT_CONTAINER_PORT);
+        assertThat((Integer) ReflectionTestUtils.invokeMethod(service, "resolveContainerPort", customPort))
+                .isEqualTo(65535);
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(service, "resolveContainerPort", tooLow))
+                .isInstanceOf(LabPodException.class)
+                .hasMessageContaining("between 1 and 65535");
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(service, "resolveContainerPort", tooHigh))
+                .isInstanceOf(LabPodException.class)
+                .hasMessageContaining("between 1 and 65535");
+    }
+
+    @Test
+    void normalizeHostPrefix_trimsHyphensAndReplacesUnsafeCharacters() {
+        String normalized = ReflectionTestUtils.invokeMethod(service, "normalizeHostPrefix", " --Team A/Blue-- ");
+        String empty = ReflectionTestUtils.invokeMethod(service, "normalizeHostPrefix", new Object[] {null});
+
+        assertThat(normalized).isEqualTo("team-a-blue");
+        assertThat(empty).isEmpty();
+    }
+
+    @Test
+    void containerHasFailed_returnsFalseWhenStateIsMissingOrWaitingReasonIsBenign() {
+        ContainerStatus noState = new ContainerStatusBuilder().build();
+        ContainerStatus benignWaiting =
+                new ContainerStatusBuilder()
+                        .withNewState()
+                        .withNewWaiting()
+                        .withReason("ContainerCreating")
+                        .endWaiting()
+                        .endState()
+                        .build();
+        ContainerStatus terminatedWithoutExitCode =
+                new ContainerStatusBuilder().withNewState().withNewTerminated().endTerminated().endState().build();
+
+        assertThat((Boolean) ReflectionTestUtils.invokeMethod(service, "containerHasFailed", noState)).isFalse();
+        assertThat((Boolean) ReflectionTestUtils.invokeMethod(service, "containerHasFailed", benignWaiting))
+                .isFalse();
+        assertThat((Boolean) ReflectionTestUtils.invokeMethod(service, "containerHasFailed", terminatedWithoutExitCode))
+                .isFalse();
+    }
+
     @SuppressWarnings("unchecked")
     private void setClientRef(KubernetesClient client) {
         AtomicReference<KubernetesClient> ref =
