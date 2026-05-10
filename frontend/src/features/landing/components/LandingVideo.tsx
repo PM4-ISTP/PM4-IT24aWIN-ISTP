@@ -12,7 +12,6 @@ gsap.registerPlugin(ScrollTrigger);
 
 const VIDEO_ID = "3nkFtJMCs1Q";
 const VIDEO_START = 0;
-const INITIAL_MAX_WIDTH = 1180;
 
 const CLIPPED = "polygon(20% 20%, 80% 20%, 80% 80%, 20% 80%)";
 const REVEALED = "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)";
@@ -91,7 +90,7 @@ export default function LandingVideo() {
             ref={frameRef}
             style={{
               width: "100%",
-              maxWidth: INITIAL_MAX_WIDTH,
+              maxWidth: "100%",
               aspectRatio: "16 / 9",
               border: `1px solid ${LINE_2}`,
               borderRadius: 16,

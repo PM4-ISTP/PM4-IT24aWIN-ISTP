@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge, Box, Container, Group, Stack, Text, Title } from "@mantine/core";
-import HeroTerminal from "./HeroTerminal";
 import GradientText from "./parts/GradientText";
 import LandingButton from "./parts/LandingButton";
 import useSignInToDashboard from "../hooks/useSignInToDashboard";
@@ -34,7 +33,10 @@ export default function LandingHero() {
     { scope: dotRef }
   );
   return (
-    <Box component="header" style={{ padding: "96px 0 40px", position: "relative" }}>
+    <Box
+      component="header"
+      style={{ padding: "96px 0 40px", position: "relative", minHeight: "80vh" }}
+    >
       <Container size="xl" px={32}>
         <Stack align="center" gap={0} style={{ textAlign: "center" }}>
           <Badge
@@ -111,7 +113,6 @@ export default function LandingHero() {
             <LandingButton
               tone="ghost"
               size="md"
-              component="a"
               href="https://github.com/PM4-ISTP/PM4-IT24aWIN-ISTP"
               style={{ padding: "14px 22px", fontSize: 15 }}
               leftSection={
@@ -168,7 +169,6 @@ export default function LandingHero() {
             ))}
           </Group>
 
-          <HeroTerminal />
         </Stack>
       </Container>
     </Box>

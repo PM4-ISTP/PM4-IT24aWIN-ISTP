@@ -5,7 +5,8 @@ import { GRADIENT, INK, LINE } from "../../theme";
 type LandingButtonProps = ButtonProps &
   ElementProps<"button", keyof ButtonProps> & {
     tone?: "primary" | "ghost";
-    component?: React.ElementType;
+    // Do not redeclare `component` here - use the one from ButtonProps to avoid
+    // incompatible type issues between string element names and function components.
     href?: string;
   };
 
@@ -28,7 +29,7 @@ export default function LandingButton({
   tone = "primary",
   style,
   variant,
-  radius = "md",
+  radius = "md" as ButtonProps["radius"],
   ...rest
 }: LandingButtonProps) {
   const toneStyle = tone === "primary" ? PRIMARY_STYLE : GHOST_STYLE;

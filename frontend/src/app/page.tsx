@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Box } from "@mantine/core";
 import LandingNav from "@/src/features/landing/components/LandingNav";
 import LandingHero from "@/src/features/landing/components/LandingHero";
+import LandingTerminal from "@/src/features/landing/components/LandingTerminal";
 import LandingVideo from "@/src/features/landing/components/LandingVideo";
 import LandingBento from "@/src/features/landing/components/LandingBento";
 import LandingScreenshots from "@/src/features/landing/components/LandingScreenshots";
@@ -56,6 +57,7 @@ export default async function Home() {
       <Box style={{ position: "relative", zIndex: 1 }}>
         <LandingNav />
         <LandingHero />
+        <LandingTerminal />
         <LandingVideo />
         <LandingBento />
         <LandingScreenshots />

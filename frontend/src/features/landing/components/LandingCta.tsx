@@ -105,7 +105,6 @@ export default function LandingCta() {
               <LandingButton
                 tone="ghost"
                 size="md"
-                component="a"
                 href="https://github.com/PM4-ISTP/PM4-IT24aWIN-ISTP"
                 style={{ padding: "14px 22px", fontSize: 15 }}
                 leftSection={
