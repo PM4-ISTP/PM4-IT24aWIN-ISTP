@@ -78,7 +78,7 @@ export default function LandingFooter() {
           </Text>
           <Group gap={4} align="center" wrap="nowrap">
             <Text style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED }}>
-              Developed in Switzerland with
+              Developed in <span style={{ color: ROSE }}>Switzerland</span> with
             </Text>
             <Box
               component="span"
@@ -98,17 +98,6 @@ export default function LandingFooter() {
                 verticalAlign: "-1px",
               }}
             />
-            <Text
-              style={{
-                fontFamily: FONT_MONO,
-                fontSize: 12,
-                color: ROSE,
-                fontWeight: 600,
-                letterSpacing: "0.06em",
-              }}
-            >
-              CH
-            </Text>
           </Group>
         </Group>
       </Container>

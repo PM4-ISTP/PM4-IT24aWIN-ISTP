@@ -37,6 +37,15 @@ export default function LandingButton({
       radius={radius}
       variant={tone === "ghost" ? "default" : variant}
       style={{ ...toneStyle, ...((style as CSSProperties) ?? {}) }}
+      // Mantine's Button slots have overflow: hidden + line-height: 1, which
+      // clips descenders (g, p, y, …). Open them up.
+      styles={
+        {
+          root: { overflow: "visible" },
+          inner: { overflow: "visible" },
+          label: { lineHeight: 1.4, overflow: "visible" },
+        } as ButtonProps["styles"]
+      }
       {...rest}
     />
   );

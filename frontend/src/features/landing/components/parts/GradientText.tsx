@@ -12,6 +12,9 @@ export default function GradientText({ children }: { children: ReactNode }) {
         backgroundClip: "text",
         color: "transparent",
         display: "inline-block",
+        // Avoid clipping descenders (g, p, y, …) when used in tight headings
+        paddingBottom: "0.1em",
+        marginBottom: "-0.1em",
       }}
     >
       {children}
