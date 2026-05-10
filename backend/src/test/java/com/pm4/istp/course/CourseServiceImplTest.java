@@ -1458,24 +1458,38 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void listUpcomingDeadlines_filtersIncompleteRows() {
+  void listUpcomingDeadlines_filtersSubmittedAndIncompleteRows() {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
-    UUID labId = UUID.randomUUID();
+    UUID submittedLabId = UUID.randomUUID();
+    UUID openLabId = UUID.randomUUID();
     LocalDateTime dueAt = LocalDateTime.of(2026, 5, 13, 8, 0);
 
     when(courseLabRepository.findDeadlinesForUser(userId))
         .thenReturn(
             List.of(
-                new Object[] {courseId, "Course", labId, "Lab", dueAt},
-                new Object[] {null, "Missing course", labId, "Lab", dueAt},
-                new Object[] {courseId, "Missing due date", labId, "Lab", null}));
+                new Object[] {courseId, "Course", submittedLabId, "Submitted Lab", dueAt},
+                new Object[] {courseId, "Course", openLabId, "Open Lab", dueAt},
+                new Object[] {null, "Missing course", openLabId, "Lab", dueAt.plusHours(2)},
+                new Object[] {courseId, "Missing due date", openLabId, "Lab", null}));
+
+    when(challengeRepository.countByLabIds(List.of(submittedLabId, openLabId)))
+        .thenReturn(
+            List.of(
+                new Object[] {submittedLabId, 3L},
+                new Object[] {openLabId, 3L}));
+    when(challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+            List.of(userId), List.of(submittedLabId, openLabId)))
+        .thenReturn(
+            List.of(
+                new Object[] {userId, submittedLabId, 3L, dueAt.minusMinutes(5)},
+                new Object[] {userId, openLabId, 2L, dueAt.minusMinutes(2)}));
 
     var deadlines = courseService.listUpcomingDeadlines(userId);
 
-    assertThat(deadlines).singleElement();
+    assertThat(deadlines).hasSize(1);
     assertThat(deadlines.getFirst().getCourseId()).isEqualTo(courseId);
-    assertThat(deadlines.getFirst().getLabId()).isEqualTo(labId);
+    assertThat(deadlines.getFirst().getLabId()).isEqualTo(openLabId);
     assertThat(deadlines.getFirst().getDueAt()).isEqualTo(dueAt);
   }
 
