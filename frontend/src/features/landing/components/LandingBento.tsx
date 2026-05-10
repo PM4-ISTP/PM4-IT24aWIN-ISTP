@@ -1,4 +1,10 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { Box, Container, Group, Paper, Progress, Stack, Text, Title } from "@mantine/core";
+import { gsap } from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import GradientText from "./parts/GradientText";
 import Kicker from "./parts/Kicker";
 import {
@@ -12,13 +18,16 @@ import {
   LINE_2,
   MINT,
   MUTED,
+  ROSE,
 } from "../theme";
 
-type ChipTone = "hot" | "live";
-const chips: { label: string; tone?: ChipTone }[] = [
-  { label: "SQL injection", tone: "hot" },
+gsap.registerPlugin(ScrollTrigger);
+
+type ChipTone = "hot" | "warm" | "live" | "rare";
+const chips: { label: string }[] = [
+  { label: "SQL injection" },
   { label: "XSS" },
-  { label: "IDOR", tone: "hot" },
+  { label: "IDOR" },
   { label: "broken auth" },
   { label: "broken access" },
   { label: "SSRF" },
@@ -29,28 +38,55 @@ const chips: { label: string; tone?: ChipTone }[] = [
   { label: "API security" },
   { label: "crypto" },
   { label: "misconfig" },
-  { label: "OWASP Top 10 · core", tone: "live" },
+  { label: "OWASP Top 10 · core" },
 ];
 
-function Chip({ label, tone }: { label: string; tone?: "hot" | "live" }) {
-  const palette =
-    tone === "hot"
-      ? {
-          color: ACCENT,
-          border: "rgba(93,110,240,0.4)",
-          background: "rgba(93,110,240,0.1)",
-        }
-      : tone === "live"
-        ? {
-            color: MINT,
-            border: "rgba(109,240,200,0.3)",
-            background: "rgba(109,240,200,0.06)",
-          }
-        : {
-            color: INK_DIM,
-            border: LINE_2,
-            background: "rgba(255,255,255,0.02)",
-          };
+type ChipScene = Partial<Record<number, ChipTone>>;
+
+const CHIP_SCENES: ChipScene[] = [
+  { 0: "hot", 2: "hot", 13: "live" },
+  { 3: "warm", 5: "warm", 7: "rare", 10: "live" },
+  { 1: "hot", 4: "warm", 11: "rare", 13: "live" },
+  { 0: "hot", 6: "warm", 7: "rare", 9: "warm", 10: "live" },
+  { 2: "hot", 5: "warm", 8: "rare", 12: "warm", 13: "live" },
+  { 1: "hot", 3: "warm", 7: "rare", 10: "live", 11: "warm" },
+];
+
+const SCENE_INTERVAL_MS = 2200;
+
+const CHIP_PALETTES: Record<
+  ChipTone | "default",
+  { color: string; border: string; background: string }
+> = {
+  hot: {
+    color: ACCENT,
+    border: "rgba(93,110,240,0.4)",
+    background: "rgba(93,110,240,0.1)",
+  },
+  warm: {
+    color: AMBER,
+    border: "rgba(245,180,98,0.35)",
+    background: "rgba(245,180,98,0.08)",
+  },
+  live: {
+    color: MINT,
+    border: "rgba(109,240,200,0.3)",
+    background: "rgba(109,240,200,0.06)",
+  },
+  rare: {
+    color: ROSE,
+    border: "rgba(240,109,138,0.35)",
+    background: "rgba(240,109,138,0.08)",
+  },
+  default: {
+    color: INK_DIM,
+    border: LINE_2,
+    background: "rgba(255,255,255,0.02)",
+  },
+};
+
+function Chip({ label, tone }: { label: string; tone?: ChipTone }) {
+  const palette = CHIP_PALETTES[tone ?? "default"];
   return (
     <Box
       component="span"
@@ -63,6 +99,8 @@ function Chip({ label, tone }: { label: string; tone?: "hot" | "live" }) {
         border: `1px solid ${palette.border}`,
         color: palette.color,
         background: palette.background,
+        transition:
+          "color 0.6s ease, border-color 0.6s ease, background 0.6s ease",
       }}
     >
       {label}
@@ -70,19 +108,80 @@ function Chip({ label, tone }: { label: string; tone?: "hot" | "live" }) {
   );
 }
 
+type GlowTone = "indigo" | "mint" | "amber" | "rose";
+
+const GLOW_COLORS: Record<GlowTone, { primary: string; secondary: string; border: string }> = {
+  indigo: {
+    primary: "rgba(93,110,240,0.28)",
+    secondary: "rgba(109,240,200,0.10)",
+    border: "rgba(93,110,240,0.28)",
+  },
+  mint: {
+    primary: "rgba(109,240,200,0.22)",
+    secondary: "rgba(93,110,240,0.10)",
+    border: "rgba(109,240,200,0.30)",
+  },
+  amber: {
+    primary: "rgba(245,180,98,0.24)",
+    secondary: "rgba(240,109,138,0.10)",
+    border: "rgba(245,180,98,0.30)",
+  },
+  rose: {
+    primary: "rgba(240,109,138,0.24)",
+    secondary: "rgba(93,110,240,0.10)",
+    border: "rgba(240,109,138,0.30)",
+  },
+};
+
 function Cell({
   span,
   rowSpan,
   accent,
+  glow = "indigo",
   children,
 }: {
   span: number;
   rowSpan?: number;
   accent?: boolean;
+  glow?: GlowTone;
   children: React.ReactNode;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const tone = GLOW_COLORS[glow];
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const card = ref.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    gsap.to(card, {
+      rotateY: x * 4,
+      rotateX: -y * 4,
+      duration: 0.45,
+      ease: "power2.out",
+      overwrite: "auto",
+    });
+  }
+
+  function handleMouseLeave() {
+    const card = ref.current;
+    if (!card) return;
+    gsap.to(card, {
+      rotateY: 0,
+      rotateX: 0,
+      duration: 0.7,
+      ease: "power2.out",
+      overwrite: "auto",
+    });
+  }
+
   return (
     <Paper
+      ref={ref}
+      className={accent ? "bento-cell bento-cell-accent" : "bento-cell"}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       p={22}
       radius={18}
       style={{
@@ -99,8 +198,12 @@ function Cell({
         gap: 14,
         overflow: "hidden",
         minWidth: 0,
-        transition: "border-color 0.2s, transform 0.2s",
-      }}
+        transformStyle: "preserve-3d",
+        willChange: "transform",
+        ["--glow-primary" as string]: tone.primary,
+        ["--glow-secondary" as string]: tone.secondary,
+        ["--glow-border" as string]: tone.border,
+      } as React.CSSProperties}
     >
       {children}
     </Paper>
@@ -157,6 +260,7 @@ function CellHead({
 function CodePeek({ children, inverted }: { children: React.ReactNode; inverted?: boolean }) {
   return (
     <Box
+      className="code-peek"
       px={11}
       py={9}
       style={{
@@ -175,10 +279,90 @@ function CodePeek({ children, inverted }: { children: React.ReactNode; inverted?
 }
 
 export default function LandingBento() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [sceneIndex, setSceneIndex] = useState(0);
+
+  // Cycle chip-tone scenes while the bento section is in viewport
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (intervalId) return;
+          intervalId = setInterval(() => {
+            setSceneIndex((i) => (i + 1) % CHIP_SCENES.length);
+          }, SCENE_INTERVAL_MS);
+        } else if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
+
+  useGSAP(
+    () => {
+      const section = sectionRef.current;
+      if (!section) return;
+
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const tl = gsap.timeline({
+          defaults: { ease: "power2.out" },
+          scrollTrigger: {
+            trigger: section,
+            start: "top 85%",
+            end: "top 15%",
+            scrub: 1.2,
+          },
+        });
+
+        // Phase 1 — title block fades up
+        tl.fromTo(
+          ".bento-head",
+          { opacity: 0, y: 40 },
+          { opacity: 1, y: 0, duration: 0.9 },
+          0
+        );
+
+        // Phase 2 — cards stagger in (slower stagger, gentle slide)
+        tl.fromTo(
+          ".bento-cell",
+          { opacity: 0, y: 35 },
+          { opacity: 1, y: 0, duration: 0.85, stagger: 0.12 },
+          0.25
+        );
+
+        // Phase 3 — CodePeeks clip-reveal left to right (typewriter feel)
+        tl.fromTo(
+          ".code-peek",
+          { clipPath: "inset(0% 100% 0% 0%)" },
+          { clipPath: "inset(0% 0% 0% 0%)", duration: 1.1, stagger: 0.18 },
+          0.9
+        );
+      });
+    },
+    { scope: sectionRef }
+  );
+
   return (
-    <Box component="section" id="bento" style={{ padding: "80px 0 40px" }}>
+    <Box
+      component="section"
+      id="bento"
+      ref={sectionRef}
+      style={{ padding: "80px 0 40px" }}
+    >
       <Container size="xl" px={32}>
         <Group
+          className="bento-head"
           justify="space-between"
           align="flex-end"
           pb={18}
@@ -210,10 +394,11 @@ export default function LandingBento() {
             gridTemplateColumns: "repeat(12, 1fr)",
             gridAutoRows: "minmax(260px, auto)",
             gap: 14,
+            perspective: 1400,
           }}
         >
           {/* 01 BIG — Courses, labs, challenges */}
-          <Cell span={7} rowSpan={2}>
+          <Cell span={7} rowSpan={2} glow="indigo">
             <CellHead
               tag="— 01"
               title="Courses, labs, challenges."
@@ -221,14 +406,14 @@ export default function LandingBento() {
               big
             />
             <Group gap={6} style={{ flexWrap: "wrap", maxWidth: 560 }}>
-              {chips.map((c) => (
-                <Chip key={c.label} label={c.label} tone={c.tone} />
+              {chips.map((c, i) => (
+                <Chip key={c.label} label={c.label} tone={CHIP_SCENES[sceneIndex][i]} />
               ))}
             </Group>
           </Cell>
 
           {/* 02 deploy */}
-          <Cell span={5}>
+          <Cell span={5} glow="mint">
             <CellHead
               tag="— 02"
               title="On-premises by design."
@@ -255,7 +440,7 @@ export default function LandingBento() {
           </Cell>
 
           {/* 03 Open-source (accent) */}
-          <Cell span={5} accent>
+          <Cell span={5} accent glow="indigo">
             <CellHead
               tag="— 03"
               title="Open-source. No catch."
@@ -279,7 +464,7 @@ export default function LandingBento() {
           </Cell>
 
           {/* 04 classroom */}
-          <Cell span={4}>
+          <Cell span={4} glow="amber">
             <CellHead
               tag="— 04"
               title="Built for academic workflows."
@@ -336,7 +521,7 @@ export default function LandingBento() {
           </Cell>
 
           {/* 05 auto-graded */}
-          <Cell span={4}>
+          <Cell span={4} glow="mint">
             <CellHead
               tag="— 05"
               title="Auto-graded, instantly scored."
@@ -362,7 +547,7 @@ export default function LandingBento() {
           </Cell>
 
           {/* 06 BYOC */}
-          <Cell span={4}>
+          <Cell span={4} glow="rose">
             <CellHead
               tag="— 06"
               title="Course, lab & challenge designer."
@@ -397,6 +582,27 @@ export default function LandingBento() {
       </Container>
 
       <style>{`
+        .bento-cell {
+          box-shadow: 0 0 0 0 rgba(0,0,0,0);
+          transition: box-shadow 0.6s ease, border-color 0.4s ease;
+          z-index: 1;
+        }
+        /* While any cell in the grid is hovered, lift the non-hovered cells
+           above it so the hovered one's glow tucks under the neighbours. */
+        .bento-grid:hover .bento-cell { z-index: 3; }
+        .bento-grid:hover .bento-cell:hover { z-index: 2; }
+        .bento-cell:hover {
+          box-shadow:
+            0 30px 90px -25px var(--glow-primary),
+            0 0 120px -35px var(--glow-secondary),
+            0 0 0 1px var(--glow-border) inset;
+          border-color: var(--glow-border);
+        }
+        .bento-cell-accent:hover {
+          box-shadow:
+            0 30px 90px -25px var(--glow-primary),
+            0 0 130px -30px var(--glow-secondary);
+        }
         @media (max-width: 900px) {
           .bento-grid {
             grid-template-columns: repeat(6, 1fr) !important;
@@ -406,6 +612,9 @@ export default function LandingBento() {
             grid-column: span 6 !important;
             grid-row: auto !important;
           }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .bento-cell { transition: none; }
         }
       `}</style>
     </Box>
