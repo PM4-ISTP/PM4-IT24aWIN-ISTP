@@ -42,8 +42,10 @@ async function proxy(req: NextRequest, params: { path: string[] }): Promise<Resp
 
   let response = await fetchBackend(accessToken);
 
-  // Fallback for race conditions (clock skew/revocation edge cases): force one
-  // refresh and retry the request a single time.
+  // Fallback for timing gaps where the token passes local expiry checks but is
+  // already rejected by backend/IdP (e.g. revocation, issuer clock skew, or
+  // token becoming invalid between validation and the upstream request). Force
+  // one refresh and retry a single time.
   if (response.status === 401) {
     try {
       const refreshedAccessToken = await getValidAccessToken(authReq, { forceRefresh: true });
