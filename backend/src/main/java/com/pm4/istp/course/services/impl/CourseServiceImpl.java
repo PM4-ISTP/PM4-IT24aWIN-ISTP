@@ -729,8 +729,7 @@ public class CourseServiceImpl implements CourseService {
     return totalByLab;
   }
 
-  private SubmissionAggregates loadSubmissionAggregates(
-      List<UUID> userIds, List<UUID> labIds) {
+  private SubmissionAggregates loadSubmissionAggregates(List<UUID> userIds, List<UUID> labIds) {
     Map<SubmissionKey, Integer> solvedCountByKey = new HashMap<>();
     Map<SubmissionKey, LocalDateTime> completedAtByKey = new HashMap<>();
     if (userIds.isEmpty() || labIds.isEmpty()) {
@@ -981,7 +980,8 @@ public class CourseServiceImpl implements CourseService {
     List<Object[]> rows = courseLabRepository.findDeadlinesForUser(userId);
     List<UUID> labIds = rows.stream().map(row -> (UUID) row[2]).distinct().toList();
     Map<UUID, Integer> totalByLab = loadChallengeTotals(labIds);
-    SubmissionAggregates submissions = loadSubmissionAggregates(Collections.singletonList(userId), labIds);
+    SubmissionAggregates submissions =
+        loadSubmissionAggregates(Collections.singletonList(userId), labIds);
 
     List<CourseLabDeadlineDto> result = new ArrayList<>(rows.size());
     for (Object[] row : rows) {
@@ -995,8 +995,10 @@ public class CourseServiceImpl implements CourseService {
       }
 
       int totalCount = totalByLab.getOrDefault(labId, 0);
-      int solvedCount = submissions.solvedCountByKey.getOrDefault(new SubmissionKey(userId, labId), 0);
-      if (resolveSubmissionStatus(solvedCount, totalCount) != CourseLabSubmissionStatusEnum.SUBMITTED) {
+      int solvedCount =
+          submissions.solvedCountByKey.getOrDefault(new SubmissionKey(userId, labId), 0);
+      if (resolveSubmissionStatus(solvedCount, totalCount)
+          != CourseLabSubmissionStatusEnum.SUBMITTED) {
         result.add(new CourseLabDeadlineDto(courseId, courseTitle, labId, labTitle, dueAt));
       }
     }
