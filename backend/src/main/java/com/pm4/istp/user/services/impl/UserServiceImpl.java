@@ -80,16 +80,6 @@ public class UserServiceImpl implements UserService {
   @Transactional
   public void softDeleteAndAnonymizeUser(
       UUID userId, String anonymizedEmail, String anonymizedUsername) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
-    if (anonymizedEmail == null || anonymizedEmail.isBlank()) {
-      throw new IllegalArgumentException("anonymizedEmail is required");
-    }
-    if (anonymizedUsername == null || anonymizedUsername.isBlank()) {
-      throw new IllegalArgumentException("anonymizedUsername is required");
-    }
-
     LocalDateTime now = LocalDateTime.now();
 
     User user = userRepository.findById(userId).orElse(null);

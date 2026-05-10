@@ -175,7 +175,7 @@ public class LabServiceImpl implements LabService {
       st.setFlag(normalizeFlag(req.getFlag()));
       st.setOrderIndex(idx++);
       st.setType(req.getType() != null ? req.getType() : ChallengeType.FLAG);
-      st.setPoints(req.getPoints() > 0 ? req.getPoints() : 1);
+      st.setPoints(req.getPoints());
       st.setHint(req.getHint());
       applyOptions(st, req.getOptions());
       result.add(st);
@@ -210,7 +210,7 @@ public class LabServiceImpl implements LabService {
       target.setFlag(normalizeFlag(req.getFlag()));
       target.setOrderIndex(idx++);
       target.setType(req.getType() != null ? req.getType() : ChallengeType.FLAG);
-      target.setPoints(req.getPoints() > 0 ? req.getPoints() : 1);
+      target.setPoints(req.getPoints());
       target.setHint(req.getHint());
       applyOptions(target, req.getOptions());
       retained.add(target);

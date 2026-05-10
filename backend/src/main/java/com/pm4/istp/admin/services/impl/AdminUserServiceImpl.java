@@ -88,10 +88,6 @@ public class AdminUserServiceImpl implements AdminUserService {
 
   @Override
   public AdminUserDetailDto getUser(UUID userId) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
-
     User user = userRepository.findById(userId).orElse(null);
 
     KeycloakUserRepresentation keycloakUser = keycloakAdminClient.getUser(userId);
@@ -145,7 +141,7 @@ public class AdminUserServiceImpl implements AdminUserService {
   @Override
   @Transactional
   public AdminUserDetailDto updateUserRole(UUID userId, AdminUpdateUserRoleRequestDto request) {
-    Set<String> desired = validateRoleUpdateRequest(userId, request);
+    Set<String> desired = validateRoleUpdateRequest(request);
 
     // Keycloak is source of truth for roles. Snapshot current app roles for rollback.
     List<KeycloakRoleRepresentation> currentRoleReps =
@@ -230,18 +226,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     return getUser(userId);
   }
 
-  private Set<String> validateRoleUpdateRequest(
-      UUID userId, AdminUpdateUserRoleRequestDto request) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
-    if (request == null || request.getRoles() == null || request.getRoles().isEmpty()) {
-      throw new IllegalArgumentException("roles is required");
-    }
-    if (request.getRoles().size() != 1) {
-      throw new IllegalArgumentException("Exactly one role must be provided");
-    }
-
+  private Set<String> validateRoleUpdateRequest(AdminUpdateUserRoleRequestDto request) {
     Set<String> desired =
         request.getRoles().stream()
             .map(this::normalizeOptional)
@@ -323,10 +308,6 @@ public class AdminUserServiceImpl implements AdminUserService {
   @Override
   @Transactional
   public AdminProvisionUserResponseDto provisionUser(UUID userId) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
-
     User existing = userRepository.findById(userId).orElse(null);
     if (existing != null) {
       if (existing.getAnonymizedAt() != null) {
@@ -381,10 +362,6 @@ public class AdminUserServiceImpl implements AdminUserService {
   @Override
   @Transactional
   public void disableUser(UUID userId) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
-
     KeycloakUserRepresentation before = keycloakAdminClient.getUser(userId);
     if (before == null) {
       throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
@@ -409,10 +386,6 @@ public class AdminUserServiceImpl implements AdminUserService {
   @Override
   @Transactional
   public void restoreUser(UUID userId) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
-
     User dbUser = userRepository.findById(userId).orElse(null);
     if (dbUser != null && dbUser.getAnonymizedAt() != null) {
       throw new UserSoftDeletedException("User is soft-deleted and cannot be restored");
@@ -442,10 +415,6 @@ public class AdminUserServiceImpl implements AdminUserService {
   @Override
   @Transactional
   public void softDeleteUser(UUID userId) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
-
     User existing = userRepository.findById(userId).orElse(null);
     if (existing != null && existing.getAnonymizedAt() != null) {
       // Idempotent: already soft-deleted
@@ -478,36 +447,21 @@ public class AdminUserServiceImpl implements AdminUserService {
 
   @Override
   public List<KeycloakUserSessionRepresentation> listUserSessions(UUID userId) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
     return keycloakAdminClient.listUserSessions(userId);
   }
 
   @Override
   public void logoutUser(UUID userId) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
     keycloakAdminClient.logoutUser(userId);
   }
 
   @Override
   public void sendPasswordResetEmail(UUID userId) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
     keycloakAdminClient.executeActionsEmail(userId, List.of("UPDATE_PASSWORD"));
   }
 
   @Override
   public void setUserPassword(UUID userId, AdminSetUserPasswordRequestDto request) {
-    if (userId == null) {
-      throw new IllegalArgumentException("userId is required");
-    }
-    if (request == null || request.getPassword() == null) {
-      throw new IllegalArgumentException("password is required");
-    }
     keycloakAdminClient.resetPassword(userId, request.getPassword(), request.isTemporary());
   }
 

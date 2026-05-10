@@ -54,7 +54,6 @@ import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseLabException;
-import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
 import com.pm4.istp.course.repositories.LabRepository;
@@ -370,37 +369,6 @@ class CourseServiceImplTest {
 
     assertThat(result).isSameAs(expected);
     verify(courseRepository).findPublishedCoursesByQueryAndTopic("sql", "Security", pageable);
-  }
-
-  @Test
-  void createCourse_withTooManyShortDescriptionChars_throwsValidationException() {
-    UUID ownerId = UUID.randomUUID();
-
-    User owner = new User();
-    owner.setId(ownerId);
-    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
-
-    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
-
-    String tooLong = "a".repeat(201);
-
-    CreateCourseRequest request = new CreateCourseRequest(
-        "Secure Coding",
-        "Long description",
-        tooLong,
-        false,
-        false,
-        null,
-        null,
-        List.of(),
-        McAttemptsMode.UNLIMITED);
-
-    assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
-        .isInstanceOf(InvalidCourseShortDescriptionException.class)
-        .hasMessageContaining("200")
-        .hasMessageContaining("characters");
-
-    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test

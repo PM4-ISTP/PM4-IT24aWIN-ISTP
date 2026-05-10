@@ -15,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional
 public class AdminTopicServiceImpl implements AdminTopicService {
-  private static final int MIN_TOPIC_LENGTH = 3;
-  private static final int MAX_TOPIC_LENGTH = 24;
   private final CourseTopicRepository courseTopicRepository;
   private final CourseRepository courseRepository;
 
@@ -76,22 +74,6 @@ public class AdminTopicServiceImpl implements AdminTopicService {
   }
 
   private static String normalize(String value) {
-    if (value == null) {
-      throw new IllegalArgumentException("Topic value is required");
-    }
-    String trimmed = value.trim();
-    if (trimmed.isBlank()) {
-      throw new IllegalArgumentException("Topic value is required");
-    }
-    if (trimmed.length() < MIN_TOPIC_LENGTH) {
-      throw new IllegalArgumentException("Topic must be at least 3 characters");
-    }
-    if (trimmed.length() > MAX_TOPIC_LENGTH) {
-      throw new IllegalArgumentException("Topic must be at most 24 characters");
-    }
-    if (!trimmed.matches("^[A-Za-z][A-Za-z0-9-]*$")) {
-      throw new IllegalArgumentException("Topic must be a single word (letters, numbers, '-')");
-    }
-    return trimmed;
+    return value.trim();
   }
 }
