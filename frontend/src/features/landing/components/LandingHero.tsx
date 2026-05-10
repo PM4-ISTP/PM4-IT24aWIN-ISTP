@@ -6,12 +6,26 @@ import GradientText from "./parts/GradientText";
 import LandingButton from "./parts/LandingButton";
 import useSignInToDashboard from "../hooks/useSignInToDashboard";
 import { FONT_MONO, INK, INK_DIM, LINE_2, MINT, MUTED } from "../theme";
+import { useRef } from "react";
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
 
 const schools = ["ZHAW", "ZHAW", "ZHAW", "ZHAW", "ZHAW", "ZHAW", "ZHAW"];
 
 export default function LandingHero() {
   const handleSignIn = useSignInToDashboard();
+  const dotRef = useRef<HTMLDivElement>(null);
 
+  useGSAP(() => {
+    gsap.to(dotRef.current, {
+      boxShadow: `0 0 24px ${MINT}, 0 0 0px ${MINT}`,
+      repeat: -1,
+      yoyo: true,
+      duration: 1.5,
+      scale: 0.8,
+      ease: "sine.inOut",
+    });
+  });
   return (
     <Box component="header" style={{ padding: "96px 0 40px", position: "relative" }}>
       <Container size="xl" px={32}>
@@ -20,15 +34,7 @@ export default function LandingHero() {
             variant="outline"
             radius="xl"
             leftSection={
-              <Box
-                w={7}
-                h={7}
-                style={{
-                  borderRadius: 99,
-                  background: MINT,
-                  boxShadow: `0 0 12px ${MINT}`,
-                }}
-              />
+              <Box ref={dotRef} w={7} h={7} style={{ borderRadius: 99, background: MINT, boxShadow: `0 0 12px ${MINT}` }} />
             }
             styles={{
               root: {

@@ -313,6 +313,17 @@ export default function LandingBento() {
     () => {
       const section = sectionRef.current;
       if (!section) return;
+      gsap.utils.toArray(".pulse-items").forEach((item, i) => {
+        gsap.from(item as HTMLElement, {
+          boxShadow: `0 0 16px ${MINT}, 0 0 6px ${MINT}`,
+          repeat: -1,
+          yoyo: true,
+          scale: 1.2,
+          duration: 1.5,
+          ease: "sine.inOut",
+          delay: i * 2 // Stagger based on index
+        });
+        });
 
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
@@ -333,7 +344,7 @@ export default function LandingBento() {
         tl.fromTo(
           ".bento-cell",
           { opacity: 0, y: 35 },
-          { opacity: 1, y: 0, duration: 0.85, stagger: 0.12 },
+          { opacity: 1, y: 0, duration: 0.85, stagger: 0.2 },
           0.25
         );
 
@@ -341,7 +352,7 @@ export default function LandingBento() {
         tl.fromTo(
           ".code-peek",
           { clipPath: "inset(0% 100% 0% 0%)" },
-          { clipPath: "inset(0% 0% 0% 0%)", duration: 1.1, stagger: 0.18 },
+          { clipPath: "inset(0% 0% 0% 0%)", duration: 1.1, stagger: 0.25 },
           0.9
         );
       });
@@ -423,7 +434,7 @@ export default function LandingBento() {
                   align="center"
                   style={{ border: `1px solid ${LINE_2}`, borderRadius: 6 }}
                 >
-                  <Box w={6} h={6} style={{ borderRadius: 99, background: MINT }} />
+                  <Box className="pulse-items" w={6} h={6} style={{ borderRadius: 99, background: MINT, boxShadow: `0 0 12px ${MINT}` }} />
                   <Text style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: MUTED }}>{p}</Text>
                 </Group>
               ))}
