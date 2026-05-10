@@ -9,15 +9,17 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 
-const schools = ["ZHAW", "ZHAW", "ZHAW", "ZHAW", "ZHAW", "ZHAW", "ZHAW"];
+const schools = ["ZHAW"];
 
 export default function LandingHero() {
   const handleSignIn = useSignInToDashboard();
   const dotRef = useRef<HTMLDivElement>(null);
+  const heroTextRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
       if (!dotRef.current) return;
+      const heroText = heroTextRef.current;
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         gsap.to(dotRef.current, {
@@ -28,6 +30,13 @@ export default function LandingHero() {
           duration: 1.4,
           ease: "sine.inOut",
         });
+        if (heroText) {
+          gsap.fromTo(
+            heroText.children,
+            { opacity: 0, y: 22 },
+            { opacity: 1, y: 0, duration: 0.6, stagger: 0.12, ease: "power2.out" }
+          );
+        }
       });
     },
     { scope: dotRef }
@@ -35,10 +44,14 @@ export default function LandingHero() {
   return (
     <Box
       component="header"
-      style={{ padding: "96px 0 40px", position: "relative", minHeight: "80vh" }}
+      style={{ padding: "48px 0 40px", position: "relative", minHeight: "80vh" }}
     >
       <Container size="xl" px={32}>
-        <Stack align="center" gap={0} style={{ textAlign: "center" }}>
+        <Stack
+          align="center"
+          gap={0}
+          style={{ textAlign: "center", minHeight: "calc(80vh - 88px)", justifyContent: "center" }}
+        >
           <Badge
             variant="outline"
             radius="xl"
@@ -70,36 +83,38 @@ export default function LandingHero() {
             Open-source · v0.4 alpha
           </Badge>
 
-          <Title
-            order={1}
-            mt={24}
-            style={{
-              fontSize: "clamp(56px, 8.6vw, 108px)",
-              lineHeight: 0.98,
-              fontWeight: 600,
-              letterSpacing: "-0.03em",
-              maxWidth: 980,
-              color: INK,
-            }}
-          >
-            Break things.
-            <br />
-            <GradientText>Build</GradientText> brains.
-          </Title>
+          <Box ref={heroTextRef}>
+            <Title
+              order={1}
+              mt={24}
+              style={{
+                fontSize: "clamp(56px, 8.6vw, 108px)",
+                lineHeight: 0.98,
+                fontWeight: 600,
+                letterSpacing: "-0.03em",
+                maxWidth: 980,
+                color: INK,
+              }}
+            >
+              Break things.
+              <br />
+              <GradientText>Build</GradientText> brains.
+            </Title>
 
-          <Text
-            mt={24}
-            style={{
-              maxWidth: 640,
-              fontSize: 19,
-              lineHeight: 1.5,
-              color: INK_DIM,
-            }}
-          >
-            A self-hosted, open-source security training platform for universities. Each student
-            gets their own isolated Kubernetes pod — exploit real vulnerabilities instead of just
-            reading about them.
-          </Text>
+            <Text
+              mt={24}
+              style={{
+                maxWidth: 640,
+                fontSize: 19,
+                lineHeight: 1.5,
+                color: INK_DIM,
+              }}
+            >
+              A self-hosted, open-source security training platform for universities. Each student
+              gets their own isolated Kubernetes pod — exploit real vulnerabilities instead of just
+              reading about them.
+            </Text>
+          </Box>
 
           <Group gap={12} justify="center" mt={36} wrap="wrap">
             <LandingButton
@@ -125,19 +140,6 @@ export default function LandingHero() {
                 >
                   <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.08-2.7-1.08-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.88 2.34.67.07-.52.28-.88.51-1.08-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.13 0 0 .67-.21 2.2.82a7.66 7.66 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.11.16 1.93.08 2.13.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
                 </svg>
-              }
-              rightSection={
-                <Text
-                  component="span"
-                  style={{
-                    fontFamily: FONT_MONO,
-                    fontSize: 13,
-                    color: MUTED,
-                    marginLeft: 4,
-                  }}
-                >
-                  6
-                </Text>
               }
             >
               Star on GitHub

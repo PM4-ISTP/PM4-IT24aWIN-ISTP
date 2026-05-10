@@ -7,8 +7,8 @@ import BrandLockup from "./parts/BrandLockup";
 import LandingButton from "./parts/LandingButton";
 
 const navLinks = [
-  { label: "Courses", href: "#bento" },
-  { label: "Labs", href: "#screens" },
+  { label: "Features", href: "#bento" },
+  { label: "Product", href: "#screens" },
   { label: "For Schools", href: "#cta" },
   { label: "Docs", href: "#" },
   { label: "GitHub ↗", href: "https://github.com" },

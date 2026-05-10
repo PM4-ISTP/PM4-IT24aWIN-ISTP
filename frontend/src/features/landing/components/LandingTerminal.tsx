@@ -16,12 +16,14 @@ type BubbleCalloutProps = {
   body: string;
   style: CSSProperties;
   setRef: (el: HTMLDivElement | null) => void;
+  className?: string;
 };
 
-function BubbleCallout({ title, body, style, setRef }: BubbleCalloutProps) {
+function BubbleCallout({ title, body, style, setRef, className }: BubbleCalloutProps) {
   return (
     <Box
       ref={setRef}
+      className={className}
       style={{
         position: "absolute",
         zIndex: 3,
@@ -82,6 +84,7 @@ export default function LandingTerminal() {
         (ctx) => {
           const { motionOk } = ctx.conditions as { motionOk: boolean };
           if (!motionOk) {
+            gsap.set(terminal, { scale: 1, transformOrigin: "center top" });
             gsap.set(bubbles, { opacity: 1, y: 0, scale: 1 });
             return;
           }
@@ -151,6 +154,7 @@ export default function LandingTerminal() {
                   title={bubble.title}
                   body={bubble.body}
                   style={bubble.style}
+                  className={`bubble-callout bubble-${bubble.title.toLowerCase()}`}
                   setRef={(el) => {
                     bubbleRefs.current[index] = el;
                   }}
@@ -160,6 +164,13 @@ export default function LandingTerminal() {
           </Box>
         </Stack>
       </Container>
+
+      <style>{`
+        @media (max-width: 900px) {
+          .bubble-callout { display: none; }
+          .bubble-overview { display: block; }
+        }
+      `}</style>
     </Box>
   );
 }
