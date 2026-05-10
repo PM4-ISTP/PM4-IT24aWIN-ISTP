@@ -83,7 +83,7 @@ async function fetchUserInfo(accessToken: string): Promise<KeycloakBasicProfile>
  * Refreshing slightly early reduces the window during which multiple concurrent
  * requests can all see an expired token and race to refresh it simultaneously.
  */
-const REFRESH_BUFFER_MS = 60_000;
+export const REFRESH_BUFFER_MS = 60_000;
 
 /**
  * In-process deduplication map for concurrent refresh calls.
@@ -147,7 +147,7 @@ async function doRefreshAccessToken(token: JWT): Promise<JWT> {
  * one HTTP request is sent to Keycloak and all callers receive the result of
  * that single request.
  */
-async function refreshAccessToken(token: JWT): Promise<JWT> {
+export async function refreshAccessToken(token: JWT): Promise<JWT> {
   if (!token.refreshToken) {
     console.error("Missing refresh token");
     return { ...token, error: "RefreshAccessTokenError" };
