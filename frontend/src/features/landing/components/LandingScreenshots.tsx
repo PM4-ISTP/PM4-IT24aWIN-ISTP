@@ -1,150 +1,224 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import Image from "next/image";
-import { ActionIcon, Box, Container, Group, ScrollArea, Stack, Text, Title } from "@mantine/core";
+import { Box, Container, Group, Stack, Text, Title } from "@mantine/core";
+import { gsap } from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Kicker from "./parts/Kicker";
-import { FONT_MONO, INK, LINE, LINE_2, MUTED } from "../theme";
+import { FONT_MONO, INK, INK_DIM, LINE, LINE_2, MUTED } from "../theme";
+
+// The browser-frame caps its own width by viewport height so the 16:9 card
+// always fits vertically without overlapping the floating header.
+const FRAME_MAX_WIDTH: React.CSSProperties = {
+  maxWidth: "calc((100vh - 400px) * 16 / 9)",
+  margin: "0 auto",
+  width: "100%",
+};
+
+gsap.registerPlugin(ScrollTrigger);
 
 const shots = [
   {
     src: "/images/landing/Home.png",
-    alt: "Home dashboard",
-    url: "istp.pm4.init-lab.ch",
-    label: "01 · Home dashboard",
+    title: "Home dashboard",
     role: "student",
+    description:
+      "Enrolled courses, completed labs and time online — all your progress at a glance.",
+    url: "istp.pm4.init-lab.ch",
   },
   {
     src: "/images/landing/Course_catalog.png",
-    alt: "Browse catalog",
-    url: "istp.pm4.init-lab.ch/catalog",
-    label: "02 · Browse catalog",
+    title: "Browse catalog",
     role: "everyone",
+    description:
+      "Search and filter every course running on this ISTP instance.",
+    url: "istp.pm4.init-lab.ch/catalog",
   },
   {
     src: "/images/landing/Course_overview.png",
-    alt: "Course overview",
-    url: "istp.pm4.init-lab.ch/courses/web-security",
-    label: "03 · Course overview",
+    title: "Course overview",
     role: "student",
+    description:
+      "All labs in a course, your per-lab progress, and what's due next — in one view.",
+    url: "istp.pm4.init-lab.ch/courses/web-security",
   },
   {
     src: "/images/landing/Course_lab.png",
-    alt: "Lab view",
-    url: "istp.pm4.init-lab.ch/lab/campus-helpdesk",
-    label: "04 · Lab · live pod",
+    title: "Lab · live pod",
     role: "student",
+    description:
+      "Challenge brief, a Kubernetes pod running just for you, and a flag submission box.",
+    url: "istp.pm4.init-lab.ch/lab/campus-helpdesk",
   },
 ];
 
-const SHOT_WIDTH = 720;
-const SHOT_GAP = 18;
-const STEP = SHOT_WIDTH + SHOT_GAP;
-
 export default function LandingScreenshots() {
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
 
-  function scrollToIndex(idx: number) {
-    const clamped = Math.min(Math.max(idx, 0), shots.length - 1);
-    viewportRef.current?.scrollTo({ left: clamped * STEP, behavior: "smooth" });
-  }
+  useGSAP(
+    () => {
+      const section = sectionRef.current;
+      const header = headerRef.current;
+      const track = trackRef.current;
+      if (!section || !header || !track) return;
 
-  function handleScrollPositionChange({ x }: { x: number }) {
-    const el = viewportRef.current;
-    const maxScroll = el ? el.scrollWidth - el.clientWidth : 0;
-    if (maxScroll > 0 && x >= maxScroll - 4) {
-      setActiveIndex(shots.length - 1);
-      return;
-    }
-    const idx = Math.round(x / STEP);
-    setActiveIndex(Math.min(Math.max(idx, 0), shots.length - 1));
-  }
+      const mm = gsap.matchMedia();
+      mm.add(
+        "(min-width: 900px) and (prefers-reduced-motion: no-preference)",
+        () => {
+          // Header entrance — fades up as the section enters, before the pin starts
+          gsap.fromTo(
+            header,
+            { opacity: 0, y: 40 },
+            {
+              opacity: 1,
+              y: 0,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: section,
+                start: "top 80%",
+                end: "top 45%",
+                scrub: 1,
+              },
+            }
+          );
+
+          // Horizontal pinned scroll — total vertical scroll is decoupled from
+          // viewport width so ultra-wide screens don't have to scroll forever.
+          const getDistance = () => track.scrollWidth - window.innerWidth;
+          const getScrollLength = () =>
+            (shots.length - 1) * window.innerHeight * 0.8;
+
+          gsap.to(track, {
+            x: () => -getDistance(),
+            ease: "none",
+            scrollTrigger: {
+              trigger: section,
+              start: "top top",
+              end: () => `+=${getScrollLength()}`,
+              scrub: 1,
+              pin: true,
+              anticipatePin: 1,
+              invalidateOnRefresh: true,
+            },
+          });
+        }
+      );
+    },
+    { scope: sectionRef }
+  );
 
   return (
-    <Box component="section" id="screens" style={{ padding: "80px 0 60px" }}>
-      <Container size="xl" px={32}>
-        <Group justify="space-between" align="flex-end" mb={32} wrap="wrap">
+    <Box
+      component="section"
+      ref={sectionRef}
+      id="screens"
+      style={{ overflow: "hidden", position: "relative", marginTop: 40}}
+    >
+      {/* Section header — fixed-position during pin, fades up on entrance */}
+      <Box
+        ref={headerRef}
+        className="screens-label"
+        style={{
+          position: "absolute",
+          top:40,
+          left: 0,
+          right: 0,
+          zIndex: 2,
+          pointerEvents: "none",
+        }}
+      >
+        <Container size="xl" px={32}>
           <Stack gap={10}>
             <Kicker>— 04 · Product tour</Kicker>
             <Title
               order={2}
               style={{
-                fontSize: 48,
+                fontSize: 54,
                 fontWeight: 600,
-                letterSpacing: "-0.022em",
+                letterSpacing: "-0.025em",
                 margin: 0,
                 color: INK,
+                lineHeight: 1,
               }}
             >
               The product, plainly.
             </Title>
           </Stack>
-          <Group gap={16} align="center">
-            <Text
-              style={{
-                fontFamily: FONT_MONO,
-                fontSize: 12,
-                color: MUTED,
-              }}
-            >
-              {String(activeIndex + 1).padStart(2, "0")} / {String(shots.length).padStart(2, "0")}
-            </Text>
-            <ActionIcon
-              variant="default"
-              radius="xl"
-              size={38}
-              aria-label="Previous"
-              onClick={() => scrollToIndex(activeIndex - 1)}
-              style={{
-                border: `1px solid ${LINE_2}`,
-                background: "rgba(255,255,255,0.02)",
-                color: INK,
-              }}
-            >
-              ←
-            </ActionIcon>
-            <ActionIcon
-              variant="default"
-              radius="xl"
-              size={38}
-              aria-label="Next"
-              onClick={() => scrollToIndex(activeIndex + 1)}
-              style={{
-                border: `1px solid ${LINE_2}`,
-                background: "rgba(255,255,255,0.02)",
-                color: INK,
-              }}
-            >
-              →
-            </ActionIcon>
-          </Group>
-        </Group>
+        </Container>
+      </Box>
 
-        <ScrollArea
-          viewportRef={viewportRef}
-          type="never"
-          offsetScrollbars={false}
-          onScrollPositionChange={handleScrollPositionChange}
-          styles={{
-            viewport: {
-              scrollSnapType: "x mandatory",
-              paddingBottom: 14,
-            },
-          }}
-        >
-          <Group gap={18} wrap="nowrap" align="flex-start">
-            {shots.map((s) => (
-              <Box
-                key={s.label}
-                style={{
-                  flex: `0 0 ${SHOT_WIDTH}px`,
-                  scrollSnapAlign: "start",
-                }}
-              >
+      <Box
+        ref={trackRef}
+        className="screens-track"
+        style={{ display: "flex", height: "100vh", willChange: "transform" }}
+      >
+        {shots.map((s, i) => (
+          <Box
+            key={s.title}
+            className="screens-panel"
+            style={{
+              flex: "0 0 100vw",
+              height: "100vh",
+              display: "flex",
+              alignItems: "center",
+              padding: "120px 0 60px",
+            }}
+          >
+            <Container size="xl" px={32} style={{ width: "100%" }}>
+              <Stack gap={24} className="screens-panel-stack">
+                {/* Header row — title left, step right */}
+                <Group
+                  justify="space-between"
+                  align="flex-end"
+                  wrap="nowrap"
+                  pb={14}
+                  style={{ borderBottom: `1px solid ${LINE}` }}
+                >
+                  <Title
+                    order={3}
+                    style={{
+                      fontSize: "clamp(28px, 3.4vw, 32px)",
+                      fontWeight: 600,
+                      letterSpacing: "-0.022em",
+                      margin: 0,
+                      color: INK,
+                      lineHeight: 1.05,
+                    }}
+                  >
+                    {s.title}
+                  </Title>
+                  <Text
+                    style={{
+                      fontFamily: FONT_MONO,
+                      fontSize: 18,
+                      color: INK,
+                      fontWeight: 500,
+                      letterSpacing: "0.04em",
+                      lineHeight: 1,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                    <Text
+                      component="span"
+                      style={{ color: MUTED, fontSize: 14, marginLeft: 8 }}
+                    >
+                      / {String(shots.length).padStart(2, "0")}
+                    </Text>
+                  </Text>
+                </Group>
+
+                {/* Browser frame */}
                 <Box
+                  className="screens-frame"
                   style={{
-                    aspectRatio: "16 / 10",
+                    ...FRAME_MAX_WIDTH,
+                    aspectRatio: "16 / 9",
                     border: `1px solid ${LINE_2}`,
                     borderRadius: 14,
                     overflow: "hidden",
@@ -152,6 +226,7 @@ export default function LandingScreenshots() {
                     boxShadow: "0 30px 80px -20px rgba(0,0,0,0.6)",
                     display: "flex",
                     flexDirection: "column",
+                    minWidth: 0,
                   }}
                 >
                   <Group
@@ -164,9 +239,9 @@ export default function LandingScreenshots() {
                       background: "rgba(255,255,255,0.02)",
                     }}
                   >
-                    {[0, 1, 2].map((i) => (
+                    {[0, 1, 2].map((d) => (
                       <Box
-                        key={i}
+                        key={d}
                         w={9}
                         h={9}
                         style={{
@@ -190,49 +265,60 @@ export default function LandingScreenshots() {
                       {s.url}
                     </Text>
                   </Group>
-                  <Box
-                    style={{
-                      position: "relative",
-                      flex: 1,
-                      width: "100%",
-                    }}
-                  >
+                  <Box style={{ position: "relative", flex: 1, width: "100%" }}>
                     <Image
                       src={s.src}
-                      alt={s.alt}
+                      alt={s.title}
                       fill
-                      sizes="720px"
+                      sizes="90vw"
                       style={{ objectFit: "cover", objectPosition: "top left" }}
                     />
                   </Box>
                 </Box>
-                <Group justify="space-between" mt={12}>
+
+                {/* Footer row — description left, role tag right */}
+                <Group justify="space-between" align="flex-start" wrap="nowrap" gap={32}>
                   <Text
                     style={{
-                      fontFamily: FONT_MONO,
-                      fontSize: 11,
-                      color: INK,
-                      fontWeight: 500,
-                      letterSpacing: "0.04em",
+                      color: INK_DIM,
+                      fontSize: 16,
+                      lineHeight: 1.55,
+                      maxWidth: 720,
                     }}
                   >
-                    {s.label}
+                    {s.description}
                   </Text>
-                  <Text
+                  <Box
                     style={{
-                      fontFamily: FONT_MONO,
-                      fontSize: 11,
-                      color: MUTED,
+                      borderRadius: 6,
+                      flexShrink: 0,
                     }}
                   >
-                    {s.role}
-                  </Text>
+                    <Kicker size={11}>{s.role}</Kicker>
+                  </Box>
                 </Group>
-              </Box>
-            ))}
-          </Group>
-        </ScrollArea>
-      </Container>
+              </Stack>
+            </Container>
+          </Box>
+        ))}
+      </Box>
+
+      <style>{`
+        @media (max-width: 900px), (prefers-reduced-motion: reduce) {
+          .screens-label { position: relative !important; top: 0 !important; padding: 60px 0 0; }
+          .screens-track {
+            flex-direction: column;
+            height: auto !important;
+            transform: none !important;
+          }
+          .screens-panel {
+            flex: 0 0 auto !important;
+            width: 100% !important;
+            height: auto !important;
+            padding: 40px 0 !important;
+          }
+        }
+      `}</style>
     </Box>
   );
 }

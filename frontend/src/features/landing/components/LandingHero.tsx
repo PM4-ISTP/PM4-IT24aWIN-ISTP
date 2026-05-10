@@ -16,16 +16,23 @@ export default function LandingHero() {
   const handleSignIn = useSignInToDashboard();
   const dotRef = useRef<HTMLDivElement>(null);
 
-  useGSAP(() => {
-    gsap.to(dotRef.current, {
-      boxShadow: `0 0 24px ${MINT}, 0 0 0px ${MINT}`,
-      repeat: -1,
-      yoyo: true,
-      duration: 1.5,
-      scale: 0.8,
-      ease: "sine.inOut",
-    });
-  });
+  useGSAP(
+    () => {
+      if (!dotRef.current) return;
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.to(dotRef.current, {
+          scale: 1.25,
+          boxShadow: `0 0 22px ${MINT}, 0 0 6px ${MINT}`,
+          repeat: -1,
+          yoyo: true,
+          duration: 1.4,
+          ease: "sine.inOut",
+        });
+      });
+    },
+    { scope: dotRef }
+  );
   return (
     <Box component="header" style={{ padding: "96px 0 40px", position: "relative" }}>
       <Container size="xl" px={32}>
@@ -105,7 +112,7 @@ export default function LandingHero() {
               tone="ghost"
               size="md"
               component="a"
-              href="https://github.com"
+              href="https://github.com/PM4-ISTP/PM4-IT24aWIN-ISTP"
               style={{ padding: "14px 22px", fontSize: 15 }}
               leftSection={
                 <svg
@@ -128,7 +135,7 @@ export default function LandingHero() {
                     marginLeft: 4,
                   }}
                 >
-                  2.4k
+                  6
                 </Text>
               }
             >

@@ -486,7 +486,7 @@ export default function LandingBento() {
             >
               {[
                 { n: "24", l: "students", w: 78 },
-                { n: "9 / 12", l: "challenges", w: 75 },
+                { n: "9 / 12", l: "labs", w: 75 },
                 { n: "87%", l: "solved", w: 87 },
                 { n: "3", l: "courses", w: 62 },
               ].map((s) => (
