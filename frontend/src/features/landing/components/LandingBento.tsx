@@ -176,7 +176,7 @@ function CodePeek({ children, inverted }: { children: React.ReactNode; inverted?
 
 export default function LandingBento() {
   return (
-    <Box component="section" id="bento" style={{ padding: "140px 0 40px" }}>
+    <Box component="section" id="bento" style={{ padding: "80px 0 40px" }}>
       <Container size="xl" px={32}>
         <Group
           justify="space-between"

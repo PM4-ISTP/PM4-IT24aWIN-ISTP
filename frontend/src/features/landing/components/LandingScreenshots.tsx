@@ -62,7 +62,7 @@ export default function LandingScreenshots() {
   }
 
   return (
-    <Box component="section" id="screens" style={{ padding: "140px 0 60px" }}>
+    <Box component="section" id="screens" style={{ padding: "80px 0 60px" }}>
       <Container size="xl" px={32}>
         <Group justify="space-between" align="flex-end" mb={32} wrap="wrap">
           <Stack gap={10}>
