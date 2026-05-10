@@ -16,6 +16,7 @@ import com.pm4.istp.shared.keycloak.KeycloakAdminClient;
 import com.pm4.istp.shared.keycloak.KeycloakUserRepresentation;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.dto.UpdateUserProfileRequestDto;
+import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.exceptions.UserProfileSyncException;
 import com.pm4.istp.user.repositories.UserRepository;
 import com.pm4.istp.user.services.impl.UserProfileServiceImpl;
@@ -39,6 +40,22 @@ class UserProfileServiceImplTest {
   @Mock private KeycloakAdminClient keycloakAdminClient;
 
   @InjectMocks private UserProfileServiceImpl userProfileService;
+
+  @Test
+  void getProfile_returnsExistingUserAndThrowsWhenMissing() {
+    UUID userId = UUID.randomUUID();
+    UUID missingId = UUID.randomUUID();
+    User user = new User();
+    user.setId(userId);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
+    when(userRepository.findByIdAndDeletedAtIsNull(missingId)).thenReturn(Optional.empty());
+
+    assertThat(userProfileService.getProfile(userId)).isSameAs(user);
+    assertThatThrownBy(() -> userProfileService.getProfile(missingId))
+        .isInstanceOf(UserNotFoundException.class)
+        .hasMessageContaining(missingId.toString());
+  }
 
   @Test
   void updateProfile_self_success_updatesKeycloakAndDb() {
@@ -107,6 +124,16 @@ class UserProfileServiceImplTest {
   }
 
   @Test
+  void updateProfile_otherUser_withNullAuthorities_isForbidden() {
+    UUID actorId = UUID.randomUUID();
+    UUID targetId = UUID.randomUUID();
+    UpdateUserProfileRequestDto request = new UpdateUserProfileRequestDto();
+
+    assertThatThrownBy(() -> userProfileService.updateProfile(actorId, null, targetId, request))
+        .isInstanceOf(AccessDeniedException.class);
+  }
+
+  @Test
   void updateProfile_otherUser_withAdminRole_isAllowed() {
     UUID actorId = UUID.randomUUID();
     UUID targetId = UUID.randomUUID();
@@ -165,6 +192,71 @@ class UserProfileServiceImplTest {
         .isInstanceOf(KeycloakAdminApiException.class);
 
     verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  void updateProfile_whenKeycloakUserMissing_throwsSyncException() {
+    UUID userId = UUID.randomUUID();
+    User dbUser = new User();
+    dbUser.setId(userId);
+    UpdateUserProfileRequestDto request = new UpdateUserProfileRequestDto();
+    request.setFirstName("Alice");
+    request.setLastName("Example");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(dbUser));
+    when(keycloakAdminClient.getUser(userId)).thenReturn(null);
+
+    assertThatThrownBy(() -> userProfileService.updateProfile(userId, List.of(), userId, request))
+        .isInstanceOf(UserProfileSyncException.class)
+        .hasMessageContaining("could not be loaded");
+    verify(keycloakAdminClient, never()).updateUser(any(), any());
+  }
+
+  @Test
+  void updateProfile_blankOptionalValuesRemoveKeycloakAttributesAndCollapseName() {
+    UUID userId = UUID.randomUUID();
+    User dbUser = new User();
+    dbUser.setId(userId);
+    KeycloakUserRepresentation before = new KeycloakUserRepresentation();
+    before.setAttributes(Map.of("title", List.of("Old"), "picture", List.of("old.png")));
+    UpdateUserProfileRequestDto request = new UpdateUserProfileRequestDto();
+    request.setFirstName("  Alice  ");
+    request.setLastName("  Example  ");
+    request.setTitle(" ");
+    request.setPictureUrl("");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(dbUser));
+    when(keycloakAdminClient.getUser(userId)).thenReturn(before);
+    when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    User updated = userProfileService.updateProfile(userId, List.of(), userId, request);
+
+    ArgumentCaptor<KeycloakUserRepresentation> captor =
+        ArgumentCaptor.forClass(KeycloakUserRepresentation.class);
+    verify(keycloakAdminClient).updateUser(eq(userId), captor.capture());
+    assertThat(captor.getValue().getAttributes()).doesNotContainKeys("title", "picture");
+    assertThat(updated.getName()).isEqualTo("Alice Example");
+    assertThat(updated.getTitle()).isNull();
+    assertThat(updated.getPicture()).isNull();
+  }
+
+  @Test
+  void updateProfile_blankRequiredFields_throwIllegalArgumentException() {
+    UUID userId = UUID.randomUUID();
+    User dbUser = new User();
+    dbUser.setId(userId);
+    KeycloakUserRepresentation before = new KeycloakUserRepresentation();
+    UpdateUserProfileRequestDto request = new UpdateUserProfileRequestDto();
+    request.setFirstName(" ");
+    request.setLastName("Example");
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(dbUser));
+    when(keycloakAdminClient.getUser(userId)).thenReturn(before);
+
+    assertThatThrownBy(() -> userProfileService.updateProfile(userId, List.of(), userId, request))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("firstName");
+    verify(keycloakAdminClient, never()).updateUser(any(), any());
   }
 
   @Test
@@ -238,5 +330,20 @@ class UserProfileServiceImplTest {
     assertThat(result).isEqualTo(200L);
     verify(userRepository, never()).incrementTotalSecondsOnlineById(any(), anyLong());
     verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  void addOnlineTime_whenUserDisappearsAfterIncrement_throwsNotFound() {
+    UUID userId = UUID.randomUUID();
+    User dbUser = new User();
+    dbUser.setId(userId);
+
+    when(userRepository.findByIdAndDeletedAtIsNull(userId))
+        .thenReturn(Optional.of(dbUser))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> userProfileService.addOnlineTime(userId, 10L))
+        .isInstanceOf(UserNotFoundException.class);
+    verify(userRepository).incrementTotalSecondsOnlineById(userId, 10L);
   }
 }

@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.pm4.istp.course.db.CreateCourseInstructorRequest;
 import com.pm4.istp.course.db.CreateCourseRequest;
@@ -99,6 +100,37 @@ class CourseServiceImplTest {
   private CourseInviteCodeHelper courseInviteCodeHelper;
   @Mock
   private CourseTopicService courseTopicService;
+
+  @Test
+  void privateCourseHelpers_coverNormalizationVisibilityEnrollmentAndStatusBranches() {
+    assertThat((String) ReflectionTestUtils.invokeMethod(courseService, "normalizeShortDescription", "  A   short   text  "))
+        .isEqualTo("A short text");
+    assertThat((String) ReflectionTestUtils.invokeMethod(courseService, "normalizeShortDescription", "   "))
+        .isNull();
+    assertThatThrownBy(
+            () -> ReflectionTestUtils.invokeMethod(courseService, "validateVisibilityState", true, true))
+        .isInstanceOf(IllegalArgumentException.class);
+
+    User participant = new User();
+    participant.setId(UUID.randomUUID());
+    Course course = new Course();
+    ReflectionTestUtils.invokeMethod(courseService, "addEnrollmentIfMissing", course, participant);
+    ReflectionTestUtils.invokeMethod(courseService, "addEnrollmentIfMissing", course, participant);
+
+    assertThat(course.getCourseEnrollments()).hasSize(1);
+    assertThat(
+            (CourseLabSubmissionStatusEnum)
+                ReflectionTestUtils.invokeMethod(courseService, "resolveSubmissionStatus", 0, 0))
+        .isEqualTo(CourseLabSubmissionStatusEnum.NOT_STARTED);
+    assertThat(
+            (CourseLabSubmissionStatusEnum)
+                ReflectionTestUtils.invokeMethod(courseService, "resolveSubmissionStatus", 1, 2))
+        .isEqualTo(CourseLabSubmissionStatusEnum.IN_PROGRESS);
+    assertThat(
+            (CourseLabSubmissionStatusEnum)
+                ReflectionTestUtils.invokeMethod(courseService, "resolveSubmissionStatus", 2, 2))
+        .isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
+  }
 
   @InjectMocks
   private CourseServiceImpl courseService;
