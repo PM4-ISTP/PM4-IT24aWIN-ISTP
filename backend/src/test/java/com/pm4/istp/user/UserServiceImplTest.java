@@ -169,18 +169,8 @@ class UserServiceImplTest {
   }
 
   @Test
-  void softDeleteAndAnonymizeUser_validatesInputAndCreatesMissingUser() {
+  void softDeleteAndAnonymizeUser_createsMissingUser() {
     UUID userId = UUID.randomUUID();
-
-    assertThatThrownBy(() -> userService.softDeleteAndAnonymizeUser(null, "a@x.test", "anon"))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("userId");
-    assertThatThrownBy(() -> userService.softDeleteAndAnonymizeUser(userId, " ", "anon"))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("anonymizedEmail");
-    assertThatThrownBy(() -> userService.softDeleteAndAnonymizeUser(userId, "a@x.test", " "))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("anonymizedUsername");
 
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 

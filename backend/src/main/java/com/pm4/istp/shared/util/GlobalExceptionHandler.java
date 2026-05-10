@@ -8,7 +8,6 @@ import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseCollaboratorException;
 import com.pm4.istp.course.exceptions.InvalidCourseLabException;
-import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
@@ -176,15 +175,6 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorDto> handleInvalidCourseCollaboratorException(
       InvalidCourseCollaboratorException ex) {
     log.warn("Caught InvalidCourseCollaboratorException: {}", ex.getMessage());
-    ErrorDto errorDto = new ErrorDto();
-    errorDto.setError(ex.getMessage());
-    return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
-  }
-
-  @ExceptionHandler(InvalidCourseShortDescriptionException.class)
-  public ResponseEntity<ErrorDto> handleInvalidCourseShortDescriptionException(
-      InvalidCourseShortDescriptionException ex) {
-    log.warn("Caught InvalidCourseShortDescriptionException: {}", ex.getMessage());
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError(ex.getMessage());
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);

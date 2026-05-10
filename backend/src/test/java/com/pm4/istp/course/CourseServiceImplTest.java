@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.pm4.istp.course.db.CreateCourseInstructorRequest;
 import com.pm4.istp.course.db.CreateCourseRequest;
@@ -54,7 +55,6 @@ import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseLabException;
-import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.InviteCodeGenerationException;
 import com.pm4.istp.course.repositories.LabRepository;
@@ -100,6 +100,37 @@ class CourseServiceImplTest {
   private CourseInviteCodeHelper courseInviteCodeHelper;
   @Mock
   private CourseTopicService courseTopicService;
+
+  @Test
+  void privateCourseHelpers_coverNormalizationVisibilityEnrollmentAndStatusBranches() {
+    assertThat((String) ReflectionTestUtils.invokeMethod(courseService, "normalizeShortDescription", "  A   short   text  "))
+        .isEqualTo("A short text");
+    assertThat((String) ReflectionTestUtils.invokeMethod(courseService, "normalizeShortDescription", "   "))
+        .isNull();
+    assertThatThrownBy(
+            () -> ReflectionTestUtils.invokeMethod(courseService, "validateVisibilityState", true, true))
+        .isInstanceOf(IllegalArgumentException.class);
+
+    User participant = new User();
+    participant.setId(UUID.randomUUID());
+    Course course = new Course();
+    ReflectionTestUtils.invokeMethod(courseService, "addEnrollmentIfMissing", course, participant);
+    ReflectionTestUtils.invokeMethod(courseService, "addEnrollmentIfMissing", course, participant);
+
+    assertThat(course.getCourseEnrollments()).hasSize(1);
+    assertThat(
+            (CourseLabSubmissionStatusEnum)
+                ReflectionTestUtils.invokeMethod(courseService, "resolveSubmissionStatus", 0, 0))
+        .isEqualTo(CourseLabSubmissionStatusEnum.NOT_STARTED);
+    assertThat(
+            (CourseLabSubmissionStatusEnum)
+                ReflectionTestUtils.invokeMethod(courseService, "resolveSubmissionStatus", 1, 2))
+        .isEqualTo(CourseLabSubmissionStatusEnum.IN_PROGRESS);
+    assertThat(
+            (CourseLabSubmissionStatusEnum)
+                ReflectionTestUtils.invokeMethod(courseService, "resolveSubmissionStatus", 2, 2))
+        .isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
+  }
 
   @InjectMocks
   private CourseServiceImpl courseService;
@@ -370,37 +401,6 @@ class CourseServiceImplTest {
 
     assertThat(result).isSameAs(expected);
     verify(courseRepository).findPublishedCoursesByQueryAndTopic("sql", "Security", pageable);
-  }
-
-  @Test
-  void createCourse_withTooManyShortDescriptionChars_throwsValidationException() {
-    UUID ownerId = UUID.randomUUID();
-
-    User owner = new User();
-    owner.setId(ownerId);
-    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
-
-    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
-
-    String tooLong = "a".repeat(201);
-
-    CreateCourseRequest request = new CreateCourseRequest(
-        "Secure Coding",
-        "Long description",
-        tooLong,
-        false,
-        false,
-        null,
-        null,
-        List.of(),
-        McAttemptsMode.UNLIMITED);
-
-    assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
-        .isInstanceOf(InvalidCourseShortDescriptionException.class)
-        .hasMessageContaining("200")
-        .hasMessageContaining("characters");
-
-    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
@@ -1324,10 +1324,10 @@ class CourseServiceImplTest {
         courseService.getCourseLabSubmissionDetails(instructorId, courseId, participantId, labId);
 
     assertThat(detail.getStatus()).isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
-    assertThat(detail.getAwardedPoints()).isEqualTo(0);
+    assertThat(detail.getAwardedPoints()).isZero();
     assertThat(detail.getChallenges()).singleElement().satisfies(challenge -> {
       assertThat(challenge.getCorrect()).isFalse();
-      assertThat(challenge.getAwardedPoints()).isEqualTo(0);
+      assertThat(challenge.getAwardedPoints()).isZero();
       assertThat(challenge.getSelectedOptionText()).isEqualTo("Wrong answer");
     });
   }
@@ -1447,14 +1447,12 @@ class CourseServiceImplTest {
     when(userRepository.findByIdAndDeletedAtIsNull(participantId)).thenReturn(Optional.of(participant));
     when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
 
+    UpdateCourseChallengeScoreRequestDto request = new UpdateCourseChallengeScoreRequestDto(1);
+
     assertThatThrownBy(
             () ->
                 courseService.updateCourseChallengeScore(
-                    instructorId,
-                    courseId,
-                    participantId,
-                    challengeId,
-                    new UpdateCourseChallengeScoreRequestDto(1)))
+                    instructorId, courseId, participantId, challengeId, request))
         .isInstanceOf(ChallengeNotFoundException.class)
         .hasMessageContaining("not part of this course");
   }

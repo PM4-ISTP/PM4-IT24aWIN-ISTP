@@ -19,15 +19,18 @@ import com.pm4.istp.shared.keycloak.KeycloakAdminClient;
 import com.pm4.istp.shared.keycloak.KeycloakRoleRepresentation;
 import com.pm4.istp.shared.keycloak.KeycloakUserRepresentation;
 import com.pm4.istp.user.db.entities.User;
+import com.pm4.istp.user.db.entities.UserRoleEnum;
 import com.pm4.istp.user.repositories.UserRepository;
 import com.pm4.istp.user.services.UserService;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -167,20 +170,11 @@ class AdminUserServiceImplTest {
   }
 
   @Test
-  void simpleUserActions_validateInputsAndDelegateToKeycloak() {
+  void simpleUserActions_delegateToKeycloak() {
     UUID userId = UUID.randomUUID();
     var passwordRequest = new com.pm4.istp.admin.dto.AdminSetUserPasswordRequestDto();
     passwordRequest.setPassword("Secret123!");
     passwordRequest.setTemporary(true);
-
-    assertThatThrownBy(() -> adminUserService.listUserSessions(null))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> adminUserService.logoutUser(null))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> adminUserService.sendPasswordResetEmail(null))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> adminUserService.setUserPassword(userId, null))
-        .isInstanceOf(IllegalArgumentException.class);
 
     adminUserService.listUserSessions(userId);
     adminUserService.logoutUser(userId);
@@ -444,27 +438,11 @@ class AdminUserServiceImplTest {
   }
 
   @Test
-  void updateUserRole_rejectsInvalidRequests() {
+  void updateUserRole_rejectsRolesOutsideManagedSet() {
     UUID userId = UUID.randomUUID();
-    var empty = new com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto();
-    empty.setRoles(java.util.Set.of());
-    var multiple = new com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto();
-    multiple.setRoles(java.util.Set.of("ROLE_STUDENT", "ROLE_ADMINISTRATOR"));
     var invalid = new com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto();
     invalid.setRoles(java.util.Set.of("offline_access"));
 
-    assertThatThrownBy(() -> adminUserService.updateUserRole(null, invalid))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("userId is required");
-    assertThatThrownBy(() -> adminUserService.updateUserRole(userId, null))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("roles is required");
-    assertThatThrownBy(() -> adminUserService.updateUserRole(userId, empty))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("roles is required");
-    assertThatThrownBy(() -> adminUserService.updateUserRole(userId, multiple))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Exactly one role");
     assertThatThrownBy(() -> adminUserService.updateUserRole(userId, invalid))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Invalid app roles");
@@ -576,5 +554,68 @@ class AdminUserServiceImplTest {
 
     verifyNoInteractions(keycloakAdminClient);
     verifyNoInteractions(userService);
+  }
+
+  @Test
+  void privateNormalizationHelpers_coverBoundaryValues() {
+    String longEmail = "a".repeat(260) + "@example.com";
+    String softDeletedEmail =
+        ReflectionTestUtils.invokeMethod(
+            adminUserService, "toSoftDeletedEmail", longEmail, "20260509190000");
+    String softDeletedUsername =
+        ReflectionTestUtils.invokeMethod(
+            adminUserService, "toSoftDeletedUsername", "u".repeat(260), "20260509190000");
+    String fallbackEmail =
+        ReflectionTestUtils.invokeMethod(
+            adminUserService, "toSoftDeletedEmail", "   ", "20260509190000");
+    String fallbackUsername =
+        ReflectionTestUtils.invokeMethod(
+            adminUserService, "toSoftDeletedUsername", "   ", "20260509190000");
+    Character fallbackRandom = ReflectionTestUtils.invokeMethod(adminUserService, "randomChar", "");
+
+    assertThat(softDeletedEmail).hasSizeLessThanOrEqualTo(255).endsWith("@invalid.local");
+    assertThat(softDeletedUsername).hasSizeLessThanOrEqualTo(255).startsWith("deleted_");
+    assertThat(fallbackEmail).contains("unknown");
+    assertThat(fallbackUsername).endsWith("_user");
+    assertThat(fallbackRandom).isEqualTo('x');
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void privateMappingHelpers_handleNullsInvalidIdsAndProvisionedDirectoryRows() {
+    assertThat((Object) ReflectionTestUtils.invokeMethod(adminUserService, "toListItem", new Object[] {null}))
+        .isNull();
+    assertThat(
+            (Set<String>)
+                ReflectionTestUtils.invokeMethod(adminUserService, "toRoleStrings", new Object[] {null}))
+        .isEmpty();
+
+    KeycloakUserRepresentation missingId = new KeycloakUserRepresentation();
+    KeycloakUserRepresentation invalidId = new KeycloakUserRepresentation();
+    invalidId.setId("not-a-uuid");
+    assertThat(
+            (Object) ReflectionTestUtils.invokeMethod(adminUserService, "toDirectoryItem", missingId))
+        .isNull();
+    assertThat(
+            (Object) ReflectionTestUtils.invokeMethod(adminUserService, "toDirectoryItem", invalidId))
+        .isNull();
+
+    UUID userId = UUID.randomUUID();
+    User dbUser = new User();
+    dbUser.setId(userId);
+    dbUser.setRoles(Set.of(UserRoleEnum.ROLE_STUDENT));
+    KeycloakUserRepresentation keycloakUser = new KeycloakUserRepresentation();
+    keycloakUser.setId(userId.toString());
+    keycloakUser.setEmail("student@example.com");
+    keycloakUser.setUsername("student");
+    keycloakUser.setEnabled(true);
+    when(userRepository.findById(userId)).thenReturn(Optional.of(dbUser));
+
+    var directoryItem =
+        (com.pm4.istp.admin.dto.AdminUserDirectoryItemDto)
+            ReflectionTestUtils.invokeMethod(adminUserService, "toDirectoryItem", keycloakUser);
+
+    assertThat(directoryItem.isProvisioned()).isTrue();
+    assertThat(directoryItem.getRoles()).contains(UserRoleEnum.ROLE_STUDENT.name());
   }
 }

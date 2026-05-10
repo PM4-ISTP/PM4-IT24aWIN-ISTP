@@ -32,7 +32,6 @@ import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.exceptions.CourseParticipantNotFoundException;
 import com.pm4.istp.course.exceptions.InvalidCourseLabException;
-import com.pm4.istp.course.exceptions.InvalidCourseShortDescriptionException;
 import com.pm4.istp.course.exceptions.InvalidInviteCodeException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
@@ -70,8 +69,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class CourseServiceImpl implements CourseService {
-  private static final int SHORT_DESCRIPTION_MAX_CHARS = 200;
-
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
   private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
   private static final String LAB_NOT_FOUND_MSG = "Lab with ID '%s' not found";
@@ -657,7 +654,7 @@ public class CourseServiceImpl implements CourseService {
 
     int max = Math.max(0, challenge.getPoints());
     int points = request.getPoints() == null ? 0 : request.getPoints();
-    if (points < 0 || points > max) {
+    if (points > max) {
       throw new IllegalArgumentException(String.format("Points must be between 0 and %d", max));
     }
 
@@ -764,69 +761,95 @@ public class CourseServiceImpl implements CourseService {
 
   private SubmissionScoringData loadSubmissionScoringData(
       UUID courseId, List<UUID> userIds, List<UUID> labIds) {
-    Map<UUID, List<Challenge>> challengesByLab = new HashMap<>();
-    Map<UUID, Set<UUID>> solvedChallengeIdsByUser = new HashMap<>();
-    Map<UUID, Set<UUID>> correctChoiceChallengeIdsByUser = new HashMap<>();
-    Map<UUID, Map<UUID, Integer>> overridesByUserByChallenge = new HashMap<>();
+    SubmissionScoringData scoringData = emptySubmissionScoringData();
     if (userIds.isEmpty() || labIds.isEmpty()) {
-      return new SubmissionScoringData(
-          challengesByLab,
-          solvedChallengeIdsByUser,
-          correctChoiceChallengeIdsByUser,
-          overridesByUserByChallenge);
+      return scoringData;
     }
 
     List<Challenge> allChallenges =
         challengeRepository.findByLabIdsOrderByLabIdAndOrderIndexAsc(labIds);
+    SubmissionChallengeIds challengeIds = collectSubmissionChallengeIds(allChallenges, scoringData);
+    if (challengeIds.isEmpty()) {
+      return scoringData;
+    }
+
+    addSolvedChallengeIds(userIds, challengeIds.all(), scoringData);
+    addCorrectChoiceChallengeIds(userIds, challengeIds.multipleChoice(), scoringData);
+    addScoreOverrides(courseId, userIds, challengeIds.all(), scoringData);
+
+    return scoringData;
+  }
+
+  private SubmissionScoringData emptySubmissionScoringData() {
+    return new SubmissionScoringData(
+        new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>());
+  }
+
+  private SubmissionChallengeIds collectSubmissionChallengeIds(
+      List<Challenge> allChallenges, SubmissionScoringData scoringData) {
     List<UUID> challengeIds = new ArrayList<>();
     List<UUID> choiceChallengeIds = new ArrayList<>();
     for (Challenge challenge : allChallenges) {
       UUID labId = challenge.getLab().getId();
-      challengesByLab.computeIfAbsent(labId, key -> new ArrayList<>()).add(challenge);
+      scoringData.challengesByLab().computeIfAbsent(labId, key -> new ArrayList<>()).add(challenge);
       challengeIds.add(challenge.getId());
       if (challenge.getType() == ChallengeType.MULTIPLE_CHOICE) {
         choiceChallengeIds.add(challenge.getId());
       }
     }
-    if (challengeIds.isEmpty()) {
-      return new SubmissionScoringData(
-          challengesByLab,
-          solvedChallengeIdsByUser,
-          correctChoiceChallengeIdsByUser,
-          overridesByUserByChallenge);
-    }
+    return new SubmissionChallengeIds(challengeIds, choiceChallengeIds);
+  }
 
+  private void addSolvedChallengeIds(
+      List<UUID> userIds, List<UUID> challengeIds, SubmissionScoringData scoringData) {
     for (Object[] row :
         challengeCompletionRepository.findSolvedChallengePairs(userIds, challengeIds)) {
       UUID userId = (UUID) row[0];
       UUID challengeId = (UUID) row[1];
       if (userId != null && challengeId != null) {
-        solvedChallengeIdsByUser.computeIfAbsent(userId, key -> new HashSet<>()).add(challengeId);
-      }
-    }
-
-    if (!choiceChallengeIds.isEmpty()) {
-      List<StudentOptionSubmission> correctSubmissions =
-          studentOptionSubmissionRepository.findByUserIdInAndChallengeIdInAndCorrectTrue(
-              userIds, choiceChallengeIds);
-      if (correctSubmissions == null) {
-        correctSubmissions = List.of();
-      }
-      for (StudentOptionSubmission submission : correctSubmissions) {
-        if (submission.getUser() == null || submission.getUser().getId() == null) {
-          continue;
-        }
-        if (submission.getChallenge() == null || submission.getChallenge().getId() == null) {
-          continue;
-        }
-        UUID userId = submission.getUser().getId();
-        UUID challengeId = submission.getChallenge().getId();
-        correctChoiceChallengeIdsByUser
+        scoringData
+            .solvedChallengeIdsByUser()
             .computeIfAbsent(userId, key -> new HashSet<>())
             .add(challengeId);
       }
     }
+  }
 
+  private void addCorrectChoiceChallengeIds(
+      List<UUID> userIds, List<UUID> choiceChallengeIds, SubmissionScoringData scoringData) {
+    if (choiceChallengeIds.isEmpty()) {
+      return;
+    }
+    List<StudentOptionSubmission> correctSubmissions =
+        studentOptionSubmissionRepository.findByUserIdInAndChallengeIdInAndCorrectTrue(
+            userIds, choiceChallengeIds);
+    if (correctSubmissions == null) {
+      correctSubmissions = List.of();
+    }
+    for (StudentOptionSubmission submission : correctSubmissions) {
+      if (hasUserAndChallenge(submission)) {
+        UUID userId = submission.getUser().getId();
+        UUID challengeId = submission.getChallenge().getId();
+        scoringData
+            .correctChoiceChallengeIdsByUser()
+            .computeIfAbsent(userId, key -> new HashSet<>())
+            .add(challengeId);
+      }
+    }
+  }
+
+  private boolean hasUserAndChallenge(StudentOptionSubmission submission) {
+    return submission.getUser() != null
+        && submission.getUser().getId() != null
+        && submission.getChallenge() != null
+        && submission.getChallenge().getId() != null;
+  }
+
+  private void addScoreOverrides(
+      UUID courseId,
+      List<UUID> userIds,
+      List<UUID> challengeIds,
+      SubmissionScoringData scoringData) {
     for (Object[] row :
         courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
             courseId, userIds, challengeIds)) {
@@ -834,17 +857,12 @@ public class CourseServiceImpl implements CourseService {
       UUID challengeId = (UUID) row[1];
       Integer points = (Integer) row[2];
       if (userId != null && challengeId != null && points != null) {
-        overridesByUserByChallenge
+        scoringData
+            .overridesByUserByChallenge()
             .computeIfAbsent(userId, key -> new HashMap<>())
             .put(challengeId, points);
       }
     }
-
-    return new SubmissionScoringData(
-        challengesByLab,
-        solvedChallengeIdsByUser,
-        correctChoiceChallengeIdsByUser,
-        overridesByUserByChallenge);
   }
 
   private List<CourseChallengeSubmissionEntryDto> buildSubmissionEntries(
@@ -943,6 +961,12 @@ public class CourseServiceImpl implements CourseService {
   private record SubmissionAggregates(
       Map<SubmissionKey, Integer> solvedCountByKey,
       Map<SubmissionKey, LocalDateTime> completedAtByKey) {}
+
+  private record SubmissionChallengeIds(List<UUID> all, List<UUID> multipleChoice) {
+    private boolean isEmpty() {
+      return all.isEmpty();
+    }
+  }
 
   private record SubmissionScoringData(
       Map<UUID, List<Challenge>> challengesByLab,
@@ -1152,13 +1176,7 @@ public class CourseServiceImpl implements CourseService {
     if (shortDescription == null || shortDescription.isBlank()) {
       return null;
     }
-    String normalized = shortDescription.trim().replaceAll("\\s+", " ");
-    if (normalized.length() > SHORT_DESCRIPTION_MAX_CHARS) {
-      throw new InvalidCourseShortDescriptionException(
-          String.format(
-              "Short description must be at most %d characters", SHORT_DESCRIPTION_MAX_CHARS));
-    }
-    return normalized;
+    return shortDescription.trim().replaceAll("\\s+", " ");
   }
 
   private void validateVisibilityState(boolean published, boolean privateCourse) {

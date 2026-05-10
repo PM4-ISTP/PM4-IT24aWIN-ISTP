@@ -36,7 +36,10 @@ import com.pm4.istp.course.dto.ChallengeCreatorResponseDto;
 import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
+import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabDeadlineDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionDetailDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionStatusEnum;
 import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
 import com.pm4.istp.course.dto.CreateCourseRequestDto;
@@ -640,6 +643,28 @@ class CourseControllerTest {
         detailDto.setId(courseId);
         CourseLabSubmissionsResponseDto submissions =
                 new CourseLabSubmissionsResponseDto(courseId, List.of(), List.of(), List.of());
+        CourseLabSubmissionDetailDto submissionDetail =
+                new CourseLabSubmissionDetailDto(
+                        courseId,
+                        participantId,
+                        labId,
+                        "Lab",
+                        null,
+                        null,
+                        CourseLabSubmissionStatusEnum.SUBMITTED,
+                        4,
+                        5,
+                        List.of());
+        CourseChallengeSubmissionEntryDto scoreEntry =
+                new CourseChallengeSubmissionEntryDto(
+                        participantId,
+                        labId,
+                        1,
+                        1,
+                        4,
+                        5,
+                        null,
+                        CourseLabSubmissionStatusEnum.SUBMITTED);
         CourseLabDeadlineDto deadline =
                 new CourseLabDeadlineDto(courseId, "Course", labId, "Lab", LocalDateTime.now());
 
@@ -649,6 +674,10 @@ class CourseControllerTest {
                 .thenReturn(course);
         when(courseMapper.toCourseDetailDto(course)).thenReturn(detailDto);
         when(courseService.getCourseChallengeSubmissions(userId, courseId)).thenReturn(submissions);
+        when(courseService.getCourseLabSubmissionDetails(userId, courseId, participantId, labId))
+                .thenReturn(submissionDetail);
+        when(courseService.updateCourseChallengeScore(eq(userId), eq(courseId), eq(participantId), eq(labId), any()))
+                .thenReturn(scoreEntry);
         when(courseService.listUpcomingDeadlines(userId)).thenReturn(List.of(deadline));
         when(courseTopicService.listActiveTopics()).thenReturn(List.of("web", "crypto"));
 
@@ -670,6 +699,17 @@ class CourseControllerTest {
         mockMvc.perform(get("/api/v1/courses/{id}/submissions", courseId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.courseId").value(courseId.toString()));
+        mockMvc.perform(get("/api/v1/courses/{id}/submissions/{participantId}/{labId}", courseId, participantId, labId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.participantId").value(participantId.toString()));
+        mockMvc
+                .perform(
+                        put("/api/v1/courses/{id}/submissions/{participantId}/{challengeId}/score",
+                                        courseId, participantId, labId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"points\":4}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.awardedPoints").value(4));
         mockMvc.perform(get("/api/v1/courses/my-deadlines"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].courseId").value(courseId.toString()));
