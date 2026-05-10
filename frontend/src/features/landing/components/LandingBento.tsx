@@ -99,8 +99,7 @@ function Chip({ label, tone }: { label: string; tone?: ChipTone }) {
         border: `1px solid ${palette.border}`,
         color: palette.color,
         background: palette.background,
-        transition:
-          "color 0.6s ease, border-color 0.6s ease, background 0.6s ease",
+        transition: "color 0.6s ease, border-color 0.6s ease, background 0.6s ease",
       }}
     >
       {label}
@@ -184,26 +183,28 @@ function Cell({
       onMouseLeave={handleMouseLeave}
       p={22}
       radius={18}
-      style={{
-        position: "relative",
-        gridColumn: `span ${span}`,
-        gridRow: rowSpan ? `span ${rowSpan}` : undefined,
-        border: accent ? "1px solid transparent" : `1px solid ${LINE}`,
-        background: accent
-          ? "linear-gradient(135deg,#5d6ef0 0%, #3b82f6 100%)"
-          : "linear-gradient(180deg, #0d1322 0%, #0a0f1c 100%)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        gap: 14,
-        overflow: "hidden",
-        minWidth: 0,
-        transformStyle: "preserve-3d",
-        willChange: "transform",
-        ["--glow-primary" as string]: tone.primary,
-        ["--glow-secondary" as string]: tone.secondary,
-        ["--glow-border" as string]: tone.border,
-      } as React.CSSProperties}
+      style={
+        {
+          position: "relative",
+          gridColumn: `span ${span}`,
+          gridRow: rowSpan ? `span ${rowSpan}` : undefined,
+          border: accent ? "1px solid transparent" : `1px solid ${LINE}`,
+          background: accent
+            ? "linear-gradient(135deg,#5d6ef0 0%, #3b82f6 100%)"
+            : "linear-gradient(180deg, #0d1322 0%, #0a0f1c 100%)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          gap: 14,
+          overflow: "hidden",
+          minWidth: 0,
+          transformStyle: "preserve-3d",
+          willChange: "transform",
+          ["--glow-primary" as string]: tone.primary,
+          ["--glow-secondary" as string]: tone.secondary,
+          ["--glow-border" as string]: tone.border,
+        } as React.CSSProperties
+      }
     >
       {children}
     </Paper>
@@ -326,12 +327,7 @@ export default function LandingBento() {
         });
 
         // Phase 1 — title block fades up
-        tl.fromTo(
-          ".bento-head",
-          { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 0.9 },
-          0
-        );
+        tl.fromTo(".bento-head", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.9 }, 0);
 
         // Phase 2 — cards stagger in (slower stagger, gentle slide)
         tl.fromTo(
@@ -354,12 +350,7 @@ export default function LandingBento() {
   );
 
   return (
-    <Box
-      component="section"
-      id="bento"
-      ref={sectionRef}
-      style={{ padding: "80px 0 40px" }}
-    >
+    <Box component="section" id="bento" ref={sectionRef} style={{ padding: "80px 0 40px" }}>
       <Container size="xl" px={32}>
         <Group
           className="bento-head"
