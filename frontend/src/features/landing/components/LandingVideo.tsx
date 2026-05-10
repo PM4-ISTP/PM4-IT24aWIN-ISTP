@@ -53,12 +53,7 @@ export default function LandingVideo() {
               scrub: 1,
             },
           });
-          tl.fromTo(
-            header,
-            { opacity: 0, y: 40 },
-            { opacity: 1, y: 0, duration: 0.3 },
-            0
-          );
+          tl.fromTo(header, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3 }, 0);
           tl.fromTo(
             frame,
             { yPercent: 80, opacity: 0 },
@@ -76,12 +71,7 @@ export default function LandingVideo() {
     <Box component="section" ref={sectionRef} style={{ padding: "60px 0" }}>
       <Container size="xl" px={32}>
         <Stack gap={28} align="center">
-          <Stack
-            ref={headerRef}
-            gap={10}
-            align="center"
-            style={{ textAlign: "center" }}
-          >
+          <Stack ref={headerRef} gap={10} align="center" style={{ textAlign: "center" }}>
             <Kicker>$ ./watch-demo.sh — 02:14</Kicker>
             <Title
               order={2}
