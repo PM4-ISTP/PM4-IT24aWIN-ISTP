@@ -321,9 +321,9 @@ export default function LandingBento() {
           scale: 1.2,
           duration: 1.5,
           ease: "sine.inOut",
-          delay: i * 2 // Stagger based on index
+          delay: i * 2, // Stagger based on index
         });
-        });
+      });
 
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
@@ -434,7 +434,12 @@ export default function LandingBento() {
                   align="center"
                   style={{ border: `1px solid ${LINE_2}`, borderRadius: 6 }}
                 >
-                  <Box className="pulse-items" w={6} h={6} style={{ borderRadius: 99, background: MINT, boxShadow: `0 0 12px ${MINT}` }} />
+                  <Box
+                    className="pulse-items"
+                    w={6}
+                    h={6}
+                    style={{ borderRadius: 99, background: MINT, boxShadow: `0 0 12px ${MINT}` }}
+                  />
                   <Text style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: MUTED }}>{p}</Text>
                 </Group>
               ))}

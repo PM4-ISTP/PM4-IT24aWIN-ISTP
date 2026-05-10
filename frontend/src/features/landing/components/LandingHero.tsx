@@ -34,7 +34,12 @@ export default function LandingHero() {
             variant="outline"
             radius="xl"
             leftSection={
-              <Box ref={dotRef} w={7} h={7} style={{ borderRadius: 99, background: MINT, boxShadow: `0 0 12px ${MINT}` }} />
+              <Box
+                ref={dotRef}
+                w={7}
+                h={7}
+                style={{ borderRadius: 99, background: MINT, boxShadow: `0 0 12px ${MINT}` }}
+              />
             }
             styles={{
               root: {
