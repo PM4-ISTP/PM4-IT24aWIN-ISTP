@@ -32,16 +32,14 @@ const shots = [
     src: "/images/landing/Course_catalog.png",
     title: "Browse catalog",
     role: "everyone",
-    description:
-      "Search and filter every course running on this ISTP instance.",
+    description: "Search and filter every course running on this ISTP instance.",
     url: "istp.pm4.init-lab.ch/catalog",
   },
   {
     src: "/images/landing/Course_overview.png",
     title: "Course overview",
     role: "student",
-    description:
-      "All labs in a course, your per-lab progress, and what's due next — in one view.",
+    description: "All labs in a course, your per-lab progress, and what's due next — in one view.",
     url: "istp.pm4.init-lab.ch/courses/web-security",
   },
   {
@@ -67,47 +65,43 @@ export default function LandingScreenshots() {
       if (!section || !header || !track) return;
 
       const mm = gsap.matchMedia();
-      mm.add(
-        "(min-width: 900px) and (prefers-reduced-motion: no-preference)",
-        () => {
-          // Header entrance — fades up as the section enters, before the pin starts
-          gsap.fromTo(
-            header,
-            { opacity: 0, y: 40 },
-            {
-              opacity: 1,
-              y: 0,
-              ease: "power2.out",
-              scrollTrigger: {
-                trigger: section,
-                start: "top 80%",
-                end: "top 45%",
-                scrub: 1,
-              },
-            }
-          );
-
-          // Horizontal pinned scroll — total vertical scroll is decoupled from
-          // viewport width so ultra-wide screens don't have to scroll forever.
-          const getDistance = () => track.scrollWidth - window.innerWidth;
-          const getScrollLength = () =>
-            (shots.length - 1) * window.innerHeight * 0.8;
-
-          gsap.to(track, {
-            x: () => -getDistance(),
-            ease: "none",
+      mm.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
+        // Header entrance — fades up as the section enters, before the pin starts
+        gsap.fromTo(
+          header,
+          { opacity: 0, y: 40 },
+          {
+            opacity: 1,
+            y: 0,
+            ease: "power2.out",
             scrollTrigger: {
               trigger: section,
-              start: "top top",
-              end: () => `+=${getScrollLength()}`,
+              start: "top 80%",
+              end: "top 45%",
               scrub: 1,
-              pin: true,
-              anticipatePin: 1,
-              invalidateOnRefresh: true,
             },
-          });
-        }
-      );
+          }
+        );
+
+        // Horizontal pinned scroll — total vertical scroll is decoupled from
+        // viewport width so ultra-wide screens don't have to scroll forever.
+        const getDistance = () => track.scrollWidth - window.innerWidth;
+        const getScrollLength = () => (shots.length - 1) * window.innerHeight * 0.8;
+
+        gsap.to(track, {
+          x: () => -getDistance(),
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: () => `+=${getScrollLength()}`,
+            scrub: 1,
+            pin: true,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+      });
     },
     { scope: sectionRef }
   );
@@ -117,7 +111,7 @@ export default function LandingScreenshots() {
       component="section"
       ref={sectionRef}
       id="screens"
-      style={{ overflow: "hidden", position: "relative", marginTop: 40}}
+      style={{ overflow: "hidden", position: "relative", marginTop: 40 }}
     >
       {/* Section header — fixed-position during pin, fades up on entrance */}
       <Box
@@ -125,7 +119,7 @@ export default function LandingScreenshots() {
         className="screens-label"
         style={{
           position: "absolute",
-          top:40,
+          top: 40,
           left: 0,
           right: 0,
           zIndex: 2,
@@ -204,10 +198,7 @@ export default function LandingScreenshots() {
                     }}
                   >
                     {String(i + 1).padStart(2, "0")}
-                    <Text
-                      component="span"
-                      style={{ color: MUTED, fontSize: 14, marginLeft: 8 }}
-                    >
+                    <Text component="span" style={{ color: MUTED, fontSize: 14, marginLeft: 8 }}>
                       / {String(shots.length).padStart(2, "0")}
                     </Text>
                   </Text>
