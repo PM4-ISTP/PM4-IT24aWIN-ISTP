@@ -49,7 +49,7 @@ public class KeycloakUserRepresentation {
 
   private List<String> toStringList(Object value) {
     if (value == null) {
-      return null;
+      return List.of();
     }
     if (value instanceof List<?> values) {
       List<String> normalized = new ArrayList<>(values.size());
