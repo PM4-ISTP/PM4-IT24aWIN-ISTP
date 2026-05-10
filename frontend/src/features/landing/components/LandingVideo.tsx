@@ -70,7 +70,12 @@ export default function LandingVideo() {
     <Box component="section" ref={sectionRef} style={{ padding: "60px 0" }}>
       <Container size="xl" px={32}>
         <Stack gap={28} align="center">
-          <Stack ref={headerRef} gap={10} align="center" style={{ textAlign: "center" }}>
+          <Stack
+            ref={headerRef}
+            gap={10}
+            align="center"
+            style={{ textAlign: "center", opacity: 0, transform: "translateY(20px)" }}
+          >
             <Kicker>$ ./watch-demo.sh — 02:14</Kicker>
             <Title
               order={2}
@@ -98,6 +103,8 @@ export default function LandingVideo() {
               boxShadow: "0 30px 80px -20px rgba(0,0,0,0.6)",
               background: "#000",
               clipPath: CLIPPED,
+              opacity: 0,
+              transform: "translateY(30px)",
             }}
           >
             <iframe
