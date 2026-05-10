@@ -58,7 +58,14 @@ async function doRefreshAccessToken(refreshToken: string): Promise<string> {
   return refreshedTokens.access_token;
 }
 
-export async function getValidAccessToken(req?: GetTokenParams["req"]): Promise<string> {
+type GetValidAccessTokenOptions = {
+  forceRefresh?: boolean;
+};
+
+export async function getValidAccessToken(
+  req?: GetTokenParams["req"],
+  options: GetValidAccessTokenOptions = {}
+): Promise<string> {
   const token = await getToken({
     req: req ?? (await buildReqFromNextHeaders()),
     secret: process.env.NEXTAUTH_SECRET,
@@ -69,7 +76,7 @@ export async function getValidAccessToken(req?: GetTokenParams["req"]): Promise<
   }
 
   const expiresAtMs = typeof token.accessTokenExpires === "number" ? token.accessTokenExpires : 0;
-  if (Date.now() < expiresAtMs - REFRESH_BUFFER_MS) {
+  if (!options.forceRefresh && Date.now() < expiresAtMs - REFRESH_BUFFER_MS) {
     return token.accessToken;
   }
 
