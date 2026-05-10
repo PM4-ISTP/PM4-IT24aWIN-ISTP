@@ -1,4 +1,3 @@
-import { cookies, headers } from "next/headers";
 import type { GetTokenParams } from "next-auth/jwt";
 import type { NextRequest } from "next/server";
 import { getValidAccessToken } from "@/src/shared/lib/api/server";
@@ -6,12 +5,7 @@ import { getValidAccessToken } from "@/src/shared/lib/api/server";
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
 
 async function proxy(req: NextRequest, params: { path: string[] }): Promise<Response> {
-  const req_ = {
-    headers: Object.fromEntries((await headers()).entries()),
-    cookies: Object.fromEntries((await cookies()).getAll().map((c) => [c.name, c.value])),
-  };
-
-  const authReq = req_ as GetTokenParams["req"];
+  const authReq = req as unknown as GetTokenParams["req"];
   let accessToken: string;
   try {
     accessToken = await getValidAccessToken(authReq);
