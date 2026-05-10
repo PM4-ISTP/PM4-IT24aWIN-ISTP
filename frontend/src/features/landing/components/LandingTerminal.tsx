@@ -108,14 +108,16 @@ export default function LandingTerminal() {
 
           tl.to(terminal, { scale: 1, duration: 0.6 });
           if (bubbles.length) {
+            tl.to(bubbles, { opacity: 1, y: 0, scale: 1, duration: 0.25, stagger: 0.2 }, 0.35);
             tl.to(
               bubbles,
-              { opacity: 1, y: 0, scale: 1, duration: 0.25, stagger: 0.2 },
-              0.35
-            );
-            tl.to(
-              bubbles,
-              { opacity: 0, y: 12, scale: 0.98, duration: 0.22, stagger: { each: 0.18, from: "end" } },
+              {
+                opacity: 0,
+                y: 12,
+                scale: 0.98,
+                duration: 0.22,
+                stagger: { each: 0.18, from: "end" },
+              },
               1.45
             );
           }

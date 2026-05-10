@@ -170,7 +170,6 @@ export default function LandingHero() {
               </Group>
             ))}
           </Group>
-
         </Stack>
       </Container>
     </Box>
