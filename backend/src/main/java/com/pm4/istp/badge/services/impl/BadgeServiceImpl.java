@@ -107,6 +107,11 @@ public class BadgeServiceImpl implements BadgeService {
         courseRepository
             .findById(courseId)
             .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+    tryAwardBadgeForCourse(userId, course);
+  }
+
+  @Transactional
+  public void tryAwardBadgeForCourse(UUID userId, Course course) {
     if (canAwardBadge(userId, course) && isCourseCompleted(userId, course)) {
       awardBadge(userId, course);
     }
