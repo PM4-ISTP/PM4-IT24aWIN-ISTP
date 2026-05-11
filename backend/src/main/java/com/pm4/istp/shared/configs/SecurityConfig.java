@@ -43,8 +43,6 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/api/admin/**")
                     .hasRole(ADMINISTRATOR_ROLE)
-                    .requestMatchers("/api/v1/users/me/badges")
-                    .authenticated()
                     .requestMatchers("/api/v1/courses/my-enrollments")
                     .authenticated()
                     .requestMatchers("/api/v1/courses/my-deadlines")
@@ -61,6 +59,12 @@ public class SecurityConfig {
                     .authenticated()
                     .requestMatchers("/api/v1/courses/**", "/api/v1/labs/**")
                     .hasAnyRole("INSTRUCTOR", ADMINISTRATOR_ROLE)
+                    .requestMatchers("/api/v1/users/me/**")
+                    .authenticated()
+                    .requestMatchers("/api/v1/users/collaborators", "/api/v1/users/instructors")
+                    .hasAnyRole("INSTRUCTOR", ADMINISTRATOR_ROLE)
+                    .requestMatchers("/api/v1/users/**")
+                    .hasRole(ADMINISTRATOR_ROLE)
                     // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
                     // catch-all rule to require authentication for all requests
                     .anyRequest()
