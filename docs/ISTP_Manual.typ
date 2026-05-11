@@ -452,6 +452,28 @@ The left panel shows your current progress for the open lab: solved challenges o
 
 To view your overall progress across all courses, return to the course page where each lab card shows its completion status.
 
+== Trophy Cabinet (Badges)
+
+ISTP supports *course completion badges*. A badge represents “user X completed course Y” and is shown in the *Trophy Cabinet*.
+
+*What a badge means:*
+- Badges are *per course* (not per lab).
+- A course is considered *completed* when the user has solved *all challenges across all labs* that belong to the course.
+
+*When a user receives a badge (our decision):*
+- A user receives the badge for a course *only if* `badgeEnabled = true` for that course at the time the badge is awarded.
+- Badges are awarded in two situations:
+  + *On completion while enrolled:* when the user solves the last remaining challenge required to complete the course.
+  + *On enrollment (already completed):* when the user enrolls in a course, ISTP checks whether the course is already completed for that user. If the course is already completed and `badgeEnabled = true`, the badge is awarded immediately.
+
+*No retroactive awarding (“no backfill”):*
+- If a user completed a course while `badgeEnabled = false` and the instructor enables badges later, ISTP does *not* retroactively award the badge automatically.
+
+*Shared challenges across courses (important):*
+- Challenge completions are stored *per user + challenge*, not per course.
+- If two courses reference the *same challenge IDs*, solving a challenge once can count as solved in both courses.
+- The enrollment-time badge check ensures users still receive the course badge (when enabled) even if there is no “new solve” event inside the second course.
+
 // ─── 5. User Guide: Instructor ────────────────────────────────────────────
 
 = User Guide: Instructor
@@ -463,6 +485,14 @@ To view your overall progress across all courses, return to the course page wher
 == Publishing & Archiving a Challenge
 
 == Creating a Course & Adding Challenges
+
+== Course Badges
+
+Course owners can configure the badge for their course (icon, colors, template) and enable or disable awarding via `badgeEnabled`.
+
+- If `badgeEnabled = true`, students can earn the badge when they complete the course (see Student guide above).
+- If `badgeEnabled = false`, ISTP will not award new badges for this course.
+- Enabling badges later does not retroactively award badges for users who already completed the course while badges were disabled (no backfill).
 
 // ─── 6. User Guide: Admin ─────────────────────────────────────────────────
 
