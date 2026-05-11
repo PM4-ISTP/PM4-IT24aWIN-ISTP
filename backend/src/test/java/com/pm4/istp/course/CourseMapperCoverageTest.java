@@ -67,6 +67,7 @@ class CourseMapperCoverageTest {
             LabDifficultyEnum.EASY,
             "ghcr.io/acme/lab:latest",
             8080,
+            null,
             List.of(challengeDto));
     UpdateChallengeRequestDto updateDto =
         new UpdateChallengeRequestDto(
@@ -77,6 +78,7 @@ class CourseMapperCoverageTest {
             LabDifficultyEnum.HARD,
             "ghcr.io/acme/lab:2",
             8081,
+            null,
             List.of(challengeDto));
 
     assertLabRequestMappings(optionDto, challengeDto, createDto, updateDto);

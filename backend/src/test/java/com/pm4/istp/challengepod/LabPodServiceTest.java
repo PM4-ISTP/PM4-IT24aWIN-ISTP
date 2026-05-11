@@ -622,7 +622,7 @@ class LabPodServiceTest {
                 stubFindDeployments(client, userId, labId, List.of(deployment));
         RollableScalableResource<Deployment> deploymentResource = mock(RollableScalableResource.class);
         when(deploymentOperation.resource(Mockito.any())).thenReturn(deploymentResource);
-        when(deploymentResource.replace()).thenAnswer(invocation -> invocation.getArgument(0));
+        when(deploymentResource.replace()).thenReturn(deployment);
         stubPodsForLabels(client, labels, List.of());
         stubIngressGetThrows(client, "pod-extendme-ingress");
         when(adminConfigurationService.getAdminConfiguration())

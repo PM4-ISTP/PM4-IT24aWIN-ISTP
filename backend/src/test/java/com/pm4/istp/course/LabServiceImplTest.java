@@ -128,7 +128,7 @@ class ChallengeServiceImplTest {
       LabDifficultyEnum difficulty,
       String dockerImage) {
     return new CreateLabRequest(
-        title, shortDesc, desc, status, difficulty, dockerImage, null, oneChallenge());
+        title, shortDesc, desc, status, difficulty, dockerImage, null, null, oneChallenge());
   }
 
   private UpdateLabRequest updateRequest(
@@ -139,7 +139,7 @@ class ChallengeServiceImplTest {
       LabDifficultyEnum difficulty,
       String dockerImage) {
     return new UpdateLabRequest(
-        title, shortDesc, desc, status, difficulty, dockerImage, null, oneChallenge());
+        title, shortDesc, desc, status, difficulty, dockerImage, null, null, oneChallenge());
   }
 
   @Test
@@ -160,6 +160,7 @@ class ChallengeServiceImplTest {
             LabDifficultyEnum.HARD,
             "ghcr.io/pm4-istp/buffer-overflow:latest",
             8080,
+            null,
             new ArrayList<>(
                 List.of(
                     new ChallengeRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0, ChallengeType.FLAG, 1, null, null),
@@ -204,6 +205,7 @@ class ChallengeServiceImplTest {
             LabStatusEnum.DRAFT,
             LabDifficultyEnum.EASY,
             DEFAULT_DOCKER_IMAGE,
+            null,
             null,
             new ArrayList<>(List.of(new ChallengeRequest(null, "Only", "Just desc", "   ", 0, ChallengeType.FLAG, 1, null, null))));
 
@@ -404,6 +406,7 @@ class ChallengeServiceImplTest {
             LabStatusEnum.PUBLIC,
             LabDifficultyEnum.EASY,
             DEFAULT_DOCKER_IMAGE,
+            null,
             null,
             new ArrayList<>(
                 List.of(
