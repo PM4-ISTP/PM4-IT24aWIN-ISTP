@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,6 +70,7 @@ import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.course.services.impl.CourseServiceImpl;
+import com.pm4.istp.badge.services.BadgeService;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.db.entities.UserRoleEnum;
 import com.pm4.istp.user.repositories.UserRepository;
@@ -100,6 +102,8 @@ class CourseServiceImplTest {
   private CourseInviteCodeHelper courseInviteCodeHelper;
   @Mock
   private CourseTopicService courseTopicService;
+  @Mock
+  private BadgeService badgeService;
 
   @Test
   void privateCourseHelpers_coverNormalizationVisibilityEnrollmentAndStatusBranches() {
@@ -458,6 +462,7 @@ class CourseServiceImplTest {
     assertThat(enrollment.getParticipant().getId()).isEqualTo(userId);
     assertThat(enrollment.getCourse()).isSameAs(enrolledCourse);
     verify(courseRepository).save(course);
+    verify(badgeService).tryAwardBadgeForCourse(userId, courseId);
   }
 
   @Test
@@ -481,6 +486,7 @@ class CourseServiceImplTest {
 
     assertThat(result).isSameAs(course);
     verify(courseRepository, never()).save(any(Course.class));
+    verifyNoInteractions(badgeService);
   }
 
   @Test
@@ -505,6 +511,7 @@ class CourseServiceImplTest {
     Course result = courseService.enrollInCourse(userId, courseId);
 
     assertThat(result).isSameAs(course);
+    verify(badgeService).tryAwardBadgeForCourse(userId, courseId);
   }
 
   @Test

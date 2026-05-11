@@ -82,7 +82,7 @@ function printCertificate(badge: UserBadge, userName: string) {
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>Certificate – ${badge.courseTitle}</title>
+  <title>Certificate - ${badge.courseTitle}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600&display=swap');
     *{margin:0;padding:0;box-sizing:border-box}
@@ -118,18 +118,33 @@ function printCertificate(badge: UserBadge, userName: string) {
     </svg>
     <p class="date">Awarded on ${earned}</p>
   </div>
-  <script>window.onload=()=>{window.print()}<\/script>
+  
 </body>
 </html>`;
+  // Use an offscreen iframe instead of window.open()+document.write(), which can be blocked by
+  // browser security policies and result in a blank page.
+  const frame = document.createElement("iframe");
+  frame.style.position = "fixed";
+  frame.style.right = "0";
+  frame.style.bottom = "0";
+  frame.style.width = "0";
+  frame.style.height = "0";
+  frame.style.border = "0";
+  frame.style.opacity = "0";
+  frame.setAttribute("aria-hidden", "true");
+  document.body.appendChild(frame);
 
-  const win = window.open("", "_blank", "noopener,noreferrer");
-  if (win) {
-    win.opener = null;
-    win.document.write(html);
-    win.document.close();
-  }
+  frame.onload = () => {
+    try {
+      frame.contentWindow?.focus();
+      frame.contentWindow?.print();
+    } finally {
+      setTimeout(() => frame.remove(), 1000);
+    }
+  };
+
+  frame.srcdoc = html;
 }
-
 export default function TrophyCabinet({ opened, onClose, userName = "Student" }: Props) {
   const [badges, setBadges] = useState<UserBadge[] | null>(null);
   const isLoading = opened && badges === null;
@@ -149,7 +164,7 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
       onClose={onClose}
       title={
         <Group gap="sm">
-          <span style={{ fontSize: 22 }}>🏆</span>
+          <span style={{ fontSize: 22 }}>ðŸ†</span>
           <Text
             fw={700}
             size="lg"
@@ -171,12 +186,12 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
         <Stack align="center" py="xl">
           <Loader color="indigo" />
           <Text size="sm" c="dimmed">
-            Loading your badges…
+            Loading your badges...
           </Text>
         </Stack>
       ) : badgeList.length === 0 ? (
         <Stack align="center" py="xl" gap="sm">
-          <Text style={{ fontSize: 48 }}>🎯</Text>
+          <Text style={{ fontSize: 48 }}>ðŸŽ¯</Text>
           <Text fw={600} style={{ color: "#e2e8f0" }}>
             No badges yet
           </Text>
@@ -217,7 +232,7 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
                   variant="subtle"
                   onClick={() => printCertificate(b, userName)}
                   style={{ color: "#94a3b8", fontSize: "0.72rem" }}
-                  leftSection={<span style={{ fontSize: 12 }}>🖨</span>}
+                  leftSection={<span style={{ fontSize: 12 }}>ðŸ–¨</span>}
                 >
                   Print Certificate
                 </Button>

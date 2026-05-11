@@ -100,6 +100,23 @@ public class BadgeServiceImpl implements BadgeService {
     }
   }
 
+  @Override
+  @Transactional
+  public void tryAwardBadgeForCourse(UUID userId, UUID courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+    tryAwardBadgeForCourse(userId, course);
+  }
+
+  @Transactional
+  public void tryAwardBadgeForCourse(UUID userId, Course course) {
+    if (canAwardBadge(userId, course) && isCourseCompleted(userId, course)) {
+      awardBadge(userId, course);
+    }
+  }
+
   private boolean canAwardBadge(UUID userId, Course course) {
     return course.isBadgeEnabled()
         && !userCourseBadgeRepository.existsByUserIdAndCourseId(userId, course.getId());
