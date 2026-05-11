@@ -46,9 +46,6 @@ public class AdminLabServiceImpl implements AdminLabService {
     lab.setDescription(request.getDescription());
     lab.setStatus(request.getStatus());
     lab.setDifficulty(request.getDifficulty());
-    if (request.getMaxScore() != null) {
-      lab.setMaxScore(request.getMaxScore());
-    }
 
     labRepository.save(lab);
   }

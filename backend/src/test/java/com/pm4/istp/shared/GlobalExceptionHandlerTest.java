@@ -264,11 +264,11 @@ class GlobalExceptionHandlerTest {
             "{\"error\":\"".repeat(40).getBytes(),
             null);
 
-    assertResponse(
+    ResponseEntity<ErrorDto> withCause =
         handler.handleKeycloakAdminApiException(
-            new KeycloakAdminApiException("keycloak failed", responseException)),
-        HttpStatus.BAD_GATEWAY,
-        "Keycloak update failed");
+            new KeycloakAdminApiException("keycloak failed", responseException));
+    assertResponse(withCause, HttpStatus.BAD_GATEWAY, "Keycloak update failed");
+
     assertResponse(
         handler.handleKeycloakAdminApiException(new KeycloakAdminApiException("plain failure")),
         HttpStatus.BAD_GATEWAY,

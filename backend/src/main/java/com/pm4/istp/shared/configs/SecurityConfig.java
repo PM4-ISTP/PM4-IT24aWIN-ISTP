@@ -18,6 +18,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Slf4j
 @Configuration
 public class SecurityConfig {
+  private static final String STUDENT_ROLE = "STUDENT";
+  private static final String INSTRUCTOR_ROLE = "INSTRUCTOR";
   private static final String ADMINISTRATOR_ROLE = "ADMINISTRATOR";
 
   @Value("${cors.allowed-origin}")
@@ -43,18 +45,32 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/api/admin/**")
                     .hasRole(ADMINISTRATOR_ROLE)
-                    .requestMatchers("/api/v1/users/me/badges")
+                    .requestMatchers("/api/v1/courses/my-enrollments")
                     .authenticated()
-                    .requestMatchers("/api/v1/courses/my-enrollments", "/api/v1/courses/catalog")
-                    .authenticated()
-                    .requestMatchers("/api/v1/courses/catalog/**")
+                    .requestMatchers("/api/v1/courses/my-deadlines")
                     .authenticated()
                     .requestMatchers("/api/v1/courses/topics")
                     .authenticated()
+                    .requestMatchers("/api/v1/courses/catalog/**")
+                    .authenticated()
                     .requestMatchers("/api/v1/lab-pods/**")
-                    .hasAnyRole("STUDENT", "INSTRUCTOR", ADMINISTRATOR_ROLE)
+                    .hasAnyRole(STUDENT_ROLE, INSTRUCTOR_ROLE, ADMINISTRATOR_ROLE)
+                    .requestMatchers("/api/v1/labs/*/play")
+                    .authenticated()
+                    .requestMatchers("/api/v1/labs/*/challenges/**")
+                    .authenticated()
+                    .requestMatchers("/api/v1/labs/docker-image")
+                    .authenticated()
+                    .requestMatchers("/api/v1/labs/my-completed-count")
+                    .authenticated()
                     .requestMatchers("/api/v1/courses/**", "/api/v1/labs/**")
-                    .hasAnyRole("INSTRUCTOR", ADMINISTRATOR_ROLE)
+                    .hasAnyRole(INSTRUCTOR_ROLE, ADMINISTRATOR_ROLE)
+                    .requestMatchers("/api/v1/users/me/**")
+                    .authenticated()
+                    .requestMatchers("/api/v1/users/collaborators", "/api/v1/users/instructors")
+                    .hasAnyRole(INSTRUCTOR_ROLE, ADMINISTRATOR_ROLE)
+                    .requestMatchers("/api/v1/users/**")
+                    .hasRole(ADMINISTRATOR_ROLE)
                     // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
                     // catch-all rule to require authentication for all requests
                     .anyRequest()

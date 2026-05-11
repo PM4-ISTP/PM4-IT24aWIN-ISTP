@@ -136,8 +136,6 @@ class AdminChallengeControllerTest {
     req.setDescription("<p>desc</p>");
     req.setStatus(LabStatusEnum.DRAFT);
     req.setDifficulty(LabDifficultyEnum.BEGINNER);
-    req.setMaxScore(0);
     return req;
   }
 }
-

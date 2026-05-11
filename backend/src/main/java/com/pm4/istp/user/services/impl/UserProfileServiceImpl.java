@@ -111,6 +111,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     copy.setId(source.getId());
     copy.setUsername(source.getUsername());
     copy.setEmail(source.getEmail());
+    copy.setEmailVerified(source.getEmailVerified());
     copy.setEnabled(source.getEnabled());
     copy.setFirstName(source.getFirstName());
     copy.setLastName(source.getLastName());
