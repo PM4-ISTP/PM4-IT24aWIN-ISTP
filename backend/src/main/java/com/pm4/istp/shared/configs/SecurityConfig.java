@@ -53,6 +53,10 @@ public class SecurityConfig {
                     .authenticated()
                     .requestMatchers("/api/v1/lab-pods/**")
                     .hasAnyRole("STUDENT", "INSTRUCTOR", ADMINISTRATOR_ROLE)
+                    .requestMatchers("/api/v1/labs/*/play", "/api/v1/labs/*/challenges/**")
+                    .authenticated()
+                    .requestMatchers("/api/v1/labs/my-completed-count")
+                    .authenticated()
                     .requestMatchers("/api/v1/courses/**", "/api/v1/labs/**")
                     .hasAnyRole("INSTRUCTOR", ADMINISTRATOR_ROLE)
                     // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
