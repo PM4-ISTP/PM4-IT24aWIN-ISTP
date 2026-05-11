@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { Button, Group, Loader, Modal, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
