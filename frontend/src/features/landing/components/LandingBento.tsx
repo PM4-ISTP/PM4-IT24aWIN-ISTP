@@ -150,8 +150,7 @@ function Cell({
 
   function prefersReducedMotion() {
     return (
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
     );
   }
 
@@ -334,7 +333,6 @@ export default function LandingBento() {
             delay: i * 2, // Stagger based on index
           });
         });
-
 
         const tl = gsap.timeline({
           defaults: { ease: "power2.out" },
