@@ -486,7 +486,7 @@ ISTP supports *course completion badges*. A badge represents “user X completed
 
 == Creating a Course & Adding Challenges
 
-== Course Badges
+=== Course Badges
 
 Course owners can configure the badge for their course (icon, colors, template) and enable or disable awarding via `badgeEnabled`.
 
