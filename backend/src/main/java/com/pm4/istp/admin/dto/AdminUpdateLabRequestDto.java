@@ -2,7 +2,6 @@ package com.pm4.istp.admin.dto;
 
 import com.pm4.istp.course.db.entities.LabDifficultyEnum;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -22,8 +21,4 @@ public class AdminUpdateLabRequestDto {
 
   @NotNull private LabStatusEnum status;
   @NotNull private LabDifficultyEnum difficulty;
-
-  // This is still manually maintained in the project (challenges not implemented yet).
-  @Min(value = 0, message = "Max score must be at least 0")
-  private Integer maxScore;
 }
