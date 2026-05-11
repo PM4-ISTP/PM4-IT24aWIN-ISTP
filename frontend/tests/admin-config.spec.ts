@@ -8,7 +8,7 @@ test.describe.serial("Admin configuration", () => {
   test.beforeAll(async ({ browser }) => {
     const page = await browser.newPage();
     await page.goto("/");
-    await page.getByRole("button", { name: "Sign in with Keycloak" }).click();
+    await page.getByRole("button", { name: "Login" }).click();
     await page.getByRole("textbox", { name: "Username or email" }).fill(username);
     await page.getByRole("textbox", { name: "Username or email" }).press("Tab");
     await page.getByRole("textbox", { name: "Password" }).fill(password);
@@ -25,7 +25,7 @@ test.describe.serial("Admin configuration", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "Sign in with Keycloak" }).click();
+    await page.getByRole("button", { name: "Login" }).click();
     await page.getByRole("textbox", { name: "Username or email" }).fill(username);
     await page.getByRole("textbox", { name: "Username or email" }).press("Tab");
     await page.getByRole("textbox", { name: "Password" }).fill(password);
