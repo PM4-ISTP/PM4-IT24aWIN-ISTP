@@ -301,7 +301,65 @@ Following is an example for a response:
 
 The terminal does not run in the same container as the app. But they run in the same network. While you can access `localhost` of the app from the terminal (e.g., using `curl "localhost"`), you cannot access the file system of the app.
 
-// ─── 4. User Guide: Student ───────────────────────────────────────────────
+// ─── 4. Permissions Reference ─────────────────────────────────────────────
+
+= Permissions Reference
+
+== Role-Based Access
+
+The following table shows what each Keycloak realm role is allowed to do across the platform. ROLE_STUDENT is always present on every user — ROLE_INSTRUCTOR and ROLE_ADMINISTRATOR are additive on top.
+
+#figure(
+  table(
+    columns: (1fr, auto, auto, auto),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    align: (left, center, center, center),
+    fill: (col, row) => if row == 0 { luma(230) } else if calc.odd(row) { luma(248) } else { white },
+    [*Action*], [*ROLE\_STUDENT*], [*ROLE\_INSTRUCTOR*], [*ROLE\_ADMINISTRATOR*],
+    [Browse course catalog],         [✓], [✓], [✓],
+    [Enroll in / leave courses],     [✓], [✓], [✓],
+    [Play labs & use pods],          [✓], [✓], [✓],
+    [Submit flags],                  [✓], [✓], [✓],
+    [View own badges],               [✓], [✓], [✓],
+    [Create courses],                [✗], [✓], [✓],
+    [Create & manage labs],          [✗], [✓], [✓],
+    [View course submissions],       [✗], [✓], [✓],
+    [Invite collaborators to course],[✗], [✓ (owner only)], [✓],
+    [Manage platform topics],        [✗], [✗], [✓],
+    [User management (list/search)], [✗], [✗], [✓],
+    [Assign / revoke roles],         [✗], [✗], [✓],
+    [Disable / delete users],        [✗], [✗], [✓],
+    [Admin panel],                   [✗], [✗], [✓],
+  ),
+  caption: [Role-based permission matrix],
+)
+
+== Course-Level: Owner vs. Collaborator
+
+Within a course, instructors have one of two course-level roles. The creator of a course is automatically the *Owner*. Additional instructors can be invited as *Collaborators* — they must accept the invitation before gaining access.
+
+#figure(
+  table(
+    columns: (1fr, auto, auto),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    align: (left, center, center),
+    fill: (col, row) => if row == 0 { luma(230) } else if calc.odd(row) { luma(248) } else { white },
+    [*Action*], [*Owner*], [*Collaborator*],
+    [View course (instructor view)],      [✓], [✓],
+    [Edit course settings & description], [✓], [✓],
+    [Manage labs (add / remove)],         [✓], [✓],
+    [View participants & submissions],    [✓], [✓],
+    [Invite / remove collaborators],      [✓], [✗],
+    [Configure badge],                    [✓], [✗],
+    [Delete course],                      [✓], [✗],
+    [Requires invitation acceptance],     [✗], [✓],
+  ),
+  caption: [Course-level permission matrix (Owner vs. Collaborator)],
+)
+
+// ─── 5. User Guide: Student ───────────────────────────────────────────────
 
 = User Guide: Student
 
