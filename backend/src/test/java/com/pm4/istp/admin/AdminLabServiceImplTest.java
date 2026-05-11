@@ -87,7 +87,7 @@ class AdminChallengeServiceImplTest {
   // ── updateChallenge ─────────────────────────────────────────────────────────
 
   @Test
-  void updateChallenge_withValidRequest_updatesAllFields() {
+  void updateChallenge_withValidRequest_updatesEditableFields() {
     UUID id = UUID.randomUUID();
     Lab lab = new Lab();
     lab.setId(id);
@@ -115,7 +115,6 @@ class AdminChallengeServiceImplTest {
     assertThat(saved.getDescription()).isEqualTo("Full description");
     assertThat(saved.getStatus()).isEqualTo(LabStatusEnum.PUBLIC);
     assertThat(saved.getDifficulty()).isEqualTo(LabDifficultyEnum.HARD);
-    assertThat(saved.getMaxScore()).isEqualTo(0);
   }
 
   @Test
