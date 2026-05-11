@@ -23,7 +23,6 @@ public class AdminUpdateLabRequestDto {
   @NotNull private LabStatusEnum status;
   @NotNull private LabDifficultyEnum difficulty;
 
-  // This is still manually maintained in the project (challenges not implemented yet).
   @Min(value = 0, message = "Max score must be at least 0")
   private Integer maxScore;
 }
