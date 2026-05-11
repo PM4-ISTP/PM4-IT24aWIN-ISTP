@@ -148,9 +148,16 @@ function Cell({
   const ref = useRef<HTMLDivElement>(null);
   const tone = GLOW_COLORS[glow];
 
+  function prefersReducedMotion() {
+    return (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
+
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const card = ref.current;
-    if (!card) return;
+    if (!card || prefersReducedMotion()) return;
     const rect = card.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -165,7 +172,7 @@ function Cell({
 
   function handleMouseLeave() {
     const card = ref.current;
-    if (!card) return;
+    if (!card || prefersReducedMotion()) return;
     gsap.to(card, {
       rotateY: 0,
       rotateX: 0,
@@ -313,20 +320,22 @@ export default function LandingBento() {
     () => {
       const section = sectionRef.current;
       if (!section) return;
-      gsap.utils.toArray(".pulse-items").forEach((item, i) => {
-        gsap.from(item as HTMLElement, {
-          boxShadow: `0 0 16px ${MINT}, 0 0 6px ${MINT}`,
-          repeat: -1,
-          yoyo: true,
-          scale: 1.2,
-          duration: 1.5,
-          ease: "sine.inOut",
-          delay: i * 2, // Stagger based on index
-        });
-      });
-
       const mm = gsap.matchMedia();
+
       mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.utils.toArray(".pulse-items").forEach((item, i) => {
+          gsap.from(item as HTMLElement, {
+            boxShadow: `0 0 16px ${MINT}, 0 0 6px ${MINT}`,
+            repeat: -1,
+            yoyo: true,
+            scale: 1.2,
+            duration: 1.5,
+            ease: "sine.inOut",
+            delay: i * 2, // Stagger based on index
+          });
+        });
+
+
         const tl = gsap.timeline({
           defaults: { ease: "power2.out" },
           scrollTrigger: {
