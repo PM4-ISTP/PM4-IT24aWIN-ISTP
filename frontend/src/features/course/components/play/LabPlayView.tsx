@@ -27,6 +27,8 @@ import {
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
+  IconClockHour10,
+  IconClockPlus,
   IconExternalLink,
   IconPlayerPlay,
   IconPlayerStop,
@@ -192,6 +194,10 @@ export function LabPlayView({
     podStatus === "PROVISIONING" ||
     podActionLoading ||
     podStatus === "TERMINATING";
+  const podExpiresAt = pod?.expiresAt ? new Date(pod.expiresAt) : null;
+  const podMsLeft = podExpiresAt ? podExpiresAt.getTime() - Date.now() : null;
+  const podExpiringSoon = podMsLeft !== null && podMsLeft > 0 && podMsLeft <= 10 * 60 * 1000;
+  const canExtendPod = podStatus === "RUNNING" && pod?.canExtend === true;
 
   let startDisabledReason: string | null = null;
   if (dockerImageCheck.status === "checking") {
@@ -246,6 +252,22 @@ export function LabPlayView({
       setPodActionLoading(false);
     }
   }, [apiClient, labId, refetchPodStatus]);
+
+  const handleExtendPod = useCallback(async () => {
+    if (!canExtendPod) return;
+    setPodActionLoading(true);
+    setPodActionError(null);
+    try {
+      await apiClient.POST("/api/v1/lab-pods/{labId}/extend", {
+        params: { path: { labId } },
+      });
+      await refetchPodStatus();
+    } catch (e) {
+      setPodActionError(e instanceof Error ? e.message : "Failed to extend lab.");
+    } finally {
+      setPodActionLoading(false);
+    }
+  }, [apiClient, canExtendPod, labId, refetchPodStatus]);
 
   function updateChallengeSolved(challengeId: string, patch: Partial<ChallengeStudentDto>) {
     setChallenge((prev) => {
@@ -922,10 +944,39 @@ export function LabPlayView({
                     </ActionIcon>
                   </Tooltip>
                 )}
+
+                <Tooltip label={canExtendPod ? "Extend lab by 30 minutes" : "Extension unavailable"}>
+                  <ActionIcon
+                    variant="subtle"
+                    color="yellow"
+                    loading={podActionLoading}
+                    disabled={!canExtendPod}
+                    onClick={() => void handleExtendPod()}
+                    aria-label="Extend lab"
+                  >
+                    <IconClockPlus size={16} />
+                  </ActionIcon>
+                </Tooltip>
               </Group>
             </Group>
 
             <Stack gap="sm" p="md" style={{ flex: 1, overflow: isNarrow ? "visible" : "auto" }}>
+              {podExpiringSoon && (
+                <Paper
+                  withBorder
+                  radius="md"
+                  p="md"
+                  style={{ background: "rgba(251,191,36,0.12)" }}
+                >
+                  <Text size="sm" c="yellow.2">
+                    <Group gap={6} wrap="nowrap">
+                      <IconClockHour10 size={16} />
+                      <span>Lab expires in less than 10 minutes.</span>
+                    </Group>
+                  </Text>
+                </Paper>
+              )}
+
               {startDisabledReason && (
                 <Paper
                   withBorder

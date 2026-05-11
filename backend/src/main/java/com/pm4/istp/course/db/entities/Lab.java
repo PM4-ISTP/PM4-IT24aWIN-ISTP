@@ -51,6 +51,9 @@ public class Lab {
   @Column(name = "container_port", nullable = false)
   private Integer containerPort = DEFAULT_CONTAINER_PORT;
 
+  @Column(name = "pod_ttl_seconds")
+  private Integer podTtlSeconds;
+
   // This field will be filled by the Challenges which will come later, for now we
   // will set it manually
   // to 0

@@ -14,6 +14,10 @@ export interface PodStatusResponse {
   terminalPassword?: string | null;
   createdAt?: string | null;
   expiresAt?: string | null;
+  lastActivityAt?: string | null;
+  ttlSeconds?: number | null;
+  extensionCount?: number | null;
+  canExtend?: boolean | null;
 }
 
 export function useLabPodStatus(

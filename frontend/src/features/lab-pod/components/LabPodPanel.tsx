@@ -1,7 +1,13 @@
 "use client";
 
 import { Anchor, Button, Flex, Loader, Stack, Text } from "@mantine/core";
-import { IconExternalLink, IconPlayerPlay, IconPlayerStop } from "@tabler/icons-react";
+import {
+  IconClockHour10,
+  IconClockPlus,
+  IconExternalLink,
+  IconPlayerPlay,
+  IconPlayerStop,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { useApiClient } from "@/src/shared/lib/api/client";
 import { DOCKER_IMAGE_ERROR } from "@/src/features/course/constants/challengeConstants";
@@ -45,6 +51,18 @@ export function LabPodPanel({
     }
   };
 
+  const handleExtend = async () => {
+    setActionLoading(true);
+    try {
+      await apiClient.POST("/api/v1/lab-pods/{labId}/extend", {
+        params: { path: { labId } },
+      });
+      await refetch();
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <Flex justify="flex-end" align="center" gap="xs">
@@ -70,6 +88,11 @@ export function LabPodPanel({
     startDisabledReason = DOCKER_IMAGE_ERROR;
   }
   const startDisabledReasonColor = dockerImageCheck.status === "checking" ? "dimmed" : "red";
+  const expiresAt = data?.expiresAt ? new Date(data.expiresAt) : null;
+  const now = new Date();
+  const msLeft = expiresAt ? expiresAt.getTime() - now.getTime() : null;
+  const isExpiringSoon = msLeft !== null && msLeft > 0 && msLeft <= 10 * 60 * 1000;
+  const canExtend = data?.canExtend === true && status === "RUNNING";
 
   return (
     <Stack gap={6} align="flex-end">
@@ -111,6 +134,32 @@ export function LabPodPanel({
 
       {status === "RUNNING" && data && (
         <Stack gap={4} align="flex-end">
+          {isExpiringSoon && (
+            <Text size="xs" c="orange" ta="right">
+              <Flex align="center" gap={4}>
+                <IconClockHour10 size={12} />
+                Expires soon
+              </Flex>
+            </Text>
+          )}
+
+          {expiresAt && (
+            <Text size="xs" c="dimmed" ta="right">
+              Expires {expiresAt.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" })}
+            </Text>
+          )}
+
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<IconClockPlus size={14} />}
+            loading={actionLoading}
+            disabled={!canExtend}
+            onClick={() => void handleExtend()}
+          >
+            Extend +30m
+          </Button>
+
           {data.appUrl && (
             <Anchor href={data.appUrl} target="_blank" rel="noopener noreferrer" size="xs">
               <Flex align="center" gap={4}>

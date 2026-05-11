@@ -22,6 +22,7 @@ public class CreateChallengeResponseDto {
   private int maxScore;
   private String dockerImage;
   private Integer containerPort;
+  private Integer podTtlSeconds;
   private UUID creatorId;
   private List<ChallengeResponseDto> challenges;
   private LocalDateTime createdAt;

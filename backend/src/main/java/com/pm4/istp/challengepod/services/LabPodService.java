@@ -56,6 +56,14 @@ public class LabPodService {
   private static final String LABEL_USER_ID = "istp.pm4.ch/user-id";
   private static final String LABEL_CHALLENGE_ID = "istp.pm4.ch/lab-id";
   private static final String LABEL_CREATED_AT = "istp.pm4.ch/created-at-epoch";
+  private static final String LABEL_LAST_ACTIVITY_AT = "istp.pm4.ch/last-activity-at-epoch";
+  private static final String LABEL_BASE_TTL_SECONDS = "istp.pm4.ch/base-ttl-seconds";
+  private static final String LABEL_EXTENSION_COUNT = "istp.pm4.ch/ttl-extension-count";
+
+  private static final int DEFAULT_TTL_SECONDS = 3600;
+  private static final int EXTENSION_INCREMENT_SECONDS = 1800;
+  private static final int MAX_EXTENSION_COUNT = 2;
+  private static final int ACTIVITY_TOUCH_MIN_SECONDS = 60;
 
   private static final int POD_NAME_HASH_LENGTH = 8;
   private static final String INGRESS_NAME_SUFFIX = "-ingress";
@@ -190,7 +198,9 @@ public class LabPodService {
           throw new LabPodException(
               "Pod naming conflict detected. Please contact an administrator.");
         }
-        return Pair.of(buildResponse(d, adminConfig.getPodTtlSeconds()), false);
+        int ttl = resolveBaseTtlSeconds(lab, adminConfig);
+        Deployment touched = touchLastActivityIfNeeded(d);
+        return Pair.of(buildResponse(touched, ttl), false);
       }
 
       List<Deployment> existingForUser = findDeployments(userId);
@@ -206,7 +216,9 @@ public class LabPodService {
         // Race: another request created the pod between our check and our create — read it
         List<Deployment> existing = findDeployments(userId, labId);
         if (!existing.isEmpty()) {
-          return Pair.of(buildResponse(existing.get(0), adminConfig.getPodTtlSeconds()), false);
+          int ttl = resolveBaseTtlSeconds(lab, adminConfig);
+          Deployment touched = touchLastActivityIfNeeded(existing.get(0));
+          return Pair.of(buildResponse(touched, ttl), false);
         }
       }
       log.error("K8s error starting pod for lab {} user {}", labId, userId, e);
@@ -228,8 +240,9 @@ public class LabPodService {
       }
 
       AdminConfig adminConfig = adminConfigurationService.getAdminConfiguration().orElse(null);
-      int ttl = adminConfig != null ? adminConfig.getPodTtlSeconds() : 3600;
-      return buildResponse(existing.get(0), ttl);
+      int ttl = adminConfig != null ? adminConfig.getPodTtlSeconds() : DEFAULT_TTL_SECONDS;
+      Deployment touched = touchLastActivityIfNeeded(existing.get(0));
+      return buildResponse(touched, ttl);
 
     } catch (LabPodException e) {
       throw e;
@@ -242,10 +255,11 @@ public class LabPodService {
   public List<RunningPodResponse> listPods(UUID userId) {
     try {
       AdminConfig adminConfig = adminConfigurationService.getAdminConfiguration().orElse(null);
-      int ttl = adminConfig != null ? adminConfig.getPodTtlSeconds() : 3600;
+      int ttl = adminConfig != null ? adminConfig.getPodTtlSeconds() : DEFAULT_TTL_SECONDS;
 
       return findDeployments(userId).stream()
           .sorted(Comparator.comparing(this::createdAtOf).reversed())
+          .map(this::touchLastActivityIfNeeded)
           .map(deployment -> buildRunningPodResponse(userId, deployment, ttl))
           .flatMap(Optional::stream)
           .toList();
@@ -293,7 +307,53 @@ public class LabPodService {
     }
   }
 
-  /** Reap pods whose age exceeds ttlSeconds. Called by the scheduler. */
+  public PodStatusResponse extendPod(UUID userId, UUID labId) {
+    try {
+      List<Deployment> existing = findDeployments(userId, labId);
+      if (existing.isEmpty()) {
+        throw new LabPodException("No active pod found for this lab.");
+      }
+
+      Deployment deployment = existing.get(0);
+      Map<String, String> labels = deployment.getMetadata().getLabels();
+      if (labels == null
+          || !userId.toString().equals(labels.get(LABEL_USER_ID))
+          || !labId.toString().equals(labels.get(LABEL_CHALLENGE_ID))) {
+        throw new LabPodException("Ownership check failed for pod extension.");
+      }
+
+      int fallbackTtl = resolveConfiguredDefaultTtlSeconds();
+      int currentCount = parseIntLabel(labels, LABEL_EXTENSION_COUNT, 0);
+      if (currentCount >= MAX_EXTENSION_COUNT) {
+        throw new LabPodException("Maximum pod extension limit reached.");
+      }
+
+      Map<String, String> updatedLabels = new HashMap<>(labels);
+      updatedLabels.putIfAbsent(LABEL_BASE_TTL_SECONDS, String.valueOf(fallbackTtl));
+      updatedLabels.put(LABEL_EXTENSION_COUNT, String.valueOf(currentCount + 1));
+      updatedLabels.put(LABEL_LAST_ACTIVITY_AT, String.valueOf(Instant.now().getEpochSecond()));
+
+      Deployment updated = updateDeploymentLabels(deployment, updatedLabels);
+
+      log.info(
+          "Extended pod {} for user {} lab {} by {}s (extension {}/{})",
+          deployment.getMetadata().getName(),
+          userId,
+          labId,
+          EXTENSION_INCREMENT_SECONDS,
+          currentCount + 1,
+          MAX_EXTENSION_COUNT);
+
+      return buildResponse(updated, fallbackTtl);
+    } catch (LabPodException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error("Error extending pod for lab {} user {}", labId, userId, e);
+      throw new LabPodException("Failed to extend pod: " + e.getMessage(), e);
+    }
+  }
+
+  /** Reap pods whose idle-time exceeds effective TTL. Called by the scheduler. */
   public void reapExpiredPods(int ttlSeconds) {
     KubernetesClient client = getClient();
     List<Deployment> allPods =
@@ -309,19 +369,23 @@ public class LabPodService {
     for (Deployment d : allPods) {
       String instanceName = d.getMetadata().getName();
       try {
-        String createdAtStr = d.getMetadata().getLabels().get(LABEL_CREATED_AT);
-        if (createdAtStr == null) {
+        Map<String, String> labels = d.getMetadata().getLabels();
+        long createdAt = parseLongLabel(labels, LABEL_CREATED_AT, -1);
+        if (createdAt <= 0) {
           log.warn("Pod {} has no {} label, skipping reap", instanceName, LABEL_CREATED_AT);
           continue;
         }
-        long createdAt = Long.parseLong(createdAtStr);
-        if (nowEpoch - createdAt > ttlSeconds) {
+        long lastActivity = parseLongLabel(labels, LABEL_LAST_ACTIVITY_AT, createdAt);
+        int effectiveTtl = resolveEffectiveTtlSeconds(labels, ttlSeconds);
+
+        if (nowEpoch - lastActivity > effectiveTtl) {
           deleteByName(instanceName);
           log.info(
-              "Reaped expired pod {} (age {}s, ttl {}s)",
+              "Reaped expired pod {} (idle {}s, ttl {}s, created {}s ago)",
               instanceName,
-              nowEpoch - createdAt,
-              ttlSeconds);
+              nowEpoch - lastActivity,
+              effectiveTtl,
+              nowEpoch - createdAt);
         }
       } catch (Exception e) {
         log.error("Error reaping pod {}: {}", instanceName, e.getMessage(), e);
@@ -407,18 +471,115 @@ public class LabPodService {
     }
   }
 
-  private PodStatusResponse buildResponse(Deployment deployment, int ttlSeconds) {
+  private int resolveConfiguredDefaultTtlSeconds() {
+    AdminConfig adminConfig = adminConfigurationService.getAdminConfiguration().orElse(null);
+    return adminConfig != null ? adminConfig.getPodTtlSeconds() : DEFAULT_TTL_SECONDS;
+  }
+
+  private int resolveBaseTtlSeconds(Lab lab, AdminConfig adminConfig) {
+    if (lab != null && lab.getPodTtlSeconds() != null) {
+      return lab.getPodTtlSeconds();
+    }
+    if (adminConfig != null) {
+      return adminConfig.getPodTtlSeconds();
+    }
+    return DEFAULT_TTL_SECONDS;
+  }
+
+  private int resolveEffectiveTtlSeconds(Map<String, String> labels, int fallbackTtlSeconds) {
+    int baseTtl = parseIntLabel(labels, LABEL_BASE_TTL_SECONDS, fallbackTtlSeconds);
+    int extensionCount = parseIntLabel(labels, LABEL_EXTENSION_COUNT, 0);
+    extensionCount = Math.max(0, Math.min(extensionCount, MAX_EXTENSION_COUNT));
+    return baseTtl + extensionCount * EXTENSION_INCREMENT_SECONDS;
+  }
+
+  private long parseLongLabel(Map<String, String> labels, String labelKey, long fallbackValue) {
+    if (labels == null) {
+      return fallbackValue;
+    }
+    String raw = labels.get(labelKey);
+    if (raw == null || raw.isBlank()) {
+      return fallbackValue;
+    }
+    try {
+      return Long.parseLong(raw);
+    } catch (NumberFormatException ex) {
+      return fallbackValue;
+    }
+  }
+
+  private int parseIntLabel(Map<String, String> labels, String labelKey, int fallbackValue) {
+    if (labels == null) {
+      return fallbackValue;
+    }
+    String raw = labels.get(labelKey);
+    if (raw == null || raw.isBlank()) {
+      return fallbackValue;
+    }
+    try {
+      return Integer.parseInt(raw);
+    } catch (NumberFormatException ex) {
+      return fallbackValue;
+    }
+  }
+
+  private Deployment touchLastActivityIfNeeded(Deployment deployment) {
+    try {
+      Map<String, String> labels = deployment.getMetadata().getLabels();
+      long now = Instant.now().getEpochSecond();
+      long createdAt = parseLongLabel(labels, LABEL_CREATED_AT, now);
+      long lastActivity = parseLongLabel(labels, LABEL_LAST_ACTIVITY_AT, createdAt);
+      if (now - lastActivity < ACTIVITY_TOUCH_MIN_SECONDS) {
+        return deployment;
+      }
+
+      Map<String, String> updatedLabels = new HashMap<>();
+      if (labels != null) {
+        updatedLabels.putAll(labels);
+      }
+      updatedLabels.put(LABEL_LAST_ACTIVITY_AT, String.valueOf(now));
+      return updateDeploymentLabels(deployment, updatedLabels);
+    } catch (Exception e) {
+      log.debug("Could not update last activity for {}", deployment.getMetadata().getName(), e);
+      return deployment;
+    }
+  }
+
+  private Deployment updateDeploymentLabels(Deployment deployment, Map<String, String> updatedLabels) {
+    deployment.getMetadata().setLabels(updatedLabels);
+    if (deployment.getSpec() != null
+        && deployment.getSpec().getTemplate() != null
+        && deployment.getSpec().getTemplate().getMetadata() != null) {
+      deployment.getSpec().getTemplate().getMetadata().setLabels(updatedLabels);
+    }
+    return getClient().apps().deployments().inNamespace(defaultNamespace).resource(deployment).replace();
+  }
+
+  private PodStatusResponse buildResponse(Deployment deployment, int fallbackTtlSeconds) {
     Map<String, String> labels = deployment.getMetadata().getLabels();
+    if (labels == null) {
+      labels = Map.of();
+    }
 
     String instanceName = deployment.getMetadata().getName();
     String hash = instanceName.substring("pod-".length());
 
     Instant createdAt = null;
     Instant expiresAt = null;
+    Instant lastActivityAt = null;
     String createdAtStr = labels.get(LABEL_CREATED_AT);
     if (createdAtStr != null) {
       createdAt = Instant.ofEpochSecond(Long.parseLong(createdAtStr));
-      expiresAt = createdAt.plusSeconds(ttlSeconds);
+    }
+    String lastActivityAtStr = labels.get(LABEL_LAST_ACTIVITY_AT);
+    if (lastActivityAtStr != null) {
+      lastActivityAt = Instant.ofEpochSecond(Long.parseLong(lastActivityAtStr));
+    } else {
+      lastActivityAt = createdAt;
+    }
+    int effectiveTtl = resolveEffectiveTtlSeconds(labels, fallbackTtlSeconds);
+    if (lastActivityAt != null) {
+      expiresAt = lastActivityAt.plusSeconds(effectiveTtl);
     }
 
     String scheme = tls ? "https" : "http";
@@ -429,7 +590,21 @@ public class LabPodService {
 
     PodStatusEnum status = mapDeploymentStatus(deployment);
 
-    return new PodStatusResponse(status, instanceName, appUrl, null, null, createdAt, expiresAt);
+    int extensionCount = parseIntLabel(labels, LABEL_EXTENSION_COUNT, 0);
+    boolean canExtend = extensionCount < MAX_EXTENSION_COUNT;
+
+    return new PodStatusResponse(
+        status,
+        instanceName,
+        appUrl,
+        null,
+        null,
+        createdAt,
+        expiresAt,
+        lastActivityAt,
+        effectiveTtl,
+        extensionCount,
+        canExtend);
   }
 
   private PodStatusEnum mapDeploymentStatus(Deployment d) {
@@ -516,12 +691,16 @@ public class LabPodService {
     KubernetesClient client = getClient();
     long nowEpoch = Instant.now().getEpochSecond();
     String hash = instanceName.substring("pod-".length());
+    int baseTtlSeconds = resolveBaseTtlSeconds(lab, adminConfig);
 
     Map<String, String> labels = new HashMap<>();
     labels.put("app", LABEL_APP);
     labels.put(LABEL_USER_ID, userId.toString());
     labels.put(LABEL_CHALLENGE_ID, labId.toString());
     labels.put(LABEL_CREATED_AT, String.valueOf(nowEpoch));
+    labels.put(LABEL_LAST_ACTIVITY_AT, String.valueOf(nowEpoch));
+    labels.put(LABEL_BASE_TTL_SECONDS, String.valueOf(baseTtlSeconds));
+    labels.put(LABEL_EXTENSION_COUNT, "0");
     int containerPort = resolveContainerPort(lab);
 
     // 1. Deployment
@@ -636,7 +815,7 @@ public class LabPodService {
 
     String scheme = tls ? "https" : "http";
     Instant createdAt = Instant.ofEpochSecond(nowEpoch);
-    Instant expiresAt = createdAt.plusSeconds(adminConfig.getPodTtlSeconds());
+    Instant expiresAt = createdAt.plusSeconds(baseTtlSeconds);
 
     return new PodStatusResponse(
         PodStatusEnum.PROVISIONING,
@@ -645,7 +824,11 @@ public class LabPodService {
         null,
         null,
         createdAt,
-        expiresAt);
+        expiresAt,
+        createdAt,
+        baseTtlSeconds,
+        0,
+        true);
   }
 
   private String buildLabHost(String service, String hash) {

@@ -404,7 +404,7 @@ class LabPodServiceTest {
         setClientRef(client);
         UUID userId = UUID.randomUUID();
         UUID labId = UUID.randomUUID();
-        long createdAt = Instant.now().minusSeconds(60).getEpochSecond();
+        long createdAt = Instant.now().minusSeconds(30).getEpochSecond();
         Map<String, String> labels = podLabels(userId, labId, createdAt);
         Deployment deployment =
                 new DeploymentBuilder()
@@ -449,6 +449,9 @@ class LabPodServiceTest {
         assertThat(response.appUrl()).isEqualTo("http://custom.example.test");
         assertThat(response.createdAt()).isEqualTo(Instant.ofEpochSecond(createdAt));
         assertThat(response.expiresAt()).isEqualTo(Instant.ofEpochSecond(createdAt + 120));
+        assertThat(response.ttlSeconds()).isEqualTo(120);
+        assertThat(response.extensionCount()).isEqualTo(0);
+        assertThat(response.canExtend()).isTrue();
     }
 
     @Test
@@ -588,6 +591,48 @@ class LabPodServiceTest {
         assertThat(service.deletePod(userId, labId)).isTrue();
 
         verify(deploymentResource).delete();
+    }
+
+    @Test
+    void extendPod_incrementsExtensionCountAndReturnsUpdatedExpiry() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        long createdAt = Instant.now().minusSeconds(10).getEpochSecond();
+        Map<String, String> labels = podLabels(userId, labId, createdAt);
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-extendme")
+                        .withLabels(labels)
+                        .endMetadata()
+                        .withNewSpec()
+                        .withNewTemplate()
+                        .withNewMetadata()
+                        .withLabels(labels)
+                        .endMetadata()
+                        .endTemplate()
+                        .endSpec()
+                        .withNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build();
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                stubFindDeployments(client, userId, labId, List.of(deployment));
+        RollableScalableResource<Deployment> deploymentResource = mock(RollableScalableResource.class);
+        when(deploymentOperation.resource(Mockito.any())).thenReturn(deploymentResource);
+        when(deploymentResource.replace()).thenAnswer(invocation -> invocation.getArgument(0));
+        stubPodsForLabels(client, labels, List.of());
+        stubIngressGetThrows(client, "pod-extendme-ingress");
+        when(adminConfigurationService.getAdminConfiguration())
+                .thenReturn(Optional.of(adminConfigWith("kubeconfig", 600)));
+
+        PodStatusResponse response = service.extendPod(userId, labId);
+
+        assertThat(response.extensionCount()).isEqualTo(1);
+        assertThat(response.ttlSeconds()).isEqualTo(2400);
+        assertThat(response.canExtend()).isTrue();
     }
 
     @Test

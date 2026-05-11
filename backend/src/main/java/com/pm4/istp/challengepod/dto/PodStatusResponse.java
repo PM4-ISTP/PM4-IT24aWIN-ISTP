@@ -9,9 +9,14 @@ public record PodStatusResponse(
     String terminalUrl,
     String terminalPassword,
     Instant createdAt,
-    Instant expiresAt) {
+    Instant expiresAt,
+    Instant lastActivityAt,
+    Integer ttlSeconds,
+    Integer extensionCount,
+    Boolean canExtend) {
 
   public static PodStatusResponse notFound() {
-    return new PodStatusResponse(PodStatusEnum.NOT_FOUND, null, null, null, null, null, null);
+    return new PodStatusResponse(
+        PodStatusEnum.NOT_FOUND, null, null, null, null, null, null, null, null, null, null);
   }
 }
