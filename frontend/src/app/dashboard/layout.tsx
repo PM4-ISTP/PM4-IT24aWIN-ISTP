@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/shared/lib/auth";
 import { AppShell, AppShellHeader, AppShellNavbar, AppShellMain, Group } from "@mantine/core";
-import Image from "next/image";
 import UserMenu from "@/src/features/user/components/UserMenu";
 import DashboardNav from "@/src/shared/components/DashboardNav";
 import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
@@ -26,54 +25,33 @@ export default async function DashboardLayout({ children }: { children: React.Re
       >
         <Group h="100%" px="xl" justify="space-between" wrap="nowrap">
           {/* Logo */}
-          <Group gap={10} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
-            <div
+          <div style={{ display: "flex", flexDirection: "column", gap: 1, flexShrink: 0 }}>
+            <span
               style={{
-                width: 34,
-                height: 34,
-                borderRadius: 10,
-                overflow: "hidden",
-                boxShadow: "0 0 0 1px rgba(255,255,255,0.1) inset",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+                fontSize: "1.05rem",
+                color: "#e2e8f0",
+                lineHeight: 1,
               }}
             >
-              <Image
-                src="/brand/logoISTP.png"
-                alt="ISTP Logo"
-                width={34}
-                height={34}
-                priority
-                style={{ width: 34, height: 34, objectFit: "cover", objectPosition: "center" }}
-              />
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <span
-                style={{
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 700,
-                  letterSpacing: "0.02em",
-                  fontSize: "1.05rem",
-                  color: "#e2e8f0",
-                  lineHeight: 1,
-                }}
-              >
-                ISTP
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.2em",
-                  fontSize: "0.52rem",
-                  fontWeight: 700,
-                  color: "rgba(255,255,255,0.3)",
-                  lineHeight: 1,
-                }}
-              >
-                ZHAW
-              </span>
-            </div>
-          </Group>
+              ISTP
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                textTransform: "uppercase",
+                letterSpacing: "0.2em",
+                fontSize: "0.52rem",
+                fontWeight: 700,
+                color: "rgba(255,255,255,0.3)",
+                lineHeight: 1,
+              }}
+            >
+              ZHAW
+            </span>
+          </div>
 
           {/* Right side */}
           <Group gap="sm" wrap="nowrap">

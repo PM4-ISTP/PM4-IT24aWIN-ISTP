@@ -1,6 +1,5 @@
-import { Box } from "@mantine/core";
-import Image from "next/image";
-import { GRADIENT } from "../../theme";
+import { Box, Text } from "@mantine/core";
+import { FONT_MONO, GRADIENT } from "../../theme";
 
 export default function BrandMark({ size = 30 }: { size?: number }) {
   return (
@@ -15,22 +14,19 @@ export default function BrandMark({ size = 30 }: { size?: number }) {
         justifyContent: "center",
         boxShadow: "0 0 0 1px rgba(255,255,255,0.12) inset, 0 6px 20px rgba(93,110,240,0.4)",
         flexShrink: 0,
-        overflow: "hidden",
       }}
     >
-      <Image
-        src="/brand/logoISTP.png"
-        alt="ISTP Logo"
-        width={size}
-        height={size}
-        priority={size >= 28}
+      <Text
         style={{
-          width: size,
-          height: size,
-          objectFit: "cover",
-          objectPosition: "center",
+          color: "#fff",
+          fontFamily: FONT_MONO,
+          fontWeight: 700,
+          fontSize: Math.round(size * 0.4),
+          mixBlendMode: "screen",
         }}
-      />
+      >
+        {size >= 28 ? "{ }" : "{}"}
+      </Text>
     </Box>
   );
 }
