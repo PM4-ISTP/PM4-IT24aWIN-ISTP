@@ -101,6 +101,7 @@ function printCertificate(badge: UserBadge, userName: string) {
     .name{font-family:'Playfair Display',Georgia,serif;font-size:2rem;color:#1e293b;border-bottom:2px solid ${badge.primaryColor};padding-bottom:8px;padding-left:40px;padding-right:40px}
     .course{font-size:1.25rem;font-weight:600;color:#1e293b}
     .date{font-size:0.875rem;color:#94a3b8}
+    @page{margin:0;size:A4 landscape}
     @media print{body{background:white}.cert{box-shadow:none}}
   </style>
 </head>
