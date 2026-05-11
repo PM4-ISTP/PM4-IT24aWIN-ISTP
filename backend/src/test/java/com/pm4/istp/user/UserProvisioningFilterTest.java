@@ -32,6 +32,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class UserProvisioningFilterTest {
@@ -49,7 +50,7 @@ class UserProvisioningFilterTest {
   @BeforeEach
   void setUp() {
     SecurityContextHolder.setContext(securityContext);
-    when(securityContext.getAuthentication()).thenReturn(authentication);
+    lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
 
     lenient().when(authentication.isAuthenticated()).thenReturn(true);
     lenient().when(authentication.getPrincipal()).thenReturn(jwt);
@@ -451,5 +452,83 @@ class UserProvisioningFilterTest {
     verify(filterChain).doFilter(any(), any());
     verify(userRepository).save(any(User.class));
     assertThat(existing.getRoles()).containsExactly(UserRoleEnum.ROLE_ADMINISTRATOR);
+  }
+
+  @Test
+  void privateRoleAndTextHelpers_coverFallbackBranches() {
+    assertThat(
+            (Set<UserRoleEnum>)
+                ReflectionTestUtils.invokeMethod(filter, "reduceToSingleAppRole", new Object[] {null}))
+        .isEmpty();
+    assertThat(
+            (Set<UserRoleEnum>)
+                ReflectionTestUtils.invokeMethod(
+                    filter, "reduceToSingleAppRole", Set.of(UserRoleEnum.ROLE_INSTRUCTOR)))
+        .containsExactly(UserRoleEnum.ROLE_INSTRUCTOR);
+    assertThat(
+            (Set<UserRoleEnum>)
+                ReflectionTestUtils.invokeMethod(
+                    filter, "reduceToSingleAppRole", Set.of(UserRoleEnum.ROLE_STUDENT)))
+        .containsExactly(UserRoleEnum.ROLE_STUDENT);
+
+    assertThat((String) ReflectionTestUtils.invokeMethod(filter, "combineNameParts", null, "Family"))
+        .isEqualTo("Family");
+    assertThat((String) ReflectionTestUtils.invokeMethod(filter, "combineNameParts", null, null))
+        .isNull();
+    assertThat(
+            (String)
+                ReflectionTestUtils.invokeMethod(
+                    filter, "firstNonBlank", new Object[] {new String[] {" ", "value"}}))
+        .isEqualTo("value");
+    assertThat(
+            (String)
+                ReflectionTestUtils.invokeMethod(
+                    filter,
+                    "discardIfTooLong",
+                    "x".repeat(256),
+                    255,
+                    "field",
+                    USER_ID))
+        .isNull();
+    assertThat((String) ReflectionTestUtils.invokeMethod(filter, "normalizeLowercase", " Test@EXAMPLE.COM "))
+        .isEqualTo("test@example.com");
+  }
+
+  @Test
+  void privateIdentifierConflictHelpers_coverEmailUsernameAndNullCurrentUserBranches() {
+    User conflicting = new User();
+    conflicting.setId(UUID.randomUUID());
+
+    assertThat(
+            (Boolean)
+                ReflectionTestUtils.invokeMethod(
+                    filter, "hasIdentifierConflict", null, "test@example.com", "testuser"))
+        .isFalse();
+
+    when(userRepository.findByEmailIgnoreCaseAndIdNot("test@example.com", USER_ID))
+        .thenReturn(Optional.of(conflicting));
+    assertThat(
+            (Boolean)
+                ReflectionTestUtils.invokeMethod(
+                    filter, "hasIdentifierConflict", USER_ID, "test@example.com", null))
+        .isTrue();
+
+    when(userRepository.findByUsernameIgnoreCaseAndIdNot("other", USER_ID))
+        .thenReturn(Optional.of(conflicting));
+    assertThat(
+            (Boolean)
+                ReflectionTestUtils.invokeMethod(
+                    filter, "hasIdentifierConflict", USER_ID, null, "other"))
+        .isTrue();
+
+    User existing = new User();
+    existing.setId(USER_ID);
+    existing.setEmail("same@example.com");
+    existing.setUsername("same");
+    assertThat(
+            (Boolean)
+                ReflectionTestUtils.invokeMethod(
+                    filter, "hasChangedIdentifierConflict", existing, USER_ID, "same@example.com", "same"))
+        .isFalse();
   }
 }

@@ -83,7 +83,7 @@ async function fetchUserInfo(accessToken: string): Promise<KeycloakBasicProfile>
  * Refreshing slightly early reduces the window during which multiple concurrent
  * requests can all see an expired token and race to refresh it simultaneously.
  */
-const REFRESH_BUFFER_MS = 60_000;
+export const REFRESH_BUFFER_MS = 60_000;
 
 /**
  * In-process deduplication map for concurrent refresh calls.
@@ -147,7 +147,7 @@ async function doRefreshAccessToken(token: JWT): Promise<JWT> {
  * one HTTP request is sent to Keycloak and all callers receive the result of
  * that single request.
  */
-async function refreshAccessToken(token: JWT): Promise<JWT> {
+export async function refreshAccessToken(token: JWT): Promise<JWT> {
   if (!token.refreshToken) {
     console.error("Missing refresh token");
     return { ...token, error: "RefreshAccessTokenError" };
@@ -217,10 +217,9 @@ export const authOptions: AuthOptions = {
       return refreshAccessToken(token);
     },
     async session({ session, token }) {
-      // Access token is exposed on the session for use by the client-side
-      // openapi-fetch wrapper (useApiClient) when calling the /api/backend
-      // proxy. Roles are used for server-side authorization checks.
-      session.accessToken = token.accessToken;
+      // Do not expose the access token to the browser. The frontend calls the
+      // Next.js /api/backend proxy which injects the Authorization header
+      // server-side using the NextAuth JWT.
       session.roles = token.roles as string[];
       session.error = token.error;
       session.userId = token.sub;

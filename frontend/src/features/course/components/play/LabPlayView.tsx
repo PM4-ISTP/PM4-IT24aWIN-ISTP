@@ -114,7 +114,7 @@ function LabLaunchCard({
           component="a"
           href={url ?? undefined}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           disabled={!url}
           rightSection={<IconExternalLink size={16} />}
           fullWidth

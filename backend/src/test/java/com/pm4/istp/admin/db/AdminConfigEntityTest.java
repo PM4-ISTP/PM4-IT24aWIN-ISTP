@@ -39,10 +39,11 @@ class AdminConfigEntityTest {
     AdminConfig different = new AdminConfig();
     different.setId(UUID.randomUUID());
 
-    assertThat(first).isEqualTo(first);
-    assertThat(first).isEqualTo(second);
-    assertThat(first).hasSameHashCodeAs(second);
-    assertThat(first).isNotEqualTo(different);
-    assertThat(first).isNotEqualTo("not config");
+    assertThat(first)
+        .isEqualTo(first)
+        .isEqualTo(second)
+        .hasSameHashCodeAs(second)
+        .isNotEqualTo(different)
+        .isNotEqualTo("not config");
   }
 }

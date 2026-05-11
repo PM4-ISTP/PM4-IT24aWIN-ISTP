@@ -378,6 +378,7 @@ export function CourseLabManager({ labs, onChange }: CourseChallengeManagerProps
           component={Link}
           href="/dashboard/instructor/labs/create"
           target="_blank"
+          rel="noopener noreferrer"
         >
           New Lab
         </Button>

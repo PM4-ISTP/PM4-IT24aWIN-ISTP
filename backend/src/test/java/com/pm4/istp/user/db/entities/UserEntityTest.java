@@ -24,31 +24,31 @@ class UserEntityTest {
     User user = fullyPopulatedUser();
     User same = fullyPopulatedUser();
 
-    assertThat(user).isEqualTo(same);
-    assertThat(user).hasSameHashCodeAs(same);
-    assertThat(user).isNotEqualTo(null);
-    assertThat(user).isNotEqualTo("not a user");
+    assertThat(user)
+        .isEqualTo(same)
+        .hasSameHashCodeAs(same)
+        .isNotEqualTo(null)
+        .isNotEqualTo("not a user");
   }
 
   @Test
   void equalsDetectsChangedProfileFields() {
     User user = fullyPopulatedUser();
 
-    assertThat(user).isNotEqualTo(mutatedUser(copy -> copy.setId(UUID.randomUUID())));
-    assertThat(user).isNotEqualTo(mutatedUser(copy -> copy.setName("Other")));
-    assertThat(user).isNotEqualTo(mutatedUser(copy -> copy.setEmail("other@example.com")));
-    assertThat(user).isNotEqualTo(mutatedUser(copy -> copy.setUsername("other")));
-    assertThat(user).isNotEqualTo(mutatedUser(copy -> copy.setFirstName("Other")));
-    assertThat(user).isNotEqualTo(mutatedUser(copy -> copy.setLastName("Other")));
-    assertThat(user).isNotEqualTo(mutatedUser(copy -> copy.setPicture("https://example.com/b.png")));
-    assertThat(user).isNotEqualTo(mutatedUser(copy -> copy.setTitle("Other")));
     assertThat(user)
-        .isNotEqualTo(mutatedUser(copy -> copy.setCreatedAt(LocalDateTime.now().minusDays(5))));
-    assertThat(user)
-        .isNotEqualTo(mutatedUser(copy -> copy.setUpdatedAt(LocalDateTime.now().minusDays(4))));
-    assertThat(user).isNotEqualTo(mutatedUser(copy -> copy.setDeletedAt(LocalDateTime.now())));
-    assertThat(user).isNotEqualTo(mutatedUser(copy -> copy.setAnonymizedAt(LocalDateTime.now())));
-    assertThat(user).isNotEqualTo(mutatedUser(copy -> copy.setTotalSecondsOnline(99L)));
+        .isNotEqualTo(mutatedUser(copy -> copy.setId(UUID.randomUUID())))
+        .isNotEqualTo(mutatedUser(copy -> copy.setName("Other")))
+        .isNotEqualTo(mutatedUser(copy -> copy.setEmail("other@example.com")))
+        .isNotEqualTo(mutatedUser(copy -> copy.setUsername("other")))
+        .isNotEqualTo(mutatedUser(copy -> copy.setFirstName("Other")))
+        .isNotEqualTo(mutatedUser(copy -> copy.setLastName("Other")))
+        .isNotEqualTo(mutatedUser(copy -> copy.setPicture("https://example.com/b.png")))
+        .isNotEqualTo(mutatedUser(copy -> copy.setTitle("Other")))
+        .isNotEqualTo(mutatedUser(copy -> copy.setCreatedAt(LocalDateTime.now().minusDays(5))))
+        .isNotEqualTo(mutatedUser(copy -> copy.setUpdatedAt(LocalDateTime.now().minusDays(4))))
+        .isNotEqualTo(mutatedUser(copy -> copy.setDeletedAt(LocalDateTime.now())))
+        .isNotEqualTo(mutatedUser(copy -> copy.setAnonymizedAt(LocalDateTime.now())))
+        .isNotEqualTo(mutatedUser(copy -> copy.setTotalSecondsOnline(99L)));
   }
 
   private User mutatedUser(java.util.function.Consumer<User> mutation) {

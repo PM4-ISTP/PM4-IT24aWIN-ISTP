@@ -4,30 +4,65 @@ Interactive Security Training Platform
 
 ---
 
-## Development Environment Setup
+## Getting Started
+
+This README explains how to run the project locally for development.
+
+Authentication uses the shared staging Keycloak by default (local Keycloak is intentionally not supported).
+
+For the exact local dev steps (hybrid local Postgres + staging Keycloak), see `LOCAL_DEV.md`.
+
 
 ### Prerequisites
 
-Ensure you have the following installed:
+- Node.js 22+ (frontend)
+- Java 21+ (backend, optional)
+- Docker Desktop (optional, only if you run a local DB via Docker Compose)
 
-- **Docker** — for PostgreSQL, Keycloak, and Adminer
-- **Java 21+** — for the Spring Boot backend
-- **Node.js 22+** — for the Next.js frontend
-- **k3d** — for local Kubernetes cluster
-- **kubectl** — for interacting with Kubernetes (optional)
+### Staging
 
-> **Windows users:** Docker Desktop must be **started and running** before you execute any `docker compose` command. Look for the Docker whale icon in the system tray — if it isn't there (or shows "Docker Desktop is starting"), wait for it to finish starting before continuing. Make sure Docker Desktop is set to use **Linux containers** (right-click the tray icon → _Switch to Linux containers_ if the option appears).
+| Service | URL |
+| --- | --- |
+| App | https://istp-staging.pm4.init-lab.ch |
+| Keycloak admin console | https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/ |
+
+Secrets:
+- `NEXTAUTH_SECRET`: generate locally (e.g. `openssl rand -base64 32`)
+- `AUTH_KEYCLOAK_SECRET`: Keycloak admin console -> Client `interactive-security-training-platform-app` -> Credentials
 
 ### Quick Start
 
+#### Recommended: Frontend-only (use staging backend + staging Keycloak)
+
+This is the easiest way to test your frontend changes with real courses/users from staging:
+
+```bash
+cd frontend
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+Windows PowerShell: `Copy-Item .env.example .env.local`
+
+In `frontend/.env.local`, set:
+- `NEXTAUTH_SECRET` (generate locally)
+- `AUTH_KEYCLOAK_SECRET` (from staging Keycloak client credentials)
+- `BACKEND_URL=https://istp-staging.pm4.init-lab.ch`
+
+Staging Keycloak (issuer) is already set in the example file (`AUTH_KEYCLOAK_ISSUER`).
+
 #### 1. Start Docker Compose Services
 
-From the project root, start PostgreSQL, Keycloak, and Adminer:
+Only needed if you run the backend locally. From the project root, start PostgreSQL and Adminer:
 
 ```bash
 cd infra
+cp .env.example .env
 docker compose up -d
 ```
+
+Windows PowerShell: `Copy-Item .env.example .env`
 
 To stop services:
 
@@ -41,6 +76,15 @@ docker compose down
 
 From the `backend/` directory:
 
+Create `backend/application-secrets.properties` (copy the example file) and fill in secrets:
+
+```bash
+cd backend
+cp application-secrets.properties.example application-secrets.properties
+```
+
+Windows PowerShell: `Copy-Item application-secrets.properties.example application-secrets.properties`
+
 ```bash
 cd backend
 ./gradlew bootRun
@@ -50,12 +94,8 @@ The Spring Boot application starts on `http://localhost:8080`.
 
 **Keycloak Admin API (required for profile sync + admin features):**
 
-The backend calls the Keycloak **Admin REST API** using a service account client (`istp-backend`).
-For local development you must provide the client secret via an env var:
-
-```powershell
-$env:KEYCLOAK_ADMIN_CLIENT_SECRET="<<client secret from Keycloak client istp-backend>>"
-```
+The backend calls the Keycloak Admin REST API using a service account client (`istp-backend`).
+Configure `KEYCLOAK_ADMIN_CLIENT_SECRET` in `backend/application-secrets.properties` if you use those features locally.
 
 **Before committing**, always run code formatting:
 
@@ -76,68 +116,6 @@ npm run dev
 ```
 
 The Next.js application starts on `http://localhost:3000`.
-
----
-
-### Using Staging Services for Local Development
-
-You can skip running Keycloak (and optionally the backend) locally by pointing your local frontend at the staging environment.
-
-#### Staging URLs
-
-| Service                                           | URL                                                                                             |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **App** (Next.js frontend + backend)              | https://istp-staging.pm4.init-lab.ch                                                            |
-| **Keycloak Admin Console** (manage users & roles) | https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/ |
-
-When users sign in to the app they are redirected to the Keycloak OIDC login page at:
-`https://istp-staging-auth.pm4.init-lab.ch/realms/interactive-security-training-platform/protocol/openid-connect/auth`
-
-#### Set Up Environment Variables
-
-Copy the example file and fill in the missing secrets:
-
-```bash
-cd frontend
-cp .env.local.example .env.local
-```
-
-Open `frontend/.env.local` and set:
-
-| Variable               | Where to get it                                                                                                                                                                                          |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NEXTAUTH_SECRET`      | Generate with `openssl rand -base64 32`                                                                                                                                                                  |
-| `AUTH_KEYCLOAK_SECRET` | [Keycloak Admin Console](https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/) → **Clients** → `interactive-security-training-platform-app` → **Credentials** |
-
-#### Connect to Staging Keycloak (skip local Docker Compose)
-
-The example file already points `AUTH_KEYCLOAK_ISSUER` to staging.  
-Start only the database and skip Keycloak:
-
-```bash
-cd infra
-docker compose up -d db adminer
-```
-
-Then start the backend and frontend as usual.
-
-> If you point your backend at staging Keycloak (issuer-uri), you also need the staging `istp-backend`
-> client secret for `KEYCLOAK_ADMIN_CLIENT_SECRET` so Admin API calls work.
-
-#### Connect to Staging Backend (frontend-only development)
-
-To use the deployed staging backend instead of a local one, change `BACKEND_URL` in `frontend/.env.local`:
-
-```
-BACKEND_URL=https://istp-staging.pm4.init-lab.ch
-```
-
-With this setting you don't need to run the backend or database locally at all — just start the frontend:
-
-```bash
-cd frontend
-npm run dev
-```
 
 ---
 

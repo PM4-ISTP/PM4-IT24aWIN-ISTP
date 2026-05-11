@@ -112,7 +112,7 @@ export function LabPodPanel({
       {status === "RUNNING" && data && (
         <Stack gap={4} align="flex-end">
           {data.appUrl && (
-            <Anchor href={data.appUrl} target="_blank" size="xs">
+            <Anchor href={data.appUrl} target="_blank" rel="noopener noreferrer" size="xs">
               <Flex align="center" gap={4}>
                 <IconExternalLink size={12} />
                 Open app

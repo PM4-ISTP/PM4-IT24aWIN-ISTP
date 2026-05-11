@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/shared/lib/auth";
+import { getValidAccessToken } from "@/src/shared/lib/api/server";
 import {
   Alert,
   Badge,
@@ -54,9 +55,7 @@ type RunningPod = {
 
 async function fetchCompletedLabsCount(): Promise<number | null> {
   try {
-    const session = await getServerSession(authOptions);
-    const accessToken = session?.accessToken;
-    if (!accessToken) return null;
+    const accessToken = await getValidAccessToken();
 
     const res = await fetch(`${BACKEND_URL}/api/v1/labs/my-completed-count`, {
       cache: "no-store",
@@ -72,9 +71,7 @@ async function fetchCompletedLabsCount(): Promise<number | null> {
 
 async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
   try {
-    const session = await getServerSession(authOptions);
-    const accessToken = session?.accessToken;
-    if (!accessToken) return [];
+    const accessToken = await getValidAccessToken();
 
     const res = await fetch(`${BACKEND_URL}/api/v1/courses/my-deadlines`, {
       cache: "no-store",
@@ -106,9 +103,7 @@ async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
 
 async function fetchMyRunningPods(): Promise<RunningPod[]> {
   try {
-    const session = await getServerSession(authOptions);
-    const accessToken = session?.accessToken;
-    if (!accessToken) return [];
+    const accessToken = await getValidAccessToken();
 
     const res = await fetch(`${BACKEND_URL}/api/v1/lab-pods`, {
       cache: "no-store",
@@ -239,7 +234,7 @@ function RunningLabs({ pods }: { pods: RunningPod[] }) {
                       component="a"
                       href={item.pod.appUrl}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       size="xs"
                       variant="subtle"
                       leftSection={<IconExternalLink size={14} />}
