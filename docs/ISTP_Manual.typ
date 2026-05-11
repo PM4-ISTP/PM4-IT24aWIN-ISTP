@@ -185,7 +185,7 @@ The realm config export is stored in `infra/keycloak-export/interactive-security
 
 After importing, regenerate the client secrets (they are not stored in the export):
 
-+ Go to *Clients* > `interactive-security-training-platform-app` > *Credentials* > *Regenerate*.
++ Go to *Clients* > `nextjs` > *Credentials* > *Regenerate*.
 + Repeat for `istp-backend`.
 + Store both secrets in the Kubernetes Secrets (see @sec-env).
 
@@ -193,7 +193,7 @@ After importing, regenerate the client secrets (they are not stored in the expor
 
 *Next.js:*
 ```bash
-AUTH_KEYCLOAK_ID=interactive-security-training-platform-app
+AUTH_KEYCLOAK_ID=nextjs
 AUTH_KEYCLOAK_SECRET=<secret>
 AUTH_KEYCLOAK_ISSUER=https://<keycloak-host>/realms/interactive-security-training-platform
 NEXTAUTH_URL=https://istp.pm4.init-lab.ch
@@ -210,7 +210,7 @@ KEYCLOAK_ADMIN_CLIENT_ID=istp-backend
 KEYCLOAK_ADMIN_CLIENT_SECRET=<secret>
 
 # Used for session listing in the admin dashboard
-KEYCLOAK_APP_CLIENT_ID=interactive-security-training-platform-app
+KEYCLOAK_APP_CLIENT_ID=nextjs
 ```
 
 *Kubernetes Secrets (recommended):*
@@ -238,7 +238,7 @@ Keycloak is the source of truth for authentication and base user identity. Postg
 - If the DB update fails, the backend attempts to rollback Keycloak to the previous snapshot.
 
 *Admin user management (via app, not Keycloak console):*
-- Create/provision users, change roles (single-role policy), password reset email, set password, list/logout sessions.
+- Create/provision users, assign or revoke roles (additive: `ROLE_STUDENT` always remains), password reset email, set password, list/logout sessions.
 - *Disable (reversible):* disables Keycloak user and sets `deletedAt`
 - *Restore (reversible):* re-enables Keycloak user and clears `deletedAt`
 - *Soft-delete (irreversible):* anonymizes email/username in Keycloak+DB, disables user, sets `deletedAt` (frees up the original email/username for reuse)
@@ -305,19 +305,90 @@ The terminal does not run in the same container as the app. But they run in the 
 
 = User Guide: Student
 
+This section describes the platform from a student's perspective — from creating an account to solving challenges.
+
 == Registration & Login
 
-== Challenge Browser
+Open the platform at `https://istp.pm4.init-lab.ch`. Click *Sign in* to be redirected to the Keycloak login page.
 
-== Starting a Challenge (Pod Launcher)
+*New account:* Click *Register* on the Keycloak login page. Fill in your first name, last name, university email address, and a password. After submitting, Keycloak sends a verification email to the provided address. The account is only active after clicking the confirmation link in that email.
+
+*Password requirements:* minimum 8 characters, at least one uppercase letter, one digit, and one special character. The password may not contain your username.
+
+*Failed logins:* After 10 consecutive failed login attempts the account is temporarily locked. Wait a few minutes before trying again.
+
+After successful login you are redirected to the dashboard.
+
+== Course Catalog
+
+Navigate to *Catalog* in the sidebar. The catalog shows all published courses on the platform. Each course card displays the title, topic, and a short description.
+
+Use the search bar to filter courses by title. Use the topic dropdown to filter by subject area. Results are paginated — use the page controls at the bottom to navigate between pages.
+
+Click on a course card to open the course detail page where you can read the full description and enroll.
+
+== My Courses
+
+Navigate to *My Courses* in the sidebar to see all courses you are currently enrolled in. Click on a course to open it and see its labs and your progress.
+
+To leave a course, open the course detail page and click *Leave course*.
+
+== Starting a Lab (Pod Launcher)
+
+Inside a course, click *Play* on any lab to open the lab view. The screen is split into two panels:
+
+- *Left panel* — lab description, challenge tasks, flag submission
+- *Right panel* — the live lab environment (pod)
+
+To start the lab environment, click the play button (▶) in the top-right of the right panel. The pod goes through the following states:
+
+#figure(
+  table(
+    columns: (auto, 1fr),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    fill: (col, row) => if row == 0 { luma(230) } else { white },
+    [*Status*], [*Meaning*],
+    [`NOT_FOUND`], [Pod not started yet],
+    [`PROVISIONING`], [Pod is starting up — wait a moment],
+    [`RUNNING`], [Pod is ready — lab app link is active],
+    [`TERMINATING`], [Pod is shutting down],
+    [`FAILED`], [Pod failed to start — click the retry button (↺)],
+  ),
+  caption: [Pod status overview],
+)
+
+Once the status shows *RUNNING*, the *Open app* button becomes active. Click it to open the lab application in a new browser tab.
+
+To stop the pod manually, click the stop button (■) in the right panel header.
 
 == Keep-Alive & Pod Management
 
-== Submitting a Flag
+While a lab pod is running, the platform polls its status every 60 seconds. If the pod has been idle for an extended period, it will be terminated automatically to free up cluster resources. Return to the lab page and restart the pod to continue working.
 
-== Progress Dashboard
+== Solving Challenges
 
-== Courses
+Each lab contains one or more challenges. Navigate between them using the stepper at the top of the left panel — all steps are freely accessible regardless of order. A progress bar shows how many challenges you have completed.
+
+There are three challenge types:
+
+*Flag challenge* — Exploit the running lab environment to find a hidden flag. The flag has the format `ISTP{...}`. Enter it in the *Submit Flag* field (you can enter either `ISTP{flag}` or just `flag` — both are accepted) and press *Submit* or hit Enter. A green notification confirms a correct submission; a red notification means the flag is wrong — try again.
+
+*Multiple choice* — Read the question and select one of the options. Click *Submit answer* to confirm. Depending on the lab configuration there are two modes:
+- *Unlimited attempts:* wrong answers can be retried.
+- *Once:* only one attempt is allowed; the correct answer is revealed after a wrong submission.
+
+*Theory task* — Read the description and click *Mark as done* to complete the task. No flag required.
+
+Each solved challenge shows a *Solved* badge and awards the configured points. When all challenges in a lab are solved, a completion banner is shown.
+
+If a challenge has a hint available, click *Show hint* to reveal it.
+
+== Progress & Points
+
+The left panel shows your current progress for the open lab: solved challenges out of total, and earned points out of maximum points. A teal progress bar fills as you solve challenges. When the lab is fully completed, the bar turns teal and a trophy icon appears.
+
+To view your overall progress across all courses, return to the course page where each lab card shows its completion status.
 
 // ─── 5. User Guide: Instructor ────────────────────────────────────────────
 
