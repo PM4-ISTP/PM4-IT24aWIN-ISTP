@@ -239,8 +239,7 @@ public class LabPodService {
         return PodStatusResponse.notFound();
       }
 
-      AdminConfig adminConfig = adminConfigurationService.getAdminConfiguration().orElse(null);
-      int ttl = adminConfig != null ? adminConfig.getPodTtlSeconds() : DEFAULT_TTL_SECONDS;
+      int ttl = resolveConfiguredDefaultTtlSeconds();
       Deployment touched = touchLastActivityIfNeeded(existing.get(0));
       return buildResponse(touched, ttl);
 
@@ -254,8 +253,7 @@ public class LabPodService {
 
   public List<RunningPodResponse> listPods(UUID userId) {
     try {
-      AdminConfig adminConfig = adminConfigurationService.getAdminConfiguration().orElse(null);
-      int ttl = adminConfig != null ? adminConfig.getPodTtlSeconds() : DEFAULT_TTL_SECONDS;
+      int ttl = resolveConfiguredDefaultTtlSeconds();
 
       return findDeployments(userId).stream()
           .sorted(Comparator.comparing(this::createdAtOf).reversed())
@@ -533,10 +531,7 @@ public class LabPodService {
         return deployment;
       }
 
-      Map<String, String> updatedLabels = new HashMap<>();
-      if (labels != null) {
-        updatedLabels.putAll(labels);
-      }
+      Map<String, String> updatedLabels = new HashMap<>(labels != null ? labels : Map.of());
       updatedLabels.put(LABEL_LAST_ACTIVITY_AT, String.valueOf(now));
       return updateDeploymentLabels(deployment, updatedLabels);
     } catch (Exception e) {
