@@ -99,7 +99,6 @@ class AdminChallengeServiceImplTest {
     request.setDescription("Full description");
     request.setStatus(LabStatusEnum.PUBLIC);
     request.setDifficulty(LabDifficultyEnum.HARD);
-    request.setMaxScore(100);
 
     when(labRepository.findById(id)).thenReturn(Optional.of(lab));
     when(labRepository.save(any(Lab.class)))
@@ -116,11 +115,11 @@ class AdminChallengeServiceImplTest {
     assertThat(saved.getDescription()).isEqualTo("Full description");
     assertThat(saved.getStatus()).isEqualTo(LabStatusEnum.PUBLIC);
     assertThat(saved.getDifficulty()).isEqualTo(LabDifficultyEnum.HARD);
-    assertThat(saved.getMaxScore()).isEqualTo(100);
+    assertThat(saved.getMaxScore()).isEqualTo(0);
   }
 
   @Test
-  void updateChallenge_withNullMaxScore_doesNotOverwriteExistingMaxScore() {
+  void updateChallenge_doesNotOverwriteExistingMaxScore() {
     UUID id = UUID.randomUUID();
     Lab lab = new Lab();
     lab.setId(id);
@@ -130,7 +129,6 @@ class AdminChallengeServiceImplTest {
     request.setTitle("Title");
     request.setStatus(LabStatusEnum.PRIVATE);
     request.setDifficulty(LabDifficultyEnum.EASY);
-    request.setMaxScore(null);
 
     when(labRepository.findById(id)).thenReturn(Optional.of(lab));
     when(labRepository.save(any(Lab.class)))
@@ -155,7 +153,6 @@ class AdminChallengeServiceImplTest {
     request.setShortDescription("   ");
     request.setStatus(LabStatusEnum.PUBLIC);
     request.setDifficulty(LabDifficultyEnum.MEDIUM);
-    request.setMaxScore(0);
 
     when(labRepository.findById(id)).thenReturn(Optional.of(lab));
     when(labRepository.save(any(Lab.class)))
