@@ -17,6 +17,8 @@ public interface BadgeService {
 
   void tryAwardBadgesForChallenge(UUID userId, UUID labId);
 
-  /** Attempts to award the course badge if badges are enabled and the course is already completed. */
+  /**
+   * Attempts to award the course badge if badges are enabled and the course is already completed.
+   */
   void tryAwardBadgeForCourse(UUID userId, UUID courseId);
 }
