@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button, Group, Loader, Modal, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
+import { IconMedal, IconPrinter, IconTrophy } from "@tabler/icons-react";
 import BadgeSvg from "./BadgeSvg";
 
 type UserBadge = {
@@ -164,7 +165,7 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
       onClose={onClose}
       title={
         <Group gap="sm">
-          <span style={{ fontSize: 22 }}>ðŸ†</span>
+          <IconTrophy size={22} color="#f1f5f9" />
           <Text
             fw={700}
             size="lg"
@@ -191,7 +192,7 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
         </Stack>
       ) : badgeList.length === 0 ? (
         <Stack align="center" py="xl" gap="sm">
-          <Text style={{ fontSize: 48 }}>ðŸŽ¯</Text>
+          <IconMedal size={64} color="#94a3b8" stroke={1.5} />
           <Text fw={600} style={{ color: "#e2e8f0" }}>
             No badges yet
           </Text>
@@ -232,7 +233,7 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
                   variant="subtle"
                   onClick={() => printCertificate(b, userName)}
                   style={{ color: "#94a3b8", fontSize: "0.72rem" }}
-                  leftSection={<span style={{ fontSize: 12 }}>ðŸ–¨</span>}
+                  leftSection={<IconPrinter size={14} />}
                 >
                   Print Certificate
                 </Button>
