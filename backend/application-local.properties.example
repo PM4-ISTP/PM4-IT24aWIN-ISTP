@@ -10,7 +10,7 @@
 # Local Postgres (infra/docker-compose.yaml)
 spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
 spring.datasource.username=postgres
-spring.datasource.password=root
+spring.datasource.password=change-me
 
 # Local-friendly defaults
 cors.allowed-origin=http://localhost:3000
