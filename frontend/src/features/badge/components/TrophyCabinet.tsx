@@ -186,7 +186,7 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
         <Stack align="center" py="xl">
           <Loader color="indigo" />
           <Text size="sm" c="dimmed">
-            Loading your badgesâ€¦
+            Loading your badges...
           </Text>
         </Stack>
       ) : badgeList.length === 0 ? (
