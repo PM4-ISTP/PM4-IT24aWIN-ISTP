@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Badge,
@@ -90,11 +90,15 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
       },
     },
   });
+  const profileFormRef = useRef(profileForm);
+  profileFormRef.current = profileForm;
 
   const rolesForm = useForm<{ role: string }>({
     mode: "controlled",
     initialValues: { role: "ROLE_STUDENT" },
   });
+  const rolesFormRef = useRef(rolesForm);
+  rolesFormRef.current = rolesForm;
 
   const passwordForm = useForm<{ password: string }>({
     mode: "controlled",
@@ -114,7 +118,7 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
       const data = (await res.json()) as AdminUserDetailResponse;
       setUser(data);
 
-      profileForm.setValues({
+      profileFormRef.current.setValues({
         email: data.email ?? "",
         username: data.username ?? "",
         firstName: data.firstName ?? "",
@@ -129,7 +133,7 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
         normalizedRoles.find((r) => r === "ROLE_INSTRUCTOR") ??
         normalizedRoles.find((r) => r === "ROLE_STUDENT") ??
         "ROLE_STUDENT";
-      rolesForm.setValues({ role: preferred });
+      rolesFormRef.current.setValues({ role: preferred });
     } catch (e) {
       notifications.show({
         title: "Error",
@@ -139,7 +143,7 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
     } finally {
       setLoading(false);
     }
-  }, [profileForm, rolesForm, userId]);
+  }, [userId]);
 
   useEffect(() => {
     void load();

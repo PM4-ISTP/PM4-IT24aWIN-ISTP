@@ -38,13 +38,16 @@ Set:
 
 ```bash
 cd backend
-cp application-secrets.properties.example application-secrets.properties
+cp application-local.properties.example src/main/resources/application-local.properties
 ```
 
-Set:
+Windows PowerShell:
+`Copy-Item application-local.properties.example src/main/resources/application-local.properties`
 
-- `DB_PASSWORD` (must match `infra/.env` → `POSTGRES_PASSWORD`)
-- `KEYCLOAK_ADMIN_CLIENT_SECRET` (only required for admin/profile-sync features)
+Fill in `backend/src/main/resources/application-local.properties`:
+
+- `spring.datasource.password` (must match `infra/.env` → `POSTGRES_PASSWORD`)
+- `keycloak.admin.client-secret` (required for admin/profile sync; without it admin user edits / profile updates will fail)
 
 ## 2) Start infra (Postgres)
 
@@ -57,8 +60,11 @@ docker compose up -d
 
 ```bash
 cd backend
-./gradlew bootRun
+SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 ```
+
+Windows PowerShell:
+`$env:SPRING_PROFILES_ACTIVE="local"; .\\gradlew.bat bootRun`
 
 Backend runs on `http://localhost:8080`.
 

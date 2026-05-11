@@ -120,7 +120,11 @@ public class GlobalExceptionHandler {
     if (details != null) {
       log.debug("Keycloak Admin API failure details: {}", details);
     }
-    errorDto.setError("Keycloak update failed");
+    String msg = "Keycloak update failed";
+    if (details != null && !details.isBlank()) {
+      msg = msg + ": " + details;
+    }
+    errorDto.setError(msg);
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_GATEWAY);
   }
 
