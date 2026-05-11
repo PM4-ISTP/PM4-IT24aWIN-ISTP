@@ -121,11 +121,28 @@ public class GlobalExceptionHandler {
       log.debug("Keycloak Admin API failure details: {}", details);
     }
     String msg = "Keycloak update failed";
-    if (details != null && !details.isBlank()) {
+    if (shouldExposeKeycloakDetails() && details != null && !details.isBlank()) {
       msg = msg + ": " + details;
     }
     errorDto.setError(msg);
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_GATEWAY);
+  }
+
+  private boolean shouldExposeKeycloakDetails() {
+    String profiles = System.getenv("SPRING_PROFILES_ACTIVE");
+    if (profiles == null || profiles.isBlank()) {
+      profiles = System.getProperty("spring.profiles.active", "");
+    }
+    if (profiles == null || profiles.isBlank()) {
+      return false;
+    }
+    for (String profile : profiles.split("[,;\\s]+")) {
+      String normalized = profile == null ? "" : profile.trim().toLowerCase();
+      if (normalized.equals("local") || normalized.equals("dev")) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private String extractKeycloakDetails(KeycloakAdminApiException ex) {

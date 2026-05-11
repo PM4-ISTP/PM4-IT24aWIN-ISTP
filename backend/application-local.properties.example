@@ -19,4 +19,6 @@ spring.jpa.hibernate.ddl-auto=update
 # Keycloak (remote staging; no local Keycloak)
 spring.security.oauth2.resourceserver.jwt.issuer-uri=https://istp-staging-auth.pm4.init-lab.ch/realms/interactive-security-training-platform
 keycloak.admin.base-url=https://istp-staging-auth.pm4.init-lab.ch
-keycloak.admin.client-secret=6NFk01WRXj3BYiFICVKZFiyWKp2zojs8
+
+# Service-account secret for the Keycloak client "istp-backend" (only needed for admin/profile sync features; otherwise leave empty).
+keycloak.admin.client-secret=
