@@ -22,12 +22,18 @@ export default function LandingSmoothWrapper({ children }: LandingSmoothWrapperP
       const content = contentRef.current;
       if (!wrapper || !content) return;
 
-      const smoother = ScrollSmoother.create({
-        wrapper,
-        content,
-        smooth: 1.1,
-        smoothTouch: 0,
-      });
+      const prefersReducedMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const smoother = prefersReducedMotion
+        ? null
+        : ScrollSmoother.create({
+            wrapper,
+            content,
+            smooth: 1.1,
+            smoothTouch: 0,
+          });
 
       const handleAnchorClick = (event: MouseEvent) => {
         const target = event.target as HTMLElement | null;
@@ -35,17 +41,27 @@ export default function LandingSmoothWrapper({ children }: LandingSmoothWrapperP
         if (!anchor) return;
         const hash = anchor.getAttribute("href");
         if (!hash || hash === "#") return;
-        const element = document.querySelector(hash);
+        let elementId = hash.slice(1);
+        try {
+          elementId = decodeURIComponent(elementId);
+        } catch {
+          // keep raw id if not valid percent-encoding
+        }
+        const element = document.getElementById(elementId);
         if (!element) return;
         event.preventDefault();
-        smoother.scrollTo(element, true, "top top");
+        if (smoother) {
+          smoother.scrollTo(element, true, "top top");
+        } else {
+          element.scrollIntoView({ behavior: "auto", block: "start" });
+        }
       };
 
       document.addEventListener("click", handleAnchorClick);
 
       return () => {
         document.removeEventListener("click", handleAnchorClick);
-        smoother.kill();
+        smoother?.kill();
         ScrollTrigger.refresh();
       };
     },

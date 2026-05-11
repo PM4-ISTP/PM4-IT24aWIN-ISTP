@@ -1,13 +1,16 @@
 import { Button, type ButtonProps, type ElementProps } from "@mantine/core";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ComponentType } from "react";
+
+const AnyButton = Button as ComponentType<Record<string, unknown>>;
 import { GRADIENT, INK, LINE } from "../../theme";
 
 type LandingButtonProps = ButtonProps &
   ElementProps<"button", keyof ButtonProps> & {
     tone?: "primary" | "ghost";
-    // Do not redeclare `component` here - use the one from ButtonProps to avoid
-    // incompatible type issues between string element names and function components.
     href?: string;
+    component?: string;
+    target?: string;
+    rel?: string;
   };
 
 const PRIMARY_STYLE: CSSProperties = {
@@ -30,14 +33,24 @@ export default function LandingButton({
   style,
   variant,
   radius = "md" as ButtonProps["radius"],
+  href,
+  component,
+  target,
+  rel,
   ...rest
 }: LandingButtonProps) {
   const toneStyle = tone === "primary" ? PRIMARY_STYLE : GHOST_STYLE;
+  const resolvedComponent = component ?? (href ? "a" : undefined);
+  const isExternal = !!href && /^https?:\/\//i.test(href);
   return (
-    <Button
+    <AnyButton
       radius={radius}
       variant={tone === "ghost" ? "default" : variant}
       style={{ ...toneStyle, ...((style as CSSProperties) ?? {}) }}
+      component={resolvedComponent}
+      href={href}
+      target={target ?? (isExternal ? "_blank" : undefined)}
+      rel={rel ?? (isExternal ? "noopener noreferrer" : undefined)}
       // Mantine's Button slots have overflow: hidden + line-height: 1, which
       // clips descenders (g, p, y, …). Open them up.
       styles={

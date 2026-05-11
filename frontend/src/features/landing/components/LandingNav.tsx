@@ -49,16 +49,13 @@ export default function LandingNav() {
           </Group>
 
           <Group gap={10} wrap="nowrap">
-            <LandingButton tone="ghost" size="sm" onClick={handleSignIn}>
-              Log in
-            </LandingButton>
             <LandingButton
               tone="primary"
               size="sm"
               onClick={handleSignIn}
               rightSection={<span>→</span>}
             >
-              Sign up
+              Login
             </LandingButton>
           </Group>
         </Group>
