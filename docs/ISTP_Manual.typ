@@ -122,12 +122,12 @@ The most important settings in the realm:
     inset: 8pt,
     fill: (col, row) => if row == 0 { luma(230) } else { white },
     [*Setting*], [*Value*], [*Why*],
-    [Access Token Lifespan], [5 min], [Short-lived for security; frontend refreshes automatically],
-    [SSO Session Idle], [30 min], [User gets logged out after 30 min of inactivity],
+    [Access Token Lifespan], [15 min], [Short-lived for security; frontend refreshes automatically],
+    [SSO Session Idle], [1 hour], [User gets logged out after 1 hour of inactivity],
     [SSO Session Max], [10 h], [Absolute session limit regardless of activity],
     [Refresh Token Reuse], [0 (single-use)], [Prevents token replay attacks],
     [Brute Force Protection], [Enabled, 10 attempts], [Locks account temporarily after 10 failed logins],
-    [SSL Required], [External], [HTTPS enforced for all non-localhost traffic],
+    [SSL Required], [All], [HTTPS enforced for all traffic including localhost],
     [Self-Registration], [Enabled], [Users can create their own accounts],
   ),
   caption: [Key realm settings],
@@ -151,7 +151,7 @@ Three custom roles control what users can do on the platform:
   caption: [Custom realm roles],
 )
 
-*Role policy:* Each user must have *exactly one* of these roles.
+*Role policy:* Roles are additive. Every user always keeps `ROLE_STUDENT`. Additional roles (`ROLE_INSTRUCTOR`, `ROLE_ADMINISTRATOR`) are assigned on top and can be revoked individually via the app.
 
 *Self-registration:* New users who self-register automatically receive `ROLE_STUDENT` (configured as a default realm role in Keycloak).
 
@@ -163,7 +163,7 @@ Note: Keycloak *groups* are not used for authorization in the ISTP backend. Avoi
 
 Two custom clients are configured. All other clients (`account`, `broker`, etc.) are Keycloak built-ins and should not be touched.
 
-*`interactive-security-training-platform-app`* is used by the Next.js frontend (NextAuth). It uses the Authorization Code Flow so the user is redirected to Keycloak to log in, then back to the app. It is a confidential client, meaning it has a client secret stored in a Kubernetes Secret.
+*`nextjs`* is the active client used by the Next.js frontend (NextAuth). It uses the Authorization Code Flow so the user is redirected to Keycloak to log in, then back to the app. It is a confidential client, meaning it has a client secret stored in a Kubernetes Secret. The older `interactive-security-training-platform-app` client also exists in the realm but `nextjs` is the one currently in use.
 
 *`istp-backend`* is used by the Spring Boot backend for service-to-service calls to the Keycloak *Admin REST API* (Client Credentials Flow). It is a confidential client with *Service Accounts* enabled. The service account needs `realm-management` roles such as `manage-users` (and usually `view-users` / `query-users`; `view-clients` is optional for session listing).
 
@@ -301,7 +301,79 @@ Following is an example for a response:
 
 The terminal does not run in the same container as the app. But they run in the same network. While you can access `localhost` of the app from the terminal (e.g., using `curl "localhost"`), you cannot access the file system of the app.
 
-// ─── 4. Setup Checklist ────────────────────────────────────────────────────
+// ─── 4. User Guide: Student ───────────────────────────────────────────────
+
+= User Guide: Student
+
+== Registration & Login
+
+== Challenge Browser
+
+== Starting a Challenge (Pod Launcher)
+
+== Keep-Alive & Pod Management
+
+== Submitting a Flag
+
+== Progress Dashboard
+
+== Courses
+
+// ─── 5. User Guide: Instructor ────────────────────────────────────────────
+
+= User Guide: Instructor
+
+== Creating a Challenge
+
+== Configuring a Challenge (Ports, Environment Variables, Image)
+
+== Publishing & Archiving a Challenge
+
+== Creating a Course & Adding Challenges
+
+// ─── 6. User Guide: Admin ─────────────────────────────────────────────────
+
+= User Guide: Admin
+
+== User Overview
+
+== Assigning & Revoking ROLE_INSTRUCTOR
+
+== Assigning & Revoking ROLE_ADMINISTRATOR
+
+== Deleting & Disabling Users
+
+// ─── 7. Architecture ──────────────────────────────────────────────────────
+
+= Architecture
+
+== Component Overview
+
+== Authentication & Authorization (Keycloak, JWT, OIDC)
+
+== Frontend (Next.js + Mantine)
+
+== Backend (Spring Boot)
+
+== Kubernetes Pod Lifecycle
+
+== Database Schema (PostgreSQL)
+
+// ─── 8. API Documentation ─────────────────────────────────────────────────
+
+= API Documentation
+
+== Authentication & Token Handling
+
+== Challenge Endpoints
+
+== Pod Endpoints
+
+== User Endpoints
+
+== Course Endpoints
+
+// ─── 10. Setup Checklist ───────────────────────────────────────────────────
 
 = Setup Checklist
 
