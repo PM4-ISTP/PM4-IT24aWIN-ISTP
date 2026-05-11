@@ -125,7 +125,7 @@ The most important settings in the realm:
     [Access Token Lifespan], [15 min], [Short-lived for security; frontend refreshes automatically],
     [SSO Session Idle], [1 hour], [User gets logged out after 1 hour of inactivity],
     [SSO Session Max], [10 h], [Absolute session limit regardless of activity],
-    [Refresh Token Reuse], [0 (single-use)], [Prevents token replay attacks],
+    [Refresh Token Reuse], [1 (single-use per rotation)], [Prevents token replay attacks],
     [Brute Force Protection], [Enabled, 10 attempts], [Locks account temporarily after 10 failed logins],
     [SSL Required], [All], [HTTPS enforced for all traffic including localhost],
     [Self-Registration], [Enabled], [Users can create their own accounts],
