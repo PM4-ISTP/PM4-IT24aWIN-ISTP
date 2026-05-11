@@ -10,7 +10,6 @@ const navLinks = [
   { label: "Features", href: "#bento" },
   { label: "Product", href: "#screens" },
   { label: "For Schools", href: "#cta" },
-  { label: "Docs", href: "#" },
   { label: "GitHub ↗", href: "https://github.com" },
 ];
 
