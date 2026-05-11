@@ -24,7 +24,7 @@ interface Props {
 function buildInlineSvgContent(badge: UserBadge): string {
   const c = badge.primaryColor;
   const t = badge.textColor;
-  const icon = badge.badgeIcon ?? "ðŸ†";
+  const icon = badge.badgeIcon ?? "🏆";
 
   const lighten = (hex: string, f: number) => {
     const r = parseInt(hex.slice(1, 3), 16),
