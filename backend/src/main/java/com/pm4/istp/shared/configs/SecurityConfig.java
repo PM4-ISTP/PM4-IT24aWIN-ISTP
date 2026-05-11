@@ -45,7 +45,8 @@ public class SecurityConfig {
                     .hasRole(ADMINISTRATOR_ROLE)
                     .requestMatchers("/api/v1/users/me/badges")
                     .authenticated()
-                    .requestMatchers("/api/v1/courses/my-enrollments", "/api/v1/courses/my-deadlines")
+                    .requestMatchers(
+                        "/api/v1/courses/my-enrollments", "/api/v1/courses/my-deadlines")
                     .authenticated()
                     .requestMatchers("/api/v1/courses/catalog/**")
                     .authenticated()
