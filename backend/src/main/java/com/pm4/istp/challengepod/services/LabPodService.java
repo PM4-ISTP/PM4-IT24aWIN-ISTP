@@ -524,6 +524,9 @@ public class LabPodService {
   private Deployment touchLastActivityIfNeeded(Deployment deployment) {
     try {
       Map<String, String> labels = deployment.getMetadata().getLabels();
+      if (labels == null) {
+        labels = Map.of();
+      }
       long now = Instant.now().getEpochSecond();
       long createdAt = parseLongLabel(labels, LABEL_CREATED_AT, now);
       long lastActivity = parseLongLabel(labels, LABEL_LAST_ACTIVITY_AT, createdAt);
@@ -531,7 +534,9 @@ public class LabPodService {
         return deployment;
       }
 
-      Map<String, String> updatedLabels = new HashMap<>(labels != null ? labels : Map.of());
+      // We rely on Kubernetes optimistic locking during replace(); if another request updated
+      // the same deployment meanwhile, the API will reject stale writes and we keep the old object.
+      Map<String, String> updatedLabels = new HashMap<>(labels);
       updatedLabels.put(LABEL_LAST_ACTIVITY_AT, String.valueOf(now));
       return updateDeploymentLabels(deployment, updatedLabels);
     } catch (Exception e) {

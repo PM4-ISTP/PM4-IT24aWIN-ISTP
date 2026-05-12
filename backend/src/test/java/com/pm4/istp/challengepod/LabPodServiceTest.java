@@ -54,6 +54,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class LabPodServiceTest {
+    private static final int TEST_POD_AGE_SECONDS = 30;
 
     @Mock
     private AdminConfigurationService adminConfigurationService;
@@ -406,7 +407,7 @@ class LabPodServiceTest {
         UUID labId = UUID.randomUUID();
         // Keep age below ACTIVITY_TOUCH_MIN_SECONDS (60s) so getPod() won't trigger a label touch
         // that could alter the mocked deployment object during this assertion-focused test.
-        long createdAt = Instant.now().minusSeconds(30).getEpochSecond();
+        long createdAt = Instant.now().minusSeconds(TEST_POD_AGE_SECONDS).getEpochSecond();
         Map<String, String> labels = podLabels(userId, labId, createdAt);
         Deployment deployment =
                 new DeploymentBuilder()
