@@ -1004,9 +1004,7 @@ export function LabPlayView({
                   radius="md"
                   p="md"
                   style={{
-                    background: podExpiringNow
-                      ? "rgba(248,113,113,0.10)"
-                      : "rgba(251,191,36,0.12)",
+                    background: podExpiringNow ? "rgba(248,113,113,0.10)" : "rgba(251,191,36,0.12)",
                   }}
                 >
                   <Text size="sm" c={podExpiringNow ? "red.3" : "yellow.2"}>
@@ -1051,7 +1049,12 @@ export function LabPlayView({
               />
 
               {podStatus === "RUNNING" && podExpiresAt && (
-                <Paper withBorder radius="md" p="sm" style={{ background: "rgba(255,255,255,0.03)" }}>
+                <Paper
+                  withBorder
+                  radius="md"
+                  p="sm"
+                  style={{ background: "rgba(255,255,255,0.03)" }}
+                >
                   <Group justify="space-between" align="center" gap="sm">
                     <Group gap={8}>
                       <IconClockHour10 size={16} />
@@ -1068,11 +1071,7 @@ export function LabPlayView({
                         </Text>
                       </Stack>
                     </Group>
-                    <Badge
-                      variant="light"
-                      color={canExtendPod ? "blue" : "gray"}
-                      radius="sm"
-                    >
+                    <Badge variant="light" color={canExtendPod ? "blue" : "gray"} radius="sm">
                       {extensionSummary.label}
                     </Badge>
                   </Group>
