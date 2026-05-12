@@ -52,6 +52,7 @@ import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.repositories.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -400,16 +401,16 @@ public class CourseServiceImpl implements CourseService {
     List<CourseLabResponseDto> challengesDto = toChallengeSubmissionDtos(assigned);
 
     List<UUID> userIds = participants.stream().map(CourseParticipantResponseDto::getId).toList();
-    List<UUID> challengeIds = assigned.stream().map(cc -> cc.getLab().getId()).toList();
+    List<UUID> labIds = assigned.stream().map(cc -> cc.getLab().getId()).toList();
 
-    Map<UUID, Integer> totalByLab = loadChallengeTotals(challengeIds);
+    Map<UUID, Integer> totalByLab = loadChallengeTotals(labIds);
     Map<UUID, Integer> maxPointsByLab = loadMaxPoints(assigned);
 
-    SubmissionAggregates aggregates = loadSubmissionAggregates(userIds, challengeIds);
-    SubmissionScoringData scoringData = loadSubmissionScoringData(courseId, userIds, challengeIds);
+    SubmissionAggregates aggregates = loadSubmissionAggregates(userIds, labIds);
+    SubmissionScoringData scoringData = loadSubmissionScoringData(courseId, userIds, labIds);
     List<CourseChallengeSubmissionEntryDto> entries =
         buildSubmissionEntries(
-            userIds, challengeIds, totalByLab, maxPointsByLab, aggregates, scoringData);
+            userIds, labIds, totalByLab, maxPointsByLab, aggregates, scoringData);
 
     return new CourseLabSubmissionsResponseDto(courseId, participants, challengesDto, entries);
   }
@@ -720,12 +721,12 @@ public class CourseServiceImpl implements CourseService {
         .toList();
   }
 
-  private Map<UUID, Integer> loadChallengeTotals(List<UUID> challengeIds) {
+  private Map<UUID, Integer> loadChallengeTotals(List<UUID> labIds) {
     Map<UUID, Integer> totalByLab = new HashMap<>();
-    if (challengeIds.isEmpty()) {
+    if (labIds.isEmpty()) {
       return totalByLab;
     }
-    for (Object[] row : challengeRepository.countByLabIds(challengeIds)) {
+    for (Object[] row : challengeRepository.countByLabIds(labIds)) {
       UUID labId = (UUID) row[0];
       Long count = (Long) row[1];
       totalByLab.put(labId, count == null ? 0 : count.intValue());
@@ -733,15 +734,14 @@ public class CourseServiceImpl implements CourseService {
     return totalByLab;
   }
 
-  private SubmissionAggregates loadSubmissionAggregates(
-      List<UUID> userIds, List<UUID> challengeIds) {
+  private SubmissionAggregates loadSubmissionAggregates(List<UUID> userIds, List<UUID> labIds) {
     Map<SubmissionKey, Integer> solvedCountByKey = new HashMap<>();
     Map<SubmissionKey, LocalDateTime> completedAtByKey = new HashMap<>();
-    if (userIds.isEmpty() || challengeIds.isEmpty()) {
+    if (userIds.isEmpty() || labIds.isEmpty()) {
       return new SubmissionAggregates(solvedCountByKey, completedAtByKey);
     }
     for (Object[] row :
-        challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(userIds, challengeIds)) {
+        challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(userIds, labIds)) {
       UUID userId = (UUID) row[0];
       UUID labId = (UUID) row[1];
       Long solved = (Long) row[2];
@@ -983,6 +983,11 @@ public class CourseServiceImpl implements CourseService {
   @Transactional(readOnly = true)
   public List<CourseLabDeadlineDto> listUpcomingDeadlines(UUID userId) {
     List<Object[]> rows = courseLabRepository.findDeadlinesForUser(userId);
+    List<UUID> labIds = rows.stream().map(row -> (UUID) row[2]).distinct().toList();
+    Map<UUID, Integer> totalByLab = loadChallengeTotals(labIds);
+    SubmissionAggregates submissions =
+        loadSubmissionAggregates(Collections.singletonList(userId), labIds);
+
     List<CourseLabDeadlineDto> result = new ArrayList<>(rows.size());
     for (Object[] row : rows) {
       UUID courseId = (UUID) row[0];
@@ -993,7 +998,14 @@ public class CourseServiceImpl implements CourseService {
       if (courseId == null || labId == null || dueAt == null) {
         continue;
       }
-      result.add(new CourseLabDeadlineDto(courseId, courseTitle, labId, labTitle, dueAt));
+
+      int totalCount = totalByLab.getOrDefault(labId, 0);
+      int solvedCount =
+          submissions.solvedCountByKey.getOrDefault(new SubmissionKey(userId, labId), 0);
+      if (resolveSubmissionStatus(solvedCount, totalCount)
+          != CourseLabSubmissionStatusEnum.SUBMITTED) {
+        result.add(new CourseLabDeadlineDto(courseId, courseTitle, labId, labTitle, dueAt));
+      }
     }
     return result;
   }
