@@ -9,11 +9,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import com.pm4.istp.course.dto.CourseLabDeadlineDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -1489,8 +1491,67 @@ class CourseServiceImplTest {
 
     assertThat(deadlines).hasSize(1);
     assertThat(deadlines.getFirst().getCourseId()).isEqualTo(courseId);
+    assertThat(deadlines.getFirst().getCourseTitle()).isEqualTo("Course");
     assertThat(deadlines.getFirst().getLabId()).isEqualTo(openLabId);
+    assertThat(deadlines.getFirst().getLabTitle()).isEqualTo("Open Lab");
     assertThat(deadlines.getFirst().getDueAt()).isEqualTo(dueAt);
+  }
+
+  @Test
+  void listUpcomingDeadlines_multipleCoursesWithSameLab() {
+    UUID userId = UUID.randomUUID();
+    UUID[] courseIds = {UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()};
+    UUID labId = UUID.randomUUID();
+    String labTitle = "Lab (in 3 different courses)";
+    LocalDateTime dueAt = LocalDateTime.of(2026, 5, 13, 8, 0);
+
+    when(courseLabRepository.findDeadlinesForUser(userId))
+        .thenReturn(
+            List.of(
+                new Object[] {courseIds[0], "Course 1", labId, labTitle, dueAt},
+                new Object[] {courseIds[1], "Course 2", labId, labTitle, dueAt},
+                new Object[] {courseIds[2], "Course 3", labId, labTitle, dueAt}));
+
+    when(challengeRepository.countByLabIds(List.of(labId)))
+        .thenReturn(Collections.singletonList(new Object[] {labId, 5L}));
+    when(challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(List.of(userId), List.of(labId)))
+        .thenReturn(Collections.singletonList(new Object[] {userId, labId, 3L, dueAt.minusMinutes(5)}));
+
+    var deadlines = courseService.listUpcomingDeadlines(userId);
+
+    assertThat(deadlines).hasSize(3);
+    for (int i = 0; i < courseIds.length; i++) {
+      CourseLabDeadlineDto deadline = deadlines.get(i);
+      assertThat(deadline.getCourseId()).isEqualTo(courseIds[i]);
+      assertThat(deadline.getCourseTitle()).isEqualTo("Course " + (i + 1));
+      assertThat(deadline.getLabId()).isEqualTo(labId);
+      assertThat(deadline.getLabTitle()).isEqualTo(labTitle);
+      assertThat(deadline.getDueAt()).isEqualTo(dueAt);
+    }
+  }
+
+  @Test
+  void listUpcomingDeadlines_multipleCoursesWithSameCompletedLab() {
+    UUID userId = UUID.randomUUID();
+    UUID[] courseIds = {UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()};
+    UUID labId = UUID.randomUUID();
+    String labTitle = "Lab (in 3 different courses; already completed)";
+    LocalDateTime dueAt = LocalDateTime.of(2026, 5, 13, 8, 0);
+
+    when(courseLabRepository.findDeadlinesForUser(userId))
+        .thenReturn(
+            List.of(
+                new Object[] {courseIds[0], "Course 1", labId, labTitle, dueAt},
+                new Object[] {courseIds[1], "Course 2", labId, labTitle, dueAt},
+                new Object[] {courseIds[2], "Course 3", labId, labTitle, dueAt}));
+
+    when(challengeRepository.countByLabIds(List.of(labId)))
+        .thenReturn(Collections.singletonList(new Object[] {labId, 5L}));
+    when(challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(List.of(userId), List.of(labId)))
+        .thenReturn(Collections.singletonList(new Object[] {userId, labId, 5L, dueAt.minusMinutes(5)}));
+
+    var deadlines = courseService.listUpcomingDeadlines(userId);
+    assertThat(deadlines).hasSize(0);
   }
 
   @Test
