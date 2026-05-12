@@ -404,6 +404,8 @@ class LabPodServiceTest {
         setClientRef(client);
         UUID userId = UUID.randomUUID();
         UUID labId = UUID.randomUUID();
+        // Keep age below ACTIVITY_TOUCH_MIN_SECONDS (60s) so getPod() won't trigger a label touch
+        // that could alter the mocked deployment object during this assertion-focused test.
         long createdAt = Instant.now().minusSeconds(30).getEpochSecond();
         Map<String, String> labels = podLabels(userId, labId, createdAt);
         Deployment deployment =
