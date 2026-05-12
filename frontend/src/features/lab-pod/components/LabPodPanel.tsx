@@ -145,7 +145,8 @@ export function LabPodPanel({
 
           {expiresAt && (
             <Text size="xs" c="dimmed" ta="right">
-              Expires {expiresAt.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" })}
+              Expires{" "}
+              {expiresAt.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" })}
             </Text>
           )}
 

@@ -945,7 +945,9 @@ export function LabPlayView({
                   </Tooltip>
                 )}
 
-                <Tooltip label={canExtendPod ? "Extend lab by 30 minutes" : "Extension unavailable"}>
+                <Tooltip
+                  label={canExtendPod ? "Extend lab by 30 minutes" : "Extension unavailable"}
+                >
                   <ActionIcon
                     variant="subtle"
                     color="yellow"
