@@ -199,7 +199,7 @@ public class LabPodService {
               "Pod naming conflict detected. Please contact an administrator.");
         }
         int ttl = resolveBaseTtlSeconds(lab, adminConfig);
-        Deployment touched = touchLastActivityIfNeeded(d);
+        Deployment touched = ensureLifecycleLabelsAndTouch(d, ttl);
         return Pair.of(buildResponse(touched, ttl), false);
       }
 
@@ -217,7 +217,7 @@ public class LabPodService {
         List<Deployment> existing = findDeployments(userId, labId);
         if (!existing.isEmpty()) {
           int ttl = resolveBaseTtlSeconds(lab, adminConfig);
-          Deployment touched = touchLastActivityIfNeeded(existing.get(0));
+          Deployment touched = ensureLifecycleLabelsAndTouch(existing.get(0), ttl);
           return Pair.of(buildResponse(touched, ttl), false);
         }
       }
@@ -321,7 +321,7 @@ public class LabPodService {
       }
 
       int fallbackTtl = resolveConfiguredDefaultTtlSeconds();
-      int currentCount = parseIntLabel(labels, LABEL_EXTENSION_COUNT, 0);
+      int currentCount = Math.max(0, parseIntLabel(labels, LABEL_EXTENSION_COUNT, 0));
       if (currentCount >= MAX_EXTENSION_COUNT) {
         throw new LabPodException("Maximum pod extension limit reached.");
       }
@@ -545,6 +545,43 @@ public class LabPodService {
     }
   }
 
+  /**
+   * Initializes missing lifecycle labels (base-ttl-seconds, ttl-extension-count) and updates
+   * last-activity-at if the touch threshold has been exceeded — all in a single K8s write to avoid
+   * resource-version conflicts from two consecutive updates.
+   */
+  private Deployment ensureLifecycleLabelsAndTouch(Deployment deployment, int baseTtl) {
+    try {
+      Map<String, String> labels = deployment.getMetadata().getLabels();
+      if (labels == null) {
+        labels = Map.of();
+      }
+
+      long now = Instant.now().getEpochSecond();
+      long createdAt = parseLongLabel(labels, LABEL_CREATED_AT, now);
+      long lastActivity = parseLongLabel(labels, LABEL_LAST_ACTIVITY_AT, createdAt);
+
+      boolean activityNeedsTouch = (now - lastActivity) >= ACTIVITY_TOUCH_MIN_SECONDS;
+      boolean missingBaseTtl = !labels.containsKey(LABEL_BASE_TTL_SECONDS);
+      boolean missingExtCount = !labels.containsKey(LABEL_EXTENSION_COUNT);
+
+      if (!activityNeedsTouch && !missingBaseTtl && !missingExtCount) {
+        return deployment;
+      }
+
+      Map<String, String> updatedLabels = new HashMap<>(labels);
+      updatedLabels.putIfAbsent(LABEL_BASE_TTL_SECONDS, String.valueOf(baseTtl));
+      updatedLabels.putIfAbsent(LABEL_EXTENSION_COUNT, "0");
+      if (activityNeedsTouch) {
+        updatedLabels.put(LABEL_LAST_ACTIVITY_AT, String.valueOf(now));
+      }
+      return updateDeploymentLabels(deployment, updatedLabels);
+    } catch (Exception e) {
+      log.debug("Could not update lifecycle labels for {}", deployment.getMetadata().getName(), e);
+      return deployment;
+    }
+  }
+
   private Deployment updateDeploymentLabels(
       Deployment deployment, Map<String, String> updatedLabels) {
     deployment.getMetadata().setLabels(updatedLabels);
@@ -573,13 +610,13 @@ public class LabPodService {
     Instant createdAt = null;
     Instant expiresAt = null;
     Instant lastActivityAt = null;
-    String createdAtStr = labels.get(LABEL_CREATED_AT);
-    if (createdAtStr != null) {
-      createdAt = Instant.ofEpochSecond(Long.parseLong(createdAtStr));
+    long createdEpoch = parseLongLabel(labels, LABEL_CREATED_AT, -1);
+    if (createdEpoch > 0) {
+      createdAt = Instant.ofEpochSecond(createdEpoch);
     }
-    String lastActivityAtStr = labels.get(LABEL_LAST_ACTIVITY_AT);
-    if (lastActivityAtStr != null) {
-      lastActivityAt = Instant.ofEpochSecond(Long.parseLong(lastActivityAtStr));
+    long lastActivityEpoch = parseLongLabel(labels, LABEL_LAST_ACTIVITY_AT, createdEpoch > 0 ? createdEpoch : -1);
+    if (lastActivityEpoch > 0) {
+      lastActivityAt = Instant.ofEpochSecond(lastActivityEpoch);
     } else {
       lastActivityAt = createdAt;
     }
@@ -596,7 +633,9 @@ public class LabPodService {
 
     PodStatusEnum status = mapDeploymentStatus(deployment);
 
+    // Clamp extension count to [0, MAX_EXTENSION_COUNT] — consistent with resolveEffectiveTtlSeconds
     int extensionCount = parseIntLabel(labels, LABEL_EXTENSION_COUNT, 0);
+    extensionCount = Math.max(0, Math.min(extensionCount, MAX_EXTENSION_COUNT));
     boolean canExtend = extensionCount < MAX_EXTENSION_COUNT;
 
     return new PodStatusResponse(

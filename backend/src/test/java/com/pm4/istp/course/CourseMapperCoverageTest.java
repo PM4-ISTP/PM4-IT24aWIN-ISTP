@@ -144,7 +144,9 @@ class CourseMapperCoverageTest {
     assertThat(labMapper.fromDto((ChallengeOptionRequestDto) null)).isNull();
     assertThat(labMapper.fromDto(createDto).getChallenges()).hasSize(1);
     assertThat(labMapper.fromDto(createDto).getContainerPort()).isEqualTo(8080);
+    assertThat(labMapper.fromDto(createDto).getPodTtlSeconds()).isNull();
     assertThat(labMapper.fromDto(updateDto).getStatus()).isEqualTo(LabStatusEnum.DRAFT);
+    assertThat(labMapper.fromDto(updateDto).getPodTtlSeconds()).isNull();
     assertThat(labMapper.fromDto(challengeDto).getOptions().get(0).isCorrect()).isTrue();
     assertThat(labMapper.fromDto(optionDto).getText()).isEqualTo("Option A");
   }

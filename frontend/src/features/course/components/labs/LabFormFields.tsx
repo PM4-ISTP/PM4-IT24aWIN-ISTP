@@ -25,7 +25,7 @@ export interface ChallengeFormValues {
   difficulty: LabDifficultyEnum;
   dockerImage: string;
   containerPort: number;
-  podTtlSeconds: number;
+  podTtlSeconds: number | undefined;
   challenges: ChallengeItemFormValues[];
 }
 

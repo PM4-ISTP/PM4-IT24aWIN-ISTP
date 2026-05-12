@@ -37,7 +37,7 @@ export default function CreateLab() {
     difficulty: "MEDIUM",
     dockerImage: "",
     containerPort: 80,
-    podTtlSeconds: 3600,
+    podTtlSeconds: undefined,
     challenges: [
       {
         title: "",
@@ -110,7 +110,9 @@ export default function CreateLab() {
       difficulty: formValues.difficulty,
       dockerImage: trimmedDockerImage,
       containerPort: formValues.containerPort,
-      podTtlSeconds: formValues.podTtlSeconds,
+      ...(formValues.podTtlSeconds !== undefined
+        ? { podTtlSeconds: formValues.podTtlSeconds }
+        : {}),
       challenges: toRequestChallenges(formValues.challenges),
     });
 

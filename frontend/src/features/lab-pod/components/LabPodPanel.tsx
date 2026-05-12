@@ -1,6 +1,7 @@
 "use client";
 
 import { Anchor, Button, Flex, Loader, Stack, Text } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   IconClockHour10,
   IconClockPlus,
@@ -34,6 +35,12 @@ export function LabPodPanel({
         params: { path: { labId } },
       });
       await refetch();
+    } catch (e) {
+      notifications.show({
+        color: "red",
+        title: "Failed to start lab",
+        message: e instanceof Error ? e.message : "An unexpected error occurred.",
+      });
     } finally {
       setActionLoading(false);
     }
@@ -46,6 +53,12 @@ export function LabPodPanel({
         params: { path: { labId } },
       });
       await refetch();
+    } catch (e) {
+      notifications.show({
+        color: "red",
+        title: "Failed to stop lab",
+        message: e instanceof Error ? e.message : "An unexpected error occurred.",
+      });
     } finally {
       setActionLoading(false);
     }
@@ -58,6 +71,12 @@ export function LabPodPanel({
         params: { path: { labId } },
       });
       await refetch();
+    } catch (e) {
+      notifications.show({
+        color: "red",
+        title: "Failed to extend lab",
+        message: e instanceof Error ? e.message : "An unexpected error occurred.",
+      });
     } finally {
       setActionLoading(false);
     }
