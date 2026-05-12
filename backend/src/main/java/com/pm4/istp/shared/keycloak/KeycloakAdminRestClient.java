@@ -26,7 +26,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
     try {
       return restClient()
           .get()
-          .uri(properties.getUserByIdPath(), userId)
+          .uri(userByIdPath(), userId)
           .retrieve()
           .body(KeycloakUserRepresentation.class);
     } catch (RestClientResponseException ex) {
@@ -44,7 +44,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
     try {
       restClient()
           .put()
-          .uri(properties.getUserByIdPath(), userId)
+          .uri(userByIdPath(), userId)
           .contentType(MediaType.APPLICATION_JSON)
           .body(writeJson(updatedUser))
           .retrieve()
@@ -81,7 +81,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
   @Override
   public void deleteUser(UUID userId) {
     try {
-      restClient().delete().uri(properties.getUserByIdPath(), userId).retrieve().toBodilessEntity();
+      restClient().delete().uri(userByIdPath(), userId).retrieve().toBodilessEntity();
     } catch (RestClientException ex) {
       throw new KeycloakAdminApiException("Failed to delete user via Keycloak Admin API", ex);
     }
@@ -129,7 +129,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
     try {
       restClient()
           .post()
-          .uri(properties.getUserRealmRoleMappingsPath(), userId)
+          .uri(userRealmRoleMappingsPath(), userId)
           .contentType(MediaType.APPLICATION_JSON)
           .body(writeJson(roles))
           .retrieve()
@@ -145,7 +145,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
       KeycloakRoleRepresentation[] body =
           restClient()
               .get()
-              .uri(properties.getUserRealmRoleMappingsPath(), userId)
+              .uri(userRealmRoleMappingsPath(), userId)
               .retrieve()
               .body(KeycloakRoleRepresentation[].class);
       return body == null ? List.of() : List.of(body);
@@ -159,7 +159,7 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
     try {
       restClient()
           .method(org.springframework.http.HttpMethod.DELETE)
-          .uri(properties.getUserRealmRoleMappingsPath(), userId)
+          .uri(userRealmRoleMappingsPath(), userId)
           .contentType(MediaType.APPLICATION_JSON)
           .body(writeJson(roles))
           .retrieve()
@@ -278,6 +278,22 @@ public class KeycloakAdminRestClient implements KeycloakAdminClient {
         .baseUrl(adminBase)
         .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token)
         .build();
+  }
+
+  private String userByIdPath() {
+    String path = properties.getUserByIdPath();
+    if (path == null || path.isBlank()) {
+      return "/users/{id}";
+    }
+    return path;
+  }
+
+  private String userRealmRoleMappingsPath() {
+    String path = properties.getUserRealmRoleMappingsPath();
+    if (path == null || path.isBlank()) {
+      return "/users/{id}/role-mappings/realm";
+    }
+    return path;
   }
 
   private String writeJson(Object body) {

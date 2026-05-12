@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button, Group, Loader, Modal, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
+import { IconMedal, IconPrinter, IconTrophy } from "@tabler/icons-react";
 import BadgeSvg from "./BadgeSvg";
 
 type UserBadge = {
@@ -21,7 +22,7 @@ interface Props {
   userName?: string;
 }
 
-function buildInlineSvgContent(badge: UserBadge): string {
+function buildInlineSvgContent(badge: UserBadge): { viewBox: string; height: number; content: string } {
   const c = badge.primaryColor;
   const t = badge.textColor;
   const icon = badge.badgeIcon ?? "🏆";
@@ -53,8 +54,7 @@ function buildInlineSvgContent(badge: UserBadge): string {
 
   const light = lighten(c, 0.3);
   const dark = darken(c, 0.4);
-
-  return `<defs>
+  const base = `<defs>
     <linearGradient id="ig" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="${light}"/>
       <stop offset="100%" stop-color="${dark}"/>
@@ -63,12 +63,62 @@ function buildInlineSvgContent(badge: UserBadge): string {
       <stop offset="0%" stop-color="white" stop-opacity="0.22"/>
       <stop offset="100%" stop-color="white" stop-opacity="0"/>
     </radialGradient>
-  </defs>
-  <circle cx="150" cy="150" r="130" fill="url(#ig)"/>
-  <circle cx="150" cy="150" r="128" fill="none" stroke="${t}" stroke-width="3" stroke-dasharray="8 5" stroke-opacity="0.4"/>
-  <circle cx="150" cy="150" r="116" fill="none" stroke="${t}" stroke-width="1.5" stroke-opacity="0.2"/>
-  <circle cx="150" cy="150" r="130" fill="url(#is)"/>
-  <text x="150" y="155" text-anchor="middle" font-size="80" dominant-baseline="middle">${icon}</text>`;
+  </defs>`;
+
+  if (badge.template === 2) {
+    const cx = 150;
+    const cy = 155;
+    const r = 135;
+    const hexPoints = (radius: number) =>
+      Array.from({ length: 6 }, (_, i) => {
+        const angle = (Math.PI / 180) * (60 * i - 30);
+        return `${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)}`;
+      }).join(" ");
+    return {
+      viewBox: "0 0 300 310",
+      height: 124,
+      content: `${base}
+      <polygon points="${hexPoints(r)}" fill="url(#ig)"/>
+      <polygon points="${hexPoints(r - 10)}" fill="none" stroke="${t}" stroke-width="2" stroke-opacity="0.25"/>
+      <polygon points="${hexPoints(r - 22)}" fill="none" stroke="${t}" stroke-width="1" stroke-opacity="0.15"/>
+      <text x="${cx}" y="${cy - 30}" text-anchor="middle" font-size="68" dominant-baseline="middle">${icon}</text>`,
+    };
+  }
+
+  if (badge.template === 3) {
+    const ribbonMid = lighten(c, 0.15);
+    return {
+      viewBox: "0 0 300 360",
+      height: 144,
+      content: `${base}
+      <linearGradient id="mribbon" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="${dark}"/>
+        <stop offset="50%" stop-color="${ribbonMid}"/>
+        <stop offset="100%" stop-color="${dark}"/>
+      </linearGradient>
+      <polygon points="122,28 150,28 148,95 124,95" fill="url(#mribbon)"/>
+      <polygon points="150,28 178,28 176,95 152,95" fill="url(#mribbon)"/>
+      <line x1="150" y1="28" x2="150" y2="95" stroke="${t}" stroke-width="0.5" stroke-opacity="0.2"/>
+      <rect x="113" y="12" width="74" height="18" rx="5" fill="${ribbonMid}" stroke="${t}" stroke-width="1" stroke-opacity="0.3"/>
+      <rect x="118" y="16" width="64" height="10" rx="3" fill="none" stroke="${t}" stroke-width="0.5" stroke-opacity="0.2"/>
+      <circle cx="150" cy="215" r="120" fill="url(#ig)"/>
+      <circle cx="150" cy="215" r="118" fill="none" stroke="${t}" stroke-width="3" stroke-dasharray="8 5" stroke-opacity="0.45"/>
+      <circle cx="150" cy="215" r="106" fill="none" stroke="${t}" stroke-width="1.5" stroke-opacity="0.2"/>
+      <circle cx="150" cy="215" r="120" fill="url(#is)"/>
+      <text x="150" y="190" text-anchor="middle" font-size="68" dominant-baseline="middle">${icon}</text>`,
+    };
+  }
+
+  return {
+    viewBox: "0 0 300 300",
+    height: 120,
+    content: `${base}
+    <circle cx="150" cy="150" r="130" fill="url(#ig)"/>
+    <circle cx="150" cy="150" r="128" fill="none" stroke="${t}" stroke-width="3" stroke-dasharray="8 5" stroke-opacity="0.4"/>
+    <circle cx="150" cy="150" r="116" fill="none" stroke="${t}" stroke-width="1.5" stroke-opacity="0.2"/>
+    <circle cx="150" cy="150" r="130" fill="url(#is)"/>
+    <text x="150" y="155" text-anchor="middle" font-size="80" dominant-baseline="middle">${icon}</text>`,
+  };
 }
 
 function printCertificate(badge: UserBadge, userName: string) {
@@ -77,12 +127,13 @@ function printCertificate(badge: UserBadge, userName: string) {
     month: "long",
     year: "numeric",
   });
+  const badgeSvg = buildInlineSvgContent(badge);
 
   const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>Certificate – ${badge.courseTitle}</title>
+  <title>Certificate - ${badge.courseTitle}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600&display=swap');
     *{margin:0;padding:0;box-sizing:border-box}
@@ -100,6 +151,7 @@ function printCertificate(badge: UserBadge, userName: string) {
     .name{font-family:'Playfair Display',Georgia,serif;font-size:2rem;color:#1e293b;border-bottom:2px solid ${badge.primaryColor};padding-bottom:8px;padding-left:40px;padding-right:40px}
     .course{font-size:1.25rem;font-weight:600;color:#1e293b}
     .date{font-size:0.875rem;color:#94a3b8}
+    @page{margin:0;size:A4 landscape}
     @media print{body{background:white}.cert{box-shadow:none}}
   </style>
 </head>
@@ -113,23 +165,38 @@ function printCertificate(badge: UserBadge, userName: string) {
     <p class="name">${userName}</p>
     <p class="sub">has successfully completed all labs in</p>
     <p class="course">${badge.courseTitle}</p>
-    <svg viewBox="0 0 300 300" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
-      ${buildInlineSvgContent(badge)}
+    <svg viewBox="${badgeSvg.viewBox}" width="120" height="${badgeSvg.height}" xmlns="http://www.w3.org/2000/svg">
+      ${badgeSvg.content}
     </svg>
     <p class="date">Awarded on ${earned}</p>
   </div>
-  <script>window.onload=()=>{window.print()}<\/script>
+  
 </body>
 </html>`;
+  // Use an offscreen iframe instead of window.open()+document.write(), which can be blocked by
+  // browser security policies and result in a blank page.
+  const frame = document.createElement("iframe");
+  frame.style.position = "fixed";
+  frame.style.right = "0";
+  frame.style.bottom = "0";
+  frame.style.width = "0";
+  frame.style.height = "0";
+  frame.style.border = "0";
+  frame.style.opacity = "0";
+  frame.setAttribute("aria-hidden", "true");
+  document.body.appendChild(frame);
 
-  const win = window.open("", "_blank", "noopener,noreferrer");
-  if (win) {
-    win.opener = null;
-    win.document.write(html);
-    win.document.close();
-  }
+  frame.onload = () => {
+    try {
+      frame.contentWindow?.focus();
+      frame.contentWindow?.print();
+    } finally {
+      setTimeout(() => frame.remove(), 1000);
+    }
+  };
+
+  frame.srcdoc = html;
 }
-
 export default function TrophyCabinet({ opened, onClose, userName = "Student" }: Props) {
   const [badges, setBadges] = useState<UserBadge[] | null>(null);
   const isLoading = opened && badges === null;
@@ -149,7 +216,7 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
       onClose={onClose}
       title={
         <Group gap="sm">
-          <span style={{ fontSize: 22 }}>🏆</span>
+          <IconTrophy size={22} color="#f1f5f9" />
           <Text
             fw={700}
             size="lg"
@@ -171,12 +238,12 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
         <Stack align="center" py="xl">
           <Loader color="indigo" />
           <Text size="sm" c="dimmed">
-            Loading your badges…
+            Loading your badges...
           </Text>
         </Stack>
       ) : badgeList.length === 0 ? (
         <Stack align="center" py="xl" gap="sm">
-          <Text style={{ fontSize: 48 }}>🎯</Text>
+          <IconMedal size={64} color="#94a3b8" stroke={1.5} />
           <Text fw={600} style={{ color: "#e2e8f0" }}>
             No badges yet
           </Text>
@@ -217,7 +284,7 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
                   variant="subtle"
                   onClick={() => printCertificate(b, userName)}
                   style={{ color: "#94a3b8", fontSize: "0.72rem" }}
-                  leftSection={<span style={{ fontSize: 12 }}>🖨</span>}
+                  leftSection={<IconPrinter size={14} />}
                 >
                   Print Certificate
                 </Button>

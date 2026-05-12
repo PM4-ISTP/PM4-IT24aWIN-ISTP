@@ -1,5 +1,6 @@
 package com.pm4.istp.course.services.impl;
 
+import com.pm4.istp.badge.services.BadgeService;
 import com.pm4.istp.course.db.CreateCourseInstructorRequest;
 import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
@@ -86,6 +87,7 @@ public class CourseServiceImpl implements CourseService {
   private final CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
   private final CourseInviteCodeHelper courseInviteCodeHelper;
   private final CourseTopicService courseTopicService;
+  private final BadgeService badgeService;
 
   @Override
   @Transactional
@@ -221,11 +223,14 @@ public class CourseServiceImpl implements CourseService {
     course.addCourseEnrollment(courseEnrollment);
 
     try {
-      return courseRepository.save(course);
+      Course saved = courseRepository.save(course);
+      badgeService.tryAwardBadgeForCourse(userId, courseId);
+      return saved;
     } catch (DataIntegrityViolationException ex) {
       // Concurrent enrollment: another request already enrolled this user; treat as
       // already
       // enrolled
+      badgeService.tryAwardBadgeForCourse(userId, courseId);
       return course;
     }
   }

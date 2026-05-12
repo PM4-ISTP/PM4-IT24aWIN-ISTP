@@ -30,94 +30,9 @@ Secrets:
 - `NEXTAUTH_SECRET`: generate locally (e.g. `openssl rand -base64 32`)
 - `AUTH_KEYCLOAK_SECRET`: Keycloak admin console -> Client `interactive-security-training-platform-app` -> Credentials
 
-### Quick Start
+### Local Development
 
-#### Recommended: Frontend-only (use staging backend + staging Keycloak)
-
-This is the easiest way to test your frontend changes with real courses/users from staging:
-
-```bash
-cd frontend
-cp .env.example .env.local
-npm install
-npm run dev
-```
-
-Windows PowerShell: `Copy-Item .env.example .env.local`
-
-In `frontend/.env.local`, set:
-- `NEXTAUTH_SECRET` (generate locally)
-- `AUTH_KEYCLOAK_SECRET` (from staging Keycloak client credentials)
-- `BACKEND_URL=https://istp-staging.pm4.init-lab.ch`
-
-Staging Keycloak (issuer) is already set in the example file (`AUTH_KEYCLOAK_ISSUER`).
-
-#### 1. Start Docker Compose Services
-
-Only needed if you run the backend locally. From the project root, start PostgreSQL and Adminer:
-
-```bash
-cd infra
-cp .env.example .env
-docker compose up -d
-```
-
-Windows PowerShell: `Copy-Item .env.example .env`
-
-To stop services:
-
-```bash
-docker compose down
-```
-
----
-
-#### 2. Start the Backend
-
-From the `backend/` directory:
-
-Create `backend/application-secrets.properties` (copy the example file) and fill in secrets:
-
-```bash
-cd backend
-cp application-secrets.properties.example application-secrets.properties
-```
-
-Windows PowerShell: `Copy-Item application-secrets.properties.example application-secrets.properties`
-
-```bash
-cd backend
-./gradlew bootRun
-```
-
-The Spring Boot application starts on `http://localhost:8080`.
-
-**Keycloak Admin API (required for profile sync + admin features):**
-
-The backend calls the Keycloak Admin REST API using a service account client (`istp-backend`).
-Configure `KEYCLOAK_ADMIN_CLIENT_SECRET` in `backend/application-secrets.properties` if you use those features locally.
-
-**Before committing**, always run code formatting:
-
-```bash
-./gradlew spotlessApply
-```
-
----
-
-#### 3. Start the Frontend
-
-From the `frontend/` directory:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The Next.js application starts on `http://localhost:3000`.
-
----
+See `LOCAL_DEV.md`.
 
 ### Kubernetes Setup (K3d)
 
@@ -506,7 +421,7 @@ See [Staging URLs](#staging-urls) for the list of staging service URLs.
 
 #### 1. Start the app
 
-Make sure the Next.js app is running on `http://localhost:3000` (see [Quick Start](#quick-start)).
+Make sure the Next.js app is running on `http://localhost:3000` (see `LOCAL_DEV.md`).
 
 #### 2. Install Playwright browsers (first time only)
 
