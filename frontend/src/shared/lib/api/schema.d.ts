@@ -288,6 +288,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/lab-pods/{labId}/extend": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["extendPod"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/labs/{labId}/challenges/{challengeId}/submit": {
     parameters: {
       query?: never;
@@ -790,6 +806,8 @@ export interface components {
       dockerImage: string;
       /** Format: int32 */
       containerPort?: number;
+      /** Format: int32 */
+      podTtlSeconds?: number;
       challenges: components["schemas"]["ChallengeRequestDto"][];
     };
     ChallengeCreatorResponseDto: {
@@ -810,6 +828,8 @@ export interface components {
       dockerImage?: string;
       /** Format: int32 */
       containerPort?: number;
+      /** Format: int32 */
+      podTtlSeconds?: number;
       /** Format: int32 */
       maxScore?: number;
       creator?: components["schemas"]["ChallengeCreatorResponseDto"];
@@ -1053,6 +1073,8 @@ export interface components {
       dockerImage: string;
       /** Format: int32 */
       containerPort?: number;
+      /** Format: int32 */
+      podTtlSeconds?: number;
       challenges: components["schemas"]["ChallengeRequestDto"][];
     };
     CreateChallengeResponseDto: {
@@ -1070,6 +1092,8 @@ export interface components {
       dockerImage?: string;
       /** Format: int32 */
       containerPort?: number;
+      /** Format: int32 */
+      podTtlSeconds?: number;
       /** Format: uuid */
       creatorId?: string;
       challenges?: components["schemas"]["ChallengeResponseDto"][];
@@ -1116,6 +1140,15 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       expiresAt?: string;
+      /** Format: date-time */
+      lastActivityAt?: string;
+      /** Format: int32 */
+      ttlSeconds?: number;
+      /** Format: int32 */
+      extensionCount?: number;
+      /** Format: int32 */
+      maxExtensionCount?: number;
+      canExtend?: boolean;
     };
     AdminTopicRequest: {
       value: string;
@@ -1225,6 +1258,8 @@ export interface components {
       dockerImage?: string;
       /** Format: int32 */
       containerPort?: number;
+      /** Format: int32 */
+      podTtlSeconds?: number;
       creatorName?: string;
       /** Format: int64 */
       courseCount?: number;
@@ -2258,6 +2293,28 @@ export interface operations {
     };
   };
   startPod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        labId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["PodStatusResponse"];
+        };
+      };
+    };
+  };
+  extendPod: {
     parameters: {
       query?: never;
       header?: never;

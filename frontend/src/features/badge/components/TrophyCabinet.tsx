@@ -174,7 +174,7 @@ function printCertificate(badge: UserBadge, userName: string) {
     </svg>
     <p class="date">Awarded on ${earned}</p>
   </div>
-  
+
 </body>
 </html>`;
   // Use an offscreen iframe instead of window.open()+document.write(), which can be blocked by

@@ -1,12 +1,20 @@
 "use client";
 
-import { Anchor, Button, Flex, Loader, Stack, Text } from "@mantine/core";
-import { IconExternalLink, IconPlayerPlay, IconPlayerStop } from "@tabler/icons-react";
-import { useState } from "react";
+import { Anchor, Button, Flex, Loader, Stack, Text, Tooltip } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import {
+  IconClockHour10,
+  IconClockPlus,
+  IconExternalLink,
+  IconPlayerPlay,
+  IconPlayerStop,
+} from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { useApiClient } from "@/src/shared/lib/api/client";
 import { DOCKER_IMAGE_ERROR } from "@/src/features/course/constants/challengeConstants";
 import { useDockerImageCheck } from "@/src/features/course/hooks/useDockerImageCheck";
 import { useLabPodStatus } from "../hooks/useLabPodStatus";
+import { formatTimeLeft, getApiErrorMessage, getExtensionSummary } from "../utils/lifecycle";
 import { LabPodStatusBadge } from "./LabPodStatusBadge";
 
 export function LabPodPanel({
@@ -20,26 +28,77 @@ export function LabPodPanel({
   const { data, loading, refetch } = useLabPodStatus(labId);
   const dockerImageCheck = useDockerImageCheck(dockerImage ?? "");
   const [actionLoading, setActionLoading] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNowMs(Date.now()), 10_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const handleStart = async () => {
     setActionLoading(true);
     try {
-      await apiClient.POST("/api/v1/lab-pods/{labId}", {
+      const { error } = await apiClient.POST("/api/v1/lab-pods/{labId}", {
         params: { path: { labId } },
       });
+      if (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to start lab."));
+      }
       await refetch();
+    } catch (e) {
+      notifications.show({
+        color: "red",
+        title: "Failed to start lab",
+        message: e instanceof Error ? e.message : "An unexpected error occurred.",
+      });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleStop = async () => {
+    if (!window.confirm("Stop this lab?")) return;
     setActionLoading(true);
     try {
-      await apiClient.DELETE("/api/v1/lab-pods/{labId}", {
+      const { error } = await apiClient.DELETE("/api/v1/lab-pods/{labId}", {
         params: { path: { labId } },
       });
+      if (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to stop lab."));
+      }
       await refetch();
+    } catch (e) {
+      notifications.show({
+        color: "red",
+        title: "Failed to stop lab",
+        message: e instanceof Error ? e.message : "An unexpected error occurred.",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleExtend = async () => {
+    setActionLoading(true);
+    try {
+      const { error } = await apiClient.POST("/api/v1/lab-pods/{labId}/extend", {
+        params: { path: { labId } },
+      });
+      if (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to extend lab."));
+      }
+      await refetch();
+      notifications.show({
+        color: "teal",
+        title: "Lab extended",
+        message: "Added 30 minutes to this lab.",
+      });
+    } catch (e) {
+      notifications.show({
+        color: "red",
+        title: "Failed to extend lab",
+        message: e instanceof Error ? e.message : "An unexpected error occurred.",
+      });
     } finally {
       setActionLoading(false);
     }
@@ -70,6 +129,21 @@ export function LabPodPanel({
     startDisabledReason = DOCKER_IMAGE_ERROR;
   }
   const startDisabledReasonColor = dockerImageCheck.status === "checking" ? "dimmed" : "red";
+  const expiresAt = data?.expiresAt ? new Date(data.expiresAt) : null;
+  const msLeft = expiresAt ? expiresAt.getTime() - nowMs : null;
+  const timeLeftLabel = formatTimeLeft(msLeft);
+  const isExpiringSoon = msLeft !== null && msLeft > 0 && msLeft <= 10 * 60 * 1000;
+  const isExpiringNow = msLeft !== null && msLeft > 0 && msLeft <= 2 * 60 * 1000;
+  const canExtend = data?.canExtend === true && status === "RUNNING";
+  const extensionSummary = getExtensionSummary(data?.extensionCount, data?.maxExtensionCount);
+  const extendDisabledReason =
+    status !== "RUNNING"
+      ? "Only running labs can be extended"
+      : extensionSummary.max === 0
+        ? "Extensions are disabled"
+        : !canExtend
+          ? "Maximum extensions reached"
+          : "Extend lab by 30 minutes";
 
   return (
     <Stack gap={6} align="flex-end">
@@ -111,6 +185,49 @@ export function LabPodPanel({
 
       {status === "RUNNING" && data && (
         <Stack gap={4} align="flex-end">
+          {isExpiringSoon && (
+            <Text size="xs" c={isExpiringNow ? "red" : "orange"} ta="right">
+              <Flex align="center" gap={4}>
+                <IconClockHour10 size={12} />
+                {isExpiringNow ? "Expires now" : "Expires soon"}
+              </Flex>
+            </Text>
+          )}
+
+          {expiresAt && (
+            <Text size="xs" c="dimmed" ta="right">
+              Expires in {timeLeftLabel} at{" "}
+              {expiresAt.toLocaleTimeString("de-CH", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Text>
+          )}
+
+          <Text size="xs" c="dimmed" ta="right">
+            {extensionSummary.label}
+          </Text>
+
+          {!canExtend && (
+            <Text size="xs" c="dimmed" ta="right">
+              {extendDisabledReason}
+            </Text>
+          )}
+
+          <Tooltip label={extendDisabledReason}>
+            <Button
+              size="xs"
+              variant="light"
+              color={isExpiringNow ? "orange" : undefined}
+              leftSection={<IconClockPlus size={14} />}
+              loading={actionLoading}
+              disabled={!canExtend}
+              onClick={() => void handleExtend()}
+            >
+              Extend +30m
+            </Button>
+          </Tooltip>
+
           {data.appUrl && (
             <Anchor href={data.appUrl} target="_blank" rel="noopener noreferrer" size="xs">
               <Flex align="center" gap={4}>

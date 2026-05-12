@@ -22,6 +22,7 @@ public class ChallengeDetailResponseDto {
   private int maxScore;
   private String dockerImage;
   private Integer containerPort;
+  private Integer podTtlSeconds;
   private ChallengeCreatorResponseDto creator;
   private long courseCount;
   private List<ChallengeResponseDto> challenges;
