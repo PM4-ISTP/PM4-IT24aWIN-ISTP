@@ -22,7 +22,11 @@ interface Props {
   userName?: string;
 }
 
-function buildInlineSvgContent(badge: UserBadge): { viewBox: string; height: number; content: string } {
+function buildInlineSvgContent(badge: UserBadge): {
+  viewBox: string;
+  height: number;
+  content: string;
+} {
   const c = badge.primaryColor;
   const t = badge.textColor;
   const icon = badge.badgeIcon ?? "🏆";
