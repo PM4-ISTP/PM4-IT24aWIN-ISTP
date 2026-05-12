@@ -545,14 +545,20 @@ public class LabPodService {
     }
   }
 
-  private Deployment updateDeploymentLabels(Deployment deployment, Map<String, String> updatedLabels) {
+  private Deployment updateDeploymentLabels(
+      Deployment deployment, Map<String, String> updatedLabels) {
     deployment.getMetadata().setLabels(updatedLabels);
     if (deployment.getSpec() != null
         && deployment.getSpec().getTemplate() != null
         && deployment.getSpec().getTemplate().getMetadata() != null) {
       deployment.getSpec().getTemplate().getMetadata().setLabels(updatedLabels);
     }
-    return getClient().apps().deployments().inNamespace(defaultNamespace).resource(deployment).replace();
+    return getClient()
+        .apps()
+        .deployments()
+        .inNamespace(defaultNamespace)
+        .resource(deployment)
+        .replace();
   }
 
   private PodStatusResponse buildResponse(Deployment deployment, int fallbackTtlSeconds) {
