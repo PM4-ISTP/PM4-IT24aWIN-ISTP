@@ -111,13 +111,17 @@ export function LabFormFields({
 
       <NumberInput
         label="Pod TTL (seconds)"
-        description="Default is 3600 seconds (1h). Increase for heavier labs if needed."
+        description="Optional. Leave blank to use the admin default. Increase it for heavier labs only when you need a per-lab override."
         min={60}
         max={86400}
         clampBehavior="strict"
-        value={values.podTtlSeconds}
-        onChange={(value) => onChange({ ...values, podTtlSeconds: Number(value) || 3600 })}
-        required
+        value={values.podTtlSeconds ?? ""}
+        onChange={(value) =>
+          onChange({
+            ...values,
+            podTtlSeconds: value === "" || value === null ? undefined : Number(value),
+          })
+        }
       />
 
       <Stack gap={4}>
