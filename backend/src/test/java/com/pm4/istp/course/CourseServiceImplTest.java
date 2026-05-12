@@ -1555,6 +1555,13 @@ class CourseServiceImplTest {
   }
 
   @Test
+  void listUpcomingDeadlines_noDeadlines() {
+    UUID userId = UUID.randomUUID();
+    when(courseLabRepository.findDeadlinesForUser(userId)).thenReturn(Collections.emptyList());
+    assertThat(courseService.listUpcomingDeadlines(userId)).hasSize(0);
+  }
+
+  @Test
   void joinByInviteCode_withInvalidCode_throwsInvalidInviteCodeException() {
     UUID studentId = UUID.randomUUID();
 
