@@ -54,6 +54,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class LabPodServiceTest {
+    private static final int TEST_POD_AGE_SECONDS = 30;
 
     @Mock
     private AdminConfigurationService adminConfigurationService;
@@ -86,7 +87,9 @@ class LabPodServiceTest {
                 "default",
                 "test.domain",
                 false,
-                "");
+                "",
+                1800,
+                2);
     }
 
     // ── startPod: early-exit paths ───────────────────────────────────────────
@@ -327,7 +330,16 @@ class LabPodServiceTest {
         assertThat(deployment.getSpec().getTemplate().getSpec().getImagePullSecrets())
                 .singleElement()
                 .satisfies(secret -> assertThat(secret.getName()).isEqualTo("ghcr-pull-secret"));
-        assertThat(deployment.getMetadata().getAnnotations()).isNullOrEmpty();
+        assertThat(deployment.getMetadata().getLabels())
+                .containsOnlyKeys("app", "istp.pm4.ch/user-id", "istp.pm4.ch/lab-id");
+        assertThat(deployment.getSpec().getSelector().getMatchLabels())
+                .containsOnlyKeys("app", "istp.pm4.ch/user-id", "istp.pm4.ch/lab-id");
+        assertThat(deployment.getMetadata().getAnnotations())
+                .containsKeys(
+                        "istp.pm4.ch/created-at-epoch",
+                        "istp.pm4.ch/last-activity-at-epoch",
+                        "istp.pm4.ch/base-ttl-seconds",
+                        "istp.pm4.ch/ttl-extension-count");
     }
 
     private void assertCreatedService(Service service) {
@@ -339,6 +351,8 @@ class LabPodServiceTest {
                             assertThat(port.getPort()).isEqualTo(80);
                             assertThat(port.getTargetPort().getIntVal()).isEqualTo(8080);
                         });
+        assertThat(service.getSpec().getSelector())
+                .containsOnlyKeys("app", "istp.pm4.ch/user-id", "istp.pm4.ch/lab-id");
     }
 
     private void assertCreatedIngress(Ingress ingress) {
@@ -404,7 +418,9 @@ class LabPodServiceTest {
         setClientRef(client);
         UUID userId = UUID.randomUUID();
         UUID labId = UUID.randomUUID();
-        long createdAt = Instant.now().minusSeconds(60).getEpochSecond();
+        // Keep age below ACTIVITY_TOUCH_MIN_SECONDS (60s) so getPod() won't trigger a label touch
+        // that could alter the mocked deployment object during this assertion-focused test.
+        long createdAt = Instant.now().minusSeconds(TEST_POD_AGE_SECONDS).getEpochSecond();
         Map<String, String> labels = podLabels(userId, labId, createdAt);
         Deployment deployment =
                 new DeploymentBuilder()
@@ -449,6 +465,9 @@ class LabPodServiceTest {
         assertThat(response.appUrl()).isEqualTo("http://custom.example.test");
         assertThat(response.createdAt()).isEqualTo(Instant.ofEpochSecond(createdAt));
         assertThat(response.expiresAt()).isEqualTo(Instant.ofEpochSecond(createdAt + 120));
+        assertThat(response.ttlSeconds()).isEqualTo(120);
+        assertThat(response.extensionCount()).isEqualTo(0);
+        assertThat(response.canExtend()).isTrue();
     }
 
     @Test
@@ -463,7 +482,9 @@ class LabPodServiceTest {
                         "default",
                         "test.domain",
                         true,
-                        " Team Alpha! ");
+                        " Team Alpha! ",
+                        1800,
+                        2);
         KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
         UUID userId = UUID.randomUUID();
         UUID labId = UUID.randomUUID();
@@ -591,6 +612,63 @@ class LabPodServiceTest {
     }
 
     @Test
+    void extendPod_incrementsExtensionCountAndReturnsUpdatedExpiry() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        long createdAt = Instant.now().minusSeconds(10).getEpochSecond();
+        Map<String, String> labels = podLabels(userId, labId, createdAt);
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-extendme")
+                        .withLabels(labels)
+                        .endMetadata()
+                        .withNewSpec()
+                        .withNewTemplate()
+                        .withNewMetadata()
+                        .withLabels(labels)
+                        .endMetadata()
+                        .endTemplate()
+                        .endSpec()
+                        .withNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build();
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                stubFindDeployments(client, userId, labId, List.of(deployment));
+        RollableScalableResource<Deployment> deploymentResource = mock(RollableScalableResource.class);
+        when(deploymentOperation.withName("pod-extendme")).thenReturn(deploymentResource);
+        when(deploymentResource.patch(Mockito.any(), Mockito.any(Deployment.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Deployment patch = invocation.getArgument(1);
+                            deployment.getMetadata().setAnnotations(patch.getMetadata().getAnnotations());
+                            return deployment;
+                        });
+        stubPodsForLabels(client, labels, List.of());
+        stubIngressGetThrows(client, "pod-extendme-ingress");
+        when(adminConfigurationService.getAdminConfiguration())
+                .thenReturn(Optional.of(adminConfigWith("kubeconfig", 600)));
+
+        PodStatusResponse response = service.extendPod(userId, labId);
+
+        assertThat(response.extensionCount()).isEqualTo(1);
+        assertThat(response.ttlSeconds()).isEqualTo(2400);
+        assertThat(response.canExtend()).isTrue();
+
+        ArgumentCaptor<Deployment> patchCaptor = ArgumentCaptor.forClass(Deployment.class);
+        verify(deploymentResource).patch(Mockito.any(), patchCaptor.capture());
+        Deployment patch = patchCaptor.getValue();
+        assertThat(patch.getMetadata().getLabels()).isNullOrEmpty();
+        assertThat(patch.getSpec()).isNull();
+        assertThat(patch.getMetadata().getAnnotations())
+                .containsEntry("istp.pm4.ch/ttl-extension-count", "1")
+                .containsKey("istp.pm4.ch/last-activity-at-epoch");
+    }
+
+    @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
     void reapExpiredPods_deletesOnlyDeploymentsOlderThanTtl() {
         KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
@@ -691,7 +769,9 @@ class LabPodServiceTest {
                                         "default",
                                         "test.domain",
                                         false,
-                                        ""))
+                                        "",
+                                        1800,
+                                        2))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(
                         () ->
@@ -703,7 +783,9 @@ class LabPodServiceTest {
                                         "default",
                                         "test.domain",
                                         false,
-                                        ""))
+                                        "",
+                                        1800,
+                                        2))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(
                         () ->
@@ -715,7 +797,9 @@ class LabPodServiceTest {
                                         "default",
                                         "test.domain",
                                         false,
-                                        ""))
+                                        "",
+                                        1800,
+                                        2))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(
                         () ->
@@ -727,7 +811,9 @@ class LabPodServiceTest {
                                         "default",
                                         "test.domain",
                                         false,
-                                        ""))
+                                        "",
+                                        1800,
+                                        2))
                 .isInstanceOf(NullPointerException.class);
     }
 

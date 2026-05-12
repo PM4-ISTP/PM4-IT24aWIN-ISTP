@@ -55,6 +55,14 @@ public class LabPodController {
     return ResponseEntity.ok(response);
   }
 
+  @PostMapping("/{labId}/extend")
+  public ResponseEntity<PodStatusResponse> extendPod(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID labId) {
+    UUID userId = JwtUtil.parseUserId(jwt);
+    PodStatusResponse response = labPodService.extendPod(userId, labId);
+    return ResponseEntity.ok(response);
+  }
+
   @DeleteMapping("/{labId}")
   public ResponseEntity<Void> stopPod(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID labId) {
     UUID userId = JwtUtil.parseUserId(jwt);

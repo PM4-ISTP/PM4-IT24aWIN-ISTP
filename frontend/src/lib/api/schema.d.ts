@@ -612,6 +612,15 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       expiresAt?: string;
+      /** Format: date-time */
+      lastActivityAt?: string;
+      /** Format: int32 */
+      ttlSeconds?: number;
+      /** Format: int32 */
+      extensionCount?: number;
+      /** Format: int32 */
+      maxExtensionCount?: number;
+      canExtend?: boolean;
     };
     Pageable: {
       /** Format: int32 */
