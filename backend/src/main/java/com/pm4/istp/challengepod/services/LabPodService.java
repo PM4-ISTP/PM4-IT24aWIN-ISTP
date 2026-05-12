@@ -26,6 +26,8 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.dsl.base.PatchContext;
+import io.fabric8.kubernetes.client.dsl.base.PatchType;
 import jakarta.annotation.PreDestroy;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -51,18 +53,20 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Service
 public class LabPodService {
 
-  // Label / annotation keys
+  // Stable labels used for Kubernetes selectors and ownership checks.
   private static final String LABEL_APP = "istp-lab-pod";
   private static final String LABEL_USER_ID = "istp.pm4.ch/user-id";
   private static final String LABEL_CHALLENGE_ID = "istp.pm4.ch/lab-id";
-  private static final String LABEL_CREATED_AT = "istp.pm4.ch/created-at-epoch";
-  private static final String LABEL_LAST_ACTIVITY_AT = "istp.pm4.ch/last-activity-at-epoch";
-  private static final String LABEL_BASE_TTL_SECONDS = "istp.pm4.ch/base-ttl-seconds";
-  private static final String LABEL_EXTENSION_COUNT = "istp.pm4.ch/ttl-extension-count";
+
+  // Lifecycle data changes over time, so keep it out of selectors.
+  private static final String ANNOTATION_CREATED_AT = "istp.pm4.ch/created-at-epoch";
+  private static final String ANNOTATION_LAST_ACTIVITY_AT = "istp.pm4.ch/last-activity-at-epoch";
+  private static final String ANNOTATION_BASE_TTL_SECONDS = "istp.pm4.ch/base-ttl-seconds";
+  private static final String ANNOTATION_EXTENSION_COUNT = "istp.pm4.ch/ttl-extension-count";
 
   private static final int DEFAULT_TTL_SECONDS = 3600;
-  private static final int EXTENSION_INCREMENT_SECONDS = 1800;
-  private static final int MAX_EXTENSION_COUNT = 2;
+  private static final int DEFAULT_EXTENSION_INCREMENT_SECONDS = 1800;
+  private static final int DEFAULT_MAX_EXTENSION_COUNT = 2;
   private static final int ACTIVITY_TOUCH_MIN_SECONDS = 60;
 
   private static final int POD_NAME_HASH_LENGTH = 8;
@@ -76,6 +80,8 @@ public class LabPodService {
   private final String domain;
   private final boolean tls;
   private final String labHostPrefix;
+  private final int extensionIncrementSeconds;
+  private final int maxExtensionCount;
 
   private final AtomicReference<KubernetesClient> clientRef = new AtomicReference<>();
 
@@ -87,7 +93,9 @@ public class LabPodService {
       @Value("${k8s.default.namespace}") String defaultNamespace,
       @Value("${istp.domain}") String domain,
       @Value("${istp.tls}") boolean tls,
-      @Value("${istp.lab-host-prefix:}") String labHostPrefix) {
+      @Value("${istp.lab-host-prefix:}") String labHostPrefix,
+      @Value("${istp.pod-extension-seconds:1800}") int extensionIncrementSeconds,
+      @Value("${istp.pod-max-extensions:2}") int maxExtensionCount) {
     this.adminConfigurationService = adminConfigurationService;
     this.labService = labService;
     this.dockerImageAvailabilityService = dockerImageAvailabilityService;
@@ -96,6 +104,12 @@ public class LabPodService {
     this.domain = domain;
     this.tls = tls;
     this.labHostPrefix = normalizeHostPrefix(labHostPrefix);
+    this.extensionIncrementSeconds =
+        extensionIncrementSeconds > 0
+            ? extensionIncrementSeconds
+            : DEFAULT_EXTENSION_INCREMENT_SECONDS;
+    this.maxExtensionCount =
+        maxExtensionCount >= 0 ? maxExtensionCount : DEFAULT_MAX_EXTENSION_COUNT;
   }
 
   // -------------------------------------------------------------------------
@@ -199,7 +213,7 @@ public class LabPodService {
               "Pod naming conflict detected. Please contact an administrator.");
         }
         int ttl = resolveBaseTtlSeconds(lab, adminConfig);
-        Deployment touched = ensureLifecycleLabelsAndTouch(d, ttl);
+        Deployment touched = ensureLifecycleAnnotationsAndTouch(d, ttl);
         return Pair.of(buildResponse(touched, ttl), false);
       }
 
@@ -217,7 +231,7 @@ public class LabPodService {
         List<Deployment> existing = findDeployments(userId, labId);
         if (!existing.isEmpty()) {
           int ttl = resolveBaseTtlSeconds(lab, adminConfig);
-          Deployment touched = ensureLifecycleLabelsAndTouch(existing.get(0), ttl);
+          Deployment touched = ensureLifecycleAnnotationsAndTouch(existing.get(0), ttl);
           return Pair.of(buildResponse(touched, ttl), false);
         }
       }
@@ -321,26 +335,34 @@ public class LabPodService {
       }
 
       int fallbackTtl = resolveConfiguredDefaultTtlSeconds();
-      int currentCount = Math.max(0, parseIntLabel(labels, LABEL_EXTENSION_COUNT, 0));
-      if (currentCount >= MAX_EXTENSION_COUNT) {
+      Map<String, String> annotations = deployment.getMetadata().getAnnotations();
+      if (annotations == null) {
+        annotations = Map.of();
+      }
+      int currentCount =
+          Math.max(0, parseIntMetadata(annotations, labels, ANNOTATION_EXTENSION_COUNT, 0));
+      if (currentCount >= maxExtensionCount) {
         throw new LabPodException("Maximum pod extension limit reached.");
       }
 
-      Map<String, String> updatedLabels = new HashMap<>(labels);
-      updatedLabels.putIfAbsent(LABEL_BASE_TTL_SECONDS, String.valueOf(fallbackTtl));
-      updatedLabels.put(LABEL_EXTENSION_COUNT, String.valueOf(currentCount + 1));
-      updatedLabels.put(LABEL_LAST_ACTIVITY_AT, String.valueOf(Instant.now().getEpochSecond()));
+      Map<String, String> updatedAnnotations = new HashMap<>(annotations);
+      long nowEpoch = Instant.now().getEpochSecond();
+      long createdAt = parseLongMetadata(annotations, labels, ANNOTATION_CREATED_AT, nowEpoch);
+      updatedAnnotations.putIfAbsent(ANNOTATION_CREATED_AT, String.valueOf(createdAt));
+      updatedAnnotations.putIfAbsent(ANNOTATION_BASE_TTL_SECONDS, String.valueOf(fallbackTtl));
+      updatedAnnotations.put(ANNOTATION_EXTENSION_COUNT, String.valueOf(currentCount + 1));
+      updatedAnnotations.put(ANNOTATION_LAST_ACTIVITY_AT, String.valueOf(nowEpoch));
 
-      Deployment updated = updateDeploymentLabels(deployment, updatedLabels);
+      Deployment updated = updateDeploymentAnnotations(deployment, updatedAnnotations);
 
       log.info(
           "Extended pod {} for user {} lab {} by {}s (extension {}/{})",
           deployment.getMetadata().getName(),
           userId,
           labId,
-          EXTENSION_INCREMENT_SECONDS,
+          extensionIncrementSeconds,
           currentCount + 1,
-          MAX_EXTENSION_COUNT);
+          maxExtensionCount);
 
       return buildResponse(updated, fallbackTtl);
     } catch (LabPodException e) {
@@ -368,13 +390,16 @@ public class LabPodService {
       String instanceName = d.getMetadata().getName();
       try {
         Map<String, String> labels = d.getMetadata().getLabels();
-        long createdAt = parseLongLabel(labels, LABEL_CREATED_AT, -1);
+        Map<String, String> annotations = d.getMetadata().getAnnotations();
+        long createdAt = parseLongMetadata(annotations, labels, ANNOTATION_CREATED_AT, -1);
         if (createdAt <= 0) {
-          log.warn("Pod {} has no {} label, skipping reap", instanceName, LABEL_CREATED_AT);
+          log.warn(
+              "Pod {} has no {} annotation, skipping reap", instanceName, ANNOTATION_CREATED_AT);
           continue;
         }
-        long lastActivity = parseLongLabel(labels, LABEL_LAST_ACTIVITY_AT, createdAt);
-        int effectiveTtl = resolveEffectiveTtlSeconds(labels, ttlSeconds);
+        long lastActivity =
+            parseLongMetadata(annotations, labels, ANNOTATION_LAST_ACTIVITY_AT, createdAt);
+        int effectiveTtl = resolveEffectiveTtlSeconds(annotations, labels, ttlSeconds);
 
         if (nowEpoch - lastActivity > effectiveTtl) {
           deleteByName(instanceName);
@@ -459,11 +484,11 @@ public class LabPodService {
 
   private Instant createdAtOf(Deployment deployment) {
     Map<String, String> labels = deployment.getMetadata().getLabels();
-    if (labels == null) {
-      return Instant.EPOCH;
-    }
     try {
-      return Instant.ofEpochSecond(Long.parseLong(labels.get(LABEL_CREATED_AT)));
+      long createdAt =
+          parseLongMetadata(
+              deployment.getMetadata().getAnnotations(), labels, ANNOTATION_CREATED_AT, -1);
+      return createdAt > 0 ? Instant.ofEpochSecond(createdAt) : Instant.EPOCH;
     } catch (Exception e) {
       return Instant.EPOCH;
     }
@@ -484,18 +509,21 @@ public class LabPodService {
     return DEFAULT_TTL_SECONDS;
   }
 
-  private int resolveEffectiveTtlSeconds(Map<String, String> labels, int fallbackTtlSeconds) {
-    int baseTtl = parseIntLabel(labels, LABEL_BASE_TTL_SECONDS, fallbackTtlSeconds);
-    int extensionCount = parseIntLabel(labels, LABEL_EXTENSION_COUNT, 0);
-    extensionCount = Math.max(0, Math.min(extensionCount, MAX_EXTENSION_COUNT));
-    return baseTtl + extensionCount * EXTENSION_INCREMENT_SECONDS;
+  private int resolveEffectiveTtlSeconds(
+      Map<String, String> annotations, Map<String, String> labels, int fallbackTtlSeconds) {
+    int baseTtl =
+        parseIntMetadata(annotations, labels, ANNOTATION_BASE_TTL_SECONDS, fallbackTtlSeconds);
+    int extensionCount = parseIntMetadata(annotations, labels, ANNOTATION_EXTENSION_COUNT, 0);
+    extensionCount = Math.max(0, Math.min(extensionCount, maxExtensionCount));
+    return baseTtl + extensionCount * extensionIncrementSeconds;
   }
 
-  private long parseLongLabel(Map<String, String> labels, String labelKey, long fallbackValue) {
-    if (labels == null) {
-      return fallbackValue;
-    }
-    String raw = labels.get(labelKey);
+  private long parseLongMetadata(
+      Map<String, String> annotations,
+      Map<String, String> fallbackLabels,
+      String key,
+      long fallbackValue) {
+    String raw = metadataValue(annotations, fallbackLabels, key);
     if (raw == null || raw.isBlank()) {
       return fallbackValue;
     }
@@ -506,11 +534,12 @@ public class LabPodService {
     }
   }
 
-  private int parseIntLabel(Map<String, String> labels, String labelKey, int fallbackValue) {
-    if (labels == null) {
-      return fallbackValue;
-    }
-    String raw = labels.get(labelKey);
+  private int parseIntMetadata(
+      Map<String, String> annotations,
+      Map<String, String> fallbackLabels,
+      String key,
+      int fallbackValue) {
+    String raw = metadataValue(annotations, fallbackLabels, key);
     if (raw == null || raw.isBlank()) {
       return fallbackValue;
     }
@@ -521,24 +550,38 @@ public class LabPodService {
     }
   }
 
+  private String metadataValue(
+      Map<String, String> annotations, Map<String, String> fallbackLabels, String key) {
+    if (annotations != null && annotations.containsKey(key)) {
+      return annotations.get(key);
+    }
+    return fallbackLabels != null ? fallbackLabels.get(key) : null;
+  }
+
   private Deployment touchLastActivityIfNeeded(Deployment deployment) {
     try {
       Map<String, String> labels = deployment.getMetadata().getLabels();
       if (labels == null) {
         labels = Map.of();
       }
+      Map<String, String> annotations = deployment.getMetadata().getAnnotations();
+      if (annotations == null) {
+        annotations = Map.of();
+      }
       long now = Instant.now().getEpochSecond();
-      long createdAt = parseLongLabel(labels, LABEL_CREATED_AT, now);
-      long lastActivity = parseLongLabel(labels, LABEL_LAST_ACTIVITY_AT, createdAt);
+      long createdAt = parseLongMetadata(annotations, labels, ANNOTATION_CREATED_AT, now);
+      long lastActivity =
+          parseLongMetadata(annotations, labels, ANNOTATION_LAST_ACTIVITY_AT, createdAt);
       if (now - lastActivity < ACTIVITY_TOUCH_MIN_SECONDS) {
         return deployment;
       }
 
       // We rely on Kubernetes optimistic locking during replace(); if another request updated
       // the same deployment meanwhile, the API will reject stale writes and we keep the old object.
-      Map<String, String> updatedLabels = new HashMap<>(labels);
-      updatedLabels.put(LABEL_LAST_ACTIVITY_AT, String.valueOf(now));
-      return updateDeploymentLabels(deployment, updatedLabels);
+      Map<String, String> updatedAnnotations = new HashMap<>(annotations);
+      updatedAnnotations.putIfAbsent(ANNOTATION_CREATED_AT, String.valueOf(createdAt));
+      updatedAnnotations.put(ANNOTATION_LAST_ACTIVITY_AT, String.valueOf(now));
+      return updateDeploymentAnnotations(deployment, updatedAnnotations);
     } catch (Exception e) {
       log.debug("Could not update last activity for {}", deployment.getMetadata().getName(), e);
       return deployment;
@@ -546,62 +589,84 @@ public class LabPodService {
   }
 
   /**
-   * Initializes missing lifecycle labels (base-ttl-seconds, ttl-extension-count) and updates
+   * Initializes missing lifecycle annotations (base-ttl-seconds, ttl-extension-count) and updates
    * last-activity-at if the touch threshold has been exceeded — all in a single K8s write to avoid
    * resource-version conflicts from two consecutive updates.
    */
-  private Deployment ensureLifecycleLabelsAndTouch(Deployment deployment, int baseTtl) {
+  private Deployment ensureLifecycleAnnotationsAndTouch(Deployment deployment, int baseTtl) {
     try {
       Map<String, String> labels = deployment.getMetadata().getLabels();
       if (labels == null) {
         labels = Map.of();
       }
+      Map<String, String> annotations = deployment.getMetadata().getAnnotations();
+      if (annotations == null) {
+        annotations = Map.of();
+      }
 
       long now = Instant.now().getEpochSecond();
-      long createdAt = parseLongLabel(labels, LABEL_CREATED_AT, now);
-      long lastActivity = parseLongLabel(labels, LABEL_LAST_ACTIVITY_AT, createdAt);
+      long createdAt = parseLongMetadata(annotations, labels, ANNOTATION_CREATED_AT, now);
+      long lastActivity =
+          parseLongMetadata(annotations, labels, ANNOTATION_LAST_ACTIVITY_AT, createdAt);
 
       boolean activityNeedsTouch = (now - lastActivity) >= ACTIVITY_TOUCH_MIN_SECONDS;
-      boolean missingBaseTtl = !labels.containsKey(LABEL_BASE_TTL_SECONDS);
-      boolean missingExtCount = !labels.containsKey(LABEL_EXTENSION_COUNT);
+      boolean missingCreatedAt = !annotations.containsKey(ANNOTATION_CREATED_AT);
+      boolean missingLastActivity = !annotations.containsKey(ANNOTATION_LAST_ACTIVITY_AT);
+      boolean missingBaseTtl = !annotations.containsKey(ANNOTATION_BASE_TTL_SECONDS);
+      boolean missingExtCount = !annotations.containsKey(ANNOTATION_EXTENSION_COUNT);
 
-      if (!activityNeedsTouch && !missingBaseTtl && !missingExtCount) {
+      if (!activityNeedsTouch
+          && !missingCreatedAt
+          && !missingLastActivity
+          && !missingBaseTtl
+          && !missingExtCount) {
         return deployment;
       }
 
-      Map<String, String> updatedLabels = new HashMap<>(labels);
-      updatedLabels.putIfAbsent(LABEL_BASE_TTL_SECONDS, String.valueOf(baseTtl));
-      updatedLabels.putIfAbsent(LABEL_EXTENSION_COUNT, "0");
+      Map<String, String> updatedAnnotations = new HashMap<>(annotations);
+      updatedAnnotations.putIfAbsent(ANNOTATION_CREATED_AT, String.valueOf(createdAt));
+      updatedAnnotations.putIfAbsent(ANNOTATION_BASE_TTL_SECONDS, String.valueOf(baseTtl));
+      updatedAnnotations.putIfAbsent(ANNOTATION_EXTENSION_COUNT, "0");
       if (activityNeedsTouch) {
-        updatedLabels.put(LABEL_LAST_ACTIVITY_AT, String.valueOf(now));
+        updatedAnnotations.put(ANNOTATION_LAST_ACTIVITY_AT, String.valueOf(now));
+      } else {
+        updatedAnnotations.putIfAbsent(ANNOTATION_LAST_ACTIVITY_AT, String.valueOf(lastActivity));
       }
-      return updateDeploymentLabels(deployment, updatedLabels);
+      return updateDeploymentAnnotations(deployment, updatedAnnotations);
     } catch (Exception e) {
-      log.debug("Could not update lifecycle labels for {}", deployment.getMetadata().getName(), e);
+      log.debug(
+          "Could not update lifecycle annotations for {}", deployment.getMetadata().getName(), e);
       return deployment;
     }
   }
 
-  private Deployment updateDeploymentLabels(
-      Deployment deployment, Map<String, String> updatedLabels) {
-    deployment.getMetadata().setLabels(updatedLabels);
-    if (deployment.getSpec() != null
-        && deployment.getSpec().getTemplate() != null
-        && deployment.getSpec().getTemplate().getMetadata() != null) {
-      deployment.getSpec().getTemplate().getMetadata().setLabels(updatedLabels);
-    }
+  private Deployment updateDeploymentAnnotations(
+      Deployment deployment, Map<String, String> updatedAnnotations) {
+    Deployment patch =
+        new DeploymentBuilder()
+            .withNewMetadata()
+            .withName(deployment.getMetadata().getName())
+            .withNamespace(defaultNamespace)
+            .withAnnotations(updatedAnnotations)
+            .endMetadata()
+            .build();
+
     return getClient()
         .apps()
         .deployments()
         .inNamespace(defaultNamespace)
-        .resource(deployment)
-        .replace();
+        .withName(deployment.getMetadata().getName())
+        .patch(PatchContext.of(PatchType.JSON_MERGE), patch);
   }
 
   private PodStatusResponse buildResponse(Deployment deployment, int fallbackTtlSeconds) {
     Map<String, String> labels = deployment.getMetadata().getLabels();
     if (labels == null) {
       labels = Map.of();
+    }
+    Map<String, String> annotations = deployment.getMetadata().getAnnotations();
+    if (annotations == null) {
+      annotations = Map.of();
     }
 
     String instanceName = deployment.getMetadata().getName();
@@ -610,18 +675,19 @@ public class LabPodService {
     Instant createdAt = null;
     Instant expiresAt = null;
     Instant lastActivityAt = null;
-    long createdEpoch = parseLongLabel(labels, LABEL_CREATED_AT, -1);
+    long createdEpoch = parseLongMetadata(annotations, labels, ANNOTATION_CREATED_AT, -1);
     if (createdEpoch > 0) {
       createdAt = Instant.ofEpochSecond(createdEpoch);
     }
     long lastActivityEpoch =
-        parseLongLabel(labels, LABEL_LAST_ACTIVITY_AT, createdEpoch > 0 ? createdEpoch : -1);
+        parseLongMetadata(
+            annotations, labels, ANNOTATION_LAST_ACTIVITY_AT, createdEpoch > 0 ? createdEpoch : -1);
     if (lastActivityEpoch > 0) {
       lastActivityAt = Instant.ofEpochSecond(lastActivityEpoch);
     } else {
       lastActivityAt = createdAt;
     }
-    int effectiveTtl = resolveEffectiveTtlSeconds(labels, fallbackTtlSeconds);
+    int effectiveTtl = resolveEffectiveTtlSeconds(annotations, labels, fallbackTtlSeconds);
     if (lastActivityAt != null) {
       expiresAt = lastActivityAt.plusSeconds(effectiveTtl);
     }
@@ -634,11 +700,11 @@ public class LabPodService {
 
     PodStatusEnum status = mapDeploymentStatus(deployment);
 
-    // Clamp extension count to [0, MAX_EXTENSION_COUNT] — consistent with
+    // Clamp extension count to the configured limit — consistent with
     // resolveEffectiveTtlSeconds
-    int extensionCount = parseIntLabel(labels, LABEL_EXTENSION_COUNT, 0);
-    extensionCount = Math.max(0, Math.min(extensionCount, MAX_EXTENSION_COUNT));
-    boolean canExtend = extensionCount < MAX_EXTENSION_COUNT;
+    int extensionCount = parseIntMetadata(annotations, labels, ANNOTATION_EXTENSION_COUNT, 0);
+    extensionCount = Math.max(0, Math.min(extensionCount, maxExtensionCount));
+    boolean canExtend = extensionCount < maxExtensionCount;
 
     return new PodStatusResponse(
         status,
@@ -651,6 +717,7 @@ public class LabPodService {
         lastActivityAt,
         effectiveTtl,
         extensionCount,
+        maxExtensionCount,
         canExtend);
   }
 
@@ -744,10 +811,11 @@ public class LabPodService {
     labels.put("app", LABEL_APP);
     labels.put(LABEL_USER_ID, userId.toString());
     labels.put(LABEL_CHALLENGE_ID, labId.toString());
-    labels.put(LABEL_CREATED_AT, String.valueOf(nowEpoch));
-    labels.put(LABEL_LAST_ACTIVITY_AT, String.valueOf(nowEpoch));
-    labels.put(LABEL_BASE_TTL_SECONDS, String.valueOf(baseTtlSeconds));
-    labels.put(LABEL_EXTENSION_COUNT, "0");
+    Map<String, String> annotations = new HashMap<>();
+    annotations.put(ANNOTATION_CREATED_AT, String.valueOf(nowEpoch));
+    annotations.put(ANNOTATION_LAST_ACTIVITY_AT, String.valueOf(nowEpoch));
+    annotations.put(ANNOTATION_BASE_TTL_SECONDS, String.valueOf(baseTtlSeconds));
+    annotations.put(ANNOTATION_EXTENSION_COUNT, "0");
     int containerPort = resolveContainerPort(lab);
 
     // 1. Deployment
@@ -757,6 +825,7 @@ public class LabPodService {
             .withName(instanceName)
             .withNamespace(defaultNamespace)
             .withLabels(labels)
+            .withAnnotations(annotations)
             .endMetadata()
             .withNewSpec()
             .withReplicas(1)
@@ -875,6 +944,7 @@ public class LabPodService {
         createdAt,
         baseTtlSeconds,
         0,
+        maxExtensionCount,
         true);
   }
 

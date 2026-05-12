@@ -1146,6 +1146,8 @@ export interface components {
       ttlSeconds?: number;
       /** Format: int32 */
       extensionCount?: number;
+      /** Format: int32 */
+      maxExtensionCount?: number;
       canExtend?: boolean;
     };
     AdminTopicRequest: {

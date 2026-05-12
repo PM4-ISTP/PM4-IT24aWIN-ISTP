@@ -41,6 +41,11 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { LabPodStatusBadge } from "@/src/features/lab-pod/components/LabPodStatusBadge";
 import { useLabPodStatus } from "@/src/features/lab-pod/hooks/useLabPodStatus";
 import {
+  formatTimeLeft,
+  getApiErrorMessage,
+  getExtensionSummary,
+} from "@/src/features/lab-pod/utils/lifecycle";
+import {
   submitChallengeFlag,
   submitChallengeChoice,
   completeTheoryChallenge,
@@ -150,6 +155,7 @@ export function LabPlayView({
   const [labCollapsed, setLabCollapsed] = useState(false);
   const [podActionLoading, setPodActionLoading] = useState(false);
   const [podActionError, setPodActionError] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   const {
     data: pod,
@@ -195,9 +201,20 @@ export function LabPlayView({
     podActionLoading ||
     podStatus === "TERMINATING";
   const podExpiresAt = pod?.expiresAt ? new Date(pod.expiresAt) : null;
-  const podMsLeft = podExpiresAt ? podExpiresAt.getTime() - Date.now() : null;
+  const podMsLeft = podExpiresAt ? podExpiresAt.getTime() - nowMs : null;
+  const podTimeLeftLabel = formatTimeLeft(podMsLeft);
   const podExpiringSoon = podMsLeft !== null && podMsLeft > 0 && podMsLeft <= 10 * 60 * 1000;
+  const podExpiringNow = podMsLeft !== null && podMsLeft > 0 && podMsLeft <= 2 * 60 * 1000;
   const canExtendPod = podStatus === "RUNNING" && pod?.canExtend === true;
+  const extensionSummary = getExtensionSummary(pod?.extensionCount, pod?.maxExtensionCount);
+  const extendDisabledReason =
+    podStatus !== "RUNNING"
+      ? "Only running labs can be extended"
+      : extensionSummary.max === 0
+        ? "Extensions are disabled"
+        : !canExtendPod
+          ? "Maximum extensions reached"
+          : "Extend lab by 30 minutes";
 
   let startDisabledReason: string | null = null;
   if (dockerImageCheck.status === "checking") {
@@ -219,6 +236,11 @@ export function LabPlayView({
     setHintOpen(false);
   }, [activeStep, current?.selectedOptionId]);
 
+  useEffect(() => {
+    const id = window.setInterval(() => setNowMs(Date.now()), 10_000);
+    return () => window.clearInterval(id);
+  }, []);
+
   const handleStartPod = useCallback(async () => {
     if (!canStartPod) {
       setPodActionError(startDisabledReason ?? "Lab cannot be started with this Docker image.");
@@ -227,9 +249,12 @@ export function LabPlayView({
     setPodActionLoading(true);
     setPodActionError(null);
     try {
-      await apiClient.POST("/api/v1/lab-pods/{labId}", {
+      const { error } = await apiClient.POST("/api/v1/lab-pods/{labId}", {
         params: { path: { labId } },
       });
+      if (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to start lab."));
+      }
       await refetchPodStatus();
     } catch (e) {
       setPodActionError(e instanceof Error ? e.message : "Failed to start lab.");
@@ -239,12 +264,16 @@ export function LabPlayView({
   }, [apiClient, canStartPod, labId, refetchPodStatus, startDisabledReason]);
 
   const handleStopPod = useCallback(async () => {
+    if (!window.confirm("Stop this lab?")) return;
     setPodActionLoading(true);
     setPodActionError(null);
     try {
-      await apiClient.DELETE("/api/v1/lab-pods/{labId}", {
+      const { error } = await apiClient.DELETE("/api/v1/lab-pods/{labId}", {
         params: { path: { labId } },
       });
+      if (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to stop lab."));
+      }
       await refetchPodStatus();
     } catch (e) {
       setPodActionError(e instanceof Error ? e.message : "Failed to stop lab.");
@@ -258,10 +287,18 @@ export function LabPlayView({
     setPodActionLoading(true);
     setPodActionError(null);
     try {
-      await apiClient.POST("/api/v1/lab-pods/{labId}/extend", {
+      const { error } = await apiClient.POST("/api/v1/lab-pods/{labId}/extend", {
         params: { path: { labId } },
       });
+      if (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to extend lab."));
+      }
       await refetchPodStatus();
+      notifications.show({
+        color: "teal",
+        title: "Lab extended",
+        message: "Added 30 minutes to this lab.",
+      });
     } catch (e) {
       setPodActionError(e instanceof Error ? e.message : "Failed to extend lab.");
     } finally {
@@ -945,12 +982,10 @@ export function LabPlayView({
                   </Tooltip>
                 )}
 
-                <Tooltip
-                  label={canExtendPod ? "Extend lab by 30 minutes" : "Extension unavailable"}
-                >
+                <Tooltip label={extendDisabledReason}>
                   <ActionIcon
                     variant="subtle"
-                    color="yellow"
+                    color={podExpiringNow ? "orange" : "yellow"}
                     loading={podActionLoading}
                     disabled={!canExtendPod}
                     onClick={() => void handleExtendPod()}
@@ -968,12 +1003,20 @@ export function LabPlayView({
                   withBorder
                   radius="md"
                   p="md"
-                  style={{ background: "rgba(251,191,36,0.12)" }}
+                  style={{
+                    background: podExpiringNow
+                      ? "rgba(248,113,113,0.10)"
+                      : "rgba(251,191,36,0.12)",
+                  }}
                 >
-                  <Text size="sm" c="yellow.2">
+                  <Text size="sm" c={podExpiringNow ? "red.3" : "yellow.2"}>
                     <Group gap={6} wrap="nowrap">
                       <IconClockHour10 size={16} />
-                      <span>Lab expires in less than 10 minutes.</span>
+                      <span>
+                        {podExpiringNow
+                          ? "Lab expires in less than 2 minutes."
+                          : "Lab expires in less than 10 minutes."}
+                      </span>
                     </Group>
                   </Text>
                 </Paper>
@@ -1006,6 +1049,40 @@ export function LabPlayView({
                 buttonLabel="Open app"
                 disabledLabel={labIsStarting ? "Starting..." : "App not ready"}
               />
+
+              {podStatus === "RUNNING" && podExpiresAt && (
+                <Paper withBorder radius="md" p="sm" style={{ background: "rgba(255,255,255,0.03)" }}>
+                  <Group justify="space-between" align="center" gap="sm">
+                    <Group gap={8}>
+                      <IconClockHour10 size={16} />
+                      <Stack gap={0}>
+                        <Text size="sm" fw={600} c={podExpiringSoon ? "yellow.2" : undefined}>
+                          Expires in {podTimeLeftLabel}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          at{" "}
+                          {podExpiresAt.toLocaleTimeString("de-CH", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </Text>
+                      </Stack>
+                    </Group>
+                    <Badge
+                      variant="light"
+                      color={canExtendPod ? "blue" : "gray"}
+                      radius="sm"
+                    >
+                      {extensionSummary.label}
+                    </Badge>
+                  </Group>
+                  {!canExtendPod && (
+                    <Text size="xs" c="dimmed" mt={6}>
+                      {extendDisabledReason}
+                    </Text>
+                  )}
+                </Paper>
+              )}
 
               {(podActionError || podStatusError) && (
                 <Paper

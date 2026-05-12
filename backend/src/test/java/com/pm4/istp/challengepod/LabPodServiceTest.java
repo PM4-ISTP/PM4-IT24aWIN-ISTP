@@ -87,7 +87,9 @@ class LabPodServiceTest {
                 "default",
                 "test.domain",
                 false,
-                "");
+                "",
+                1800,
+                2);
     }
 
     // ── startPod: early-exit paths ───────────────────────────────────────────
@@ -328,7 +330,16 @@ class LabPodServiceTest {
         assertThat(deployment.getSpec().getTemplate().getSpec().getImagePullSecrets())
                 .singleElement()
                 .satisfies(secret -> assertThat(secret.getName()).isEqualTo("ghcr-pull-secret"));
-        assertThat(deployment.getMetadata().getAnnotations()).isNullOrEmpty();
+        assertThat(deployment.getMetadata().getLabels())
+                .containsOnlyKeys("app", "istp.pm4.ch/user-id", "istp.pm4.ch/lab-id");
+        assertThat(deployment.getSpec().getSelector().getMatchLabels())
+                .containsOnlyKeys("app", "istp.pm4.ch/user-id", "istp.pm4.ch/lab-id");
+        assertThat(deployment.getMetadata().getAnnotations())
+                .containsKeys(
+                        "istp.pm4.ch/created-at-epoch",
+                        "istp.pm4.ch/last-activity-at-epoch",
+                        "istp.pm4.ch/base-ttl-seconds",
+                        "istp.pm4.ch/ttl-extension-count");
     }
 
     private void assertCreatedService(Service service) {
@@ -340,6 +351,8 @@ class LabPodServiceTest {
                             assertThat(port.getPort()).isEqualTo(80);
                             assertThat(port.getTargetPort().getIntVal()).isEqualTo(8080);
                         });
+        assertThat(service.getSpec().getSelector())
+                .containsOnlyKeys("app", "istp.pm4.ch/user-id", "istp.pm4.ch/lab-id");
     }
 
     private void assertCreatedIngress(Ingress ingress) {
@@ -469,7 +482,9 @@ class LabPodServiceTest {
                         "default",
                         "test.domain",
                         true,
-                        " Team Alpha! ");
+                        " Team Alpha! ",
+                        1800,
+                        2);
         KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
         UUID userId = UUID.randomUUID();
         UUID labId = UUID.randomUUID();
@@ -624,8 +639,14 @@ class LabPodServiceTest {
         NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
                 stubFindDeployments(client, userId, labId, List.of(deployment));
         RollableScalableResource<Deployment> deploymentResource = mock(RollableScalableResource.class);
-        when(deploymentOperation.resource(Mockito.any())).thenReturn(deploymentResource);
-        when(deploymentResource.replace()).thenReturn(deployment);
+        when(deploymentOperation.withName("pod-extendme")).thenReturn(deploymentResource);
+        when(deploymentResource.patch(Mockito.any(), Mockito.any(Deployment.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Deployment patch = invocation.getArgument(1);
+                            deployment.getMetadata().setAnnotations(patch.getMetadata().getAnnotations());
+                            return deployment;
+                        });
         stubPodsForLabels(client, labels, List.of());
         stubIngressGetThrows(client, "pod-extendme-ingress");
         when(adminConfigurationService.getAdminConfiguration())
@@ -636,6 +657,15 @@ class LabPodServiceTest {
         assertThat(response.extensionCount()).isEqualTo(1);
         assertThat(response.ttlSeconds()).isEqualTo(2400);
         assertThat(response.canExtend()).isTrue();
+
+        ArgumentCaptor<Deployment> patchCaptor = ArgumentCaptor.forClass(Deployment.class);
+        verify(deploymentResource).patch(Mockito.any(), patchCaptor.capture());
+        Deployment patch = patchCaptor.getValue();
+        assertThat(patch.getMetadata().getLabels()).isNullOrEmpty();
+        assertThat(patch.getSpec()).isNull();
+        assertThat(patch.getMetadata().getAnnotations())
+                .containsEntry("istp.pm4.ch/ttl-extension-count", "1")
+                .containsKey("istp.pm4.ch/last-activity-at-epoch");
     }
 
     @Test
@@ -739,7 +769,9 @@ class LabPodServiceTest {
                                         "default",
                                         "test.domain",
                                         false,
-                                        ""))
+                                        "",
+                                        1800,
+                                        2))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(
                         () ->
@@ -751,7 +783,9 @@ class LabPodServiceTest {
                                         "default",
                                         "test.domain",
                                         false,
-                                        ""))
+                                        "",
+                                        1800,
+                                        2))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(
                         () ->
@@ -763,7 +797,9 @@ class LabPodServiceTest {
                                         "default",
                                         "test.domain",
                                         false,
-                                        ""))
+                                        "",
+                                        1800,
+                                        2))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(
                         () ->
@@ -775,7 +811,9 @@ class LabPodServiceTest {
                                         "default",
                                         "test.domain",
                                         false,
-                                        ""))
+                                        "",
+                                        1800,
+                                        2))
                 .isInstanceOf(NullPointerException.class);
     }
 

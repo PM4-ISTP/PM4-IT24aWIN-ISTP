@@ -17,6 +17,7 @@ export interface PodStatusResponse {
   lastActivityAt?: string | null;
   ttlSeconds?: number | null;
   extensionCount?: number | null;
+  maxExtensionCount?: number | null;
   canExtend?: boolean | null;
 }
 

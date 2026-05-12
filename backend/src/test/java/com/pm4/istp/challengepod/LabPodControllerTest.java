@@ -56,6 +56,7 @@ class LabPodControllerTest {
                 now,
                 3600,
                 0,
+                2,
                 true);
     }
 

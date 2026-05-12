@@ -87,6 +87,18 @@ spec:
                   name: istp-config
                   key: istp-lab-host-prefix
                   optional: true
+            - name: ISTP_POD_EXTENSION_SECONDS
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: istp-pod-extension-seconds
+                  optional: true
+            - name: ISTP_POD_MAX_EXTENSIONS
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: istp-pod-max-extensions
+                  optional: true
           resources:
             requests:
               cpu: 250m
