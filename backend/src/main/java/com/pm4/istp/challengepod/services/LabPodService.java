@@ -614,7 +614,8 @@ public class LabPodService {
     if (createdEpoch > 0) {
       createdAt = Instant.ofEpochSecond(createdEpoch);
     }
-    long lastActivityEpoch = parseLongLabel(labels, LABEL_LAST_ACTIVITY_AT, createdEpoch > 0 ? createdEpoch : -1);
+    long lastActivityEpoch =
+        parseLongLabel(labels, LABEL_LAST_ACTIVITY_AT, createdEpoch > 0 ? createdEpoch : -1);
     if (lastActivityEpoch > 0) {
       lastActivityAt = Instant.ofEpochSecond(lastActivityEpoch);
     } else {
@@ -633,7 +634,8 @@ public class LabPodService {
 
     PodStatusEnum status = mapDeploymentStatus(deployment);
 
-    // Clamp extension count to [0, MAX_EXTENSION_COUNT] — consistent with resolveEffectiveTtlSeconds
+    // Clamp extension count to [0, MAX_EXTENSION_COUNT] — consistent with
+    // resolveEffectiveTtlSeconds
     int extensionCount = parseIntLabel(labels, LABEL_EXTENSION_COUNT, 0);
     extensionCount = Math.max(0, Math.min(extensionCount, MAX_EXTENSION_COUNT));
     boolean canExtend = extensionCount < MAX_EXTENSION_COUNT;
