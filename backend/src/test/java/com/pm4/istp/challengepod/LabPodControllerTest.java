@@ -52,7 +52,12 @@ class LabPodControllerTest {
                 "http://term-abc12345.test.domain",
                 "secret123",
                 now,
-                now.plusSeconds(3600));
+                now.plusSeconds(3600),
+                now,
+                3600,
+                0,
+                2,
+                true);
     }
 
     // ── POST /{labId} ──────────────────────────────────────────────────
@@ -179,6 +184,22 @@ class LabPodControllerTest {
     }
 
     // ── DELETE /{labId} ────────────────────────────────────────────────
+
+    @Test
+    void extendPod_returnsOk_withStatusFromService() {
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        Jwt jwt = jwtFor(userId);
+        PodStatusResponse response = runningResponse();
+
+        when(labPodService.extendPod(userId, labId)).thenReturn(response);
+
+        ResponseEntity<PodStatusResponse> result = controller.extendPod(jwt, labId);
+
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getBody()).isSameAs(response);
+        verify(labPodService).extendPod(userId, labId);
+    }
 
     @Test
     void stopPod_returnsNoContent_whenPodDeleted() {

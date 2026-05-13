@@ -25,6 +25,7 @@ export interface ChallengeFormValues {
   difficulty: LabDifficultyEnum;
   dockerImage: string;
   containerPort: number;
+  podTtlSeconds: number | undefined;
   challenges: ChallengeItemFormValues[];
 }
 
@@ -106,6 +107,21 @@ export function LabFormFields({
         value={values.containerPort}
         onChange={(value) => onChange({ ...values, containerPort: Number(value) || 80 })}
         required
+      />
+
+      <NumberInput
+        label="Pod TTL (seconds)"
+        description="Optional. Leave blank to use the admin default. Increase it for heavier labs only when you need a per-lab override."
+        min={60}
+        max={86400}
+        clampBehavior="strict"
+        value={values.podTtlSeconds ?? ""}
+        onChange={(value) =>
+          onChange({
+            ...values,
+            podTtlSeconds: value === "" || value === null ? undefined : Number(value),
+          })
+        }
       />
 
       <Stack gap={4}>

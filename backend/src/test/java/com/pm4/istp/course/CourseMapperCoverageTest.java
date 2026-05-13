@@ -67,6 +67,7 @@ class CourseMapperCoverageTest {
             LabDifficultyEnum.EASY,
             "ghcr.io/acme/lab:latest",
             8080,
+            null,
             List.of(challengeDto));
     UpdateChallengeRequestDto updateDto =
         new UpdateChallengeRequestDto(
@@ -77,6 +78,7 @@ class CourseMapperCoverageTest {
             LabDifficultyEnum.HARD,
             "ghcr.io/acme/lab:2",
             8081,
+            null,
             List.of(challengeDto));
 
     assertLabRequestMappings(optionDto, challengeDto, createDto, updateDto);
@@ -142,7 +144,9 @@ class CourseMapperCoverageTest {
     assertThat(labMapper.fromDto((ChallengeOptionRequestDto) null)).isNull();
     assertThat(labMapper.fromDto(createDto).getChallenges()).hasSize(1);
     assertThat(labMapper.fromDto(createDto).getContainerPort()).isEqualTo(8080);
+    assertThat(labMapper.fromDto(createDto).getPodTtlSeconds()).isNull();
     assertThat(labMapper.fromDto(updateDto).getStatus()).isEqualTo(LabStatusEnum.DRAFT);
+    assertThat(labMapper.fromDto(updateDto).getPodTtlSeconds()).isNull();
     assertThat(labMapper.fromDto(challengeDto).getOptions().get(0).isCorrect()).isTrue();
     assertThat(labMapper.fromDto(optionDto).getText()).isEqualTo("Option A");
   }

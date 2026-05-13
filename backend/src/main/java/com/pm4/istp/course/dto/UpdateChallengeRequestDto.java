@@ -46,6 +46,10 @@ public class UpdateChallengeRequestDto {
   @Max(value = 65535, message = "Container port must be between 1 and 65535")
   private Integer containerPort;
 
+  @Min(value = 60, message = "Pod TTL must be at least 60 seconds")
+  @Max(value = 86400, message = "Pod TTL must not exceed 86400 seconds (24h)")
+  private Integer podTtlSeconds;
+
   @NotEmpty(message = "At least one sub task is required")
   @Valid
   private List<ChallengeRequestDto> challenges;

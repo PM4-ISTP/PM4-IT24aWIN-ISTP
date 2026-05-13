@@ -359,7 +359,7 @@ public class CourseController {
   @Operation(
       summary = "Get upcoming lab deadlines for current user",
       description =
-          "Returns lab assignments (course + lab + dueAt) for courses where the user is enrolled. Only entries with a dueAt deadline are returned.")
+          "Returns lab assignments (course + lab + dueAt) for courses where the user is enrolled. Only entries with a dueAt deadline are returned. Already submitted labs are not returned (labs with the submission status `SUBMITTED`).")
   @ApiResponses(
       value = {
         @ApiResponse(
