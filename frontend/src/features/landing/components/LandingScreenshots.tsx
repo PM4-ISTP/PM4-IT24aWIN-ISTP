@@ -23,7 +23,7 @@ const FRAME_MAX_WIDTH: React.CSSProperties = {
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function LandingScreenSCREENSHOTS() {
+export default function LandingScreenshots() {
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
