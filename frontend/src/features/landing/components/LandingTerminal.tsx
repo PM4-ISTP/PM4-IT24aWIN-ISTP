@@ -7,6 +7,8 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import HeroTerminal from "./HeroTerminal";
+import { addDesktopMotion, addMobileMotion, addReducedMotion } from "../hooks/useScrollAnimations";
+import { TERMINAL_BUBBLES } from "../content/terminalBubbles";
 import { INK, INK_DIM, LINE_2 } from "../theme";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -49,23 +51,6 @@ export default function LandingTerminal() {
   const pinRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   const bubbleRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const bubbles = [
-    {
-      title: "Navigation",
-      body: "Jump between courses and labs without losing progress.",
-      style: { top: 110, left: -20, maxWidth: 220 },
-    },
-    {
-      title: "Overview",
-      body: "Lab summary and description keep students focused on the goal.",
-      style: { top: 180, left: "50%", transform: "translateX(-50%)", maxWidth: 260 },
-    },
-    {
-      title: "Status",
-      body: "Live pod status and progress meters stay visible.",
-      style: { top: 120, right: -10, maxWidth: 240 },
-    },
-  ] satisfies Array<{ title: string; body: string; style: CSSProperties }>;
 
   useGSAP(
     () => {
@@ -76,60 +61,88 @@ export default function LandingTerminal() {
       if (!section || !pin || !terminal) return;
 
       const mm = gsap.matchMedia();
-      mm.add(
-        {
-          motionOk: "(prefers-reduced-motion: no-preference)",
-          motionReduced: "(prefers-reduced-motion: reduce)",
-        },
-        (ctx) => {
-          const { motionOk } = ctx.conditions as { motionOk: boolean };
-          if (!motionOk) {
-            gsap.set(terminal, { scale: 1, transformOrigin: "center top" });
-            gsap.set(bubbles, { opacity: 1, y: 0, scale: 1 });
-            return;
-          }
 
-          gsap.set(terminal, { scale: 0.96, transformOrigin: "center top" });
-          gsap.set(bubbles, { opacity: 0, y: 18, scale: 0.98 });
+      addReducedMotion(mm, () => {
+        gsap.set(terminal, { scale: 1, transformOrigin: "center top" });
+        gsap.set(bubbles, { opacity: 1, y: 0, scale: 1 });
+      });
 
-          const tl = gsap.timeline({
-            defaults: { ease: "power2.out" },
-            scrollTrigger: {
-              trigger: section,
-              start: "top 10%",
-              end: "bottom top",
-              scrub: 1,
-              pin,
-              pinSpacing: true,
-              anticipatePin: 1,
-              invalidateOnRefresh: true,
+      addDesktopMotion(mm, () => {
+        gsap.set(terminal, { scale: 0.96, transformOrigin: "center top" });
+        gsap.set(bubbles, { opacity: 0, y: 18, scale: 0.98 });
+
+        const tl = gsap.timeline({
+          defaults: { ease: "power2.out" },
+          scrollTrigger: {
+            trigger: section,
+            start: "top 10%",
+            end: "bottom top",
+            scrub: 1,
+            pin,
+            pinSpacing: true,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+
+        tl.to(terminal, { scale: 1, duration: 0.6 });
+        if (bubbles.length) {
+          tl.to(bubbles, { opacity: 1, y: 0, scale: 1, duration: 0.25, stagger: 0.2 }, 0.35);
+          tl.to(
+            bubbles,
+            {
+              opacity: 0,
+              y: 12,
+              scale: 0.98,
+              duration: 0.22,
+              stagger: { each: 0.18, from: "end" },
             },
-          });
-
-          tl.to(terminal, { scale: 1, duration: 0.6 });
-          if (bubbles.length) {
-            tl.to(bubbles, { opacity: 1, y: 0, scale: 1, duration: 0.25, stagger: 0.2 }, 0.35);
-            tl.to(
-              bubbles,
-              {
-                opacity: 0,
-                y: 12,
-                scale: 0.98,
-                duration: 0.22,
-                stagger: { each: 0.18, from: "end" },
-              },
-              1.45
-            );
-          }
-          tl.to(terminal, { scale: 0.96, duration: 0.6 }, 1.7);
+            1.45
+          );
         }
-      );
+        tl.to(terminal, { scale: 0.96, duration: 0.6 }, 1.7);
+      });
+
+      addMobileMotion(mm, () => {
+        gsap.set(terminal, { scale: 1, transformOrigin: "center top" });
+        gsap.fromTo(
+          terminal,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 85%", once: true },
+          }
+        );
+        if (bubbles.length) {
+          gsap.fromTo(
+            bubbles,
+            { opacity: 0, y: 18, scale: 0.98 },
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.5,
+              stagger: 0.12,
+              ease: "power2.out",
+              scrollTrigger: { trigger: section, start: "top 75%", once: true },
+            }
+          );
+        }
+      });
     },
     { scope: sectionRef }
   );
 
   return (
-    <Box component="section" ref={sectionRef} style={{ padding: "0 0 120px", minHeight: "120vh" }}>
+    <Box
+      component="section"
+      ref={sectionRef}
+      className="landing-terminal-section"
+      style={{ padding: "0 0 120px", minHeight: "120svh" }}
+    >
       <Container size="xl" px={32}>
         <Stack gap={24}>
           <Box
@@ -150,7 +163,7 @@ export default function LandingTerminal() {
             >
               <HeroTerminal />
 
-              {bubbles.map((bubble, index) => (
+              {TERMINAL_BUBBLES.map((bubble, index) => (
                 <BubbleCallout
                   key={bubble.title}
                   title={bubble.title}
@@ -169,6 +182,7 @@ export default function LandingTerminal() {
 
       <style>{`
         @media (max-width: 900px) {
+          .landing-terminal-section { min-height: 0 !important; padding-bottom: 60px !important; }
           .bubble-callout { display: none; }
           .bubble-overview { display: block; }
         }
