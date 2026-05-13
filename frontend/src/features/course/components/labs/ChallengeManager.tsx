@@ -218,8 +218,8 @@ export function ChallengeManager({
         <Stack gap={2}>
           <Title order={4}>Challenges</Title>
           <Text size="sm" c="dimmed">
-            Each lab awards points on correct submission. A lab without a flag or options is just a
-            description.
+            Each challenge awards points on correct submission. A challenge without a flag or options
+            is just a description.
           </Text>
         </Stack>
         <Badge size="lg" variant="light">
@@ -227,7 +227,7 @@ export function ChallengeManager({
         </Badge>
       </Group>
 
-      {challenges.length === 0 && <Alert color="orange">At least one lab is required.</Alert>}
+      {challenges.length === 0 && <Alert color="orange">At least one challenge is required.</Alert>}
 
       {challenges.length > 0 && (
         <Stack gap="sm">
@@ -236,7 +236,7 @@ export function ChallengeManager({
             const isExpanded = expandedIndex === index;
             const shouldRenderBody = isExpanded || closingIndex === index;
             const hasError = Boolean(err.title || err.description || err.flag || err.options);
-            const displayTitle = st.title.trim() || `Lab ${index + 1}`;
+            const displayTitle = st.title.trim() || `Challenge ${index + 1}`;
             const isFlag = st.type === "FLAG";
             const isMC = st.type === "MULTIPLE_CHOICE";
 
@@ -310,7 +310,7 @@ export function ChallengeManager({
                           size="sm"
                           color="red"
                           onClick={() => handleRemove(index)}
-                          aria-label="Remove lab"
+                          aria-label="Remove challenge"
                         >
                           <IconTrash size={14} />
                         </ActionIcon>
@@ -386,7 +386,7 @@ export function ChallengeManager({
                         {isFlag && (
                           <TextInput
                             label="Flag"
-                            description="Leave empty if this lab has no flag to submit."
+                            description="Leave empty if this challenge has no flag to submit."
                             placeholder="flag_content_here"
                             leftSection={<Text size="sm">ISTP&#123;</Text>}
                             leftSectionWidth={52}
@@ -469,9 +469,9 @@ export function ChallengeManager({
         variant="light"
         leftSection={<IconPlus size={14} />}
         onClick={handleAdd}
-        aria-label="Add lab"
+        aria-label="Add challenge"
       >
-        Add Lab
+        Add Challenge
       </Button>
     </Stack>
   );
