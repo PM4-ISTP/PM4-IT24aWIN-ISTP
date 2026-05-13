@@ -12,7 +12,10 @@ export default function OnPremCell() {
         title="On-premises by design."
         description="Runs on your own Kubernetes cluster. No external SaaS, no per-seat pricing, no student data leaving campus."
       />
-      <Group gap={6} style={{ flexWrap: "wrap", fontFamily: FONT_MONO, fontSize: 10.5, color: MUTED }}>
+      <Group
+        gap={6}
+        style={{ flexWrap: "wrap", fontFamily: FONT_MONO, fontSize: 10.5, color: MUTED }}
+      >
         {ON_PREM_TAGS.map((p) => (
           <Group
             key={p}

@@ -85,8 +85,7 @@ export default function LandingCta() {
               }}
             >
               Spin up a course. Hand out a pod.
-              <br className="cta-br-desktop" />{" "}
-              <GradientText>Start hacking.</GradientText>
+              <br className="cta-br-desktop" /> <GradientText>Start hacking.</GradientText>
             </Title>
             <Text
               mt={18}
@@ -101,14 +100,7 @@ export default function LandingCta() {
               Free for universities. On-premises in your own Kubernetes cluster — no SaaS lock-in,
               no per-seat pricing, no student data leaving campus.
             </Text>
-            <Group
-              className="cta-buttons"
-              gap={12}
-              justify="center"
-              wrap="wrap"
-              w="100%"
-              maw={520}
-            >
+            <Group className="cta-buttons" gap={12} justify="center" wrap="wrap" w="100%" maw={520}>
               <LandingButton
                 size="md"
                 onClick={handleSignIn}

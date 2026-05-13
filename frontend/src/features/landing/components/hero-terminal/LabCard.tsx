@@ -50,9 +50,7 @@ export default function LabCard() {
         <Group justify="space-between" wrap="nowrap" mb={10}>
           <Group gap={10} wrap="nowrap">
             <Box w={6} h={6} style={{ borderRadius: 99, background: MINT, marginTop: 4 }} />
-            <Text
-              style={{ fontSize: 15, fontWeight: 600, color: INK, letterSpacing: "-0.01em" }}
-            >
+            <Text style={{ fontSize: 15, fontWeight: 600, color: INK, letterSpacing: "-0.01em" }}>
               #1 Campus Helpdesk
             </Text>
           </Group>
@@ -121,9 +119,7 @@ export default function LabCard() {
                   flexShrink: 0,
                 }}
               >
-                {c.done ? (
-                  <Text style={{ fontSize: 9, color: MINT, lineHeight: 1 }}>✓</Text>
-                ) : null}
+                {c.done ? <Text style={{ fontSize: 9, color: MINT, lineHeight: 1 }}>✓</Text> : null}
               </Box>
               <Text
                 style={{

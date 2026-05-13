@@ -14,9 +14,5 @@ function subscribe(callback: () => void) {
 }
 
 export default function usePrefersReducedMotion() {
-  return useSyncExternalStore(
-    subscribe,
-    prefersReducedMotionNow,
-    () => false
-  );
+  return useSyncExternalStore(subscribe, prefersReducedMotionNow, () => false);
 }

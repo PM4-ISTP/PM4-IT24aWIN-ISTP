@@ -1,11 +1,4 @@
-import {
-  ACCENT,
-  AMBER,
-  INK_DIM,
-  LINE_2,
-  MINT,
-  ROSE,
-} from "../../theme";
+import { ACCENT, AMBER, INK_DIM, LINE_2, MINT, ROSE } from "../../theme";
 
 export type ChipTone = "hot" | "warm" | "live" | "rare";
 
@@ -72,31 +65,29 @@ export const CHIP_PALETTES: Record<
 
 export type GlowTone = "indigo" | "mint" | "amber" | "rose";
 
-export const GLOW_COLORS: Record<
-  GlowTone,
-  { primary: string; secondary: string; border: string }
-> = {
-  indigo: {
-    primary: "rgba(93,110,240,0.28)",
-    secondary: "rgba(109,240,200,0.10)",
-    border: "rgba(93,110,240,0.28)",
-  },
-  mint: {
-    primary: "rgba(109,240,200,0.22)",
-    secondary: "rgba(93,110,240,0.10)",
-    border: "rgba(109,240,200,0.30)",
-  },
-  amber: {
-    primary: "rgba(245,180,98,0.24)",
-    secondary: "rgba(240,109,138,0.10)",
-    border: "rgba(245,180,98,0.30)",
-  },
-  rose: {
-    primary: "rgba(240,109,138,0.24)",
-    secondary: "rgba(93,110,240,0.10)",
-    border: "rgba(240,109,138,0.30)",
-  },
-};
+export const GLOW_COLORS: Record<GlowTone, { primary: string; secondary: string; border: string }> =
+  {
+    indigo: {
+      primary: "rgba(93,110,240,0.28)",
+      secondary: "rgba(109,240,200,0.10)",
+      border: "rgba(93,110,240,0.28)",
+    },
+    mint: {
+      primary: "rgba(109,240,200,0.22)",
+      secondary: "rgba(93,110,240,0.10)",
+      border: "rgba(109,240,200,0.30)",
+    },
+    amber: {
+      primary: "rgba(245,180,98,0.24)",
+      secondary: "rgba(240,109,138,0.10)",
+      border: "rgba(245,180,98,0.30)",
+    },
+    rose: {
+      primary: "rgba(240,109,138,0.24)",
+      secondary: "rgba(93,110,240,0.10)",
+      border: "rgba(240,109,138,0.30)",
+    },
+  };
 
 export const WORKFLOW_STATS = [
   { n: "24", l: "students", w: 78 },
