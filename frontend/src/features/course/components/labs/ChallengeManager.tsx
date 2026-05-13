@@ -218,8 +218,8 @@ export function ChallengeManager({
         <Stack gap={2}>
           <Title order={4}>Challenges</Title>
           <Text size="sm" c="dimmed">
-            Each challenge awards points on correct submission. A challenge without a flag or options
-            is just a description.
+            Each challenge awards points on correct submission. A challenge without a flag or
+            options is just a description.
           </Text>
         </Stack>
         <Badge size="lg" variant="light">
