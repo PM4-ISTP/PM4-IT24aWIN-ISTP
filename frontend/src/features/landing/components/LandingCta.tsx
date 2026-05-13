@@ -47,14 +47,19 @@ export default function LandingCta() {
   );
 
   return (
-    <Box component="section" ref={sectionRef} id="cta" style={{ padding: "60px 0 100px" }}>
-      <Container size="xl" px={32}>
+    <Box
+      component="section"
+      ref={sectionRef}
+      id="cta"
+      style={{ padding: "clamp(40px, 8vw, 60px) 0 clamp(60px, 10vw, 100px)" }}
+    >
+      <Container size="xl" px={{ base: 16, sm: 32 }}>
         <Paper
           radius={24}
-          p="64px 56px"
           className="cta-card"
           style={{
             position: "relative",
+            padding: "clamp(28px, 6vw, 64px) clamp(20px, 5vw, 56px)",
             border: `1px solid ${LINE_2}`,
             background:
               "radial-gradient(700px 300px at 100% 0%, rgba(93,110,240,0.25), transparent 60%), linear-gradient(180deg,#0d1426 0%, #080c18 100%)",
@@ -70,7 +75,7 @@ export default function LandingCta() {
               order={2}
               style={{
                 margin: 0,
-                fontSize: 54,
+                fontSize: "clamp(28px, 6.5vw, 54px)",
                 letterSpacing: "-0.025em",
                 fontWeight: 600,
                 lineHeight: 1.05,
@@ -78,7 +83,7 @@ export default function LandingCta() {
               }}
             >
               Spin up a course. Hand out a pod.
-              <br />
+              <br className="cta-br-desktop" />{" "}
               <GradientText>Start hacking.</GradientText>
             </Title>
             <Text
@@ -87,14 +92,21 @@ export default function LandingCta() {
               style={{
                 maxWidth: 520,
                 color: INK_DIM,
-                fontSize: 18,
+                fontSize: "clamp(15px, 1.6vw, 18px)",
                 lineHeight: 1.5,
               }}
             >
               Free for universities. On-premises in your own Kubernetes cluster — no SaaS lock-in,
               no per-seat pricing, no student data leaving campus.
             </Text>
-            <Group gap={12} justify="center" wrap="wrap">
+            <Group
+              className="cta-buttons"
+              gap={12}
+              justify="center"
+              wrap="wrap"
+              w="100%"
+              maw={520}
+            >
               <LandingButton
                 size="md"
                 onClick={handleSignIn}
@@ -125,6 +137,14 @@ export default function LandingCta() {
           </Stack>
         </Paper>
       </Container>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .cta-br-desktop { display: none; }
+          .cta-buttons { flex-direction: column; align-items: stretch; }
+          .cta-buttons > * { width: 100%; justify-content: center; }
+        }
+      `}</style>
     </Box>
   );
 }

@@ -76,60 +76,88 @@ export default function LandingTerminal() {
       if (!section || !pin || !terminal) return;
 
       const mm = gsap.matchMedia();
-      mm.add(
-        {
-          motionOk: "(prefers-reduced-motion: no-preference)",
-          motionReduced: "(prefers-reduced-motion: reduce)",
-        },
-        (ctx) => {
-          const { motionOk } = ctx.conditions as { motionOk: boolean };
-          if (!motionOk) {
-            gsap.set(terminal, { scale: 1, transformOrigin: "center top" });
-            gsap.set(bubbles, { opacity: 1, y: 0, scale: 1 });
-            return;
-          }
 
-          gsap.set(terminal, { scale: 0.96, transformOrigin: "center top" });
-          gsap.set(bubbles, { opacity: 0, y: 18, scale: 0.98 });
+      mm.add("(prefers-reduced-motion: reduce)", () => {
+        gsap.set(terminal, { scale: 1, transformOrigin: "center top" });
+        gsap.set(bubbles, { opacity: 1, y: 0, scale: 1 });
+      });
 
-          const tl = gsap.timeline({
-            defaults: { ease: "power2.out" },
-            scrollTrigger: {
-              trigger: section,
-              start: "top 10%",
-              end: "bottom top",
-              scrub: 1,
-              pin,
-              pinSpacing: true,
-              anticipatePin: 1,
-              invalidateOnRefresh: true,
+      mm.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
+        gsap.set(terminal, { scale: 0.96, transformOrigin: "center top" });
+        gsap.set(bubbles, { opacity: 0, y: 18, scale: 0.98 });
+
+        const tl = gsap.timeline({
+          defaults: { ease: "power2.out" },
+          scrollTrigger: {
+            trigger: section,
+            start: "top 10%",
+            end: "bottom top",
+            scrub: 1,
+            pin,
+            pinSpacing: true,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+
+        tl.to(terminal, { scale: 1, duration: 0.6 });
+        if (bubbles.length) {
+          tl.to(bubbles, { opacity: 1, y: 0, scale: 1, duration: 0.25, stagger: 0.2 }, 0.35);
+          tl.to(
+            bubbles,
+            {
+              opacity: 0,
+              y: 12,
+              scale: 0.98,
+              duration: 0.22,
+              stagger: { each: 0.18, from: "end" },
             },
-          });
-
-          tl.to(terminal, { scale: 1, duration: 0.6 });
-          if (bubbles.length) {
-            tl.to(bubbles, { opacity: 1, y: 0, scale: 1, duration: 0.25, stagger: 0.2 }, 0.35);
-            tl.to(
-              bubbles,
-              {
-                opacity: 0,
-                y: 12,
-                scale: 0.98,
-                duration: 0.22,
-                stagger: { each: 0.18, from: "end" },
-              },
-              1.45
-            );
-          }
-          tl.to(terminal, { scale: 0.96, duration: 0.6 }, 1.7);
+            1.45
+          );
         }
-      );
+        tl.to(terminal, { scale: 0.96, duration: 0.6 }, 1.7);
+      });
+
+      mm.add("(max-width: 899px) and (prefers-reduced-motion: no-preference)", () => {
+        gsap.set(terminal, { scale: 1, transformOrigin: "center top" });
+        gsap.fromTo(
+          terminal,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 85%", once: true },
+          }
+        );
+        if (bubbles.length) {
+          gsap.fromTo(
+            bubbles,
+            { opacity: 0, y: 18, scale: 0.98 },
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.5,
+              stagger: 0.12,
+              ease: "power2.out",
+              scrollTrigger: { trigger: section, start: "top 75%", once: true },
+            }
+          );
+        }
+      });
     },
     { scope: sectionRef }
   );
 
   return (
-    <Box component="section" ref={sectionRef} style={{ padding: "0 0 120px", minHeight: "120vh" }}>
+    <Box
+      component="section"
+      ref={sectionRef}
+      className="landing-terminal-section"
+      style={{ padding: "0 0 120px", minHeight: "120svh" }}
+    >
       <Container size="xl" px={32}>
         <Stack gap={24}>
           <Box
@@ -169,6 +197,7 @@ export default function LandingTerminal() {
 
       <style>{`
         @media (max-width: 900px) {
+          .landing-terminal-section { min-height: 0 !important; padding-bottom: 60px !important; }
           .bubble-callout { display: none; }
           .bubble-overview { display: block; }
         }

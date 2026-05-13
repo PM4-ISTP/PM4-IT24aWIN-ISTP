@@ -333,7 +333,9 @@ export default function LandingBento() {
             delay: i * 2, // Stagger based on index
           });
         });
+      });
 
+      mm.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
         const tl = gsap.timeline({
           defaults: { ease: "power2.out" },
           scrollTrigger: {
@@ -362,6 +364,33 @@ export default function LandingBento() {
           { clipPath: "inset(0% 0% 0% 0%)", duration: 1.1, stagger: 0.25 },
           0.9
         );
+      });
+
+      mm.add("(max-width: 899px) and (prefers-reduced-motion: no-preference)", () => {
+        gsap.fromTo(
+          ".bento-head",
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 85%", once: true },
+          }
+        );
+        gsap.fromTo(
+          ".bento-cell",
+          { opacity: 0, y: 25 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.55,
+            stagger: 0.1,
+            ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 80%", once: true },
+          }
+        );
+        gsap.set(".code-peek", { clipPath: "inset(0% 0% 0% 0%)" });
       });
     },
     { scope: sectionRef }

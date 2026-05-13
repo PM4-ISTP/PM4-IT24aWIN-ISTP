@@ -44,13 +44,17 @@ export default function LandingHero() {
   return (
     <Box
       component="header"
-      style={{ padding: "48px 0 40px", position: "relative", minHeight: "80vh" }}
+      style={{ padding: "48px 0 40px", position: "relative", minHeight: "80svh" }}
     >
       <Container size="xl" px={32}>
         <Stack
           align="center"
           gap={0}
-          style={{ textAlign: "center", minHeight: "calc(80vh - 88px)", justifyContent: "center" }}
+          style={{
+            textAlign: "center",
+            minHeight: "calc(80svh - 88px)",
+            justifyContent: "center",
+          }}
         >
           <Badge
             variant="outline"

@@ -30,38 +30,56 @@ export default function LandingVideo() {
 
       const mm = gsap.matchMedia();
 
-      mm.add(
-        {
-          motionOk: "(prefers-reduced-motion: no-preference)",
-          motionReduced: "(prefers-reduced-motion: reduce)",
-        },
-        (ctx) => {
-          const { motionOk } = ctx.conditions as { motionOk: boolean };
-          if (!motionOk) {
-            gsap.set(header, { opacity: 1, y: 0 });
-            gsap.set(frame, { yPercent: 0, opacity: 1, clipPath: REVEALED });
-            return;
-          }
+      mm.add("(prefers-reduced-motion: reduce)", () => {
+        gsap.set(header, { opacity: 1, y: 0 });
+        gsap.set(frame, { yPercent: 0, opacity: 1, clipPath: REVEALED });
+      });
 
-          const tl = gsap.timeline({
-            defaults: { ease: "power2.out" },
-            scrollTrigger: {
-              trigger: section,
-              start: "top 75%",
-              end: "top 15%",
-              scrub: 1,
-            },
-          });
-          tl.fromTo(header, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3 }, 0);
-          tl.fromTo(
-            frame,
-            { yPercent: 80, opacity: 0 },
-            { yPercent: 0, opacity: 1, duration: 0.4 },
-            0.35
-          );
-          tl.to(frame, { clipPath: REVEALED, duration: 0.3 }, 0.7);
-        }
-      );
+      mm.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
+        const tl = gsap.timeline({
+          defaults: { ease: "power2.out" },
+          scrollTrigger: {
+            trigger: section,
+            start: "top 75%",
+            end: "top 15%",
+            scrub: 1,
+          },
+        });
+        tl.fromTo(header, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3 }, 0);
+        tl.fromTo(
+          frame,
+          { yPercent: 80, opacity: 0 },
+          { yPercent: 0, opacity: 1, duration: 0.4 },
+          0.35
+        );
+        tl.to(frame, { clipPath: REVEALED, duration: 0.3 }, 0.7);
+      });
+
+      mm.add("(max-width: 899px) and (prefers-reduced-motion: no-preference)", () => {
+        gsap.set(frame, { clipPath: REVEALED });
+        gsap.fromTo(
+          header,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 85%", once: true },
+          }
+        );
+        gsap.fromTo(
+          frame,
+          { opacity: 0, y: 40 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 80%", once: true },
+          }
+        );
+      });
     },
     { scope: sectionRef }
   );
