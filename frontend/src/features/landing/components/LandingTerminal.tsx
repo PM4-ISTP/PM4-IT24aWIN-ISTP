@@ -7,6 +7,8 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import HeroTerminal from "./HeroTerminal";
+import { addDesktopMotion, addMobileMotion, addReducedMotion } from "../hooks/useScrollAnimations";
+import { TERMINAL_BUBBLES } from "../content/terminalBubbles";
 import { INK, INK_DIM, LINE_2 } from "../theme";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -49,23 +51,6 @@ export default function LandingTerminal() {
   const pinRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   const bubbleRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const bubbles = [
-    {
-      title: "Navigation",
-      body: "Jump between courses and labs without losing progress.",
-      style: { top: 110, left: -20, maxWidth: 220 },
-    },
-    {
-      title: "Overview",
-      body: "Lab summary and description keep students focused on the goal.",
-      style: { top: 180, left: "50%", transform: "translateX(-50%)", maxWidth: 260 },
-    },
-    {
-      title: "Status",
-      body: "Live pod status and progress meters stay visible.",
-      style: { top: 120, right: -10, maxWidth: 240 },
-    },
-  ] satisfies Array<{ title: string; body: string; style: CSSProperties }>;
 
   useGSAP(
     () => {
@@ -77,12 +62,12 @@ export default function LandingTerminal() {
 
       const mm = gsap.matchMedia();
 
-      mm.add("(prefers-reduced-motion: reduce)", () => {
+      addReducedMotion(mm, () => {
         gsap.set(terminal, { scale: 1, transformOrigin: "center top" });
         gsap.set(bubbles, { opacity: 1, y: 0, scale: 1 });
       });
 
-      mm.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
+      addDesktopMotion(mm, () => {
         gsap.set(terminal, { scale: 0.96, transformOrigin: "center top" });
         gsap.set(bubbles, { opacity: 0, y: 18, scale: 0.98 });
 
@@ -118,7 +103,7 @@ export default function LandingTerminal() {
         tl.to(terminal, { scale: 0.96, duration: 0.6 }, 1.7);
       });
 
-      mm.add("(max-width: 899px) and (prefers-reduced-motion: no-preference)", () => {
+      addMobileMotion(mm, () => {
         gsap.set(terminal, { scale: 1, transformOrigin: "center top" });
         gsap.fromTo(
           terminal,
@@ -178,7 +163,7 @@ export default function LandingTerminal() {
             >
               <HeroTerminal />
 
-              {bubbles.map((bubble, index) => (
+              {TERMINAL_BUBBLES.map((bubble, index) => (
                 <BubbleCallout
                   key={bubble.title}
                   title={bubble.title}

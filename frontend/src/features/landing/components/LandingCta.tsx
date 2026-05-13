@@ -10,6 +10,7 @@ import GitHubIcon from "./parts/GitHubIcon";
 import Kicker from "./parts/Kicker";
 import LandingButton from "./parts/LandingButton";
 import useSignInToDashboard from "../hooks/useSignInToDashboard";
+import { addMotion } from "../hooks/useScrollAnimations";
 import { INK, INK_DIM, LINE_2 } from "../theme";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -27,7 +28,7 @@ export default function LandingCta() {
       if (!section) return;
 
       const mm = gsap.matchMedia();
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
+      addMotion(mm, () => {
         gsap.fromTo(
           ".cta-card",
           { clipPath: CLIPPED, scale: 0.85 },

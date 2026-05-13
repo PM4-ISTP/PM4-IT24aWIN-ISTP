@@ -6,6 +6,7 @@ import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SectionHeader from "./parts/SectionHeader";
+import { addDesktopMotion, addMobileMotion, addReducedMotion } from "../hooks/useScrollAnimations";
 import { LINE_2 } from "../theme";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -30,12 +31,12 @@ export default function LandingVideo() {
 
       const mm = gsap.matchMedia();
 
-      mm.add("(prefers-reduced-motion: reduce)", () => {
+      addReducedMotion(mm, () => {
         gsap.set(header, { opacity: 1, y: 0 });
         gsap.set(frame, { yPercent: 0, opacity: 1, clipPath: REVEALED });
       });
 
-      mm.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
+      addDesktopMotion(mm, () => {
         const tl = gsap.timeline({
           defaults: { ease: "power2.out" },
           scrollTrigger: {
@@ -55,7 +56,7 @@ export default function LandingVideo() {
         tl.to(frame, { clipPath: REVEALED, duration: 0.3 }, 0.7);
       });
 
-      mm.add("(max-width: 899px) and (prefers-reduced-motion: no-preference)", () => {
+      addMobileMotion(mm, () => {
         gsap.set(frame, { clipPath: REVEALED });
         gsap.fromTo(
           header,

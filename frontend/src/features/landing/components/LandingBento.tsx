@@ -14,6 +14,7 @@ import OnPremCell from "./bento/cells/OnPremCell";
 import OpenSourceCell from "./bento/cells/OpenSourceCell";
 import WorkflowCell from "./bento/cells/WorkflowCell";
 import { CHIP_SCENES, SCENE_INTERVAL_MS } from "./bento/data";
+import { addDesktopMotion, addMobileMotion, addMotion } from "../hooks/useScrollAnimations";
 import { INK, LINE, MINT } from "../theme";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -54,7 +55,7 @@ export default function LandingBento() {
       if (!section) return;
       const mm = gsap.matchMedia();
 
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
+      addMotion(mm, () => {
         gsap.utils.toArray(".pulse-items").forEach((item, i) => {
           gsap.from(item as HTMLElement, {
             boxShadow: `0 0 16px ${MINT}, 0 0 6px ${MINT}`,
@@ -68,7 +69,7 @@ export default function LandingBento() {
         });
       });
 
-      mm.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
+      addDesktopMotion(mm, () => {
         const tl = gsap.timeline({
           defaults: { ease: "power2.out" },
           scrollTrigger: {
@@ -96,7 +97,7 @@ export default function LandingBento() {
         );
       });
 
-      mm.add("(max-width: 899px) and (prefers-reduced-motion: no-preference)", () => {
+      addMobileMotion(mm, () => {
         gsap.fromTo(
           ".bento-head",
           { opacity: 0, y: 30 },

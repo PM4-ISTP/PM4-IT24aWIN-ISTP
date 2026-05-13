@@ -5,6 +5,7 @@ import GradientText from "./parts/GradientText";
 import GitHubIcon from "./parts/GitHubIcon";
 import LandingButton from "./parts/LandingButton";
 import useSignInToDashboard from "../hooks/useSignInToDashboard";
+import { addMotion } from "../hooks/useScrollAnimations";
 import { FONT_MONO, INK, INK_DIM, LINE_2, MINT, MUTED } from "../theme";
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
@@ -22,7 +23,7 @@ export default function LandingHero() {
       if (!dotRef.current) return;
       const heroText = heroTextRef.current;
       const mm = gsap.matchMedia();
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
+      addMotion(mm, () => {
         gsap.to(dotRef.current, {
           scale: 1.25,
           boxShadow: `0 0 22px ${MINT}, 0 0 6px ${MINT}`,

@@ -1,22 +1,8 @@
 import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from "@mantine/core";
 import BrandLockup from "./parts/BrandLockup";
 import Kicker from "./parts/Kicker";
+import { FOOTER_SECTIONS } from "../content/footer";
 import { FONT_MONO, INK_DIM, LINE, MUTED, ROSE } from "../theme";
-
-const sections = [
-  {
-    title: "Project",
-    links: ["GitHub", "Docs", "Issues", "Roadmap"],
-  },
-  {
-    title: "Community",
-    links: ["Contribute", "Code of Conduct"],
-  },
-  {
-    title: "For universities",
-    links: ["Self-hosting", "Authoring", "Contact"],
-  },
-];
 
 const heartSvg =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M10 17 C 4 12 1 9 3 5 C 5 2 9 3 10 6 C 11 3 15 2 17 5 C 19 9 16 12 10 17 Z' fill='black'/></svg>";
@@ -47,7 +33,7 @@ export default function LandingFooter() {
             </Text>
           </Stack>
 
-          {sections.map((section) => (
+          {FOOTER_SECTIONS.map((section) => (
             <Stack key={section.title} gap={16}>
               <Kicker size={10}>{section.title}</Kicker>
               <Stack gap={10}>
