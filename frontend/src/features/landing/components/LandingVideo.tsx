@@ -1,12 +1,12 @@
 "use client";
 
 import { useRef } from "react";
-import { Box, Container, Stack, Title } from "@mantine/core";
+import { Box, Container, Stack } from "@mantine/core";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Kicker from "./parts/Kicker";
-import { INK, LINE_2 } from "../theme";
+import SectionHeader from "./parts/SectionHeader";
+import { LINE_2 } from "../theme";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -88,26 +88,16 @@ export default function LandingVideo() {
     <Box component="section" ref={sectionRef} style={{ padding: "60px 0" }}>
       <Container size="xl" px={32}>
         <Stack gap={28} align="center">
-          <Stack
-            ref={headerRef}
-            gap={10}
+          <SectionHeader
+            innerRef={headerRef}
+            kicker="$ ./watch-demo.sh — 02:14"
             align="center"
-            style={{ textAlign: "center", opacity: 0, transform: "translateY(20px)" }}
+            fontSize={38}
+            titleStyle={{ letterSpacing: "-0.02em" }}
+            style={{ opacity: 0, transform: "translateY(20px)" }}
           >
-            <Kicker>$ ./watch-demo.sh — 02:14</Kicker>
-            <Title
-              order={2}
-              style={{
-                fontSize: 38,
-                fontWeight: 600,
-                letterSpacing: "-0.02em",
-                margin: 0,
-                color: INK,
-              }}
-            >
-              A class, in two minutes.
-            </Title>
-          </Stack>
+            A class, in two minutes.
+          </SectionHeader>
 
           <Box
             ref={frameRef}

@@ -1,5 +1,6 @@
 import { Badge, Box, Group, Paper, Progress, Stack, Text } from "@mantine/core";
 import BrandLockup from "./parts/BrandLockup";
+import BrowserFrame from "./parts/BrowserFrame";
 import Kicker from "./parts/Kicker";
 import LandingButton from "./parts/LandingButton";
 import {
@@ -91,49 +92,14 @@ export default function HeroTerminal() {
           pointerEvents: "none",
         }}
       />
-      <Paper
-        radius={14}
+      <BrowserFrame
+        url="istp.pm4.init-lab.ch/courses/web-security"
         style={{
           position: "relative",
-          border: `1px solid ${LINE_2}`,
-          background: "linear-gradient(180deg,#0c1120 0%, #080c18 100%)",
-          boxShadow: "0 30px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset",
-          overflow: "hidden",
           zIndex: 1,
+          boxShadow: "0 30px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset",
         }}
       >
-        {/* Browser chrome */}
-        <Group
-          gap={8}
-          align="center"
-          px={16}
-          py={12}
-          style={{
-            borderBottom: `1px solid ${LINE}`,
-            background: "rgba(255,255,255,0.02)",
-          }}
-        >
-          <Group gap={6}>
-            {["#f06d6d", "#f5b462", "#6df0a0"].map((c) => (
-              <Box key={c} w={11} h={11} style={{ borderRadius: 99, background: c }} />
-            ))}
-          </Group>
-          <Text
-            ml={12}
-            px={12}
-            py={3}
-            style={{
-              fontFamily: FONT_MONO,
-              fontSize: 11.5,
-              color: MUTED,
-              background: "rgba(255,255,255,0.04)",
-              borderRadius: 6,
-            }}
-          >
-            istp.pm4.init-lab.ch/courses/web-security
-          </Text>
-        </Group>
-
         {/* App body */}
         <Box
           className="hero-app-body"
@@ -345,7 +311,7 @@ export default function HeroTerminal() {
             </Paper>
           </Stack>
         </Box>
-      </Paper>
+      </BrowserFrame>
 
       <style>{`
         @media (max-width: 900px) {
