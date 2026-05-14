@@ -324,7 +324,8 @@ export function LabPlayView({
   async function handleSubmitFlag() {
     if (!current || !current.id || !lab.id) return;
 
-    const trimmedFlag = flagInput.trim();
+    // Normalize to uppercase so flag submissions match the instructor-provided flag format.
+    const trimmedFlag = flagInput.trim().toUpperCase();
     const normalizedFlag = FLAG_WRAPPED_PATTERN.test(trimmedFlag)
       ? trimmedFlag
       : FLAG_INNER_PATTERN.test(trimmedFlag)
@@ -335,7 +336,7 @@ export function LabPlayView({
       notifications.show({
         color: "red",
         title: "Invalid flag format",
-        message: "Flags must match ISTP{...} (letters, digits, underscores).",
+        message: "Flags must match ISTP{YOUR_FLAG} (letters, digits, underscores).",
       });
       return;
     }
@@ -694,9 +695,10 @@ export function LabPlayView({
                         <TextInput
                           value={current.isSolved ? (current.solvedFlag ?? "") : flagInput}
                           onChange={(e) => {
-                            if (!current.isSolved) setFlagInput(e.currentTarget.value);
+                            if (!current.isSolved)
+                              setFlagInput(e.currentTarget.value.toUpperCase());
                           }}
-                          placeholder="ISTP{...}"
+                          placeholder="ISTP{YOUR_FLAG}"
                           readOnly={current.isSolved}
                           disabled={submitting}
                           style={{ flex: 1 }}
