@@ -52,7 +52,6 @@ export default async function InstructorChallenges(props: {
           labs={(result.data.content ?? []).map((c) => ({
             id: c.id ?? "",
             title: c.title ?? "",
-            shortDescription: c.shortDescription ?? undefined,
             status: c.status ?? "DRAFT",
             difficulty: c.difficulty ?? "MEDIUM",
             maxScore: c.maxScore ?? 0,

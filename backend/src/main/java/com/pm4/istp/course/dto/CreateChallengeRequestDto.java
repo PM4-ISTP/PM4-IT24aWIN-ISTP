@@ -24,9 +24,6 @@ public class CreateChallengeRequestDto {
   @Size(max = 255, message = "Lab title must be at most 255 characters")
   private String title;
 
-  @Size(max = 200, message = "Short description must not exceed 200 characters")
-  private String shortDescription;
-
   @Size(max = 5000, message = "Description must be at most 5000 characters")
   private String description;
 
@@ -45,6 +42,10 @@ public class CreateChallengeRequestDto {
   @Min(value = 1, message = "Container port must be between 1 and 65535")
   @Max(value = 65535, message = "Container port must be between 1 and 65535")
   private Integer containerPort;
+
+  @Min(value = 60, message = "Pod TTL must be at least 60 seconds")
+  @Max(value = 86400, message = "Pod TTL must not exceed 86400 seconds (24h)")
+  private Integer podTtlSeconds;
 
   @NotEmpty(message = "At least one sub task is required")
   @Valid

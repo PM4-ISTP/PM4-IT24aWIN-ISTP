@@ -8,6 +8,8 @@ import { ScrollSmoother } from "gsap/ScrollSmoother";
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
+ScrollTrigger.config({ ignoreMobileResize: true });
+
 type LandingSmoothWrapperProps = {
   children: React.ReactNode;
 };
@@ -26,14 +28,19 @@ export default function LandingSmoothWrapper({ children }: LandingSmoothWrapperP
         typeof window !== "undefined" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      const smoother = prefersReducedMotion
-        ? null
-        : ScrollSmoother.create({
-            wrapper,
-            content,
-            smooth: 1.1,
-            smoothTouch: 0,
-          });
+      const isTouch =
+        typeof window !== "undefined" &&
+        (window.matchMedia("(pointer: coarse)").matches || "ontouchstart" in window);
+
+      const smoother =
+        prefersReducedMotion || isTouch
+          ? null
+          : ScrollSmoother.create({
+              wrapper,
+              content,
+              smooth: 1.1,
+              smoothTouch: 0,
+            });
 
       const handleAnchorClick = (event: MouseEvent) => {
         const target = event.target as HTMLElement | null;

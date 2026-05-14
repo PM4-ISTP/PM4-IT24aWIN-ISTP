@@ -97,12 +97,12 @@ public class LabServiceImpl implements LabService {
     dockerImageAvailabilityService.assertImageExists(request.getDockerImage());
 
     lab.setTitle(request.getTitle());
-    lab.setShortDescription(request.getShortDescription());
     lab.setDescription(request.getDescription());
     lab.setStatus(request.getStatus());
     lab.setDifficulty(request.getDifficulty());
     lab.setDockerImage(request.getDockerImage());
     lab.setContainerPort(resolveContainerPort(request.getContainerPort()));
+    lab.setPodTtlSeconds(request.getPodTtlSeconds());
     lab.setCreator(creator);
 
     List<Challenge> challenges = buildChallengesForCreate(request.getChallenges(), lab);
@@ -141,12 +141,12 @@ public class LabServiceImpl implements LabService {
     dockerImageAvailabilityService.assertImageExists(request.getDockerImage());
 
     lab.setTitle(request.getTitle());
-    lab.setShortDescription(request.getShortDescription());
     lab.setDescription(request.getDescription());
     lab.setStatus(newStatus);
     lab.setDifficulty(request.getDifficulty());
     lab.setDockerImage(request.getDockerImage());
     lab.setContainerPort(resolveContainerPort(request.getContainerPort()));
+    lab.setPodTtlSeconds(request.getPodTtlSeconds());
 
     applyChallengeUpdates(lab, request.getChallenges());
     lab.setMaxScore(totalPoints(lab.getChallenges()));

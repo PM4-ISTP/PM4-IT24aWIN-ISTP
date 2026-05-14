@@ -6,8 +6,12 @@ import { Box, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import BrowserFrame from "./parts/BrowserFrame";
 import Kicker from "./parts/Kicker";
-import { FONT_MONO, INK, INK_DIM, LINE, LINE_2, MUTED } from "../theme";
+import SectionHeader from "./parts/SectionHeader";
+import { addDesktopMotion } from "../hooks/useScrollAnimations";
+import { SCREENSHOTS } from "../content/screenshots";
+import { FONT_MONO, INK, INK_DIM, LINE, MUTED } from "../theme";
 
 // The browser-frame caps its own width by viewport height so the 16:9 card
 // always fits vertically without overlapping the floating header.
@@ -18,39 +22,6 @@ const FRAME_MAX_WIDTH: React.CSSProperties = {
 };
 
 gsap.registerPlugin(ScrollTrigger);
-
-const shots = [
-  {
-    src: "/images/landing/Home.png",
-    title: "Home dashboard",
-    role: "student",
-    description:
-      "Enrolled courses, completed labs and time online — all your progress at a glance.",
-    url: "istp.pm4.init-lab.ch",
-  },
-  {
-    src: "/images/landing/Course_catalog.png",
-    title: "Browse catalog",
-    role: "everyone",
-    description: "Search and filter every course running on this ISTP instance.",
-    url: "istp.pm4.init-lab.ch/catalog",
-  },
-  {
-    src: "/images/landing/Course_overview.png",
-    title: "Course overview",
-    role: "student",
-    description: "All labs in a course, your per-lab progress, and what's due next — in one view.",
-    url: "istp.pm4.init-lab.ch/courses/web-security",
-  },
-  {
-    src: "/images/landing/Course_lab.png",
-    title: "Lab · live pod",
-    role: "student",
-    description:
-      "Challenge brief, a Kubernetes pod running just for you, and a flag submission box.",
-    url: "istp.pm4.init-lab.ch/lab/campus-helpdesk",
-  },
-];
 
 export default function LandingScreenshots() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -65,7 +36,7 @@ export default function LandingScreenshots() {
       if (!section || !header || !track) return;
 
       const mm = gsap.matchMedia();
-      mm.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
+      addDesktopMotion(mm, () => {
         // Header entrance — fades up as the section enters, before the pin starts
         gsap.fromTo(
           header,
@@ -86,7 +57,7 @@ export default function LandingScreenshots() {
         // Horizontal pinned scroll — total vertical scroll is decoupled from
         // viewport width so ultra-wide screens don't have to scroll forever.
         const getDistance = () => track.scrollWidth - window.innerWidth;
-        const getScrollLength = () => (shots.length - 1) * window.innerHeight * 0.8;
+        const getScrollLength = () => (SCREENSHOTS.length - 1) * window.innerHeight * 0.8;
 
         gsap.to(track, {
           x: () => -getDistance(),
@@ -127,22 +98,7 @@ export default function LandingScreenshots() {
         }}
       >
         <Container size="xl" px={32}>
-          <Stack gap={10}>
-            <Kicker>— 04 · Product tour</Kicker>
-            <Title
-              order={2}
-              style={{
-                fontSize: 54,
-                fontWeight: 600,
-                letterSpacing: "-0.025em",
-                margin: 0,
-                color: INK,
-                lineHeight: 1,
-              }}
-            >
-              The product, plainly.
-            </Title>
-          </Stack>
+          <SectionHeader kicker="— 04 · Product tour">The product, plainly.</SectionHeader>
         </Container>
       </Box>
 
@@ -151,7 +107,7 @@ export default function LandingScreenshots() {
         className="screens-track"
         style={{ display: "flex", height: "100vh", willChange: "transform" }}
       >
-        {shots.map((s, i) => (
+        {SCREENSHOTS.map((s, i) => (
           <Box
             key={s.title}
             className="screens-panel"
@@ -199,63 +155,18 @@ export default function LandingScreenshots() {
                   >
                     {String(i + 1).padStart(2, "0")}
                     <Text component="span" style={{ color: MUTED, fontSize: 14, marginLeft: 8 }}>
-                      / {String(shots.length).padStart(2, "0")}
+                      / {String(SCREENSHOTS.length).padStart(2, "0")}
                     </Text>
                   </Text>
                 </Group>
 
                 {/* Browser frame */}
-                <Box
+                <BrowserFrame
+                  url={s.url}
+                  dots="muted"
                   className="screens-frame"
-                  style={{
-                    ...FRAME_MAX_WIDTH,
-                    aspectRatio: "16 / 9",
-                    border: `1px solid ${LINE_2}`,
-                    borderRadius: 14,
-                    overflow: "hidden",
-                    background: "linear-gradient(180deg,#0c1120,#070a14)",
-                    boxShadow: "0 30px 80px -20px rgba(0,0,0,0.6)",
-                    display: "flex",
-                    flexDirection: "column",
-                    minWidth: 0,
-                  }}
+                  style={{ ...FRAME_MAX_WIDTH, aspectRatio: "16 / 9" }}
                 >
-                  <Group
-                    gap={6}
-                    align="center"
-                    px={12}
-                    py={10}
-                    style={{
-                      borderBottom: `1px solid ${LINE}`,
-                      background: "rgba(255,255,255,0.02)",
-                    }}
-                  >
-                    {[0, 1, 2].map((d) => (
-                      <Box
-                        key={d}
-                        w={9}
-                        h={9}
-                        style={{
-                          borderRadius: 99,
-                          background: "rgba(255,255,255,0.18)",
-                        }}
-                      />
-                    ))}
-                    <Text
-                      ml={10}
-                      px={10}
-                      py={3}
-                      style={{
-                        fontFamily: FONT_MONO,
-                        fontSize: 10.5,
-                        color: MUTED,
-                        background: "rgba(255,255,255,0.04)",
-                        borderRadius: 6,
-                      }}
-                    >
-                      {s.url}
-                    </Text>
-                  </Group>
                   <Box style={{ position: "relative", flex: 1, width: "100%" }}>
                     <Image
                       src={s.src}
@@ -265,7 +176,7 @@ export default function LandingScreenshots() {
                       style={{ objectFit: "cover", objectPosition: "top left" }}
                     />
                   </Box>
-                </Box>
+                </BrowserFrame>
 
                 {/* Footer row — description left, role tag right */}
                 <Group justify="space-between" align="flex-start" wrap="nowrap" gap={32}>

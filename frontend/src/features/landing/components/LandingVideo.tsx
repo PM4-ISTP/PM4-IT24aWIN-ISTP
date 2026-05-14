@@ -1,12 +1,13 @@
 "use client";
 
 import { useRef } from "react";
-import { Box, Container, Stack, Title } from "@mantine/core";
+import { Box, Container, Stack } from "@mantine/core";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Kicker from "./parts/Kicker";
-import { INK, LINE_2 } from "../theme";
+import SectionHeader from "./parts/SectionHeader";
+import { addDesktopMotion, addMobileMotion, addReducedMotion } from "../hooks/useScrollAnimations";
+import { LINE_2 } from "../theme";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -30,38 +31,56 @@ export default function LandingVideo() {
 
       const mm = gsap.matchMedia();
 
-      mm.add(
-        {
-          motionOk: "(prefers-reduced-motion: no-preference)",
-          motionReduced: "(prefers-reduced-motion: reduce)",
-        },
-        (ctx) => {
-          const { motionOk } = ctx.conditions as { motionOk: boolean };
-          if (!motionOk) {
-            gsap.set(header, { opacity: 1, y: 0 });
-            gsap.set(frame, { yPercent: 0, opacity: 1, clipPath: REVEALED });
-            return;
-          }
+      addReducedMotion(mm, () => {
+        gsap.set(header, { opacity: 1, y: 0 });
+        gsap.set(frame, { yPercent: 0, opacity: 1, clipPath: REVEALED });
+      });
 
-          const tl = gsap.timeline({
-            defaults: { ease: "power2.out" },
-            scrollTrigger: {
-              trigger: section,
-              start: "top 75%",
-              end: "top 15%",
-              scrub: 1,
-            },
-          });
-          tl.fromTo(header, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3 }, 0);
-          tl.fromTo(
-            frame,
-            { yPercent: 80, opacity: 0 },
-            { yPercent: 0, opacity: 1, duration: 0.4 },
-            0.35
-          );
-          tl.to(frame, { clipPath: REVEALED, duration: 0.3 }, 0.7);
-        }
-      );
+      addDesktopMotion(mm, () => {
+        const tl = gsap.timeline({
+          defaults: { ease: "power2.out" },
+          scrollTrigger: {
+            trigger: section,
+            start: "top 75%",
+            end: "top 15%",
+            scrub: 1,
+          },
+        });
+        tl.fromTo(header, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3 }, 0);
+        tl.fromTo(
+          frame,
+          { yPercent: 80, opacity: 0 },
+          { yPercent: 0, opacity: 1, duration: 0.4 },
+          0.35
+        );
+        tl.to(frame, { clipPath: REVEALED, duration: 0.3 }, 0.7);
+      });
+
+      addMobileMotion(mm, () => {
+        gsap.set(frame, { clipPath: REVEALED });
+        gsap.fromTo(
+          header,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 85%", once: true },
+          }
+        );
+        gsap.fromTo(
+          frame,
+          { opacity: 0, y: 40 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 80%", once: true },
+          }
+        );
+      });
     },
     { scope: sectionRef }
   );
@@ -70,26 +89,16 @@ export default function LandingVideo() {
     <Box component="section" ref={sectionRef} style={{ padding: "60px 0" }}>
       <Container size="xl" px={32}>
         <Stack gap={28} align="center">
-          <Stack
-            ref={headerRef}
-            gap={10}
+          <SectionHeader
+            innerRef={headerRef}
+            kicker="$ ./watch-demo.sh — 02:14"
             align="center"
-            style={{ textAlign: "center", opacity: 0, transform: "translateY(20px)" }}
+            fontSize={38}
+            titleStyle={{ letterSpacing: "-0.02em" }}
+            style={{ opacity: 0, transform: "translateY(20px)" }}
           >
-            <Kicker>$ ./watch-demo.sh — 02:14</Kicker>
-            <Title
-              order={2}
-              style={{
-                fontSize: 38,
-                fontWeight: 600,
-                letterSpacing: "-0.02em",
-                margin: 0,
-                color: INK,
-              }}
-            >
-              A class, in two minutes.
-            </Title>
-          </Stack>
+            A class, in two minutes.
+          </SectionHeader>
 
           <Box
             ref={frameRef}

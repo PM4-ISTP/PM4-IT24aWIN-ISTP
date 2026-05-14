@@ -52,6 +52,7 @@ import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.repositories.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -244,6 +245,23 @@ public class CourseServiceImpl implements CourseService {
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
+    boolean wasPrivate = course.isPrivate();
+    boolean willBePublished = request.isPublished();
+    boolean willBePrivate = request.isPrivate();
+    validateVisibilityState(willBePublished, willBePrivate);
+
+    boolean visibilityChanges =
+        course.isPublished() != willBePublished || course.isPrivate() != willBePrivate;
+    if (visibilityChanges) {
+      verifyOwner(course, userId);
+    }
+
+    List<UpdateCourseInstructorRequest> requestedInstructors =
+        request.getInstructors() == null ? List.of() : request.getInstructors();
+    if (collaboratorsChange(course, requestedInstructors)) {
+      verifyOwner(course, userId);
+    }
+
     // Update scalar fields
     course.setTitle(request.getTitle());
     course.setDescription(request.getDescription());
@@ -251,10 +269,6 @@ public class CourseServiceImpl implements CourseService {
     course.setImageUrl(request.getImageUrl());
     course.setTopic(courseTopicService.normalizeAndValidate(request.getTopic()));
 
-    boolean wasPrivate = course.isPrivate();
-    boolean willBePublished = request.isPublished();
-    boolean willBePrivate = request.isPrivate();
-    validateVisibilityState(willBePublished, willBePrivate);
     boolean needsNewCode = willBePrivate && (!wasPrivate || course.getInviteCode() == null);
     if (!willBePrivate) {
       course.setInviteCode(null);
@@ -268,7 +282,7 @@ public class CourseServiceImpl implements CourseService {
 
     // Diff instructor list: preserve OWNER, update COLLABORATORs
     Set<UUID> requestedInstructorIds =
-        request.getInstructors().stream()
+        requestedInstructors.stream()
             .map(UpdateCourseInstructorRequest::getInstructorId)
             .collect(Collectors.toSet());
 
@@ -288,7 +302,7 @@ public class CourseServiceImpl implements CourseService {
             .collect(Collectors.toSet());
 
     // Add new collaborators
-    for (UpdateCourseInstructorRequest req : request.getInstructors()) {
+    for (UpdateCourseInstructorRequest req : requestedInstructors) {
       if (!existingInstructorIds.contains(req.getInstructorId())) {
         User collaboratorUser =
             userRepository
@@ -311,6 +325,20 @@ public class CourseServiceImpl implements CourseService {
       saved.setInviteCode(courseInviteCodeHelper.generateAndAssign(saved.getId()));
     }
     return saved;
+  }
+
+  private boolean collaboratorsChange(
+      Course course, List<UpdateCourseInstructorRequest> requestedInstructors) {
+    Set<UUID> currentCollaboratorIds =
+        course.getCourseInstructors().stream()
+            .filter(ci -> ci.getInstructorRole() == InstructorRoleEnum.COLLABORATOR)
+            .map(ci -> ci.getInstructor().getId())
+            .collect(Collectors.toSet());
+    Set<UUID> requestedCollaboratorIds =
+        requestedInstructors.stream()
+            .map(UpdateCourseInstructorRequest::getInstructorId)
+            .collect(Collectors.toSet());
+    return !currentCollaboratorIds.equals(requestedCollaboratorIds);
   }
 
   @Override
@@ -394,22 +422,24 @@ public class CourseServiceImpl implements CourseService {
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
+    McAttemptsMode mcAttemptsMode =
+        course.getMcAttemptsMode() != null ? course.getMcAttemptsMode() : McAttemptsMode.UNLIMITED;
 
     List<CourseParticipantResponseDto> participants = loadParticipants(courseId);
     List<CourseLab> assigned = course.getCourseLabs() == null ? List.of() : course.getCourseLabs();
     List<CourseLabResponseDto> challengesDto = toChallengeSubmissionDtos(assigned);
 
     List<UUID> userIds = participants.stream().map(CourseParticipantResponseDto::getId).toList();
-    List<UUID> challengeIds = assigned.stream().map(cc -> cc.getLab().getId()).toList();
+    List<UUID> labIds = assigned.stream().map(cc -> cc.getLab().getId()).toList();
 
-    Map<UUID, Integer> totalByLab = loadChallengeTotals(challengeIds);
+    Map<UUID, Integer> totalByLab = loadChallengeTotals(labIds);
     Map<UUID, Integer> maxPointsByLab = loadMaxPoints(assigned);
 
-    SubmissionAggregates aggregates = loadSubmissionAggregates(userIds, challengeIds);
-    SubmissionScoringData scoringData = loadSubmissionScoringData(courseId, userIds, challengeIds);
+    SubmissionAggregates aggregates = loadSubmissionAggregates(userIds, labIds);
+    SubmissionScoringData scoringData = loadSubmissionScoringData(courseId, userIds, labIds);
     List<CourseChallengeSubmissionEntryDto> entries =
         buildSubmissionEntries(
-            userIds, challengeIds, totalByLab, maxPointsByLab, aggregates, scoringData);
+            userIds, labIds, totalByLab, maxPointsByLab, aggregates, scoringData, mcAttemptsMode);
 
     return new CourseLabSubmissionsResponseDto(courseId, participants, challengesDto, entries);
   }
@@ -425,6 +455,8 @@ public class CourseServiceImpl implements CourseService {
     CourseLab assignedLab = findAssignedLab(course, labId);
     Lab lab = assignedLab.getLab();
     List<Challenge> challenges = challengeRepository.findByLabIdOrderByOrderIndexAsc(labId);
+    McAttemptsMode mcAttemptsMode =
+        course.getMcAttemptsMode() != null ? course.getMcAttemptsMode() : McAttemptsMode.UNLIMITED;
 
     List<UUID> challengeIds = challenges.stream().map(Challenge::getId).toList();
     Set<UUID> solvedIds = loadSolvedChallengeIds(participantId, challengeIds);
@@ -440,7 +472,8 @@ public class CourseServiceImpl implements CourseService {
     CourseLabSubmissionStatusEnum status = resolveSubmissionStatus(solvedCount, totalCount);
 
     ChallengeDetailResult detailResult =
-        buildChallengeSubmissionDetails(challenges, solvedIds, evidence, overridePointsByChallenge);
+        buildChallengeSubmissionDetails(
+            challenges, solvedIds, evidence, overridePointsByChallenge, mcAttemptsMode);
 
     return new CourseLabSubmissionDetailDto(
         courseId,
@@ -536,12 +569,14 @@ public class CourseServiceImpl implements CourseService {
       List<Challenge> challenges,
       Set<UUID> solvedIds,
       SubmissionEvidence evidence,
-      Map<UUID, Integer> overridePointsByChallenge) {
+      Map<UUID, Integer> overridePointsByChallenge,
+      McAttemptsMode mcAttemptsMode) {
     int awardedPoints = 0;
     List<CourseLabChallengeSubmissionDetailDto> details = new ArrayList<>();
     for (Challenge challenge : challenges) {
       ChallengeDetail detail =
-          buildChallengeSubmissionDetail(challenge, solvedIds, evidence, overridePointsByChallenge);
+          buildChallengeSubmissionDetail(
+              challenge, solvedIds, evidence, overridePointsByChallenge, mcAttemptsMode);
       awardedPoints += detail.awardedPoints();
       details.add(detail.dto());
     }
@@ -552,12 +587,13 @@ public class CourseServiceImpl implements CourseService {
       Challenge challenge,
       Set<UUID> solvedIds,
       SubmissionEvidence evidence,
-      Map<UUID, Integer> overridePointsByChallenge) {
+      Map<UUID, Integer> overridePointsByChallenge,
+      McAttemptsMode mcAttemptsMode) {
     UUID challengeId = challenge.getId();
     boolean completed = solvedIds.contains(challengeId);
     Integer override = overridePointsByChallenge.get(challengeId);
-    int awarded = awardedPoints(challenge, completed, override, evidence);
-    SubmissionDisplay display = submissionDisplay(challengeId, completed, evidence);
+    int awarded = awardedPoints(challenge, completed, override, evidence, mcAttemptsMode);
+    SubmissionDisplay display = submissionDisplay(challenge, completed, evidence, mcAttemptsMode);
 
     CourseLabChallengeSubmissionDetailDto dto =
         new CourseLabChallengeSubmissionDetailDto(
@@ -575,19 +611,33 @@ public class CourseServiceImpl implements CourseService {
   }
 
   private int awardedPoints(
-      Challenge challenge, boolean completed, Integer override, SubmissionEvidence evidence) {
+      Challenge challenge,
+      boolean completed,
+      Integer override,
+      SubmissionEvidence evidence,
+      McAttemptsMode mcAttemptsMode) {
     if (override != null) {
       return override;
     }
     if (challenge.getType() == ChallengeType.MULTIPLE_CHOICE) {
       StudentOptionSubmission option = evidence.optionByChallenge().get(challenge.getId());
-      return option != null && option.isCorrect() ? challenge.getPoints() : 0;
+      if (option != null) {
+        return option.isCorrect() ? challenge.getPoints() : 0;
+      }
+      // In UNLIMITED mode a MULTIPLE_CHOICE completion implies correctness. This also keeps older /
+      // inconsistent data (completion without stored submission) from showing "correct" but 0
+      // points.
+      return completed && mcAttemptsMode == McAttemptsMode.UNLIMITED ? challenge.getPoints() : 0;
     }
     return completed ? challenge.getPoints() : 0;
   }
 
   private SubmissionDisplay submissionDisplay(
-      UUID challengeId, boolean completed, SubmissionEvidence evidence) {
+      Challenge challenge,
+      boolean completed,
+      SubmissionEvidence evidence,
+      McAttemptsMode mcAttemptsMode) {
+    UUID challengeId = challenge.getId();
     StudentOptionSubmission option = evidence.optionByChallenge().get(challengeId);
     if (option != null) {
       String selectedOptionText =
@@ -600,6 +650,12 @@ public class CourseServiceImpl implements CourseService {
       return new SubmissionDisplay(flag.isCorrect(), flag.getSubmittedFlag(), null);
     }
 
+    if (challenge.getType() == ChallengeType.MULTIPLE_CHOICE) {
+      return new SubmissionDisplay(
+          completed && mcAttemptsMode == McAttemptsMode.UNLIMITED ? Boolean.TRUE : null,
+          null,
+          null);
+    }
     return new SubmissionDisplay(completed ? Boolean.TRUE : null, null, null);
   }
 
@@ -686,8 +742,10 @@ public class CourseServiceImpl implements CourseService {
         loadSubmissionAggregates(List.of(participantId), List.of(labId));
     SubmissionScoringData scoringData =
         loadSubmissionScoringData(courseId, List.of(participantId), List.of(labId));
+    McAttemptsMode mcAttemptsMode =
+        course.getMcAttemptsMode() != null ? course.getMcAttemptsMode() : McAttemptsMode.UNLIMITED;
     return buildSubmissionEntry(
-        participantId, labId, totalByLab, maxPointsByLab, aggregates, scoringData);
+        participantId, labId, totalByLab, maxPointsByLab, aggregates, scoringData, mcAttemptsMode);
   }
 
   private List<CourseParticipantResponseDto> loadParticipants(UUID courseId) {
@@ -720,12 +778,12 @@ public class CourseServiceImpl implements CourseService {
         .toList();
   }
 
-  private Map<UUID, Integer> loadChallengeTotals(List<UUID> challengeIds) {
+  private Map<UUID, Integer> loadChallengeTotals(List<UUID> labIds) {
     Map<UUID, Integer> totalByLab = new HashMap<>();
-    if (challengeIds.isEmpty()) {
+    if (labIds.isEmpty()) {
       return totalByLab;
     }
-    for (Object[] row : challengeRepository.countByLabIds(challengeIds)) {
+    for (Object[] row : challengeRepository.countByLabIds(labIds)) {
       UUID labId = (UUID) row[0];
       Long count = (Long) row[1];
       totalByLab.put(labId, count == null ? 0 : count.intValue());
@@ -733,15 +791,14 @@ public class CourseServiceImpl implements CourseService {
     return totalByLab;
   }
 
-  private SubmissionAggregates loadSubmissionAggregates(
-      List<UUID> userIds, List<UUID> challengeIds) {
+  private SubmissionAggregates loadSubmissionAggregates(List<UUID> userIds, List<UUID> labIds) {
     Map<SubmissionKey, Integer> solvedCountByKey = new HashMap<>();
     Map<SubmissionKey, LocalDateTime> completedAtByKey = new HashMap<>();
-    if (userIds.isEmpty() || challengeIds.isEmpty()) {
+    if (userIds.isEmpty() || labIds.isEmpty()) {
       return new SubmissionAggregates(solvedCountByKey, completedAtByKey);
     }
     for (Object[] row :
-        challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(userIds, challengeIds)) {
+        challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(userIds, labIds)) {
       UUID userId = (UUID) row[0];
       UUID labId = (UUID) row[1];
       Long solved = (Long) row[2];
@@ -876,13 +933,20 @@ public class CourseServiceImpl implements CourseService {
       Map<UUID, Integer> totalByLab,
       Map<UUID, Integer> maxPointsByLab,
       SubmissionAggregates aggregates,
-      SubmissionScoringData scoringData) {
+      SubmissionScoringData scoringData,
+      McAttemptsMode mcAttemptsMode) {
     List<CourseChallengeSubmissionEntryDto> entries = new ArrayList<>();
     for (UUID participantId : userIds) {
       for (UUID labId : challengeIds) {
         entries.add(
             buildSubmissionEntry(
-                participantId, labId, totalByLab, maxPointsByLab, aggregates, scoringData));
+                participantId,
+                labId,
+                totalByLab,
+                maxPointsByLab,
+                aggregates,
+                scoringData,
+                mcAttemptsMode));
       }
     }
     return entries;
@@ -894,7 +958,8 @@ public class CourseServiceImpl implements CourseService {
       Map<UUID, Integer> totalByLab,
       Map<UUID, Integer> maxPointsByLab,
       SubmissionAggregates aggregates,
-      SubmissionScoringData scoringData) {
+      SubmissionScoringData scoringData,
+      McAttemptsMode mcAttemptsMode) {
     SubmissionKey key = new SubmissionKey(participantId, labId);
     int solvedCount = aggregates.solvedCountByKey().getOrDefault(key, 0);
     int totalCount = totalByLab.getOrDefault(labId, 0);
@@ -920,7 +985,8 @@ public class CourseServiceImpl implements CourseService {
       if (override != null) {
         awardedPoints += override;
       } else if (c.getType() == ChallengeType.MULTIPLE_CHOICE) {
-        if (correctChoiceIds.contains(cid)) {
+        if ((mcAttemptsMode == McAttemptsMode.UNLIMITED && solvedIds.contains(cid))
+            || (mcAttemptsMode != McAttemptsMode.UNLIMITED && correctChoiceIds.contains(cid))) {
           awardedPoints += cMax;
         }
       } else if (solvedIds.contains(cid)) {
@@ -983,6 +1049,11 @@ public class CourseServiceImpl implements CourseService {
   @Transactional(readOnly = true)
   public List<CourseLabDeadlineDto> listUpcomingDeadlines(UUID userId) {
     List<Object[]> rows = courseLabRepository.findDeadlinesForUser(userId);
+    List<UUID> labIds = rows.stream().map(row -> (UUID) row[2]).distinct().toList();
+    Map<UUID, Integer> totalByLab = loadChallengeTotals(labIds);
+    SubmissionAggregates submissions =
+        loadSubmissionAggregates(Collections.singletonList(userId), labIds);
+
     List<CourseLabDeadlineDto> result = new ArrayList<>(rows.size());
     for (Object[] row : rows) {
       UUID courseId = (UUID) row[0];
@@ -993,7 +1064,14 @@ public class CourseServiceImpl implements CourseService {
       if (courseId == null || labId == null || dueAt == null) {
         continue;
       }
-      result.add(new CourseLabDeadlineDto(courseId, courseTitle, labId, labTitle, dueAt));
+
+      int totalCount = totalByLab.getOrDefault(labId, 0);
+      int solvedCount =
+          submissions.solvedCountByKey.getOrDefault(new SubmissionKey(userId, labId), 0);
+      if (resolveSubmissionStatus(solvedCount, totalCount)
+          != CourseLabSubmissionStatusEnum.SUBMITTED) {
+        result.add(new CourseLabDeadlineDto(courseId, courseTitle, labId, labTitle, dueAt));
+      }
     }
     return result;
   }

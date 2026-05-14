@@ -12,11 +12,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UpdateLabRequest {
   private String title;
-  private String shortDescription;
   private String description;
   private LabStatusEnum status;
   private LabDifficultyEnum difficulty;
   private String dockerImage;
   private Integer containerPort;
+  private Integer podTtlSeconds;
   private List<ChallengeRequest> challenges;
 }

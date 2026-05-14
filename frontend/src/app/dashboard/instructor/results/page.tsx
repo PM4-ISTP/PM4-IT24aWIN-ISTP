@@ -1,4 +1,4 @@
-import { Alert, Badge, Box, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Alert, Box, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { IconChevronRight, IconUsers } from "@tabler/icons-react";
 import Link from "next/link";
 import { fetchInstructorCourses } from "@/src/features/course/actions/courses";
@@ -69,18 +69,6 @@ export default async function InstructorResultsPage(props: {
                     >
                       {course.title}
                     </Text>
-
-                    <Group gap={6} wrap="wrap">
-                      {course.mcAttemptsMode && (
-                        <Badge
-                          size="xs"
-                          variant="light"
-                          color={course.mcAttemptsMode === "ONCE" ? "orange" : "blue"}
-                        >
-                          {course.mcAttemptsMode === "ONCE" ? "Graded" : "Self-learning"}
-                        </Badge>
-                      )}
-                    </Group>
 
                     <Group gap={4} mt={4}>
                       <IconUsers size={13} color="var(--mantine-color-dimmed)" />

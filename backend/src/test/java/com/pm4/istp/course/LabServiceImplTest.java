@@ -122,24 +122,22 @@ class ChallengeServiceImplTest {
 
   private CreateLabRequest createRequest(
       String title,
-      String shortDesc,
       String desc,
       LabStatusEnum status,
       LabDifficultyEnum difficulty,
       String dockerImage) {
     return new CreateLabRequest(
-        title, shortDesc, desc, status, difficulty, dockerImage, null, oneChallenge());
+        title, desc, status, difficulty, dockerImage, null, null, oneChallenge());
   }
 
   private UpdateLabRequest updateRequest(
       String title,
-      String shortDesc,
       String desc,
       LabStatusEnum status,
       LabDifficultyEnum difficulty,
       String dockerImage) {
     return new UpdateLabRequest(
-        title, shortDesc, desc, status, difficulty, dockerImage, null, oneChallenge());
+        title, desc, status, difficulty, dockerImage, null, null, oneChallenge());
   }
 
   @Test
@@ -154,12 +152,12 @@ class ChallengeServiceImplTest {
     CreateLabRequest request =
         new CreateLabRequest(
             "Buffer Overflow",
-            "Short summary",
             "Long description",
             LabStatusEnum.DRAFT,
             LabDifficultyEnum.HARD,
             "ghcr.io/pm4-istp/buffer-overflow:latest",
             8080,
+            null,
             new ArrayList<>(
                 List.of(
                     new ChallengeRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0, ChallengeType.FLAG, 1, null, null),
@@ -168,7 +166,6 @@ class ChallengeServiceImplTest {
     Lab created = labService.createChallenge(creatorId, request);
 
     assertThat(created.getTitle()).isEqualTo("Buffer Overflow");
-    assertThat(created.getShortDescription()).isEqualTo("Short summary");
     assertThat(created.getDescription()).isEqualTo("Long description");
     assertThat(created.getStatus()).isEqualTo(LabStatusEnum.DRAFT);
     assertThat(created.getDifficulty()).isEqualTo(LabDifficultyEnum.HARD);
@@ -199,11 +196,11 @@ class ChallengeServiceImplTest {
     CreateLabRequest request =
         new CreateLabRequest(
             "T",
-            "S",
             "D",
             LabStatusEnum.DRAFT,
             LabDifficultyEnum.EASY,
             DEFAULT_DOCKER_IMAGE,
+            null,
             null,
             new ArrayList<>(List.of(new ChallengeRequest(null, "Only", "Just desc", "   ", 0, ChallengeType.FLAG, 1, null, null))));
 
@@ -220,7 +217,6 @@ class ChallengeServiceImplTest {
     CreateLabRequest request =
         createRequest(
             "Title",
-            "Short",
             "Desc",
             LabStatusEnum.DRAFT,
             LabDifficultyEnum.EASY,
@@ -356,7 +352,6 @@ class ChallengeServiceImplTest {
     UpdateLabRequest request =
         updateRequest(
             "Updated",
-            "Updated short",
             "Updated desc",
             LabStatusEnum.PUBLIC,
             LabDifficultyEnum.EASY,
@@ -365,7 +360,6 @@ class ChallengeServiceImplTest {
     Lab updated = labService.updateChallenge(creatorId, labId, request);
 
     assertThat(updated.getTitle()).isEqualTo("Updated");
-    assertThat(updated.getShortDescription()).isEqualTo("Updated short");
     assertThat(updated.getDescription()).isEqualTo("Updated desc");
     assertThat(updated.getStatus()).isEqualTo(LabStatusEnum.PUBLIC);
     assertThat(updated.getDifficulty()).isEqualTo(LabDifficultyEnum.EASY);
@@ -399,11 +393,11 @@ class ChallengeServiceImplTest {
     UpdateLabRequest request =
         new UpdateLabRequest(
             "T",
-            "S",
             "D",
             LabStatusEnum.PUBLIC,
             LabDifficultyEnum.EASY,
             DEFAULT_DOCKER_IMAGE,
+            null,
             null,
             new ArrayList<>(
                 List.of(
@@ -436,7 +430,6 @@ class ChallengeServiceImplTest {
     UpdateLabRequest request =
         updateRequest(
             "Title",
-            "Short",
             "Desc",
             LabStatusEnum.DRAFT,
             LabDifficultyEnum.MEDIUM,
@@ -463,7 +456,6 @@ class ChallengeServiceImplTest {
     UpdateLabRequest request =
         updateRequest(
             "Title",
-            "Short",
             "Desc",
             LabStatusEnum.PRIVATE,
             LabDifficultyEnum.MEDIUM,
@@ -490,7 +482,6 @@ class ChallengeServiceImplTest {
     UpdateLabRequest request =
         updateRequest(
             "Title",
-            "Short",
             "Desc",
             LabStatusEnum.PUBLIC,
             LabDifficultyEnum.MEDIUM,
@@ -516,7 +507,6 @@ class ChallengeServiceImplTest {
     UpdateLabRequest request =
         updateRequest(
             "Title",
-            "Short",
             "Desc",
             LabStatusEnum.PRIVATE,
             LabDifficultyEnum.MEDIUM,
@@ -539,7 +529,6 @@ class ChallengeServiceImplTest {
     UpdateLabRequest request =
         updateRequest(
             "Title",
-            "Short",
             "Desc",
             LabStatusEnum.PUBLIC,
             LabDifficultyEnum.MEDIUM,

@@ -22,12 +22,12 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
           select new com.pm4.istp.course.dto.ListLabResponseDto(
             c.id,
             c.title,
-            c.shortDescription,
             c.status,
             c.difficulty,
             c.maxScore,
             c.dockerImage,
             c.containerPort,
+            c.podTtlSeconds,
             c.creator.name,
             (select count(cc) from CourseLab cc where cc.lab = c),
             c.updatedAt
@@ -50,12 +50,12 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
           select new com.pm4.istp.course.dto.ListLabResponseDto(
             c.id,
             c.title,
-            c.shortDescription,
             c.status,
             c.difficulty,
             c.maxScore,
             c.dockerImage,
             c.containerPort,
+            c.podTtlSeconds,
             c.creator.name,
             (select count(cc) from CourseLab cc where cc.lab = c),
             c.updatedAt
@@ -86,7 +86,6 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
           select new com.pm4.istp.admin.dto.AdminLabListItemDto(
             c.id,
             c.title,
-            c.shortDescription,
             c.description,
             c.status,
             c.difficulty,
@@ -115,7 +114,6 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
           select new com.pm4.istp.admin.dto.AdminLabListItemDto(
             c.id,
             c.title,
-            c.shortDescription,
             c.description,
             c.status,
             c.difficulty,
@@ -131,7 +129,6 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
           )
           from Lab c
           where lower(c.title) like lower(concat('%', :query, '%'))
-              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
           """,
       countQuery =
@@ -139,7 +136,6 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
           select count(c)
           from Lab c
           where lower(c.title) like lower(concat('%', :query, '%'))
-              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
           """)
   Page<AdminLabListItemDto> findAllChallengesForAdminByQuery(

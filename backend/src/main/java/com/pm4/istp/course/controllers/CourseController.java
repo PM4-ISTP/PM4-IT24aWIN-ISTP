@@ -3,6 +3,7 @@ package com.pm4.istp.course.controllers;
 import static com.pm4.istp.shared.util.JwtUtil.parseUserId;
 
 import com.pm4.istp.course.db.CreateCourseRequest;
+import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
@@ -359,7 +360,7 @@ public class CourseController {
   @Operation(
       summary = "Get upcoming lab deadlines for current user",
       description =
-          "Returns lab assignments (course + lab + dueAt) for courses where the user is enrolled. Only entries with a dueAt deadline are returned.")
+          "Returns lab assignments (course + lab + dueAt) for courses where the user is enrolled. Only entries with a dueAt deadline are returned. Already submitted labs are not returned (labs with the submission status `SUBMITTED`).")
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -595,6 +596,15 @@ public class CourseController {
         course.getCourseInstructors().stream()
             .anyMatch(ci -> ci.getInstructor().getId().equals(userId));
     if (!callerIsInstructor) {
+      dto.setInviteCode(null);
+    }
+    boolean callerIsOwner =
+        course.getCourseInstructors().stream()
+            .anyMatch(
+                ci ->
+                    ci.getInstructor().getId().equals(userId)
+                        && ci.getInstructorRole() == InstructorRoleEnum.OWNER);
+    if (!callerIsOwner) {
       dto.setInviteCode(null);
     }
     return dto;

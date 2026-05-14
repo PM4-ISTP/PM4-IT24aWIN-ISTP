@@ -447,7 +447,6 @@ export interface components {
     };
     UpdateChallengeRequestDto: {
       title: string;
-      shortDescription?: string;
       description?: string;
       /** @enum {string} */
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -463,7 +462,6 @@ export interface components {
       /** Format: uuid */
       id?: string;
       title?: string;
-      shortDescription?: string;
       description?: string;
       /** @enum {string} */
       status?: "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -575,7 +573,6 @@ export interface components {
     };
     CreateChallengeRequestDto: {
       title: string;
-      shortDescription?: string;
       description?: string;
       /** @enum {string} */
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -586,7 +583,6 @@ export interface components {
       /** Format: uuid */
       id?: string;
       title?: string;
-      shortDescription?: string;
       description?: string;
       /** @enum {string} */
       status?: "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -612,6 +608,15 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       expiresAt?: string;
+      /** Format: date-time */
+      lastActivityAt?: string;
+      /** Format: int32 */
+      ttlSeconds?: number;
+      /** Format: int32 */
+      extensionCount?: number;
+      /** Format: int32 */
+      maxExtensionCount?: number;
+      canExtend?: boolean;
     };
     Pageable: {
       /** Format: int32 */
@@ -709,7 +714,6 @@ export interface components {
       /** Format: uuid */
       id?: string;
       title?: string;
-      shortDescription?: string;
       /** @enum {string} */
       status?: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */

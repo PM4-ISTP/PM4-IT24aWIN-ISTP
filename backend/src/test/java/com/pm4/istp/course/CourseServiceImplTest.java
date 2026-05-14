@@ -10,11 +10,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import com.pm4.istp.course.dto.CourseLabDeadlineDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -351,6 +353,164 @@ class CourseServiceImplTest {
     assertThat(updated.getCourseInstructors())
         .filteredOn(ci -> ci.getInstructorRole() == InstructorRoleEnum.OWNER)
         .hasSize(1);
+  }
+
+  @Test
+  void updateCourse_whenCollaboratorUpdatesContentOnly_savesChanges() {
+    UUID ownerId = UUID.randomUUID();
+    UUID collaboratorId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    User collaborator = new User();
+    collaborator.setId(collaboratorId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(false);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    CourseInstructor collaboratorRelation = new CourseInstructor();
+    collaboratorRelation.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
+    collaboratorRelation.setInstructor(collaborator);
+    course.addCourseInstructor(collaboratorRelation);
+
+    UpdateCourseRequest updateRequest =
+        new UpdateCourseRequest(
+            "Collaborator update",
+            "Updated by collaborator",
+            "Updated short description",
+            false,
+            false,
+            "https://example.com/course.png",
+            "Web-Security",
+            List.of(
+                new UpdateCourseInstructorRequest(
+                    collaboratorId, InstructorRoleEnum.COLLABORATOR)),
+            McAttemptsMode.ONCE);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.save(any(Course.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Course updated = courseService.updateCourse(collaboratorId, courseId, updateRequest);
+
+    assertThat(updated.getTitle()).isEqualTo("Collaborator update");
+    assertThat(updated.getDescription()).isEqualTo("Updated by collaborator");
+    assertThat(updated.getImageUrl()).isEqualTo("https://example.com/course.png");
+    assertThat(updated.getTopic()).isEqualTo("Web-Security");
+    assertThat(updated.getMcAttemptsMode()).isEqualTo(McAttemptsMode.ONCE);
+    assertThat(updated.isPublished()).isFalse();
+    assertThat(updated.isPrivate()).isFalse();
+
+    verify(courseRepository).save(course);
+  }
+
+  @Test
+  void updateCourse_whenCollaboratorChangesVisibility_throwsCourseAccessDeniedException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID collaboratorId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    User collaborator = new User();
+    collaborator.setId(collaboratorId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(false);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    CourseInstructor collaboratorRelation = new CourseInstructor();
+    collaboratorRelation.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
+    collaboratorRelation.setInstructor(collaborator);
+    course.addCourseInstructor(collaboratorRelation);
+
+    UpdateCourseRequest updateRequest =
+        new UpdateCourseRequest(
+            "Collaborator publish",
+            "Attempted publish",
+            "Updated short description",
+            true,
+            false,
+            null,
+            null,
+            List.of(
+                new UpdateCourseInstructorRequest(
+                    collaboratorId, InstructorRoleEnum.COLLABORATOR)),
+            McAttemptsMode.UNLIMITED);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.updateCourse(collaboratorId, courseId, updateRequest))
+        .isInstanceOf(CourseAccessDeniedException.class)
+        .hasMessageContaining("not the owner");
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void updateCourse_whenCollaboratorChangesCollaborators_throwsCourseAccessDeniedException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID collaboratorId = UUID.randomUUID();
+    UUID newCollaboratorId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    User collaborator = new User();
+    collaborator.setId(collaboratorId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(false);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    CourseInstructor collaboratorRelation = new CourseInstructor();
+    collaboratorRelation.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
+    collaboratorRelation.setInstructor(collaborator);
+    course.addCourseInstructor(collaboratorRelation);
+
+    UpdateCourseRequest updateRequest =
+        new UpdateCourseRequest(
+            "Collaborator update",
+            "Attempted collaborator change",
+            "Updated short description",
+            false,
+            false,
+            null,
+            null,
+            List.of(
+                new UpdateCourseInstructorRequest(
+                    newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
+            McAttemptsMode.UNLIMITED);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.updateCourse(collaboratorId, courseId, updateRequest))
+        .isInstanceOf(CourseAccessDeniedException.class)
+        .hasMessageContaining("not the owner");
+
+    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
@@ -1340,6 +1500,115 @@ class CourseServiceImplTest {
   }
 
   @Test
+  void getCourseLabSubmissionDetails_whenMultipleChoiceCompletedButNoSubmission_inUnlimited_awardsFullPoints() {
+    UUID instructorId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID optionChallengeId = UUID.randomUUID();
+    LocalDateTime completedAt = LocalDateTime.of(2026, 5, 12, 19, 15);
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+    Course course = buildCourseWithOwner(courseId, instructor);
+    course.setMcAttemptsMode(McAttemptsMode.UNLIMITED);
+
+    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    lab.setMaxScore(2);
+    CourseLab assignment = new CourseLab();
+    assignment.setLab(lab);
+    course.addCourseChallenge(assignment);
+
+    Challenge optionChallenge =
+        buildCourseChallenge(
+            optionChallengeId, lab, "Pick one", ChallengeType.MULTIPLE_CHOICE, 2);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(true);
+    when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId)).thenReturn(List.of(optionChallenge));
+    when(challengeCompletionRepository.findSolvedChallengeIds(participantId, List.of(optionChallengeId)))
+        .thenReturn(List.of(optionChallengeId));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.empty());
+    when(studentFlagSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.empty());
+    when(
+            courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+                courseId, List.of(participantId), List.of(optionChallengeId)))
+        .thenReturn(List.of());
+    when(
+            challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+                List.of(participantId), List.of(labId)))
+        .thenReturn(List.<Object[]>of(new Object[] {participantId, labId, 1L, completedAt}));
+
+    var detail =
+        courseService.getCourseLabSubmissionDetails(instructorId, courseId, participantId, labId);
+
+    assertThat(detail.getStatus()).isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
+    assertThat(detail.getAwardedPoints()).isEqualTo(2);
+    assertThat(detail.getChallenges()).singleElement().satisfies(challenge -> {
+      assertThat(challenge.getCorrect()).isTrue();
+      assertThat(challenge.getAwardedPoints()).isEqualTo(2);
+      assertThat(challenge.getSelectedOptionText()).isNull();
+    });
+  }
+
+  @Test
+  void getCourseLabSubmissionDetails_whenMultipleChoiceCompletedButNoSubmission_inOnce_awardsZeroPoints() {
+    UUID instructorId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID optionChallengeId = UUID.randomUUID();
+    LocalDateTime completedAt = LocalDateTime.of(2026, 5, 12, 19, 15);
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+    Course course = buildCourseWithOwner(courseId, instructor);
+    course.setMcAttemptsMode(McAttemptsMode.ONCE);
+
+    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    lab.setMaxScore(2);
+    CourseLab assignment = new CourseLab();
+    assignment.setLab(lab);
+    course.addCourseChallenge(assignment);
+
+    Challenge optionChallenge =
+        buildCourseChallenge(
+            optionChallengeId, lab, "Pick one", ChallengeType.MULTIPLE_CHOICE, 2);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(true);
+    when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId)).thenReturn(List.of(optionChallenge));
+    when(challengeCompletionRepository.findSolvedChallengeIds(participantId, List.of(optionChallengeId)))
+        .thenReturn(List.of(optionChallengeId));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.empty());
+    when(studentFlagSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.empty());
+    when(
+            courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+                courseId, List.of(participantId), List.of(optionChallengeId)))
+        .thenReturn(List.of());
+    when(
+            challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+                List.of(participantId), List.of(labId)))
+        .thenReturn(List.<Object[]>of(new Object[] {participantId, labId, 1L, completedAt}));
+
+    var detail =
+        courseService.getCourseLabSubmissionDetails(instructorId, courseId, participantId, labId);
+
+    assertThat(detail.getStatus()).isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
+    assertThat(detail.getAwardedPoints()).isZero();
+    assertThat(detail.getChallenges()).singleElement().satisfies(challenge -> {
+      assertThat(challenge.getCorrect()).isNull();
+      assertThat(challenge.getAwardedPoints()).isZero();
+    });
+  }
+
+  @Test
   void getCourseLabSubmissionDetails_whenLabNotAssigned_throwsLabNotFound() {
     UUID instructorId = UUID.randomUUID();
     UUID participantId = UUID.randomUUID();
@@ -1465,25 +1734,105 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void listUpcomingDeadlines_filtersIncompleteRows() {
+  void listUpcomingDeadlines_filtersSubmittedAndIncompleteRows() {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
-    UUID labId = UUID.randomUUID();
+    UUID submittedLabId = UUID.randomUUID();
+    UUID openLabId = UUID.randomUUID();
     LocalDateTime dueAt = LocalDateTime.of(2026, 5, 13, 8, 0);
 
     when(courseLabRepository.findDeadlinesForUser(userId))
         .thenReturn(
             List.of(
-                new Object[] {courseId, "Course", labId, "Lab", dueAt},
-                new Object[] {null, "Missing course", labId, "Lab", dueAt},
-                new Object[] {courseId, "Missing due date", labId, "Lab", null}));
+                new Object[] {courseId, "Course", submittedLabId, "Submitted Lab", dueAt},
+                new Object[] {courseId, "Course", openLabId, "Open Lab", dueAt},
+                new Object[] {null, "Missing course", openLabId, "Lab", dueAt.plusHours(2)},
+                new Object[] {courseId, "Missing due date", openLabId, "Lab", null}));
+
+    when(challengeRepository.countByLabIds(List.of(submittedLabId, openLabId)))
+        .thenReturn(
+            List.of(
+                new Object[] {submittedLabId, 3L},
+                new Object[] {openLabId, 3L}));
+    when(challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+            List.of(userId), List.of(submittedLabId, openLabId)))
+        .thenReturn(
+            List.of(
+                new Object[] {userId, submittedLabId, 3L, dueAt.minusMinutes(5)},
+                new Object[] {userId, openLabId, 2L, dueAt.minusMinutes(2)}));
 
     var deadlines = courseService.listUpcomingDeadlines(userId);
 
-    assertThat(deadlines).singleElement();
+    assertThat(deadlines).hasSize(1);
     assertThat(deadlines.getFirst().getCourseId()).isEqualTo(courseId);
-    assertThat(deadlines.getFirst().getLabId()).isEqualTo(labId);
+    assertThat(deadlines.getFirst().getCourseTitle()).isEqualTo("Course");
+    assertThat(deadlines.getFirst().getLabId()).isEqualTo(openLabId);
+    assertThat(deadlines.getFirst().getLabTitle()).isEqualTo("Open Lab");
     assertThat(deadlines.getFirst().getDueAt()).isEqualTo(dueAt);
+  }
+
+  @Test
+  void listUpcomingDeadlines_multipleCoursesWithSameLab() {
+    UUID userId = UUID.randomUUID();
+    UUID[] courseIds = {UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()};
+    UUID labId = UUID.randomUUID();
+    String labTitle = "Lab (in 3 different courses)";
+    LocalDateTime dueAt = LocalDateTime.of(2026, 5, 13, 8, 0);
+
+    when(courseLabRepository.findDeadlinesForUser(userId))
+        .thenReturn(
+            List.of(
+                new Object[] {courseIds[0], "Course 1", labId, labTitle, dueAt},
+                new Object[] {courseIds[1], "Course 2", labId, labTitle, dueAt},
+                new Object[] {courseIds[2], "Course 3", labId, labTitle, dueAt}));
+
+    when(challengeRepository.countByLabIds(List.of(labId)))
+        .thenReturn(Collections.singletonList(new Object[] {labId, 5L}));
+    when(challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(List.of(userId), List.of(labId)))
+        .thenReturn(Collections.singletonList(new Object[] {userId, labId, 3L, dueAt.minusMinutes(5)}));
+
+    var deadlines = courseService.listUpcomingDeadlines(userId);
+
+    assertThat(deadlines).hasSize(3);
+    for (int i = 0; i < courseIds.length; i++) {
+      CourseLabDeadlineDto deadline = deadlines.get(i);
+      assertThat(deadline.getCourseId()).isEqualTo(courseIds[i]);
+      assertThat(deadline.getCourseTitle()).isEqualTo("Course " + (i + 1));
+      assertThat(deadline.getLabId()).isEqualTo(labId);
+      assertThat(deadline.getLabTitle()).isEqualTo(labTitle);
+      assertThat(deadline.getDueAt()).isEqualTo(dueAt);
+    }
+  }
+
+  @Test
+  void listUpcomingDeadlines_multipleCoursesWithSameCompletedLab() {
+    UUID userId = UUID.randomUUID();
+    UUID[] courseIds = {UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()};
+    UUID labId = UUID.randomUUID();
+    String labTitle = "Lab (in 3 different courses; already completed)";
+    LocalDateTime dueAt = LocalDateTime.of(2026, 5, 13, 8, 0);
+
+    when(courseLabRepository.findDeadlinesForUser(userId))
+        .thenReturn(
+            List.of(
+                new Object[] {courseIds[0], "Course 1", labId, labTitle, dueAt},
+                new Object[] {courseIds[1], "Course 2", labId, labTitle, dueAt},
+                new Object[] {courseIds[2], "Course 3", labId, labTitle, dueAt}));
+
+    when(challengeRepository.countByLabIds(List.of(labId)))
+        .thenReturn(Collections.singletonList(new Object[] {labId, 5L}));
+    when(challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(List.of(userId), List.of(labId)))
+        .thenReturn(Collections.singletonList(new Object[] {userId, labId, 5L, dueAt.minusMinutes(5)}));
+
+    var deadlines = courseService.listUpcomingDeadlines(userId);
+    assertThat(deadlines).hasSize(0);
+  }
+
+  @Test
+  void listUpcomingDeadlines_noDeadlines() {
+    UUID userId = UUID.randomUUID();
+    when(courseLabRepository.findDeadlinesForUser(userId)).thenReturn(Collections.emptyList());
+    assertThat(courseService.listUpcomingDeadlines(userId)).hasSize(0);
   }
 
   @Test

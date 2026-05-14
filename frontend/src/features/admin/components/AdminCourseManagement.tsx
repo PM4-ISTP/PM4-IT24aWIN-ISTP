@@ -375,6 +375,7 @@ export default function AdminCourseManagement() {
                 form.setFieldValue("shortDescription", next);
               }}
               description={`${form.values.shortDescription.length}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
+              styles={{ input: { overflowY: "auto" } }}
             />
             <MyEditor
               description={form.values.description}

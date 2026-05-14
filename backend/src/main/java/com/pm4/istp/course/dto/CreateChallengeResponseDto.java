@@ -15,13 +15,13 @@ import lombok.NoArgsConstructor;
 public class CreateChallengeResponseDto {
   private UUID id;
   private String title;
-  private String shortDescription;
   private String description;
   private LabStatusEnum status;
   private LabDifficultyEnum difficulty;
   private int maxScore;
   private String dockerImage;
   private Integer containerPort;
+  private Integer podTtlSeconds;
   private UUID creatorId;
   private List<ChallengeResponseDto> challenges;
   private LocalDateTime createdAt;

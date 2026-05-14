@@ -77,7 +77,9 @@ function MyEditor({ description, setDescription }: MyEditorProps) {
         </RichTextEditor.ControlsGroup>
       </RichTextEditor.Toolbar>
 
-      <RichTextEditor.Content style={{ minHeight: "200px" }} />
+      <RichTextEditor.Content
+        style={{ minHeight: "200px", maxHeight: "320px", overflowY: "auto" }}
+      />
     </RichTextEditor>
   );
 }

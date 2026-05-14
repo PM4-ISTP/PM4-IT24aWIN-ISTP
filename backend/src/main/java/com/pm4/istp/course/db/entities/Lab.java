@@ -31,9 +31,6 @@ public class Lab {
   @Column(name = "title", nullable = false)
   private String title;
 
-  @Column(name = "short_description")
-  private String shortDescription;
-
   @Column(name = "description", nullable = true, length = 5000)
   private String description;
 
@@ -50,6 +47,26 @@ public class Lab {
 
   @Column(name = "container_port", nullable = false)
   private Integer containerPort = DEFAULT_CONTAINER_PORT;
+
+  @Column(name = "pod_ttl_seconds")
+  private Integer podTtlSeconds;
+
+  /**
+   * Optional: name of a Kubernetes Secret (in the lab namespace) whose key-value pairs are injected
+   * as environment variables into the lab pod at startup.
+   *
+   * <p><b>Current state:</b> This field was introduced to demonstrate the concept for the "LLM01 -
+   * Prompt Injection" lab, which requires a {@code GROQ_API_KEY} to call the Groq API. The secret
+   * {@code groq-api-secret} is pre-created in the cluster by an admin and referenced here directly
+   * in the database — there is no instructor-facing UI for this field yet.
+   *
+   * <p><b>Not yet fully available to instructors:</b> Future work should add a frontend field in
+   * the lab create/edit form so instructors can configure this themselves without DB access.
+   *
+   * <p>Leave {@code null} for labs that need no external secrets.
+   */
+  @Column(name = "env_secret_name", nullable = true)
+  private String envSecretName;
 
   // This field will be filled by the Challenges which will come later, for now we
   // will set it manually
