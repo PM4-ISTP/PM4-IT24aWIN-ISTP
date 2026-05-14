@@ -35,23 +35,12 @@ const eslintConfig = defineConfig([
     },
   },
 
-  // Cypress test files use patterns that trigger false positives with standard rules:
-  // - `namespace Cypress` augmentation in commands.ts triggers no-namespace
-  // - Chai property-based assertions (.be.empty, .be.true, etc.) trigger no-unused-expressions
-  {
-    files: ["cypress/**/*.ts"],
-    rules: {
-      "@typescript-eslint/no-namespace": "off",
-      "@typescript-eslint/no-unused-expressions": "off",
-    },
-  },
-
   // Disable ESLint rules that would conflict with Prettier formatting.
   // Must be last so it can override any rule set above.
   prettier,
 
   // Override default ignores of eslint-config-next.
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "playwright-report/**"]),
 ]);
 
 export default eslintConfig;
