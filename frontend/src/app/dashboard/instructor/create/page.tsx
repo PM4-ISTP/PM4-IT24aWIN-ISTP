@@ -89,7 +89,7 @@ export default function CreateCourse() {
     }
 
     router.refresh();
-    router.push("/dashboard/instructor");
+    router.push(`/dashboard/instructor/${result.data.id}`);
   }
 
   return (

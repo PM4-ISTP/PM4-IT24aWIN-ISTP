@@ -49,6 +49,7 @@ interface InstructorMultiSelectProps {
   onChange: (value: string[]) => void;
   initialUsers?: CollaboratorUserResponseDto[];
   onUsersLoaded?: (users: CollaboratorUserResponseDto[]) => void;
+  disabled?: boolean;
 }
 
 export function InstructorMultiSelect({
@@ -56,6 +57,7 @@ export function InstructorMultiSelect({
   onChange,
   initialUsers,
   onUsersLoaded,
+  disabled = false,
 }: InstructorMultiSelectProps) {
   const [searchValue, setSearchValue] = useState("");
   const [options, setOptions] = useState<CollaboratorUserResponseDto[]>(initialUsers ?? []);
@@ -138,6 +140,7 @@ export function InstructorMultiSelect({
       nothingFoundMessage={errorMessage ?? "No collaborators found"}
       clearable
       hidePickedOptions
+      disabled={disabled}
     />
   );
 }

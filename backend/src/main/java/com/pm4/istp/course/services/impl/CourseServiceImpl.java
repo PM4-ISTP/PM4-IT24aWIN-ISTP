@@ -245,6 +245,23 @@ public class CourseServiceImpl implements CourseService {
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
+    boolean wasPrivate = course.isPrivate();
+    boolean willBePublished = request.isPublished();
+    boolean willBePrivate = request.isPrivate();
+    validateVisibilityState(willBePublished, willBePrivate);
+
+    boolean visibilityChanges =
+        course.isPublished() != willBePublished || course.isPrivate() != willBePrivate;
+    if (visibilityChanges) {
+      verifyOwner(course, userId);
+    }
+
+    List<UpdateCourseInstructorRequest> requestedInstructors =
+        request.getInstructors() == null ? List.of() : request.getInstructors();
+    if (collaboratorsChange(course, requestedInstructors)) {
+      verifyOwner(course, userId);
+    }
+
     // Update scalar fields
     course.setTitle(request.getTitle());
     course.setDescription(request.getDescription());
@@ -252,10 +269,6 @@ public class CourseServiceImpl implements CourseService {
     course.setImageUrl(request.getImageUrl());
     course.setTopic(courseTopicService.normalizeAndValidate(request.getTopic()));
 
-    boolean wasPrivate = course.isPrivate();
-    boolean willBePublished = request.isPublished();
-    boolean willBePrivate = request.isPrivate();
-    validateVisibilityState(willBePublished, willBePrivate);
     boolean needsNewCode = willBePrivate && (!wasPrivate || course.getInviteCode() == null);
     if (!willBePrivate) {
       course.setInviteCode(null);
@@ -269,7 +282,7 @@ public class CourseServiceImpl implements CourseService {
 
     // Diff instructor list: preserve OWNER, update COLLABORATORs
     Set<UUID> requestedInstructorIds =
-        request.getInstructors().stream()
+        requestedInstructors.stream()
             .map(UpdateCourseInstructorRequest::getInstructorId)
             .collect(Collectors.toSet());
 
@@ -289,7 +302,7 @@ public class CourseServiceImpl implements CourseService {
             .collect(Collectors.toSet());
 
     // Add new collaborators
-    for (UpdateCourseInstructorRequest req : request.getInstructors()) {
+    for (UpdateCourseInstructorRequest req : requestedInstructors) {
       if (!existingInstructorIds.contains(req.getInstructorId())) {
         User collaboratorUser =
             userRepository
@@ -312,6 +325,20 @@ public class CourseServiceImpl implements CourseService {
       saved.setInviteCode(courseInviteCodeHelper.generateAndAssign(saved.getId()));
     }
     return saved;
+  }
+
+  private boolean collaboratorsChange(
+      Course course, List<UpdateCourseInstructorRequest> requestedInstructors) {
+    Set<UUID> currentCollaboratorIds =
+        course.getCourseInstructors().stream()
+            .filter(ci -> ci.getInstructorRole() == InstructorRoleEnum.COLLABORATOR)
+            .map(ci -> ci.getInstructor().getId())
+            .collect(Collectors.toSet());
+    Set<UUID> requestedCollaboratorIds =
+        requestedInstructors.stream()
+            .map(UpdateCourseInstructorRequest::getInstructorId)
+            .collect(Collectors.toSet());
+    return !currentCollaboratorIds.equals(requestedCollaboratorIds);
   }
 
   @Override
