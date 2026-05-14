@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 public class CreateChallengeResponseDto {
   private UUID id;
   private String title;
-  private String shortDescription;
   private String description;
   private LabStatusEnum status;
   private LabDifficultyEnum difficulty;

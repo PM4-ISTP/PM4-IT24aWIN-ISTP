@@ -1140,7 +1140,6 @@ export interface components {
     };
     UpdateChallengeRequestDto: {
       title: string;
-      shortDescription?: string;
       description?: string;
       /** @enum {string} */
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -1162,7 +1161,6 @@ export interface components {
       /** Format: uuid */
       id?: string;
       title?: string;
-      shortDescription?: string;
       description?: string;
       /** @enum {string} */
       status?: "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -1382,7 +1380,6 @@ export interface components {
     };
     AdminUpdateLabRequestDto: {
       title: string;
-      shortDescription?: string;
       description?: string;
       /** @enum {string} */
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -1420,7 +1417,6 @@ export interface components {
     };
     CreateChallengeRequestDto: {
       title: string;
-      shortDescription?: string;
       description?: string;
       /** @enum {string} */
       status: "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -1437,7 +1433,6 @@ export interface components {
       /** Format: uuid */
       id?: string;
       title?: string;
-      shortDescription?: string;
       description?: string;
       /** @enum {string} */
       status?: "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -1591,7 +1586,6 @@ export interface components {
       /** Format: uuid */
       id?: string;
       title?: string;
-      shortDescription?: string;
       description?: string;
       /** @enum {string} */
       status?: "DRAFT" | "PRIVATE" | "PUBLIC";
@@ -1739,7 +1733,6 @@ export interface components {
       /** Format: uuid */
       id?: string;
       title?: string;
-      shortDescription?: string;
       /** @enum {string} */
       status?: "DRAFT" | "PRIVATE" | "PUBLIC";
       /** @enum {string} */
@@ -1962,7 +1955,6 @@ export interface components {
       /** Format: uuid */
       id?: string;
       title?: string;
-      shortDescription?: string;
       description?: string;
       /** @enum {string} */
       status?: "DRAFT" | "PRIVATE" | "PUBLIC";

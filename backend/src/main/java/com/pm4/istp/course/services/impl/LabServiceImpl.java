@@ -97,7 +97,6 @@ public class LabServiceImpl implements LabService {
     dockerImageAvailabilityService.assertImageExists(request.getDockerImage());
 
     lab.setTitle(request.getTitle());
-    lab.setShortDescription(request.getShortDescription());
     lab.setDescription(request.getDescription());
     lab.setStatus(request.getStatus());
     lab.setDifficulty(request.getDifficulty());
@@ -142,7 +141,6 @@ public class LabServiceImpl implements LabService {
     dockerImageAvailabilityService.assertImageExists(request.getDockerImage());
 
     lab.setTitle(request.getTitle());
-    lab.setShortDescription(request.getShortDescription());
     lab.setDescription(request.getDescription());
     lab.setStatus(newStatus);
     lab.setDifficulty(request.getDifficulty());

@@ -132,7 +132,6 @@ class AdminChallengeControllerTest {
   private static AdminUpdateLabRequestDto validUpdateRequest() {
     AdminUpdateLabRequestDto req = new AdminUpdateLabRequestDto();
     req.setTitle("My lab");
-    req.setShortDescription("short");
     req.setDescription("<p>desc</p>");
     req.setStatus(LabStatusEnum.DRAFT);
     req.setDifficulty(LabDifficultyEnum.BEGINNER);

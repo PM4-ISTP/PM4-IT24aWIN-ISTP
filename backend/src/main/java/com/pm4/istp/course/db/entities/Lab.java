@@ -31,9 +31,6 @@ public class Lab {
   @Column(name = "title", nullable = false)
   private String title;
 
-  @Column(name = "short_description")
-  private String shortDescription;
-
   @Column(name = "description", nullable = true, length = 5000)
   private String description;
 

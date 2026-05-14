@@ -9,7 +9,6 @@ interface ChallengeGridProps {
   labs: Array<{
     id: string;
     title: string;
-    shortDescription?: string;
     status: string;
     difficulty: string;
     maxScore: number;
