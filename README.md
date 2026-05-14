@@ -34,6 +34,9 @@ Secrets:
 
 See `LOCAL_DEV.md`.
 
+For local testing of lab pod lifecycle changes against the staging Kubernetes cluster, see
+`LOCAL_DEV.md#5-test-lab-pod-lifecycle-changes-against-staging-kubernetes`.
+
 ### Kubernetes Setup (K3d)
 
 #### Create a K3d Cluster
