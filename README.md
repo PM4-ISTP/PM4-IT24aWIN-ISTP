@@ -30,6 +30,10 @@ Secrets:
 - `NEXTAUTH_SECRET`: generate locally (e.g. `openssl rand -base64 32`)
 - `AUTH_KEYCLOAK_SECRET`: Keycloak admin console -> Client `interactive-security-training-platform-app` -> Credentials
 
+Keep real secrets in local gitignored files (`frontend/.env.local`, `infra/.env`,
+`backend/src/main/resources/application-local.properties`) or CI/Kubernetes secrets. Committed
+example files must use placeholders only.
+
 ### Local Development
 
 See `LOCAL_DEV.md`.
