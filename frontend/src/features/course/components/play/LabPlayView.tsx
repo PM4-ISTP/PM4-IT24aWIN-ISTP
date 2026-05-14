@@ -695,7 +695,8 @@ export function LabPlayView({
                         <TextInput
                           value={current.isSolved ? (current.solvedFlag ?? "") : flagInput}
                           onChange={(e) => {
-                            if (!current.isSolved) setFlagInput(e.currentTarget.value.toUpperCase());
+                            if (!current.isSolved)
+                              setFlagInput(e.currentTarget.value.toUpperCase());
                           }}
                           placeholder="ISTP{YOUR_FLAG}"
                           readOnly={current.isSolved}
