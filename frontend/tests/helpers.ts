@@ -4,24 +4,40 @@ export enum TestUser {
   Admin,
   Instructor,
   InstructorWithoutCoursesOrLabs,
-  Student
+  Student,
 }
 
 interface LoginCredentials {
-  username: string,
-  password: string
+  username: string;
+  password: string;
 }
 
 function getLoginCredentialsForUser(user: TestUser): LoginCredentials {
   switch (user) {
     case TestUser.Admin:
-      return { username: process.env.E2E_ADMIN_USERNAME ?? "e2e-admin", password: process.env.E2E_ADMIN_PASSWORD ?? "e2e-admin" };
+      return {
+        username: process.env.E2E_ADMIN_USERNAME ?? "e2e-admin",
+        password: process.env.E2E_ADMIN_PASSWORD ?? "e2e-admin",
+      };
     case TestUser.Instructor:
-      return { username: process.env.E2E_INSTRUCTOR_USERNAME ?? "e2e-instructor", password: process.env.E2E_INSTRUCTOR_PASSWORD ?? "e2e-instructor" };
+      return {
+        username: process.env.E2E_INSTRUCTOR_USERNAME ?? "e2e-instructor",
+        password: process.env.E2E_INSTRUCTOR_PASSWORD ?? "e2e-instructor",
+      };
     case TestUser.InstructorWithoutCoursesOrLabs:
-      return { username: process.env.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_USERNAME ?? "e2e-instructor-without-courses-or-labs", password: process.env.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_PASSWORD ?? "e2e-instructor-without-courses-or-labs" };
+      return {
+        username:
+          process.env.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_USERNAME ??
+          "e2e-instructor-without-courses-or-labs",
+        password:
+          process.env.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_PASSWORD ??
+          "e2e-instructor-without-courses-or-labs",
+      };
     case TestUser.Student:
-      return { username: process.env.E2E_STUDENT_USERNAME ?? "e2e-student", password: process.env.E2E_STUDENT_PASSWORD ?? "e2e-student" };
+      return {
+        username: process.env.E2E_STUDENT_USERNAME ?? "e2e-student",
+        password: process.env.E2E_STUDENT_PASSWORD ?? "e2e-student",
+      };
     default:
       throw Error("The given test user does not exist.");
   }
