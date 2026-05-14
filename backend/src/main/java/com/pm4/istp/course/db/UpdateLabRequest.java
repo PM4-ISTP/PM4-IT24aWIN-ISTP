@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UpdateLabRequest {
   private String title;
-  private String shortDescription;
   private String description;
   private LabStatusEnum status;
   private LabDifficultyEnum difficulty;

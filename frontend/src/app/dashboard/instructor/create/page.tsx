@@ -89,7 +89,7 @@ export default function CreateCourse() {
     }
 
     router.refresh();
-    router.push("/dashboard/instructor");
+    router.push(`/dashboard/instructor/${result.data.id}`);
   }
 
   return (
@@ -157,6 +157,7 @@ export default function CreateCourse() {
               }}
               error={shortDescriptionError}
               description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
+              styles={{ input: { overflowY: "auto" } }}
             />
 
             <MyEditor description={description} setDescription={setDescription} />

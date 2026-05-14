@@ -42,7 +42,6 @@ public class AdminLabServiceImpl implements AdminLabService {
                 () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
     lab.setTitle(request.getTitle());
-    lab.setShortDescription(normalizeBlankToNull(request.getShortDescription()));
     lab.setDescription(request.getDescription());
     lab.setStatus(request.getStatus());
     lab.setDifficulty(request.getDifficulty());

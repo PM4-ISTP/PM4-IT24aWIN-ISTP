@@ -61,7 +61,6 @@ class CourseMapperCoverageTest {
     CreateChallengeRequestDto createDto =
         new CreateChallengeRequestDto(
             "Lab",
-            "Short",
             "Long",
             LabStatusEnum.PUBLIC,
             LabDifficultyEnum.EASY,
@@ -72,7 +71,6 @@ class CourseMapperCoverageTest {
     UpdateChallengeRequestDto updateDto =
         new UpdateChallengeRequestDto(
             "Lab 2",
-            "Short 2",
             "Long 2",
             LabStatusEnum.DRAFT,
             LabDifficultyEnum.HARD,
@@ -251,7 +249,6 @@ class CourseMapperCoverageTest {
     Lab lab = new Lab();
     lab.setId(UUID.randomUUID());
     lab.setTitle("Lab");
-    lab.setShortDescription("Short");
     lab.setDescription("Long");
     lab.setStatus(LabStatusEnum.PUBLIC);
     lab.setDifficulty(LabDifficultyEnum.EASY);

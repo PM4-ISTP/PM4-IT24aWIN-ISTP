@@ -356,6 +356,164 @@ class CourseServiceImplTest {
   }
 
   @Test
+  void updateCourse_whenCollaboratorUpdatesContentOnly_savesChanges() {
+    UUID ownerId = UUID.randomUUID();
+    UUID collaboratorId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    User collaborator = new User();
+    collaborator.setId(collaboratorId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(false);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    CourseInstructor collaboratorRelation = new CourseInstructor();
+    collaboratorRelation.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
+    collaboratorRelation.setInstructor(collaborator);
+    course.addCourseInstructor(collaboratorRelation);
+
+    UpdateCourseRequest updateRequest =
+        new UpdateCourseRequest(
+            "Collaborator update",
+            "Updated by collaborator",
+            "Updated short description",
+            false,
+            false,
+            "https://example.com/course.png",
+            "Web-Security",
+            List.of(
+                new UpdateCourseInstructorRequest(
+                    collaboratorId, InstructorRoleEnum.COLLABORATOR)),
+            McAttemptsMode.ONCE);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.save(any(Course.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Course updated = courseService.updateCourse(collaboratorId, courseId, updateRequest);
+
+    assertThat(updated.getTitle()).isEqualTo("Collaborator update");
+    assertThat(updated.getDescription()).isEqualTo("Updated by collaborator");
+    assertThat(updated.getImageUrl()).isEqualTo("https://example.com/course.png");
+    assertThat(updated.getTopic()).isEqualTo("Web-Security");
+    assertThat(updated.getMcAttemptsMode()).isEqualTo(McAttemptsMode.ONCE);
+    assertThat(updated.isPublished()).isFalse();
+    assertThat(updated.isPrivate()).isFalse();
+
+    verify(courseRepository).save(course);
+  }
+
+  @Test
+  void updateCourse_whenCollaboratorChangesVisibility_throwsCourseAccessDeniedException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID collaboratorId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    User collaborator = new User();
+    collaborator.setId(collaboratorId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(false);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    CourseInstructor collaboratorRelation = new CourseInstructor();
+    collaboratorRelation.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
+    collaboratorRelation.setInstructor(collaborator);
+    course.addCourseInstructor(collaboratorRelation);
+
+    UpdateCourseRequest updateRequest =
+        new UpdateCourseRequest(
+            "Collaborator publish",
+            "Attempted publish",
+            "Updated short description",
+            true,
+            false,
+            null,
+            null,
+            List.of(
+                new UpdateCourseInstructorRequest(
+                    collaboratorId, InstructorRoleEnum.COLLABORATOR)),
+            McAttemptsMode.UNLIMITED);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.updateCourse(collaboratorId, courseId, updateRequest))
+        .isInstanceOf(CourseAccessDeniedException.class)
+        .hasMessageContaining("not the owner");
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void updateCourse_whenCollaboratorChangesCollaborators_throwsCourseAccessDeniedException() {
+    UUID ownerId = UUID.randomUUID();
+    UUID collaboratorId = UUID.randomUUID();
+    UUID newCollaboratorId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    User collaborator = new User();
+    collaborator.setId(collaboratorId);
+
+    Course course = new Course();
+    course.setId(courseId);
+    course.setPublished(false);
+    course.setPrivate(false);
+
+    CourseInstructor ownerRelation = new CourseInstructor();
+    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
+    ownerRelation.setInstructor(owner);
+    course.addCourseInstructor(ownerRelation);
+
+    CourseInstructor collaboratorRelation = new CourseInstructor();
+    collaboratorRelation.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
+    collaboratorRelation.setInstructor(collaborator);
+    course.addCourseInstructor(collaboratorRelation);
+
+    UpdateCourseRequest updateRequest =
+        new UpdateCourseRequest(
+            "Collaborator update",
+            "Attempted collaborator change",
+            "Updated short description",
+            false,
+            false,
+            null,
+            null,
+            List.of(
+                new UpdateCourseInstructorRequest(
+                    newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
+            McAttemptsMode.UNLIMITED);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    assertThatThrownBy(() -> courseService.updateCourse(collaboratorId, courseId, updateRequest))
+        .isInstanceOf(CourseAccessDeniedException.class)
+        .hasMessageContaining("not the owner");
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
   void listPublishedCourses_delegatesToRepositoryWithNormalizedQuery() {
     Pageable pageable = PageRequest.of(0, 12);
     Page<ListCourseResponseDto> expected = new PageImpl<>(List.of());
