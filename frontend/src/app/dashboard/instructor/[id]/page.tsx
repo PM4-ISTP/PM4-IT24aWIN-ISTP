@@ -502,6 +502,7 @@ export default function EditCourse() {
                   autosize
                   minRows={2}
                   maxRows={4}
+                  styles={{ input: { overflowY: "auto" } }}
                   required
                 />
 

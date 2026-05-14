@@ -380,6 +380,7 @@ export function ChallengeManager({
                           autosize
                           minRows={2}
                           maxRows={4}
+                          styles={{ input: { overflowY: "auto" } }}
                         />
 
                         {/* Flag (FLAG type only) */}
