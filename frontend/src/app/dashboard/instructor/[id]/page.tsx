@@ -537,6 +537,7 @@ export default function EditCourse() {
                   onChange={handleCollaboratorChange}
                   initialUsers={initialUsers}
                   onUsersLoaded={(users) => setKnownUsers((prev) => mergeUsersById(prev, users))}
+                  disabled={!isOwner}
                 />
 
                 <Select
@@ -554,6 +555,7 @@ export default function EditCourse() {
                   ]}
                   description="Choose exactly one state. Draft keeps it hidden, Public shows in catalog, Private is join-by-code only."
                   allowDeselect={false}
+                  disabled={!isOwner}
                 />
 
                 <Select
@@ -631,7 +633,7 @@ export default function EditCourse() {
                 onRemoveParticipant={handleRemoveParticipant}
               />
 
-              {visibility === "PRIVATE" && (
+              {visibility === "PRIVATE" && isOwner && (
                 <SurfaceCard variant="strong" elevation="md" padding="1.5rem">
                   <Stack gap="sm">
                     <Text
