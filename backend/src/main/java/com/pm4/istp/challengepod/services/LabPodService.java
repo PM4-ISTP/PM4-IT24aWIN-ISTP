@@ -870,6 +870,27 @@ public class LabPodService {
               List.of(new LocalObjectReferenceBuilder().withName(imagePullSecretName).build()));
     }
 
+    // Inject a Kubernetes Secret as environment variables into the lab container.
+    // Currently introduced for the "LLM01 - Prompt Injection" lab, which needs a
+    // GROQ_API_KEY to call the Groq API (set via the "groq-api-secret" K8s Secret).
+    // The envSecretName is set directly in the DB for that lab — no instructor UI exists yet.
+    String envSecretName = lab.getEnvSecretName();
+    if (envSecretName != null && !envSecretName.isBlank()) {
+      deployment
+          .getSpec()
+          .getTemplate()
+          .getSpec()
+          .getContainers()
+          .get(0)
+          .setEnvFrom(
+              List.of(
+                  new io.fabric8.kubernetes.api.model.EnvFromSourceBuilder()
+                      .withNewSecretRef()
+                      .withName(envSecretName)
+                      .endSecretRef()
+                      .build()));
+    }
+
     client.apps().deployments().inNamespace(defaultNamespace).resource(deployment).create();
 
     // 2. Service
