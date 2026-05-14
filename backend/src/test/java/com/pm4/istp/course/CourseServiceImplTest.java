@@ -1500,6 +1500,115 @@ class CourseServiceImplTest {
   }
 
   @Test
+  void getCourseLabSubmissionDetails_whenMultipleChoiceCompletedButNoSubmission_inUnlimited_awardsFullPoints() {
+    UUID instructorId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID optionChallengeId = UUID.randomUUID();
+    LocalDateTime completedAt = LocalDateTime.of(2026, 5, 12, 19, 15);
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+    Course course = buildCourseWithOwner(courseId, instructor);
+    course.setMcAttemptsMode(McAttemptsMode.UNLIMITED);
+
+    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    lab.setMaxScore(2);
+    CourseLab assignment = new CourseLab();
+    assignment.setLab(lab);
+    course.addCourseChallenge(assignment);
+
+    Challenge optionChallenge =
+        buildCourseChallenge(
+            optionChallengeId, lab, "Pick one", ChallengeType.MULTIPLE_CHOICE, 2);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(true);
+    when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId)).thenReturn(List.of(optionChallenge));
+    when(challengeCompletionRepository.findSolvedChallengeIds(participantId, List.of(optionChallengeId)))
+        .thenReturn(List.of(optionChallengeId));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.empty());
+    when(studentFlagSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.empty());
+    when(
+            courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+                courseId, List.of(participantId), List.of(optionChallengeId)))
+        .thenReturn(List.of());
+    when(
+            challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+                List.of(participantId), List.of(labId)))
+        .thenReturn(List.<Object[]>of(new Object[] {participantId, labId, 1L, completedAt}));
+
+    var detail =
+        courseService.getCourseLabSubmissionDetails(instructorId, courseId, participantId, labId);
+
+    assertThat(detail.getStatus()).isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
+    assertThat(detail.getAwardedPoints()).isEqualTo(2);
+    assertThat(detail.getChallenges()).singleElement().satisfies(challenge -> {
+      assertThat(challenge.getCorrect()).isTrue();
+      assertThat(challenge.getAwardedPoints()).isEqualTo(2);
+      assertThat(challenge.getSelectedOptionText()).isNull();
+    });
+  }
+
+  @Test
+  void getCourseLabSubmissionDetails_whenMultipleChoiceCompletedButNoSubmission_inOnce_awardsZeroPoints() {
+    UUID instructorId = UUID.randomUUID();
+    UUID participantId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    UUID optionChallengeId = UUID.randomUUID();
+    LocalDateTime completedAt = LocalDateTime.of(2026, 5, 12, 19, 15);
+
+    User instructor = new User();
+    instructor.setId(instructorId);
+    Course course = buildCourseWithOwner(courseId, instructor);
+    course.setMcAttemptsMode(McAttemptsMode.ONCE);
+
+    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    lab.setMaxScore(2);
+    CourseLab assignment = new CourseLab();
+    assignment.setLab(lab);
+    course.addCourseChallenge(assignment);
+
+    Challenge optionChallenge =
+        buildCourseChallenge(
+            optionChallengeId, lab, "Pick one", ChallengeType.MULTIPLE_CHOICE, 2);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
+        .thenReturn(true);
+    when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId)).thenReturn(List.of(optionChallenge));
+    when(challengeCompletionRepository.findSolvedChallengeIds(participantId, List.of(optionChallengeId)))
+        .thenReturn(List.of(optionChallengeId));
+    when(studentOptionSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.empty());
+    when(studentFlagSubmissionRepository.findByUserIdAndChallengeId(participantId, optionChallengeId))
+        .thenReturn(Optional.empty());
+    when(
+            courseChallengeScoreOverrideRepository.findPointsForCourseParticipantsAndChallenges(
+                courseId, List.of(participantId), List.of(optionChallengeId)))
+        .thenReturn(List.of());
+    when(
+            challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+                List.of(participantId), List.of(labId)))
+        .thenReturn(List.<Object[]>of(new Object[] {participantId, labId, 1L, completedAt}));
+
+    var detail =
+        courseService.getCourseLabSubmissionDetails(instructorId, courseId, participantId, labId);
+
+    assertThat(detail.getStatus()).isEqualTo(CourseLabSubmissionStatusEnum.SUBMITTED);
+    assertThat(detail.getAwardedPoints()).isZero();
+    assertThat(detail.getChallenges()).singleElement().satisfies(challenge -> {
+      assertThat(challenge.getCorrect()).isNull();
+      assertThat(challenge.getAwardedPoints()).isZero();
+    });
+  }
+
+  @Test
   void getCourseLabSubmissionDetails_whenLabNotAssigned_throwsLabNotFound() {
     UUID instructorId = UUID.randomUUID();
     UUID participantId = UUID.randomUUID();

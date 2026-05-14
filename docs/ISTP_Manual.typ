@@ -373,7 +373,7 @@ This section describes the platform from a student's perspective — from creati
 
 Open the platform at `https://istp.pm4.init-lab.ch`. Click *Sign in* to be redirected to the Keycloak login page.
 
-*New account:* Click *Register* on the Keycloak login page. Fill in your first name, last name, university email address, and a password. After submitting, Keycloak sends a verification email to the provided address. The account is only active after clicking the confirmation link in that email.
+*New account:* Click *Register* on the Keycloak login page. Fill in your first name, last name, email address, and a password. After submitting, Keycloak sends a verification email to the provided address. The account is only active after clicking the confirmation link in that email.
 
 *Password requirements:* minimum 8 characters, at least one uppercase letter, one digit, and one special character. The password may not contain your username.
 
@@ -483,6 +483,32 @@ ISTP supports *course completion badges*. A badge represents “user X completed
 == Configuring a Challenge (Ports, Environment Variables, Image)
 
 == Publishing & Archiving a Challenge
+
+== Labs
+
+Labs are the core learning units of the platform. Each lab consists of a Docker image that runs as a Kubernetes pod, one or more challenges, and optional metadata such as difficulty level and a time limit (TTL).
+
+=== Example: LLM01 — Prompt Injection
+
+As part of this project, the "LLM01 — Prompt Injection" lab was implemented as a concrete example of what the platform supports. The lab presents students with an LLM-powered chat interface and challenges them to extract a hidden flag through prompt injection techniques — a real-world vulnerability class described in the OWASP LLM Top 10.
+
+The lab demonstrates that labs can integrate external AI services via API. In this case the lab uses #link("https://groq.com")[Groq], a free LLM inference API, to power the chat interface. The following free-tier limits apply and are sufficient for CTF usage with around 20–30 concurrent students:
+
+#figure(
+  table(
+    columns: (1fr, auto),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    fill: (col, row) => if row == 0 { luma(230) } else { white },
+    [*Limit*], [*Value*],
+    [Requests per minute], [30],
+    [Requests per day], [14,400],
+    [Tokens per minute], [500,000],
+  ),
+  caption: [Groq free-tier limits],
+)
+
+The backend and database already support injecting external secrets (such as API keys) as environment variables into lab pods. This mechanism was introduced specifically for this lab. A dedicated instructor UI for configuring this per lab is not yet implemented and is out of scope for the current project submission.
 
 == Creating a Course & Adding Challenges
 
