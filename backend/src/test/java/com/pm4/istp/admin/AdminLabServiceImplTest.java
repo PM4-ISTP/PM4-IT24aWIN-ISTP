@@ -95,7 +95,6 @@ class AdminChallengeServiceImplTest {
 
     AdminUpdateLabRequestDto request = new AdminUpdateLabRequestDto();
     request.setTitle("Updated Title");
-    request.setShortDescription("  short  ");
     request.setDescription("Full description");
     request.setStatus(LabStatusEnum.PUBLIC);
     request.setDifficulty(LabDifficultyEnum.HARD);
@@ -111,7 +110,6 @@ class AdminChallengeServiceImplTest {
     Lab saved = captor.getValue();
 
     assertThat(saved.getTitle()).isEqualTo("Updated Title");
-    assertThat(saved.getShortDescription()).isEqualTo("short");
     assertThat(saved.getDescription()).isEqualTo("Full description");
     assertThat(saved.getStatus()).isEqualTo(LabStatusEnum.PUBLIC);
     assertThat(saved.getDifficulty()).isEqualTo(LabDifficultyEnum.HARD);
@@ -138,30 +136,6 @@ class AdminChallengeServiceImplTest {
     ArgumentCaptor<Lab> captor = ArgumentCaptor.forClass(Lab.class);
     verify(labRepository).save(captor.capture());
     assertThat(captor.getValue().getMaxScore()).isEqualTo(42);
-  }
-
-  @Test
-  void updateChallenge_withBlankShortDescription_normalizesToNull() {
-    UUID id = UUID.randomUUID();
-    Lab lab = new Lab();
-    lab.setId(id);
-    lab.setMaxScore(0);
-
-    AdminUpdateLabRequestDto request = new AdminUpdateLabRequestDto();
-    request.setTitle("Title");
-    request.setShortDescription("   ");
-    request.setStatus(LabStatusEnum.PUBLIC);
-    request.setDifficulty(LabDifficultyEnum.MEDIUM);
-
-    when(labRepository.findById(id)).thenReturn(Optional.of(lab));
-    when(labRepository.save(any(Lab.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
-
-    adminChallengeService.updateChallenge(id, request);
-
-    ArgumentCaptor<Lab> captor = ArgumentCaptor.forClass(Lab.class);
-    verify(labRepository).save(captor.capture());
-    assertThat(captor.getValue().getShortDescription()).isNull();
   }
 
   @Test
