@@ -593,8 +593,7 @@ public class CourseServiceImpl implements CourseService {
     boolean completed = solvedIds.contains(challengeId);
     Integer override = overridePointsByChallenge.get(challengeId);
     int awarded = awardedPoints(challenge, completed, override, evidence, mcAttemptsMode);
-    SubmissionDisplay display =
-        submissionDisplay(challenge, completed, evidence, mcAttemptsMode);
+    SubmissionDisplay display = submissionDisplay(challenge, completed, evidence, mcAttemptsMode);
 
     CourseLabChallengeSubmissionDetailDto dto =
         new CourseLabChallengeSubmissionDetailDto(
@@ -626,7 +625,8 @@ public class CourseServiceImpl implements CourseService {
         return option.isCorrect() ? challenge.getPoints() : 0;
       }
       // In UNLIMITED mode a MULTIPLE_CHOICE completion implies correctness. This also keeps older /
-      // inconsistent data (completion without stored submission) from showing "correct" but 0 points.
+      // inconsistent data (completion without stored submission) from showing "correct" but 0
+      // points.
       return completed && mcAttemptsMode == McAttemptsMode.UNLIMITED ? challenge.getPoints() : 0;
     }
     return completed ? challenge.getPoints() : 0;
@@ -652,7 +652,9 @@ public class CourseServiceImpl implements CourseService {
 
     if (challenge.getType() == ChallengeType.MULTIPLE_CHOICE) {
       return new SubmissionDisplay(
-          completed && mcAttemptsMode == McAttemptsMode.UNLIMITED ? Boolean.TRUE : null, null, null);
+          completed && mcAttemptsMode == McAttemptsMode.UNLIMITED ? Boolean.TRUE : null,
+          null,
+          null);
     }
     return new SubmissionDisplay(completed ? Boolean.TRUE : null, null, null);
   }
