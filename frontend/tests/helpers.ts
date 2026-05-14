@@ -54,6 +54,17 @@ export async function loginAs(page: Page, user: TestUser) {
   await page.waitForURL(/\/dashboard(?:\/.*)?$/);
 }
 
+export async function clickNavbarButton(
+  page: Page,
+  buttonText: string,
+  expectedUrl: string,
+  buttonIndex = 0
+) {
+  const navbar = page.getByRole("navigation");
+  await navbar.getByRole("link", { name: buttonText }).nth(buttonIndex).click();
+  await page.waitForURL(expectedUrl);
+}
+
 export async function expectApiSuccess(
   page: Page,
   trigger: () => Promise<void>,
