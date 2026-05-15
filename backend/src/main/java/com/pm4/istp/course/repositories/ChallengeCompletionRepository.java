@@ -66,4 +66,12 @@ public interface ChallengeCompletionRepository extends JpaRepository<ChallengeCo
       )
       """)
   long countCompletedChallenges(@Param("userId") UUID userId);
+
+  @Query(
+      """
+      select count(c) > 0
+      from ChallengeCompletion c
+      where c.challenge.lab.id = :labId
+      """)
+  boolean existsByLabId(@Param("labId") UUID labId);
 }

@@ -1124,6 +1124,30 @@ class CourseServiceImplTest {
   }
 
   @Test
+  void updateCourseChallenges_rejectsArchivedChallengeEvenFromOwnCreator() {
+    UUID ownerId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+
+    User owner = new User();
+    owner.setId(ownerId);
+
+    Course course = buildCourseWithOwner(courseId, owner);
+    Lab lab = buildChallenge(labId, owner, LabStatusEnum.ARCHIVED);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+
+    List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
+
+    assertThatThrownBy(() -> courseService.updateCourseChallenges(ownerId, courseId, items))
+        .isInstanceOf(InvalidCourseLabException.class)
+        .hasMessageContaining("archived");
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
   void updateCourseChallenges_rejectsPrivateChallengeFromOtherCreator() {
     UUID ownerId = UUID.randomUUID();
     UUID otherCreatorId = UUID.randomUUID();

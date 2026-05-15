@@ -31,6 +31,7 @@ import com.pm4.istp.course.mappers.LabMapper;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.ChallengeOptionRepository;
 import com.pm4.istp.course.repositories.ChallengeRepository;
+import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
@@ -79,6 +80,7 @@ public class LabServiceImpl implements LabService {
   private final ChallengeCompletionRepository challengeCompletionRepository;
   private final StudentOptionSubmissionRepository studentOptionSubmissionRepository;
   private final StudentFlagSubmissionRepository studentFlagSubmissionRepository;
+  private final CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final LabMapper labMapper;
   private final DockerImageAvailabilityService dockerImageAvailabilityService;
@@ -309,7 +311,30 @@ public class LabServiceImpl implements LabService {
                 () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
+    deleteOrArchive(lab);
+  }
+
+  private void deleteOrArchive(Lab lab) {
+    if (hasRetainedHistory(lab.getId())) {
+      archive(lab);
+      return;
+    }
+
     labRepository.delete(lab);
+    labRepository.flush();
+  }
+
+  private boolean hasRetainedHistory(UUID labId) {
+    return courseLabRepository.countByChallengeId(labId) > 0
+        || challengeCompletionRepository.existsByLabId(labId)
+        || studentFlagSubmissionRepository.existsByLabId(labId)
+        || studentOptionSubmissionRepository.existsByLabId(labId)
+        || courseChallengeScoreOverrideRepository.existsByLabId(labId);
+  }
+
+  private void archive(Lab lab) {
+    lab.setStatus(LabStatusEnum.ARCHIVED);
+    labRepository.save(lab);
   }
 
   @Override
@@ -366,6 +391,11 @@ public class LabServiceImpl implements LabService {
             .findById(labId)
             .orElseThrow(
                 () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+
+    if (lab.getStatus() == LabStatusEnum.ARCHIVED) {
+      throw new LabAccessDeniedException(
+          String.format("Archived lab '%s' cannot be started or played", labId));
+    }
 
     boolean challengeBelongsToCourse =
         lab.getCourseLabs().stream().anyMatch(cc -> cc.getCourse().getId().equals(courseId));
