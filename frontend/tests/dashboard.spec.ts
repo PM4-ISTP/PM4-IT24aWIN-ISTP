@@ -1,23 +1,10 @@
 import test, { expect, type Page } from "@playwright/test";
-import { loginAs, TestUser } from "@/tests/helpers";
+import { assertCourseCards, type Course, loginAs, TestUser } from "@/tests/helpers";
 import testData from "@/tests/files/dashboard-test-data.json";
 import adminCourse01 from "@/tests/files/courses/admin_01.json";
 import instructorCourse01 from "@/tests/files/courses/instructor_01.json";
 import instructorCourse02 from "@/tests/files/courses/instructor_02.json";
 import instructorCourse04 from "@/tests/files/courses/instructor_04.json";
-
-type DashboardCourse = {
-  id?: string;
-  title?: string;
-  isPrivate?: boolean;
-  isPublished?: boolean;
-  topic?: string | null;
-  ownerName?: string | null;
-  ownerTitle?: string | null;
-  shortDescription?: string | null;
-  description?: string | null;
-  updatedAt?: string | null;
-};
 
 type Deadline = {
   courseId: string;
@@ -31,33 +18,8 @@ type RenderDashboardTestParameters = {
   roleName: string;
   user: TestUser;
   dataKey: keyof typeof testData.dashboardTestData;
-  displayedCourses: DashboardCourse[];
+  displayedCourses: Course[];
 };
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function getCourseStatusLabel(course: DashboardCourse): "Private" | "Published" | "Draft" {
-  if (course.isPrivate) return "Private";
-  if (course.isPublished) return "Published";
-  return "Draft";
-}
-
-function formatCourseDate(updatedAt?: string | null | number): string {
-  if (!updatedAt) {
-    return "No date specified";
-  }
-
-  return new Date(typeof updatedAt === "number" ? updatedAt : updatedAt).toLocaleDateString(
-    "de-CH",
-    {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }
-  );
-}
 
 function formatDeadlineDate(dueAt: string | number): string {
   return new Date(dueAt).toLocaleString("de-CH", {
@@ -71,63 +33,6 @@ function formatDeadlineDate(dueAt: string | number): string {
 
 function getHeroStatisticValue(page: Page, label: string) {
   return page.getByText(label, { exact: true }).first().locator("xpath=following-sibling::*[1]");
-}
-
-async function assertContinueLearning(page: Page, courses: DashboardCourse[]) {
-  const courseCards = page
-    .getByRole("button")
-    .filter({ has: page.getByText(/^(Private|Published|Draft)$/) });
-
-  if (courses.length === 0) {
-    await expect(page.getByText("No courses found", { exact: true })).toBeVisible();
-    await expect(courseCards).toHaveCount(0);
-    return;
-  }
-
-  await expect(courseCards).toHaveCount(courses.length);
-
-  const expectedTitles = courses
-    .map((course) => course.title ?? "")
-    .filter((title) => title.length > 0);
-  const titleOrderInUi = await courseCards.evaluateAll((buttons, titles) => {
-    const normalize = (value: string) => value.toLowerCase().replace(/\s+/g, " ").trim();
-    const normalizedTitles = titles.map((title) => ({ raw: title, normalized: normalize(title) }));
-    const found: string[] = [];
-
-    for (const button of buttons) {
-      const text = normalize(button.textContent ?? "");
-      const match = normalizedTitles.find((title) => text.includes(title.normalized));
-      if (match) {
-        found.push(match.raw);
-      }
-    }
-
-    return found;
-  }, expectedTitles);
-  expect(titleOrderInUi).toEqual(expectedTitles);
-
-  for (const course of courses) {
-    const title = course.title ?? "";
-    const card = courseCards.filter({ has: page.getByText(title, { exact: true }) }).first();
-
-    await expect(card, `Course card for "${title}" should be visible`).toBeVisible();
-    await expect(card.getByText(getCourseStatusLabel(course), { exact: true })).toBeVisible();
-    await expect(card.getByText(title, { exact: true })).toBeVisible();
-
-    if (course.topic) {
-      await expect(
-        card.getByText(new RegExp(`^${escapeRegExp(course.topic)}$`, "i"))
-      ).toBeVisible();
-    }
-
-    if (course.ownerName) {
-      await expect(card.getByText(course.ownerName, { exact: true })).toBeVisible();
-      await expect(card.getByText(course.ownerTitle ?? "", { exact: true })).toBeVisible();
-    }
-
-    await expect(card).toContainText(course.shortDescription ?? "");
-    await expect(card).toContainText(formatCourseDate(course.updatedAt));
-  }
 }
 
 async function assertUpcomingDeadlines(page: Page, visibleDeadlines: Deadline[]) {
@@ -214,7 +119,7 @@ test.describe("Dashboard widgets for all primary roles and a user without course
       const expectedData = testData.dashboardTestData[dataKey];
       const deadlines = expectedData.upcomingDeadlines;
 
-      await assertContinueLearning(page, displayedCourses);
+      await assertCourseCards(page, displayedCourses);
       await assertUpcomingDeadlines(page, deadlines);
 
       await expect(getHeroStatisticValue(page, "Enrolled Courses")).toHaveText(
