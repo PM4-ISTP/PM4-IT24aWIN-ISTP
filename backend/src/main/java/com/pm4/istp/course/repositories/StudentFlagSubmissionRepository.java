@@ -23,4 +23,12 @@ public interface StudentFlagSubmissionRepository
       """)
   List<Object[]> findForUserAndChallenges(
       @Param("userId") UUID userId, @Param("challengeIds") Collection<UUID> challengeIds);
+
+  @Query(
+      """
+      select count(s) > 0
+      from StudentFlagSubmission s
+      where s.challenge.lab.id = :labId
+      """)
+  boolean existsByLabId(@Param("labId") UUID labId);
 }
