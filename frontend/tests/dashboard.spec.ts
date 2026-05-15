@@ -56,9 +56,7 @@ function getCoursePreviewText(course: DashboardCourse): string {
   }
 
   return normalizeWhitespace(
-    (course.description ?? "")
-      .replace(/<\/(p|h[1-6]|li|br|div)>/gi, " ")
-      .replace(/<[^>]*>/g, " ")
+    (course.description ?? "").replace(/<\/(p|h[1-6]|li|br|div)>/gi, " ").replace(/<[^>]*>/g, " ")
   );
 }
 
@@ -85,10 +83,7 @@ function formatDeadlineDate(dueAt: string): string {
 }
 
 function getHeroStatisticValue(page: Page, label: string) {
-  return page
-    .getByText(label, { exact: true })
-    .first()
-    .locator("xpath=following-sibling::*[1]");
+  return page.getByText(label, { exact: true }).first().locator("xpath=following-sibling::*[1]");
 }
 
 async function getJson<T>(page: Page, path: string): Promise<T> {
@@ -110,25 +105,24 @@ async function assertContinueLearning(page: Page, courses: DashboardCourse[]) {
 
   await expect(courseCards).toHaveCount(courses.length);
 
-  const expectedTitles = courses.map((course) => course.title ?? "").filter((title) => title.length > 0);
-  const titleOrderInUi = await courseCards.evaluateAll(
-    (buttons, titles) => {
-      const normalize = (value: string) => value.toLowerCase().replace(/\s+/g, " ").trim();
-      const normalizedTitles = titles.map((title) => ({ raw: title, normalized: normalize(title) }));
-      const found: string[] = [];
+  const expectedTitles = courses
+    .map((course) => course.title ?? "")
+    .filter((title) => title.length > 0);
+  const titleOrderInUi = await courseCards.evaluateAll((buttons, titles) => {
+    const normalize = (value: string) => value.toLowerCase().replace(/\s+/g, " ").trim();
+    const normalizedTitles = titles.map((title) => ({ raw: title, normalized: normalize(title) }));
+    const found: string[] = [];
 
-      for (const button of buttons) {
-        const text = normalize(button.textContent ?? "");
-        const match = normalizedTitles.find((title) => text.includes(title.normalized));
-        if (match) {
-          found.push(match.raw);
-        }
+    for (const button of buttons) {
+      const text = normalize(button.textContent ?? "");
+      const match = normalizedTitles.find((title) => text.includes(title.normalized));
+      if (match) {
+        found.push(match.raw);
       }
+    }
 
-      return found;
-    },
-    expectedTitles
-  );
+    return found;
+  }, expectedTitles);
   expect(titleOrderInUi).toEqual(expectedTitles);
 
   for (const course of courses) {
@@ -140,12 +134,16 @@ async function assertContinueLearning(page: Page, courses: DashboardCourse[]) {
     await expect(card.getByText(title, { exact: true })).toBeVisible();
 
     if (course.topic) {
-      await expect(card.getByText(new RegExp(`^${escapeRegExp(course.topic)}$`, "i"))).toBeVisible();
+      await expect(
+        card.getByText(new RegExp(`^${escapeRegExp(course.topic)}$`, "i"))
+      ).toBeVisible();
     }
 
     if (course.ownerName) {
       await expect(card.getByText(course.ownerName, { exact: true })).toBeVisible();
-      await expect(card.getByText(course.ownerTitle ?? "Instructor", { exact: true })).toBeVisible();
+      await expect(
+        card.getByText(course.ownerTitle ?? "Instructor", { exact: true })
+      ).toBeVisible();
     }
 
     const preview = getCoursePreviewText(course);
@@ -172,7 +170,6 @@ function normalizeDeadlines(deadlines: DeadlineDto[]): NormalizedDeadline[] {
 }
 
 async function assertUpcomingDeadlines(page: Page, rawDeadlines: DeadlineDto[]) {
-
   const now = Date.now();
   const visibleDeadlines = normalizeDeadlines(rawDeadlines);
 
@@ -187,7 +184,9 @@ async function assertUpcomingDeadlines(page: Page, rawDeadlines: DeadlineDto[]) 
   const expectedOrder = [...overdue, ...due];
 
   if (expectedOrder.length === 0) {
-    await expect(page.getByText("No deadlines set for your enrolled courses.", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("No deadlines set for your enrolled courses.", { exact: true })
+    ).toBeVisible();
     await expect(page.locator('[title="Aus Kalender entfernen"]')).toHaveCount(0);
     return;
   }
@@ -234,11 +233,16 @@ const DASHBOARD_ROLE_CASES: Array<{ roleName: string; user: TestUser }> = [
 test.describe("Dashboard widgets for all primary roles", () => {
   // Group: End-to-end dashboard checks (cards, deadlines, hero stats, and empty active labs) per role.
   for (const { roleName, user } of DASHBOARD_ROLE_CASES) {
-    test(`Dashboard data for ${roleName} matches backend sources and ordering rules`, async ({ page }) => {
+    test(`Dashboard data for ${roleName} matches backend sources and ordering rules`, async ({
+      page,
+    }) => {
       await loginAs(page, user);
 
       const [enrollments, deadlines, completedLabs, runningPods] = await Promise.all([
-        getJson<EnrollmentsResponse>(page, "/api/backend/api/v1/courses/my-enrollments?page=0&size=3"),
+        getJson<EnrollmentsResponse>(
+          page,
+          "/api/backend/api/v1/courses/my-enrollments?page=0&size=3"
+        ),
         getJson<DeadlineDto[]>(page, "/api/backend/api/v1/courses/my-deadlines"),
         getJson<{ count?: number }>(page, "/api/backend/api/v1/labs/my-completed-count"),
         getJson<Array<{ labId?: string }>>(page, "/api/backend/api/v1/lab-pods"),
