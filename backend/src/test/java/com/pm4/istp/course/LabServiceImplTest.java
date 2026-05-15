@@ -52,6 +52,7 @@ import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.mappers.LabMapper;
 import com.pm4.istp.course.repositories.LabRepository;
+import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
 import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
 import com.pm4.istp.course.repositories.CourseRepository;
@@ -81,6 +82,7 @@ class ChallengeServiceImplTest {
   @Mock private ChallengeCompletionRepository challengeCompletionRepository;
   @Mock private StudentOptionSubmissionRepository studentOptionSubmissionRepository;
   @Mock private StudentFlagSubmissionRepository studentFlagSubmissionRepository;
+  @Mock private CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
   @Mock private CourseEnrollmentRepository courseEnrollmentRepository;
   @Mock private LabMapper labMapper;
   @Mock private DockerImageAvailabilityService dockerImageAvailabilityService;
@@ -657,6 +659,24 @@ class ChallengeServiceImplTest {
     labService.deleteChallenge(creatorId, labId);
 
     verify(labRepository).delete(lab);
+    verify(labRepository).flush();
+  }
+
+  @Test
+  void deleteChallenge_whenLabHasCourseHistory_archivesInsteadOfDeleting() {
+    UUID creatorId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    User creator = buildUser(creatorId);
+    Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
+
+    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(courseLabRepository.countByChallengeId(labId)).thenReturn(1L);
+
+    labService.deleteChallenge(creatorId, labId);
+
+    assertThat(lab.getStatus()).isEqualTo(LabStatusEnum.ARCHIVED);
+    verify(labRepository).save(lab);
+    verify(labRepository, never()).delete(any(Lab.class));
   }
 
   @Test

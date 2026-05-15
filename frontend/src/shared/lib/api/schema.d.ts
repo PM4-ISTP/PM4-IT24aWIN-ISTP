@@ -1142,7 +1142,7 @@ export interface components {
       title: string;
       description?: string;
       /** @enum {string} */
-      status: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status: "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage: string;
@@ -1163,7 +1163,7 @@ export interface components {
       title?: string;
       description?: string;
       /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
@@ -1382,7 +1382,7 @@ export interface components {
       title: string;
       description?: string;
       /** @enum {string} */
-      status: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status: "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
     };
@@ -1419,7 +1419,7 @@ export interface components {
       title: string;
       description?: string;
       /** @enum {string} */
-      status: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status: "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage: string;
@@ -1435,7 +1435,7 @@ export interface components {
       title?: string;
       description?: string;
       /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
@@ -1588,7 +1588,7 @@ export interface components {
       title?: string;
       description?: string;
       /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage?: string;
@@ -1734,7 +1734,7 @@ export interface components {
       id?: string;
       title?: string;
       /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
@@ -1957,7 +1957,7 @@ export interface components {
       title?: string;
       description?: string;
       /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage?: string;
@@ -3591,7 +3591,7 @@ export interface operations {
   getVisibilityImpact: {
     parameters: {
       query: {
-        status: "DRAFT" | "PRIVATE" | "PUBLIC";
+        status: "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
       };
       header?: never;
       path: {

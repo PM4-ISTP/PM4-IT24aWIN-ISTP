@@ -13,7 +13,12 @@ import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabDifficultyEnum;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
+import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
+import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
+import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.repositories.LabRepository;
+import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
+import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,6 +37,11 @@ import org.springframework.data.domain.Pageable;
 class AdminChallengeServiceImplTest {
 
   @Mock private LabRepository labRepository;
+  @Mock private CourseLabRepository courseLabRepository;
+  @Mock private ChallengeCompletionRepository challengeCompletionRepository;
+  @Mock private StudentFlagSubmissionRepository studentFlagSubmissionRepository;
+  @Mock private StudentOptionSubmissionRepository studentOptionSubmissionRepository;
+  @Mock private CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
 
   @InjectMocks private AdminLabServiceImpl adminChallengeService;
 
@@ -167,6 +177,23 @@ class AdminChallengeServiceImplTest {
     adminChallengeService.deleteChallenge(id);
 
     verify(labRepository).delete(lab);
+    verify(labRepository).flush();
+  }
+
+  @Test
+  void deleteChallenge_whenLabHasCourseHistory_archivesInsteadOfDeleting() {
+    UUID id = UUID.randomUUID();
+    Lab lab = new Lab();
+    lab.setId(id);
+    lab.setStatus(LabStatusEnum.PUBLIC);
+    when(labRepository.findById(id)).thenReturn(Optional.of(lab));
+    when(courseLabRepository.countByChallengeId(id)).thenReturn(1L);
+
+    adminChallengeService.deleteChallenge(id);
+
+    assertThat(lab.getStatus()).isEqualTo(LabStatusEnum.ARCHIVED);
+    verify(labRepository).save(lab);
+    verify(labRepository, never()).delete(any());
   }
 
   @Test
