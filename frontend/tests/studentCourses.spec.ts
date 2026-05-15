@@ -1,5 +1,11 @@
 import test from "@playwright/test";
-import { assertCourseCards, clickNavbarButton, Course, loginAs, TestUser } from "@/tests/helpers";
+import {
+  assertCourseCards,
+  clickNavbarButton,
+  type Course,
+  loginAs,
+  TestUser,
+} from "@/tests/helpers";
 import adminCourse01 from "@/tests/files/courses/admin_01.json";
 import instructorCourse01 from "@/tests/files/courses/instructor_01.json";
 import instructorCourse02 from "@/tests/files/courses/instructor_02.json";
