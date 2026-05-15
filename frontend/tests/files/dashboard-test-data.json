@@ -1,0 +1,77 @@
+{
+  "dashboardTestData": {
+    "student": {
+      "enrolledCoursesCount": 4,
+      "completedLabsCount": 0,
+      "upcomingDeadlines": [
+        {
+          "courseId": "e2bf8cc9-366f-4617-a12b-245507395be9",
+          "courseTitle": "E2E Test Course: Instructor 01",
+          "labId": "4ad6bb3d-2fc4-4e45-848a-e044410d11f6",
+          "labTitle": "E2E Test Lab: Instructor 02",
+          "dueAt": "2000-01-01T11:00:00"
+        },
+        {
+          "courseId": "e2bf8cc9-366f-4617-a12b-245507395be9",
+          "courseTitle": "E2E Test Course: Instructor 01",
+          "labId": "61b8867c-14d6-4a1e-b405-6238ef82513d",
+          "labTitle": "E2E Test Lab: Instructor 01",
+          "dueAt": "2100-01-01T11:00:00"
+        },
+        {
+          "courseId": "5c23ae34-88af-4d46-96e5-a412d019a97b",
+          "courseTitle": "E2E Test Course: Instructor 02",
+          "labId": "e93b357d-b0f7-4f51-8abf-d6b1890cdb75",
+          "labTitle": "E2E Test Lab: Admin 01",
+          "dueAt": "2100-01-01T13:00:00"
+        },
+        {
+          "courseId": "e2bf8cc9-366f-4617-a12b-245507395be9",
+          "courseTitle": "E2E Test Course: Instructor 01",
+          "labId": "2d975668-2741-4d61-b02e-24cd2528a480",
+          "labTitle": "E2E Test Lab: Instructor 03",
+          "dueAt": "2100-01-02T11:00:00"
+        },
+        {
+          "courseId": "5c23ae34-88af-4d46-96e5-a412d019a97b",
+          "courseTitle": "E2E Test Course: Instructor 02",
+          "labId": "4ad6bb3d-2fc4-4e45-848a-e044410d11f6",
+          "labTitle": "E2E Test Lab: Instructor 02",
+          "dueAt": "2100-01-02T13:00:00"
+        }
+      ]
+    },
+    "instructor": {
+      "enrolledCoursesCount": 3,
+      "completedLabsCount": 2,
+      "upcomingDeadlines": [
+        {
+          "courseId": "e2bf8cc9-366f-4617-a12b-245507395be9",
+          "courseTitle": "E2E Test Course: Instructor 01",
+          "labId": "4ad6bb3d-2fc4-4e45-848a-e044410d11f6",
+          "labTitle": "E2E Test Lab: Instructor 02",
+          "dueAt": "2000-01-01T11:00:00"
+        },
+        {
+          "courseId": "e2bf8cc9-366f-4617-a12b-245507395be9",
+          "courseTitle": "E2E Test Course: Instructor 01",
+          "labId": "61b8867c-14d6-4a1e-b405-6238ef82513d",
+          "labTitle": "E2E Test Lab: Instructor 01",
+          "dueAt": "2100-01-01T11:00:00"
+        },
+        {
+          "courseId": "5c23ae34-88af-4d46-96e5-a412d019a97b",
+          "courseTitle": "E2E Test Course: Instructor 02",
+          "labId": "4ad6bb3d-2fc4-4e45-848a-e044410d11f6",
+          "labTitle": "E2E Test Lab: Instructor 02",
+          "dueAt": "2100-01-02T13:00:00"
+        }
+      ]
+    },
+    "admin": {
+      "enrolledCoursesCount": 1,
+      "completedLabsCount": 0,
+      "upcomingDeadlines": []
+    }
+  }
+}

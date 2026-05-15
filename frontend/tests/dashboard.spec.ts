@@ -1,5 +1,10 @@
 import test, { expect, type Page } from "@playwright/test";
 import { loginAs, TestUser } from "@/tests/helpers";
+import testData from "@/tests/files/dashboard-test-data.json";
+import adminCourse01 from "@/tests/files/courses/admin_01.json";
+import instructorCourse01 from "@/tests/files/courses/instructor_01.json";
+import instructorCourse02 from "@/tests/files/courses/instructor_02.json";
+import instructorCourse04 from "@/tests/files/courses/instructor_04.json";
 
 type DashboardCourse = {
   id?: string;
@@ -14,20 +19,7 @@ type DashboardCourse = {
   updatedAt?: string | null;
 };
 
-type EnrollmentsResponse = {
-  content?: DashboardCourse[];
-  totalElements?: number;
-};
-
-type DeadlineDto = {
-  courseId?: string;
-  courseTitle?: string;
-  labId?: string;
-  labTitle?: string;
-  dueAt?: string;
-};
-
-type NormalizedDeadline = {
+type Deadline = {
   courseId: string;
   courseTitle: string;
   labId: string;
@@ -35,9 +27,12 @@ type NormalizedDeadline = {
   dueAt: string;
 };
 
-function normalizeWhitespace(value: string): string {
-  return value.replace(/\s+/g, " ").trim();
-}
+type RenderDashboardTestParameters = {
+  roleName: string;
+  user: TestUser;
+  dataKey: keyof typeof testData.dashboardTestData;
+  displayedCourses: DashboardCourse[];
+};
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -49,30 +44,22 @@ function getCourseStatusLabel(course: DashboardCourse): "Private" | "Published" 
   return "Draft";
 }
 
-function getCoursePreviewText(course: DashboardCourse): string {
-  const normalizedShortDescription = normalizeWhitespace(course.shortDescription ?? "");
-  if (normalizedShortDescription) {
-    return normalizedShortDescription;
-  }
-
-  return normalizeWhitespace(
-    (course.description ?? "").replace(/<\/(p|h[1-6]|li|br|div)>/gi, " ").replace(/<[^>]*>/g, " ")
-  );
-}
-
-function formatCourseDate(updatedAt?: string | null): string {
+function formatCourseDate(updatedAt?: string | null | number): string {
   if (!updatedAt) {
     return "No date specified";
   }
 
-  return new Date(updatedAt).toLocaleDateString("de-CH", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return new Date(typeof updatedAt === "number" ? updatedAt : updatedAt).toLocaleDateString(
+    "de-CH",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }
+  );
 }
 
-function formatDeadlineDate(dueAt: string): string {
+function formatDeadlineDate(dueAt: string | number): string {
   return new Date(dueAt).toLocaleString("de-CH", {
     day: "2-digit",
     month: "2-digit",
@@ -84,12 +71,6 @@ function formatDeadlineDate(dueAt: string): string {
 
 function getHeroStatisticValue(page: Page, label: string) {
   return page.getByText(label, { exact: true }).first().locator("xpath=following-sibling::*[1]");
-}
-
-async function getJson<T>(page: Page, path: string): Promise<T> {
-  const response = await page.request.get(path);
-  expect(response.ok(), `GET ${path} should succeed`).toBeTruthy();
-  return (await response.json()) as T;
 }
 
 async function assertContinueLearning(page: Page, courses: DashboardCourse[]) {
@@ -141,46 +122,22 @@ async function assertContinueLearning(page: Page, courses: DashboardCourse[]) {
 
     if (course.ownerName) {
       await expect(card.getByText(course.ownerName, { exact: true })).toBeVisible();
-      await expect(
-        card.getByText(course.ownerTitle ?? "Instructor", { exact: true })
-      ).toBeVisible();
+      await expect(card.getByText(course.ownerTitle ?? "", { exact: true })).toBeVisible();
     }
 
-    const preview = getCoursePreviewText(course);
-    if (preview) {
-      await expect(card).toContainText(preview.slice(0, 40));
-    }
-
+    await expect(card).toContainText(course.shortDescription ?? "");
     await expect(card).toContainText(formatCourseDate(course.updatedAt));
   }
 }
 
-function normalizeDeadlines(deadlines: DeadlineDto[]): NormalizedDeadline[] {
-  return deadlines
-    .filter((item) => item.courseId && item.labId && item.dueAt)
-    .map((item) => ({
-      courseId: String(item.courseId),
-      courseTitle: String(item.courseTitle ?? ""),
-      labId: String(item.labId),
-      labTitle: String(item.labTitle ?? ""),
-      dueAt: String(item.dueAt),
-    }))
-    .filter((item) => !Number.isNaN(new Date(item.dueAt).getTime()))
-    .slice(0, 8);
-}
-
-async function assertUpcomingDeadlines(page: Page, rawDeadlines: DeadlineDto[]) {
+async function assertUpcomingDeadlines(page: Page, visibleDeadlines: Deadline[]) {
   const now = Date.now();
-  const visibleDeadlines = normalizeDeadlines(rawDeadlines);
-
   const overdue = visibleDeadlines
     .filter((item) => new Date(item.dueAt).getTime() < now)
     .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
-
   const due = visibleDeadlines
     .filter((item) => new Date(item.dueAt).getTime() >= now)
     .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
-
   const expectedOrder = [...overdue, ...due];
 
   if (expectedOrder.length === 0) {
@@ -211,7 +168,7 @@ async function assertUpcomingDeadlines(page: Page, rawDeadlines: DeadlineDto[]) 
     await expect(rowLink).toBeVisible();
     await expect(rowLink).toHaveText(item.labTitle);
     await expect(rowLink).toHaveAttribute("href", href);
-    await expect(row).toContainText(item.courseTitle || "-");
+    await expect(row).toContainText(item.courseTitle);
 
     const isOverdue = new Date(item.dueAt).getTime() < now;
     await expect(row.getByText(isOverdue ? "OVERDUE" : "DUE", { exact: true })).toBeVisible();
@@ -224,42 +181,47 @@ async function assertUpcomingDeadlines(page: Page, rawDeadlines: DeadlineDto[]) 
   await expect(page.locator('[title="Aus Kalender entfernen"]')).toHaveCount(overdue.length);
 }
 
-const DASHBOARD_ROLE_CASES: Array<{ roleName: string; user: TestUser }> = [
-  { roleName: "Instructor", user: TestUser.Instructor },
-  { roleName: "Admin", user: TestUser.Admin },
-  { roleName: "Student", user: TestUser.Student },
+const DASHBOARD_ROLE_CASES: Array<RenderDashboardTestParameters> = [
+  {
+    roleName: "Instructor",
+    user: TestUser.Instructor,
+    dataKey: "instructor",
+    displayedCourses: [instructorCourse02, instructorCourse04, instructorCourse01],
+  },
+  { roleName: "Admin", user: TestUser.Admin, dataKey: "admin", displayedCourses: [adminCourse01] },
+  {
+    roleName: "Student",
+    user: TestUser.Student,
+    dataKey: "student",
+    displayedCourses: [instructorCourse02, instructorCourse04, adminCourse01],
+  },
 ];
 
 test.describe("Dashboard widgets for all primary roles", () => {
   // Group: End-to-end dashboard checks (cards, deadlines, hero stats, and empty active labs) per role.
-  for (const { roleName, user } of DASHBOARD_ROLE_CASES) {
-    test(`Dashboard data for ${roleName} matches backend sources and ordering rules`, async ({
+  for (const { roleName, user, dataKey, displayedCourses } of DASHBOARD_ROLE_CASES) {
+    test(`Dashboard data for ${roleName} matches expected test data and ordering rules`, async ({
       page,
     }) => {
       await loginAs(page, user);
 
-      const [enrollments, deadlines, completedLabs, runningPods] = await Promise.all([
-        getJson<EnrollmentsResponse>(
-          page,
-          "/api/backend/api/v1/courses/my-enrollments?page=0&size=3"
-        ),
-        getJson<DeadlineDto[]>(page, "/api/backend/api/v1/courses/my-deadlines"),
-        getJson<{ count?: number }>(page, "/api/backend/api/v1/labs/my-completed-count"),
-        getJson<Array<{ labId?: string }>>(page, "/api/backend/api/v1/lab-pods"),
-      ]);
+      const expectedData = testData.dashboardTestData[dataKey];
+      const deadlines = expectedData.upcomingDeadlines;
 
-      const visibleCourses = enrollments.content ?? [];
-      await assertContinueLearning(page, visibleCourses);
+      await assertContinueLearning(page, displayedCourses);
       await assertUpcomingDeadlines(page, deadlines);
 
       await expect(getHeroStatisticValue(page, "Enrolled Courses")).toHaveText(
-        String(enrollments.totalElements ?? 0)
+        String(expectedData.enrolledCoursesCount)
       );
       await expect(getHeroStatisticValue(page, "Completed Labs")).toHaveText(
-        String(completedLabs.count ?? 0)
+        String(expectedData.completedLabsCount)
       );
 
-      expect(runningPods.length, "Expected no running lab pods for dashboard baseline").toBe(0);
+      // Verify no active labs
+      const runningPods = await page.request.get("/api/backend/api/v1/lab-pods");
+      const podsData = (await runningPods.json()) as Array<{ labId?: string }>;
+      expect(podsData.length, "Expected no running lab pods for dashboard baseline").toBe(0);
       await expect(page.getByText("No active labs", { exact: true })).toBeVisible();
     });
   }

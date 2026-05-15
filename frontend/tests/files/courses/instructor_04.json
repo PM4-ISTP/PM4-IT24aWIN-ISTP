@@ -1,0 +1,16 @@
+{
+  "id": "6fa36d31-2418-48af-afca-b8576ac978ec",
+  "title": "E2E Test Course: Instructor 04",
+  "description": "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 04</p>",
+  "shortDescription": "\"Instructor 04\" is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.",
+  "isPublished": true,
+  "isPrivate": false,
+  "createdAt": "2026-05-14T12:41:39.618199",
+  "updatedAt": "2026-05-15T11:23:59.909511",
+  "ownerId": "e4f2814e-0bd9-4fe9-acd3-8d08cfb11179",
+  "ownerName": "E2E Instructor",
+  "ownerUsername": "e2e-instructor",
+  "ownerTitle": "Test Instructor",
+  "private": false,
+  "published": true
+}
