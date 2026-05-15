@@ -1,5 +1,6 @@
 import test, { expect, type Page } from "@playwright/test";
-import { assertCourseCards, type Course, loginAs, TestUser } from "@/tests/helpers";
+import { assertCourseCards, type Course } from "@/tests/helpers/course";
+import { loginAs, TestUser } from "@/tests/helpers/auth";
 import testData from "@/tests/files/dashboard-test-data.json";
 import adminCourse01 from "@/tests/files/courses/admin_01.json";
 import instructorCourse01 from "@/tests/files/courses/instructor_01.json";

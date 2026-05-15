@@ -1,15 +1,11 @@
 import test from "@playwright/test";
-import {
-  assertCourseCards,
-  clickNavbarButton,
-  type Course,
-  loginAs,
-  TestUser,
-} from "@/tests/helpers";
+import { clickNavbarButton } from "@/tests/helpers/navigation";
 import adminCourse01 from "@/tests/files/courses/admin_01.json";
 import instructorCourse01 from "@/tests/files/courses/instructor_01.json";
 import instructorCourse02 from "@/tests/files/courses/instructor_02.json";
 import instructorCourse04 from "@/tests/files/courses/instructor_04.json";
+import { loginAs, TestUser } from "@/tests/helpers/auth";
+import { assertCourseCards, type Course } from "@/tests/helpers/course";
 
 const testUsers: { userDesription: string; user: TestUser; courses: Course[] }[] = [
   {

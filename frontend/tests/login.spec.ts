@@ -1,5 +1,5 @@
 import test, { expect, type Page } from "@playwright/test";
-import { loginAs, TestUser } from "@/tests/helpers";
+import { loginAs, TestUser } from "@/tests/helpers/auth";
 
 async function logInAndThenLogOut(page: Page, user: TestUser, username: string, userRole: string) {
   const userMenuTriggerId = "user-menu-trigger";

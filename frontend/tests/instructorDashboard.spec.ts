@@ -1,5 +1,6 @@
 import test, { expect } from "@playwright/test";
-import { clickNavbarButton, loginAs, TestUser } from "@/tests/helpers";
+import { clickNavbarButton } from "@/tests/helpers/navigation";
+import { loginAs, TestUser } from "@/tests/helpers/auth";
 
 test("Instructor dashboard (instructor courses tab) must be empty, if user is not an instructor of any courses.", async ({
   page,
