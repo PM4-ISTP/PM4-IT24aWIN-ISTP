@@ -1,5 +1,10 @@
 {
   "dashboardTestData": {
+    "instructorWithoutCoursesOrLabs": {
+      "enrolledCoursesCount": 0,
+      "completedLabsCount": 0,
+      "upcomingDeadlines": []
+    },
     "student": {
       "enrolledCoursesCount": 4,
       "completedLabsCount": 0,

@@ -195,9 +195,15 @@ const DASHBOARD_ROLE_CASES: Array<RenderDashboardTestParameters> = [
     dataKey: "student",
     displayedCourses: [instructorCourse02, instructorCourse04, adminCourse01],
   },
+  {
+    roleName: "Instructor (without courses or labs)",
+    user: TestUser.InstructorWithoutCoursesOrLabs,
+    dataKey: "instructorWithoutCoursesOrLabs",
+    displayedCourses: [],
+  },
 ];
 
-test.describe("Dashboard widgets for all primary roles", () => {
+test.describe("Dashboard widgets for all primary roles and a user without courses and deadlines", () => {
   // Group: End-to-end dashboard checks (cards, deadlines, hero stats, and empty active labs) per role.
   for (const { roleName, user, dataKey, displayedCourses } of DASHBOARD_ROLE_CASES) {
     test(`Dashboard data for ${roleName} matches expected test data and ordering rules`, async ({
