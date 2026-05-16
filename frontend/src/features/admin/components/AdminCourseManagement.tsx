@@ -245,8 +245,8 @@ export default function AdminCourseManagement() {
         )}
       </Group>
       <Text size="sm" c="dimmed">
-        Instructors can only soft-delete courses. Hard delete is managed from the Removed tab and
-        is only available when no related database dependencies exist.
+        Instructors can only soft-delete courses. Hard delete is managed from the Removed tab and is
+        only available when no related database dependencies exist.
       </Text>
 
       <Table

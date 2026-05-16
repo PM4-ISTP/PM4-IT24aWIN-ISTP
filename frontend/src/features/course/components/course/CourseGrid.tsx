@@ -105,10 +105,16 @@ export function CourseGrid({
 
   return (
     <Stack gap="lg">
-      <Modal opened={removeOpened} onClose={() => setRemoveOpened(false)} title="Remove Course" centered>
+      <Modal
+        opened={removeOpened}
+        onClose={() => setRemoveOpened(false)}
+        title="Remove Course"
+        centered
+      >
         <Stack gap="md">
           <Text size="sm">
-            Remove <strong>{selectedCourseTitle}</strong> from instructor dashboards? Students and instructors will no longer see it in active course lists.
+            Remove <strong>{selectedCourseTitle}</strong> from instructor dashboards? Students and
+            instructors will no longer see it in active course lists.
           </Text>
           {removeError ? (
             <Alert color="red" title="Could not remove course" variant="light">
@@ -119,7 +125,12 @@ export function CourseGrid({
             <Button variant="default" onClick={() => setRemoveOpened(false)} disabled={removing}>
               Cancel
             </Button>
-            <Button color="red" onClick={() => void confirmRemove()} loading={removing} disabled={removing}>
+            <Button
+              color="red"
+              onClick={() => void confirmRemove()}
+              loading={removing}
+              disabled={removing}
+            >
               Remove
             </Button>
           </Group>

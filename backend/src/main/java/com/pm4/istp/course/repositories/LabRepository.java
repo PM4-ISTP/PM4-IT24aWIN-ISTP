@@ -37,8 +37,8 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
            from Lab c
            where c.creator.id = :creatorId and c.deletedAt is null
            """,
-       countQuery =
-           """
+      countQuery =
+          """
            select count(c)
            from Lab c
            where c.creator.id = :creatorId and c.deletedAt is null

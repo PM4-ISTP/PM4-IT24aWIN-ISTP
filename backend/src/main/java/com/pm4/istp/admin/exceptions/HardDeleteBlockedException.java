@@ -5,4 +5,3 @@ public class HardDeleteBlockedException extends RuntimeException {
     super(message);
   }
 }
-

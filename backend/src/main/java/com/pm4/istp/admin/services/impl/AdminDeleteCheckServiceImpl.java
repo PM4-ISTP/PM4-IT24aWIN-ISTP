@@ -76,7 +76,8 @@ public class AdminDeleteCheckServiceImpl implements AdminDeleteCheckService {
     long courseAssignments = courseLabRepository.countByChallengeId(labId);
     if (courseAssignments > 0) {
       blockers.add(
-          new DeleteCheckBlockerDto("Lab is still assigned to one or more courses", courseAssignments));
+          new DeleteCheckBlockerDto(
+              "Lab is still assigned to one or more courses", courseAssignments));
     }
 
     long challengeCount = challengeRepository.countByLabId(labId);

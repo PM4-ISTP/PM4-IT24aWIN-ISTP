@@ -4,8 +4,8 @@ import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateCourseRequestDto;
 import com.pm4.istp.admin.dto.DeleteCheckResponseDto;
 import com.pm4.istp.admin.exceptions.HardDeleteBlockedException;
-import com.pm4.istp.admin.services.AdminDeleteCheckService;
 import com.pm4.istp.admin.services.AdminCourseService;
+import com.pm4.istp.admin.services.AdminDeleteCheckService;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.repositories.CourseRepository;
@@ -103,7 +103,8 @@ public class AdminCourseServiceImpl implements AdminCourseService {
 
     DeleteCheckResponseDto check = adminDeleteCheckService.checkCourse(courseId);
     if (!check.hardDeleteAllowed()) {
-      throw new HardDeleteBlockedException("Hard delete is blocked because related data still exists.");
+      throw new HardDeleteBlockedException(
+          "Hard delete is blocked because related data still exists.");
     }
     courseRepository.delete(course);
   }

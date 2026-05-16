@@ -8,4 +8,3 @@ public interface AdminDeleteCheckService {
 
   DeleteCheckResponseDto checkLab(UUID labId);
 }
-
