@@ -8,6 +8,15 @@
 // Type Definitions
 // ============================================================================
 
+export type Challenge = Readonly<{
+  id: string;
+  title: string;
+  points: number;
+  type: "FLAG" | "MULTIPLE_CHOICE";
+  orderIndex: number;
+  updatedAt: string;
+}>;
+
 export type Lab = Readonly<{
   id: string;
   title: string;
@@ -19,11 +28,18 @@ export type Lab = Readonly<{
   creatorName: string;
   courseCount: number;
   updatedAt: string;
+  challenges: readonly Challenge[];
 }>;
 
 export type LabAssignment = Readonly<{
   lab: Lab;
   dueAt: string;
+}>;
+
+export type ChallengeCompletion = Readonly<{
+  lab: Lab;
+  challenge: Challenge;
+  submittedAt: string;
 }>;
 
 export type User = Readonly<{
@@ -35,6 +51,7 @@ export type User = Readonly<{
   title: string;
   enrolledCourses: readonly Course[];
   completedLabs: readonly Lab[];
+  completedChallenges: readonly ChallengeCompletion[];
 }>;
 
 export type Course = Readonly<{
@@ -73,6 +90,7 @@ const adminUser: User = {
   title: "Test Administrator",
   enrolledCourses: [],
   completedLabs: [],
+  completedChallenges: [],
 };
 
 // Instructor User
@@ -85,6 +103,7 @@ const instructorUser: User = {
   title: "Test Instructor",
   enrolledCourses: [],
   completedLabs: [],
+  completedChallenges: [],
 };
 
 // Instructor Without Courses Or Labs (separate user with Instructor role)
@@ -101,6 +120,7 @@ const instructorWithoutCoursesOrLabsUser: User = {
   title: "Test Instructor",
   enrolledCourses: [],
   completedLabs: [],
+  completedChallenges: [],
 };
 
 // Student User
@@ -113,6 +133,7 @@ const studentUser: User = {
   title: "Student",
   enrolledCourses: [],
   completedLabs: [],
+  completedChallenges: [],
 };
 
 export const testUsers = {
@@ -121,6 +142,154 @@ export const testUsers = {
   instructorWithoutCoursesOrLabs: instructorWithoutCoursesOrLabsUser,
   student: studentUser,
 } as const;
+
+// ============================================================================
+// Challenge Definitions (E2E labs only)
+// ============================================================================
+
+const adminLab01Challenge01: Challenge = {
+  id: "73210587-0238-401f-9ccf-e22d4ae4710f",
+  title: "E2E Test Course: Admin 01 - Challenge 1",
+  points: 1,
+  type: "FLAG",
+  orderIndex: 0,
+  updatedAt: "2026-05-15T11:19:54.049359",
+};
+
+const instructorLab01Challenge01: Challenge = {
+  id: "0e14ca87-d2b5-45e9-ab04-92eaabbe29eb",
+  title: "E2E Test Course: Instructor 01 - Challenge 1",
+  points: 1,
+  type: "FLAG",
+  orderIndex: 0,
+  updatedAt: "2026-05-15T11:14:20.527435",
+};
+
+const instructorLab02Challenge01: Challenge = {
+  id: "f1d2e1c9-eefd-41f5-a195-e70282467a08",
+  title: "E2E Test Course: Instructor 02 - Challenge 1",
+  points: 3,
+  type: "FLAG",
+  orderIndex: 0,
+  updatedAt: "2026-05-15T11:32:08.776357",
+};
+
+const instructorLab02Challenge02: Challenge = {
+  id: "3951ffcd-33c7-4473-89ae-719cba79c651",
+  title: "E2E Test Course: Instructor 02 - Challenge 2",
+  points: 1,
+  type: "MULTIPLE_CHOICE",
+  orderIndex: 1,
+  updatedAt: "2026-05-15T11:32:08.771493",
+};
+
+const instructorLab02Challenge03: Challenge = {
+  id: "acecc0a4-cf6e-4d75-ad98-265874e2d232",
+  title: "E2E Test Course: Instructor 02 - Challenge 3",
+  points: 1,
+  type: "MULTIPLE_CHOICE",
+  orderIndex: 2,
+  updatedAt: "2026-05-15T11:32:08.774549",
+};
+
+const instructorLab03Challenge01: Challenge = {
+  id: "9e9026fd-99c1-4e92-b498-893a3596b28b",
+  title: "E2E Test Course: Instructor 03 - Challenge 1",
+  points: 1,
+  type: "FLAG",
+  orderIndex: 0,
+  updatedAt: "2026-05-15T11:28:07.33958",
+};
+
+const instructorLab03Challenge02: Challenge = {
+  id: "54cfcfbf-4baf-4ccd-aeae-90e8ad36acba",
+  title: "E2E Test Course: Instructor 03 - Challenge 2",
+  points: 3,
+  type: "MULTIPLE_CHOICE",
+  orderIndex: 1,
+  updatedAt: "2026-05-15T11:28:07.335503",
+};
+
+const instructorLab03Challenge03: Challenge = {
+  id: "c8087132-4aa1-4a9c-ab88-9aa16da20add",
+  title: "E2E Test Course: Instructor 03 - Challenge 3",
+  points: 2,
+  type: "FLAG",
+  orderIndex: 2,
+  updatedAt: "2026-05-15T11:28:07.338252",
+};
+
+const instructorLab04Challenge01: Challenge = {
+  id: "7820ac4e-c09b-4269-899a-2b58c7805d22",
+  title: "E2E Test Course: Instructor 04 - Challenge 1",
+  points: 1,
+  type: "FLAG",
+  orderIndex: 0,
+  updatedAt: "2026-05-15T11:16:23.82805",
+};
+
+const instructorLab05Challenge01: Challenge = {
+  id: "45268bd3-be53-4453-a4ef-96b158c2ddf5",
+  title: "E2E Test Course: Instructor 05 - Challenge 1",
+  points: 1,
+  type: "MULTIPLE_CHOICE",
+  orderIndex: 0,
+  updatedAt: "2026-05-16T15:31:31.595004",
+};
+
+const instructorLab06Challenge01: Challenge = {
+  id: "cbd4884f-0c34-4264-88db-60bb656c108e",
+  title: "E2E Test Course: Instructor 06 - Challenge 1",
+  points: 2,
+  type: "FLAG",
+  orderIndex: 0,
+  updatedAt: "2026-05-16T16:14:46.102053",
+};
+
+const instructorLab06Challenge02: Challenge = {
+  id: "324a2ab5-7654-4130-a640-75d5f6e90a59",
+  title: "E2E Test Course: Instructor 06 - Challenge 2",
+  points: 1,
+  type: "FLAG",
+  orderIndex: 1,
+  updatedAt: "2026-05-16T16:14:46.102595",
+};
+
+const instructorLab07Challenge01: Challenge = {
+  id: "ab35a542-595d-4025-9aac-f4e6a2a15247",
+  title: "E2E Test Course: Instructor 07 - Challenge 1",
+  points: 23,
+  type: "FLAG",
+  orderIndex: 0,
+  updatedAt: "2026-05-16T16:18:11.284597",
+};
+
+const instructorLab08Challenge01: Challenge = {
+  id: "e39d36fa-2ef0-41a1-8f65-357dcd7e34a0",
+  title: "E2E Test Course: Instructor 08 - Challenge 1",
+  points: 1,
+  type: "MULTIPLE_CHOICE",
+  orderIndex: 0,
+  updatedAt: "2026-05-16T16:20:31.260226",
+};
+
+const instructorLab08Challenge02: Challenge = {
+  id: "542d02b4-0550-4332-9ab4-1487a2aeb9ca",
+  title: "E2E Test Course: Instructor 08 - Challenge 2",
+  points: 1,
+  type: "MULTIPLE_CHOICE",
+  orderIndex: 1,
+  updatedAt: "2026-05-16T16:20:31.26121",
+};
+
+const instructorLab08Challenge03: Challenge = {
+  id: "327ac23a-8a9f-42a4-b015-8d58fb6caf04",
+  title: "E2E Test Course: Instructor 08 - Challenge 3",
+  points: 2,
+  type: "FLAG",
+  orderIndex: 2,
+  updatedAt: "2026-05-16T16:20:31.262238",
+};
 
 // ============================================================================
 // Lab Definitions
@@ -138,6 +307,7 @@ const adminLab01: Lab = {
   creatorName: "E2E Admin",
   courseCount: 1,
   updatedAt: "2026-05-15T11:23:40.18509",
+  challenges: [adminLab01Challenge01],
 };
 
 const instructorLab01: Lab = {
@@ -152,6 +322,7 @@ const instructorLab01: Lab = {
   creatorName: "E2E Instructor",
   courseCount: 1,
   updatedAt: "2026-05-15T11:23:04.107777",
+  challenges: [instructorLab01Challenge01],
 };
 
 const instructorLab02: Lab = {
@@ -166,6 +337,11 @@ const instructorLab02: Lab = {
   creatorName: "E2E Instructor",
   courseCount: 3,
   updatedAt: "2026-05-15T11:32:08.776083",
+  challenges: [
+    instructorLab02Challenge01,
+    instructorLab02Challenge02,
+    instructorLab02Challenge03,
+  ],
 };
 
 const instructorLab03: Lab = {
@@ -180,6 +356,11 @@ const instructorLab03: Lab = {
   creatorName: "E2E Instructor",
   courseCount: 2,
   updatedAt: "2026-05-15T11:28:07.339331",
+  challenges: [
+    instructorLab03Challenge01,
+    instructorLab03Challenge02,
+    instructorLab03Challenge03,
+  ],
 };
 
 const instructorLab04: Lab = {
@@ -194,6 +375,7 @@ const instructorLab04: Lab = {
   creatorName: "E2E Instructor",
   courseCount: 0,
   updatedAt: "2026-05-15T11:23:17.275862",
+  challenges: [instructorLab04Challenge01],
 };
 
 const instructorLab05: Lab = {
@@ -208,6 +390,7 @@ const instructorLab05: Lab = {
   creatorName: "E2E Instructor",
   courseCount: 1,
   updatedAt: "2026-05-16T15:58:20.374834",
+  challenges: [instructorLab05Challenge01],
 };
 
 const instructorLab06: Lab = {
@@ -215,13 +398,14 @@ const instructorLab06: Lab = {
   title: "E2E Test Lab: Instructor 06",
   status: "PUBLIC",
   difficulty: "HARD",
-  maxScore: 1,
+  maxScore: 3,
   dockerImage:
     "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
   containerPort: 80,
   creatorName: "E2E Instructor",
   courseCount: 1,
   updatedAt: "2026-05-16T16:14:46.101168",
+  challenges: [instructorLab06Challenge01, instructorLab06Challenge02],
 };
 
 const instructorLab07: Lab = {
@@ -236,6 +420,7 @@ const instructorLab07: Lab = {
   creatorName: "E2E Instructor",
   courseCount: 1,
   updatedAt: "2026-05-16T16:18:11.284093",
+  challenges: [instructorLab07Challenge01],
 };
 
 const instructorLab08: Lab = {
@@ -250,6 +435,11 @@ const instructorLab08: Lab = {
   creatorName: "E2E Instructor",
   courseCount: 1,
   updatedAt: "2026-05-16T16:20:31.259556",
+  challenges: [
+    instructorLab08Challenge01,
+    instructorLab08Challenge02,
+    instructorLab08Challenge03,
+  ],
 };
 
 // ============================================================================
@@ -391,21 +581,21 @@ export const instructorCourse04: Course = {
 };
 
 export const instructorCourse05: Course = {
-  id: "6fa36d31-2418-48af-afca-b8576ac978ec",
+  id: "18c6e7ab-623f-4bb0-bc59-5b8b6560025d",
   title: "E2E Test Course: Instructor 05",
   description:
     "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 05</p>",
   shortDescription:
     '"Instructor 05" is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.',
-  isPublished: true,
-  isPrivate: false,
-  createdAt: "2026-05-14T12:41:39.618199",
-  updatedAt: "2026-05-15T11:23:59.909511",
-  topic: "",
+  isPublished: false,
+  isPrivate: true,
+  createdAt: "2026-05-16T16:12:29.824781",
+  updatedAt: "2026-05-16T16:12:29.824781",
+  topic: "E2E-Testing-02",
   owner: instructorUser,
-  private: false,
-  published: true,
-  numOfParticipants: 2,
+  private: true,
+  published: false,
+  numOfParticipants: 1,
   labs: [],
 };
 
@@ -413,9 +603,9 @@ export const instructorCourse06: Course = {
   id: "b5d31d5d-5b59-44be-9f5b-e20cea9be92b",
   title: "E2E Test Course: Instructor 06",
   description:
-    "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 06</p>",
+      "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 06</p>",
   shortDescription:
-    '"Instructor 06" is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.',
+      '"Instructor 06" is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.',
   isPublished: false,
   isPrivate: true,
   createdAt: "2026-05-16T16:27:52.870031",
@@ -424,7 +614,7 @@ export const instructorCourse06: Course = {
   owner: instructorUser,
   private: true,
   published: false,
-  numOfParticipants: 2,
+  numOfParticipants: 1,
   labs: [
     {
       lab: instructorLab06,
@@ -457,11 +647,11 @@ export const dashboardTestData: Readonly<{
   },
   student: {
     enrolledCoursesCount: 4,
-    completedLabsCount: 0,
+    completedLabsCount: 4,
   },
   instructor: {
     enrolledCoursesCount: 3,
-    completedLabsCount: 2,
+    completedLabsCount: 3,
   },
   admin: {
     enrolledCoursesCount: 1,
@@ -500,7 +690,7 @@ export const courses = {
 } as const;
 
 // ============================================================================
-// Update User data after course and lab definitions (handle circular dep)
+// Update User data after course and lab definitions (handle circular dependencies)
 //
 // This solution uses a workaround for setting in readonly arrays. This isn't
 // clean code. But because it is only done once in this file, it is ok.
@@ -511,6 +701,7 @@ export const courses = {
 
 // Instructor: enrolls in courses and completes labs
 (instructorUser as unknown as { enrolledCourses: Course[] }).enrolledCourses = [
+  instructorCourse05,
   instructorCourse02,
   instructorCourse04,
   instructorCourse01,
@@ -520,12 +711,50 @@ export const courses = {
   adminLab01,
   instructorLab05,
 ];
+(instructorUser as unknown as { completedChallenges: ChallengeCompletion[] }).completedChallenges = [
+  {
+    lab: adminLab01,
+    challenge: adminLab01Challenge01,
+    submittedAt: "2026-05-15T11:26:05.084648",
+  },  
+  {
+    lab: instructorLab03,
+    challenge: instructorLab03Challenge01,
+    submittedAt: "2026-05-15T11:30:37.032344",
+  },
+  {
+    lab: instructorLab03,
+    challenge: instructorLab03Challenge02,
+    submittedAt: "2026-05-15T11:30:40.430358",
+  },
+  {
+    lab: instructorLab03,
+    challenge: instructorLab03Challenge03,
+    submittedAt: "2026-05-15T11:30:50.552643",
+  },
+  {
+    lab: instructorLab02,
+    challenge: instructorLab02Challenge01,
+    submittedAt: "2026-05-15T11:32:24.575717",
+  },
+  {
+    lab: instructorLab02,
+    challenge: instructorLab02Challenge02,
+    submittedAt: "2026-05-15T11:32:27.145546",
+  },
+  {
+    lab: instructorLab05,
+    challenge: instructorLab05Challenge01,
+    submittedAt: "2026-05-16T16:21:42.532488",
+  },
+];
 
 // Student: enrolls in courses and completes labs
 (studentUser as unknown as { enrolledCourses: Course[] }).enrolledCourses = [
   instructorCourse02,
   instructorCourse04,
   adminCourse01,
+  instructorCourse06,
   instructorCourse01,
 ];
 (studentUser as unknown as { completedLabs: Lab[] }).completedLabs = [
@@ -533,4 +762,51 @@ export const courses = {
   instructorLab06,
   instructorLab07,
   instructorLab08,
+];
+(studentUser as unknown as { completedChallenges: ChallengeCompletion[] }).completedChallenges = [
+  {
+    lab: instructorLab02,
+    challenge: instructorLab02Challenge01,
+    submittedAt: "2026-05-16T15:28:48.50928",
+  },
+  {
+    lab: instructorLab02,
+    challenge: instructorLab02Challenge02,
+    submittedAt: "2026-05-16T15:28:51.457509",
+  },
+  {
+    lab: instructorLab02,
+    challenge: instructorLab02Challenge03,
+    submittedAt: "2026-05-16T15:28:54.288624",
+  },
+  {
+    lab: instructorLab06,
+    challenge: instructorLab06Challenge01,
+    submittedAt: "2026-05-16T16:30:03.670308",
+  },
+  {
+    lab: instructorLab06,
+    challenge: instructorLab06Challenge02,
+    submittedAt: "2026-05-16T16:30:11.335404",
+  },
+  {
+    lab: instructorLab07,
+    challenge: instructorLab07Challenge01,
+    submittedAt: "2026-05-16T16:30:21.969296",
+  },
+  {
+    lab: instructorLab08,
+    challenge: instructorLab08Challenge01,
+    submittedAt: "2026-05-16T16:30:26.963781",
+  },
+  {
+    lab: instructorLab08,
+    challenge: instructorLab08Challenge02,
+    submittedAt: "2026-05-16T16:30:31.733892",
+  },
+  {
+    lab: instructorLab08,
+    challenge: instructorLab08Challenge03,
+    submittedAt: "2026-05-16T16:30:40.875401",
+  },
 ];
