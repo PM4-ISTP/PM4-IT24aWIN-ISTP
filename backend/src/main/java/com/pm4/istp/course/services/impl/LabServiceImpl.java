@@ -120,8 +120,7 @@ public class LabServiceImpl implements LabService {
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyVisibility(lab, userId);
     return lab;
@@ -133,8 +132,7 @@ public class LabServiceImpl implements LabService {
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
 
@@ -264,8 +262,7 @@ public class LabServiceImpl implements LabService {
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
 
@@ -307,8 +304,7 @@ public class LabServiceImpl implements LabService {
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
     deleteOrArchive(lab);
@@ -389,8 +385,7 @@ public class LabServiceImpl implements LabService {
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     if (lab.getStatus() == LabStatusEnum.ARCHIVED) {
       throw new LabAccessDeniedException(

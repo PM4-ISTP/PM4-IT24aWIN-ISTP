@@ -169,8 +169,7 @@ public class LabController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteLab(
-      @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+  public ResponseEntity<Void> deleteLab(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     labService.deleteLab(userId, id);
     return ResponseEntity.noContent().build();
@@ -227,8 +226,7 @@ public class LabController {
       @RequestParam(name = "q", defaultValue = "") String query,
       Pageable pageable) {
     UUID userId = parseUserId(jwt);
-    Page<ListLabResponseDto> results =
-        labService.searchAvailableLabs(userId, query, pageable);
+    Page<ListLabResponseDto> results = labService.searchAvailableLabs(userId, query, pageable);
     return ResponseEntity.ok(results);
   }
 
