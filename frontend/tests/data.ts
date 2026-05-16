@@ -196,6 +196,62 @@ const instructorLab04: Lab = {
   updatedAt: "2026-05-15T11:23:17.275862",
 };
 
+const instructorLab05: Lab = {
+  id: "2378cb15-0151-4109-97a9-eb3a5b40a022",
+  title: "E2E Test Lab: Instructor 05",
+  status: "PRIVATE",
+  difficulty: "EASY",
+  maxScore: 1,
+  dockerImage:
+    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
+  containerPort: 80,
+  creatorName: "E2E Instructor",
+  courseCount: 1,
+  updatedAt: "2026-05-16T15:58:20.374834",
+};
+
+const instructorLab06: Lab = {
+  id: "f6a0c1f7-7142-40cb-b24d-d29b44e89f98",
+  title: "E2E Test Lab: Instructor 06",
+  status: "PUBLIC",
+  difficulty: "HARD",
+  maxScore: 1,
+  dockerImage:
+    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
+  containerPort: 80,
+  creatorName: "E2E Instructor",
+  courseCount: 1,
+  updatedAt: "2026-05-16T16:14:46.101168",
+};
+
+const instructorLab07: Lab = {
+  id: "09e8ddaa-4cc2-4c0e-9127-906973f9727b",
+  title: "E2E Test Lab: Instructor 07",
+  status: "PRIVATE",
+  difficulty: "EXPERT",
+  maxScore: 23,
+  dockerImage:
+    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
+  containerPort: 80,
+  creatorName: "E2E Instructor",
+  courseCount: 1,
+  updatedAt: "2026-05-16T16:18:11.284093",
+};
+
+const instructorLab08: Lab = {
+  id: "d1e3d1b9-ba3a-4fe9-9545-cdef24fa99b5",
+  title: "E2E Test Lab: Instructor 08",
+  status: "PUBLIC",
+  difficulty: "BEGINNER",
+  maxScore: 4,
+  dockerImage:
+    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
+  containerPort: 80,
+  creatorName: "E2E Instructor",
+  courseCount: 1,
+  updatedAt: "2026-05-16T16:20:31.259556",
+};
+
 // ============================================================================
 // Course Definitions (with Lab References and Deadlines)
 // ============================================================================
@@ -248,6 +304,10 @@ export const instructorCourse01: Course = {
       lab: instructorLab03,
       dueAt: "2100-01-02T11:00:00",
     },
+    {
+      lab: instructorLab05,
+      dueAt: "2000-01-02T11:00:00",
+    },
   ],
 };
 
@@ -279,6 +339,10 @@ export const instructorCourse02: Course = {
     {
       lab: instructorLab02,
       dueAt: "2100-01-02T13:00:00",
+    },
+    {
+      lab: instructorLab05,
+      dueAt: "2100-01-03T13:00:00",
     },
   ],
 };
@@ -326,6 +390,57 @@ export const instructorCourse04: Course = {
   ],
 };
 
+export const instructorCourse05: Course = {
+  id: "6fa36d31-2418-48af-afca-b8576ac978ec",
+  title: "E2E Test Course: Instructor 05",
+  description:
+    "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 05</p>",
+  shortDescription:
+    '"Instructor 05" is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.',
+  isPublished: true,
+  isPrivate: false,
+  createdAt: "2026-05-14T12:41:39.618199",
+  updatedAt: "2026-05-15T11:23:59.909511",
+  topic: "",
+  owner: instructorUser,
+  private: false,
+  published: true,
+  numOfParticipants: 2,
+  labs: [],
+};
+
+export const instructorCourse06: Course = {
+  id: "b5d31d5d-5b59-44be-9f5b-e20cea9be92b",
+  title: "E2E Test Course: Instructor 06",
+  description:
+    "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 06</p>",
+  shortDescription:
+    '"Instructor 06" is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.',
+  isPublished: false,
+  isPrivate: true,
+  createdAt: "2026-05-16T16:27:52.870031",
+  updatedAt: "2026-05-16T16:28:41.927021",
+  topic: "E2E-Testing-02",
+  owner: instructorUser,
+  private: true,
+  published: false,
+  numOfParticipants: 2,
+  labs: [
+    {
+      lab: instructorLab06,
+      dueAt: "2026-05-16T18:35:00",
+    },
+    {
+      lab: instructorLab07,
+      dueAt: "2026-05-16T18:35:00",
+    },
+    {
+      lab: instructorLab08,
+      dueAt: "2026-05-16T18:40:00",
+    },
+  ],
+};
+
 // ============================================================================
 // Dashboard Test Data (statistics only)
 // ============================================================================
@@ -364,6 +479,10 @@ export const labs = {
   instructor02: instructorLab02,
   instructor03: instructorLab03,
   instructor04: instructorLab04,
+  instructor05: instructorLab05,
+  instructor06: instructorLab06,
+  instructor07: instructorLab07,
+  instructor08: instructorLab08
 } as const;
 
 // ============================================================================
@@ -376,6 +495,8 @@ export const courses = {
   instructor02: instructorCourse02,
   instructor03: instructorCourse03,
   instructor04: instructorCourse04,
+  instructor05: instructorCourse05,
+  instructor06: instructorCourse06
 } as const;
 
 // ============================================================================
@@ -388,7 +509,7 @@ export const courses = {
 // Admin: enrolls in adminCourse01
 (adminUser as unknown as { enrolledCourses: Course[] }).enrolledCourses = [adminCourse01];
 
-// Instructor: enrolls in instructorCourse01 and instructorCourse02 and mark two labs as completed
+// Instructor: enrolls in courses and completes labs
 (instructorUser as unknown as { enrolledCourses: Course[] }).enrolledCourses = [
   instructorCourse02,
   instructorCourse04,
@@ -397,12 +518,19 @@ export const courses = {
 (instructorUser as unknown as { completedLabs: Lab[] }).completedLabs = [
   instructorLab03,
   adminLab01,
+  instructorLab05
 ];
 
-// Student: enrolls in instructorCourse02, instructorCourse04, adminCourse01, instructorCourse01
+// Student: enrolls in courses and completes labs
 (studentUser as unknown as { enrolledCourses: Course[] }).enrolledCourses = [
   instructorCourse02,
   instructorCourse04,
   adminCourse01,
   instructorCourse01,
+];
+(studentUser as unknown as { completedLabs: Lab[] }).completedLabs = [
+  instructorLab02,
+  instructorLab06,
+  instructorLab07,
+  instructorLab08,
 ];
