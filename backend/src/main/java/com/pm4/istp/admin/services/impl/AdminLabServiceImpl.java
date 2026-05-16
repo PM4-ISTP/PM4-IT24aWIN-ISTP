@@ -83,7 +83,8 @@ public class AdminLabServiceImpl implements AdminLabService {
 
     DeleteCheckResponseDto check = adminDeleteCheckService.checkLab(labId);
     if (!check.hardDeleteAllowed()) {
-      throw new HardDeleteBlockedException("Hard delete is blocked because related data still exists.");
+      throw new HardDeleteBlockedException(
+          "Hard delete is blocked because related data still exists.");
     }
     labRepository.delete(lab);
   }

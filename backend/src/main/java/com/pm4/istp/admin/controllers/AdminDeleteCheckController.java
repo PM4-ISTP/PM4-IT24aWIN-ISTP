@@ -26,4 +26,3 @@ public class AdminDeleteCheckController {
     return ResponseEntity.ok(adminDeleteCheckService.checkLab(id));
   }
 }
-
