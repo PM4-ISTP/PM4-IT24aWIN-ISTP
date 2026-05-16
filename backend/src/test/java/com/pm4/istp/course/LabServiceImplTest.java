@@ -69,7 +69,7 @@ import com.pm4.istp.user.repositories.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
-class ChallengeServiceImplTest {
+class LabServiceImplTest {
 
   private static final String DEFAULT_DOCKER_IMAGE = "ghcr.io/pm4-istp/default:latest";
 
@@ -143,7 +143,7 @@ class ChallengeServiceImplTest {
   }
 
   @Test
-  void createChallenge_persistsChallengeWithCreatorAndChallenges() {
+  void createLab_persistsLabWithCreatorAndChallenges() {
     UUID creatorId = UUID.randomUUID();
     User creator = buildUser(creatorId);
 
@@ -165,7 +165,7 @@ class ChallengeServiceImplTest {
                     new ChallengeRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0, ChallengeType.FLAG, 1, null, null),
                     new ChallengeRequest(null, "Exploit", "Pop a shell", null, 1, ChallengeType.FLAG, 1, null, null))));
 
-    Lab created = labService.createChallenge(creatorId, request);
+    Lab created = labService.createLab(creatorId, request);
 
     assertThat(created.getTitle()).isEqualTo("Buffer Overflow");
     assertThat(created.getDescription()).isEqualTo("Long description");
@@ -187,7 +187,7 @@ class ChallengeServiceImplTest {
   }
 
   @Test
-  void createChallenge_trimsEmptyFlagToNull() {
+  void createLab_trimsEmptyFlagToNull() {
     UUID creatorId = UUID.randomUUID();
     User creator = buildUser(creatorId);
 
@@ -206,13 +206,13 @@ class ChallengeServiceImplTest {
             null,
             new ArrayList<>(List.of(new ChallengeRequest(null, "Only", "Just desc", "   ", 0, ChallengeType.FLAG, 1, null, null))));
 
-    Lab created = labService.createChallenge(creatorId, request);
+    Lab created = labService.createLab(creatorId, request);
 
     assertThat(created.getChallenges().get(0).getFlag()).isNull();
   }
 
   @Test
-  void createChallenge_whenUserNotFound_throwsUserNotFoundException() {
+  void createLab_whenUserNotFound_throwsUserNotFoundException() {
     UUID creatorId = UUID.randomUUID();
     when(userRepository.findByIdAndDeletedAtIsNull(creatorId)).thenReturn(Optional.empty());
 
@@ -224,14 +224,14 @@ class ChallengeServiceImplTest {
             LabDifficultyEnum.EASY,
             DEFAULT_DOCKER_IMAGE);
 
-    assertThatThrownBy(() -> labService.createChallenge(creatorId, request))
+    assertThatThrownBy(() -> labService.createLab(creatorId, request))
         .isInstanceOf(UserNotFoundException.class);
 
     verify(labRepository, never()).save(any(Lab.class));
   }
 
   @Test
-  void getChallenge_whenCallerIsCreator_returnsChallengeRegardlessOfStatus() {
+  void getLab_whenCallerIsCreator_returnsLabRegardlessOfStatus() {
     UUID creatorId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     User creator = buildUser(creatorId);
@@ -239,7 +239,7 @@ class ChallengeServiceImplTest {
 
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
 
-    Lab result = labService.getChallenge(creatorId, labId);
+    Lab result = labService.getLab(creatorId, labId);
 
     assertThat(result).isSameAs(lab);
     verifyNoInteractions(courseLabRepository);
@@ -255,7 +255,7 @@ class ChallengeServiceImplTest {
 
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
 
-    assertThatThrownBy(() -> labService.getChallenge(otherId, labId))
+    assertThatThrownBy(() -> labService.getLab(otherId, labId))
         .isInstanceOf(LabAccessDeniedException.class);
   }
 
@@ -272,7 +272,7 @@ class ChallengeServiceImplTest {
             labId, instructorId))
         .thenReturn(true);
 
-    Lab result = labService.getChallenge(instructorId, labId);
+    Lab result = labService.getLab(instructorId, labId);
 
     assertThat(result).isSameAs(lab);
   }
@@ -291,7 +291,7 @@ class ChallengeServiceImplTest {
     when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, studentId))
         .thenReturn(true);
 
-    Lab result = labService.getChallenge(studentId, labId);
+    Lab result = labService.getLab(studentId, labId);
 
     assertThat(result).isSameAs(lab);
   }
@@ -310,7 +310,7 @@ class ChallengeServiceImplTest {
     when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, otherId))
         .thenReturn(false);
 
-    assertThatThrownBy(() -> labService.getChallenge(otherId, labId))
+    assertThatThrownBy(() -> labService.getLab(otherId, labId))
         .isInstanceOf(LabAccessDeniedException.class);
   }
 
@@ -324,7 +324,7 @@ class ChallengeServiceImplTest {
 
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
 
-    Lab result = labService.getChallenge(otherId, labId);
+    Lab result = labService.getLab(otherId, labId);
 
     assertThat(result).isSameAs(lab);
     verifyNoInteractions(courseLabRepository);
@@ -336,7 +336,7 @@ class ChallengeServiceImplTest {
     UUID labId = UUID.randomUUID();
     when(labRepository.findById(labId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> labService.getChallenge(userId, labId))
+    assertThatThrownBy(() -> labService.getLab(userId, labId))
         .isInstanceOf(LabNotFoundException.class);
   }
 
@@ -359,7 +359,7 @@ class ChallengeServiceImplTest {
             LabDifficultyEnum.EASY,
             "ghcr.io/pm4-istp/updated:1.0");
 
-    Lab updated = labService.updateChallenge(creatorId, labId, request);
+    Lab updated = labService.updateLab(creatorId, labId, request);
 
     assertThat(updated.getTitle()).isEqualTo("Updated");
     assertThat(updated.getDescription()).isEqualTo("Updated desc");
@@ -406,7 +406,7 @@ class ChallengeServiceImplTest {
                     new ChallengeRequest(null, "New first", "desc", null, 0, ChallengeType.FLAG, 1, null, null),
                     new ChallengeRequest(existingId, "Renamed", "updated desc", "ISTP{x}", 1, ChallengeType.FLAG, 1, null, null))));
 
-    Lab updated = labService.updateChallenge(creatorId, labId, request);
+    Lab updated = labService.updateLab(creatorId, labId, request);
 
     assertThat(updated.getChallenges()).hasSize(2);
     assertThat(updated.getChallenges().get(0).getId()).isNull();
@@ -437,7 +437,7 @@ class ChallengeServiceImplTest {
             LabDifficultyEnum.MEDIUM,
             DEFAULT_DOCKER_IMAGE);
 
-    labService.updateChallenge(creatorId, labId, request);
+    labService.updateLab(creatorId, labId, request);
 
     verify(courseLabRepository).deleteByChallengeId(labId);
     verify(courseLabRepository, never())
@@ -463,7 +463,7 @@ class ChallengeServiceImplTest {
             LabDifficultyEnum.MEDIUM,
             DEFAULT_DOCKER_IMAGE);
 
-    labService.updateChallenge(creatorId, labId, request);
+    labService.updateLab(creatorId, labId, request);
 
     verify(courseLabRepository)
         .deleteByChallengeIdWhereCreatorNotInstructor(labId, creatorId);
@@ -489,7 +489,7 @@ class ChallengeServiceImplTest {
             LabDifficultyEnum.MEDIUM,
             DEFAULT_DOCKER_IMAGE);
 
-    labService.updateChallenge(creatorId, labId, request);
+    labService.updateLab(creatorId, labId, request);
 
     verify(courseLabRepository, never()).deleteByChallengeId(any());
     verify(courseLabRepository, never())
@@ -514,7 +514,7 @@ class ChallengeServiceImplTest {
             LabDifficultyEnum.MEDIUM,
             DEFAULT_DOCKER_IMAGE);
 
-    assertThatThrownBy(() -> labService.updateChallenge(otherId, labId, request))
+    assertThatThrownBy(() -> labService.updateLab(otherId, labId, request))
         .isInstanceOf(LabAccessDeniedException.class);
 
     verify(labRepository, never()).save(any(Lab.class));
@@ -536,7 +536,7 @@ class ChallengeServiceImplTest {
             LabDifficultyEnum.MEDIUM,
             DEFAULT_DOCKER_IMAGE);
 
-    assertThatThrownBy(() -> labService.updateChallenge(creatorId, labId, request))
+    assertThatThrownBy(() -> labService.updateLab(creatorId, labId, request))
         .isInstanceOf(LabNotFoundException.class);
 
     verify(labRepository, never()).save(any(Lab.class));
@@ -656,7 +656,7 @@ class ChallengeServiceImplTest {
 
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
 
-    labService.deleteChallenge(creatorId, labId);
+    labService.deleteLab(creatorId, labId);
 
     verify(labRepository).delete(lab);
     verify(labRepository).flush();
@@ -672,7 +672,7 @@ class ChallengeServiceImplTest {
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
     when(courseLabRepository.countByChallengeId(labId)).thenReturn(1L);
 
-    labService.deleteChallenge(creatorId, labId);
+    labService.deleteLab(creatorId, labId);
 
     assertThat(lab.getStatus()).isEqualTo(LabStatusEnum.ARCHIVED);
     verify(labRepository).save(lab);
@@ -689,7 +689,7 @@ class ChallengeServiceImplTest {
 
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
 
-    assertThatThrownBy(() -> labService.deleteChallenge(otherId, labId))
+    assertThatThrownBy(() -> labService.deleteLab(otherId, labId))
         .isInstanceOf(LabAccessDeniedException.class);
 
     verify(labRepository, never()).delete(any(Lab.class));
@@ -702,12 +702,12 @@ class ChallengeServiceImplTest {
 
     when(labRepository.findById(labId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> labService.deleteChallenge(userId, labId))
+    assertThatThrownBy(() -> labService.deleteLab(userId, labId))
         .isInstanceOf(LabNotFoundException.class);
   }
 
   @Test
-  void listChallengesForCreator_delegatesToRepository() {
+  void listLabsForCreator_delegatesToRepository() {
     UUID creatorId = UUID.randomUUID();
     Pageable pageable = PageRequest.of(0, 10);
     Page<ListLabResponseDto> expected = new PageImpl<>(List.of());
@@ -716,29 +716,29 @@ class ChallengeServiceImplTest {
         .thenReturn(expected);
 
     Page<ListLabResponseDto> result =
-        labService.listChallengesForCreator(creatorId, pageable);
+        labService.listLabsForCreator(creatorId, pageable);
 
     assertThat(result).isSameAs(expected);
     verify(labRepository).findListChallengesForCreator(creatorId, pageable);
   }
 
   @Test
-  void searchAvailableChallenges_delegatesToRepository() {
+  void searchAvailableLabs_delegatesToRepository() {
     UUID userId = UUID.randomUUID();
     Pageable pageable = PageRequest.of(0, 10);
     Page<ListLabResponseDto> expected = new PageImpl<>(List.of());
 
-    when(labRepository.searchAvailableChallenges(userId, "sql", pageable))
+    when(labRepository.searchAvailableLabs(userId, "sql", pageable))
         .thenReturn(expected);
 
     Page<ListLabResponseDto> result =
-        labService.searchAvailableChallenges(userId, "sql", pageable);
+        labService.searchAvailableLabs(userId, "sql", pageable);
 
     assertThat(result).isSameAs(expected);
-    verify(labRepository).searchAvailableChallenges(userId, "sql", pageable);
+    verify(labRepository).searchAvailableLabs(userId, "sql", pageable);
   }
 
-  // ── getChallengeForPlay ────────────────────────────────────────────────────
+  // ── getLabForPlay ────────────────────────────────────────────────────
 
   private Lab buildChallengeWithCourses(UUID labId, UUID... courseIds) {
     Lab lab = buildChallenge(labId, buildUser(UUID.randomUUID()),
@@ -757,7 +757,7 @@ class ChallengeServiceImplTest {
   }
 
   @Test
-  void getChallengeForPlay_returnsStudentDto_whenEnrolledAndChallengeBelongsToCourse() {
+  void getLabForPlay_returnsStudentDto_whenEnrolledAndChallengeBelongsToCourse() {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -776,14 +776,14 @@ class ChallengeServiceImplTest {
     course.setMcAttemptsMode(McAttemptsMode.UNLIMITED);
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
-    LabStudentDto result = labService.getChallengeForPlay(userId, courseId, labId);
+    LabStudentDto result = labService.getLabForPlay(userId, courseId, labId);
 
     assertThat(result).isSameAs(dto);
     assertThat(result.getMcAttemptsMode()).isEqualTo("UNLIMITED");
   }
 
   @Test
-  void getChallengeForPlay_whenNotEnrolled_throwsAccessDenied() {
+  void getLabForPlay_whenNotEnrolled_throwsAccessDenied() {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -791,13 +791,13 @@ class ChallengeServiceImplTest {
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(false);
 
-    assertThatThrownBy(() -> labService.getChallengeForPlay(userId, courseId, labId))
+    assertThatThrownBy(() -> labService.getLabForPlay(userId, courseId, labId))
         .isInstanceOf(LabAccessDeniedException.class);
     verify(labRepository, never()).findById(any());
   }
 
   @Test
-  void getChallengeForPlay_whenChallengeMissing_throwsNotFound() {
+  void getLabForPlay_whenChallengeMissing_throwsNotFound() {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -806,12 +806,12 @@ class ChallengeServiceImplTest {
         .thenReturn(true);
     when(labRepository.findById(labId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> labService.getChallengeForPlay(userId, courseId, labId))
+    assertThatThrownBy(() -> labService.getLabForPlay(userId, courseId, labId))
         .isInstanceOf(LabNotFoundException.class);
   }
 
   @Test
-  void getChallengeForPlay_whenChallengeNotInRequestedCourse_throwsAccessDenied() {
+  void getLabForPlay_whenChallengeNotInRequestedCourse_throwsAccessDenied() {
     // Regression test for the authz-bypass: even if the user is enrolled in a course
     // and the lab exists in some *other* course, the requested courseId must
     // actually contain the lab.
@@ -826,7 +826,7 @@ class ChallengeServiceImplTest {
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
 
     assertThatThrownBy(
-        () -> labService.getChallengeForPlay(userId, requestedCourseId, labId))
+        () -> labService.getLabForPlay(userId, requestedCourseId, labId))
         .isInstanceOf(LabAccessDeniedException.class)
         .hasMessageContaining("not part of course");
   }

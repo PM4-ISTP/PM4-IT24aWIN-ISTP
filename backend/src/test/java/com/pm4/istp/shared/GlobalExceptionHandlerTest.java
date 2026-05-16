@@ -230,11 +230,11 @@ class GlobalExceptionHandlerTest {
     assertResponse(
         handler.handleChallengeNotFoundException(new ChallengeNotFoundException("missing")),
         HttpStatus.NOT_FOUND,
-        "Sub-task not found");
+        "Challenge not found");
     assertResponse(
         handler.handleChallengeAlreadySolvedException(new ChallengeAlreadySolvedException("solved")),
         HttpStatus.CONFLICT,
-        "Sub-task already solved");
+        "Challenge already solved");
     assertResponse(
         handler.handleUserProfileSyncException(new UserProfileSyncException("sync failed")),
         HttpStatus.INTERNAL_SERVER_ERROR,

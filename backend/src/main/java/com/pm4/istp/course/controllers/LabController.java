@@ -77,12 +77,12 @@ public class LabController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PostMapping
-  public ResponseEntity<CreateChallengeResponseDto> createChallenge(
+  public ResponseEntity<CreateChallengeResponseDto> createLab(
       @AuthenticationPrincipal Jwt jwt,
       @Valid @RequestBody CreateChallengeRequestDto createChallengeRequestDto) {
     UUID userId = parseUserId(jwt);
     CreateLabRequest request = labMapper.fromDto(createChallengeRequestDto);
-    Lab created = labService.createChallenge(userId, request);
+    Lab created = labService.createLab(userId, request);
     CreateChallengeResponseDto responseDto = labMapper.toCreateResponseDto(created);
     return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
   }
@@ -108,10 +108,10 @@ public class LabController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @GetMapping("/{id}")
-  public ResponseEntity<ChallengeDetailResponseDto> getChallenge(
+  public ResponseEntity<ChallengeDetailResponseDto> getLab(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
-    Lab lab = labService.getChallenge(userId, id);
+    Lab lab = labService.getLab(userId, id);
     ChallengeDetailResponseDto dto = labMapper.toDetailResponseDto(lab);
     dto.setCourseCount(lab.getCourseLabs().size());
     return ResponseEntity.ok(dto);
@@ -141,13 +141,13 @@ public class LabController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PutMapping("/{id}")
-  public ResponseEntity<ChallengeDetailResponseDto> updateChallenge(
+  public ResponseEntity<ChallengeDetailResponseDto> updateLab(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable UUID id,
       @Valid @RequestBody UpdateChallengeRequestDto updateChallengeRequestDto) {
     UUID userId = parseUserId(jwt);
     UpdateLabRequest request = labMapper.fromDto(updateChallengeRequestDto);
-    Lab updated = labService.updateChallenge(userId, id, request);
+    Lab updated = labService.updateLab(userId, id, request);
     ChallengeDetailResponseDto dto = labMapper.toDetailResponseDto(updated);
     dto.setCourseCount(updated.getCourseLabs().size());
     return ResponseEntity.ok(dto);
@@ -169,10 +169,10 @@ public class LabController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteChallenge(
+  public ResponseEntity<Void> deleteLab(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
-    labService.deleteChallenge(userId, id);
+    labService.deleteLab(userId, id);
     return ResponseEntity.noContent().build();
   }
 
@@ -184,10 +184,10 @@ public class LabController {
         @ApiResponse(responseCode = "200", description = "Challenges retrieved successfully")
       })
   @GetMapping
-  public ResponseEntity<Page<ListLabResponseDto>> listChallenges(
+  public ResponseEntity<Page<ListLabResponseDto>> listLabs(
       @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
     UUID userId = parseUserId(jwt);
-    Page<ListLabResponseDto> labs = labService.listChallengesForCreator(userId, pageable);
+    Page<ListLabResponseDto> labs = labService.listLabsForCreator(userId, pageable);
     return ResponseEntity.ok(labs);
   }
 
@@ -222,13 +222,13 @@ public class LabController {
         @ApiResponse(responseCode = "200", description = "Search results retrieved successfully")
       })
   @GetMapping("/search")
-  public ResponseEntity<Page<ListLabResponseDto>> searchChallenges(
+  public ResponseEntity<Page<ListLabResponseDto>> searchLabs(
       @AuthenticationPrincipal Jwt jwt,
       @RequestParam(name = "q", defaultValue = "") String query,
       Pageable pageable) {
     UUID userId = parseUserId(jwt);
     Page<ListLabResponseDto> results =
-        labService.searchAvailableChallenges(userId, query, pageable);
+        labService.searchAvailableLabs(userId, query, pageable);
     return ResponseEntity.ok(results);
   }
 
@@ -285,12 +285,12 @@ public class LabController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @GetMapping("/{id}/play")
-  public ResponseEntity<LabStudentDto> getChallengeForPlay(
+  public ResponseEntity<LabStudentDto> getLabForPlay(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable UUID id,
       @RequestParam("courseId") UUID courseId) {
     UUID userId = parseUserId(jwt);
-    LabStudentDto dto = labService.getChallengeForPlay(userId, courseId, id);
+    LabStudentDto dto = labService.getLabForPlay(userId, courseId, id);
     return ResponseEntity.ok(dto);
   }
 
@@ -321,7 +321,7 @@ public class LabController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class))),
         @ApiResponse(
             responseCode = "409",
-            description = "Sub-task already solved",
+            description = "Challenge already solved",
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PostMapping("/{labId}/challenges/{challengeId}/submit")
@@ -382,7 +382,7 @@ public class LabController {
         @ApiResponse(responseCode = "200", description = "Theory challenge marked as completed"),
         @ApiResponse(
             responseCode = "400",
-            description = "Sub-task has a flag and cannot be auto-completed",
+            description = "Challenge has a flag and cannot be auto-completed",
             content = @Content(schema = @Schema(implementation = ErrorDto.class))),
         @ApiResponse(
             responseCode = "403",
@@ -412,10 +412,10 @@ public class LabController {
   @ApiResponses(
       value = {@ApiResponse(responseCode = "200", description = "Count returned successfully")})
   @GetMapping("/my-completed-count")
-  public ResponseEntity<java.util.Map<String, Long>> countMyCompletedChallenges(
+  public ResponseEntity<java.util.Map<String, Long>> countMyCompletedLabs(
       @AuthenticationPrincipal Jwt jwt) {
     UUID userId = parseUserId(jwt);
-    long count = labService.countCompletedChallenges(userId);
+    long count = labService.countCompletedLabs(userId);
     return ResponseEntity.ok(java.util.Map.of("count", count));
   }
 }

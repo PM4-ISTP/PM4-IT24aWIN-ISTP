@@ -65,7 +65,7 @@ public interface ChallengeCompletionRepository extends JpaRepository<ChallengeCo
         where sc2.user.id = :userId and sc2.challenge.lab.id = sc.challenge.lab.id
       )
       """)
-  long countCompletedChallenges(@Param("userId") UUID userId);
+  long countCompletedLabs(@Param("userId") UUID userId);
 
   @Query(
       """

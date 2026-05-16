@@ -187,7 +187,7 @@ public class LabPodService {
   public Pair<PodStatusResponse, Boolean> startPod(UUID userId, UUID labId) {
     // Visibility / existence check — throws LabNotFoundException or
     // LabAccessDeniedException which flow through GlobalExceptionHandler
-    Lab lab = labService.getChallenge(userId, labId);
+    Lab lab = labService.getLab(userId, labId);
     dockerImageAvailabilityService.assertImageExists(lab.getDockerImage());
 
     AdminConfig adminConfig =

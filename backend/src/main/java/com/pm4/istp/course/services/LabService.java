@@ -13,17 +13,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface LabService {
-  Lab createChallenge(UUID userId, CreateLabRequest request);
+  Lab createLab(UUID userId, CreateLabRequest request);
 
-  Lab getChallenge(UUID userId, UUID labId);
+  Lab getLab(UUID userId, UUID labId);
 
-  Lab updateChallenge(UUID userId, UUID labId, UpdateLabRequest request);
+  Lab updateLab(UUID userId, UUID labId, UpdateLabRequest request);
 
-  void deleteChallenge(UUID userId, UUID labId);
+  void deleteLab(UUID userId, UUID labId);
 
-  Page<ListLabResponseDto> listChallengesForCreator(UUID creatorId, Pageable pageable);
+  Page<ListLabResponseDto> listLabsForCreator(UUID creatorId, Pageable pageable);
 
-  Page<ListLabResponseDto> searchAvailableChallenges(UUID userId, String search, Pageable pageable);
+  Page<ListLabResponseDto> searchAvailableLabs(UUID userId, String search, Pageable pageable);
 
   int previewVisibilityImpact(UUID userId, UUID labId, LabStatusEnum newStatus);
 
@@ -31,7 +31,7 @@ public interface LabService {
    * Returns the lab in its student-facing form (no flags; with per-student progress). The caller
    * must be enrolled in a course that contains this lab.
    */
-  LabStudentDto getChallengeForPlay(UUID userId, UUID courseId, UUID labId);
+  LabStudentDto getLabForPlay(UUID userId, UUID courseId, UUID labId);
 
   /**
    * Submits a flag for a challenge. Case-sensitive comparison against the plaintext flag. On a
@@ -63,5 +63,5 @@ public interface LabService {
       UUID userId, UUID courseId, UUID labId, UUID challengeId);
 
   /** Returns the number of labs the user has fully completed (all challenges solved). */
-  long countCompletedChallenges(UUID userId);
+  long countCompletedLabs(UUID userId);
 }
