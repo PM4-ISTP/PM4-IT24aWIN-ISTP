@@ -152,11 +152,17 @@ export default function CreateCourse() {
                 }
               }}
               error={shortDescriptionError}
+              required
               description={`Shown on course cards and in the blue course header. ${shortDescriptionCharCount}/${COURSE_SHORT_DESCRIPTION_MAX_CHARS} characters.`}
               styles={{ input: { overflowY: "auto" } }}
             />
 
-            <MyEditor description={description} setDescription={setDescription} />
+            <MyEditor
+              label="Description"
+              required
+              description={description}
+              setDescription={setDescription}
+            />
 
             <Select
               label="Topic"
