@@ -2,6 +2,9 @@ package com.pm4.istp.admin.services.impl;
 
 import com.pm4.istp.admin.dto.AdminLabListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateLabRequestDto;
+import com.pm4.istp.admin.dto.DeleteCheckResponseDto;
+import com.pm4.istp.admin.exceptions.HardDeleteBlockedException;
+import com.pm4.istp.admin.services.AdminDeleteCheckService;
 import com.pm4.istp.admin.services.AdminLabService;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
@@ -23,6 +26,7 @@ public class AdminLabServiceImpl implements AdminLabService {
 
   private final LabRepository labRepository;
   private final CourseLabRepository courseLabRepository;
+  private final AdminDeleteCheckService adminDeleteCheckService;
 
   @Override
   @Transactional(readOnly = true)
@@ -34,6 +38,18 @@ public class AdminLabServiceImpl implements AdminLabService {
     }
 
     return labRepository.findAllChallengesForAdminByQuery(normalizedQuery, pageable);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<AdminLabListItemDto> listRemovedChallenges(String query, Pageable pageable) {
+    String normalizedQuery = normalizeBlankToNull(query);
+
+    if (normalizedQuery == null) {
+      return labRepository.findRemovedChallengesForAdmin(pageable);
+    }
+
+    return labRepository.findRemovedChallengesForAdminByQuery(normalizedQuery, pageable);
   }
 
   @Override
@@ -65,6 +81,10 @@ public class AdminLabServiceImpl implements AdminLabService {
       return;
     }
 
+    DeleteCheckResponseDto check = adminDeleteCheckService.checkLab(labId);
+    if (!check.hardDeleteAllowed()) {
+      throw new HardDeleteBlockedException("Hard delete is blocked because related data still exists.");
+    }
     labRepository.delete(lab);
   }
 

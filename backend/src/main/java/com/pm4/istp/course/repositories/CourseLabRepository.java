@@ -17,12 +17,16 @@ public interface CourseLabRepository extends JpaRepository<CourseLab, UUID> {
 
   Optional<CourseLab> findByCourseIdAndLabId(UUID courseId, UUID labId);
 
+  long countByCourseId(UUID courseId);
+
   @Query(
       """
       select count(cc) > 0
       from CourseLab cc
       join cc.course.courseInstructors ci
       where cc.lab.id = :labId and ci.instructor.id = :userId
+        and cc.course.deletedAt is null
+        and cc.lab.deletedAt is null
       """)
   boolean existsByChallengeIdAndCourseInstructorId(
       @Param("labId") UUID labId, @Param("userId") UUID userId);
@@ -32,6 +36,8 @@ public interface CourseLabRepository extends JpaRepository<CourseLab, UUID> {
       select count(cc) > 0
       from CourseLab cc
       where cc.lab.id = :labId
+      and cc.course.deletedAt is null
+      and cc.lab.deletedAt is null
       and exists (
         select 1 from CourseEnrollment e where e.course = cc.course and e.participant.id = :userId
       )
@@ -74,6 +80,8 @@ public interface CourseLabRepository extends JpaRepository<CourseLab, UUID> {
       select cc.course.id, cc.course.title, cc.lab.id, cc.lab.title, cc.dueAt
       from CourseLab cc
       where cc.dueAt is not null
+      and cc.course.deletedAt is null
+      and cc.lab.deletedAt is null
       and exists (
         select 1 from CourseEnrollment e where e.course = cc.course and e.participant.id = :userId
       )
@@ -86,6 +94,8 @@ public interface CourseLabRepository extends JpaRepository<CourseLab, UUID> {
       select cc.course.id, cc.course.title, cc.lab.id, cc.lab.title
       from CourseLab cc
       where cc.lab.id = :labId
+      and cc.course.deletedAt is null
+      and cc.lab.deletedAt is null
       and exists (
         select 1 from CourseEnrollment e where e.course = cc.course and e.participant.id = :userId
       )

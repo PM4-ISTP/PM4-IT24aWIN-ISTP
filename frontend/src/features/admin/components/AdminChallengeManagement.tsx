@@ -25,7 +25,7 @@ import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { slugify } from "@/src/shared/lib/utils";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
-type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
+type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC";
 type ChallengeDifficulty = "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
 
 type AdminLabListItem = {
@@ -217,7 +217,8 @@ export default function AdminChallengeManagement() {
         )}
       </Group>
       <Text size="sm" c="dimmed">
-        Instructors can only soft-delete labs. Hard delete is enabled after soft delete.
+        Instructors can only soft-delete labs. Hard delete is managed from the Removed tab and is
+        only available when no related database dependencies exist.
       </Text>
 
       <Table highlightOnHover withTableBorder striped={false} style={{ tableLayout: "fixed" }}>
@@ -278,9 +279,7 @@ export default function AdminChallengeManagement() {
                           ? "green"
                           : c.status === "PRIVATE"
                             ? "yellow"
-                            : c.status === "ARCHIVED"
-                              ? "red"
-                              : "gray"
+                            : "gray"
                       }
                     >
                       {c.status}
@@ -325,7 +324,7 @@ export default function AdminChallengeManagement() {
                       color="red"
                       aria-label="Hard delete lab"
                       onClick={() => openDelete(c, "hard")}
-                      disabled={!c.isSoftDeleted}
+                      disabled
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -375,7 +374,6 @@ export default function AdminChallengeManagement() {
                   { value: "DRAFT", label: "DRAFT" },
                   { value: "PRIVATE", label: "PRIVATE" },
                   { value: "PUBLIC", label: "PUBLIC" },
-                  { value: "ARCHIVED", label: "ARCHIVED" },
                 ]}
                 value={form.values.status}
                 onChange={(v) => form.setFieldValue("status", (v ?? "DRAFT") as ChallengeStatus)}

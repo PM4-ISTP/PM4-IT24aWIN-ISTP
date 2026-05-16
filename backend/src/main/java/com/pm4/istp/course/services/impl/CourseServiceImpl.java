@@ -167,7 +167,7 @@ public class CourseServiceImpl implements CourseService {
   public Course getCourse(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
@@ -202,7 +202,7 @@ public class CourseServiceImpl implements CourseService {
 
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
@@ -240,7 +240,7 @@ public class CourseServiceImpl implements CourseService {
   public Course updateCourse(UUID userId, UUID courseId, UpdateCourseRequest request) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
@@ -346,7 +346,7 @@ public class CourseServiceImpl implements CourseService {
   public Course updateCourseChallenges(UUID userId, UUID courseId, List<CourseLabItemDto> labs) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
@@ -366,9 +366,9 @@ public class CourseServiceImpl implements CourseService {
         throw new InvalidCourseLabException(
             String.format("Lab '%s' is a draft and cannot be added to a course", lab.getTitle()));
       }
-      if (lab.getStatus() == LabStatusEnum.ARCHIVED) {
+      if (lab.getDeletedAt() != null) {
         throw new InvalidCourseLabException(
-            String.format("Lab '%s' is archived and cannot be added to a course", lab.getTitle()));
+            String.format("Lab '%s' was removed and cannot be added to a course", lab.getTitle()));
       }
 
       // Only allow adding own PRIVATE labs or PUBLIC labs
@@ -422,7 +422,7 @@ public class CourseServiceImpl implements CourseService {
   public CourseLabSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
@@ -494,7 +494,7 @@ public class CourseServiceImpl implements CourseService {
 
   private Course findCourseOrThrow(UUID courseId) {
     return courseRepository
-        .findById(courseId)
+        .findByIdAndDeletedAtIsNull(courseId)
         .orElseThrow(
             () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
   }
@@ -673,7 +673,7 @@ public class CourseServiceImpl implements CourseService {
       com.pm4.istp.course.dto.UpdateCourseChallengeScoreRequestDto request) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, instructorUserId);
@@ -1085,7 +1085,7 @@ public class CourseServiceImpl implements CourseService {
   public void deleteCourse(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
@@ -1171,7 +1171,7 @@ public class CourseServiceImpl implements CourseService {
   public Course regenerateInviteCode(UUID courseId, UUID userId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
@@ -1191,7 +1191,7 @@ public class CourseServiceImpl implements CourseService {
   public void removeParticipant(UUID ownerId, UUID courseId, UUID participantId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
@@ -1216,7 +1216,7 @@ public class CourseServiceImpl implements CourseService {
   public void leaveCourse(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 

@@ -18,9 +18,7 @@ import org.springframework.stereotype.Repository;
 public interface CourseRepository extends JpaRepository<Course, UUID> {
   Page<Course> findByCourseInstructorsInstructorId(UUID instructorId, Pageable pageable);
 
-  default Optional<Course> findByIdAndDeletedAtIsNull(UUID id) {
-    return findById(id).filter(course -> course.getDeletedAt() == null);
-  }
+  Optional<Course> findByIdAndDeletedAtIsNull(UUID id);
 
   @Query("select c from Course c where c.inviteCode = :inviteCode and c.deletedAt is null")
   Optional<Course> findByInviteCode(@Param("inviteCode") String inviteCode);
@@ -347,6 +345,83 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
               or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
           """)
   Page<AdminCourseListItemDto> findAllCoursesForAdminByQuery(
+      @Param("query") String query, Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select distinct new com.pm4.istp.admin.dto.AdminCourseListItemDto(
+            c.id,
+            c.title,
+            c.description,
+            c.shortDescription,
+            c.isPublished,
+            c.isPrivate,
+            c.deletedAt is not null,
+            c.createdAt,
+            c.updatedAt,
+            c.topic,
+            c.imageUrl,
+            ownerUser.id,
+            ownerUser.name,
+            ownerUser.username
+          )
+          from Course c
+          left join c.courseInstructors ciOwner
+            on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
+          left join ciOwner.instructor ownerUser
+          where c.deletedAt is not null
+          """,
+      countQuery =
+          """
+          select count(distinct c.id)
+          from Course c
+          where c.deletedAt is not null
+          """)
+  Page<AdminCourseListItemDto> findRemovedCoursesForAdmin(Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select distinct new com.pm4.istp.admin.dto.AdminCourseListItemDto(
+            c.id,
+            c.title,
+            c.description,
+            c.shortDescription,
+            c.isPublished,
+            c.isPrivate,
+            c.deletedAt is not null,
+            c.createdAt,
+            c.updatedAt,
+            c.topic,
+            c.imageUrl,
+            ownerUser.id,
+            ownerUser.name,
+            ownerUser.username
+          )
+          from Course c
+          left join c.courseInstructors ciOwner
+            on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
+          left join ciOwner.instructor ownerUser
+          where c.deletedAt is not null
+            and (
+              lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+            )
+          """,
+      countQuery =
+          """
+          select count(distinct c.id)
+          from Course c
+          where c.deletedAt is not null
+            and (
+              lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+            )
+          """)
+  Page<AdminCourseListItemDto> findRemovedCoursesForAdminByQuery(
       @Param("query") String query, Pageable pageable);
 
   @Modifying

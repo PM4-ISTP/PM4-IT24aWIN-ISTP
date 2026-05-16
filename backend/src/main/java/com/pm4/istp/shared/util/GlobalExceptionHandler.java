@@ -1,6 +1,7 @@
 package com.pm4.istp.shared.util;
 
 import com.pm4.istp.challengepod.exceptions.LabPodException;
+import com.pm4.istp.admin.exceptions.HardDeleteBlockedException;
 import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
@@ -35,6 +36,17 @@ import org.springframework.web.client.RestClientResponseException;
 @Slf4j
 public class GlobalExceptionHandler {
   private static final String ACCESS_DENIED_ERROR = "Access denied";
+
+  @ExceptionHandler(HardDeleteBlockedException.class)
+  public ResponseEntity<ErrorDto> handleHardDeleteBlockedException(HardDeleteBlockedException ex) {
+    log.warn("Caught HardDeleteBlockedException: {}", ex.getMessage());
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError(
+        ex.getMessage() == null || ex.getMessage().isBlank()
+            ? "Hard delete is blocked because related data still exists."
+            : ex.getMessage());
+    return new ResponseEntity<>(errorDto, HttpStatus.CONFLICT);
+  }
 
   @ExceptionHandler(LabPodException.class)
   public ResponseEntity<ErrorDto> handleLabPodException(LabPodException ex) {

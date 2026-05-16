@@ -125,7 +125,7 @@ export async function deleteCourse(id: string): Promise<ActionResult<void>> {
       client.DELETE("/api/v1/courses/{id}", {
         params: { path: { id } },
       }),
-    "Failed to delete course"
+    "Failed to remove course"
   );
 }
 

@@ -14,9 +14,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LabRepository extends JpaRepository<Lab, UUID> {
-  default Optional<Lab> findByIdAndDeletedAtIsNull(UUID id) {
-    return findById(id).filter(lab -> lab.getDeletedAt() == null);
-  }
+  Optional<Lab> findByIdAndDeletedAtIsNull(UUID id);
 
   Page<Lab> findByCreatorId(UUID creatorId, Pageable pageable);
 
@@ -147,5 +145,76 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
               or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
           """)
   Page<AdminLabListItemDto> findAllChallengesForAdminByQuery(
+      @Param("query") String query, Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select new com.pm4.istp.admin.dto.AdminLabListItemDto(
+            c.id,
+            c.title,
+            c.description,
+            c.status,
+            c.difficulty,
+            c.deletedAt is not null,
+            c.dockerImage,
+            c.containerPort,
+            c.maxScore,
+            (select count(cc) from CourseLab cc where cc.lab = c),
+            c.createdAt,
+            c.updatedAt,
+            c.creator.id,
+            c.creator.name,
+            c.creator.username
+          )
+          from Lab c
+          where c.deletedAt is not null
+          """,
+      countQuery =
+          """
+          select count(c)
+          from Lab c
+          where c.deletedAt is not null
+          """)
+  Page<AdminLabListItemDto> findRemovedChallengesForAdmin(Pageable pageable);
+
+  @Query(
+      value =
+          """
+          select new com.pm4.istp.admin.dto.AdminLabListItemDto(
+            c.id,
+            c.title,
+            c.description,
+            c.status,
+            c.difficulty,
+            c.deletedAt is not null,
+            c.dockerImage,
+            c.containerPort,
+            c.maxScore,
+            (select count(cc) from CourseLab cc where cc.lab = c),
+            c.createdAt,
+            c.updatedAt,
+            c.creator.id,
+            c.creator.name,
+            c.creator.username
+          )
+          from Lab c
+          where c.deletedAt is not null
+            and (
+              lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+            )
+          """,
+      countQuery =
+          """
+          select count(c)
+          from Lab c
+          where c.deletedAt is not null
+            and (
+              lower(c.title) like lower(concat('%', :query, '%'))
+              or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+            )
+          """)
+  Page<AdminLabListItemDto> findRemovedChallengesForAdminByQuery(
       @Param("query") String query, Pageable pageable);
 }
