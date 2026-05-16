@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -86,9 +87,10 @@ public class Lab {
   @OneToMany(
       mappedBy = "lab",
       cascade = CascadeType.ALL,
-      orphanRemoval = true,
+      orphanRemoval = false,
       fetch = FetchType.LAZY)
   @OrderBy("orderIndex ASC")
+  @SQLRestriction("deleted_at IS NULL")
   private List<Challenge> challenges = new ArrayList<>();
 
   @CreatedDate

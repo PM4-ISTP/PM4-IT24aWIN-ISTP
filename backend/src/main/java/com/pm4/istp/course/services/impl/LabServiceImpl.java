@@ -216,6 +216,13 @@ public class LabServiceImpl implements LabService {
       retained.add(target);
     }
 
+    // Soft-delete challenges that were removed (not in retained).
+    // Hard deletion is not possible because challenge_completions, student_flag_submissions,
+    // student_option_submissions, and course_challenge_score_overrides hold FK references.
+    for (Challenge removed : existingById.values()) {
+      removed.setDeletedAt(LocalDateTime.now());
+    }
+
     lab.getChallenges().clear();
     lab.getChallenges().addAll(retained);
   }
