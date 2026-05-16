@@ -66,8 +66,8 @@ export type DashboardTestDataEntry = Readonly<{
 // Admin User
 const adminUser: User = {
   id: "f730669a-055b-4362-8a01-605d9881c5b0",
-        username: process.env.E2E_ADMIN_USERNAME ?? "e2e-admin",
-        password: process.env.E2E_ADMIN_PASSWORD ?? "e2e-admin",
+  username: process.env.E2E_ADMIN_USERNAME ?? "e2e-admin",
+  password: process.env.E2E_ADMIN_PASSWORD ?? "e2e-admin",
   name: "E2E Admin",
   role: "Admin",
   title: "Test Administrator",
@@ -78,8 +78,8 @@ const adminUser: User = {
 // Instructor User
 const instructorUser: User = {
   id: "e4f2814e-0bd9-4fe9-acd3-8d08cfb11179",
-        username: process.env.E2E_INSTRUCTOR_USERNAME ?? "e2e-instructor",
-        password: process.env.E2E_INSTRUCTOR_PASSWORD ?? "e2e-instructor",
+  username: process.env.E2E_INSTRUCTOR_USERNAME ?? "e2e-instructor",
+  password: process.env.E2E_INSTRUCTOR_PASSWORD ?? "e2e-instructor",
   name: "E2E Instructor",
   role: "Instructor",
   title: "Test Instructor",
@@ -90,12 +90,12 @@ const instructorUser: User = {
 // Instructor Without Courses Or Labs (separate user with Instructor role)
 const instructorWithoutCoursesOrLabsUser: User = {
   id: "a1b2c3d4-e5f6-4g7h-8i9j-0k1l2m3n4o5p",
-        username:
-          process.env.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_USERNAME ??
-          "e2e-instructor-without-courses-or-labs",
-        password:
-          process.env.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_PASSWORD ??
-          "e2e-instructor-without-courses-or-labs",
+  username:
+    process.env.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_USERNAME ??
+    "e2e-instructor-without-courses-or-labs",
+  password:
+    process.env.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_PASSWORD ??
+    "e2e-instructor-without-courses-or-labs",
   name: "E2E Instructor Without Courses",
   role: "Instructor",
   title: "Test Instructor",
@@ -106,8 +106,8 @@ const instructorWithoutCoursesOrLabsUser: User = {
 // Student User
 const studentUser: User = {
   id: "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
-        username: process.env.E2E_STUDENT_USERNAME ?? "e2e-student",
-        password: process.env.E2E_STUDENT_PASSWORD ?? "e2e-student",
+  username: process.env.E2E_STUDENT_USERNAME ?? "e2e-student",
+  password: process.env.E2E_STUDENT_PASSWORD ?? "e2e-student",
   name: "E2E Student",
   role: "Student",
   title: "Student",
@@ -240,7 +240,7 @@ export const instructorCourse01: Course = {
       lab: instructorLab01,
       dueAt: "2100-01-01T11:00:00",
     },
-        {
+    {
       lab: instructorLab02,
       dueAt: "2000-01-01T11:00:00",
     },
@@ -268,7 +268,7 @@ export const instructorCourse02: Course = {
   published: false,
   numOfParticipants: 2,
   labs: [
-        {
+    {
       lab: instructorLab03,
       dueAt: "",
     },
@@ -318,10 +318,12 @@ export const instructorCourse04: Course = {
   private: false,
   published: true,
   numOfParticipants: 2,
-  labs: [    {
+  labs: [
+    {
       lab: instructorLab02,
       dueAt: "",
-    },],
+    },
+  ],
 };
 
 // ============================================================================
@@ -378,7 +380,7 @@ export const courses = {
 
 // ============================================================================
 // Update User data after course and lab definitions (handle circular dep)
-// 
+//
 // This solution uses a workaround for setting in readonly arrays. This isn't
 // clean code. But because it is only done once in this file, it is ok.
 // ============================================================================
@@ -392,7 +394,10 @@ export const courses = {
   instructorCourse04,
   instructorCourse01,
 ];
-(instructorUser as unknown as { completedLabs: Lab[] }).completedLabs = [instructorLab03, adminLab01];
+(instructorUser as unknown as { completedLabs: Lab[] }).completedLabs = [
+  instructorLab03,
+  adminLab01,
+];
 
 // Student: enrolls in instructorCourse02, instructorCourse04, adminCourse01, instructorCourse01
 (studentUser as unknown as { enrolledCourses: Course[] }).enrolledCourses = [
@@ -401,4 +406,3 @@ export const courses = {
   adminCourse01,
   instructorCourse01,
 ];
-

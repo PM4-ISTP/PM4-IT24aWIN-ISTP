@@ -94,7 +94,12 @@ async function assertUpcomingDeadlines(page: Page, visibleDeadlines: readonly De
   await expect(page.locator('[title="Aus Kalender entfernen"]')).toHaveCount(overdue.length);
 }
 
-const dashboardRoleTestUsers = [testUsers.instructor, testUsers.admin, testUsers.student, testUsers.instructorWithoutCoursesOrLabs];
+const dashboardRoleTestUsers = [
+  testUsers.instructor,
+  testUsers.admin,
+  testUsers.student,
+  testUsers.instructorWithoutCoursesOrLabs,
+];
 
 test.describe("Dashboard widgets for all primary roles and a user without courses and deadlines", () => {
   // Group: End-to-end dashboard checks (cards, deadlines, hero stats, and empty active labs) per role.
