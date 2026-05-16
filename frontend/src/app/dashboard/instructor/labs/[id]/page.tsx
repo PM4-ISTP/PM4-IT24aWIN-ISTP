@@ -298,10 +298,10 @@ export default function EditChallenge() {
         </Stack>
       </Modal>
 
-      <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Lab" centered>
+      <Modal opened={deleteOpened} onClose={closeDelete} title="Remove Lab" centered>
         <Stack gap="md">
           <Text size="sm">
-            Are you sure you want to delete <strong>{formValues.title}</strong>?
+            Remove <strong>{formValues.title}</strong> from instructor dashboards?
           </Text>
           {courseCount > 0 && (
             <Text size="sm" c="orange">
@@ -309,10 +309,10 @@ export default function EditChallenge() {
             </Text>
           )}
           <Text size="sm" c="dimmed">
-            This action cannot be undone.
+            Soft-deleted labs are hidden from active instructor and student lists.
           </Text>
           {deleteError && (
-            <Alert color="red" title="Could not delete lab" variant="light">
+            <Alert color="red" title="Could not remove lab" variant="light">
               Something went wrong. Please try again.
             </Alert>
           )}
@@ -328,7 +328,7 @@ export default function EditChallenge() {
                 void handleDelete();
               }}
             >
-              Delete Lab
+              Remove Lab
             </Button>
           </Group>
         </Stack>
@@ -369,7 +369,7 @@ export default function EditChallenge() {
             onClick={openDelete}
             radius="md"
           >
-            Delete Lab
+            Remove Lab
           </Button>
         </Group>
 

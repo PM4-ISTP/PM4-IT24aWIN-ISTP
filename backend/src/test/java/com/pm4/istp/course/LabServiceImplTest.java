@@ -646,7 +646,7 @@ class ChallengeServiceImplTest {
   }
 
   @Test
-  void deleteChallenge_whenCallerIsCreator_deletesChallenge() {
+  void deleteChallenge_whenCallerIsCreator_softDeletesChallenge() {
     UUID creatorId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     User creator = buildUser(creatorId);
@@ -656,7 +656,8 @@ class ChallengeServiceImplTest {
 
     labService.deleteChallenge(creatorId, labId);
 
-    verify(labRepository).delete(lab);
+    verify(courseLabRepository).deleteByChallengeId(labId);
+    verify(labRepository).save(lab);
   }
 
   @Test
@@ -672,7 +673,7 @@ class ChallengeServiceImplTest {
     assertThatThrownBy(() -> labService.deleteChallenge(otherId, labId))
         .isInstanceOf(LabAccessDeniedException.class);
 
-    verify(labRepository, never()).delete(any(Lab.class));
+    verify(labRepository, never()).save(any(Lab.class));
   }
 
   @Test

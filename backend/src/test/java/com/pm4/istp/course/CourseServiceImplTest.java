@@ -675,7 +675,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void deleteCourse_whenOwner_deletesCourse() {
+  void deleteCourse_whenOwner_softDeletesCourse() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
@@ -695,7 +695,7 @@ class CourseServiceImplTest {
 
     courseService.deleteCourse(ownerId, courseId);
 
-    verify(courseRepository).delete(course);
+    verify(courseRepository).save(course);
   }
 
   @Test
@@ -721,7 +721,7 @@ class CourseServiceImplTest {
     assertThatThrownBy(() -> courseService.deleteCourse(nonOwnerId, courseId))
         .isInstanceOf(CourseAccessDeniedException.class);
 
-    verify(courseRepository, never()).delete(any(Course.class));
+    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
@@ -734,7 +734,7 @@ class CourseServiceImplTest {
     assertThatThrownBy(() -> courseService.deleteCourse(userId, courseId))
         .isInstanceOf(CourseNotFoundException.class);
 
-    verify(courseRepository, never()).delete(any(Course.class));
+    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test

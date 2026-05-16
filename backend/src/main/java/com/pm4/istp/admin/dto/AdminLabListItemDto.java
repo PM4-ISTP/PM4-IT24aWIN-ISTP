@@ -17,6 +17,8 @@ public class AdminLabListItemDto {
   private String description;
   private LabStatusEnum status;
   private LabDifficultyEnum difficulty;
+  private boolean isSoftDeleted;
+  private boolean canHardDelete;
   private String dockerImage;
   private Integer containerPort;
   private int maxScore;

@@ -94,7 +94,7 @@ public class CourseServiceImpl implements CourseService {
   public Course createCourse(UUID userId, CreateCourseRequest course) {
     User instructorUser =
         userRepository
-            .findByIdAndDeletedAtIsNull(userId)
+            .findById(userId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
@@ -125,7 +125,7 @@ public class CourseServiceImpl implements CourseService {
       for (CreateCourseInstructorRequest req : course.getInstructors()) {
         User collaboratorUser =
             userRepository
-                .findByIdAndDeletedAtIsNull(req.getInstructorId())
+            .findById(req.getInstructorId())
                 .orElseThrow(
                     () ->
                         new UserNotFoundException(
@@ -167,7 +167,7 @@ public class CourseServiceImpl implements CourseService {
   public Course getCourse(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
@@ -196,13 +196,13 @@ public class CourseServiceImpl implements CourseService {
   public Course enrollInCourse(UUID userId, UUID courseId) {
     User participant =
         userRepository
-            .findByIdAndDeletedAtIsNull(userId)
+            .findById(userId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
@@ -240,7 +240,7 @@ public class CourseServiceImpl implements CourseService {
   public Course updateCourse(UUID userId, UUID courseId, UpdateCourseRequest request) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
@@ -306,7 +306,7 @@ public class CourseServiceImpl implements CourseService {
       if (!existingInstructorIds.contains(req.getInstructorId())) {
         User collaboratorUser =
             userRepository
-                .findByIdAndDeletedAtIsNull(req.getInstructorId())
+            .findById(req.getInstructorId())
                 .orElseThrow(
                     () ->
                         new UserNotFoundException(
@@ -346,7 +346,7 @@ public class CourseServiceImpl implements CourseService {
   public Course updateCourseChallenges(UUID userId, UUID courseId, List<CourseLabItemDto> labs) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
@@ -356,7 +356,7 @@ public class CourseServiceImpl implements CourseService {
     for (CourseLabItemDto item : labs) {
       Lab lab =
           labRepository
-              .findById(item.getLabId())
+            .findByIdAndDeletedAtIsNull(item.getLabId())
               .orElseThrow(
                   () ->
                       new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, item.getLabId())));
@@ -418,7 +418,7 @@ public class CourseServiceImpl implements CourseService {
   public CourseLabSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
@@ -490,7 +490,7 @@ public class CourseServiceImpl implements CourseService {
 
   private Course findCourseOrThrow(UUID courseId) {
     return courseRepository
-        .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
         .orElseThrow(
             () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
   }
@@ -669,7 +669,7 @@ public class CourseServiceImpl implements CourseService {
       com.pm4.istp.course.dto.UpdateCourseChallengeScoreRequestDto request) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, instructorUserId);
@@ -684,14 +684,14 @@ public class CourseServiceImpl implements CourseService {
 
     User instructor =
         userRepository
-            .findByIdAndDeletedAtIsNull(instructorUserId)
+            .findById(instructorUserId)
             .orElseThrow(
                 () ->
                     new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, instructorUserId)));
 
     User participant =
         userRepository
-            .findByIdAndDeletedAtIsNull(participantId)
+            .findById(participantId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, participantId)));
 
@@ -1081,11 +1081,12 @@ public class CourseServiceImpl implements CourseService {
   public void deleteCourse(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
-    courseRepository.delete(course);
+    course.setDeletedAt(LocalDateTime.now());
+    courseRepository.save(course);
   }
 
   @Override
@@ -1129,7 +1130,7 @@ public class CourseServiceImpl implements CourseService {
   public Course joinByInviteCode(String code, UUID studentId) {
     User participant =
         userRepository
-            .findByIdAndDeletedAtIsNull(studentId)
+            .findById(studentId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, studentId)));
 
@@ -1166,7 +1167,7 @@ public class CourseServiceImpl implements CourseService {
   public Course regenerateInviteCode(UUID courseId, UUID userId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
@@ -1186,7 +1187,7 @@ public class CourseServiceImpl implements CourseService {
   public void removeParticipant(UUID ownerId, UUID courseId, UUID participantId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
@@ -1211,7 +1212,7 @@ public class CourseServiceImpl implements CourseService {
   public void leaveCourse(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 

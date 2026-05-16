@@ -8,6 +8,7 @@ import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseTopicService;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -78,6 +79,11 @@ public class AdminCourseServiceImpl implements AdminCourseService {
             .findById(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+    if (course.getDeletedAt() == null) {
+      course.setDeletedAt(LocalDateTime.now());
+      courseRepository.save(course);
+      return;
+    }
     courseRepository.delete(course);
   }
 

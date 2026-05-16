@@ -39,6 +39,8 @@ type AdminCourseListItem = {
   shortDescription: string | null;
   isPublished: boolean;
   isPrivate: boolean;
+  isSoftDeleted: boolean;
+  canHardDelete: boolean;
   createdAt: string;
   updatedAt: string;
   topic: string | null;
@@ -72,6 +74,7 @@ export default function AdminCourseManagement() {
 
   const [editOpened, setEditOpened] = useState(false);
   const [deleteOpened, setDeleteOpened] = useState(false);
+  const [deleteMode, setDeleteMode] = useState<"soft" | "hard">("soft");
   const [selected, setSelected] = useState<AdminCourseListItem | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -130,8 +133,9 @@ export default function AdminCourseManagement() {
     setEditOpened(true);
   }
 
-  function openDelete(course: AdminCourseListItem) {
+  function openDelete(course: AdminCourseListItem, mode: "soft" | "hard") {
     setSelected(course);
+    setDeleteMode(mode);
     setDeleteOpened(true);
   }
 
@@ -188,7 +192,11 @@ export default function AdminCourseManagement() {
         const raw = await readBackendError(res);
         const msg = toUserFriendlyBackendError(raw);
         const color = res.status >= 500 ? "red" : "orange";
-        showToast(color, "Failed to delete course", msg ?? "Please try again.");
+        showToast(
+          color,
+          deleteMode === "hard" ? "Failed to hard-delete course" : "Failed to remove course",
+          msg ?? "Please try again."
+        );
         return;
       }
       setDeleteOpened(false);
@@ -199,7 +207,11 @@ export default function AdminCourseManagement() {
         refresh();
       }
     } catch {
-      showToast("red", "Failed to delete course", "Please try again.");
+      showToast(
+        "red",
+        deleteMode === "hard" ? "Failed to hard-delete course" : "Failed to remove course",
+        "Please try again."
+      );
     } finally {
       setSaving(false);
     }
@@ -233,6 +245,10 @@ export default function AdminCourseManagement() {
           </Group>
         )}
       </Group>
+      <Text size="sm" c="dimmed">
+        Instructors can only soft-delete courses. Hard delete is available only after a course is
+        soft-deleted.
+      </Text>
 
       <Table
         highlightOnHover
@@ -246,14 +262,15 @@ export default function AdminCourseManagement() {
             <Table.Th>Title</Table.Th>
             <Table.Th style={{ width: 240 }}>Owner</Table.Th>
             <Table.Th style={{ width: 190 }}>Visibility</Table.Th>
+            <Table.Th style={{ width: 180 }}>Deletion</Table.Th>
             <Table.Th style={{ width: 190 }}>Updated</Table.Th>
-            <Table.Th style={{ width: 96 }} />
+            <Table.Th style={{ width: 130 }} />
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
           {courses.length === 0 ? (
             <Table.Tr>
-              <Table.Td colSpan={5}>
+              <Table.Td colSpan={6}>
                 <Text size="sm" c="dimmed" ta="center" py="md">
                   No courses found.
                 </Text>
@@ -307,6 +324,11 @@ export default function AdminCourseManagement() {
                   </Group>
                 </Table.Td>
                 <Table.Td>
+                  <Badge variant="light" color={c.isSoftDeleted ? "orange" : "teal"}>
+                    {c.isSoftDeleted ? "Soft Deleted" : "Active"}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
                   <Text size="sm">{formatDate(c.updatedAt)}</Text>
                 </Table.Td>
                 <Table.Td>
@@ -321,9 +343,19 @@ export default function AdminCourseManagement() {
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
+                      color="orange"
+                      aria-label="Soft delete course"
+                      onClick={() => openDelete(c, "soft")}
+                      disabled={c.isSoftDeleted}
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="subtle"
                       color="red"
-                      aria-label="Delete course"
-                      onClick={() => openDelete(c)}
+                      aria-label="Hard delete course"
+                      onClick={() => openDelete(c, "hard")}
+                      disabled={!c.canHardDelete}
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -451,17 +483,25 @@ export default function AdminCourseManagement() {
       <Modal
         opened={deleteOpened}
         onClose={() => setDeleteOpened(false)}
-        title="Delete Course"
+        title={deleteMode === "hard" ? "Hard Delete Course" : "Remove Course"}
         centered
       >
         <Stack gap="md">
           <Text size="sm">
-            Delete{" "}
+            {deleteMode === "hard" ? "Permanently delete" : "Soft-delete"}{" "}
             <Text span fw={700}>
               {selectedTitle}
             </Text>
-            ? This cannot be undone.
+            ?{" "}
+            {deleteMode === "hard"
+              ? "This cannot be undone."
+              : "The course will be hidden from instructor and student active lists."}
           </Text>
+          {deleteMode === "hard" && !(selected?.canHardDelete ?? false) && (
+            <Text size="sm" c="dimmed">
+              Hard delete is only possible after soft delete.
+            </Text>
+          )}
           <Group justify="flex-end">
             <Button
               variant="default"
@@ -471,8 +511,14 @@ export default function AdminCourseManagement() {
             >
               Cancel
             </Button>
-            <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
-              Delete
+            <Button
+              color={deleteMode === "hard" ? "red" : "orange"}
+              radius="md"
+              onClick={() => void confirmDelete()}
+              loading={saving}
+              disabled={deleteMode === "hard" && !(selected?.canHardDelete ?? false)}
+            >
+              {deleteMode === "hard" ? "Hard Delete" : "Remove"}
             </Button>
           </Group>
         </Stack>

@@ -6,6 +6,7 @@ import com.pm4.istp.admin.services.AdminLabService;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.repositories.LabRepository;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -56,6 +57,11 @@ public class AdminLabServiceImpl implements AdminLabService {
             .findById(labId)
             .orElseThrow(
                 () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+    if (lab.getDeletedAt() == null) {
+      lab.setDeletedAt(LocalDateTime.now());
+      labRepository.save(lab);
+      return;
+    }
     labRepository.delete(lab);
   }
 

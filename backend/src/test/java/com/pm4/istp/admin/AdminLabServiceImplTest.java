@@ -158,7 +158,7 @@ class AdminChallengeServiceImplTest {
   // ── deleteChallenge ─────────────────────────────────────────────────────────
 
   @Test
-  void deleteChallenge_whenExists_deletesChallenge() {
+  void deleteChallenge_whenExists_softDeletesChallenge() {
     UUID id = UUID.randomUUID();
     Lab lab = new Lab();
     lab.setId(id);
@@ -166,7 +166,7 @@ class AdminChallengeServiceImplTest {
 
     adminChallengeService.deleteChallenge(id);
 
-    verify(labRepository).delete(lab);
+    verify(labRepository).save(lab);
   }
 
   @Test
@@ -178,6 +178,6 @@ class AdminChallengeServiceImplTest {
         .isInstanceOf(LabNotFoundException.class)
         .hasMessageContaining(id.toString());
 
-    verify(labRepository, never()).delete(any());
+    verify(labRepository, never()).save(any());
   }
 }

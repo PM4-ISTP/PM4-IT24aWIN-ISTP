@@ -384,13 +384,14 @@ export default function EditCourse() {
 
   return (
     <Container size="xl">
-      <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Course" centered>
+      <Modal opened={deleteOpened} onClose={closeDelete} title="Remove Course" centered>
         <Stack gap="md">
           <Text size="sm">
-            Are you sure you want to delete <strong>{title}</strong>? This action cannot be undone.
+            Remove <strong>{title}</strong> from instructor dashboards? Students and instructors will no
+            longer see it in active course lists.
           </Text>
           {deleteError && (
-            <Alert color="red" title="Could not delete course" variant="light">
+            <Alert color="red" title="Could not remove course" variant="light">
               Something went wrong. Please try again.
             </Alert>
           )}
@@ -417,7 +418,7 @@ export default function EditCourse() {
                 void handleDelete();
               }}
             >
-              Delete Course
+              Remove Course
             </Button>
           </Group>
         </Stack>
@@ -459,7 +460,7 @@ export default function EditCourse() {
               onClick={openDelete}
               radius="md"
             >
-              Delete Course
+              Remove Course
             </Button>
           )}
         </Group>
