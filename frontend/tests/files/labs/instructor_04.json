@@ -1,0 +1,12 @@
+{
+  "id": "d71ff207-c4c0-428e-ae71-41f338989180",
+  "title": "E2E Test Lab: Instructor 04",
+  "status": "DRAFT",
+  "difficulty": "MEDIUM",
+  "maxScore": 1,
+  "dockerImage": "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
+  "containerPort": 80,
+  "creatorName": "E2E Instructor",
+  "courseCount": 0,
+  "updatedAt": "2026-05-15T11:23:17.275862"
+}
