@@ -1222,10 +1222,8 @@ export interface components {
       topic?: string;
       instructors: components["schemas"]["UpdateCourseInstructorRequestDto"][];
       mcAttemptsMode?: string;
-      private?: boolean;
-      published?: boolean;
-      isPublished?: boolean;
-      isPrivate?: boolean;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     CourseDetailInstructorResponseDto: {
       /** Format: uuid */
@@ -1262,12 +1260,9 @@ export interface components {
       /** Format: date-time */
       updatedAt?: string;
       mcAttemptsMode?: string;
-      private?: boolean;
-      published?: boolean;
-      enrolled?: boolean;
       isEnrolled?: boolean;
-      isPublished?: boolean;
-      isPrivate?: boolean;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     CourseLabResponseDto: {
       /** Format: uuid */
@@ -1392,10 +1387,8 @@ export interface components {
       shortDescription?: string;
       topic?: string;
       imageUrl?: string;
-      private?: boolean;
-      published?: boolean;
-      isPublished?: boolean;
-      isPrivate?: boolean;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     AdminConfigRequest: {
       cpuLimit?: string;
@@ -1517,10 +1510,8 @@ export interface components {
       topic?: string;
       instructors: components["schemas"]["CreateCourseInstructorRequestDto"][];
       mcAttemptsMode?: string;
-      private?: boolean;
-      published?: boolean;
-      isPublished?: boolean;
-      isPrivate?: boolean;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     CreateCourseInstructorResponseDto: {
       /** Format: uuid */
@@ -1549,10 +1540,8 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
-      private?: boolean;
-      published?: boolean;
-      isPublished?: boolean;
-      isPrivate?: boolean;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     ChallengeOptionStudentDto: {
       /** Format: uuid */
@@ -1629,12 +1618,9 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
-      private?: boolean;
-      published?: boolean;
-      enrolled?: boolean;
       isEnrolled?: boolean;
-      isPublished?: boolean;
-      isPrivate?: boolean;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     JoinByInviteCodeRequestDto: {
       code: string;
@@ -1802,10 +1788,8 @@ export interface components {
       ownerName?: string;
       ownerPicture?: string;
       ownerTitle?: string;
-      private?: boolean;
-      published?: boolean;
-      isPublished?: boolean;
-      isPrivate?: boolean;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     PageListCourseResponseDto: {
       /** Format: int64 */
@@ -2010,10 +1994,8 @@ export interface components {
       ownerId?: string;
       ownerName?: string;
       ownerUsername?: string;
-      private?: boolean;
-      published?: boolean;
-      isPublished?: boolean;
-      isPrivate?: boolean;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     PageAdminCourseListItemDto: {
       /** Format: int64 */

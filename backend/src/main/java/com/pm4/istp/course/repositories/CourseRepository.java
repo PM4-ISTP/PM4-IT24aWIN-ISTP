@@ -33,8 +33,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.title,
             c.description,
             c.shortDescription,
-            c.isPublished,
-            c.isPrivate,
+            c.status,
             count(distinct ciAll.id),
             c.createdAt,
             c.updatedAt,
@@ -54,7 +53,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             where ciFilter.course = c and ciFilter.instructor.id = :instructorId
           )
           and c.deletedAt is null
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
+          group by c.id, c.title, c.description, c.shortDescription, c.status, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
@@ -78,8 +77,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.title,
             c.description,
             c.shortDescription,
-            c.isPublished,
-            c.isPrivate,
+            c.status,
             count(distinct ciAll.id),
             c.createdAt,
             c.updatedAt,
@@ -95,13 +93,13 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
           where c.deletedAt is null
-            and ((c.isPublished = true or c.isPrivate = true) and exists (
+            and (c.status in (com.pm4.istp.course.db.entities.CourseStatusEnum.PUBLIC, com.pm4.istp.course.db.entities.CourseStatusEnum.PRIVATE) and exists (
               select 1
               from CourseEnrollment eFilter
               where eFilter.course = c and eFilter.participant.id = :userId
             ))
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished,
-            c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic,
+          group by c.id, c.title, c.description, c.shortDescription, c.status,
+            c.createdAt, c.updatedAt, c.imageUrl, c.topic,
             ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
@@ -109,7 +107,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           select count(distinct c.id)
           from Course c
           where c.deletedAt is null
-            and (c.isPublished = true or c.isPrivate = true)
+            and c.status in (com.pm4.istp.course.db.entities.CourseStatusEnum.PUBLIC, com.pm4.istp.course.db.entities.CourseStatusEnum.PRIVATE)
             and exists (
               select 1
               from CourseEnrollment eFilter
@@ -127,8 +125,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.title,
             c.description,
             c.shortDescription,
-            c.isPublished,
-            c.isPrivate,
+            c.status,
             count(distinct ciAll.id),
             c.createdAt,
             c.updatedAt,
@@ -142,14 +139,14 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
-          where c.isPublished = true and c.isPrivate = false and c.deletedAt is null
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
+          where c.status = com.pm4.istp.course.db.entities.CourseStatusEnum.PUBLIC and c.deletedAt is null
+          group by c.id, c.title, c.description, c.shortDescription, c.status, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
           select count(c)
           from Course c
-          where c.isPublished = true and c.isPrivate = false and c.deletedAt is null
+          where c.status = com.pm4.istp.course.db.entities.CourseStatusEnum.PUBLIC and c.deletedAt is null
           """)
   Page<ListCourseResponseDto> findPublishedCourses(Pageable pageable);
 
@@ -161,8 +158,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.title,
             c.description,
             c.shortDescription,
-            c.isPublished,
-            c.isPrivate,
+            c.status,
             count(distinct ciAll.id),
             c.createdAt,
             c.updatedAt,
@@ -176,14 +172,14 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
-          where c.isPublished = true and c.isPrivate = false and c.topic = :topic and c.deletedAt is null
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
+          where c.status = com.pm4.istp.course.db.entities.CourseStatusEnum.PUBLIC and c.topic = :topic and c.deletedAt is null
+          group by c.id, c.title, c.description, c.shortDescription, c.status, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
           select count(c)
           from Course c
-          where c.isPublished = true and c.isPrivate = false and c.topic = :topic and c.deletedAt is null
+          where c.status = com.pm4.istp.course.db.entities.CourseStatusEnum.PUBLIC and c.topic = :topic and c.deletedAt is null
           """)
   Page<ListCourseResponseDto> findPublishedCoursesByTopic(
       @Param("topic") String topic, Pageable pageable);
@@ -196,8 +192,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.title,
             c.description,
             c.shortDescription,
-            c.isPublished,
-            c.isPrivate,
+            c.status,
             count(distinct ciAll.id),
             c.createdAt,
             c.updatedAt,
@@ -211,19 +206,19 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
-          where c.isPublished = true and c.isPrivate = false and c.topic = :topic and c.deletedAt is null
+          where c.status = com.pm4.istp.course.db.entities.CourseStatusEnum.PUBLIC and c.topic = :topic and c.deletedAt is null
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
             )
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
+          group by c.id, c.title, c.description, c.shortDescription, c.status, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
           select count(c)
           from Course c
-          where c.isPublished = true and c.isPrivate = false and c.topic = :topic and c.deletedAt is null
+          where c.status = com.pm4.istp.course.db.entities.CourseStatusEnum.PUBLIC and c.topic = :topic and c.deletedAt is null
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
@@ -241,8 +236,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.title,
             c.description,
             c.shortDescription,
-            c.isPublished,
-            c.isPrivate,
+            c.status,
             count(distinct ciAll.id),
             c.createdAt,
             c.updatedAt,
@@ -256,19 +250,19 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
-          where c.isPublished = true and c.isPrivate = false and c.deletedAt is null
+          where c.status = com.pm4.istp.course.db.entities.CourseStatusEnum.PUBLIC and c.deletedAt is null
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
             )
-          group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
+          group by c.id, c.title, c.description, c.shortDescription, c.status, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
           select count(c)
           from Course c
-          where c.isPublished = true and c.isPrivate = false and c.deletedAt is null
+          where c.status = com.pm4.istp.course.db.entities.CourseStatusEnum.PUBLIC and c.deletedAt is null
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
@@ -286,9 +280,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.title,
             c.description,
             c.shortDescription,
-            c.isPublished,
-            c.isPrivate,
-            c.deletedAt is not null,
+            c.status,
             c.createdAt,
             c.updatedAt,
             c.topic,
@@ -319,9 +311,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.title,
             c.description,
             c.shortDescription,
-            c.isPublished,
-            c.isPrivate,
-            c.deletedAt is not null,
+            c.status,
             c.createdAt,
             c.updatedAt,
             c.topic,

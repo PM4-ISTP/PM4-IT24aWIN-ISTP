@@ -12,7 +12,6 @@ import {
   Pagination,
   Select,
   Stack,
-  Switch,
   Table,
   Text,
   TextInput,
@@ -32,15 +31,14 @@ import {
   normalizeShortDescription,
 } from "@/src/features/course/utils/courseText";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
+import type { CourseVisibility } from "@/src/shared/types/course";
 
 type AdminCourseListItem = {
   id: string;
   title: string;
   description: string | null;
   shortDescription: string | null;
-  isPublished: boolean;
-  isPrivate: boolean;
-  isSoftDeleted: boolean;
+  status: CourseVisibility;
   createdAt: string;
   updatedAt: string;
   topic: string | null;
@@ -98,21 +96,12 @@ export default function AdminCourseManagement() {
       title: "",
       description: "",
       shortDescription: "",
-      isPublished: false,
-      isPrivate: false,
+      status: "DRAFT" as CourseVisibility,
       topic: "" as string,
       imageUrl: "",
     },
     validate: {
       title: (v) => (v.trim().length === 0 ? "Title is required" : null),
-      isPrivate: (_v, values) =>
-        values.isPrivate && values.isPublished
-          ? "A course cannot be private and published at the same time"
-          : null,
-      isPublished: (_v, values) =>
-        values.isPrivate && values.isPublished
-          ? "A course cannot be private and published at the same time"
-          : null,
     },
   });
 
@@ -124,8 +113,7 @@ export default function AdminCourseManagement() {
       title: course.title ?? "",
       description: course.description ?? "<p>Add a description...</p>",
       shortDescription: course.shortDescription ?? "",
-      isPublished: !!course.isPublished,
-      isPrivate: !!course.isPrivate,
+      status: course.status ?? "DRAFT",
       topic: course.topic ?? "",
       imageUrl: course.imageUrl ?? "",
     });
@@ -150,8 +138,7 @@ export default function AdminCourseManagement() {
           title: values.title.trim(),
           description: cleanText(values.description),
           shortDescription: cleanText(normalizedShortDescription),
-          isPublished: values.isPublished,
-          isPrivate: values.isPrivate,
+          status: values.status,
           topic: cleanText(values.topic),
           imageUrl: cleanText(values.imageUrl),
         }),
@@ -254,7 +241,6 @@ export default function AdminCourseManagement() {
             <Table.Th>Title</Table.Th>
             <Table.Th style={{ width: 240 }}>Owner</Table.Th>
             <Table.Th style={{ width: 190 }}>Visibility</Table.Th>
-            <Table.Th style={{ width: 180 }}>State</Table.Th>
             <Table.Th style={{ width: 190 }}>Updated</Table.Th>
             <Table.Th style={{ width: 130 }} />
           </Table.Tr>
@@ -262,7 +248,7 @@ export default function AdminCourseManagement() {
         <Table.Tbody>
           {courses.length === 0 ? (
             <Table.Tr>
-              <Table.Td colSpan={6}>
+              <Table.Td colSpan={5}>
                 <Text size="sm" c="dimmed" ta="center" py="md">
                   No courses found.
                 </Text>
@@ -307,18 +293,15 @@ export default function AdminCourseManagement() {
                 </Table.Td>
                 <Table.Td>
                   <Group gap="xs">
-                    <Badge variant="light" color={c.isPublished ? "green" : "gray"}>
-                      {c.isPublished ? "Published" : "Draft"}
-                    </Badge>
-                    <Badge variant="light" color={c.isPrivate ? "yellow" : "blue"}>
-                      {c.isPrivate ? "Private" : "Public"}
+                    <Badge
+                      variant="light"
+                      color={
+                        c.status === "PRIVATE" ? "yellow" : c.status === "PUBLIC" ? "green" : "gray"
+                      }
+                    >
+                      {c.status === "PRIVATE" ? "Private" : c.status === "PUBLIC" ? "Public" : "Draft"}
                     </Badge>
                   </Group>
-                </Table.Td>
-                <Table.Td>
-                  <Badge variant="light" color={c.isSoftDeleted ? "orange" : "teal"}>
-                    {c.isSoftDeleted ? "Deleted" : "Active"}
-                  </Badge>
                 </Table.Td>
                 <Table.Td>
                   <Text size="sm">{formatDate(c.updatedAt)}</Text>
@@ -338,7 +321,6 @@ export default function AdminCourseManagement() {
                       color="red"
                       aria-label="Delete course"
                       onClick={() => openDelete(c)}
-                      disabled={c.isSoftDeleted}
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -408,32 +390,20 @@ export default function AdminCourseManagement() {
             />
             <TextInput label="Image URL" {...form.getInputProps("imageUrl")} />
 
-            <Group justify="space-between" wrap="wrap">
-              <Switch
-                label="Published"
-                checked={form.values.isPublished}
-                onChange={(e) => {
-                  const next = e.currentTarget.checked;
-                  form.setFieldValue("isPublished", next);
-                  if (next) form.setFieldValue("isPrivate", false);
-                }}
-              />
-              <Switch
-                label="Private"
-                checked={form.values.isPrivate}
-                onChange={(e) => {
-                  const next = e.currentTarget.checked;
-                  form.setFieldValue("isPrivate", next);
-                  if (next) form.setFieldValue("isPublished", false);
-                }}
-              />
-            </Group>
-
-            {form.errors.isPrivate ? (
-              <Text c="red" size="sm">
-                {form.errors.isPrivate}
-              </Text>
-            ) : null}
+            <Select
+              label="Visibility"
+              value={form.values.status}
+              onChange={(value) => {
+                if (value) form.setFieldValue("status", value as CourseVisibility);
+              }}
+              data={[
+                { value: "DRAFT", label: "Draft" },
+                { value: "PUBLIC", label: "Public" },
+                { value: "PRIVATE", label: "Private" },
+              ]}
+              description="Choose exactly one state. Draft keeps it hidden, Public shows in catalog, Private is join-by-code only."
+              allowDeselect={false}
+            />
 
             <Group justify="flex-end" mt="xs">
               <Button

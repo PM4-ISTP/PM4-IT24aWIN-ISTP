@@ -1,6 +1,6 @@
 package com.pm4.istp.admin.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -16,14 +16,7 @@ public class AdminCourseListItemDto {
   private String description;
   private String shortDescription;
 
-  @JsonProperty("isPublished")
-  private boolean isPublished;
-
-  @JsonProperty("isPrivate")
-  private boolean isPrivate;
-
-  @JsonProperty("isSoftDeleted")
-  private boolean isSoftDeleted;
+  private CourseStatusEnum status;
 
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;

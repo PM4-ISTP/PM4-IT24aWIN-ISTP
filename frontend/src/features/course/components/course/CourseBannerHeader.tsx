@@ -3,6 +3,7 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseEnrollmentButton } from "@/src/features/course/components/enrollment/CourseEnrollmentButton";
 import { getCoursePreviewText } from "@/src/features/course/utils/courseText";
+import type { CourseVisibility } from "@/src/shared/types/course";
 
 interface CourseBannerHeaderProps {
   title: string;
@@ -12,8 +13,7 @@ interface CourseBannerHeaderProps {
   courseId: string;
   isEnrolled: boolean;
   participantCount: number;
-  isPublished: boolean;
-  isPrivate?: boolean;
+  status: CourseVisibility;
   nextChallengeHref?: string;
   backPageName: string;
   backHref: string;
@@ -27,8 +27,7 @@ export function CourseBannerHeader({
   courseId,
   isEnrolled,
   participantCount,
-  isPublished,
-  isPrivate = false,
+  status,
   nextChallengeHref,
   backPageName,
   backHref,
@@ -141,8 +140,7 @@ export function CourseBannerHeader({
                 courseId={courseId}
                 isEnrolled={isEnrolled}
                 participantCount={participantCount}
-                isPublished={isPublished}
-                isPrivate={isPrivate}
+                status={status}
                 nextChallengeHref={nextChallengeHref}
               />
             </div>

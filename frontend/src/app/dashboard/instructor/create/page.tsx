@@ -25,7 +25,6 @@ import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/features/course/utils/courseText";
-import { visibilityToFlags } from "@/src/features/course/utils/courseVisibility";
 import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 import type { CourseVisibility } from "@/src/shared/types/course";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
@@ -67,14 +66,11 @@ export default function CreateCourse() {
 
     setIsSubmitting(true);
 
-    const { isPublished, isPrivate } = visibilityToFlags(visibility);
-
     const result = await createCourse({
       title: title.trim(),
       description,
       shortDescription: normalizedShortDescription,
-      isPublished,
-      isPrivate,
+      status: visibility,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
       collaboratorIds: selectedInstructors,

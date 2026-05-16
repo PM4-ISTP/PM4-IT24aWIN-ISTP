@@ -4,6 +4,7 @@ import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateCourseRequestDto;
 import com.pm4.istp.admin.services.AdminCourseService;
 import com.pm4.istp.course.db.entities.Course;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
@@ -51,18 +52,15 @@ public class AdminCourseServiceImpl implements AdminCourseService {
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
-    validateVisibilityState(request.isPublished(), request.isPrivate());
-
     course.setTitle(request.getTitle());
     course.setDescription(request.getDescription());
     course.setShortDescription(normalizeBlankToNull(request.getShortDescription()));
-    course.setPublished(request.isPublished());
-    course.setPrivate(request.isPrivate());
+    course.setStatus(request.getStatus());
     course.setTopic(courseTopicService.normalizeAndValidate(request.getTopic()));
     course.setImageUrl(normalizeBlankToNull(request.getImageUrl()));
 
     // Clear invite code when course is no longer private.
-    if (!request.isPrivate()) {
+    if (request.getStatus() != CourseStatusEnum.PRIVATE) {
       course.setInviteCode(null);
     }
 
@@ -71,7 +69,7 @@ public class AdminCourseServiceImpl implements AdminCourseService {
     // Ensure private courses have an invite code. CourseInviteCodeHelper assigns the code in its
     // own REQUIRES_NEW transaction so that a unique-constraint collision on a concurrent insert
     // only rolls back that single attempt, leaving the caller's transaction intact for a retry.
-    if (request.isPrivate()
+    if (request.getStatus() == CourseStatusEnum.PRIVATE
         && (course.getInviteCode() == null || course.getInviteCode().isBlank())) {
       courseInviteCodeHelper.generateAndAssign(courseId);
     }
@@ -105,12 +103,6 @@ public class AdminCourseServiceImpl implements AdminCourseService {
     }
     String trimmed = value.trim();
     return trimmed.isEmpty() ? null : trimmed;
-  }
-
-  private void validateVisibilityState(boolean published, boolean privateCourse) {
-    if (published && privateCourse) {
-      throw new IllegalArgumentException("Course cannot be published and private at the same time");
-    }
   }
 
   private UUID resolveActorIdFromSecurityContext() {
