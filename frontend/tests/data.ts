@@ -482,7 +482,7 @@ export const labs = {
   instructor05: instructorLab05,
   instructor06: instructorLab06,
   instructor07: instructorLab07,
-  instructor08: instructorLab08
+  instructor08: instructorLab08,
 } as const;
 
 // ============================================================================
@@ -496,7 +496,7 @@ export const courses = {
   instructor03: instructorCourse03,
   instructor04: instructorCourse04,
   instructor05: instructorCourse05,
-  instructor06: instructorCourse06
+  instructor06: instructorCourse06,
 } as const;
 
 // ============================================================================
@@ -518,7 +518,7 @@ export const courses = {
 (instructorUser as unknown as { completedLabs: Lab[] }).completedLabs = [
   instructorLab03,
   adminLab01,
-  instructorLab05
+  instructorLab05,
 ];
 
 // Student: enrolls in courses and completes labs
