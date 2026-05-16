@@ -1,6 +1,11 @@
 import test from "@playwright/test";
 import { clickNavbarButton } from "@/tests/helpers/navigation";
-import { adminCourse01, instructorCourse01, instructorCourse02, instructorCourse04 } from "@/tests/data";
+import {
+  adminCourse01,
+  instructorCourse01,
+  instructorCourse02,
+  instructorCourse04,
+} from "@/tests/data";
 import { loginAs, TestUser } from "@/tests/helpers/auth";
 import { assertCourseCards, type Course } from "@/tests/helpers/course";
 

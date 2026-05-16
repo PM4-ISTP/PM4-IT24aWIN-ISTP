@@ -1,7 +1,13 @@
 import test, { expect, type Page } from "@playwright/test";
 import { assertCourseCards, type Course } from "@/tests/helpers/course";
 import { loginAs, TestUser } from "@/tests/helpers/auth";
-import { dashboardTestData, adminCourse01, instructorCourse01, instructorCourse02, instructorCourse04 } from "@/tests/data";
+import {
+  dashboardTestData,
+  adminCourse01,
+  instructorCourse01,
+  instructorCourse02,
+  instructorCourse04,
+} from "@/tests/data";
 
 type Deadline = {
   courseId: string;

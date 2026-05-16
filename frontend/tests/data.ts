@@ -356,4 +356,3 @@ export const courses = {
   instructor03: instructorCourse03,
   instructor04: instructorCourse04,
 } as const;
-
