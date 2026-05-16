@@ -629,7 +629,7 @@ public class CourseController {
   private void filterOutDraftChallenges(PublicCourseDetailResponseDto dto) {
     List<LabStudentDto> labs = new ArrayList<>();
     for (LabStudentDto lab : dto.getCourseLabs()) {
-      if (lab.getStatus() != LabStatusEnum.DRAFT && lab.getStatus() != LabStatusEnum.ARCHIVED) {
+      if (lab.getStatus() != LabStatusEnum.DRAFT) {
         labs.add(lab);
       }
     }

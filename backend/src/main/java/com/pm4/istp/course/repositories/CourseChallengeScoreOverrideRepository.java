@@ -14,6 +14,8 @@ import org.springframework.stereotype.Repository;
 public interface CourseChallengeScoreOverrideRepository
     extends JpaRepository<CourseChallengeScoreOverride, UUID> {
 
+  boolean existsByCourseId(UUID courseId);
+
   Optional<CourseChallengeScoreOverride> findByCourseIdAndParticipantIdAndChallengeId(
       UUID courseId, UUID participantId, UUID challengeId);
 

@@ -43,7 +43,6 @@ import {
 
 function isMoreRestrictive(oldStatus: LabStatusEnum, newStatus: LabStatusEnum): boolean {
   if (oldStatus === newStatus) return false;
-  if (newStatus === "ARCHIVED") return true;
   if (newStatus === "DRAFT") return true;
   if (newStatus === "PRIVATE" && oldStatus === "PUBLIC") return true;
   return false;

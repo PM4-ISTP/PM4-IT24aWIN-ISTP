@@ -119,7 +119,7 @@ public class LabServiceImpl implements LabService {
   public Lab getLab(UUID userId, UUID labId) {
     Lab lab =
         labRepository
-            .findById(labId)
+            .findByIdAndDeletedAtIsNull(labId)
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyVisibility(lab, userId);
@@ -131,7 +131,7 @@ public class LabServiceImpl implements LabService {
   public Lab updateLab(UUID userId, UUID labId, UpdateLabRequest request) {
     Lab lab =
         labRepository
-            .findById(labId)
+            .findByIdAndDeletedAtIsNull(labId)
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
@@ -261,7 +261,7 @@ public class LabServiceImpl implements LabService {
   public int previewVisibilityImpact(UUID userId, UUID labId, LabStatusEnum newStatus) {
     Lab lab =
         labRepository
-            .findById(labId)
+            .findByIdAndDeletedAtIsNull(labId)
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
@@ -303,15 +303,13 @@ public class LabServiceImpl implements LabService {
   public void deleteLab(UUID userId, UUID labId) {
     Lab lab =
         labRepository
-            .findById(labId)
+            .findByIdAndDeletedAtIsNull(labId)
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
     courseLabRepository.deleteByChallengeId(labId);
-    if (lab.getDeletedAt() == null) {
-      lab.setDeletedAt(LocalDateTime.now());
-      labRepository.save(lab);
-    }
+    lab.setDeletedAt(LocalDateTime.now());
+    labRepository.save(lab);
   }
 
   @Override
@@ -365,13 +363,8 @@ public class LabServiceImpl implements LabService {
 
     Lab lab =
         labRepository
-            .findById(labId)
+            .findByIdAndDeletedAtIsNull(labId)
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
-
-    if (lab.getStatus() == LabStatusEnum.ARCHIVED) {
-      throw new LabAccessDeniedException(
-          String.format("Archived lab '%s' cannot be started or played", labId));
-    }
 
     boolean challengeBelongsToCourse =
         lab.getCourseLabs().stream().anyMatch(cc -> cc.getCourse().getId().equals(courseId));

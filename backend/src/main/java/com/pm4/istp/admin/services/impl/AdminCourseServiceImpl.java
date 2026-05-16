@@ -2,7 +2,10 @@ package com.pm4.istp.admin.services.impl;
 
 import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateCourseRequestDto;
+import com.pm4.istp.admin.dto.DeleteCheckResponseDto;
+import com.pm4.istp.admin.exceptions.HardDeleteBlockedException;
 import com.pm4.istp.admin.services.AdminCourseService;
+import com.pm4.istp.admin.services.AdminDeleteCheckService;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.repositories.CourseRepository;
@@ -25,6 +28,7 @@ public class AdminCourseServiceImpl implements AdminCourseService {
   private final CourseRepository courseRepository;
   private final CourseTopicService courseTopicService;
   private final CourseInviteCodeHelper courseInviteCodeHelper;
+  private final AdminDeleteCheckService adminDeleteCheckService;
 
   @Override
   @Transactional(readOnly = true)
@@ -36,6 +40,18 @@ public class AdminCourseServiceImpl implements AdminCourseService {
     }
 
     return courseRepository.findAllCoursesForAdminByQuery(normalizedQuery, pageable);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<AdminCourseListItemDto> listRemovedCourses(String query, Pageable pageable) {
+    String normalizedQuery = normalizeBlankToNull(query);
+
+    if (normalizedQuery == null) {
+      return courseRepository.findRemovedCoursesForAdmin(pageable);
+    }
+
+    return courseRepository.findRemovedCoursesForAdminByQuery(normalizedQuery, pageable);
   }
 
   @Override
@@ -83,6 +99,12 @@ public class AdminCourseServiceImpl implements AdminCourseService {
       course.setDeletedAt(LocalDateTime.now());
       courseRepository.save(course);
       return;
+    }
+
+    DeleteCheckResponseDto check = adminDeleteCheckService.checkCourse(courseId);
+    if (!check.hardDeleteAllowed()) {
+      throw new HardDeleteBlockedException(
+          "Hard delete is blocked because related data still exists.");
     }
     courseRepository.delete(course);
   }

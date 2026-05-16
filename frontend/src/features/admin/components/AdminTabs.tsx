@@ -4,6 +4,7 @@ import { Tabs, Box } from "@mantine/core";
 import AdminConfigForm from "@/src/features/admin/components/AdminConfigForm";
 import AdminCourseManagement from "@/src/features/admin/components/AdminCourseManagement";
 import AdminChallengeManagement from "@/src/features/admin/components/AdminChallengeManagement";
+import AdminRemovedManagement from "@/src/features/admin/components/AdminRemovedManagement";
 import AdminTopicManagement from "@/src/features/admin/components/AdminTopicManagement";
 import type { components } from "@/src/shared/lib/api/schema";
 
@@ -40,6 +41,7 @@ export default function AdminTabs({ initialConfig }: AdminTabsProps) {
         <Tabs.Tab value="config">Platform Config</Tabs.Tab>
         <Tabs.Tab value="courses">Courses</Tabs.Tab>
         <Tabs.Tab value="labs">Labs</Tabs.Tab>
+        <Tabs.Tab value="removed">Removed</Tabs.Tab>
         <Tabs.Tab value="topics">Topics</Tabs.Tab>
       </Tabs.List>
 
@@ -58,6 +60,12 @@ export default function AdminTabs({ initialConfig }: AdminTabsProps) {
       <Tabs.Panel value="labs">
         <Box style={cardStyle}>
           <AdminChallengeManagement />
+        </Box>
+      </Tabs.Panel>
+
+      <Tabs.Panel value="removed">
+        <Box style={cardStyle}>
+          <AdminRemovedManagement />
         </Box>
       </Tabs.Panel>
 

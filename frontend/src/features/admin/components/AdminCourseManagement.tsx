@@ -245,8 +245,8 @@ export default function AdminCourseManagement() {
         )}
       </Group>
       <Text size="sm" c="dimmed">
-        Instructors can only soft-delete courses. Hard delete is available only after a course is
-        soft-deleted.
+        Instructors can only soft-delete courses. Hard delete is managed from the Removed tab and is
+        only available when no related database dependencies exist.
       </Text>
 
       <Table
@@ -354,7 +354,7 @@ export default function AdminCourseManagement() {
                       color="red"
                       aria-label="Hard delete course"
                       onClick={() => openDelete(c, "hard")}
-                      disabled={!c.isSoftDeleted}
+                      disabled
                     >
                       <IconTrash size={16} />
                     </ActionIcon>

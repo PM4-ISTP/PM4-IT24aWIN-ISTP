@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository;
 public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
   List<Challenge> findByLabIdOrderByOrderIndexAsc(UUID labId);
 
+  long countByLabId(UUID labId);
+
   @Query(
       """
       select c

@@ -25,7 +25,7 @@ import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { slugify } from "@/src/shared/lib/utils";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
-type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
+type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC";
 type ChallengeDifficulty = "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
 
 type AdminLabListItem = {
@@ -217,7 +217,8 @@ export default function AdminChallengeManagement() {
         )}
       </Group>
       <Text size="sm" c="dimmed">
-        Instructors can only soft-delete labs. Hard delete is enabled after soft delete.
+        Instructors can only soft-delete labs. Hard delete is managed from the Removed tab and is
+        only available when no related database dependencies exist.
       </Text>
 
       <Table highlightOnHover withTableBorder striped={false} style={{ tableLayout: "fixed" }}>
@@ -274,13 +275,7 @@ export default function AdminChallengeManagement() {
                     <Badge
                       variant="light"
                       color={
-                        c.status === "PUBLIC"
-                          ? "green"
-                          : c.status === "PRIVATE"
-                            ? "yellow"
-                            : c.status === "ARCHIVED"
-                              ? "red"
-                              : "gray"
+                        c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"
                       }
                     >
                       {c.status}
@@ -325,7 +320,7 @@ export default function AdminChallengeManagement() {
                       color="red"
                       aria-label="Hard delete lab"
                       onClick={() => openDelete(c, "hard")}
-                      disabled={!c.isSoftDeleted}
+                      disabled
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -375,7 +370,6 @@ export default function AdminChallengeManagement() {
                   { value: "DRAFT", label: "DRAFT" },
                   { value: "PRIVATE", label: "PRIVATE" },
                   { value: "PUBLIC", label: "PUBLIC" },
-                  { value: "ARCHIVED", label: "ARCHIVED" },
                 ]}
                 value={form.values.status}
                 onChange={(v) => form.setFieldValue("status", (v ?? "DRAFT") as ChallengeStatus)}
@@ -440,15 +434,15 @@ export default function AdminChallengeManagement() {
               ? "This cannot be undone."
               : "The lab will be hidden from active instructor and student lists."}
           </Text>
-           {deleteMode === "hard" && !(selected?.isSoftDeleted ?? false) && (
-             <Text size="sm" c="dimmed">
-               Hard delete is only possible after soft delete.
-             </Text>
-           )}
-           <Group justify="flex-end">
-             <Button
-               variant="default"
-               radius="md"
+          {deleteMode === "hard" && !(selected?.isSoftDeleted ?? false) && (
+            <Text size="sm" c="dimmed">
+              Hard delete is only possible after soft delete.
+            </Text>
+          )}
+          <Group justify="flex-end">
+            <Button
+              variant="default"
+              radius="md"
               onClick={() => setDeleteOpened(false)}
               disabled={saving}
             >
