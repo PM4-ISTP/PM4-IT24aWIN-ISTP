@@ -29,8 +29,7 @@ export default async function AdminDashboard() {
           Admin Dashboard
         </Title>
         <Text style={{ color: "#94a3b8" }} mt={4}>
-          Instructors can only soft-delete courses and labs. Admins can review soft-deleted entries
-          and permanently delete them when database cleanup is needed.
+          Manage courses and labs. Delete hides items from active lists.
         </Text>
       </div>
 

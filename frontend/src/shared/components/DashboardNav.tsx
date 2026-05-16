@@ -137,14 +137,6 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
             icon="flag"
             active={pathname.startsWith("/dashboard/instructor/labs")}
           />
-          {isAdmin && (
-            <NavItem
-              href="/dashboard/admin"
-              label="Admin"
-              icon="database"
-              active={pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/")}
-            />
-          )}
         </>
       )}
 

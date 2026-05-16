@@ -30,12 +30,6 @@ public class AdminCourseController {
     return ResponseEntity.ok(adminCourseService.listCourses(query, pageable));
   }
 
-  @GetMapping("/removed")
-  public ResponseEntity<Page<AdminCourseListItemDto>> listRemovedCourses(
-      @RequestParam(name = "q", required = false) String query, Pageable pageable) {
-    return ResponseEntity.ok(adminCourseService.listRemovedCourses(query, pageable));
-  }
-
   @PutMapping("/{id}")
   public ResponseEntity<Void> updateCourse(
       @PathVariable UUID id, @Valid @RequestBody AdminUpdateCourseRequestDto request) {

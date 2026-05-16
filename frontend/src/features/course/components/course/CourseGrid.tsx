@@ -108,16 +108,16 @@ export function CourseGrid({
       <Modal
         opened={removeOpened}
         onClose={() => setRemoveOpened(false)}
-        title="Remove Course"
+        title="Delete Course"
         centered
       >
         <Stack gap="md">
           <Text size="sm">
-            Remove <strong>{selectedCourseTitle}</strong> from instructor dashboards? Students and
-            instructors will no longer see it in active course lists.
+            Delete <strong>{selectedCourseTitle}</strong>? Students and instructors will no longer
+            see it in active course lists.
           </Text>
           {removeError ? (
-            <Alert color="red" title="Could not remove course" variant="light">
+            <Alert color="red" title="Could not delete course" variant="light">
               {removeError}
             </Alert>
           ) : null}
@@ -131,7 +131,7 @@ export function CourseGrid({
               loading={removing}
               disabled={removing}
             >
-              Remove
+              Delete
             </Button>
           </Group>
         </Stack>
@@ -145,7 +145,7 @@ export function CourseGrid({
                 color="red"
                 radius="xl"
                 size="md"
-                aria-label="Remove course"
+                aria-label="Delete course"
                 style={{ position: "absolute", top: 10, right: 10, zIndex: 5 }}
                 onClick={(e) => {
                   e.preventDefault();

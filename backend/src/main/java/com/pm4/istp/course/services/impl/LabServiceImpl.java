@@ -308,6 +308,8 @@ public class LabServiceImpl implements LabService {
 
     verifyCreator(lab, userId);
     courseLabRepository.deleteByChallengeId(labId);
+    lab.setDeletedByUsername(
+        userRepository.findByIdAndDeletedAtIsNull(userId).map(User::getUsername).orElse("unknown"));
     lab.setDeletedAt(LocalDateTime.now());
     labRepository.save(lab);
   }
@@ -749,14 +751,20 @@ public class LabServiceImpl implements LabService {
       Map<UUID, String> flagsById,
       Map<UUID, UUID> selectedOptionByChallenge,
       Map<UUID, UUID> correctOptionByChallenge) {
-    boolean solved = solvedIds.contains(challenge.getId());
-    challenge.setSolved(solved);
+    UUID challengeId = challenge.getId();
+    boolean solved = solvedIds.contains(challengeId);
+    UUID selectedOptionId = selectedOptionByChallenge.get(challengeId);
+    boolean attemptedMc =
+        challenge.getType() == ChallengeType.MULTIPLE_CHOICE && selectedOptionId != null;
+
+    boolean completed = solved || attemptedMc;
+    challenge.setSolved(completed);
     if (solved && challenge.getType() == ChallengeType.FLAG) {
-      challenge.setSolvedFlag(flagsById.get(challenge.getId()));
+      challenge.setSolvedFlag(flagsById.get(challengeId));
     }
-    challenge.setSelectedOptionId(selectedOptionByChallenge.get(challenge.getId()));
-    challenge.setCorrectOptionId(correctOptionByChallenge.get(challenge.getId()));
-    return solved ? 1 : 0;
+    challenge.setSelectedOptionId(selectedOptionId);
+    challenge.setCorrectOptionId(correctOptionByChallenge.get(challengeId));
+    return completed ? 1 : 0;
   }
 
   // -------------------------------------------------------------------------
