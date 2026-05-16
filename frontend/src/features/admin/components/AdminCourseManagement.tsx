@@ -40,7 +40,6 @@ type AdminCourseListItem = {
   isPublished: boolean;
   isPrivate: boolean;
   isSoftDeleted: boolean;
-  canHardDelete: boolean;
   createdAt: string;
   updatedAt: string;
   topic: string | null;
@@ -355,7 +354,7 @@ export default function AdminCourseManagement() {
                       color="red"
                       aria-label="Hard delete course"
                       onClick={() => openDelete(c, "hard")}
-                      disabled={!c.canHardDelete}
+                      disabled={!c.isSoftDeleted}
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -497,7 +496,7 @@ export default function AdminCourseManagement() {
               ? "This cannot be undone."
               : "The course will be hidden from instructor and student active lists."}
           </Text>
-          {deleteMode === "hard" && !(selected?.canHardDelete ?? false) && (
+          {deleteMode === "hard" && !(selected?.isSoftDeleted ?? false) && (
             <Text size="sm" c="dimmed">
               Hard delete is only possible after soft delete.
             </Text>
@@ -516,7 +515,7 @@ export default function AdminCourseManagement() {
               radius="md"
               onClick={() => void confirmDelete()}
               loading={saving}
-              disabled={deleteMode === "hard" && !(selected?.canHardDelete ?? false)}
+              disabled={deleteMode === "hard" && !(selected?.isSoftDeleted ?? false)}
             >
               {deleteMode === "hard" ? "Hard Delete" : "Remove"}
             </Button>

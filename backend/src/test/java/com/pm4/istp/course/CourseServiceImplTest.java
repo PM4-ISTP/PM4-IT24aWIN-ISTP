@@ -1874,6 +1874,23 @@ class CourseServiceImplTest {
   }
 
   @Test
+  void joinByInviteCode_whenCourseWasSoftDeleted_throwsInvalidInviteCodeException() {
+    UUID studentId = UUID.randomUUID();
+
+    User student = new User();
+    student.setId(studentId);
+
+    // Repository-level soft-delete filtering returns no match for deleted courses.
+    when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
+    when(courseRepository.findByInviteCode("DEL123")).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> courseService.joinByInviteCode("DEL123", studentId))
+        .isInstanceOf(InvalidInviteCodeException.class);
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
   void joinByInviteCode_withValidCodeAndPrivateCourse_enrollsParticipant() {
     UUID studentId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();

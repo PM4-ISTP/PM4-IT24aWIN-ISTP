@@ -35,7 +35,6 @@ type AdminLabListItem = {
   status: ChallengeStatus;
   difficulty: ChallengeDifficulty;
   isSoftDeleted: boolean;
-  canHardDelete: boolean;
   dockerImage: string | null;
   courseCount: number;
   createdAt: string;
@@ -320,7 +319,7 @@ export default function AdminChallengeManagement() {
                       color="red"
                       aria-label="Hard delete lab"
                       onClick={() => openDelete(c, "hard")}
-                      disabled={!c.canHardDelete}
+                      disabled={!c.isSoftDeleted}
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -434,7 +433,7 @@ export default function AdminChallengeManagement() {
               ? "This cannot be undone."
               : "The lab will be hidden from active instructor and student lists."}
           </Text>
-          {deleteMode === "hard" && !(selected?.canHardDelete ?? false) && (
+          {deleteMode === "hard" && !(selected?.isSoftDeleted ?? false) && (
             <Text size="sm" c="dimmed">
               Hard delete is only possible after soft delete.
             </Text>
@@ -453,7 +452,7 @@ export default function AdminChallengeManagement() {
               radius="md"
               onClick={() => void confirmDelete()}
               loading={saving}
-              disabled={deleteMode === "hard" && !(selected?.canHardDelete ?? false)}
+              disabled={deleteMode === "hard" && !(selected?.isSoftDeleted ?? false)}
             >
               {deleteMode === "hard" ? "Hard Delete" : "Remove"}
             </Button>

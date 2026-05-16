@@ -110,12 +110,13 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           """
           select count(distinct c.id)
           from Course c
-          where exists (
-            select 1 from CourseEnrollment eFilter
-            where eFilter.course = c and eFilter.participant.id = :userId
-          )
-          and c.deletedAt is null
-          and (c.isPublished = true or c.isPrivate = true)
+          where c.deletedAt is null
+            and (c.isPublished = true or c.isPrivate = true)
+            and exists (
+              select 1
+              from CourseEnrollment eFilter
+              where eFilter.course = c and eFilter.participant.id = :userId
+            )
           """)
   Page<ListCourseResponseDto> findListEnrollmentsForUser(
       @Param("userId") UUID userId, Pageable pageable);
@@ -290,7 +291,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.isPublished,
             c.isPrivate,
             c.deletedAt is not null,
-            c.deletedAt is not null,
             c.createdAt,
             c.updatedAt,
             c.topic,
@@ -321,7 +321,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.shortDescription,
             c.isPublished,
             c.isPrivate,
-            c.deletedAt is not null,
             c.deletedAt is not null,
             c.createdAt,
             c.updatedAt,
