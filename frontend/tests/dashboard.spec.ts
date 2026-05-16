@@ -2,6 +2,7 @@ import test, { expect, type Page } from "@playwright/test";
 import { assertCourseCards } from "@/tests/helpers/course";
 import { loginAs } from "@/tests/helpers/auth";
 import { type Course, testUsers, type Lab } from "@/tests/data";
+import { formatDate } from "@/tests/helpers/date";
 
 type Deadline = {
   courseId: string;
@@ -28,16 +29,6 @@ function extractDeadlines(courses: readonly Course[], completedLabs: readonly La
   }
   deadlines.sort((a, b) => Date.parse(a.dueAt) - Date.parse(b.dueAt));
   return deadlines;
-}
-
-function formatDeadlineDate(dueAt: string | number): string {
-  return new Date(dueAt).toLocaleString("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function getHeroStatisticValue(page: Page, label: string) {
@@ -86,7 +77,7 @@ async function assertUpcomingDeadlines(page: Page, visibleDeadlines: readonly De
 
     const isOverdue = new Date(item.dueAt).getTime() < now;
     await expect(row.getByText(isOverdue ? "OVERDUE" : "DUE", { exact: true })).toBeVisible();
-    await expect(row).toContainText(formatDeadlineDate(item.dueAt));
+    await expect(row).toContainText(formatDate(item.dueAt));
 
     const dismissIcon = row.locator('[title="Aus Kalender entfernen"]');
     await expect(dismissIcon).toHaveCount(isOverdue ? 1 : 0);
