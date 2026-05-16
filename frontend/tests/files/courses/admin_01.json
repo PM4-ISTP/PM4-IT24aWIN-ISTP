@@ -13,5 +13,6 @@
   "ownerUsername": "e2e-admin",
   "ownerTitle": "Test Administrator",
   "private": false,
-  "published": true
+  "published": true,
+  "numOfParticipants": 2
 }

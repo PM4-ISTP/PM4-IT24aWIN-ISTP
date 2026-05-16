@@ -12,5 +12,6 @@
   "ownerUsername": "e2e-instructor",
   "ownerTitle": "Test Instructor",
   "private": false,
-  "published": true
+  "published": true,
+  "numOfParticipants": 2
 }

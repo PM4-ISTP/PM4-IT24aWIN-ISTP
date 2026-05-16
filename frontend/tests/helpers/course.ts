@@ -11,6 +11,7 @@ export type Course = {
   shortDescription?: string | null;
   description?: string | null;
   updatedAt?: string | null;
+  numOfParticipants: number;
 };
 
 function escapeRegExp(value: string): string {
