@@ -234,7 +234,7 @@ class AdminCourseServiceImplTest {
   // ── deleteCourse ────────────────────────────────────────────────────────────
 
   @Test
-  void deleteCourse_whenExists_deletesCourse() {
+  void deleteCourse_whenExists_softDeletesCourse() {
     UUID id = UUID.randomUUID();
     Course course = new Course();
     course.setId(id);
@@ -242,7 +242,7 @@ class AdminCourseServiceImplTest {
 
     adminCourseService.deleteCourse(id);
 
-    verify(courseRepository).delete(course);
+    verify(courseRepository).save(course);
   }
 
   @Test
@@ -254,6 +254,6 @@ class AdminCourseServiceImplTest {
         .isInstanceOf(CourseNotFoundException.class)
         .hasMessageContaining(id.toString());
 
-    verify(courseRepository, never()).delete(any());
+    verify(courseRepository, never()).save(any());
   }
 }

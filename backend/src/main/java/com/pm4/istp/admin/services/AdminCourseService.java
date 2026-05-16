@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 public interface AdminCourseService {
   Page<AdminCourseListItemDto> listCourses(String query, Pageable pageable);
 
+  Page<AdminCourseListItemDto> listRemovedCourses(String query, Pageable pageable);
+
   void updateCourse(UUID courseId, AdminUpdateCourseRequestDto request);
 
   void deleteCourse(UUID courseId);

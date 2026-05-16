@@ -2,12 +2,16 @@ package com.pm4.istp.admin.services.impl;
 
 import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateCourseRequestDto;
+import com.pm4.istp.admin.dto.DeleteCheckResponseDto;
+import com.pm4.istp.admin.exceptions.HardDeleteBlockedException;
 import com.pm4.istp.admin.services.AdminCourseService;
+import com.pm4.istp.admin.services.AdminDeleteCheckService;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseTopicService;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +28,7 @@ public class AdminCourseServiceImpl implements AdminCourseService {
   private final CourseRepository courseRepository;
   private final CourseTopicService courseTopicService;
   private final CourseInviteCodeHelper courseInviteCodeHelper;
+  private final AdminDeleteCheckService adminDeleteCheckService;
 
   @Override
   @Transactional(readOnly = true)
@@ -35,6 +40,18 @@ public class AdminCourseServiceImpl implements AdminCourseService {
     }
 
     return courseRepository.findAllCoursesForAdminByQuery(normalizedQuery, pageable);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<AdminCourseListItemDto> listRemovedCourses(String query, Pageable pageable) {
+    String normalizedQuery = normalizeBlankToNull(query);
+
+    if (normalizedQuery == null) {
+      return courseRepository.findRemovedCoursesForAdmin(pageable);
+    }
+
+    return courseRepository.findRemovedCoursesForAdminByQuery(normalizedQuery, pageable);
   }
 
   @Override
@@ -78,6 +95,17 @@ public class AdminCourseServiceImpl implements AdminCourseService {
             .findById(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
+    if (course.getDeletedAt() == null) {
+      course.setDeletedAt(LocalDateTime.now());
+      courseRepository.save(course);
+      return;
+    }
+
+    DeleteCheckResponseDto check = adminDeleteCheckService.checkCourse(courseId);
+    if (!check.hardDeleteAllowed()) {
+      throw new HardDeleteBlockedException(
+          "Hard delete is blocked because related data still exists.");
+    }
     courseRepository.delete(course);
   }
 

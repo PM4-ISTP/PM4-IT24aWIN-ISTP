@@ -53,7 +53,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 @ExtendWith(MockitoExtension.class)
-class ChallengeControllerTest {
+class LabControllerTest {
 
   @Mock
   private LabService labService;
@@ -63,7 +63,7 @@ class ChallengeControllerTest {
   private DockerImageAvailabilityService dockerImageAvailabilityService;
 
   @InjectMocks
-  private LabController challengeController;
+  private LabController labController;
 
   private Jwt jwtFor(UUID userId) {
     Jwt jwt = mock(Jwt.class);
@@ -72,7 +72,7 @@ class ChallengeControllerTest {
   }
 
   @Test
-  void createChallenge_returnsCreatedResponse() {
+  void createLab_returnsCreatedResponse() {
     UUID userId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
@@ -88,18 +88,18 @@ class ChallengeControllerTest {
     responseDto.setId(created.getId());
 
     when(labMapper.fromDto(requestDto)).thenReturn(mappedRequest);
-    when(labService.createChallenge(userId, mappedRequest)).thenReturn(created);
+    when(labService.createLab(userId, mappedRequest)).thenReturn(created);
     when(labMapper.toCreateResponseDto(created)).thenReturn(responseDto);
 
-    ResponseEntity<CreateChallengeResponseDto> response = challengeController.createChallenge(jwt, requestDto);
+    ResponseEntity<CreateChallengeResponseDto> response = labController.createLab(jwt, requestDto);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(response.getBody()).isSameAs(responseDto);
-    verify(labService).createChallenge(userId, mappedRequest);
+    verify(labService).createLab(userId, mappedRequest);
   }
 
   @Test
-  void getChallenge_returnsDtoWithCourseCount() {
+  void getLab_returnsDtoWithCourseCount() {
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
@@ -111,10 +111,10 @@ class ChallengeControllerTest {
 
     ChallengeDetailResponseDto dto = new ChallengeDetailResponseDto();
 
-    when(labService.getChallenge(userId, labId)).thenReturn(lab);
+    when(labService.getLab(userId, labId)).thenReturn(lab);
     when(labMapper.toDetailResponseDto(lab)).thenReturn(dto);
 
-    ResponseEntity<ChallengeDetailResponseDto> response = challengeController.getChallenge(jwt, labId);
+    ResponseEntity<ChallengeDetailResponseDto> response = labController.getLab(jwt, labId);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isSameAs(dto);
@@ -122,20 +122,20 @@ class ChallengeControllerTest {
   }
 
   @Test
-  void getChallenge_whenServiceThrowsAccessDenied_propagatesException() {
+  void getLab_whenServiceThrowsAccessDenied_propagatesException() {
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
-    when(labService.getChallenge(userId, labId))
+    when(labService.getLab(userId, labId))
         .thenThrow(new LabAccessDeniedException("nope"));
 
-    assertThatThrownBy(() -> challengeController.getChallenge(jwt, labId))
+    assertThatThrownBy(() -> labController.getLab(jwt, labId))
         .isInstanceOf(LabAccessDeniedException.class);
   }
 
   @Test
-  void updateChallenge_returnsUpdatedDto() {
+  void updateLab_returnsUpdatedDto() {
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
@@ -148,10 +148,10 @@ class ChallengeControllerTest {
     ChallengeDetailResponseDto dto = new ChallengeDetailResponseDto();
 
     when(labMapper.fromDto(requestDto)).thenReturn(mappedRequest);
-    when(labService.updateChallenge(userId, labId, mappedRequest)).thenReturn(updated);
+    when(labService.updateLab(userId, labId, mappedRequest)).thenReturn(updated);
     when(labMapper.toDetailResponseDto(updated)).thenReturn(dto);
 
-    ResponseEntity<ChallengeDetailResponseDto> response = challengeController.updateChallenge(jwt, labId,
+    ResponseEntity<ChallengeDetailResponseDto> response = labController.updateLab(jwt, labId,
         requestDto);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -160,62 +160,62 @@ class ChallengeControllerTest {
   }
 
   @Test
-  void deleteChallenge_returnsNoContent() {
+  void deleteLab_returnsNoContent() {
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
-    ResponseEntity<Void> response = challengeController.deleteChallenge(jwt, labId);
+    ResponseEntity<Void> response = labController.deleteLab(jwt, labId);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-    verify(labService).deleteChallenge(userId, labId);
+    verify(labService).deleteLab(userId, labId);
   }
 
   @Test
-  void deleteChallenge_whenServiceThrowsNotFound_propagatesException() {
+  void deleteLab_whenServiceThrowsNotFound_propagatesException() {
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
     org.mockito.Mockito.doThrow(new LabNotFoundException("missing"))
         .when(labService)
-        .deleteChallenge(userId, labId);
+        .deleteLab(userId, labId);
 
-    assertThatThrownBy(() -> challengeController.deleteChallenge(jwt, labId))
+    assertThatThrownBy(() -> labController.deleteLab(jwt, labId))
         .isInstanceOf(LabNotFoundException.class);
   }
 
   @Test
-  void listChallenges_returnsPageFromService() {
+  void listLabs_returnsPageFromService() {
     UUID userId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
     Pageable pageable = PageRequest.of(0, 20);
     Page<ListLabResponseDto> expected = new PageImpl<>(List.of());
 
-    when(labService.listChallengesForCreator(userId, pageable)).thenReturn(expected);
+    when(labService.listLabsForCreator(userId, pageable)).thenReturn(expected);
 
-    ResponseEntity<Page<ListLabResponseDto>> response = challengeController.listChallenges(jwt, pageable);
+    ResponseEntity<Page<ListLabResponseDto>> response = labController.listLabs(jwt, pageable);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isSameAs(expected);
   }
 
   @Test
-  void searchChallenges_delegatesToService() {
+  void searchLabs_delegatesToService() {
     UUID userId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
     Pageable pageable = PageRequest.of(0, 20);
     Page<ListLabResponseDto> expected = new PageImpl<>(List.of());
 
-    when(labService.searchAvailableChallenges(eq(userId), eq("sql"), any(Pageable.class)))
+    when(labService.searchAvailableLabs(eq(userId), eq("sql"), any(Pageable.class)))
         .thenReturn(expected);
 
-    ResponseEntity<Page<ListLabResponseDto>> response = challengeController.searchChallenges(jwt, "sql",
+    ResponseEntity<Page<ListLabResponseDto>> response = labController.searchLabs(jwt, "sql",
         pageable);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isSameAs(expected);
-    verify(labService).searchAvailableChallenges(userId, "sql", pageable);
+    verify(labService).searchAvailableLabs(userId, "sql", pageable);
   }
 
   @Test
@@ -227,7 +227,7 @@ class ChallengeControllerTest {
     when(labService.previewVisibilityImpact(userId, labId, LabStatusEnum.DRAFT))
         .thenReturn(5);
 
-    ResponseEntity<VisibilityImpactResponseDto> response = challengeController.getVisibilityImpact(jwt, labId,
+    ResponseEntity<VisibilityImpactResponseDto> response = labController.getVisibilityImpact(jwt, labId,
         LabStatusEnum.DRAFT);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -245,15 +245,15 @@ class ChallengeControllerTest {
         .thenThrow(new LabAccessDeniedException("nope"));
 
     assertThatThrownBy(
-        () -> challengeController.getVisibilityImpact(
+        () -> labController.getVisibilityImpact(
             jwt, labId, LabStatusEnum.PRIVATE))
         .isInstanceOf(LabAccessDeniedException.class);
   }
 
-  // ── getChallengeForPlay ────────────────────────────────────────────────────
+  // ── getLabForPlay ────────────────────────────────────────────────────
 
   @Test
-  void getChallengeForPlay_returnsStudentDto() {
+  void getLabForPlay_returnsStudentDto() {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -262,42 +262,42 @@ class ChallengeControllerTest {
     LabStudentDto dto = new LabStudentDto();
     dto.setId(labId);
 
-    when(labService.getChallengeForPlay(userId, courseId, labId)).thenReturn(dto);
+    when(labService.getLabForPlay(userId, courseId, labId)).thenReturn(dto);
 
     ResponseEntity<LabStudentDto> response =
-        challengeController.getChallengeForPlay(jwt, labId, courseId);
+        labController.getLabForPlay(jwt, labId, courseId);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isSameAs(dto);
   }
 
   @Test
-  void getChallengeForPlay_whenNotEnrolled_propagatesAccessDenied() {
+  void getLabForPlay_whenNotEnrolled_propagatesAccessDenied() {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
-    when(labService.getChallengeForPlay(userId, courseId, labId))
+    when(labService.getLabForPlay(userId, courseId, labId))
         .thenThrow(new LabAccessDeniedException("not enrolled"));
 
     assertThatThrownBy(
-        () -> challengeController.getChallengeForPlay(jwt, labId, courseId))
+        () -> labController.getLabForPlay(jwt, labId, courseId))
         .isInstanceOf(LabAccessDeniedException.class);
   }
 
   @Test
-  void getChallengeForPlay_whenChallengeNotFound_propagatesNotFound() {
+  void getLabForPlay_whenLabNotFound_propagatesNotFound() {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
-    when(labService.getChallengeForPlay(userId, courseId, labId))
+    when(labService.getLabForPlay(userId, courseId, labId))
         .thenThrow(new LabNotFoundException("missing"));
 
     assertThatThrownBy(
-        () -> challengeController.getChallengeForPlay(jwt, labId, courseId))
+        () -> labController.getLabForPlay(jwt, labId, courseId))
         .isInstanceOf(LabNotFoundException.class);
   }
 
@@ -318,7 +318,7 @@ class ChallengeControllerTest {
         .thenReturn(result);
 
     ResponseEntity<ChallengeSubmissionResponseDto> response =
-        challengeController.submitChallengeFlag(jwt, labId, challengeId, request);
+        labController.submitChallengeFlag(jwt, labId, challengeId, request);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isSameAs(result);
@@ -340,7 +340,7 @@ class ChallengeControllerTest {
         .thenReturn(result);
 
     ResponseEntity<ChallengeSubmissionResponseDto> response =
-        challengeController.submitChallengeFlag(jwt, labId, challengeId, request);
+        labController.submitChallengeFlag(jwt, labId, challengeId, request);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody().isCorrect()).isFalse();
@@ -360,7 +360,7 @@ class ChallengeControllerTest {
         .thenThrow(new LabAccessDeniedException("not enrolled"));
 
     assertThatThrownBy(
-        () -> challengeController.submitChallengeFlag(jwt, labId, challengeId, request))
+        () -> labController.submitChallengeFlag(jwt, labId, challengeId, request))
         .isInstanceOf(LabAccessDeniedException.class);
   }
 
@@ -378,7 +378,7 @@ class ChallengeControllerTest {
         .thenThrow(new ChallengeNotFoundException("missing"));
 
     assertThatThrownBy(
-        () -> challengeController.submitChallengeFlag(jwt, labId, challengeId, request))
+        () -> labController.submitChallengeFlag(jwt, labId, challengeId, request))
         .isInstanceOf(ChallengeNotFoundException.class);
   }
 
@@ -396,7 +396,7 @@ class ChallengeControllerTest {
         .thenThrow(new ChallengeAlreadySolvedException("already done"));
 
     assertThatThrownBy(
-        () -> challengeController.submitChallengeFlag(jwt, labId, challengeId, request))
+        () -> labController.submitChallengeFlag(jwt, labId, challengeId, request))
         .isInstanceOf(ChallengeAlreadySolvedException.class);
   }
 
@@ -408,9 +408,9 @@ class ChallengeControllerTest {
         .thenReturn(DockerImageAvailabilityResult.privateGhcrImage());
 
     ResponseEntity<DockerImageCheckResponseDto> publicResponse =
-        challengeController.checkDockerImage("ghcr.io/acme/lab:latest");
+        labController.checkDockerImage("ghcr.io/acme/lab:latest");
     ResponseEntity<DockerImageCheckResponseDto> privateResponse =
-        challengeController.checkDockerImage("ghcr.io/acme/private:latest");
+        labController.checkDockerImage("ghcr.io/acme/private:latest");
 
     assertThat(publicResponse.getBody()).isNotNull();
     assertThat(publicResponse.getBody().message()).isEqualTo("Public GHCR image found");
@@ -436,15 +436,15 @@ class ChallengeControllerTest {
         .thenReturn(choiceResponse);
     when(labService.completeTheoryChallenge(userId, courseId, labId, challengeId))
         .thenReturn(theoryResponse);
-    when(labService.countCompletedChallenges(userId)).thenReturn(7L);
+    when(labService.countCompletedLabs(userId)).thenReturn(7L);
 
     assertThat(
-            challengeController
+            labController
                 .submitChallengeChoice(jwt, labId, challengeId, choiceRequest)
                 .getBody())
         .isSameAs(choiceResponse);
-    assertThat(challengeController.completeTheoryChallenge(jwt, labId, challengeId, courseId).getBody())
+    assertThat(labController.completeTheoryChallenge(jwt, labId, challengeId, courseId).getBody())
         .isSameAs(theoryResponse);
-    assertThat(challengeController.countMyCompletedChallenges(jwt).getBody()).containsEntry("count", 7L);
+    assertThat(labController.countMyCompletedLabs(jwt).getBody()).containsEntry("count", 7L);
   }
 }

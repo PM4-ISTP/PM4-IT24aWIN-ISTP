@@ -28,6 +28,7 @@ import { CoursePeoplePanel } from "@/src/features/course/components/people/Cours
 import MyEditor from "@/src/shared/components/MyEditor";
 import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
 import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
+import { CourseInviteCodePanel } from "@/src/features/course/components/management/CourseInviteCodePanel";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
@@ -384,13 +385,14 @@ export default function EditCourse() {
 
   return (
     <Container size="xl">
-      <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Course" centered>
+      <Modal opened={deleteOpened} onClose={closeDelete} title="Remove Course" centered>
         <Stack gap="md">
           <Text size="sm">
-            Are you sure you want to delete <strong>{title}</strong>? This action cannot be undone.
+            Remove <strong>{title}</strong> from instructor dashboards? Students and instructors
+            will no longer see it in active course lists.
           </Text>
           {deleteError && (
-            <Alert color="red" title="Could not delete course" variant="light">
+            <Alert color="red" title="Could not remove course" variant="light">
               Something went wrong. Please try again.
             </Alert>
           )}
@@ -417,7 +419,7 @@ export default function EditCourse() {
                 void handleDelete();
               }}
             >
-              Delete Course
+              Remove Course
             </Button>
           </Group>
         </Stack>
@@ -459,7 +461,7 @@ export default function EditCourse() {
               onClick={openDelete}
               radius="md"
             >
-              Delete Course
+              Remove Course
             </Button>
           )}
         </Group>
@@ -635,101 +637,14 @@ export default function EditCourse() {
               />
 
               {visibility === "PRIVATE" && isOwner && (
-                <SurfaceCard variant="strong" elevation="md" padding="1.5rem">
-                  <Stack gap="sm">
-                    <Text
-                      size="sm"
-                      fw={600}
-                      style={{
-                        color: "#94a3b8",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        fontSize: "0.7rem",
-                      }}
-                    >
-                      Invite Code
-                    </Text>
-
-                    <Group gap="xs" align="center">
-                      <Text
-                        style={{
-                          fontFamily: "var(--font-space-grotesk), monospace",
-                          fontSize: "1.6rem",
-                          fontWeight: 700,
-                          letterSpacing: "0.3em",
-                          color: "#f1f5f9",
-                          lineHeight: 1,
-                        }}
-                      >
-                        {inviteCode ?? "—"}
-                      </Text>
-                      {inviteCode && (
-                        <Button
-                          variant="subtle"
-                          size="xs"
-                          radius="md"
-                          onClick={handleCopyCode}
-                          style={{ color: codeCopied ? "#4ade80" : "#94a3b8" }}
-                          leftSection={
-                            <span
-                              className="material-symbols-outlined"
-                              style={{
-                                fontSize: "0.95rem",
-                                lineHeight: 1,
-                                fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
-                              }}
-                            >
-                              {codeCopied ? "check" : "content_copy"}
-                            </span>
-                          }
-                        >
-                          {codeCopied ? "Copied!" : "Copy"}
-                        </Button>
-                      )}
-                    </Group>
-
-                    <Text size="xs" style={{ color: "#64748b" }}>
-                      Share this code with students to let them join the course directly.
-                    </Text>
-
-                    {regenerateError && (
-                      <Alert color="red" variant="light" py="xs">
-                        {regenerateError}
-                      </Alert>
-                    )}
-
-                    {isOwner && (
-                      <Button
-                        variant="outline"
-                        size="xs"
-                        radius="md"
-                        loading={isRegenerating}
-                        disabled={isRegenerating}
-                        onClick={() => void handleRegenerate()}
-                        leftSection={
-                          <span
-                            className="material-symbols-outlined"
-                            style={{
-                              fontSize: "0.95rem",
-                              lineHeight: 1,
-                              fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24",
-                            }}
-                          >
-                            refresh
-                          </span>
-                        }
-                        style={{
-                          borderColor: "rgba(255,255,255,0.12)",
-                          color: "#e2e8f0",
-                          background: "rgba(255,255,255,0.04)",
-                          alignSelf: "flex-start",
-                        }}
-                      >
-                        Regenerate code
-                      </Button>
-                    )}
-                  </Stack>
-                </SurfaceCard>
+                <CourseInviteCodePanel
+                  inviteCode={inviteCode}
+                  codeCopied={codeCopied}
+                  regenerateError={regenerateError}
+                  isRegenerating={isRegenerating}
+                  onCopyCode={handleCopyCode}
+                  onRegenerate={() => void handleRegenerate()}
+                />
               )}
             </Stack>
           </GridCol>

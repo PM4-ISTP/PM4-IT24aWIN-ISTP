@@ -25,7 +25,7 @@ import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { slugify } from "@/src/shared/lib/utils";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
-type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
+type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC";
 type ChallengeDifficulty = "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
 
 type AdminLabListItem = {
@@ -34,6 +34,7 @@ type AdminLabListItem = {
   description: string | null;
   status: ChallengeStatus;
   difficulty: ChallengeDifficulty;
+  isSoftDeleted: boolean;
   dockerImage: string | null;
   courseCount: number;
   createdAt: string;
@@ -67,6 +68,7 @@ export default function AdminChallengeManagement() {
 
   const [editOpened, setEditOpened] = useState(false);
   const [deleteOpened, setDeleteOpened] = useState(false);
+  const [deleteMode, setDeleteMode] = useState<"soft" | "hard">("soft");
   const [selected, setSelected] = useState<AdminLabListItem | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -111,8 +113,9 @@ export default function AdminChallengeManagement() {
     setEditOpened(true);
   }
 
-  function openDelete(lab: AdminLabListItem) {
+  function openDelete(lab: AdminLabListItem, mode: "soft" | "hard") {
     setSelected(lab);
+    setDeleteMode(mode);
     setDeleteOpened(true);
   }
 
@@ -160,7 +163,11 @@ export default function AdminChallengeManagement() {
         const raw = await readBackendError(res);
         const msg = toUserFriendlyBackendError(raw);
         const color = res.status >= 500 ? "red" : "orange";
-        showToast(color, "Failed to delete lab", msg ?? "Please try again.");
+        showToast(
+          color,
+          deleteMode === "hard" ? "Failed to hard-delete lab" : "Failed to remove lab",
+          msg ?? "Please try again."
+        );
         return;
       }
       setDeleteOpened(false);
@@ -171,7 +178,11 @@ export default function AdminChallengeManagement() {
         refresh();
       }
     } catch {
-      showToast("red", "Failed to delete lab", "Please try again.");
+      showToast(
+        "red",
+        deleteMode === "hard" ? "Failed to hard-delete lab" : "Failed to remove lab",
+        "Please try again."
+      );
     } finally {
       setSaving(false);
     }
@@ -205,6 +216,10 @@ export default function AdminChallengeManagement() {
           </Group>
         )}
       </Group>
+      <Text size="sm" c="dimmed">
+        Instructors can only soft-delete labs. Hard delete is managed from the Removed tab and is
+        only available when no related database dependencies exist.
+      </Text>
 
       <Table highlightOnHover withTableBorder striped={false} style={{ tableLayout: "fixed" }}>
         <Table.Thead>
@@ -212,14 +227,15 @@ export default function AdminChallengeManagement() {
             <Table.Th>Title</Table.Th>
             <Table.Th style={{ width: 240 }}>Creator</Table.Th>
             <Table.Th>Status</Table.Th>
+            <Table.Th style={{ width: 150 }}>Deletion</Table.Th>
             <Table.Th style={{ width: 190 }}>Updated</Table.Th>
-            <Table.Th style={{ width: 96 }} />
+            <Table.Th style={{ width: 130 }} />
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
           {labs.length === 0 ? (
             <Table.Tr>
-              <Table.Td colSpan={5}>
+              <Table.Td colSpan={6}>
                 <Text size="sm" c="dimmed" ta="center" py="md">
                   No labs found.
                 </Text>
@@ -259,13 +275,7 @@ export default function AdminChallengeManagement() {
                     <Badge
                       variant="light"
                       color={
-                        c.status === "PUBLIC"
-                          ? "green"
-                          : c.status === "PRIVATE"
-                            ? "yellow"
-                            : c.status === "ARCHIVED"
-                              ? "red"
-                              : "gray"
+                        c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"
                       }
                     >
                       {c.status}
@@ -277,6 +287,11 @@ export default function AdminChallengeManagement() {
                       Courses: {c.courseCount}
                     </Badge>
                   </Group>
+                </Table.Td>
+                <Table.Td>
+                  <Badge variant="light" color={c.isSoftDeleted ? "orange" : "teal"}>
+                    {c.isSoftDeleted ? "Soft Deleted" : "Active"}
+                  </Badge>
                 </Table.Td>
                 <Table.Td>
                   <Text size="sm">{formatDate(c.updatedAt)}</Text>
@@ -293,9 +308,19 @@ export default function AdminChallengeManagement() {
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
+                      color="orange"
+                      aria-label="Soft delete lab"
+                      onClick={() => openDelete(c, "soft")}
+                      disabled={c.isSoftDeleted}
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="subtle"
                       color="red"
-                      aria-label="Delete lab"
-                      onClick={() => openDelete(c)}
+                      aria-label="Hard delete lab"
+                      onClick={() => openDelete(c, "hard")}
+                      disabled
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -345,7 +370,6 @@ export default function AdminChallengeManagement() {
                   { value: "DRAFT", label: "DRAFT" },
                   { value: "PRIVATE", label: "PRIVATE" },
                   { value: "PUBLIC", label: "PUBLIC" },
-                  { value: "ARCHIVED", label: "ARCHIVED" },
                 ]}
                 value={form.values.status}
                 onChange={(v) => form.setFieldValue("status", (v ?? "DRAFT") as ChallengeStatus)}
@@ -396,25 +420,23 @@ export default function AdminChallengeManagement() {
       <Modal
         opened={deleteOpened}
         onClose={() => setDeleteOpened(false)}
-        title={selected?.courseCount ? "Archive Lab" : "Delete Lab"}
+        title={deleteMode === "hard" ? "Hard Delete Lab" : "Remove Lab"}
         centered
       >
         <Stack gap="md">
           <Text size="sm">
-            {selected?.courseCount ? "Archive" : "Delete"}{" "}
+            {deleteMode === "hard" ? "Permanently delete" : "Soft-delete"}{" "}
             <Text span fw={700}>
               {selectedTitle}
             </Text>
-            ?
+            ?{" "}
+            {deleteMode === "hard"
+              ? "This cannot be undone."
+              : "The lab will be hidden from active instructor and student lists."}
           </Text>
-          {selected?.courseCount ? (
+          {deleteMode === "hard" && !(selected?.isSoftDeleted ?? false) && (
             <Text size="sm" c="dimmed">
-              This lab is connected to existing course history, so it will be archived instead of
-              permanently deleted.
-            </Text>
-          ) : (
-            <Text size="sm" c="dimmed">
-              This cannot be undone.
+              Hard delete is only possible after soft delete.
             </Text>
           )}
           <Group justify="flex-end">
@@ -426,8 +448,14 @@ export default function AdminChallengeManagement() {
             >
               Cancel
             </Button>
-            <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
-              {selected?.courseCount ? "Archive" : "Delete"}
+            <Button
+              color={deleteMode === "hard" ? "red" : "orange"}
+              radius="md"
+              onClick={() => void confirmDelete()}
+              loading={saving}
+              disabled={deleteMode === "hard" && !(selected?.isSoftDeleted ?? false)}
+            >
+              {deleteMode === "hard" ? "Hard Delete" : "Remove"}
             </Button>
           </Group>
         </Stack>
