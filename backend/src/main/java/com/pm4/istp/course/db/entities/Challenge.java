@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -69,4 +70,11 @@ public class Challenge {
   @LastModifiedDate
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
+
+  /** Soft-delete timestamp. Null means the challenge is active. */
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
+
+  @Column(name = "deleted_by_username", length = 128)
+  private String deletedByUsername;
 }
