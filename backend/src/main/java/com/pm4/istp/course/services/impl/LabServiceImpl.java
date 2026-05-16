@@ -89,7 +89,7 @@ public class LabServiceImpl implements LabService {
   public Lab createChallenge(UUID userId, CreateLabRequest request) {
     User creator =
         userRepository
-            .findById(userId)
+            .findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
@@ -117,7 +117,7 @@ public class LabServiceImpl implements LabService {
   public Lab getChallenge(UUID userId, UUID labId) {
     Lab lab =
         labRepository
-            .findByIdAndDeletedAtIsNull(labId)
+            .findById(labId)
             .orElseThrow(
                 () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
@@ -130,7 +130,7 @@ public class LabServiceImpl implements LabService {
   public Lab updateChallenge(UUID userId, UUID labId, UpdateLabRequest request) {
     Lab lab =
         labRepository
-            .findByIdAndDeletedAtIsNull(labId)
+            .findById(labId)
             .orElseThrow(
                 () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
@@ -261,7 +261,7 @@ public class LabServiceImpl implements LabService {
   public int previewVisibilityImpact(UUID userId, UUID labId, LabStatusEnum newStatus) {
     Lab lab =
         labRepository
-            .findByIdAndDeletedAtIsNull(labId)
+            .findById(labId)
             .orElseThrow(
                 () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
@@ -304,7 +304,7 @@ public class LabServiceImpl implements LabService {
   public void deleteChallenge(UUID userId, UUID labId) {
     Lab lab =
         labRepository
-            .findByIdAndDeletedAtIsNull(labId)
+            .findById(labId)
             .orElseThrow(
                 () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
@@ -365,7 +365,7 @@ public class LabServiceImpl implements LabService {
 
     Lab lab =
         labRepository
-            .findByIdAndDeletedAtIsNull(labId)
+            .findById(labId)
             .orElseThrow(
                 () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
 
@@ -509,7 +509,7 @@ public class LabServiceImpl implements LabService {
 
   private User findActiveUser(UUID userId) {
     return userRepository
-            .findById(userId)
+        .findByIdAndDeletedAtIsNull(userId)
         .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
   }
 
@@ -793,7 +793,7 @@ public class LabServiceImpl implements LabService {
       UUID userId, UUID courseId, UUID labId, UUID challengeId) {
     User user =
         userRepository
-            .findById(userId)
+            .findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 

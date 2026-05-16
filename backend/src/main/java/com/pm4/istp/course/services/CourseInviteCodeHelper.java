@@ -52,7 +52,7 @@ public class CourseInviteCodeHelper {
   public void assignInviteCode(UUID courseId, String code) {
     Course course =
         courseRepository
-            .findByIdAndDeletedAtIsNull(courseId)
+            .findById(courseId)
             .orElseThrow(
                 () ->
                     new CourseNotFoundException(
