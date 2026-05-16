@@ -56,9 +56,7 @@ async function fetchDeleteCheck(url: string): Promise<DeleteCheckResponse | null
 
 function blockersToHint(blockers: DeleteCheckBlocker[]): string {
   if (!blockers || blockers.length === 0) return "";
-  return blockers
-    .map((b) => (b.count > 1 ? `${b.relation} (${b.count})` : b.relation))
-    .join(" • ");
+  return blockers.map((b) => (b.count > 1 ? `${b.relation} (${b.count})` : b.relation)).join(" • ");
 }
 
 export default function AdminRemovedManagement() {
@@ -142,7 +140,13 @@ export default function AdminRemovedManagement() {
     let cancelled = false;
     async function loadChecks() {
       const entries = await Promise.all(
-        removedCourseIds.map(async (id) => [id, await fetchDeleteCheck(`/api/backend/api/admin/delete-check/course/${id}`)] as const)
+        removedCourseIds.map(
+          async (id) =>
+            [
+              id,
+              await fetchDeleteCheck(`/api/backend/api/admin/delete-check/course/${id}`),
+            ] as const
+        )
       );
       if (cancelled) return;
       setCourseChecks((prev) => {
@@ -163,7 +167,10 @@ export default function AdminRemovedManagement() {
     let cancelled = false;
     async function loadChecks() {
       const entries = await Promise.all(
-        removedLabIds.map(async (id) => [id, await fetchDeleteCheck(`/api/backend/api/admin/delete-check/lab/${id}`)] as const)
+        removedLabIds.map(
+          async (id) =>
+            [id, await fetchDeleteCheck(`/api/backend/api/admin/delete-check/lab/${id}`)] as const
+        )
       );
       if (cancelled) return;
       setLabChecks((prev) => {
@@ -342,7 +349,12 @@ export default function AdminRemovedManagement() {
                     </Table.Td>
                     <Table.Td>
                       <Stack gap={2}>
-                        <Text size="sm" lineClamp={1} style={wrapTextStyle} title={c.ownerName ?? "-"}>
+                        <Text
+                          size="sm"
+                          lineClamp={1}
+                          style={wrapTextStyle}
+                          title={c.ownerName ?? "-"}
+                        >
                           {c.ownerName ?? "-"}
                         </Text>
                         <Text
@@ -536,4 +548,3 @@ export default function AdminRemovedManagement() {
     </Stack>
   );
 }
-

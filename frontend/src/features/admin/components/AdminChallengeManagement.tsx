@@ -275,11 +275,7 @@ export default function AdminChallengeManagement() {
                     <Badge
                       variant="light"
                       color={
-                        c.status === "PUBLIC"
-                          ? "green"
-                          : c.status === "PRIVATE"
-                            ? "yellow"
-                            : "gray"
+                        c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"
                       }
                     >
                       {c.status}
@@ -438,15 +434,15 @@ export default function AdminChallengeManagement() {
               ? "This cannot be undone."
               : "The lab will be hidden from active instructor and student lists."}
           </Text>
-           {deleteMode === "hard" && !(selected?.isSoftDeleted ?? false) && (
-             <Text size="sm" c="dimmed">
-               Hard delete is only possible after soft delete.
-             </Text>
-           )}
-           <Group justify="flex-end">
-             <Button
-               variant="default"
-               radius="md"
+          {deleteMode === "hard" && !(selected?.isSoftDeleted ?? false) && (
+            <Text size="sm" c="dimmed">
+              Hard delete is only possible after soft delete.
+            </Text>
+          )}
+          <Group justify="flex-end">
+            <Button
+              variant="default"
+              radius="md"
               onClick={() => setDeleteOpened(false)}
               disabled={saving}
             >
