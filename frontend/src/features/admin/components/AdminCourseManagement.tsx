@@ -299,7 +299,11 @@ export default function AdminCourseManagement() {
                         c.status === "PRIVATE" ? "yellow" : c.status === "PUBLIC" ? "green" : "gray"
                       }
                     >
-                      {c.status === "PRIVATE" ? "Private" : c.status === "PUBLIC" ? "Public" : "Draft"}
+                      {c.status === "PRIVATE"
+                        ? "Private"
+                        : c.status === "PUBLIC"
+                          ? "Public"
+                          : "Draft"}
                     </Badge>
                   </Group>
                 </Table.Td>
