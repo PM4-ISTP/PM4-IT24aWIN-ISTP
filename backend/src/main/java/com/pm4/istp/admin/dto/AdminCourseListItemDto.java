@@ -22,6 +22,9 @@ public class AdminCourseListItemDto {
   @JsonProperty("isPrivate")
   private boolean isPrivate;
 
+  @JsonProperty("isSoftDeleted")
+  private boolean isSoftDeleted;
+
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private String topic;

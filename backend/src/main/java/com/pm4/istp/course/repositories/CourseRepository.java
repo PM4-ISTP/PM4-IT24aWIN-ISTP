@@ -18,7 +18,12 @@ import org.springframework.stereotype.Repository;
 public interface CourseRepository extends JpaRepository<Course, UUID> {
   Page<Course> findByCourseInstructorsInstructorId(UUID instructorId, Pageable pageable);
 
-  Optional<Course> findByInviteCode(String inviteCode);
+  default Optional<Course> findByIdAndDeletedAtIsNull(UUID id) {
+    return findById(id).filter(course -> course.getDeletedAt() == null);
+  }
+
+  @Query("select c from Course c where c.inviteCode = :inviteCode and c.deletedAt is null")
+  Optional<Course> findByInviteCode(@Param("inviteCode") String inviteCode);
 
   boolean existsByInviteCode(String inviteCode);
 
@@ -50,17 +55,19 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             from CourseInstructor ciFilter
             where ciFilter.course = c and ciFilter.instructor.id = :instructorId
           )
+          and c.deletedAt is null
           group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
           select count(c)
           from Course c
-          where exists (
-            select 1
-            from CourseInstructor ciFilter
-            where ciFilter.course = c and ciFilter.instructor.id = :instructorId
-          )
+          where c.deletedAt is null
+            and exists (
+              select 1
+              from CourseInstructor ciFilter
+              where ciFilter.course = c and ciFilter.instructor.id = :instructorId
+            )
           """)
   Page<ListCourseResponseDto> findListCoursesForInstructor(
       @Param("instructorId") UUID instructorId, Pageable pageable);
@@ -89,8 +96,8 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciOwner
             on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
-          where
-            ((c.isPublished = true or c.isPrivate = true) and exists (
+          where c.deletedAt is null
+            and ((c.isPublished = true or c.isPrivate = true) and exists (
               select 1
               from CourseEnrollment eFilter
               where eFilter.course = c and eFilter.participant.id = :userId
@@ -103,12 +110,13 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           """
           select count(distinct c.id)
           from Course c
-          where
-            ((c.isPublished = true or c.isPrivate = true) and exists (
+          where c.deletedAt is null
+            and (c.isPublished = true or c.isPrivate = true)
+            and exists (
               select 1
               from CourseEnrollment eFilter
               where eFilter.course = c and eFilter.participant.id = :userId
-            ))
+            )
           """)
   Page<ListCourseResponseDto> findListEnrollmentsForUser(
       @Param("userId") UUID userId, Pageable pageable);
@@ -136,14 +144,14 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
-          where c.isPublished = true and c.isPrivate = false
+          where c.isPublished = true and c.isPrivate = false and c.deletedAt is null
           group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
           select count(c)
           from Course c
-          where c.isPublished = true and c.isPrivate = false
+          where c.isPublished = true and c.isPrivate = false and c.deletedAt is null
           """)
   Page<ListCourseResponseDto> findPublishedCourses(Pageable pageable);
 
@@ -170,14 +178,14 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
-          where c.isPublished = true and c.isPrivate = false and c.topic = :topic
+          where c.isPublished = true and c.isPrivate = false and c.topic = :topic and c.deletedAt is null
           group by c.id, c.title, c.description, c.shortDescription, c.isPublished, c.isPrivate, c.createdAt, c.updatedAt, c.imageUrl, c.topic, ownerUser.name, ownerUser.picture, ownerUser.title
           """,
       countQuery =
           """
           select count(c)
           from Course c
-          where c.isPublished = true and c.isPrivate = false and c.topic = :topic
+          where c.isPublished = true and c.isPrivate = false and c.topic = :topic and c.deletedAt is null
           """)
   Page<ListCourseResponseDto> findPublishedCoursesByTopic(
       @Param("topic") String topic, Pageable pageable);
@@ -205,7 +213,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
-          where c.isPublished = true and c.isPrivate = false and c.topic = :topic
+          where c.isPublished = true and c.isPrivate = false and c.topic = :topic and c.deletedAt is null
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
@@ -217,7 +225,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           """
           select count(c)
           from Course c
-          where c.isPublished = true and c.isPrivate = false and c.topic = :topic
+          where c.isPublished = true and c.isPrivate = false and c.topic = :topic and c.deletedAt is null
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
@@ -250,7 +258,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           left join c.courseInstructors ciAll
           left join c.courseInstructors ciOwner on ciOwner.instructorRole = com.pm4.istp.course.db.InstructorRoleEnum.OWNER
           left join ciOwner.instructor ownerUser
-          where c.isPublished = true and c.isPrivate = false
+          where c.isPublished = true and c.isPrivate = false and c.deletedAt is null
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
@@ -262,7 +270,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
           """
           select count(c)
           from Course c
-          where c.isPublished = true and c.isPrivate = false
+          where c.isPublished = true and c.isPrivate = false and c.deletedAt is null
             and (
               lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.shortDescription, '')) like lower(concat('%', :query, '%'))
@@ -282,6 +290,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.shortDescription,
             c.isPublished,
             c.isPrivate,
+            c.deletedAt is not null,
             c.createdAt,
             c.updatedAt,
             c.topic,
@@ -312,6 +321,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             c.shortDescription,
             c.isPublished,
             c.isPrivate,
+            c.deletedAt is not null,
             c.createdAt,
             c.updatedAt,
             c.topic,
@@ -350,7 +360,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
       join fetch c.courseLabs cc
       join fetch cc.lab ch
       join c.courseEnrollments ce
-      where cc.lab.id = :labId and ce.participant.id = :userId
+      where cc.lab.id = :labId and ce.participant.id = :userId and c.deletedAt is null
       """)
   List<Course> findCoursesByChallengeIdAndEnrolledUserId(
       @Param("labId") UUID labId, @Param("userId") UUID userId);

@@ -648,7 +648,7 @@ class LabServiceImplTest {
   }
 
   @Test
-  void deleteChallenge_whenCallerIsCreator_deletesChallenge() {
+  void deleteChallenge_whenCallerIsCreator_softDeletesChallenge() {
     UUID creatorId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     User creator = buildUser(creatorId);
@@ -658,25 +658,8 @@ class LabServiceImplTest {
 
     labService.deleteLab(creatorId, labId);
 
-    verify(labRepository).delete(lab);
-    verify(labRepository).flush();
-  }
-
-  @Test
-  void deleteChallenge_whenLabHasCourseHistory_archivesInsteadOfDeleting() {
-    UUID creatorId = UUID.randomUUID();
-    UUID labId = UUID.randomUUID();
-    User creator = buildUser(creatorId);
-    Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
-
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
-    when(courseLabRepository.countByChallengeId(labId)).thenReturn(1L);
-
-    labService.deleteLab(creatorId, labId);
-
-    assertThat(lab.getStatus()).isEqualTo(LabStatusEnum.ARCHIVED);
+    verify(courseLabRepository).deleteByChallengeId(labId);
     verify(labRepository).save(lab);
-    verify(labRepository, never()).delete(any(Lab.class));
   }
 
   @Test
@@ -692,7 +675,7 @@ class LabServiceImplTest {
     assertThatThrownBy(() -> labService.deleteLab(otherId, labId))
         .isInstanceOf(LabAccessDeniedException.class);
 
-    verify(labRepository, never()).delete(any(Lab.class));
+    verify(labRepository, never()).save(any(Lab.class));
   }
 
   @Test

@@ -168,7 +168,7 @@ class AdminChallengeServiceImplTest {
   // ── deleteChallenge ─────────────────────────────────────────────────────────
 
   @Test
-  void deleteChallenge_whenExists_deletesChallenge() {
+  void deleteChallenge_whenExists_softDeletesChallenge() {
     UUID id = UUID.randomUUID();
     Lab lab = new Lab();
     lab.setId(id);
@@ -176,24 +176,8 @@ class AdminChallengeServiceImplTest {
 
     adminChallengeService.deleteChallenge(id);
 
-    verify(labRepository).delete(lab);
-    verify(labRepository).flush();
-  }
-
-  @Test
-  void deleteChallenge_whenLabHasCourseHistory_archivesInsteadOfDeleting() {
-    UUID id = UUID.randomUUID();
-    Lab lab = new Lab();
-    lab.setId(id);
-    lab.setStatus(LabStatusEnum.PUBLIC);
-    when(labRepository.findById(id)).thenReturn(Optional.of(lab));
-    when(courseLabRepository.countByChallengeId(id)).thenReturn(1L);
-
-    adminChallengeService.deleteChallenge(id);
-
-    assertThat(lab.getStatus()).isEqualTo(LabStatusEnum.ARCHIVED);
+    verify(courseLabRepository).deleteByChallengeId(id);
     verify(labRepository).save(lab);
-    verify(labRepository, never()).delete(any());
   }
 
   @Test
@@ -205,6 +189,6 @@ class AdminChallengeServiceImplTest {
         .isInstanceOf(LabNotFoundException.class)
         .hasMessageContaining(id.toString());
 
-    verify(labRepository, never()).delete(any());
+    verify(labRepository, never()).save(any());
   }
 }

@@ -299,30 +299,23 @@ export default function EditChallenge() {
         </Stack>
       </Modal>
 
-      <Modal
-        opened={deleteOpened}
-        onClose={closeDelete}
-        title={courseCount > 0 ? "Archive Lab" : "Delete Lab"}
-        centered
-      >
+      <Modal opened={deleteOpened} onClose={closeDelete} title="Remove Lab" centered>
         <Stack gap="md">
           <Text size="sm">
-            Are you sure you want to {courseCount > 0 ? "archive" : "delete"}{" "}
-            <strong>{formValues.title}</strong>?
+            Remove <strong>{formValues.title}</strong> from instructor dashboards? Students and
+            instructors will no longer see it in active lab lists.
           </Text>
           {courseCount > 0 && (
-            <Text size="sm" c="orange">
-              This lab is connected to {courseCount} course{courseCount !== 1 ? "s" : ""}, so it
-              will be archived instead of permanently deleted.
-            </Text>
-          )}
-          {courseCount === 0 && (
             <Text size="sm" c="dimmed">
-              This action cannot be undone.
+              This lab is currently used in {courseCount} course{courseCount !== 1 ? "s" : ""} and
+              will be removed from those courses.
             </Text>
           )}
+          <Text size="sm" c="dimmed">
+            Soft-deleted labs are hidden from active instructor and student lists.
+          </Text>
           {deleteError && (
-            <Alert color="red" title="Could not delete lab" variant="light">
+            <Alert color="red" title="Could not remove lab" variant="light">
               {deleteError}
             </Alert>
           )}
@@ -338,7 +331,7 @@ export default function EditChallenge() {
                 void handleDelete();
               }}
             >
-              {courseCount > 0 ? "Archive Lab" : "Delete Lab"}
+              Remove Lab
             </Button>
           </Group>
         </Stack>
@@ -379,7 +372,7 @@ export default function EditChallenge() {
             onClick={openDelete}
             radius="md"
           >
-            {courseCount > 0 ? "Archive Lab" : "Delete Lab"}
+            Remove Lab
           </Button>
         </Group>
 

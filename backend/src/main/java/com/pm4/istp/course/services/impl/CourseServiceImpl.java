@@ -1089,7 +1089,8 @@ public class CourseServiceImpl implements CourseService {
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
-    courseRepository.delete(course);
+    course.setDeletedAt(LocalDateTime.now());
+    courseRepository.save(course);
   }
 
   @Override

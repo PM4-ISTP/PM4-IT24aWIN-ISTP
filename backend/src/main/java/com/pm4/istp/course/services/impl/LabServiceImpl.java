@@ -307,30 +307,11 @@ public class LabServiceImpl implements LabService {
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
-    deleteOrArchive(lab);
-  }
-
-  private void deleteOrArchive(Lab lab) {
-    if (hasRetainedHistory(lab.getId())) {
-      archive(lab);
-      return;
+    courseLabRepository.deleteByChallengeId(labId);
+    if (lab.getDeletedAt() == null) {
+      lab.setDeletedAt(LocalDateTime.now());
+      labRepository.save(lab);
     }
-
-    labRepository.delete(lab);
-    labRepository.flush();
-  }
-
-  private boolean hasRetainedHistory(UUID labId) {
-    return courseLabRepository.countByChallengeId(labId) > 0
-        || challengeCompletionRepository.existsByLabId(labId)
-        || studentFlagSubmissionRepository.existsByLabId(labId)
-        || studentOptionSubmissionRepository.existsByLabId(labId)
-        || courseChallengeScoreOverrideRepository.existsByLabId(labId);
-  }
-
-  private void archive(Lab lab) {
-    lab.setStatus(LabStatusEnum.ARCHIVED);
-    labRepository.save(lab);
   }
 
   @Override

@@ -4,14 +4,10 @@ import com.pm4.istp.admin.dto.AdminLabListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateLabRequestDto;
 import com.pm4.istp.admin.services.AdminLabService;
 import com.pm4.istp.course.db.entities.Lab;
-import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
-import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
-import com.pm4.istp.course.repositories.CourseChallengeScoreOverrideRepository;
 import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.repositories.LabRepository;
-import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
-import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,10 +23,6 @@ public class AdminLabServiceImpl implements AdminLabService {
 
   private final LabRepository labRepository;
   private final CourseLabRepository courseLabRepository;
-  private final ChallengeCompletionRepository challengeCompletionRepository;
-  private final StudentFlagSubmissionRepository studentFlagSubmissionRepository;
-  private final StudentOptionSubmissionRepository studentOptionSubmissionRepository;
-  private final CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
 
   @Override
   @Transactional(readOnly = true)
@@ -65,30 +57,15 @@ public class AdminLabServiceImpl implements AdminLabService {
         labRepository
             .findById(labId)
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
-    deleteOrArchive(lab);
-  }
 
-  private void deleteOrArchive(Lab lab) {
-    if (hasRetainedHistory(lab.getId())) {
-      archive(lab);
+    if (lab.getDeletedAt() == null) {
+      courseLabRepository.deleteByChallengeId(labId);
+      lab.setDeletedAt(LocalDateTime.now());
+      labRepository.save(lab);
       return;
     }
 
     labRepository.delete(lab);
-    labRepository.flush();
-  }
-
-  private boolean hasRetainedHistory(UUID labId) {
-    return courseLabRepository.countByChallengeId(labId) > 0
-        || challengeCompletionRepository.existsByLabId(labId)
-        || studentFlagSubmissionRepository.existsByLabId(labId)
-        || studentOptionSubmissionRepository.existsByLabId(labId)
-        || courseChallengeScoreOverrideRepository.existsByLabId(labId);
-  }
-
-  private void archive(Lab lab) {
-    lab.setStatus(LabStatusEnum.ARCHIVED);
-    labRepository.save(lab);
   }
 
   private String normalizeBlankToNull(String value) {

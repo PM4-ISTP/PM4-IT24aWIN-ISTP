@@ -13,6 +13,7 @@ import {
   GridCol,
   Group,
   Loader,
+  Modal,
   Select,
   Stack,
   Text,
@@ -27,7 +28,6 @@ import { CoursePeoplePanel } from "@/src/features/course/components/people/Cours
 import MyEditor from "@/src/shared/components/MyEditor";
 import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
 import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
-import { CourseDeleteModal } from "@/src/features/course/components/management/CourseDeleteModal";
 import { CourseInviteCodePanel } from "@/src/features/course/components/management/CourseInviteCodePanel";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
@@ -385,16 +385,45 @@ export default function EditCourse() {
 
   return (
     <Container size="xl">
-      <CourseDeleteModal
-        opened={deleteOpened}
-        title={title}
-        isDeleting={isDeleting}
-        deleteError={deleteError}
-        onClose={closeDelete}
-        onConfirm={() => {
-          void handleDelete();
-        }}
-      />
+      <Modal opened={deleteOpened} onClose={closeDelete} title="Remove Course" centered>
+        <Stack gap="md">
+          <Text size="sm">
+            Remove <strong>{title}</strong> from instructor dashboards? Students and instructors
+            will no longer see it in active course lists.
+          </Text>
+          {deleteError && (
+            <Alert color="red" title="Could not remove course" variant="light">
+              Something went wrong. Please try again.
+            </Alert>
+          )}
+          <Group justify="flex-end" gap="sm">
+            <Button
+              variant="outline"
+              radius="md"
+              onClick={closeDelete}
+              disabled={isDeleting}
+              style={{
+                borderColor: "rgba(255,255,255,0.12)",
+                color: "#e2e8f0",
+                background: "rgba(255,255,255,0.04)",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              loading={isDeleting}
+              disabled={isDeleting}
+              onClick={() => {
+                void handleDelete();
+              }}
+            >
+              Remove Course
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
 
       <Stack p="xl" gap="lg">
         <Group justify="space-between" align="flex-end">
@@ -432,7 +461,7 @@ export default function EditCourse() {
               onClick={openDelete}
               radius="md"
             >
-              Delete Course
+              Remove Course
             </Button>
           )}
         </Group>
