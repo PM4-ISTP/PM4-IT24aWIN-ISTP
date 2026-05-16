@@ -361,10 +361,14 @@ public class CourseServiceImpl implements CourseService {
                   () ->
                       new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, item.getLabId())));
 
-      // DRAFT labs cannot be added to any course, even by their creator
+      // Hidden labs cannot be added to courses, even by their creator.
       if (lab.getStatus() == LabStatusEnum.DRAFT) {
         throw new InvalidCourseLabException(
             String.format("Lab '%s' is a draft and cannot be added to a course", lab.getTitle()));
+      }
+      if (lab.getStatus() == LabStatusEnum.ARCHIVED) {
+        throw new InvalidCourseLabException(
+            String.format("Lab '%s' is archived and cannot be added to a course", lab.getTitle()));
       }
 
       // Only allow adding own PRIVATE labs or PUBLIC labs

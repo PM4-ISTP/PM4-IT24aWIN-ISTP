@@ -29,4 +29,12 @@ public interface CourseChallengeScoreOverrideRepository
       @Param("courseId") UUID courseId,
       @Param("participantIds") Collection<UUID> participantIds,
       @Param("challengeIds") Collection<UUID> challengeIds);
+
+  @Query(
+      """
+      select count(o) > 0
+      from CourseChallengeScoreOverride o
+      where o.challenge.lab.id = :labId
+      """)
+  boolean existsByLabId(@Param("labId") UUID labId);
 }

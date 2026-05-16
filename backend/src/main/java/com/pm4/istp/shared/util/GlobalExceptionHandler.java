@@ -214,7 +214,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorDto> handleChallengeNotFoundException(ChallengeNotFoundException ex) {
     log.error("Caught ChallengeNotFoundException", ex);
     ErrorDto errorDto = new ErrorDto();
-    errorDto.setError("Sub-task not found");
+    errorDto.setError("Challenge not found");
     return new ResponseEntity<>(errorDto, HttpStatus.NOT_FOUND);
   }
 
@@ -223,7 +223,7 @@ public class GlobalExceptionHandler {
       ChallengeAlreadySolvedException ex) {
     log.warn("Caught ChallengeAlreadySolvedException: {}", ex.getMessage());
     ErrorDto errorDto = new ErrorDto();
-    errorDto.setError("Sub-task already solved");
+    errorDto.setError("Challenge already solved");
     return new ResponseEntity<>(errorDto, HttpStatus.CONFLICT);
   }
 

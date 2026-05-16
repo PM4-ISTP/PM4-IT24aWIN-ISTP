@@ -34,12 +34,14 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
           )
           from Lab c
           where c.creator.id = :creatorId
+          and c.status <> com.pm4.istp.course.db.entities.LabStatusEnum.ARCHIVED
           """,
       countQuery =
           """
           select count(c)
           from Lab c
           where c.creator.id = :creatorId
+          and c.status <> com.pm4.istp.course.db.entities.LabStatusEnum.ARCHIVED
           """)
   Page<ListLabResponseDto> findListChallengesForCreator(
       @Param("creatorId") UUID creatorId, Pageable pageable);
@@ -77,7 +79,7 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
           )
           and lower(c.title) like lower(concat('%', :search, '%'))
           """)
-  Page<ListLabResponseDto> searchAvailableChallenges(
+  Page<ListLabResponseDto> searchAvailableLabs(
       @Param("userId") UUID userId, @Param("search") String search, Pageable pageable);
 
   @Query(

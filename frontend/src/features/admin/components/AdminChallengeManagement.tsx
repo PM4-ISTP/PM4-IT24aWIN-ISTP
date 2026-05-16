@@ -25,7 +25,7 @@ import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { slugify } from "@/src/shared/lib/utils";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
-type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC";
+type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
 type ChallengeDifficulty = "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
 
 type AdminLabListItem = {
@@ -259,7 +259,13 @@ export default function AdminChallengeManagement() {
                     <Badge
                       variant="light"
                       color={
-                        c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"
+                        c.status === "PUBLIC"
+                          ? "green"
+                          : c.status === "PRIVATE"
+                            ? "yellow"
+                            : c.status === "ARCHIVED"
+                              ? "red"
+                              : "gray"
                       }
                     >
                       {c.status}
@@ -339,6 +345,7 @@ export default function AdminChallengeManagement() {
                   { value: "DRAFT", label: "DRAFT" },
                   { value: "PRIVATE", label: "PRIVATE" },
                   { value: "PUBLIC", label: "PUBLIC" },
+                  { value: "ARCHIVED", label: "ARCHIVED" },
                 ]}
                 value={form.values.status}
                 onChange={(v) => form.setFieldValue("status", (v ?? "DRAFT") as ChallengeStatus)}
@@ -389,17 +396,27 @@ export default function AdminChallengeManagement() {
       <Modal
         opened={deleteOpened}
         onClose={() => setDeleteOpened(false)}
-        title="Delete Lab"
+        title={selected?.courseCount ? "Archive Lab" : "Delete Lab"}
         centered
       >
         <Stack gap="md">
           <Text size="sm">
-            Delete{" "}
+            {selected?.courseCount ? "Archive" : "Delete"}{" "}
             <Text span fw={700}>
               {selectedTitle}
             </Text>
-            ? This cannot be undone.
+            ?
           </Text>
+          {selected?.courseCount ? (
+            <Text size="sm" c="dimmed">
+              This lab is connected to existing course history, so it will be archived instead of
+              permanently deleted.
+            </Text>
+          ) : (
+            <Text size="sm" c="dimmed">
+              This cannot be undone.
+            </Text>
+          )}
           <Group justify="flex-end">
             <Button
               variant="default"
@@ -410,7 +427,7 @@ export default function AdminChallengeManagement() {
               Cancel
             </Button>
             <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
-              Delete
+              {selected?.courseCount ? "Archive" : "Delete"}
             </Button>
           </Group>
         </Stack>

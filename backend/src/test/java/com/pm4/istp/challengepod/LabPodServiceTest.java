@@ -95,11 +95,11 @@ class LabPodServiceTest {
     // ── startPod: early-exit paths ───────────────────────────────────────────
 
     @Test
-    void startPod_propagatesChallengeNotFoundException() {
+    void startPod_propagatesLabNotFoundException() {
         UUID userId = UUID.randomUUID();
         UUID labId = UUID.randomUUID();
 
-        when(labService.getChallenge(userId, labId))
+        when(labService.getLab(userId, labId))
                 .thenThrow(new LabNotFoundException("not found"));
 
         assertThatThrownBy(() -> service.startPod(userId, labId))
@@ -107,11 +107,11 @@ class LabPodServiceTest {
     }
 
     @Test
-    void startPod_propagatesChallengeAccessDeniedException() {
+    void startPod_propagatesLabAccessDeniedException() {
         UUID userId = UUID.randomUUID();
         UUID labId = UUID.randomUUID();
 
-        when(labService.getChallenge(userId, labId))
+        when(labService.getLab(userId, labId))
                 .thenThrow(new LabAccessDeniedException("denied"));
 
         assertThatThrownBy(() -> service.startPod(userId, labId))
@@ -124,7 +124,7 @@ class LabPodServiceTest {
         UUID labId = UUID.randomUUID();
 
         // lab check passes
-        when(labService.getChallenge(userId, labId)).thenReturn(buildChallenge());
+        when(labService.getLab(userId, labId)).thenReturn(buildChallenge());
         // admin config missing
         when(adminConfigurationService.getAdminConfiguration()).thenReturn(Optional.empty());
 
@@ -153,7 +153,7 @@ class LabPodServiceTest {
                         .endStatus()
                         .build();
 
-        when(labService.getChallenge(userId, labId)).thenReturn(buildChallenge());
+        when(labService.getLab(userId, labId)).thenReturn(buildChallenge());
         when(adminConfigurationService.getAdminConfiguration())
                 .thenReturn(Optional.of(adminConfigWith("kubeconfig", 600)));
         stubFindDeployments(client, userId, labId, List.of(deployment));
@@ -204,7 +204,7 @@ class LabPodServiceTest {
                 .thenReturn(labOperation);
         when(labOperation.list()).thenReturn(emptyLabList);
         when(userOperation.list()).thenReturn(userPodList);
-        when(labService.getChallenge(userId, requestedLabId)).thenReturn(buildChallenge());
+        when(labService.getLab(userId, requestedLabId)).thenReturn(buildChallenge());
         when(adminConfigurationService.getAdminConfiguration())
                 .thenReturn(Optional.of(adminConfigWith("kubeconfig", 900)));
 
@@ -245,7 +245,7 @@ class LabPodServiceTest {
 
         UUID userId = UUID.randomUUID();
         UUID labId = UUID.randomUUID();
-        when(labService.getChallenge(userId, labId)).thenReturn(buildChallenge());
+        when(labService.getLab(userId, labId)).thenReturn(buildChallenge());
         when(adminConfigurationService.getAdminConfiguration())
                 .thenReturn(Optional.of(adminConfigWith("kubeconfig", 900)));
 
