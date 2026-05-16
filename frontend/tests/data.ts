@@ -337,11 +337,7 @@ const instructorLab02: Lab = {
   creatorName: "E2E Instructor",
   courseCount: 3,
   updatedAt: "2026-05-15T11:32:08.776083",
-  challenges: [
-    instructorLab02Challenge01,
-    instructorLab02Challenge02,
-    instructorLab02Challenge03,
-  ],
+  challenges: [instructorLab02Challenge01, instructorLab02Challenge02, instructorLab02Challenge03],
 };
 
 const instructorLab03: Lab = {
@@ -356,11 +352,7 @@ const instructorLab03: Lab = {
   creatorName: "E2E Instructor",
   courseCount: 2,
   updatedAt: "2026-05-15T11:28:07.339331",
-  challenges: [
-    instructorLab03Challenge01,
-    instructorLab03Challenge02,
-    instructorLab03Challenge03,
-  ],
+  challenges: [instructorLab03Challenge01, instructorLab03Challenge02, instructorLab03Challenge03],
 };
 
 const instructorLab04: Lab = {
@@ -435,11 +427,7 @@ const instructorLab08: Lab = {
   creatorName: "E2E Instructor",
   courseCount: 1,
   updatedAt: "2026-05-16T16:20:31.259556",
-  challenges: [
-    instructorLab08Challenge01,
-    instructorLab08Challenge02,
-    instructorLab08Challenge03,
-  ],
+  challenges: [instructorLab08Challenge01, instructorLab08Challenge02, instructorLab08Challenge03],
 };
 
 // ============================================================================
@@ -603,9 +591,9 @@ export const instructorCourse06: Course = {
   id: "b5d31d5d-5b59-44be-9f5b-e20cea9be92b",
   title: "E2E Test Course: Instructor 06",
   description:
-      "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 06</p>",
+    "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 06</p>",
   shortDescription:
-      '"Instructor 06" is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.',
+    '"Instructor 06" is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.',
   isPublished: false,
   isPrivate: true,
   createdAt: "2026-05-16T16:27:52.870031",
@@ -711,43 +699,44 @@ export const courses = {
   adminLab01,
   instructorLab05,
 ];
-(instructorUser as unknown as { completedChallenges: ChallengeCompletion[] }).completedChallenges = [
-  {
-    lab: adminLab01,
-    challenge: adminLab01Challenge01,
-    submittedAt: "2026-05-15T11:26:05.084648",
-  },  
-  {
-    lab: instructorLab03,
-    challenge: instructorLab03Challenge01,
-    submittedAt: "2026-05-15T11:30:37.032344",
-  },
-  {
-    lab: instructorLab03,
-    challenge: instructorLab03Challenge02,
-    submittedAt: "2026-05-15T11:30:40.430358",
-  },
-  {
-    lab: instructorLab03,
-    challenge: instructorLab03Challenge03,
-    submittedAt: "2026-05-15T11:30:50.552643",
-  },
-  {
-    lab: instructorLab02,
-    challenge: instructorLab02Challenge01,
-    submittedAt: "2026-05-15T11:32:24.575717",
-  },
-  {
-    lab: instructorLab02,
-    challenge: instructorLab02Challenge02,
-    submittedAt: "2026-05-15T11:32:27.145546",
-  },
-  {
-    lab: instructorLab05,
-    challenge: instructorLab05Challenge01,
-    submittedAt: "2026-05-16T16:21:42.532488",
-  },
-];
+(instructorUser as unknown as { completedChallenges: ChallengeCompletion[] }).completedChallenges =
+  [
+    {
+      lab: adminLab01,
+      challenge: adminLab01Challenge01,
+      submittedAt: "2026-05-15T11:26:05.084648",
+    },
+    {
+      lab: instructorLab03,
+      challenge: instructorLab03Challenge01,
+      submittedAt: "2026-05-15T11:30:37.032344",
+    },
+    {
+      lab: instructorLab03,
+      challenge: instructorLab03Challenge02,
+      submittedAt: "2026-05-15T11:30:40.430358",
+    },
+    {
+      lab: instructorLab03,
+      challenge: instructorLab03Challenge03,
+      submittedAt: "2026-05-15T11:30:50.552643",
+    },
+    {
+      lab: instructorLab02,
+      challenge: instructorLab02Challenge01,
+      submittedAt: "2026-05-15T11:32:24.575717",
+    },
+    {
+      lab: instructorLab02,
+      challenge: instructorLab02Challenge02,
+      submittedAt: "2026-05-15T11:32:27.145546",
+    },
+    {
+      lab: instructorLab05,
+      challenge: instructorLab05Challenge01,
+      submittedAt: "2026-05-16T16:21:42.532488",
+    },
+  ];
 
 // Student: enrolls in courses and completes labs
 (studentUser as unknown as { enrolledCourses: Course[] }).enrolledCourses = [
