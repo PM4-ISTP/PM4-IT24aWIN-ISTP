@@ -24,6 +24,7 @@ import {
 } from "@tabler/icons-react";
 import { type ReactNode } from "react";
 import { LabPodStatusBadge } from "@/src/features/lab-pod/components/LabPodStatusBadge";
+import type { PodStatusEnum } from "@/src/features/lab-pod/hooks/useLabPodStatus";
 
 function LabLaunchCard({
   title,
@@ -121,7 +122,7 @@ export function LabPlayPodPanel({
   isNarrow: boolean;
   labPanelId: string;
   showLabPanel: boolean;
-  podStatus: string;
+  podStatus: PodStatusEnum;
   podActionLoading: boolean;
   startDisabledReason: string | null;
   startDisabled: boolean;
@@ -129,7 +130,7 @@ export function LabPlayPodPanel({
   extendDisabledReason: string;
   podExpiringNow: boolean;
   podExpiringSoon: boolean;
-  podTimeLeftLabel: string;
+  podTimeLeftLabel: string | null;
   podExpiresAt: Date | null;
   extensionSummary: ExtensionSummary;
   labIsStarting: boolean;
@@ -296,7 +297,7 @@ export function LabPlayPodPanel({
                   <IconClockHour10 size={16} />
                   <Stack gap={0}>
                     <Text size="sm" fw={600} c={podExpiringSoon ? "yellow.2" : undefined}>
-                      Expires in {podTimeLeftLabel}
+                      Expires in {podTimeLeftLabel ?? "unknown"}
                     </Text>
                     <Text size="xs" c="dimmed">
                       at{" "}
