@@ -1,22 +1,9 @@
 "use client";
 
-import {
-  ActionIcon,
-  Alert,
-  Button,
-  Group,
-  Modal,
-  Pagination,
-  SimpleGrid,
-  Stack,
-  Text,
-  ThemeIcon,
-} from "@mantine/core";
+import { Group, Pagination, SimpleGrid, Stack, Text, ThemeIcon } from "@mantine/core";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { IconFlag, IconTrash } from "@tabler/icons-react";
+import { IconFlag } from "@tabler/icons-react";
 import { LabCard } from "@/src/features/course/components/labs/LabCard";
-import { deleteChallenge } from "@/src/features/course/actions/labs";
 
 interface ChallengeGridProps {
   labs: Array<{
@@ -46,11 +33,6 @@ function formatDateTime(iso: string): string {
 export function LabGrid({ labs, totalPages, currentPage }: ChallengeGridProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [removeOpened, setRemoveOpened] = useState(false);
-  const [removeError, setRemoveError] = useState<string | null>(null);
-  const [removing, setRemoving] = useState(false);
-  const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
-  const [selectedLabTitle, setSelectedLabTitle] = useState<string>("");
 
   function handlePageChange(page: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -60,28 +42,6 @@ export function LabGrid({ labs, totalPages, currentPage }: ChallengeGridProps) {
 
   function openChallenge(id: string) {
     router.push(`/dashboard/instructor/labs/${id}`);
-  }
-
-  function openRemove(lab: ChallengeGridProps["labs"][number]) {
-    setSelectedLabId(lab.id);
-    setSelectedLabTitle(lab.title || "this lab");
-    setRemoveError(null);
-    setRemoveOpened(true);
-  }
-
-  async function confirmRemove() {
-    if (!selectedLabId) return;
-    setRemoving(true);
-    setRemoveError(null);
-    const result = await deleteChallenge(selectedLabId);
-    setRemoving(false);
-    if (!result.success) {
-      setRemoveError(result.error);
-      return;
-    }
-    setRemoveOpened(false);
-    setSelectedLabId(null);
-    router.refresh();
   }
 
   if (labs.length === 0) {
@@ -104,60 +64,14 @@ export function LabGrid({ labs, totalPages, currentPage }: ChallengeGridProps) {
 
   return (
     <Stack gap="lg">
-      <Modal
-        opened={removeOpened}
-        onClose={() => setRemoveOpened(false)}
-        title="Remove Lab"
-        centered
-      >
-        <Stack gap="md">
-          <Text size="sm">
-            Remove <strong>{selectedLabTitle}</strong> from instructor dashboards? Students and
-            instructors will no longer see it in active lab lists.
-          </Text>
-          <Text size="sm" c="dimmed">
-            Soft-deleted labs are hidden from active instructor and student lists.
-          </Text>
-          {removeError ? (
-            <Alert color="red" title="Could not remove lab" variant="light">
-              {removeError}
-            </Alert>
-          ) : null}
-          <Group justify="flex-end">
-            <Button variant="default" onClick={() => setRemoveOpened(false)} disabled={removing}>
-              Cancel
-            </Button>
-            <Button
-              color="red"
-              onClick={() => void confirmRemove()}
-              loading={removing}
-              disabled={removing}
-            >
-              Remove
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
         {labs.map((lab) => (
-          <div key={lab.id} style={{ position: "relative" }}>
-            <ActionIcon
-              variant="filled"
-              color="red"
-              radius="xl"
-              size="md"
-              aria-label="Remove lab"
-              style={{ position: "absolute", top: 10, right: 10, zIndex: 5 }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                openRemove(lab);
-              }}
-            >
-              <IconTrash size={16} />
-            </ActionIcon>
-            <LabCard {...lab} updatedAt={formatDateTime(lab.updatedAt)} onClick={openChallenge} />
-          </div>
+          <LabCard
+            key={lab.id}
+            {...lab}
+            updatedAt={formatDateTime(lab.updatedAt)}
+            onClick={openChallenge}
+          />
         ))}
       </SimpleGrid>
 

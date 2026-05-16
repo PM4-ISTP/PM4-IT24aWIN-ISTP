@@ -24,6 +24,7 @@ import {
   IconCheck,
   IconChevronLeft,
   IconTrophy,
+  IconX,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -98,9 +99,11 @@ export function LabPlayView({
   const current = challenges[activeStep] ?? null;
   const allSolved = lab.isSolved ?? false;
 
-  const earnedPoints = challenges
-    .filter((c) => c.isSolved)
-    .reduce((sum, c) => sum + (c.points ?? 0), 0);
+  const earnedPoints = challenges.reduce((sum, c) => {
+    if (!c.isSolved) return sum;
+    if (c.type === "MULTIPLE_CHOICE" && c.correctOptionId) return sum;
+    return sum + (c.points ?? 0);
+  }, 0);
   const totalPoints = lab.maxScore ?? challenges.reduce((sum, c) => sum + (c.points ?? 0), 0);
 
   const sanitizedLabDescription = useMemo(
@@ -514,8 +517,22 @@ export function LabPlayView({
                 {challenges.map((st) => (
                   <Stepper.Step
                     key={st.id}
-                    completedIcon={<IconCheck size={14} />}
-                    icon={st.isSolved ? <IconCheck size={14} /> : undefined}
+                    completedIcon={
+                      st.isSolved && st.correctOptionId ? (
+                        <IconX size={14} color="var(--mantine-color-red-6)" />
+                      ) : (
+                        <IconCheck size={14} />
+                      )
+                    }
+                    icon={
+                      st.isSolved ? (
+                        st.correctOptionId ? (
+                          <IconX size={14} color="var(--mantine-color-red-6)" />
+                        ) : (
+                          <IconCheck size={14} />
+                        )
+                      ) : undefined
+                    }
                   />
                 ))}
               </Stepper>
@@ -530,8 +547,12 @@ export function LabPlayView({
                         Lab {activeStep + 1} of {total}
                       </Text>
                       {current.isSolved && (
-                        <Badge variant="light" color="teal" size="xs">
-                          Solved
+                        <Badge
+                          variant="light"
+                          color={isOnceModeWrongAnswer ? "red" : "teal"}
+                          size="xs"
+                        >
+                          {isOnceModeWrongAnswer ? "Wrong" : "Solved"}
                         </Badge>
                       )}
                       {isMC && (

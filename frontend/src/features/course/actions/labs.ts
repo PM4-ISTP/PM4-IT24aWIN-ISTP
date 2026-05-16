@@ -76,7 +76,7 @@ export async function deleteChallenge(id: string): Promise<ActionResult<void>> {
       client.DELETE("/api/v1/labs/{id}", {
         params: { path: { id } },
       }),
-    "Failed to remove lab"
+    "Failed to delete lab"
   );
 }
 

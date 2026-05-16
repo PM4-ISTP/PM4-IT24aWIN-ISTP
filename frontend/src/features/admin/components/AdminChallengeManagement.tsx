@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionIcon,
+  Alert,
   Badge,
   Button,
   Group,
@@ -68,7 +69,6 @@ export default function AdminChallengeManagement() {
 
   const [editOpened, setEditOpened] = useState(false);
   const [deleteOpened, setDeleteOpened] = useState(false);
-  const [deleteMode, setDeleteMode] = useState<"soft" | "hard">("soft");
   const [selected, setSelected] = useState<AdminLabListItem | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -113,9 +113,8 @@ export default function AdminChallengeManagement() {
     setEditOpened(true);
   }
 
-  function openDelete(lab: AdminLabListItem, mode: "soft" | "hard") {
+  function openDelete(lab: AdminLabListItem) {
     setSelected(lab);
-    setDeleteMode(mode);
     setDeleteOpened(true);
   }
 
@@ -163,11 +162,7 @@ export default function AdminChallengeManagement() {
         const raw = await readBackendError(res);
         const msg = toUserFriendlyBackendError(raw);
         const color = res.status >= 500 ? "red" : "orange";
-        showToast(
-          color,
-          deleteMode === "hard" ? "Failed to hard-delete lab" : "Failed to remove lab",
-          msg ?? "Please try again."
-        );
+        showToast(color, "Failed to delete lab", msg ?? "Please try again.");
         return;
       }
       setDeleteOpened(false);
@@ -178,11 +173,7 @@ export default function AdminChallengeManagement() {
         refresh();
       }
     } catch {
-      showToast(
-        "red",
-        deleteMode === "hard" ? "Failed to hard-delete lab" : "Failed to remove lab",
-        "Please try again."
-      );
+      showToast("red", "Failed to delete lab", "Please try again.");
     } finally {
       setSaving(false);
     }
@@ -216,10 +207,12 @@ export default function AdminChallengeManagement() {
           </Group>
         )}
       </Group>
-      <Text size="sm" c="dimmed">
-        Instructors can only soft-delete labs. Hard delete is managed from the Removed tab and is
-        only available when no related database dependencies exist.
-      </Text>
+      <Alert color="orange" title="Delete" variant="light">
+        <Text size="sm">
+          Deleting a lab removes it from active lists so students and instructors can no longer
+          access it.
+        </Text>
+      </Alert>
 
       <Table highlightOnHover withTableBorder striped={false} style={{ tableLayout: "fixed" }}>
         <Table.Thead>
@@ -227,7 +220,7 @@ export default function AdminChallengeManagement() {
             <Table.Th>Title</Table.Th>
             <Table.Th style={{ width: 240 }}>Creator</Table.Th>
             <Table.Th>Status</Table.Th>
-            <Table.Th style={{ width: 150 }}>Deletion</Table.Th>
+            <Table.Th style={{ width: 150 }}>State</Table.Th>
             <Table.Th style={{ width: 190 }}>Updated</Table.Th>
             <Table.Th style={{ width: 130 }} />
           </Table.Tr>
@@ -290,7 +283,7 @@ export default function AdminChallengeManagement() {
                 </Table.Td>
                 <Table.Td>
                   <Badge variant="light" color={c.isSoftDeleted ? "orange" : "teal"}>
-                    {c.isSoftDeleted ? "Soft Deleted" : "Active"}
+                    {c.isSoftDeleted ? "Deleted" : "Active"}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
@@ -308,19 +301,10 @@ export default function AdminChallengeManagement() {
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
-                      color="orange"
-                      aria-label="Soft delete lab"
-                      onClick={() => openDelete(c, "soft")}
-                      disabled={c.isSoftDeleted}
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="subtle"
                       color="red"
-                      aria-label="Hard delete lab"
-                      onClick={() => openDelete(c, "hard")}
-                      disabled
+                      aria-label="Delete lab"
+                      onClick={() => openDelete(c)}
+                      disabled={c.isSoftDeleted}
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -420,25 +404,17 @@ export default function AdminChallengeManagement() {
       <Modal
         opened={deleteOpened}
         onClose={() => setDeleteOpened(false)}
-        title={deleteMode === "hard" ? "Hard Delete Lab" : "Remove Lab"}
+        title="Delete Lab"
         centered
       >
         <Stack gap="md">
           <Text size="sm">
-            {deleteMode === "hard" ? "Permanently delete" : "Soft-delete"}{" "}
+            Delete{" "}
             <Text span fw={700}>
               {selectedTitle}
             </Text>
-            ?{" "}
-            {deleteMode === "hard"
-              ? "This cannot be undone."
-              : "The lab will be hidden from active instructor and student lists."}
+            ? Students and instructors will no longer see it in active lists.
           </Text>
-          {deleteMode === "hard" && !(selected?.isSoftDeleted ?? false) && (
-            <Text size="sm" c="dimmed">
-              Hard delete is only possible after soft delete.
-            </Text>
-          )}
           <Group justify="flex-end">
             <Button
               variant="default"
@@ -448,14 +424,8 @@ export default function AdminChallengeManagement() {
             >
               Cancel
             </Button>
-            <Button
-              color={deleteMode === "hard" ? "red" : "orange"}
-              radius="md"
-              onClick={() => void confirmDelete()}
-              loading={saving}
-              disabled={deleteMode === "hard" && !(selected?.isSoftDeleted ?? false)}
-            >
-              {deleteMode === "hard" ? "Hard Delete" : "Remove"}
+            <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
+              Delete
             </Button>
           </Group>
         </Stack>

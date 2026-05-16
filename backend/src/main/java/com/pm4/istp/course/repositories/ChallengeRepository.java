@@ -30,6 +30,16 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
 
   @Query(
       """
+      select c.id, o.id
+      from Challenge c
+      join c.options o
+      where c.id in :challengeIds and o.correct = true
+      """)
+  List<Object[]> findCorrectOptionIdsByChallengeIds(
+      @Param("challengeIds") Collection<UUID> challengeIds);
+
+  @Query(
+      """
       select s.lab.id, count(s)
       from Challenge s
       where s.lab.id in :challengeIds

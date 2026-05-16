@@ -18,6 +18,7 @@ import {
   IconCircleDashed,
   IconClock,
   IconListCheck,
+  IconX,
 } from "@tabler/icons-react";
 import { getDifficultyColor } from "@/src/features/course/constants/challengeConstants";
 import PlayLabButton from "@/src/features/course/components/labs/PlayLabButton";
@@ -45,26 +46,35 @@ function formatDue(value?: string | null): string {
 function ChallengeRow({
   title,
   solved,
+  wrong,
   index,
   testId,
 }: {
   title: string;
   solved: boolean;
+  wrong: boolean;
   index: number;
   testId?: string;
 }) {
+  const color = wrong ? "red" : solved ? "teal" : "gray";
+  const icon = wrong ? (
+    <IconX size={12} />
+  ) : solved ? (
+    <IconCheck size={12} />
+  ) : (
+    <IconCircleDashed size={12} />
+  );
+  const ariaLabel = wrong ? "Completed (wrong answer)" : solved ? "Completed" : "Not completed";
   return (
     <Group gap="xs" align="center" wrap="nowrap" data-testid={testId}>
-      <ThemeIcon
-        variant="light"
-        radius="xl"
-        size="sm"
-        color={solved ? "teal" : "gray"}
-        aria-label={solved ? "Solved" : "Not solved"}
-      >
-        {solved ? <IconCheck size={12} /> : <IconCircleDashed size={12} />}
+      <ThemeIcon variant="light" radius="xl" size="sm" color={color} aria-label={ariaLabel}>
+        {icon}
       </ThemeIcon>
-      <Text size="sm" c={solved ? "teal.3" : undefined} td={solved ? "line-through" : undefined}>
+      <Text
+        size="sm"
+        c={wrong ? "red.4" : solved ? "teal.3" : undefined}
+        td={solved ? "line-through" : undefined}
+      >
         {index + 1}. {title}
       </Text>
     </Group>
@@ -289,6 +299,7 @@ export function CourseLabDetailsList({
                             key={st.id ?? idx}
                             title={st.title ?? ""}
                             solved={st.isSolved ?? false}
+                            wrong={Boolean(st.isSolved && st.correctOptionId)}
                             index={idx}
                             testId={`course-lab-challenge-${lab.id}-${idx + 1}`}
                           />

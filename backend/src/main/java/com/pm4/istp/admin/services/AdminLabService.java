@@ -9,8 +9,6 @@ import org.springframework.data.domain.Pageable;
 public interface AdminLabService {
   Page<AdminLabListItemDto> listChallenges(String query, Pageable pageable);
 
-  Page<AdminLabListItemDto> listRemovedChallenges(String query, Pageable pageable);
-
   void updateChallenge(UUID labId, AdminUpdateLabRequestDto request);
 
   void deleteChallenge(UUID labId);
