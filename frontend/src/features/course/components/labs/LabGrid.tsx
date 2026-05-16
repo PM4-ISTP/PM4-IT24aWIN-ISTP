@@ -104,10 +104,16 @@ export function LabGrid({ labs, totalPages, currentPage }: ChallengeGridProps) {
 
   return (
     <Stack gap="lg">
-      <Modal opened={removeOpened} onClose={() => setRemoveOpened(false)} title="Remove Lab" centered>
+      <Modal
+        opened={removeOpened}
+        onClose={() => setRemoveOpened(false)}
+        title="Remove Lab"
+        centered
+      >
         <Stack gap="md">
           <Text size="sm">
-            Remove <strong>{selectedLabTitle}</strong> from instructor dashboards? Students and instructors will no longer see it in active lab lists.
+            Remove <strong>{selectedLabTitle}</strong> from instructor dashboards? Students and
+            instructors will no longer see it in active lab lists.
           </Text>
           <Text size="sm" c="dimmed">
             Soft-deleted labs are hidden from active instructor and student lists.
@@ -121,7 +127,12 @@ export function LabGrid({ labs, totalPages, currentPage }: ChallengeGridProps) {
             <Button variant="default" onClick={() => setRemoveOpened(false)} disabled={removing}>
               Cancel
             </Button>
-            <Button color="red" onClick={() => void confirmRemove()} loading={removing} disabled={removing}>
+            <Button
+              color="red"
+              onClick={() => void confirmRemove()}
+              loading={removing}
+              disabled={removing}
+            >
               Remove
             </Button>
           </Group>
@@ -145,11 +156,7 @@ export function LabGrid({ labs, totalPages, currentPage }: ChallengeGridProps) {
             >
               <IconTrash size={16} />
             </ActionIcon>
-            <LabCard
-              {...lab}
-              updatedAt={formatDateTime(lab.updatedAt)}
-              onClick={openChallenge}
-            />
+            <LabCard {...lab} updatedAt={formatDateTime(lab.updatedAt)} onClick={openChallenge} />
           </div>
         ))}
       </SimpleGrid>
