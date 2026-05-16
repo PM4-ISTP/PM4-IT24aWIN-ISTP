@@ -42,9 +42,19 @@ function formatDue(value?: string | null): string {
   });
 }
 
-function ChallengeRow({ title, solved, index }: { title: string; solved: boolean; index: number }) {
+function ChallengeRow({
+  title,
+  solved,
+  index,
+  testId,
+}: {
+  title: string;
+  solved: boolean;
+  index: number;
+  testId?: string;
+}) {
   return (
-    <Group gap="xs" align="center" wrap="nowrap">
+    <Group gap="xs" align="center" wrap="nowrap" data-testid={testId}>
       <ThemeIcon
         variant="light"
         radius="xl"
@@ -78,18 +88,18 @@ export function CourseLabDetailsList({
   const totalSolved = labs.filter((c) => c.isSolved).length;
 
   return (
-    <Stack gap="md">
+    <Stack gap="md" data-testid="course-labs-list">
       <Group justify="space-between" align="center">
         {title ? <Title order={3}>{title}</Title> : <span />}
         <Group gap="xs">
           <IconListCheck size={16} color="rgba(255,255,255,0.5)" />
-          <Text size="sm" c="dimmed">
+          <Text size="sm" c="dimmed" data-testid="course-labs-completed">
             {totalSolved}/{labs.length} completed
           </Text>
         </Group>
       </Group>
 
-      <Accordion variant="separated" radius="md" multiple>
+      <Accordion variant="separated" radius="md" multiple data-testid="course-labs-accordion">
         {labs.map((lab, index) => {
           if (lab.id === undefined) return null;
           const labTitle = showIndex
@@ -114,6 +124,7 @@ export function CourseLabDetailsList({
             <Accordion.Item
               key={lab.id}
               value={lab.id}
+              data-testid={`course-lab-item-${lab.id}`}
               style={{
                 background: deadlineExpiredUnsolved
                   ? "rgba(239,68,68,0.06)"
@@ -125,7 +136,7 @@ export function CourseLabDetailsList({
                     : undefined,
               }}
             >
-              <Accordion.Control>
+              <Accordion.Control data-testid={`course-lab-toggle-${lab.id}`}>
                 <Group justify="space-between" align="center" wrap="nowrap" pr="md">
                   <Group gap="sm" align="center" wrap="nowrap" style={{ minWidth: 0 }}>
                     {lab.isSolved ? (
@@ -135,6 +146,7 @@ export function CourseLabDetailsList({
                         radius="xl"
                         size="md"
                         aria-label="Lab solved"
+                        data-testid={`course-lab-status-${lab.id}`}
                       >
                         <IconCheck size={16} />
                       </ThemeIcon>
@@ -145,11 +157,12 @@ export function CourseLabDetailsList({
                         radius="xl"
                         size="md"
                         aria-label="Lab not solved"
+                        data-testid={`course-lab-status-${lab.id}`}
                       >
                         <IconCircleDashed size={16} />
                       </ThemeIcon>
                     )}
-                    <Text fw={600} truncate>
+                    <Text fw={600} truncate data-testid={`course-lab-title-${lab.id}`}>
                       {labTitle}
                     </Text>
                   </Group>
@@ -171,6 +184,7 @@ export function CourseLabDetailsList({
                             size="sm"
                             fw={700}
                             style={{ color: "#f87171", whiteSpace: "nowrap" }}
+                            data-testid={`course-lab-due-${lab.id}`}
                           >
                             Expired · {formatDue(lab.dueAt)}
                           </Text>
@@ -195,6 +209,7 @@ export function CourseLabDetailsList({
                             size="sm"
                             fw={600}
                             style={{ color: "rgba(20,184,166,0.9)", whiteSpace: "nowrap" }}
+                            data-testid={`course-lab-due-${lab.id}`}
                           >
                             Due: {formatDue(lab.dueAt)}
                           </Text>
@@ -219,6 +234,7 @@ export function CourseLabDetailsList({
                             size="sm"
                             fw={600}
                             style={{ color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}
+                            data-testid={`course-lab-due-${lab.id}`}
                           >
                             Due: {formatDue(lab.dueAt)}
                           </Text>
@@ -232,6 +248,7 @@ export function CourseLabDetailsList({
                       variant="light"
                       color={lab.isSolved ? "teal" : "blue"}
                       aria-label={`${solvedCount} of ${totalCount} challenges solved`}
+                      data-testid={`course-lab-challenge-counter-${lab.id}`}
                     >
                       {solvedCount}/{totalCount}
                     </Badge>
@@ -263,7 +280,7 @@ export function CourseLabDetailsList({
                   {challenges.length > 0 && (
                     <>
                       <Divider my={4} />
-                      <Stack gap={6}>
+                      <Stack gap={6} data-testid={`course-lab-challenges-${lab.id}`}>
                         <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
                           Challenges
                         </Text>
@@ -273,6 +290,7 @@ export function CourseLabDetailsList({
                             title={st.title ?? ""}
                             solved={st.isSolved ?? false}
                             index={idx}
+                            testId={`course-lab-challenge-${lab.id}-${idx + 1}`}
                           />
                         ))}
                       </Stack>

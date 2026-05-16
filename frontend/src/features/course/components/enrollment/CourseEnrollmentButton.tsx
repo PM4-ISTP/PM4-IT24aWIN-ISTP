@@ -93,6 +93,7 @@ export function CourseEnrollmentButton({
               fontWeight: 600,
               boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
             }}
+            data-testid="course-enrollment-action"
           >
             {nextChallengeHref ? "Continue Course" : "All Labs Completed"}
           </Button>
@@ -112,6 +113,7 @@ export function CourseEnrollmentButton({
               fontWeight: 600,
               boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
             }}
+            data-testid="course-enrollment-action"
           >
             Enroll in Course
           </Button>
