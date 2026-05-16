@@ -656,6 +656,7 @@ class CourseServiceImplTest {
     courseService.deleteCourse(ownerId, courseId);
 
     verify(courseRepository).save(course);
+    assertThat(course.getStatus()).isEqualTo(CourseStatusEnum.SOFT_DELETED);
   }
 
   @Test

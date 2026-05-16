@@ -413,7 +413,10 @@ export default function AdminChallengeManagement() {
             <Text span fw={700}>
               {selectedTitle}
             </Text>
-            ? Students and instructors will no longer see it in active lists.
+            ? After deletion, this lab will no longer be visible to students or instructors.
+          </Text>
+          <Text size="sm" c="dimmed">
+            This action cannot be undone.
           </Text>
           <Group justify="flex-end">
             <Button
