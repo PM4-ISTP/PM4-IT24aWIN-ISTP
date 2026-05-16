@@ -387,8 +387,8 @@ export default function EditCourse() {
       <Modal opened={deleteOpened} onClose={closeDelete} title="Remove Course" centered>
         <Stack gap="md">
           <Text size="sm">
-            Remove <strong>{title}</strong> from instructor dashboards? Students and instructors will no
-            longer see it in active course lists.
+            Remove <strong>{title}</strong> from instructor dashboards? Students and instructors
+            will no longer see it in active course lists.
           </Text>
           {deleteError && (
             <Alert color="red" title="Could not remove course" variant="light">
