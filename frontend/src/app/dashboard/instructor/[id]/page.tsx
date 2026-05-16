@@ -526,7 +526,12 @@ export default function EditCourse() {
                   description="Optional thumbnail shown on the course card."
                 />
 
-                <MyEditor description={description} setDescription={setDescription} />
+                <MyEditor
+                  label="Description"
+                  required
+                  description={description}
+                  setDescription={setDescription}
+                />
 
                 <InstructorMultiSelect
                   value={selectedInstructors}

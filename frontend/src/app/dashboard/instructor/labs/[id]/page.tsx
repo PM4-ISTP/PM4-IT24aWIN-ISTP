@@ -301,17 +301,15 @@ export default function EditChallenge() {
       <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Lab" centered>
         <Stack gap="md">
           <Text size="sm">
-            Delete <strong>{formValues.title}</strong>? Students and instructors will no longer see
-            it in active lab lists.
+            Delete <strong>{formValues.title}</strong>? After deletion, this lab will no longer be
+            visible to students or instructors.
           </Text>
-          {courseCount > 0 && (
-            <Text size="sm" c="dimmed">
-              This lab is currently used in {courseCount} course{courseCount !== 1 ? "s" : ""} and
-              will be removed from those courses.
-            </Text>
-          )}
           <Text size="sm" c="dimmed">
-            Deleting a lab hides it from active instructor and student lists.
+            This action cannot be undone.
+          </Text>
+          <Text size="sm" c="dimmed">
+            This lab is currently linked to {courseCount} course{courseCount !== 1 ? "s" : ""} and
+            will be removed from {courseCount === 1 ? "that course" : "those courses"}.
           </Text>
           {deleteError && (
             <Alert color="red" title="Could not delete lab" variant="light">

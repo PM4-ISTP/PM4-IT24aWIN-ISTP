@@ -91,6 +91,7 @@ public class AdminCourseServiceImpl implements AdminCourseService {
                   .findByIdAndDeletedAtIsNull(actorId)
                   .map(User::getUsername)
                   .orElse("unknown");
+      course.setStatus(CourseStatusEnum.SOFT_DELETED);
       course.setDeletedByUsername(deletedByUsername);
       course.setDeletedAt(LocalDateTime.now());
       courseRepository.save(course);
