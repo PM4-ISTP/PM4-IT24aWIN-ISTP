@@ -30,6 +30,7 @@ import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.dto.ChallengeCreatorResponseDto;
@@ -175,7 +176,14 @@ class CourseControllerTest {
         when(courseMapper.toDto(course)).thenReturn(dto);
 
         CreateCourseRequestDto requestDto = new CreateCourseRequestDto(
-                "Secure Coding", "Desc", "Short desc.", false, false, null, null, List.of(), "UNLIMITED");
+                "Secure Coding",
+                "Desc",
+                "Short desc.",
+                CourseStatusEnum.DRAFT,
+                null,
+                null,
+                List.of(),
+                "UNLIMITED");
 
         mockMvc
                 .perform(
@@ -189,8 +197,16 @@ class CourseControllerTest {
 
     @Test
     void createCourse_whenTitleBlank_returnsBadRequest() throws Exception {
-        CreateCourseRequestDto requestDto = new CreateCourseRequestDto("", "Desc", "Short desc.", false, false, null,
-                null, List.of(), "UNLIMITED");
+        CreateCourseRequestDto requestDto =
+                new CreateCourseRequestDto(
+                        "",
+                        "Desc",
+                        "Short desc.",
+                        CourseStatusEnum.DRAFT,
+                        null,
+                        null,
+                        List.of(),
+                        "UNLIMITED");
 
         mockMvc
                 .perform(
@@ -326,7 +342,14 @@ class CourseControllerTest {
                 .thenReturn(List.of());
 
         UpdateCourseRequestDto requestDto = new UpdateCourseRequestDto(
-                "Updated Title", "Desc", "Short summary.", false, false, null, null, List.of(), "UNLIMITED");
+                "Updated Title",
+                "Desc",
+                "Short summary.",
+                CourseStatusEnum.DRAFT,
+                null,
+                null,
+                List.of(),
+                "UNLIMITED");
 
         mockMvc
                 .perform(

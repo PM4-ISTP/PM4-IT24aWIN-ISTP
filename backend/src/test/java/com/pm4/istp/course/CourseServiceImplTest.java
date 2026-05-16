@@ -32,6 +32,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.pm4.istp.course.db.CreateCourseInstructorRequest;
 import com.pm4.istp.course.db.CreateCourseRequest;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
@@ -113,9 +114,6 @@ class CourseServiceImplTest {
         .isEqualTo("A short text");
     assertThat((String) ReflectionTestUtils.invokeMethod(courseService, "normalizeShortDescription", "   "))
         .isNull();
-    assertThatThrownBy(
-            () -> ReflectionTestUtils.invokeMethod(courseService, "validateVisibilityState", true, true))
-        .isInstanceOf(IllegalArgumentException.class);
 
     User participant = new User();
     participant.setId(UUID.randomUUID());
@@ -173,8 +171,7 @@ class CourseServiceImplTest {
         "Secure Coding",
         "Intro",
         "Learn the secure coding basics.",
-        false,
-        false,
+        CourseStatusEnum.DRAFT,
         null,
         null,
         List.of(new CreateCourseInstructorRequest(collaboratorId, InstructorRoleEnum.COLLABORATOR)),
@@ -228,8 +225,7 @@ class CourseServiceImplTest {
         "Private Secure Coding",
         "Intro",
         "Private practice course.",
-        false,
-        true,
+        CourseStatusEnum.PRIVATE,
         null,
         null,
         List.of(),
@@ -237,7 +233,7 @@ class CourseServiceImplTest {
 
     Course result = courseService.createCourse(ownerId, request);
 
-    assertThat(result.isPrivate()).isTrue();
+    assertThat(result.getStatus()).isEqualTo(CourseStatusEnum.PRIVATE);
     assertThat(result.getCourseInstructors()).hasSize(1);
     assertThat(result.getCourseEnrollments()).hasSize(1);
 
@@ -280,7 +276,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
@@ -326,8 +322,7 @@ class CourseServiceImplTest {
         "Updated title",
         "Updated description",
         "Updated short description for the header.",
-        true,
-        false,
+        CourseStatusEnum.PUBLIC,
         null,
         null,
         List.of(new UpdateCourseInstructorRequest(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
@@ -343,7 +338,7 @@ class CourseServiceImplTest {
     assertThat(updated.getTitle()).isEqualTo("Updated title");
     assertThat(updated.getDescription()).isEqualTo("Updated description");
     assertThat(updated.getShortDescription()).isEqualTo("Updated short description for the header.");
-    assertThat(updated.isPublished()).isTrue();
+    assertThat(updated.getStatus()).isEqualTo(CourseStatusEnum.PUBLIC);
 
     assertThat(updated.getCourseInstructors())
         .extracting(ci -> ci.getInstructor().getId())
@@ -369,8 +364,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.DRAFT);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
@@ -387,8 +381,7 @@ class CourseServiceImplTest {
             "Collaborator update",
             "Updated by collaborator",
             "Updated short description",
-            false,
-            false,
+            CourseStatusEnum.DRAFT,
             "https://example.com/course.png",
             "Web-Security",
             List.of(
@@ -406,8 +399,7 @@ class CourseServiceImplTest {
     assertThat(updated.getImageUrl()).isEqualTo("https://example.com/course.png");
     assertThat(updated.getTopic()).isEqualTo("Web-Security");
     assertThat(updated.getMcAttemptsMode()).isEqualTo(McAttemptsMode.ONCE);
-    assertThat(updated.isPublished()).isFalse();
-    assertThat(updated.isPrivate()).isFalse();
+    assertThat(updated.getStatus()).isEqualTo(CourseStatusEnum.DRAFT);
 
     verify(courseRepository).save(course);
   }
@@ -426,8 +418,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.DRAFT);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
@@ -444,8 +435,7 @@ class CourseServiceImplTest {
             "Collaborator publish",
             "Attempted publish",
             "Updated short description",
-            true,
-            false,
+            CourseStatusEnum.PUBLIC,
             null,
             null,
             List.of(
@@ -477,8 +467,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.DRAFT);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
@@ -495,8 +484,7 @@ class CourseServiceImplTest {
             "Collaborator update",
             "Attempted collaborator change",
             "Updated short description",
-            false,
-            false,
+            CourseStatusEnum.DRAFT,
             null,
             null,
             List.of(
@@ -568,34 +556,6 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void createCourse_withPublishedAndPrivate_throwsIllegalArgumentException() {
-    UUID ownerId = UUID.randomUUID();
-
-    User owner = new User();
-    owner.setId(ownerId);
-    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
-
-    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
-
-    CreateCourseRequest request = new CreateCourseRequest(
-        "Secure Coding",
-        "Long description",
-        "Short summary.",
-        true,
-        true,
-        null,
-        null,
-        List.of(),
-        McAttemptsMode.UNLIMITED);
-
-    assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("published and private");
-
-    verify(courseRepository, never()).save(any(Course.class));
-  }
-
-  @Test
   void enrollInCourse_whenPublished_createsEnrollment() {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
@@ -606,7 +566,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(participant));
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
@@ -635,7 +595,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(participant));
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
@@ -659,7 +619,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(participant));
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
@@ -836,7 +796,14 @@ class CourseServiceImplTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     CreateCourseRequest request = new CreateCourseRequest(
-        "Solo Course", "Desc", "Short solo summary.", false, false, null, null, List.of(), McAttemptsMode.UNLIMITED);
+        "Solo Course",
+        "Desc",
+        "Short solo summary.",
+        CourseStatusEnum.DRAFT,
+        null,
+        null,
+        List.of(),
+        McAttemptsMode.UNLIMITED);
 
     Course result = courseService.createCourse(ownerId, request);
 
@@ -898,7 +865,14 @@ class CourseServiceImplTest {
     course.addCourseInstructor(ownerRelation);
 
     UpdateCourseRequest request = new UpdateCourseRequest(
-        "Title", "Desc", "Short summary.", false, false, null, null, List.of(), McAttemptsMode.UNLIMITED);
+        "Title",
+        "Desc",
+        "Short summary.",
+        CourseStatusEnum.DRAFT,
+        null,
+        null,
+        List.of(),
+        McAttemptsMode.UNLIMITED);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
@@ -916,7 +890,14 @@ class CourseServiceImplTest {
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.empty());
 
     UpdateCourseRequest request = new UpdateCourseRequest(
-        "Title", "Desc", "Short summary.", false, false, null, null, List.of(), McAttemptsMode.UNLIMITED);
+        "Title",
+        "Desc",
+        "Short summary.",
+        CourseStatusEnum.DRAFT,
+        null,
+        null,
+        List.of(),
+        McAttemptsMode.UNLIMITED);
 
     assertThatThrownBy(() -> courseService.updateCourse(userId, courseId, request))
         .isInstanceOf(CourseNotFoundException.class);
@@ -1886,8 +1867,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
     when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
     when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
@@ -1925,8 +1905,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
 
     when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
     when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
@@ -1953,8 +1932,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
 
     when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
     when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
@@ -1977,8 +1955,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
 
     CourseInstructor relation = new CourseInstructor();
     relation.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
@@ -2007,8 +1984,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
@@ -2033,8 +2009,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
@@ -2060,8 +2035,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
     course.setInviteCode("OLDCOD");
 
     CourseInstructor ownerRelation = new CourseInstructor();
@@ -2094,44 +2068,6 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void updateCourse_withPublishedAndPrivate_throwsIllegalArgumentException() {
-    UUID ownerId = UUID.randomUUID();
-    UUID courseId = UUID.randomUUID();
-
-    User owner = new User();
-    owner.setId(ownerId);
-
-    Course course = new Course();
-    course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(false);
-
-    CourseInstructor ownerRelation = new CourseInstructor();
-    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
-    ownerRelation.setInstructor(owner);
-    course.addCourseInstructor(ownerRelation);
-
-    UpdateCourseRequest updateRequest = new UpdateCourseRequest(
-        "Updated title",
-        "Updated description",
-        "Updated short description",
-        true,
-        true,
-        null,
-        null,
-        List.of(),
-        McAttemptsMode.UNLIMITED);
-
-    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
-
-    assertThatThrownBy(() -> courseService.updateCourse(ownerId, courseId, updateRequest))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("published and private");
-
-    verify(courseRepository, never()).save(any(Course.class));
-  }
-
-  @Test
   void regenerateInviteCode_whenHelperExhausted_throwsInviteCodeGenerationException() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
@@ -2141,8 +2077,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
@@ -2175,8 +2110,7 @@ class CourseServiceImplTest {
         "Private Course",
         "Desc",
         null,
-        false,
-        true,
+        CourseStatusEnum.PRIVATE,
         null,
         null,
         List.of(),
@@ -2196,8 +2130,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.DRAFT);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
@@ -2215,8 +2148,7 @@ class CourseServiceImplTest {
         "Updated title",
         "Updated description",
         null,
-        false,
-        true,
+        CourseStatusEnum.PRIVATE,
         null,
         null,
         List.of(),

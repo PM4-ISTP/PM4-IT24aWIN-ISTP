@@ -33,8 +33,7 @@ export interface CreateCourseDto {
   title: string;
   description: string;
   shortDescription: string | null;
-  isPublished: boolean;
-  isPrivate: boolean;
+  status: CourseVisibility;
   imageUrl?: string | null;
   topic?: string | null;
   mcAttemptsMode?: string | null;
@@ -46,8 +45,7 @@ export interface CourseResponseDto {
   title: string;
   description: string | null;
   shortDescription: string | null;
-  isPublished: boolean;
-  isPrivate: boolean;
+  status: CourseVisibility;
   imageUrl?: string | null;
   topic?: string | null;
   instructors: InstructorAssignment[];
@@ -60,8 +58,7 @@ export interface ListCourseResponseDto {
   title: string;
   description: string | null;
   shortDescription: string | null;
-  isPublished: boolean;
-  isPrivate: boolean;
+  status: CourseVisibility;
   instructorCount: number;
   imageUrl?: string | null;
   topic?: string | null;
@@ -76,8 +73,7 @@ export interface UpdateCourseDto {
   title: string;
   description: string;
   shortDescription: string | null;
-  isPublished: boolean;
-  isPrivate: boolean;
+  status: CourseVisibility;
   imageUrl?: string | null;
   topic?: string | null;
   mcAttemptsMode?: string | null;
@@ -118,8 +114,7 @@ export interface CourseDetailResponseDto {
   shortDescription: string | null;
   participantCount: number;
   isEnrolled: boolean;
-  isPublished: boolean;
-  isPrivate: boolean;
+  status: CourseVisibility;
   inviteCode?: string | null;
   imageUrl?: string | null;
   topic?: string | null;
@@ -184,7 +179,7 @@ export interface PublicCourseDetailResponseDto {
   shortDescription: string | null;
   participantCount: number;
   isEnrolled: boolean;
-  isPublished: boolean;
+  status: CourseVisibility;
   imageUrl?: string | null;
   topic?: string | null;
   courseInstructors: CourseInstructorResponseDto[];
