@@ -64,10 +64,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class LabServiceImpl implements LabService {
 
   private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
-  private static final String CHALLENGE_NOT_FOUND_MSG = "Lab with ID '%s' not found";
-  private static final String SUB_TASK_NOT_FOUND_MSG = "Sub-task with ID '%s' not found";
-  private static final String SUB_TASK_NOT_IN_CHALLENGE_MSG =
-      "Sub-task '%s' does not belong to lab '%s'";
+  private static final String LAB_NOT_FOUND_MSG = "Lab with ID '%s' not found";
+  private static final String CHALLENGE_NOT_FOUND_MSG = "Challenge with ID '%s' not found";
+  private static final String CHALLENGE_NOT_IN_LAB_MSG =
+      "Challenge '%s' does not belong to lab '%s'";
 
   private static final String COURSE_NOT_FOUND_MSG = "Course with ID '%s' not found";
 
@@ -88,7 +88,7 @@ public class LabServiceImpl implements LabService {
 
   @Override
   @Transactional
-  public Lab createChallenge(UUID userId, CreateLabRequest request) {
+  public Lab createLab(UUID userId, CreateLabRequest request) {
     User creator =
         userRepository
             .findByIdAndDeletedAtIsNull(userId)
@@ -116,12 +116,11 @@ public class LabServiceImpl implements LabService {
 
   @Override
   @Transactional(readOnly = true)
-  public Lab getChallenge(UUID userId, UUID labId) {
+  public Lab getLab(UUID userId, UUID labId) {
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyVisibility(lab, userId);
     return lab;
@@ -129,12 +128,11 @@ public class LabServiceImpl implements LabService {
 
   @Override
   @Transactional
-  public Lab updateChallenge(UUID userId, UUID labId, UpdateLabRequest request) {
+  public Lab updateLab(UUID userId, UUID labId, UpdateLabRequest request) {
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
 
@@ -160,7 +158,7 @@ public class LabServiceImpl implements LabService {
   }
 
   // -------------------------------------------------------------------------
-  // Sub-task builders
+  // Challenge builders
   // -------------------------------------------------------------------------
 
   private List<Challenge> buildChallengesForCreate(List<ChallengeRequest> requests, Lab parent) {
@@ -264,8 +262,7 @@ public class LabServiceImpl implements LabService {
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
 
@@ -303,12 +300,11 @@ public class LabServiceImpl implements LabService {
 
   @Override
   @Transactional
-  public void deleteChallenge(UUID userId, UUID labId) {
+  public void deleteLab(UUID userId, UUID labId) {
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
     deleteOrArchive(lab);
@@ -338,14 +334,14 @@ public class LabServiceImpl implements LabService {
   }
 
   @Override
-  public Page<ListLabResponseDto> listChallengesForCreator(UUID creatorId, Pageable pageable) {
+  public Page<ListLabResponseDto> listLabsForCreator(UUID creatorId, Pageable pageable) {
     return labRepository.findListChallengesForCreator(creatorId, pageable);
   }
 
   @Override
-  public Page<ListLabResponseDto> searchAvailableChallenges(
+  public Page<ListLabResponseDto> searchAvailableLabs(
       UUID userId, String search, Pageable pageable) {
-    return labRepository.searchAvailableChallenges(userId, search, pageable);
+    return labRepository.searchAvailableLabs(userId, search, pageable);
   }
 
   private void verifyCreator(Lab lab, UUID userId) {
@@ -383,14 +379,13 @@ public class LabServiceImpl implements LabService {
 
   @Override
   @Transactional(readOnly = true)
-  public LabStudentDto getChallengeForPlay(UUID userId, UUID courseId, UUID labId) {
+  public LabStudentDto getLabForPlay(UUID userId, UUID courseId, UUID labId) {
     verifyEnrollment(userId, courseId);
 
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     if (lab.getStatus() == LabStatusEnum.ARCHIVED) {
       throw new LabAccessDeniedException(
@@ -441,18 +436,18 @@ public class LabServiceImpl implements LabService {
             .orElseThrow(
                 () ->
                     new ChallengeNotFoundException(
-                        String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
+                        String.format(CHALLENGE_NOT_FOUND_MSG, challengeId)));
 
     if (!challenge.getLab().getId().equals(labId)) {
       throw new ChallengeNotFoundException(
-          String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, challengeId, labId));
+          String.format(CHALLENGE_NOT_IN_LAB_MSG, challengeId, labId));
     }
 
     verifySubmissionAllowed(userId, courseId, challenge.getLab().getId());
 
     if (challengeCompletionRepository.existsByUserIdAndChallengeId(userId, challengeId)) {
       throw new ChallengeAlreadySolvedException(
-          String.format("Sub-task '%s' already solved by user '%s'", challengeId, userId));
+          String.format("Challenge '%s' already solved by user '%s'", challengeId, userId));
     }
 
     boolean correct = challenge.getFlag() != null && challenge.getFlag().equals(flag);
@@ -477,7 +472,7 @@ public class LabServiceImpl implements LabService {
         challengeCompletionRepository.saveAndFlush(completion);
       } catch (DataIntegrityViolationException ex) {
         throw new ChallengeAlreadySolvedException(
-            String.format("Sub-task '%s' already solved by user '%s'", challengeId, userId), ex);
+            String.format("Challenge '%s' already solved by user '%s'", challengeId, userId), ex);
       }
     }
 
@@ -548,10 +543,10 @@ public class LabServiceImpl implements LabService {
             .orElseThrow(
                 () ->
                     new ChallengeNotFoundException(
-                        String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
+                        String.format(CHALLENGE_NOT_FOUND_MSG, challengeId)));
     if (!challenge.getLab().getId().equals(labId)) {
       throw new ChallengeNotFoundException(
-          String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, challengeId, labId));
+          String.format(CHALLENGE_NOT_IN_LAB_MSG, challengeId, labId));
     }
     return challenge;
   }
@@ -811,8 +806,8 @@ public class LabServiceImpl implements LabService {
   }
 
   @Override
-  public long countCompletedChallenges(UUID userId) {
-    return challengeCompletionRepository.countCompletedChallenges(userId);
+  public long countCompletedLabs(UUID userId) {
+    return challengeCompletionRepository.countCompletedLabs(userId);
   }
 
   @Override
@@ -831,11 +826,11 @@ public class LabServiceImpl implements LabService {
             .orElseThrow(
                 () ->
                     new ChallengeNotFoundException(
-                        String.format(SUB_TASK_NOT_FOUND_MSG, challengeId)));
+                        String.format(CHALLENGE_NOT_FOUND_MSG, challengeId)));
 
     if (!challenge.getLab().getId().equals(labId)) {
       throw new ChallengeNotFoundException(
-          String.format(SUB_TASK_NOT_IN_CHALLENGE_MSG, challengeId, labId));
+          String.format(CHALLENGE_NOT_IN_LAB_MSG, challengeId, labId));
     }
 
     if (challenge.getFlag() != null && !challenge.getFlag().isBlank()) {

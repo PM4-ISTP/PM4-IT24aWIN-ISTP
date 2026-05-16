@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional
 public class AdminLabServiceImpl implements AdminLabService {
-  private static final String CHALLENGE_NOT_FOUND_MSG = "Lab with ID '%s' not found";
+  private static final String LAB_NOT_FOUND_MSG = "Lab with ID '%s' not found";
 
   private final LabRepository labRepository;
   private final CourseLabRepository courseLabRepository;
@@ -49,8 +49,7 @@ public class AdminLabServiceImpl implements AdminLabService {
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     lab.setTitle(request.getTitle());
     lab.setDescription(request.getDescription());
@@ -65,8 +64,7 @@ public class AdminLabServiceImpl implements AdminLabService {
     Lab lab =
         labRepository
             .findById(labId)
-            .orElseThrow(
-                () -> new LabNotFoundException(String.format(CHALLENGE_NOT_FOUND_MSG, labId)));
+            .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
     deleteOrArchive(lab);
   }
 

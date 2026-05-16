@@ -79,7 +79,7 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
           )
           and lower(c.title) like lower(concat('%', :search, '%'))
           """)
-  Page<ListLabResponseDto> searchAvailableChallenges(
+  Page<ListLabResponseDto> searchAvailableLabs(
       @Param("userId") UUID userId, @Param("search") String search, Pageable pageable);
 
   @Query(
