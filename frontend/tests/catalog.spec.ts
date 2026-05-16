@@ -5,6 +5,7 @@ import {
   instructorCourse01,
   instructorCourse04,
   instructorCourse07,
+  instructorCourse08,
   testUsers,
 } from "@/tests/data";
 import { loginAs } from "@/tests/helpers/auth";
@@ -39,6 +40,7 @@ test("Search and filter functionalities of catalog functions correctly", async (
   await assertCourseCards(page, [
     instructorCourse04,
     adminCourse01,
+    instructorCourse08,
     instructorCourse01,
     instructorCourse07,
   ]);
@@ -46,7 +48,12 @@ test("Search and filter functionalities of catalog functions correctly", async (
 
   // Select topic with matching courses
   await clickTopicOption(page, "All topics", "E2E-Testing-01");
-  await assertCourseCards(page, [adminCourse01, instructorCourse01, instructorCourse07]);
+  await assertCourseCards(page, [
+    adminCourse01,
+    instructorCourse08,
+    instructorCourse01,
+    instructorCourse07,
+  ]);
   await expect(page.getByRole("textbox", { name: "Search courses" })).toHaveValue("E2E");
 
   // Reset search
