@@ -248,8 +248,7 @@ public class CourseServiceImpl implements CourseService {
 
     CourseStatusEnum currentStatus =
         course.getStatus() == null ? CourseStatusEnum.DRAFT : course.getStatus();
-    CourseStatusEnum newStatus =
-        request.getStatus() == null ? currentStatus : request.getStatus();
+    CourseStatusEnum newStatus = request.getStatus() == null ? currentStatus : request.getStatus();
 
     boolean visibilityChanges = currentStatus != newStatus;
     if (visibilityChanges) {
