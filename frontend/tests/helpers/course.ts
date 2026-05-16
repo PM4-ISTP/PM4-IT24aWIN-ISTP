@@ -1,17 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-
-export type Course = {
-  id?: string;
-  title?: string;
-  isPrivate?: boolean;
-  isPublished?: boolean;
-  topic?: string | null;
-  owner?: { name?: string; title?: string } | null;
-  shortDescription?: string | null;
-  description?: string | null;
-  updatedAt?: string | null;
-  numOfParticipants: number;
-};
+import { type Course } from "@/tests/data";
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

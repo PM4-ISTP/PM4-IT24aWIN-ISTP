@@ -1,5 +1,5 @@
 import { type Page } from "@playwright/test";
-import { User } from "@/tests/data";
+import { type User } from "@/tests/data";
 
 export async function loginAs(page: Page, user: User) {
   await page.goto("/");
