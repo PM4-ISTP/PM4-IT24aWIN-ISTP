@@ -1,8 +1,6 @@
 import test, { expect, type Page } from "@playwright/test";
 import { clickNavbarButton } from "@/tests/helpers/navigation";
-import adminCourse01 from "@/tests/files/courses/admin_01.json";
-import instructorCourse01 from "@/tests/files/courses/instructor_01.json";
-import instructorCourse04 from "@/tests/files/courses/instructor_04.json";
+import { adminCourse01, instructorCourse01, instructorCourse04 } from "@/tests/data";
 import { loginAs, TestUser } from "@/tests/helpers/auth";
 import { assertCourseCards } from "@/tests/helpers/course";
 

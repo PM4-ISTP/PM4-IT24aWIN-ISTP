@@ -1,11 +1,7 @@
 import test, { expect, type Page } from "@playwright/test";
 import { assertCourseCards, type Course } from "@/tests/helpers/course";
 import { loginAs, TestUser } from "@/tests/helpers/auth";
-import testData from "@/tests/files/dashboard-test-data.json";
-import adminCourse01 from "@/tests/files/courses/admin_01.json";
-import instructorCourse01 from "@/tests/files/courses/instructor_01.json";
-import instructorCourse02 from "@/tests/files/courses/instructor_02.json";
-import instructorCourse04 from "@/tests/files/courses/instructor_04.json";
+import { dashboardTestData, adminCourse01, instructorCourse01, instructorCourse02, instructorCourse04 } from "@/tests/data";
 
 type Deadline = {
   courseId: string;
@@ -18,7 +14,7 @@ type Deadline = {
 type RenderDashboardTestParameters = {
   roleName: string;
   user: TestUser;
-  dataKey: keyof typeof testData.dashboardTestData;
+  dataKey: keyof typeof dashboardTestData;
   displayedCourses: Course[];
 };
 
@@ -36,7 +32,7 @@ function getHeroStatisticValue(page: Page, label: string) {
   return page.getByText(label, { exact: true }).first().locator("xpath=following-sibling::*[1]");
 }
 
-async function assertUpcomingDeadlines(page: Page, visibleDeadlines: Deadline[]) {
+async function assertUpcomingDeadlines(page: Page, visibleDeadlines: readonly Deadline[]) {
   const now = Date.now();
   const overdue = visibleDeadlines
     .filter((item) => new Date(item.dueAt).getTime() < now)
@@ -117,7 +113,7 @@ test.describe("Dashboard widgets for all primary roles and a user without course
     }) => {
       await loginAs(page, user);
 
-      const expectedData = testData.dashboardTestData[dataKey];
+      const expectedData = dashboardTestData[dataKey];
       const deadlines = expectedData.upcomingDeadlines;
 
       await assertCourseCards(page, displayedCourses);
