@@ -7,6 +7,8 @@ import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
+import com.pm4.istp.course.db.entities.StudentOptionSubmission;
+import com.pm4.istp.course.db.entities.ChallengeType;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
@@ -29,6 +31,7 @@ import com.pm4.istp.course.mappers.CourseMapper;
 import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.repositories.CourseEnrollmentRepository;
+import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.services.CourseService;
 import com.pm4.istp.course.services.CourseTopicService;
 import com.pm4.istp.shared.dto.ErrorDto;
@@ -75,6 +78,7 @@ public class CourseController {
   private final CourseTopicService courseTopicService;
   private final ChallengeCompletionRepository challengeCompletionRepository;
   private final ChallengeRepository challengeRepository;
+  private final StudentOptionSubmissionRepository studentOptionSubmissionRepository;
 
   @Operation(
       summary = "Create a course",
@@ -654,8 +658,15 @@ public class CourseController {
 
     Map<UUID, String> flagsBySolvedId = loadFlagsForSolved(solvedIds);
 
+    OptionProgress optionProgress = loadOptionProgress(userId, challengeIds);
+
     for (LabStudentDto lab : labs) {
-      applyStudentProgress(lab, solvedIds, flagsBySolvedId);
+      applyStudentProgress(
+          lab,
+          solvedIds,
+          flagsBySolvedId,
+          optionProgress.selectedOptionByChallenge(),
+          optionProgress.correctOptionByChallenge());
     }
   }
 
@@ -670,14 +681,29 @@ public class CourseController {
   }
 
   private void applyStudentProgress(
-      LabStudentDto lab, Set<UUID> solvedIds, Map<UUID, String> flagsBySolvedId) {
+      LabStudentDto lab,
+      Set<UUID> solvedIds,
+      Map<UUID, String> flagsBySolvedId,
+      Map<UUID, UUID> selectedOptionByChallenge,
+      Map<UUID, UUID> correctOptionByChallenge) {
     List<ChallengeStudentDto> challenges = safeChallenges(lab);
     int solvedCount = 0;
     for (ChallengeStudentDto challenge : challenges) {
-      boolean solved = solvedIds.contains(challenge.getId());
-      challenge.setSolved(solved);
-      if (solved) {
-        challenge.setSolvedFlag(flagsBySolvedId.get(challenge.getId()));
+      UUID challengeId = challenge.getId();
+      boolean solved = solvedIds.contains(challengeId);
+      UUID selectedOptionId = selectedOptionByChallenge.get(challengeId);
+      boolean attemptedMc =
+          challenge.getType() == ChallengeType.MULTIPLE_CHOICE && selectedOptionId != null;
+
+      boolean completed = solved || attemptedMc;
+      challenge.setSolved(completed);
+      challenge.setSelectedOptionId(selectedOptionId);
+      challenge.setCorrectOptionId(correctOptionByChallenge.get(challengeId));
+
+      if (solved && challenge.getType() == ChallengeType.FLAG) {
+        challenge.setSolvedFlag(flagsBySolvedId.get(challengeId));
+      }
+      if (completed) {
         solvedCount++;
       }
     }
@@ -685,6 +711,52 @@ public class CourseController {
     lab.setSolvedChallengeCount(solvedCount);
     lab.setSolved(!challenges.isEmpty() && solvedCount == challenges.size());
   }
+
+  private OptionProgress loadOptionProgress(UUID userId, List<UUID> challengeIds) {
+    if (challengeIds.isEmpty()) {
+      return new OptionProgress(Map.of(), Map.of());
+    }
+
+    Map<UUID, UUID> selectedOptionByChallenge = new HashMap<>();
+    List<UUID> wrongChallengeIds = new ArrayList<>();
+
+    List<StudentOptionSubmission> submissions =
+        studentOptionSubmissionRepository.findByUserIdAndChallengeIdIn(userId, challengeIds);
+    if (submissions == null) {
+      submissions = List.of();
+    }
+
+    for (StudentOptionSubmission submission : submissions) {
+      if (submission.getChallenge() == null
+          || submission.getChallenge().getId() == null
+          || submission.getSelectedOption() == null
+          || submission.getSelectedOption().getId() == null) {
+        continue;
+      }
+      UUID challengeId = submission.getChallenge().getId();
+      selectedOptionByChallenge.put(challengeId, submission.getSelectedOption().getId());
+      if (!submission.isCorrect()) {
+        wrongChallengeIds.add(challengeId);
+      }
+    }
+
+    Map<UUID, UUID> correctOptionByChallenge = new HashMap<>();
+    if (!wrongChallengeIds.isEmpty()) {
+      for (Object[] row : challengeRepository.findCorrectOptionIdsByChallengeIds(wrongChallengeIds)) {
+        if (row == null || row.length < 2) continue;
+        UUID challengeId = (UUID) row[0];
+        UUID correctOptionId = (UUID) row[1];
+        if (challengeId != null && correctOptionId != null) {
+          correctOptionByChallenge.put(challengeId, correctOptionId);
+        }
+      }
+    }
+
+    return new OptionProgress(selectedOptionByChallenge, correctOptionByChallenge);
+  }
+
+  private record OptionProgress(
+      Map<UUID, UUID> selectedOptionByChallenge, Map<UUID, UUID> correctOptionByChallenge) {}
 
   private List<ChallengeStudentDto> safeChallenges(LabStudentDto lab) {
     return lab.getChallenges() == null ? List.of() : lab.getChallenges();

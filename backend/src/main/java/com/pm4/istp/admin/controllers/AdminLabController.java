@@ -30,12 +30,6 @@ public class AdminLabController {
     return ResponseEntity.ok(adminChallengeService.listChallenges(query, pageable));
   }
 
-  @GetMapping("/removed")
-  public ResponseEntity<Page<AdminLabListItemDto>> listRemovedChallenges(
-      @RequestParam(name = "q", required = false) String query, Pageable pageable) {
-    return ResponseEntity.ok(adminChallengeService.listRemovedChallenges(query, pageable));
-  }
-
   @PutMapping("/{id}")
   public ResponseEntity<Void> updateChallenge(
       @PathVariable UUID id, @Valid @RequestBody AdminUpdateLabRequestDto request) {

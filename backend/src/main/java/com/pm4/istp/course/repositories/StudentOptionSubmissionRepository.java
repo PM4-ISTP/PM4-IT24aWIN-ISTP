@@ -18,6 +18,8 @@ public interface StudentOptionSubmissionRepository
 
   Optional<StudentOptionSubmission> findByUserIdAndChallengeId(UUID userId, UUID challengeId);
 
+  List<StudentOptionSubmission> findByUserIdAndChallengeIdIn(UUID userId, Collection<UUID> challengeIds);
+
   List<StudentOptionSubmission> findByUserIdInAndChallengeIdInAndCorrectTrue(
       Collection<UUID> userIds, Collection<UUID> challengeIds);
 

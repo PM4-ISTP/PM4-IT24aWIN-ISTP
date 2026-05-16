@@ -126,4 +126,7 @@ public class Course {
 
   @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
+
+  @Column(name = "deleted_by_username", length = 128)
+  private String deletedByUsername;
 }

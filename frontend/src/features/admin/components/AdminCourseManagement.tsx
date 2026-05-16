@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionIcon,
+  Alert,
   Badge,
   Button,
   Group,
@@ -73,7 +74,6 @@ export default function AdminCourseManagement() {
 
   const [editOpened, setEditOpened] = useState(false);
   const [deleteOpened, setDeleteOpened] = useState(false);
-  const [deleteMode, setDeleteMode] = useState<"soft" | "hard">("soft");
   const [selected, setSelected] = useState<AdminCourseListItem | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -132,9 +132,8 @@ export default function AdminCourseManagement() {
     setEditOpened(true);
   }
 
-  function openDelete(course: AdminCourseListItem, mode: "soft" | "hard") {
+  function openDelete(course: AdminCourseListItem) {
     setSelected(course);
-    setDeleteMode(mode);
     setDeleteOpened(true);
   }
 
@@ -193,7 +192,7 @@ export default function AdminCourseManagement() {
         const color = res.status >= 500 ? "red" : "orange";
         showToast(
           color,
-          deleteMode === "hard" ? "Failed to hard-delete course" : "Failed to remove course",
+          "Failed to delete course",
           msg ?? "Please try again."
         );
         return;
@@ -208,7 +207,7 @@ export default function AdminCourseManagement() {
     } catch {
       showToast(
         "red",
-        deleteMode === "hard" ? "Failed to hard-delete course" : "Failed to remove course",
+        "Failed to delete course",
         "Please try again."
       );
     } finally {
@@ -244,10 +243,12 @@ export default function AdminCourseManagement() {
           </Group>
         )}
       </Group>
-      <Text size="sm" c="dimmed">
-        Instructors can only soft-delete courses. Hard delete is managed from the Removed tab and is
-        only available when no related database dependencies exist.
-      </Text>
+      <Alert color="orange" title="Delete" variant="light">
+        <Text size="sm">
+          Deleting a course removes it from active lists so students and instructors can no longer
+          access it.
+        </Text>
+      </Alert>
 
       <Table
         highlightOnHover
@@ -261,7 +262,7 @@ export default function AdminCourseManagement() {
             <Table.Th>Title</Table.Th>
             <Table.Th style={{ width: 240 }}>Owner</Table.Th>
             <Table.Th style={{ width: 190 }}>Visibility</Table.Th>
-            <Table.Th style={{ width: 180 }}>Deletion</Table.Th>
+            <Table.Th style={{ width: 180 }}>State</Table.Th>
             <Table.Th style={{ width: 190 }}>Updated</Table.Th>
             <Table.Th style={{ width: 130 }} />
           </Table.Tr>
@@ -324,7 +325,7 @@ export default function AdminCourseManagement() {
                 </Table.Td>
                 <Table.Td>
                   <Badge variant="light" color={c.isSoftDeleted ? "orange" : "teal"}>
-                    {c.isSoftDeleted ? "Soft Deleted" : "Active"}
+                    {c.isSoftDeleted ? "Deleted" : "Active"}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
@@ -342,19 +343,10 @@ export default function AdminCourseManagement() {
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
-                      color="orange"
-                      aria-label="Soft delete course"
-                      onClick={() => openDelete(c, "soft")}
-                      disabled={c.isSoftDeleted}
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="subtle"
                       color="red"
-                      aria-label="Hard delete course"
-                      onClick={() => openDelete(c, "hard")}
-                      disabled
+                      aria-label="Delete course"
+                      onClick={() => openDelete(c)}
+                      disabled={c.isSoftDeleted}
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -482,25 +474,14 @@ export default function AdminCourseManagement() {
       <Modal
         opened={deleteOpened}
         onClose={() => setDeleteOpened(false)}
-        title={deleteMode === "hard" ? "Hard Delete Course" : "Remove Course"}
+        title="Delete Course"
         centered
       >
         <Stack gap="md">
           <Text size="sm">
-            {deleteMode === "hard" ? "Permanently delete" : "Soft-delete"}{" "}
-            <Text span fw={700}>
-              {selectedTitle}
-            </Text>
-            ?{" "}
-            {deleteMode === "hard"
-              ? "This cannot be undone."
-              : "The course will be hidden from instructor and student active lists."}
+            Delete <Text span fw={700}>{selectedTitle}</Text>? Students and instructors will no
+            longer see it in active lists.
           </Text>
-          {deleteMode === "hard" && !(selected?.isSoftDeleted ?? false) && (
-            <Text size="sm" c="dimmed">
-              Hard delete is only possible after soft delete.
-            </Text>
-          )}
           <Group justify="flex-end">
             <Button
               variant="default"
@@ -511,13 +492,12 @@ export default function AdminCourseManagement() {
               Cancel
             </Button>
             <Button
-              color={deleteMode === "hard" ? "red" : "orange"}
+              color="red"
               radius="md"
               onClick={() => void confirmDelete()}
               loading={saving}
-              disabled={deleteMode === "hard" && !(selected?.isSoftDeleted ?? false)}
             >
-              {deleteMode === "hard" ? "Hard Delete" : "Remove"}
+              Delete
             </Button>
           </Group>
         </Stack>
