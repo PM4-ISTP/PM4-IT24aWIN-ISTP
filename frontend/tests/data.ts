@@ -623,7 +623,7 @@ export const instructorCourse07: Course = {
   id: "fb394bc6-0673-4df3-8d88-35e0397887bf",
   title: "E2E Test Course: Instructor 07",
   description:
-    "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 06</p>",
+    "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 07</p>",
   shortDescription:
     '"Instructor 07" is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.',
   isPublished: true,
@@ -647,6 +647,38 @@ export const instructorCourse07: Course = {
     {
       lab: instructorLab08,
       dueAt: "2000-01-01T14:00:00",
+    },
+  ],
+};
+
+export const instructorCourse08: Course = {
+  id: "daa4fa78-a5ed-4677-99bd-c333eee30c5f",
+  title: "E2E Test Course: Instructor 08",
+  description:
+    "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 08</p>",
+  shortDescription:
+    '"Instructor 08" is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.',
+  isPublished: true,
+  isPrivate: false,
+  createdAt: "2026-05-16T21:43:20.235861",
+  updatedAt: "2026-05-16T21:43:32.138266",
+  topic: "E2E-Testing-01",
+  owner: instructorUser,
+  private: false,
+  published: true,
+  numOfParticipants: 0,
+  labs: [
+    {
+      lab: instructorLab01,
+      dueAt: "2100-01-01T11:00:00",
+    },
+    {
+      lab: instructorLab03,
+      dueAt: "",
+    },
+    {
+      lab: instructorLab05,
+      dueAt: "2000-01-01T11:00:00",
     },
   ],
 };
@@ -707,6 +739,8 @@ export const courses = {
   instructor04: instructorCourse04,
   instructor05: instructorCourse05,
   instructor06: instructorCourse06,
+  instructor07: instructorCourse07,
+  instructor08: instructorCourse08,
 } as const;
 
 // ============================================================================

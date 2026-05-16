@@ -107,11 +107,17 @@ interface UnavailableProgressSectionProps {
   label: string;
   color: string;
   hint: string;
+  testId: string;
 }
 
-function UnavailableProgressSection({ label, color, hint }: UnavailableProgressSectionProps) {
+function UnavailableProgressSection({
+  label,
+  color,
+  hint,
+  testId,
+}: UnavailableProgressSectionProps) {
   return (
-    <Stack gap={8}>
+    <Stack gap={8} data-testid={testId}>
       <Group justify="space-between" align="center">
         <Group gap={6}>
           <Text size="sm" fw={600} c="dimmed">
@@ -190,7 +196,12 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
               }
             />
           ) : (
-            <UnavailableProgressSection label="Labs" color="orange" hint={unavailableHint} />
+            <UnavailableProgressSection
+              label="Labs"
+              color="orange"
+              hint={unavailableHint}
+              testId="unavailable-labs-progress-section"
+            />
           )}
 
           {/* —— Challenges progress —— */}
@@ -219,7 +230,12 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
               }
             />
           ) : (
-            <UnavailableProgressSection label="Challenges" color="blue" hint={unavailableHint} />
+            <UnavailableProgressSection
+              label="Challenges"
+              color="blue"
+              hint={unavailableHint}
+              testId="unavailable-challenges-progress-section"
+            />
           )}
         </Stack>
 

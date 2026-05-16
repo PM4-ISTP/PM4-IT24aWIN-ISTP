@@ -58,18 +58,30 @@ function getExpectedDueLabel(dueAt: string, solved: boolean): string {
   return `Due: ${formatDate(dueAt)}`;
 }
 
-async function openCourseDetails(page: Page, course: Course) {
-  await clickNavbarButton(page, "MY COURSES", "dashboard/courses");
+async function clickCourseCard(page: Page, course: Course) {
   const courseCard = page
     .getByRole("button")
     .filter({ has: page.getByText(course.title ?? "", { exact: true }) })
     .first();
   await expect(courseCard).toBeVisible();
   await courseCard.click();
+}
+
+async function openCourseDetailsFromMyCourses(page: Page, course: Course) {
+  await clickNavbarButton(page, "MY COURSES", "dashboard/courses");
+  await clickCourseCard(page, course);
   await page.waitForURL(`/dashboard/courses/${course.id}`);
 }
 
-async function assertCourseJourneyCard(page: Page, course: Course) {
+async function openCourseDetailsFromCourseCatalog(page: Page, course: Course) {
+  await clickNavbarButton(page, "BROWSE / CATALOG", "dashboard/catalog");
+  await page.getByRole("textbox", { name: "Search courses" }).fill("E2E");
+  await page.getByRole("button", { name: "Search" }).click();
+  await clickCourseCard(page, course);
+  await page.waitForURL(`/dashboard/catalog/${course.id}`);
+}
+
+async function assertCourseJourneyCard(page: Page, course: Course, isEnrolled: boolean) {
   const progress = getCourseProgress(course);
   const journey = page.getByTestId("course-journey-card");
   await expect(journey).toBeVisible();
@@ -82,36 +94,51 @@ async function assertCourseJourneyCard(page: Page, course: Course) {
     await expect(page.getByTestId("course-instructor-title")).toHaveText(course.owner.title);
   }
 
-  await expect(page.getByTestId("course-journey-labs-percent")).toHaveText(
-    `${progress.labPercent}% Complete`
-  );
-  await expect(page.getByTestId("course-journey-labs-solved")).toHaveText(
-    `${progress.solvedLabs} Lab${progress.solvedLabs !== 1 ? "s" : ""} Solved`
-  );
-  await expect(page.getByTestId("course-journey-labs-remaining")).toHaveText(
-    `${Math.max(progress.totalLabs - progress.solvedLabs, 0)} Remaining`
-  );
+  if (!isEnrolled) {
+    await expect(
+      page.getByTestId("unavailable-labs-progress-section").getByText("Not available")
+    ).toBeVisible();
+  } else {
+    await expect(page.getByTestId("course-journey-labs-percent")).toHaveText(
+      `${progress.labPercent}% Complete`
+    );
+    await expect(page.getByTestId("course-journey-labs-solved")).toHaveText(
+      `${progress.solvedLabs} Lab${progress.solvedLabs !== 1 ? "s" : ""} Solved`
+    );
+    await expect(page.getByTestId("course-journey-labs-remaining")).toHaveText(
+      `${Math.max(progress.totalLabs - progress.solvedLabs, 0)} Remaining`
+    );
+  }
 
-  await expect(page.getByTestId("course-journey-challenges-percent")).toHaveText(
-    `${progress.challengePercent}% Complete`
-  );
-  await expect(page.getByTestId("course-journey-challenges-solved")).toHaveText(
-    `${progress.solvedChallenges} Challenge${progress.solvedChallenges !== 1 ? "s" : ""} Solved`
-  );
-  await expect(page.getByTestId("course-journey-challenges-remaining")).toHaveText(
-    `${Math.max(progress.totalChallenges - progress.solvedChallenges, 0)} Remaining`
-  );
+  if (!isEnrolled) {
+    await expect(
+      page.getByTestId("unavailable-challenges-progress-section").getByText("Not available")
+    ).toBeVisible();
+  } else {
+    await expect(page.getByTestId("course-journey-challenges-percent")).toHaveText(
+      `${progress.challengePercent}% Complete`
+    );
+    await expect(page.getByTestId("course-journey-challenges-solved")).toHaveText(
+      `${progress.solvedChallenges} Challenge${progress.solvedChallenges !== 1 ? "s" : ""} Solved`
+    );
+    await expect(page.getByTestId("course-journey-challenges-remaining")).toHaveText(
+      `${Math.max(progress.totalChallenges - progress.solvedChallenges, 0)} Remaining`
+    );
+  }
 }
 
-async function assertCourseCta(page: Page, course: Course) {
+async function assertCourseEnrollmentButton(page: Page, course: Course, isEnrolled: boolean) {
   const hasOpenLabs = course.labs.some((assignment) => !isLabSolved(assignment.lab));
-  const cta = page.getByTestId("course-enrollment-action");
-  if (hasOpenLabs) {
-    await expect(cta).toHaveText("Continue Course");
-    await expect(cta).toBeEnabled();
+  const button = page.getByTestId("course-enrollment-action");
+  if (!isEnrolled) {
+    await expect(button).toHaveText("Enroll in Course");
+    await expect(button).toBeEnabled();
+  } else if (hasOpenLabs) {
+    await expect(button).toHaveText("Continue Course");
+    await expect(button).toBeEnabled();
   } else {
-    await expect(cta).toHaveText("All Labs Completed");
-    await expect(cta).toBeDisabled();
+    await expect(button).toHaveText("All Labs Completed");
+    await expect(button).toBeDisabled();
   }
 }
 
@@ -172,24 +199,58 @@ async function assertLabList(page: Page, course: Course) {
   }
 }
 
-const courseCases = [
+async function assertCourseDetails(page: Page, course: Course, isEnrolled: boolean) {
+  await assertCourseJourneyCard(page, course, isEnrolled);
+  await assertLabList(page, course);
+  await assertCourseEnrollmentButton(page, course, isEnrolled);
+}
+
+const courseCasesMyCourses = [
   courses.instructor04,
   courses.instructor02,
   courses.instructor06,
   courses.admin01,
 ];
 
-// Group: Course detail checks for student-facing journey, instructor info, labs, and challenges.
+const courseCasesCourseCatalog = [courses.admin01, courses.instructor04, courses.instructor01];
+
+const courseCasesCourseCatalogNotEnrolled = [courses.instructor07, courses.instructor08];
+
 test.describe("Course details in My Courses for e2e-student", () => {
-  for (const course of courseCases) {
-    test(`Course details for "${course.title}" render expected progress, labs, and challenges`, async ({
+  for (const course of courseCasesMyCourses) {
+    test(`Course details for "${course.title}" (My Courses) render expected progress, labs, and challenges`, async ({
       page,
     }) => {
+      const isEnrolledInCourse = true;
       await loginAs(page, student);
-      await openCourseDetails(page, course);
-      await assertCourseJourneyCard(page, course);
-      await assertCourseCta(page, course);
-      await assertLabList(page, course);
+      await openCourseDetailsFromMyCourses(page, course);
+      await assertCourseDetails(page, course, isEnrolledInCourse);
+    });
+  }
+});
+
+test.describe("Course details for enrolled courses in Course Catalog for e2e-student", () => {
+  for (const course of courseCasesCourseCatalog) {
+    test(`Course details for "${course.title}" (Course Catalog; enrolled) render expected progress, labs, and challenges`, async ({
+      page,
+    }) => {
+      const isEnrolledInCourse = true;
+      await loginAs(page, student);
+      await openCourseDetailsFromCourseCatalog(page, course);
+      await assertCourseDetails(page, course, isEnrolledInCourse);
+    });
+  }
+});
+
+test.describe("Course details for not enrolled courses in Course Catalog for e2e-student", () => {
+  for (const course of courseCasesCourseCatalogNotEnrolled) {
+    test(`Course details for "${course.title}" (Course Catalog; not enrolled) render expected progress, labs, and challenges`, async ({
+      page,
+    }) => {
+      const isEnrolledInCourse = false;
+      await loginAs(page, student);
+      await openCourseDetailsFromCourseCatalog(page, course);
+      await assertCourseDetails(page, course, isEnrolledInCourse);
     });
   }
 });
