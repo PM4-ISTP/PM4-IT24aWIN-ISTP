@@ -194,7 +194,9 @@ export function LabPlayPodPanel({
                 </ActionIcon>
               </Tooltip>
             ) : (
-              <Tooltip label={startDisabledReason ?? (podStatus === "FAILED" ? "Retry lab" : "Start lab")}>
+              <Tooltip
+                label={startDisabledReason ?? (podStatus === "FAILED" ? "Retry lab" : "Start lab")}
+              >
                 <ActionIcon
                   variant="subtle"
                   color="blue"
@@ -203,7 +205,11 @@ export function LabPlayPodPanel({
                   onClick={onStartPod}
                   aria-label={podStatus === "FAILED" ? "Retry lab" : "Start lab"}
                 >
-                  {podStatus === "FAILED" ? <IconRefresh size={16} /> : <IconPlayerPlay size={16} />}
+                  {podStatus === "FAILED" ? (
+                    <IconRefresh size={16} />
+                  ) : (
+                    <IconPlayerPlay size={16} />
+                  )}
                 </ActionIcon>
               </Tooltip>
             )}
