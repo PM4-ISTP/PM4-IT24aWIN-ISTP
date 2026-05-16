@@ -26,6 +26,7 @@ function extractDeadlines(courses: readonly Course[], completedLabs: readonly La
       }
     }
   }
+  deadlines.sort((a, b) => Date.parse(a.dueAt) - Date.parse(b.dueAt));
   return deadlines;
 }
 
