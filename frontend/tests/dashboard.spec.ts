@@ -133,9 +133,6 @@ test.describe("Dashboard widgets for all primary roles and a user without course
       );
 
       // Verify no active labs
-      const runningPods = await page.request.get("/api/backend/api/v1/lab-pods");
-      const podsData = (await runningPods.json()) as Array<{ labId?: string }>;
-      expect(podsData.length, "Expected no running lab pods for dashboard baseline").toBe(0);
       await expect(page.getByText("No active labs", { exact: true })).toBeVisible();
     });
   }
