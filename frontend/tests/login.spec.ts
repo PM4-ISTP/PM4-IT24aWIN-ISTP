@@ -1,14 +1,15 @@
 import test, { expect, type Page } from "@playwright/test";
-import { loginAs, TestUser } from "@/tests/helpers/auth";
+import { loginAs } from "@/tests/helpers/auth";
+import { testUsers, type User } from "@/tests/data";
 
-async function logInAndThenLogOut(page: Page, user: TestUser, username: string, userRole: string) {
+async function logInAndThenLogOut(page: Page, user: User) {
   const userMenuTriggerId = "user-menu-trigger";
   await loginAs(page, user);
   await expect(
-    page.getByTestId(userMenuTriggerId).getByText(username, { exact: true })
+    page.getByTestId(userMenuTriggerId).getByText(user.name, { exact: true })
   ).toBeVisible();
   await expect(
-    page.getByTestId(userMenuTriggerId).getByText(userRole, { exact: true })
+    page.getByTestId(userMenuTriggerId).getByText(user.role, { exact: true })
   ).toBeVisible();
   await page.getByTestId(userMenuTriggerId).click();
   await page.getByTestId("logout-link").click();
@@ -20,7 +21,7 @@ async function logInAndThenLogOut(page: Page, user: TestUser, username: string, 
 test("User can log in and then log out to log in as another user. The user menu trigger gets rendered correctly each time.", async ({
   page,
 }) => {
-  await logInAndThenLogOut(page, TestUser.Student, "E2E Student", "Student");
-  await logInAndThenLogOut(page, TestUser.Instructor, "E2E Instructor", "Instructor");
-  await logInAndThenLogOut(page, TestUser.Admin, "E2E Admin", "Admin");
+  await logInAndThenLogOut(page, testUsers.student);
+  await logInAndThenLogOut(page, testUsers.instructor);
+  await logInAndThenLogOut(page, testUsers.admin);
 });

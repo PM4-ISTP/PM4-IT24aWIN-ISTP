@@ -6,8 +6,7 @@ export type Course = {
   isPrivate?: boolean;
   isPublished?: boolean;
   topic?: string | null;
-  ownerName?: string | null;
-  ownerTitle?: string | null;
+  owner?: { name?: string; title?: string } | null;
   shortDescription?: string | null;
   description?: string | null;
   updatedAt?: string | null;
@@ -36,7 +35,7 @@ function formatDate(date?: string | null | number): string {
   });
 }
 
-export async function assertCourseCards(page: Page, courses: Course[]) {
+export async function assertCourseCards(page: Page, courses: readonly Course[]) {
   const courseCards = page
     .getByRole("button")
     .filter({ has: page.getByText(/^(Private|Published|Draft)$/) });
@@ -83,9 +82,9 @@ export async function assertCourseCards(page: Page, courses: Course[]) {
       ).toBeVisible();
     }
 
-    if (course.ownerName) {
-      await expect(card.getByText(course.ownerName, { exact: true })).toBeVisible();
-      await expect(card.getByText(course.ownerTitle ?? "", { exact: true })).toBeVisible();
+    if (course.owner?.name) {
+      await expect(card.getByText(course.owner.name, { exact: true })).toBeVisible();
+      await expect(card.getByText(course.owner.title ?? "", { exact: true })).toBeVisible();
     }
 
     await expect(card).toContainText(course.shortDescription ?? "");

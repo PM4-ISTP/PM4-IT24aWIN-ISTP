@@ -1,4 +1,4 @@
-/**
+/*
  * Centralized test data repository
  * All test data is defined here to avoid duplication and maintain a single source of truth.
  * Data is immutable using const and Readonly<T> to prevent accidental modifications.
@@ -21,6 +21,22 @@ export type Lab = Readonly<{
   updatedAt: string;
 }>;
 
+export type LabAssignment = Readonly<{
+  lab: Lab;
+  dueAt: string;
+}>;
+
+export type User = Readonly<{
+  id: string;
+  username: string;
+  password: string;
+  name: string;
+  role: "Admin" | "Instructor" | "Student";
+  title: string;
+  enrolledCourses: readonly Course[];
+  completedLabs: readonly Lab[];
+}>;
+
 export type Course = Readonly<{
   id: string;
   title: string;
@@ -31,32 +47,83 @@ export type Course = Readonly<{
   createdAt: string;
   updatedAt: string;
   topic: string;
-  ownerId: string;
-  ownerName: string;
-  ownerUsername: string;
-  ownerTitle: string;
+  owner: User;
   private: boolean;
   published: boolean;
   numOfParticipants: number;
-  labs: readonly Lab[];
-}>;
-
-export type DashboardTestDataDeadline = Readonly<{
-  courseId: string;
-  courseTitle: string;
-  labId: string;
-  labTitle: string;
-  dueAt: string;
+  labs: readonly LabAssignment[];
 }>;
 
 export type DashboardTestDataEntry = Readonly<{
   enrolledCoursesCount: number;
   completedLabsCount: number;
-  upcomingDeadlines: readonly DashboardTestDataDeadline[];
 }>;
 
 // ============================================================================
-// Lab Definitions (Single Source of Truth)
+// User Definitions (Forward declarations to handle circular dependencies)
+// ============================================================================
+
+// Admin User
+const adminUser: User = {
+  id: "f730669a-055b-4362-8a01-605d9881c5b0",
+        username: process.env.E2E_ADMIN_USERNAME ?? "e2e-admin",
+        password: process.env.E2E_ADMIN_PASSWORD ?? "e2e-admin",
+  name: "E2E Admin",
+  role: "Admin",
+  title: "Test Administrator",
+  enrolledCourses: [],
+  completedLabs: [],
+};
+
+// Instructor User
+const instructorUser: User = {
+  id: "e4f2814e-0bd9-4fe9-acd3-8d08cfb11179",
+        username: process.env.E2E_INSTRUCTOR_USERNAME ?? "e2e-instructor",
+        password: process.env.E2E_INSTRUCTOR_PASSWORD ?? "e2e-instructor",
+  name: "E2E Instructor",
+  role: "Instructor",
+  title: "Test Instructor",
+  enrolledCourses: [],
+  completedLabs: [],
+};
+
+// Instructor Without Courses Or Labs (separate user with Instructor role)
+const instructorWithoutCoursesOrLabsUser: User = {
+  id: "a1b2c3d4-e5f6-4g7h-8i9j-0k1l2m3n4o5p",
+        username:
+          process.env.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_USERNAME ??
+          "e2e-instructor-without-courses-or-labs",
+        password:
+          process.env.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_PASSWORD ??
+          "e2e-instructor-without-courses-or-labs",
+  name: "E2E Instructor Without Courses",
+  role: "Instructor",
+  title: "Test Instructor",
+  enrolledCourses: [],
+  completedLabs: [],
+};
+
+// Student User
+const studentUser: User = {
+  id: "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+        username: process.env.E2E_STUDENT_USERNAME ?? "e2e-student",
+        password: process.env.E2E_STUDENT_PASSWORD ?? "e2e-student",
+  name: "E2E Student",
+  role: "Student",
+  title: "Student",
+  enrolledCourses: [],
+  completedLabs: [],
+};
+
+export const testUsers = {
+  admin: adminUser,
+  instructor: instructorUser,
+  instructorWithoutCoursesOrLabs: instructorWithoutCoursesOrLabsUser,
+  student: studentUser,
+} as const;
+
+// ============================================================================
+// Lab Definitions
 // ============================================================================
 
 const adminLab01: Lab = {
@@ -130,7 +197,7 @@ const instructorLab04: Lab = {
 };
 
 // ============================================================================
-// Course Definitions (with Lab References)
+// Course Definitions (with Lab References and Deadlines)
 // ============================================================================
 
 export const adminCourse01: Course = {
@@ -145,14 +212,11 @@ export const adminCourse01: Course = {
   createdAt: "2026-05-14T12:34:27.264592",
   updatedAt: "2026-05-14T12:42:21.790117",
   topic: "E2E-Testing-01",
-  ownerId: "f730669a-055b-4362-8a01-605d9881c5b0",
-  ownerName: "E2E Admin",
-  ownerUsername: "e2e-admin",
-  ownerTitle: "Test Administrator",
+  owner: adminUser,
   private: false,
   published: true,
   numOfParticipants: 2,
-  labs: [adminLab01],
+  labs: [],
 };
 
 export const instructorCourse01: Course = {
@@ -167,14 +231,24 @@ export const instructorCourse01: Course = {
   createdAt: "2026-05-14T12:39:30.044949",
   updatedAt: "2026-05-15T11:17:29.9017",
   topic: "E2E-Testing-01",
-  ownerId: "e4f2814e-0bd9-4fe9-acd3-8d08cfb11179",
-  ownerName: "E2E Instructor",
-  ownerUsername: "e2e-instructor",
-  ownerTitle: "Test Instructor",
+  owner: instructorUser,
   private: false,
   published: true,
   numOfParticipants: 2,
-  labs: [instructorLab02, instructorLab01, instructorLab03],
+  labs: [
+    {
+      lab: instructorLab01,
+      dueAt: "2100-01-01T11:00:00",
+    },
+        {
+      lab: instructorLab02,
+      dueAt: "2000-01-01T11:00:00",
+    },
+    {
+      lab: instructorLab03,
+      dueAt: "2100-01-02T11:00:00",
+    },
+  ],
 };
 
 export const instructorCourse02: Course = {
@@ -189,14 +263,24 @@ export const instructorCourse02: Course = {
   createdAt: "2026-05-14T12:40:07.002102",
   updatedAt: "2026-05-15T11:18:08.1631",
   topic: "E2E-Testing-02",
-  ownerId: "e4f2814e-0bd9-4fe9-acd3-8d08cfb11179",
-  ownerName: "E2E Instructor",
-  ownerUsername: "e2e-instructor",
-  ownerTitle: "Test Instructor",
+  owner: instructorUser,
   private: true,
   published: false,
   numOfParticipants: 2,
-  labs: [adminLab01, instructorLab02],
+  labs: [
+        {
+      lab: instructorLab03,
+      dueAt: "",
+    },
+    {
+      lab: adminLab01,
+      dueAt: "2000-01-03T13:00:00",
+    },
+    {
+      lab: instructorLab02,
+      dueAt: "2100-01-02T13:00:00",
+    },
+  ],
 };
 
 export const instructorCourse03: Course = {
@@ -211,10 +295,7 @@ export const instructorCourse03: Course = {
   createdAt: "2026-05-14T12:40:45.551012",
   updatedAt: "2026-05-15T15:26:09.989781",
   topic: "E2E-Testing-01",
-  ownerId: "e4f2814e-0bd9-4fe9-acd3-8d08cfb11179",
-  ownerName: "E2E Instructor",
-  ownerUsername: "e2e-instructor",
-  ownerTitle: "Test Instructor",
+  owner: instructorUser,
   private: false,
   published: false,
   numOfParticipants: 1,
@@ -233,18 +314,18 @@ export const instructorCourse04: Course = {
   createdAt: "2026-05-14T12:41:39.618199",
   updatedAt: "2026-05-15T11:23:59.909511",
   topic: "",
-  ownerId: "e4f2814e-0bd9-4fe9-acd3-8d08cfb11179",
-  ownerName: "E2E Instructor",
-  ownerUsername: "e2e-instructor",
-  ownerTitle: "Test Instructor",
+  owner: instructorUser,
   private: false,
   published: true,
   numOfParticipants: 2,
-  labs: [],
+  labs: [    {
+      lab: instructorLab02,
+      dueAt: "",
+    },],
 };
 
 // ============================================================================
-// Dashboard Test Data
+// Dashboard Test Data (statistics only)
 // ============================================================================
 
 export const dashboardTestData: Readonly<{
@@ -256,80 +337,18 @@ export const dashboardTestData: Readonly<{
   instructorWithoutCoursesOrLabs: {
     enrolledCoursesCount: 0,
     completedLabsCount: 0,
-    upcomingDeadlines: [],
   },
   student: {
     enrolledCoursesCount: 4,
     completedLabsCount: 0,
-    upcomingDeadlines: [
-      {
-        courseId: "e2bf8cc9-366f-4617-a12b-245507395be9",
-        courseTitle: "E2E Test Course: Instructor 01",
-        labId: "4ad6bb3d-2fc4-4e45-848a-e044410d11f6",
-        labTitle: "E2E Test Lab: Instructor 02",
-        dueAt: "2000-01-01T11:00:00",
-      },
-      {
-        courseId: "5c23ae34-88af-4d46-96e5-a412d019a97b",
-        courseTitle: "E2E Test Course: Instructor 02",
-        labId: "e93b357d-b0f7-4f51-8abf-d6b1890cdb75",
-        labTitle: "E2E Test Lab: Admin 01",
-        dueAt: "2000-01-03T13:00:00",
-      },
-      {
-        courseId: "e2bf8cc9-366f-4617-a12b-245507395be9",
-        courseTitle: "E2E Test Course: Instructor 01",
-        labId: "61b8867c-14d6-4a1e-b405-6238ef82513d",
-        labTitle: "E2E Test Lab: Instructor 01",
-        dueAt: "2100-01-01T11:00:00",
-      },
-      {
-        courseId: "e2bf8cc9-366f-4617-a12b-245507395be9",
-        courseTitle: "E2E Test Course: Instructor 01",
-        labId: "2d975668-2741-4d61-b02e-24cd2528a480",
-        labTitle: "E2E Test Lab: Instructor 03",
-        dueAt: "2100-01-02T11:00:00",
-      },
-      {
-        courseId: "5c23ae34-88af-4d46-96e5-a412d019a97b",
-        courseTitle: "E2E Test Course: Instructor 02",
-        labId: "4ad6bb3d-2fc4-4e45-848a-e044410d11f6",
-        labTitle: "E2E Test Lab: Instructor 02",
-        dueAt: "2100-01-02T13:00:00",
-      },
-    ],
   },
   instructor: {
     enrolledCoursesCount: 3,
     completedLabsCount: 2,
-    upcomingDeadlines: [
-      {
-        courseId: "e2bf8cc9-366f-4617-a12b-245507395be9",
-        courseTitle: "E2E Test Course: Instructor 01",
-        labId: "4ad6bb3d-2fc4-4e45-848a-e044410d11f6",
-        labTitle: "E2E Test Lab: Instructor 02",
-        dueAt: "2000-01-01T11:00:00",
-      },
-      {
-        courseId: "e2bf8cc9-366f-4617-a12b-245507395be9",
-        courseTitle: "E2E Test Course: Instructor 01",
-        labId: "61b8867c-14d6-4a1e-b405-6238ef82513d",
-        labTitle: "E2E Test Lab: Instructor 01",
-        dueAt: "2100-01-01T11:00:00",
-      },
-      {
-        courseId: "5c23ae34-88af-4d46-96e5-a412d019a97b",
-        courseTitle: "E2E Test Course: Instructor 02",
-        labId: "4ad6bb3d-2fc4-4e45-848a-e044410d11f6",
-        labTitle: "E2E Test Lab: Instructor 02",
-        dueAt: "2100-01-02T13:00:00",
-      },
-    ],
   },
   admin: {
     enrolledCoursesCount: 1,
     completedLabsCount: 0,
-    upcomingDeadlines: [],
   },
 };
 
@@ -356,3 +375,30 @@ export const courses = {
   instructor03: instructorCourse03,
   instructor04: instructorCourse04,
 } as const;
+
+// ============================================================================
+// Update User data after course and lab definitions (handle circular dep)
+// 
+// This solution uses a workaround for setting in readonly arrays. This isn't
+// clean code. But because it is only done once in this file, it is ok.
+// ============================================================================
+
+// Admin: enrolls in adminCourse01
+(adminUser as unknown as { enrolledCourses: Course[] }).enrolledCourses = [adminCourse01];
+
+// Instructor: enrolls in instructorCourse01 and instructorCourse02 and mark two labs as completed
+(instructorUser as unknown as { enrolledCourses: Course[] }).enrolledCourses = [
+  instructorCourse02,
+  instructorCourse04,
+  instructorCourse01,
+];
+(instructorUser as unknown as { completedLabs: Lab[] }).completedLabs = [instructorLab03, adminLab01];
+
+// Student: enrolls in instructorCourse02, instructorCourse04, adminCourse01, instructorCourse01
+(studentUser as unknown as { enrolledCourses: Course[] }).enrolledCourses = [
+  instructorCourse02,
+  instructorCourse04,
+  adminCourse01,
+  instructorCourse01,
+];
+

@@ -1,8 +1,8 @@
 import test, { expect, type Page } from "@playwright/test";
 import { clickNavbarButton } from "@/tests/helpers/navigation";
-import { adminCourse01, instructorCourse01, instructorCourse04 } from "@/tests/data";
-import { loginAs, TestUser } from "@/tests/helpers/auth";
-import { assertCourseCards } from "@/tests/helpers/course";
+import { adminCourse01, instructorCourse01, instructorCourse04, testUsers } from "@/tests/data";
+import { loginAs } from "@/tests/helpers/auth";
+import { assertCourseCards, type Course as CourseUI } from "@/tests/helpers/course";
 
 const e2eTopicOptions = ["E2E-Testing-01", "E2E-Testing-02"];
 
@@ -24,18 +24,18 @@ async function clickTopicOption(page: Page, initialOption: string, desiredOption
 }
 
 test("Search and filter functionalities of catalog functions correctly", async ({ page }) => {
-  await loginAs(page, TestUser.Student);
+  await loginAs(page, testUsers.student);
   await clickNavbarButton(page, "BROWSE / CATALOG", "dashboard/catalog");
 
   // Apply search query
   await page.getByRole("textbox", { name: "Search courses" }).fill("E2E");
   await page.getByRole("button", { name: "Search" }).click();
-  await assertCourseCards(page, [instructorCourse04, adminCourse01, instructorCourse01]);
+  await assertCourseCards(page, [instructorCourse04, adminCourse01, instructorCourse01] as CourseUI[]);
   await expect(page.getByRole("textbox", { name: "Search courses" })).toHaveValue("E2E");
 
   // Select topic with matching courses
   await clickTopicOption(page, "All topics", "E2E-Testing-01");
-  await assertCourseCards(page, [adminCourse01, instructorCourse01]);
+  await assertCourseCards(page, [adminCourse01, instructorCourse01] as CourseUI[]);
   await expect(page.getByRole("textbox", { name: "Search courses" })).toHaveValue("E2E");
 
   // Reset search
