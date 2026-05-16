@@ -744,7 +744,9 @@ public class CourseController {
     if (!wrongChallengeIds.isEmpty()) {
       for (Object[] row :
           challengeRepository.findCorrectOptionIdsByChallengeIds(wrongChallengeIds)) {
-        if (row == null || row.length < 2) continue;
+        if (row == null || row.length < 2) {
+          continue;
+        }
         UUID challengeId = (UUID) row[0];
         UUID correctOptionId = (UUID) row[1];
         if (challengeId != null && correctOptionId != null) {

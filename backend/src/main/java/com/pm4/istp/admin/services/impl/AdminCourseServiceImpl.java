@@ -116,7 +116,9 @@ public class AdminCourseServiceImpl implements AdminCourseService {
   private UUID resolveActorIdFromSecurityContext() {
     try {
       var auth = SecurityContextHolder.getContext().getAuthentication();
-      if (auth == null) return null;
+      if (auth == null) {
+        return null;
+      }
       Object principal = auth.getPrincipal();
       if (principal instanceof Jwt jwt) {
         return UUID.fromString(jwt.getSubject());
