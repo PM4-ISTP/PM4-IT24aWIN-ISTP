@@ -1,4 +1,5 @@
 "use client";
+import { Input } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
 import { useEditor } from "@tiptap/react";
 import Highlight from "@tiptap/extension-highlight";
@@ -11,9 +12,12 @@ import { useEffect } from "react";
 type MyEditorProps = {
   description: string;
   setDescription: (value: string) => void;
+  label?: string;
+  helperText?: string;
+  required?: boolean;
 };
 
-function MyEditor({ description, setDescription }: MyEditorProps) {
+function MyEditor({ description, setDescription, label, helperText, required }: MyEditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -37,7 +41,7 @@ function MyEditor({ description, setDescription }: MyEditorProps) {
     }
   }, [description, editor]);
 
-  return (
+  const content = (
     <RichTextEditor editor={editor}>
       <RichTextEditor.Toolbar>
         <RichTextEditor.ControlsGroup>
@@ -82,6 +86,16 @@ function MyEditor({ description, setDescription }: MyEditorProps) {
       />
     </RichTextEditor>
   );
+
+  if (label || helperText || required) {
+    return (
+      <Input.Wrapper label={label} description={helperText} required={required}>
+        {content}
+      </Input.Wrapper>
+    );
+  }
+
+  return content;
 }
 
 export default MyEditor;

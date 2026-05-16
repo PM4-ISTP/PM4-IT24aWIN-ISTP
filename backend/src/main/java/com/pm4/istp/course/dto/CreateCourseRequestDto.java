@@ -17,6 +17,7 @@ public class CreateCourseRequestDto {
   @Size(max = 255, message = "Course title must be at most 255 characters")
   private String title;
 
+  @NotBlank(message = "Description is required")
   @Size(max = 5000, message = "Description must be at most 5000 characters")
   private String description;
 
