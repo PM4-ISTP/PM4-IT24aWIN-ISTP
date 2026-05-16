@@ -1,6 +1,6 @@
 package com.pm4.istp.course.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -17,11 +17,7 @@ public class CreateCourseResponseDto {
   private String description;
   private String shortDescription;
 
-  @JsonProperty("isPublished")
-  private boolean isPublished;
-
-  @JsonProperty("isPrivate")
-  private boolean isPrivate;
+  private CourseStatusEnum status;
 
   private List<CreateCourseInstructorResponseDto> courseInstructors;
   private LocalDateTime createdAt;

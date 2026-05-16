@@ -86,8 +86,7 @@ export default async function CourseDetails({
     course.description === undefined ? "" : getSanitizedHtml(course.description);
   const isEnrolled = course.isEnrolled ?? false;
   const participantCount = course.participantCount ?? 0;
-  const isPublished = course.isPublished ?? false;
-  const isPrivate = (course as { isPrivate?: boolean }).isPrivate ?? false;
+  const status = course.status ?? "DRAFT";
   const owner = getOwner(course.courseInstructors);
   const nextChallengeHref = isEnrolled
     ? (() => {
@@ -106,8 +105,7 @@ export default async function CourseDetails({
         courseId={course.id!} // already checked, that ID is not undefined
         isEnrolled={isEnrolled}
         participantCount={participantCount}
-        isPublished={isPublished}
-        isPrivate={isPrivate}
+        status={status}
         nextChallengeHref={nextChallengeHref}
         backPageName={backPageName}
         backHref={backHref}

@@ -6,13 +6,13 @@ import { IconArrowRight } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useApiClient } from "@/src/shared/lib/api/client";
 import { LeaveCourseButton } from "./LeaveCourseButton";
+import type { CourseVisibility } from "@/src/shared/types/course";
 
 interface CourseEnrollmentButtonProps {
   courseId: string;
   isEnrolled: boolean;
   participantCount: number;
-  isPublished: boolean;
-  isPrivate?: boolean;
+  status: CourseVisibility;
   nextChallengeHref?: string;
 }
 
@@ -20,8 +20,7 @@ export function CourseEnrollmentButton({
   courseId,
   isEnrolled,
   participantCount,
-  isPublished,
-  isPrivate = false,
+  status,
   nextChallengeHref,
 }: CourseEnrollmentButtonProps) {
   const router = useRouter();
@@ -68,7 +67,7 @@ export function CourseEnrollmentButton({
 
   // Show nothing only for draft courses (not published, not private).
   // Private courses: accessible via invite code — enroll button should still appear.
-  if (!isPublished && !isPrivate) {
+  if (status === "DRAFT") {
     return null;
   }
 

@@ -34,10 +34,6 @@ import {
   normalizeShortDescription,
 } from "@/src/features/course/utils/courseText";
 import {
-  visibilityFromFlags,
-  visibilityToFlags,
-} from "@/src/features/course/utils/courseVisibility";
-import {
   deleteCourse,
   fetchCourse,
   removeCourseParticipant,
@@ -143,7 +139,7 @@ export default function EditCourse() {
       setTitle(course.title);
       setShortDescription(course.shortDescription ?? "");
       setDescription(course.description ?? "");
-      setVisibility(visibilityFromFlags(course.isPublished, course.isPrivate));
+      setVisibility(course.status ?? "DRAFT");
       setImageUrl(course.imageUrl ?? "");
       setTopic(course.topic ?? null);
       setInviteCode(course.inviteCode ?? null);
@@ -207,14 +203,11 @@ export default function EditCourse() {
 
     setIsSubmitting(true);
 
-    const { isPublished, isPrivate } = visibilityToFlags(visibility);
-
     const result = await updateCourse(courseId, {
       title: title.trim(),
       description,
       shortDescription: normalizedShortDescription,
-      isPublished,
-      isPrivate,
+      status: visibility,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
       collaboratorIds: selectedInstructors,

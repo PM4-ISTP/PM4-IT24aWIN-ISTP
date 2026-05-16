@@ -24,8 +24,10 @@ function getStringRepresentationOfDate(date: string | undefined) {
 
 export function CourseCard({ course, onClick }: CourseCardProps) {
   const previewText = getCoursePreviewText(course.shortDescription, course.description);
-  const statusLabel = course.isPrivate ? "Private" : course.isPublished ? "Published" : "Draft";
-  const statusColor = course.isPrivate ? "violet" : course.isPublished ? "teal" : "gray";
+  const statusLabel =
+    course.status === "PRIVATE" ? "Private" : course.status === "PUBLIC" ? "Public" : "Draft";
+  const statusColor =
+    course.status === "PRIVATE" ? "violet" : course.status === "PUBLIC" ? "teal" : "gray";
 
   const content = (
     <Stack gap={0} style={{ height: "100%", minWidth: 0 }}>
