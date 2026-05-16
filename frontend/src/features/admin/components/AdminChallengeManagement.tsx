@@ -162,11 +162,7 @@ export default function AdminChallengeManagement() {
         const raw = await readBackendError(res);
         const msg = toUserFriendlyBackendError(raw);
         const color = res.status >= 500 ? "red" : "orange";
-        showToast(
-          color,
-          "Failed to delete lab",
-          msg ?? "Please try again."
-        );
+        showToast(color, "Failed to delete lab", msg ?? "Please try again.");
         return;
       }
       setDeleteOpened(false);
@@ -177,11 +173,7 @@ export default function AdminChallengeManagement() {
         refresh();
       }
     } catch {
-      showToast(
-        "red",
-        "Failed to delete lab",
-        "Please try again."
-      );
+      showToast("red", "Failed to delete lab", "Please try again.");
     } finally {
       setSaving(false);
     }
@@ -417,8 +409,11 @@ export default function AdminChallengeManagement() {
       >
         <Stack gap="md">
           <Text size="sm">
-            Delete <Text span fw={700}>{selectedTitle}</Text>? Students and instructors will no
-            longer see it in active lists.
+            Delete{" "}
+            <Text span fw={700}>
+              {selectedTitle}
+            </Text>
+            ? Students and instructors will no longer see it in active lists.
           </Text>
           <Group justify="flex-end">
             <Button
@@ -429,12 +424,7 @@ export default function AdminChallengeManagement() {
             >
               Cancel
             </Button>
-            <Button
-              color="red"
-              radius="md"
-              onClick={() => void confirmDelete()}
-              loading={saving}
-            >
+            <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
               Delete
             </Button>
           </Group>

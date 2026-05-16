@@ -55,17 +55,17 @@ function ChallengeRow({
   index: number;
 }) {
   const color = wrong ? "red" : solved ? "teal" : "gray";
-  const icon = wrong ? <IconX size={12} /> : solved ? <IconCheck size={12} /> : <IconCircleDashed size={12} />;
+  const icon = wrong ? (
+    <IconX size={12} />
+  ) : solved ? (
+    <IconCheck size={12} />
+  ) : (
+    <IconCircleDashed size={12} />
+  );
   const ariaLabel = wrong ? "Completed (wrong answer)" : solved ? "Completed" : "Not completed";
   return (
     <Group gap="xs" align="center" wrap="nowrap">
-      <ThemeIcon
-        variant="light"
-        radius="xl"
-        size="sm"
-        color={color}
-        aria-label={ariaLabel}
-      >
+      <ThemeIcon variant="light" radius="xl" size="sm" color={color} aria-label={ariaLabel}>
         {icon}
       </ThemeIcon>
       <Text
