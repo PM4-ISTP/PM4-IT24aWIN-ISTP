@@ -154,5 +154,4 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
           """)
   Page<AdminLabListItemDto> findAllChallengesForAdminByQuery(
       @Param("query") String query, Pageable pageable);
-
 }

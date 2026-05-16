@@ -5,11 +5,11 @@ import static com.pm4.istp.shared.util.JwtUtil.parseUserId;
 import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseRequest;
+import com.pm4.istp.course.db.entities.ChallengeType;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
-import com.pm4.istp.course.db.entities.StudentOptionSubmission;
-import com.pm4.istp.course.db.entities.ChallengeType;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
+import com.pm4.istp.course.db.entities.StudentOptionSubmission;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
@@ -742,7 +742,8 @@ public class CourseController {
 
     Map<UUID, UUID> correctOptionByChallenge = new HashMap<>();
     if (!wrongChallengeIds.isEmpty()) {
-      for (Object[] row : challengeRepository.findCorrectOptionIdsByChallengeIds(wrongChallengeIds)) {
+      for (Object[] row :
+          challengeRepository.findCorrectOptionIdsByChallengeIds(wrongChallengeIds)) {
         if (row == null || row.length < 2) continue;
         UUID challengeId = (UUID) row[0];
         UUID correctOptionId = (UUID) row[1];

@@ -309,10 +309,7 @@ public class LabServiceImpl implements LabService {
     verifyCreator(lab, userId);
     courseLabRepository.deleteByChallengeId(labId);
     lab.setDeletedByUsername(
-        userRepository
-            .findByIdAndDeletedAtIsNull(userId)
-            .map(User::getUsername)
-            .orElse("unknown"));
+        userRepository.findByIdAndDeletedAtIsNull(userId).map(User::getUsername).orElse("unknown"));
     lab.setDeletedAt(LocalDateTime.now());
     labRepository.save(lab);
   }

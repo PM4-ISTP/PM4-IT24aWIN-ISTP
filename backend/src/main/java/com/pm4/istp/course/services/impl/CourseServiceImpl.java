@@ -1090,10 +1090,7 @@ public class CourseServiceImpl implements CourseService {
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
     course.setDeletedByUsername(
-        userRepository
-            .findByIdAndDeletedAtIsNull(userId)
-            .map(User::getUsername)
-            .orElse("unknown"));
+        userRepository.findByIdAndDeletedAtIsNull(userId).map(User::getUsername).orElse("unknown"));
     course.setDeletedAt(LocalDateTime.now());
     courseRepository.save(course);
   }
