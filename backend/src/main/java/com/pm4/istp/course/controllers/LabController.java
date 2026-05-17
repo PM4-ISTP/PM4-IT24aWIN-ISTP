@@ -10,11 +10,11 @@ import com.pm4.istp.course.dto.ChallengeSubmissionRequestDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionRequestDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
-import com.pm4.istp.course.dto.DockerImageCheckResponseDto;
 import com.pm4.istp.course.dto.CreateLabRequestDto;
 import com.pm4.istp.course.dto.CreateLabResponseDto;
-import com.pm4.istp.course.dto.LabStudentDto;
+import com.pm4.istp.course.dto.DockerImageCheckResponseDto;
 import com.pm4.istp.course.dto.LabDetailResponseDto;
+import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.ListLabResponseDto;
 import com.pm4.istp.course.dto.UpdateLabRequestDto;
 import com.pm4.istp.course.dto.VisibilityImpactResponseDto;
@@ -65,8 +65,7 @@ public class LabController {
         @ApiResponse(
             responseCode = "201",
             description = "Lab created successfully",
-            content =
-                @Content(schema = @Schema(implementation = CreateLabResponseDto.class))),
+            content = @Content(schema = @Schema(implementation = CreateLabResponseDto.class))),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid request data",
@@ -96,8 +95,7 @@ public class LabController {
         @ApiResponse(
             responseCode = "200",
             description = "Lab found",
-            content =
-                @Content(schema = @Schema(implementation = LabDetailResponseDto.class))),
+            content = @Content(schema = @Schema(implementation = LabDetailResponseDto.class))),
         @ApiResponse(
             responseCode = "403",
             description = "Access denied",
@@ -125,8 +123,7 @@ public class LabController {
         @ApiResponse(
             responseCode = "200",
             description = "Lab updated successfully",
-            content =
-                @Content(schema = @Schema(implementation = LabDetailResponseDto.class))),
+            content = @Content(schema = @Schema(implementation = LabDetailResponseDto.class))),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid request data",

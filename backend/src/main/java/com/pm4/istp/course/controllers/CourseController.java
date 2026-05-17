@@ -11,11 +11,11 @@ import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.StudentOptionSubmission;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
-import com.pm4.istp.course.dto.CourseLabSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
 import com.pm4.istp.course.dto.CourseLabDeadlineDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionDetailDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
 import com.pm4.istp.course.dto.CreateCourseRequestDto;
@@ -334,8 +334,7 @@ public class CourseController {
             responseCode = "200",
             description = "Score updated successfully",
             content =
-                @Content(
-                    schema = @Schema(implementation = CourseLabSubmissionEntryDto.class))),
+                @Content(schema = @Schema(implementation = CourseLabSubmissionEntryDto.class))),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid request",
