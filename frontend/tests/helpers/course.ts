@@ -5,9 +5,9 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function getCourseStatusLabel(course: Course): "Private" | "Published" | "Draft" {
+function getCourseStatusLabel(course: Course): "Private" | "Public" | "Draft" {
   if (course.isPrivate) return "Private";
-  if (course.isPublished) return "Published";
+  if (course.isPublished) return "Public";
   return "Draft";
 }
 
@@ -26,7 +26,7 @@ function formatDate(date?: string | null | number): string {
 export async function assertCourseCards(page: Page, courses: readonly Course[]) {
   const courseCards = page
     .getByRole("button")
-    .filter({ has: page.getByText(/^(Private|Published|Draft)$/) });
+    .filter({ has: page.getByText(/^(Private|Public|Draft)$/) });
 
   if (courses.length === 0) {
     await expect(page.getByText("No courses found", { exact: true })).toBeVisible();
