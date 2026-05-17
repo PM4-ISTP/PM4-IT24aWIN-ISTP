@@ -6,9 +6,7 @@ import type { ActionResult } from "@/src/shared/lib/api/actionResult";
 import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers";
 
 // Re-export generated types with convenient aliases
-export type LabStatusEnum = NonNullable<
-  components["schemas"]["LabDetailResponseDto"]["status"]
->;
+export type LabStatusEnum = NonNullable<components["schemas"]["LabDetailResponseDto"]["status"]>;
 export type LabDifficultyEnum = NonNullable<
   components["schemas"]["LabDetailResponseDto"]["difficulty"]
 >;
@@ -44,9 +42,7 @@ export async function createLab(
   );
 }
 
-export async function fetchLab(
-  id: string
-): Promise<ActionResult<LabDetailResponseDto>> {
+export async function fetchLab(id: string): Promise<ActionResult<LabDetailResponseDto>> {
   return await withActionResult(
     (client) =>
       client.GET("/api/v1/labs/{id}", {

@@ -4,9 +4,7 @@ import Link from "next/link";
 import { fetchInstructorLabs } from "@/src/features/course/actions/labs";
 import { LabGrid } from "@/src/features/course/components/labs/LabGrid";
 
-export default async function InstructorLabs(props: {
-  searchParams: Promise<{ page?: string }>;
-}) {
+export default async function InstructorLabs(props: { searchParams: Promise<{ page?: string }> }) {
   const searchParams = await props.searchParams;
   const currentPage = Math.max(1, parseInt(searchParams.page ?? "1"));
   const result = await fetchInstructorLabs(currentPage - 1, 12);
