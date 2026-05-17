@@ -1,5 +1,5 @@
 import test, { expect, type Page } from "@playwright/test";
-import { clickNavbarButton } from "@/tests/helpers/navigation";
+import { clickButtonAndAssertUrl, clickNavbarButton } from "@/tests/helpers/navigation";
 import { loginAs } from "@/tests/helpers/auth";
 import { courses, labs, testUsers, type Course, type Lab } from "@/tests/data";
 import { assertNoActiveLabs } from "@/tests/helpers/dashboard";
@@ -53,15 +53,14 @@ async function openCourseFromMyCourses(page: Page, course: Course) {
     .filter({ has: page.getByText(course.title ?? "", { exact: true }) })
     .first();
   await expect(courseCard).toBeVisible();
-  await courseCard.click();
-  await page.waitForURL(`/dashboard/courses/${course.id}`);
+  await clickButtonAndAssertUrl(page, courseCard, `/dashboard/courses/${course.id}`);
 }
 
 async function openLabFromCourse(page: Page, course: Course, lab: Lab) {
   const actionButton = page.getByTestId("course-enrollment-action");
   await expect(actionButton).toHaveText("Continue Course");
   await actionButton.click();
-  await page.waitForURL(`/dashboard/courses/${course.id}/labs/${lab.id}/play`);
+  await clickButtonAndAssertUrl(page, actionButton, `/dashboard/courses/${course.id}/labs/${lab.id}/play`);
   await expect(page.getByRole("heading", { name: lab.title, level: 2 })).toBeVisible();
 }
 

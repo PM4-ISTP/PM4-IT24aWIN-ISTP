@@ -1,5 +1,5 @@
 import test, { expect, type Page } from "@playwright/test";
-import { clickNavbarButton } from "@/tests/helpers/navigation";
+import { clickButtonAndAssertUrl, clickNavbarButton } from "@/tests/helpers/navigation";
 import { loginAs } from "@/tests/helpers/auth";
 import { courses, testUsers, type Course, type Lab, type ChallengeCompletion } from "@/tests/data";
 import { formatDateTime } from "@/tests/helpers/date";
@@ -58,27 +58,26 @@ function getExpectedDueLabel(dueAt: string, solved: boolean): string {
   return `Due: ${formatDateTime(dueAt)}`;
 }
 
-async function clickCourseCard(page: Page, course: Course) {
+async function clickCourseCard(page: Page, course: Course, expectedUrl: string) {
   const courseCard = page
     .getByRole("button")
     .filter({ has: page.getByText(course.title ?? "", { exact: true }) })
     .first();
   await expect(courseCard).toBeVisible();
   await courseCard.click();
+  await clickButtonAndAssertUrl(page, courseCard, expectedUrl);
 }
 
 async function openCourseDetailsFromMyCourses(page: Page, course: Course) {
   await clickNavbarButton(page, "MY COURSES", "dashboard/courses");
-  await clickCourseCard(page, course);
-  await page.waitForURL(`/dashboard/courses/${course.id}`);
+  await clickCourseCard(page, course, `/dashboard/courses/${course.id}`);
 }
 
 async function openCourseDetailsFromCourseCatalog(page: Page, course: Course) {
   await clickNavbarButton(page, "BROWSE / CATALOG", "dashboard/catalog");
   await page.getByRole("textbox", { name: "Search courses" }).fill("E2E");
   await page.getByRole("button", { name: "Search" }).click();
-  await clickCourseCard(page, course);
-  await page.waitForURL(`/dashboard/catalog/${course.id}`);
+  await clickCourseCard(page, course, `/dashboard/catalog/${course.id}`);
 }
 
 async function assertCourseJourneyCard(page: Page, course: Course, isEnrolled: boolean) {

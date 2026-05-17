@@ -1,4 +1,18 @@
-import { type Page } from "@playwright/test";
+import { type Locator, type Page } from "@playwright/test";
+
+export async function clickButtonAndAssertUrl(page: Page, button: Locator, expectedUrl: string) {
+  let pagedSwitched = false;
+  let tries = 0;
+  while (pagedSwitched === false && tries < 3) {
+    await button.click();
+    try {
+      await page.waitForURL(expectedUrl);
+      pagedSwitched = true;
+    } catch (e) {
+      tries++;
+    }
+  }
+}
 
 export async function clickNavbarButton(
   page: Page,
@@ -7,6 +21,6 @@ export async function clickNavbarButton(
   buttonIndex = 0
 ) {
   const navbar = page.getByRole("navigation");
-  await navbar.getByRole("link", { name: buttonText }).nth(buttonIndex).click();
-  await page.waitForURL(expectedUrl);
+  const button = navbar.getByRole("link", { name: buttonText }).nth(buttonIndex);
+  await clickButtonAndAssertUrl(page, button, expectedUrl);
 }

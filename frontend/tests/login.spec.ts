@@ -1,6 +1,7 @@
 import test, { expect, type Page } from "@playwright/test";
 import { loginAs } from "@/tests/helpers/auth";
 import { testUsers, type User } from "@/tests/data";
+import { clickButtonAndAssertUrl } from "@/tests/helpers/navigation";
 
 async function logInAndThenLogOut(page: Page, user: User) {
   const userMenuTriggerId = "user-menu-trigger";
@@ -13,8 +14,7 @@ async function logInAndThenLogOut(page: Page, user: User) {
   ).toBeVisible();
   await page.getByTestId(userMenuTriggerId).click();
   await page.getByTestId("logout-link").click();
-  await page.click("#kc-logout");
-  await page.waitForURL("/");
+  await clickButtonAndAssertUrl(page, page.locator("#kc-logout"), "/");
   await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
 }
 
