@@ -42,7 +42,13 @@ function parseDashboardExpiry(label: string): Date | null {
   const match = label.match(/Expires\s+(\d{2})\.(\d{2})\.(\d{4}),\s*(\d{2}):(\d{2})/);
   if (!match) return null;
   const [, day, month, year, hour, minute] = match;
-  const parsed = new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute));
+  const parsed = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute)
+  );
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
@@ -60,7 +66,11 @@ async function openLabFromCourse(page: Page, course: Course, lab: Lab) {
   const actionButton = page.getByTestId("course-enrollment-action");
   await expect(actionButton).toHaveText("Continue Course");
   await actionButton.click();
-  await clickButtonAndAssertUrl(page, actionButton, `/dashboard/courses/${course.id}/labs/${lab.id}/play`);
+  await clickButtonAndAssertUrl(
+    page,
+    actionButton,
+    `/dashboard/courses/${course.id}/labs/${lab.id}/play`
+  );
   await expect(page.getByRole("heading", { name: lab.title, level: 2 })).toBeVisible();
 }
 
@@ -106,9 +116,9 @@ async function assertActiveLabCard(page: Page, course: Course, lab: Lab, expecte
   expect(expiresAt).not.toBeNull();
   console.log("Actual expiry: ", expiresAt);
   console.log("Expected expiry: ", expectedExpiry);
-  expect(Math.abs((expiresAt?.getTime() ?? 0) - expectedExpiry.getTime()) / 60_000).toBeLessThanOrEqual(
-    TIME_TOLERANCE_MINUTES
-  );
+  expect(
+    Math.abs((expiresAt?.getTime() ?? 0) - expectedExpiry.getTime()) / 60_000
+  ).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
 }
 
 async function openAppAndAssert(page: Page) {
@@ -116,10 +126,7 @@ async function openAppAndAssert(page: Page) {
   await expect(openAppLink).toBeVisible();
   await expect(openAppLink).toHaveAttribute("href", /http/);
 
-  const [appPage] = await Promise.all([
-    page.context().waitForEvent("page"),
-    openAppLink.click(),
-  ]);
+  const [appPage] = await Promise.all([page.context().waitForEvent("page"), openAppLink.click()]);
 
   await appPage.waitForLoadState("domcontentloaded");
   await expect(appPage.getByRole("heading", { name: "Campus Helpdesk", level: 1 })).toBeVisible();
