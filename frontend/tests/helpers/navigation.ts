@@ -8,6 +8,7 @@ export async function clickButtonAndAssertUrl(page: Page, button: Locator, expec
     try {
       await page.waitForURL(expectedUrl);
       pagedSwitched = true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       tries++;
     }
