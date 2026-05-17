@@ -31,7 +31,7 @@ import {
 } from "@tabler/icons-react";
 import { fetchCourse } from "@/src/features/course/actions/courses";
 import {
-  type CourseChallengeSubmissionEntryDto,
+  type CourseLabSubmissionEntryDto,
   type CourseLabChallengeSubmissionDetailDto,
   type CourseLabResponseDto,
   type CourseLabSubmissionDetailDto,
@@ -198,7 +198,7 @@ function StatCard({
 
 interface ParticipantRow {
   participant: CourseParticipantDto;
-  byLabId: Map<string, CourseChallengeSubmissionEntryDto>;
+  byLabId: Map<string, CourseLabSubmissionEntryDto>;
   solvedChallenges: number;
   totalChallenges: number;
   awardedPoints: number;
@@ -266,7 +266,7 @@ export default function CourseResultsPage() {
   }, [data]);
 
   const submissionsByParticipant = useMemo(() => {
-    const map = new Map<string, CourseChallengeSubmissionEntryDto[]>();
+    const map = new Map<string, CourseLabSubmissionEntryDto[]>();
     if (!data) return map;
     for (const s of data.submissions ?? []) {
       const key = s.participantId;
@@ -287,7 +287,7 @@ export default function CourseResultsPage() {
     if (!data) return [];
     return (data.participants ?? []).map((p) => {
       const subs = submissionsByParticipant.get(p.id) ?? [];
-      const byLabId = new Map<string, CourseChallengeSubmissionEntryDto>();
+      const byLabId = new Map<string, CourseLabSubmissionEntryDto>();
       for (const s of subs) byLabId.set(s.labId, s);
 
       const effectiveSubs = labFilter

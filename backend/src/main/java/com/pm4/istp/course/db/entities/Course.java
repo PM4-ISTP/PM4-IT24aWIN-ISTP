@@ -81,14 +81,34 @@ public class Course {
   @OrderBy("orderIndex ASC")
   private List<CourseLab> courseLabs = new ArrayList<>();
 
-  public void addCourseChallenge(CourseLab courseLab) {
+  public void addCourseLab(CourseLab courseLab) {
     courseLabs.add(courseLab);
     courseLab.setCourse(this);
   }
 
-  public void removeCourseChallenge(CourseLab courseLab) {
+  public void removeCourseLab(CourseLab courseLab) {
     courseLabs.remove(courseLab);
     courseLab.setCourse(null);
+  }
+
+  /**
+   * Legacy naming kept for backwards compatibility.
+   *
+   * @deprecated Use {@link #addCourseLab(CourseLab)}.
+   */
+  @Deprecated
+  public void addCourseChallenge(CourseLab courseLab) {
+    addCourseLab(courseLab);
+  }
+
+  /**
+   * Legacy naming kept for backwards compatibility.
+   *
+   * @deprecated Use {@link #removeCourseLab(CourseLab)}.
+   */
+  @Deprecated
+  public void removeCourseChallenge(CourseLab courseLab) {
+    removeCourseLab(courseLab);
   }
 
   /**

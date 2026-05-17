@@ -47,18 +47,18 @@ export interface paths {
      * Get a lab by ID
      * @description Returns the full details of a lab. Visibility depends on status and user role.
      */
-    get: operations["getChallenge"];
+    get: operations["getLab"];
     /**
      * Update a lab
      * @description Updates an existing lab. Only the creator can update.
      */
-    put: operations["updateChallenge"];
+    put: operations["updateLab"];
     post?: never;
     /**
      * Delete a lab
      * @description Deletes a lab and removes it from all courses. Only the creator can delete.
      */
-    delete: operations["deleteChallenge"];
+    delete: operations["deleteLab"];
     options?: never;
     head?: never;
     patch?: never;
@@ -124,7 +124,7 @@ export interface paths {
      * Update course labs
      * @description Replaces the lab list for a course. Accepts own and public labs.
      */
-    put: operations["updateCourseChallenges"];
+    put: operations["updateCourseLabs"];
     post?: never;
     delete?: never;
     options?: never;
@@ -188,9 +188,9 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    put: operations["updateChallenge_1"];
+    put: operations["updateChallenge"];
     post?: never;
-    delete: operations["deleteChallenge_1"];
+    delete: operations["deleteChallenge"];
     options?: never;
     head?: never;
     patch?: never;
@@ -255,13 +255,13 @@ export interface paths {
      * List my labs
      * @description Returns a paginated list of labs created by the authenticated user.
      */
-    get: operations["listChallenges"];
+    get: operations["listLabs"];
     put?: never;
     /**
      * Create a lab
      * @description Creates a new lab and returns the persisted lab.
      */
-    post: operations["createChallenge"];
+    post: operations["createLab"];
     delete?: never;
     options?: never;
     head?: never;
@@ -683,7 +683,7 @@ export interface paths {
      * Get a lab in student play view
      * @description Returns a lab formatted for students (no challenge flags, with per-user solved progress). Caller must be enrolled in the given course, and the lab must belong to it.
      */
-    get: operations["getChallengeForPlay"];
+    get: operations["getLabForPlay"];
     put?: never;
     post?: never;
     delete?: never;
@@ -703,7 +703,7 @@ export interface paths {
      * Search available labs
      * @description Searches for labs by title. Returns the user's own labs and public ones.
      */
-    get: operations["searchChallenges"];
+    get: operations["searchLabs"];
     put?: never;
     post?: never;
     delete?: never;
@@ -723,7 +723,7 @@ export interface paths {
      * Count completed labs for current user
      * @description Returns the number of labs where the authenticated user has solved all challenges.
      */
-    get: operations["countMyCompletedChallenges"];
+    get: operations["countMyCompletedLabs"];
     put?: never;
     post?: never;
     delete?: never;
@@ -995,7 +995,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get: operations["listChallenges_1"];
+    get: operations["listChallenges"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1138,11 +1138,11 @@ export interface components {
       hint?: string;
       options?: components["schemas"]["ChallengeOptionRequestDto"][];
     };
-    UpdateChallengeRequestDto: {
+    UpdateLabRequestDto: {
       title: string;
       description?: string;
       /** @enum {string} */
-      status: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage: string;
@@ -1151,36 +1151,6 @@ export interface components {
       /** Format: int32 */
       podTtlSeconds?: number;
       challenges: components["schemas"]["ChallengeRequestDto"][];
-    };
-    ChallengeCreatorResponseDto: {
-      /** Format: uuid */
-      id?: string;
-      name?: string;
-    };
-    ChallengeDetailResponseDto: {
-      /** Format: uuid */
-      id?: string;
-      title?: string;
-      description?: string;
-      /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
-      /** @enum {string} */
-      difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
-      /** Format: int32 */
-      maxScore?: number;
-      dockerImage?: string;
-      /** Format: int32 */
-      containerPort?: number;
-      /** Format: int32 */
-      podTtlSeconds?: number;
-      creator?: components["schemas"]["ChallengeCreatorResponseDto"];
-      /** Format: int64 */
-      courseCount?: number;
-      challenges?: components["schemas"]["ChallengeResponseDto"][];
-      /** Format: date-time */
-      createdAt?: string;
-      /** Format: date-time */
-      updatedAt?: string;
     };
     ChallengeOptionResponseDto: {
       /** Format: uuid */
@@ -1205,6 +1175,36 @@ export interface components {
       hint?: string;
       options?: components["schemas"]["ChallengeOptionResponseDto"][];
     };
+    LabCreatorResponseDto: {
+      /** Format: uuid */
+      id?: string;
+      name?: string;
+    };
+    LabDetailResponseDto: {
+      /** Format: uuid */
+      id?: string;
+      title?: string;
+      description?: string;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
+      /** @enum {string} */
+      difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
+      /** Format: int32 */
+      maxScore?: number;
+      dockerImage?: string;
+      /** Format: int32 */
+      containerPort?: number;
+      /** Format: int32 */
+      podTtlSeconds?: number;
+      creator?: components["schemas"]["LabCreatorResponseDto"];
+      /** Format: int64 */
+      courseCount?: number;
+      challenges?: components["schemas"]["ChallengeResponseDto"][];
+      /** Format: date-time */
+      createdAt?: string;
+      /** Format: date-time */
+      updatedAt?: string;
+    };
     ErrorDto: {
       error?: string;
     };
@@ -1216,14 +1216,14 @@ export interface components {
     };
     UpdateCourseRequestDto: {
       title: string;
-      description?: string;
+      description: string;
       shortDescription: string;
+      /** @enum {string} */
+      status: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       imageUrl?: string;
       topic?: string;
       instructors: components["schemas"]["UpdateCourseInstructorRequestDto"][];
       mcAttemptsMode?: string;
-      /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     CourseDetailInstructorResponseDto: {
       /** Format: uuid */
@@ -1249,6 +1249,8 @@ export interface components {
       shortDescription?: string;
       /** Format: int64 */
       participantCount?: number;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       imageUrl?: string;
       topic?: string;
       inviteCode?: string;
@@ -1260,9 +1262,8 @@ export interface components {
       /** Format: date-time */
       updatedAt?: string;
       mcAttemptsMode?: string;
+      enrolled?: boolean;
       isEnrolled?: boolean;
-      /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     CourseLabResponseDto: {
       /** Format: uuid */
@@ -1288,7 +1289,7 @@ export interface components {
       /** Format: int32 */
       points?: number;
     };
-    CourseChallengeSubmissionEntryDto: {
+    CourseLabSubmissionEntryDto: {
       /** Format: uuid */
       participantId?: string;
       /** Format: uuid */
@@ -1377,18 +1378,18 @@ export interface components {
       title: string;
       description?: string;
       /** @enum {string} */
-      status: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
     };
     AdminUpdateCourseRequestDto: {
       title: string;
-      description?: string;
-      shortDescription?: string;
+      description: string;
+      shortDescription: string;
+      /** @enum {string} */
+      status: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       topic?: string;
       imageUrl?: string;
-      /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     AdminConfigRequest: {
       cpuLimit?: string;
@@ -1408,11 +1409,11 @@ export interface components {
       /** Format: date-time */
       updatedAt?: string;
     };
-    CreateChallengeRequestDto: {
+    CreateLabRequestDto: {
       title: string;
       description?: string;
       /** @enum {string} */
-      status: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       /** @enum {string} */
       difficulty: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage: string;
@@ -1422,13 +1423,13 @@ export interface components {
       podTtlSeconds?: number;
       challenges: components["schemas"]["ChallengeRequestDto"][];
     };
-    CreateChallengeResponseDto: {
+    CreateLabResponseDto: {
       /** Format: uuid */
       id?: string;
       title?: string;
       description?: string;
       /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
@@ -1504,14 +1505,14 @@ export interface components {
     };
     CreateCourseRequestDto: {
       title: string;
-      description?: string;
+      description: string;
       shortDescription: string;
+      /** @enum {string} */
+      status: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       imageUrl?: string;
       topic?: string;
       instructors: components["schemas"]["CreateCourseInstructorRequestDto"][];
       mcAttemptsMode?: string;
-      /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     CreateCourseInstructorResponseDto: {
       /** Format: uuid */
@@ -1535,13 +1536,13 @@ export interface components {
       title?: string;
       description?: string;
       shortDescription?: string;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       courseInstructors?: components["schemas"]["CreateCourseInstructorResponseDto"][];
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
-      /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     ChallengeOptionStudentDto: {
       /** Format: uuid */
@@ -1577,7 +1578,7 @@ export interface components {
       title?: string;
       description?: string;
       /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage?: string;
@@ -1585,7 +1586,7 @@ export interface components {
       containerPort?: number;
       /** Format: int32 */
       maxScore?: number;
-      creator?: components["schemas"]["ChallengeCreatorResponseDto"];
+      creator?: components["schemas"]["LabCreatorResponseDto"];
       challenges?: components["schemas"]["ChallengeStudentDto"][];
       /** Format: int32 */
       solvedChallengeCount?: number;
@@ -1608,6 +1609,8 @@ export interface components {
       shortDescription?: string;
       /** Format: int64 */
       participantCount?: number;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       imageUrl?: string;
       topic?: string;
       inviteCode?: string;
@@ -1618,9 +1621,8 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
+      enrolled?: boolean;
       isEnrolled?: boolean;
-      /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     JoinByInviteCodeRequestDto: {
       code: string;
@@ -1682,20 +1684,20 @@ export interface components {
       roles?: ("ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT")[];
     };
     PageListInstructorUserResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       first?: boolean;
       last?: boolean;
-      /** Format: int32 */
-      numberOfElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListInstructorUserResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      /** Format: int32 */
+      numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
@@ -1703,11 +1705,11 @@ export interface components {
       /** Format: int64 */
       offset?: number;
       sort?: components["schemas"]["SortObject"];
+      /** Format: int32 */
+      pageNumber?: number;
       paged?: boolean;
       /** Format: int32 */
       pageSize?: number;
-      /** Format: int32 */
-      pageNumber?: number;
       unpaged?: boolean;
     };
     SortObject: {
@@ -1720,7 +1722,7 @@ export interface components {
       id?: string;
       title?: string;
       /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       /** Format: int32 */
@@ -1737,20 +1739,20 @@ export interface components {
       updatedAt?: string;
     };
     PageListLabResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       first?: boolean;
       last?: boolean;
-      /** Format: int32 */
-      numberOfElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListLabResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      /** Format: int32 */
+      numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
@@ -1777,6 +1779,8 @@ export interface components {
       title?: string;
       description?: string;
       shortDescription?: string;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       /** Format: int64 */
       instructorCount?: number;
       /** Format: date-time */
@@ -1788,24 +1792,22 @@ export interface components {
       ownerName?: string;
       ownerPicture?: string;
       ownerTitle?: string;
-      /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     PageListCourseResponseDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       first?: boolean;
       last?: boolean;
-      /** Format: int32 */
-      numberOfElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListCourseResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      /** Format: int32 */
+      numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
@@ -1814,7 +1816,7 @@ export interface components {
       courseId?: string;
       participants?: components["schemas"]["CourseParticipantResponseDto"][];
       labs?: components["schemas"]["CourseLabResponseDto"][];
-      submissions?: components["schemas"]["CourseChallengeSubmissionEntryDto"][];
+      submissions?: components["schemas"]["CourseLabSubmissionEntryDto"][];
     };
     CourseLabChallengeSubmissionDetailDto: {
       /** Format: uuid */
@@ -1879,20 +1881,20 @@ export interface components {
       anonymizedAt?: string;
     };
     PageAdminUserListItemDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       first?: boolean;
       last?: boolean;
-      /** Format: int32 */
-      numberOfElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["AdminUserListItemDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      /** Format: int32 */
+      numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
@@ -1941,7 +1943,7 @@ export interface components {
       title?: string;
       description?: string;
       /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       /** @enum {string} */
       difficulty?: "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
       dockerImage?: string;
@@ -1959,22 +1961,23 @@ export interface components {
       creatorId?: string;
       creatorName?: string;
       creatorUsername?: string;
+      softDeleted?: boolean;
     };
     PageAdminLabListItemDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       first?: boolean;
       last?: boolean;
-      /** Format: int32 */
-      numberOfElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["AdminLabListItemDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      /** Format: int32 */
+      numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
@@ -1984,6 +1987,8 @@ export interface components {
       title?: string;
       description?: string;
       shortDescription?: string;
+      /** @enum {string} */
+      status?: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
@@ -1994,24 +1999,22 @@ export interface components {
       ownerId?: string;
       ownerName?: string;
       ownerUsername?: string;
-      /** @enum {string} */
-      status?: "DRAFT" | "PRIVATE" | "PUBLIC";
     };
     PageAdminCourseListItemDto: {
-      /** Format: int64 */
-      totalElements?: number;
       /** Format: int32 */
       totalPages?: number;
+      /** Format: int64 */
+      totalElements?: number;
       first?: boolean;
       last?: boolean;
-      /** Format: int32 */
-      numberOfElements?: number;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["AdminCourseListItemDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      /** Format: int32 */
+      numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
       empty?: boolean;
     };
@@ -2094,7 +2097,7 @@ export interface operations {
       };
     };
   };
-  getChallenge: {
+  getLab: {
     parameters: {
       query?: never;
       header?: never;
@@ -2111,7 +2114,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["ChallengeDetailResponseDto"];
+          "*/*": components["schemas"]["LabDetailResponseDto"];
         };
       };
       /** @description Access denied */
@@ -2134,7 +2137,7 @@ export interface operations {
       };
     };
   };
-  updateChallenge: {
+  updateLab: {
     parameters: {
       query?: never;
       header?: never;
@@ -2145,7 +2148,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["UpdateChallengeRequestDto"];
+        "application/json": components["schemas"]["UpdateLabRequestDto"];
       };
     };
     responses: {
@@ -2155,7 +2158,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["ChallengeDetailResponseDto"];
+          "*/*": components["schemas"]["LabDetailResponseDto"];
         };
       };
       /** @description Invalid request data */
@@ -2187,7 +2190,7 @@ export interface operations {
       };
     };
   };
-  deleteChallenge: {
+  deleteLab: {
     parameters: {
       query?: never;
       header?: never;
@@ -2361,7 +2364,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["CourseChallengeSubmissionEntryDto"];
+          "*/*": components["schemas"]["CourseLabSubmissionEntryDto"];
         };
       };
       /** @description Invalid request */
@@ -2393,7 +2396,7 @@ export interface operations {
       };
     };
   };
-  updateCourseChallenges: {
+  updateCourseLabs: {
     parameters: {
       query?: never;
       header?: never;
@@ -2535,7 +2538,7 @@ export interface operations {
       };
     };
   };
-  updateChallenge_1: {
+  updateChallenge: {
     parameters: {
       query?: never;
       header?: never;
@@ -2559,7 +2562,7 @@ export interface operations {
       };
     };
   };
-  deleteChallenge_1: {
+  deleteChallenge: {
     parameters: {
       query?: never;
       header?: never;
@@ -2731,7 +2734,7 @@ export interface operations {
       };
     };
   };
-  listChallenges: {
+  listLabs: {
     parameters: {
       query: {
         pageable: components["schemas"]["Pageable"];
@@ -2753,7 +2756,7 @@ export interface operations {
       };
     };
   };
-  createChallenge: {
+  createLab: {
     parameters: {
       query?: never;
       header?: never;
@@ -2762,7 +2765,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["CreateChallengeRequestDto"];
+        "application/json": components["schemas"]["CreateLabRequestDto"];
       };
     };
     responses: {
@@ -2772,7 +2775,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["CreateChallengeResponseDto"];
+          "*/*": components["schemas"]["CreateLabResponseDto"];
         };
       };
       /** @description Invalid request data */
@@ -2847,7 +2850,7 @@ export interface operations {
           "*/*": components["schemas"]["ErrorDto"];
         };
       };
-      /** @description Sub-task already solved */
+      /** @description Challenge already solved */
       409: {
         headers: {
           [name: string]: unknown;
@@ -2926,7 +2929,7 @@ export interface operations {
           "*/*": components["schemas"]["ChallengeSubmissionResponseDto"];
         };
       };
-      /** @description Sub-task has a flag and cannot be auto-completed */
+      /** @description Challenge has a flag and cannot be auto-completed */
       400: {
         headers: {
           [name: string]: unknown;
@@ -2999,6 +3002,26 @@ export interface operations {
       };
     };
   };
+  stopPod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        labId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   extendPod: {
     parameters: {
       query?: never;
@@ -3018,26 +3041,6 @@ export interface operations {
         content: {
           "*/*": components["schemas"]["PodStatusResponse"];
         };
-      };
-    };
-  };
-  stopPod: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        labId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
       };
     };
   };
@@ -3573,7 +3576,7 @@ export interface operations {
   getVisibilityImpact: {
     parameters: {
       query: {
-        status: "DRAFT" | "PRIVATE" | "PUBLIC";
+        status: "DRAFT" | "PRIVATE" | "PUBLIC" | "SOFT_DELETED";
       };
       header?: never;
       path: {
@@ -3612,7 +3615,7 @@ export interface operations {
       };
     };
   };
-  getChallengeForPlay: {
+  getLabForPlay: {
     parameters: {
       query: {
         courseId: string;
@@ -3654,7 +3657,7 @@ export interface operations {
       };
     };
   };
-  searchChallenges: {
+  searchLabs: {
     parameters: {
       query: {
         q?: string;
@@ -3677,7 +3680,7 @@ export interface operations {
       };
     };
   };
-  countMyCompletedChallenges: {
+  countMyCompletedLabs: {
     parameters: {
       query?: never;
       header?: never;
@@ -4086,7 +4089,7 @@ export interface operations {
       };
     };
   };
-  listChallenges_1: {
+  listChallenges: {
     parameters: {
       query: {
         q?: string;

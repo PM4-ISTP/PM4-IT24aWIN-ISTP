@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.pm4.istp.course.db.entities.LabDifficultyEnum;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
-import com.pm4.istp.course.dto.CreateChallengeRequestDto;
+import com.pm4.istp.course.dto.CreateLabRequestDto;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -15,9 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-
-
-class CreateChallengeRequestDtoValidationTest {
+class CreateLabRequestDtoValidationTest {
 
   private static ValidatorFactory factory;
   private static Validator validator;
@@ -33,8 +31,8 @@ class CreateChallengeRequestDtoValidationTest {
     factory.close();
   }
 
-  private CreateChallengeRequestDto dtoWithDockerImage(String dockerImage) {
-    CreateChallengeRequestDto dto = new CreateChallengeRequestDto();
+  private CreateLabRequestDto dtoWithDockerImage(String dockerImage) {
+    CreateLabRequestDto dto = new CreateLabRequestDto();
     dto.setTitle("Title");
     dto.setStatus(LabStatusEnum.DRAFT);
     dto.setDifficulty(LabDifficultyEnum.EASY);
@@ -52,7 +50,7 @@ class CreateChallengeRequestDtoValidationTest {
             + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       })
   void dockerImage_acceptsValidGhcrReferences(String dockerImage) {
-    Set<ConstraintViolation<CreateChallengeRequestDto>> violations =
+    Set<ConstraintViolation<CreateLabRequestDto>> violations =
         validator.validate(dtoWithDockerImage(dockerImage));
 
     assertThat(violations)
@@ -78,7 +76,7 @@ class CreateChallengeRequestDtoValidationTest {
         "image!",
       })
   void dockerImage_rejectsInvalidReferences(String dockerImage) {
-    Set<ConstraintViolation<CreateChallengeRequestDto>> violations =
+    Set<ConstraintViolation<CreateLabRequestDto>> violations =
         validator.validate(dtoWithDockerImage(dockerImage));
 
     assertThat(violations)
@@ -89,7 +87,7 @@ class CreateChallengeRequestDtoValidationTest {
   @ParameterizedTest
   @ValueSource(strings = {"", "   "})
   void dockerImage_rejectsBlank(String dockerImage) {
-    Set<ConstraintViolation<CreateChallengeRequestDto>> violations =
+    Set<ConstraintViolation<CreateLabRequestDto>> violations =
         validator.validate(dtoWithDockerImage(dockerImage));
 
     assertThat(violations)

@@ -8,8 +8,6 @@ import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeOption;
 import com.pm4.istp.course.db.entities.CourseLab;
 import com.pm4.istp.course.db.entities.Lab;
-import com.pm4.istp.course.dto.ChallengeCreatorResponseDto;
-import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
 import com.pm4.istp.course.dto.ChallengeOptionRequestDto;
 import com.pm4.istp.course.dto.ChallengeOptionResponseDto;
 import com.pm4.istp.course.dto.ChallengeOptionStudentDto;
@@ -17,10 +15,12 @@ import com.pm4.istp.course.dto.ChallengeRequestDto;
 import com.pm4.istp.course.dto.ChallengeResponseDto;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.CourseLabResponseDto;
-import com.pm4.istp.course.dto.CreateChallengeRequestDto;
-import com.pm4.istp.course.dto.CreateChallengeResponseDto;
+import com.pm4.istp.course.dto.CreateLabRequestDto;
+import com.pm4.istp.course.dto.CreateLabResponseDto;
+import com.pm4.istp.course.dto.LabCreatorResponseDto;
+import com.pm4.istp.course.dto.LabDetailResponseDto;
 import com.pm4.istp.course.dto.LabStudentDto;
-import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
+import com.pm4.istp.course.dto.UpdateLabRequestDto;
 import com.pm4.istp.user.db.entities.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -29,20 +29,20 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface LabMapper {
 
-  CreateLabRequest fromDto(CreateChallengeRequestDto dto);
+  CreateLabRequest fromDto(CreateLabRequestDto dto);
 
-  UpdateLabRequest fromDto(UpdateChallengeRequestDto dto);
+  UpdateLabRequest fromDto(UpdateLabRequestDto dto);
 
   ChallengeRequest fromDto(ChallengeRequestDto dto);
 
   ChallengeOptionRequest fromDto(ChallengeOptionRequestDto dto);
 
   @Mapping(target = "creatorId", source = "creator.id")
-  CreateChallengeResponseDto toCreateResponseDto(Lab lab);
+  CreateLabResponseDto toCreateResponseDto(Lab lab);
 
-  ChallengeDetailResponseDto toDetailResponseDto(Lab lab);
+  LabDetailResponseDto toDetailResponseDto(Lab lab);
 
-  ChallengeCreatorResponseDto toCreatorDto(User user);
+  LabCreatorResponseDto toCreatorDto(User user);
 
   ChallengeResponseDto toChallengeResponseDto(Challenge challenge);
 

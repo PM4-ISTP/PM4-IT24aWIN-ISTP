@@ -31,8 +31,8 @@ import {
 } from "@tabler/icons-react";
 import { LabSearchSelect } from "@/src/features/course/components/labs/LabSearchSelect";
 import {
-  fetchChallenge,
-  type ChallengeDetailResponseDto,
+  fetchLab,
+  type LabDetailResponseDto,
   type ListLabResponseDto,
 } from "@/src/features/course/actions/labs";
 import {
@@ -41,7 +41,7 @@ import {
 } from "@/src/features/course/constants/challengeConstants";
 import { getSanitizedHtml } from "@/src/shared/lib/utils";
 
-export interface CourseChallengeEntry {
+export interface CourseLabEntry {
   labId: string;
   labTitle: string;
   difficulty: string;
@@ -53,12 +53,12 @@ export interface CourseChallengeEntry {
   status?: string;
 }
 
-interface CourseChallengeManagerProps {
-  labs: CourseChallengeEntry[];
-  onChange: (labs: CourseChallengeEntry[]) => void;
+interface CourseLabManagerProps {
+  labs: CourseLabEntry[];
+  onChange: (labs: CourseLabEntry[]) => void;
 }
 
-type ChallengeDetail = NonNullable<ChallengeDetailResponseDto["challenges"]>[number];
+type ChallengeDetail = NonNullable<LabDetailResponseDto["challenges"]>[number];
 
 function ChallengeListView({ challenges }: { challenges: ChallengeDetail[] }) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
@@ -167,7 +167,7 @@ function ChallengeListView({ challenges }: { challenges: ChallengeDetail[] }) {
   );
 }
 
-function ChallengeDetailView({ detail }: { detail: ChallengeDetailResponseDto }) {
+function LabDetailView({ detail }: { detail: LabDetailResponseDto }) {
   const sanitizedDescription = detail.description ? getSanitizedHtml(detail.description) : null;
   const challenges = detail.challenges ?? [];
 
@@ -238,19 +238,19 @@ function fromDateTimeLocalValue(value: string): string | null {
   return trimmed.length === 16 ? `${trimmed}:00` : trimmed;
 }
 
-export function CourseLabManager({ labs, onChange }: CourseChallengeManagerProps) {
+export function CourseLabManager({ labs, onChange }: CourseLabManagerProps) {
   const { data: session } = useSession();
   const currentUserId = (session as { userId?: string } | null)?.userId;
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [detailsCache, setDetailsCache] = useState<Record<string, ChallengeDetailResponseDto>>({});
+  const [detailsCache, setDetailsCache] = useState<Record<string, LabDetailResponseDto>>({});
   const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
 
-  function handleAddChallenge(lab: ListLabResponseDto) {
+  function handleAddLab(lab: ListLabResponseDto) {
     if (!lab.id) return;
     if (labs.some((c) => c.labId === lab.id)) return;
 
-    const newEntry: CourseChallengeEntry = {
+    const newEntry: CourseLabEntry = {
       labId: lab.id,
       labTitle: lab.title ?? "",
       difficulty: lab.difficulty ?? "MEDIUM",
@@ -283,7 +283,7 @@ export function CourseLabManager({ labs, onChange }: CourseChallengeManagerProps
   }
 
   /** Hydrate a lab entry with data from the detail response */
-  function hydrateEntry(labId: string, detail: ChallengeDetailResponseDto) {
+  function hydrateEntry(labId: string, detail: LabDetailResponseDto) {
     const idx = labs.findIndex((c) => c.labId === labId);
     if (idx === -1) return;
     const entry = labs[idx];
@@ -310,13 +310,13 @@ export function CourseLabManager({ labs, onChange }: CourseChallengeManagerProps
     void (async () => {
       const results = await Promise.all(
         missing.map(async (c) => {
-          const result = await fetchChallenge(c.labId);
+          const result = await fetchLab(c.labId);
           return result.success ? { id: c.labId, detail: result.data } : null;
         })
       );
 
       // Build a lookup of fetched details
-      const fetched = new Map<string, ChallengeDetailResponseDto>();
+      const fetched = new Map<string, LabDetailResponseDto>();
       for (const r of results) {
         if (r) fetched.set(r.id, r.detail);
       }
@@ -357,7 +357,7 @@ export function CourseLabManager({ labs, onChange }: CourseChallengeManagerProps
 
     if (!detailsCache[labId]) {
       setLoadingDetailId(labId);
-      const result = await fetchChallenge(labId);
+      const result = await fetchLab(labId);
       setLoadingDetailId((prev) => (prev === labId ? null : prev));
 
       if (result.success) {
@@ -384,7 +384,7 @@ export function CourseLabManager({ labs, onChange }: CourseChallengeManagerProps
         </Button>
       </Group>
 
-      <LabSearchSelect excludeIds={labs.map((c) => c.labId)} onSelect={handleAddChallenge} />
+      <LabSearchSelect excludeIds={labs.map((c) => c.labId)} onSelect={handleAddLab} />
 
       {labs.length === 0 ? (
         <Text size="sm" c="dimmed">
@@ -547,7 +547,7 @@ export function CourseLabManager({ labs, onChange }: CourseChallengeManagerProps
                         <Loader size="sm" />
                       </Group>
                     ) : detail ? (
-                      <ChallengeDetailView detail={detail} />
+                      <LabDetailView detail={detail} />
                     ) : (
                       <Text size="sm" c="dimmed">
                         Failed to load details.

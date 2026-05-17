@@ -54,17 +54,17 @@ class CourseEntityTest {
   }
 
   @Test
-  void addAndRemoveCourseChallengeMaintainsBothSides() {
+  void addAndRemoveCourseLabMaintainsBothSides() {
     Course course = new Course();
     CourseLab courseLab = new CourseLab();
     courseLab.setId(UUID.randomUUID());
 
-    course.addCourseChallenge(courseLab);
+    course.addCourseLab(courseLab);
 
     assertThat(course.getCourseLabs()).containsExactly(courseLab);
     assertThat(courseLab.getCourse()).isSameAs(course);
 
-    course.removeCourseChallenge(courseLab);
+    course.removeCourseLab(courseLab);
 
     assertThat(course.getCourseLabs()).isEmpty();
     assertThat(courseLab.getCourse()).isNull();

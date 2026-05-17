@@ -15,17 +15,17 @@ import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabDifficultyEnum;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.CourseLab;
-import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
 import com.pm4.istp.course.dto.LabStudentDto;
-import com.pm4.istp.course.dto.CreateChallengeRequestDto;
-import com.pm4.istp.course.dto.CreateChallengeResponseDto;
+import com.pm4.istp.course.dto.CreateLabRequestDto;
+import com.pm4.istp.course.dto.CreateLabResponseDto;
+import com.pm4.istp.course.dto.LabDetailResponseDto;
 import com.pm4.istp.course.dto.ListLabResponseDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionRequestDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionRequestDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
 import com.pm4.istp.course.dto.DockerImageCheckResponseDto;
-import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
+import com.pm4.istp.course.dto.UpdateLabRequestDto;
 import com.pm4.istp.course.dto.VisibilityImpactResponseDto;
 import com.pm4.istp.course.exceptions.LabAccessDeniedException;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
@@ -76,7 +76,7 @@ class LabControllerTest {
     UUID userId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
-    CreateChallengeRequestDto requestDto = new CreateChallengeRequestDto();
+    CreateLabRequestDto requestDto = new CreateLabRequestDto();
     requestDto.setTitle("Title");
     requestDto.setStatus(LabStatusEnum.DRAFT);
     requestDto.setDifficulty(LabDifficultyEnum.EASY);
@@ -84,14 +84,14 @@ class LabControllerTest {
     CreateLabRequest mappedRequest = new CreateLabRequest();
     Lab created = new Lab();
     created.setId(UUID.randomUUID());
-    CreateChallengeResponseDto responseDto = new CreateChallengeResponseDto();
+    CreateLabResponseDto responseDto = new CreateLabResponseDto();
     responseDto.setId(created.getId());
 
     when(labMapper.fromDto(requestDto)).thenReturn(mappedRequest);
     when(labService.createLab(userId, mappedRequest)).thenReturn(created);
     when(labMapper.toCreateResponseDto(created)).thenReturn(responseDto);
 
-    ResponseEntity<CreateChallengeResponseDto> response = labController.createLab(jwt, requestDto);
+    ResponseEntity<CreateLabResponseDto> response = labController.createLab(jwt, requestDto);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(response.getBody()).isSameAs(responseDto);
@@ -109,12 +109,12 @@ class LabControllerTest {
     lab.setCreator(new User());
     lab.setCourseLabs(List.of(new CourseLab(), new CourseLab()));
 
-    ChallengeDetailResponseDto dto = new ChallengeDetailResponseDto();
+    LabDetailResponseDto dto = new LabDetailResponseDto();
 
     when(labService.getLab(userId, labId)).thenReturn(lab);
     when(labMapper.toDetailResponseDto(lab)).thenReturn(dto);
 
-    ResponseEntity<ChallengeDetailResponseDto> response = labController.getLab(jwt, labId);
+    ResponseEntity<LabDetailResponseDto> response = labController.getLab(jwt, labId);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isSameAs(dto);
@@ -140,19 +140,19 @@ class LabControllerTest {
     UUID labId = UUID.randomUUID();
     Jwt jwt = jwtFor(userId);
 
-    UpdateChallengeRequestDto requestDto = new UpdateChallengeRequestDto();
+    UpdateLabRequestDto requestDto = new UpdateLabRequestDto();
     UpdateLabRequest mappedRequest = new UpdateLabRequest();
     Lab updated = new Lab();
     updated.setId(labId);
     updated.setCourseLabs(List.of(new CourseLab()));
-    ChallengeDetailResponseDto dto = new ChallengeDetailResponseDto();
+    LabDetailResponseDto dto = new LabDetailResponseDto();
 
     when(labMapper.fromDto(requestDto)).thenReturn(mappedRequest);
     when(labService.updateLab(userId, labId, mappedRequest)).thenReturn(updated);
     when(labMapper.toDetailResponseDto(updated)).thenReturn(dto);
 
-    ResponseEntity<ChallengeDetailResponseDto> response = labController.updateLab(jwt, labId,
-        requestDto);
+    ResponseEntity<LabDetailResponseDto> response =
+        labController.updateLab(jwt, labId, requestDto);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isSameAs(dto);

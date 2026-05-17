@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CourseChallengeSubmissionEntryDto {
+public class CourseLabSubmissionEntryDto {
   private UUID participantId;
   private UUID labId;
   private int solvedChallengeCount;

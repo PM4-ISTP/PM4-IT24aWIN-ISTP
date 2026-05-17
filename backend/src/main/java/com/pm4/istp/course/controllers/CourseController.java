@@ -11,11 +11,11 @@ import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.StudentOptionSubmission;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
-import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
 import com.pm4.istp.course.dto.CourseLabDeadlineDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionDetailDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
 import com.pm4.istp.course.dto.CreateCourseRequestDto;
@@ -256,12 +256,12 @@ public class CourseController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PutMapping("/{id}/labs")
-  public ResponseEntity<CourseDetailResponseDto> updateCourseChallenges(
+  public ResponseEntity<CourseDetailResponseDto> updateCourseLabs(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable UUID id,
       @Valid @RequestBody UpdateCourseLabsRequestDto request) {
     UUID userId = parseUserId(jwt);
-    Course updatedCourse = courseService.updateCourseChallenges(userId, id, request.getLabs());
+    Course updatedCourse = courseService.updateCourseLabs(userId, id, request.getLabs());
     CourseDetailResponseDto dto = courseMapper.toCourseDetailDto(updatedCourse);
     return ResponseEntity.ok(dto);
   }
@@ -290,7 +290,7 @@ public class CourseController {
   public ResponseEntity<CourseLabSubmissionsResponseDto> getCourseSubmissions(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
-    return ResponseEntity.ok(courseService.getCourseChallengeSubmissions(userId, id));
+    return ResponseEntity.ok(courseService.getCourseLabSubmissions(userId, id));
   }
 
   @Operation(
@@ -334,8 +334,7 @@ public class CourseController {
             responseCode = "200",
             description = "Score updated successfully",
             content =
-                @Content(
-                    schema = @Schema(implementation = CourseChallengeSubmissionEntryDto.class))),
+                @Content(schema = @Schema(implementation = CourseLabSubmissionEntryDto.class))),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid request",
@@ -350,7 +349,7 @@ public class CourseController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PutMapping("/{id}/submissions/{participantId}/{challengeId}/score")
-  public ResponseEntity<CourseChallengeSubmissionEntryDto> updateCourseChallengeScore(
+  public ResponseEntity<CourseLabSubmissionEntryDto> updateCourseChallengeScore(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable UUID id,
       @PathVariable UUID participantId,

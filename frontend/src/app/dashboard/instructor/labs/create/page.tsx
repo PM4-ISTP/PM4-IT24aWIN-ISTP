@@ -18,7 +18,7 @@ import {
   LabFormFields,
   type ChallengeFormValues,
 } from "@/src/features/course/components/labs/LabFormFields";
-import { createChallenge } from "@/src/features/course/actions/labs";
+import { createLab } from "@/src/features/course/actions/labs";
 import { toRequestChallenges, validateChallenges } from "@/src/features/course/utils/challenges";
 import { useDockerImageCheck } from "@/src/features/course/hooks/useDockerImageCheck";
 import {
@@ -103,7 +103,7 @@ export default function CreateLab() {
 
     setIsSubmitting(true);
 
-    const result = await createChallenge({
+    const result = await createLab({
       title: formValues.title.trim(),
       description: formValues.description,
       status: formValues.status,
