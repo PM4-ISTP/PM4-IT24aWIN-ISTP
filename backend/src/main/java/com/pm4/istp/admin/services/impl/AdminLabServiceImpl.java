@@ -4,6 +4,7 @@ import com.pm4.istp.admin.dto.AdminLabListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateLabRequestDto;
 import com.pm4.istp.admin.services.AdminLabService;
 import com.pm4.istp.course.db.entities.Lab;
+import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.exceptions.LabNotFoundException;
 import com.pm4.istp.course.repositories.CourseLabRepository;
 import com.pm4.istp.course.repositories.LabRepository;
@@ -73,6 +74,7 @@ public class AdminLabServiceImpl implements AdminLabService {
                   .findByIdAndDeletedAtIsNull(actorId)
                   .map(User::getUsername)
                   .orElse("unknown");
+      lab.setStatus(LabStatusEnum.SOFT_DELETED);
       lab.setDeletedByUsername(deletedByUsername);
       lab.setDeletedAt(LocalDateTime.now());
       labRepository.save(lab);
