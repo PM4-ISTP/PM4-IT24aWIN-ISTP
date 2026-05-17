@@ -63,12 +63,12 @@
   #text(size: 11pt, fill: luma(40))[
     *Project:* PM4 / ISTP \
     *Version:* 1.0 \
-    *Date:* 2025
+    *Date:* 17.05.2026
   ]
   #v(3cm)
   #text(size: 10pt, fill: luma(100))[
-    Deployment and configuration manual for the ISTP project. \
-    Intended for developers who need to set up or extend the platform.
+    Complete manual for the ISTP project, covering platform concepts, \
+    user guides (student, instructor, admin), Keycloak setup, and deployment.
   ]
 ]
 
@@ -100,6 +100,24 @@ The platform consists of the following components:
   caption: [Platform components],
 )
 
+== Platform Concepts
+
+ISTP is built around three nested concepts: *courses*, *labs*, and *challenges*.
+
+A *course* is the top-level unit that students enroll in. It groups one or more independent labs into a coherent learning path. Each course has a topic, a description, and optionally a completion badge. Courses can be *Public* (visible in the catalog, open to everyone) or *Private* (accessible only via a 6-character invite code shared by the instructor). Public courses are typically used for open knowledge-sharing where anyone is welcome to join. Private courses are used for controlled settings such as graded practicals where only a specific group of students should have access.
+
+A *lab* is a self-contained exercise. Each lab runs a Docker image as a Kubernetes pod; the running container is the hands-on environment the student interacts with. One lab can contain multiple challenges, and the same lab can be reused across different courses.
+
+A *challenge* is a single task inside a lab. There are three types:
+
+- *Theory task:* the student reads the description and clicks "Mark as done". No flag required. Used for introductions, explanations, or reading tasks.
+- *Flag challenge:* the student must find a hidden flag inside the running lab environment and submit it. The flag has the format `ISTP{...}`. Only the correct flag awards points; wrong submissions score nothing.
+- *Multiple Choice:* the student selects one answer from a list. Whether wrong answers are penalised depends on the course setting:
+  - *Unlimited attempts (self-learning):* the student can retry as many times as needed until they find the correct answer. Best suited for open learning courses where the goal is knowledge transfer.
+  - *Single attempt (assessment):* the student gets one chance. A wrong answer awards no points and the correct answer is revealed. This mode is used when the course is part of a graded assessment or practical where students earn points towards their evaluation.
+
+ISTP tracks points but does not calculate grades; the instructor uses the earned points as input for their own grading process outside the platform.
+
 The platform is deployed on two environments:
 
 - *Production:* `https://istp.pm4.init-lab.ch`
@@ -129,6 +147,7 @@ The most important settings in the realm:
     [Brute Force Protection], [Enabled, 10 attempts], [Locks account temporarily after 10 failed logins],
     [SSL Required], [All], [HTTPS enforced for all traffic including localhost],
     [Self-Registration], [Enabled], [Users can create their own accounts],
+    [Email Verification], [*Disabled*], [Intentionally turned off. University mail servers from different providers often block or filter Keycloak's verification emails, which would prevent instructors and professors from accessing the platform],
   ),
   caption: [Key realm settings],
 )
@@ -266,11 +285,11 @@ A dedicated Gmail account was created for this project. The password in Keycloak
 
 *Known issue:* Within the ZHAW network, outbound SMTP on port 587 is blocked. Password reset emails will therefore not be delivered when the platform runs on ZHAW infrastructure. This is a ZHAW network restriction, not a Keycloak misconfiguration.
 
-// ─── 3. Challenge Pods ────────────────────────────────────────────────────
+// ─── 3. Lab Pods ────────────────────────────────────────────────────────────
 
-= Challenge Pods
+= Lab Pods
 
-The challenges run in Kubernetes pods. The #link("https://github.com/PM4-ISTP/PM4-IT24aWIN-ISTP/tree/main?tab=readme-ov-file#kubernetes-setup-k3d")[README] explains how you can set up a k3d cluster for local development.
+The labs run in Kubernetes pods. The #link("https://github.com/PM4-ISTP/PM4-IT24aWIN-ISTP/tree/main?tab=readme-ov-file#kubernetes-setup-k3d")[README] explains how you can set up a k3d cluster for local development.
 
 To create a pod, you need to send a request to the backend using a request of the following form:
 
@@ -307,7 +326,7 @@ The terminal does not run in the same container as the app. But they run in the 
 
 == Role-Based Access
 
-The following table shows what each Keycloak realm role is allowed to do across the platform. ROLE_STUDENT is always present on every user — ROLE_INSTRUCTOR and ROLE_ADMINISTRATOR are additive on top.
+The following table shows what each Keycloak realm role is allowed to do across the platform. ROLE_STUDENT is always present on every user ROLE_INSTRUCTOR and ROLE_ADMINISTRATOR are additive on top.
 
 #set text(size: 9.5pt)
 #figure(
@@ -339,7 +358,7 @@ The following table shows what each Keycloak realm role is allowed to do across 
 
 == Course-Level: Owner vs. Collaborator
 
-Within a course, instructors have one of two course-level roles. The creator of a course is automatically the *Owner*. Additional instructors can be invited as *Collaborators* — they must accept the invitation before gaining access.
+Within a course, instructors have one of two course-level roles. The creator of a course is automatically the *Owner*. Additional instructors can be invited as *Collaborators* they must accept the invitation before gaining access.
 
 #set text(size: 9.5pt)
 #figure(
@@ -367,13 +386,18 @@ Within a course, instructors have one of two course-level roles. The creator of 
 
 = User Guide: Student
 
-This section describes the platform from a student's perspective — from creating an account to solving challenges.
+This section describes the platform from a student's perspective, from creating an account to solving challenges.
 
 == Registration & Login
 
-Open the platform at `https://istp.pm4.init-lab.ch`. Click *Sign in* to be redirected to the Keycloak login page.
+Open the platform at `https://istp.pm4.init-lab.ch`. The landing page is shown first. Click *Login* in the top-right corner to be redirected to the Keycloak login page.
 
-*New account:* Click *Register* on the Keycloak login page. Fill in your first name, last name, email address, and a password. After submitting, Keycloak sends a verification email to the provided address. The account is only active after clicking the confirmation link in that email.
+#figure(
+  image("img/login_page.png", width: 100%),
+  caption: [ISTP landing page click Login in the top-right corner to sign in],
+)
+
+*New account:* Click *Register* on the Keycloak login page. Fill in your first name, last name, email address, and a password. After submitting you are logged in immediately email verification is disabled on this platform.
 
 *Password requirements:* minimum 8 characters, at least one uppercase letter, one digit, and one special character. The password may not contain your username.
 
@@ -381,28 +405,81 @@ Open the platform at `https://istp.pm4.init-lab.ch`. Click *Sign in* to be redir
 
 After successful login you are redirected to the dashboard.
 
+== Profile
+
+After logging in, open the *Profile* page via the user menu to update your personal details.
+
+#figure(
+  image("img/profil.png", width: 65%),
+  caption: [Profile page update name, title, and profile picture],
+)
+
+Your avatar and email address are shown at the top. The email address is read-only and cannot be changed here. The following fields can be edited:
+
+- *First name* and *Last name:* required, shown throughout the platform
+- *Title* optional, e.g. "Dr.", "Student" shown on your profile
+- *Profile picture URL:* optional link to an image used as your avatar; if left empty, the platform shows your initials instead
+
+Click *Save changes* to apply. Changes are synced to Keycloak immediately.
+
 == Course Catalog
 
-Navigate to *Catalog* in the sidebar. The catalog shows all published courses on the platform. Each course card displays the title, topic, and a short description.
+Navigate to *Browse / Catalog* in the sidebar. The catalog shows all *Public* courses on the platform. Each course card displays the title, topic, short description, author, and creation date.
 
-Use the search bar to filter courses by title. Use the topic dropdown to filter by subject area. Results are paginated — use the page controls at the bottom to navigate between pages.
+#figure(
+  image("img/join_a_course.png", width: 90%),
+  caption: [Browse Catalog with the Join a Course modal],
+)
+
+The search bar filters courses across three fields simultaneously: title, short description, and full description. The *Topic* dropdown on the right lets you narrow results to a specific subject area select *All topics* to reset the filter. Both filters can be combined. Results are paginated use the page controls at the bottom to navigate between pages.
 
 Click on a course card to open the course detail page where you can read the full description and enroll.
 
+== Joining a Private Course
+
+Private courses do not appear in the catalog; they are only accessible via a 6-character invite code. The course owner or a collaborator can share this code with students.
+
+To join a private course, click *Join a Course* in the catalog (or on the My Courses page) and enter the 6-character code in the dialog. Click *Join* to enroll. If the code is valid you are taken directly to the course.
+
 == My Courses
 
-Navigate to *My Courses* in the sidebar to see all courses you are currently enrolled in. Click on a course to open it and see its labs and your progress.
+Navigate to *My Courses* in the sidebar to see all courses you are currently enrolled in. Click on a course to open the course detail page.
 
-To leave a course, open the course detail page and click *Leave course*.
+#figure(
+  image("img/course_enroll.png", width: 100%),
+  caption: [Course detail page with Course Journey and Leave Course],
+)
+
+The *Course Journey* section shows your overall progress at a glance: how many labs and challenges you have solved and how many remain. The instructor's name and title are shown in the sidebar on the right.
+
+Click *Continue Course* to jump straight back into the course, or scroll down to the *Course Labs* section to see all labs and your per-lab progress.
+
+#figure(
+  image("img/progress.png", width: 100%),
+  caption: [Course Labs per-lab progress with challenge completion status],
+)
+
+Each lab card shows the difficulty, a progress bar, the lab description, and a list of all challenges. Completed challenges are shown with a green checkmark and strikethrough. Click *Continue* on any lab card to jump directly into that lab.
+
+*Leaving a course:* Click *Leave Course* on the course detail page to unenroll. Your completed challenges and earned points are saved if you re-enroll in the same course later, your previous progress is still there.
+
+*Progress in shared labs:* Challenge completions are stored per user and per challenge, not per course. If the same lab appears in multiple courses, solving a challenge in one course automatically counts as solved in all other courses that contain the same lab. This means if you have already worked through a lab in another course, it will show as completed when you encounter it again in a new course.
 
 == Starting a Lab (Pod Launcher)
 
-Inside a course, click *Play* on any lab to open the lab view. The screen is split into two panels:
+Inside a course, click *Play* on any lab to open the lab view.
 
-- *Left panel* — lab description, challenge tasks, flag submission
-- *Right panel* — the live lab environment (pod)
+#figure(
+  image("img/lab_overview.png", width: 100%),
+  caption: [Lab view: challenge description on the left, pod panel on the right],
+)
 
-To start the lab environment, click the play button (▶) in the top-right of the right panel. The pod goes through the following states:
+The screen is split into two panels:
+
+- *Left panel* lab description, challenge tasks, flag submission, hints
+- *Right panel* the live lab environment (pod)
+
+To start the lab environment, click the *Start* button in the right panel. The pod goes through the following states:
 
 #figure(
   table(
@@ -411,36 +488,66 @@ To start the lab environment, click the play button (▶) in the top-right of th
     inset: 8pt,
     fill: (col, row) => if row == 0 { luma(230) } else { white },
     [*Status*], [*Meaning*],
-    [`NOT_FOUND`], [Pod not started yet],
-    [`PROVISIONING`], [Pod is starting up — wait a moment],
-    [`RUNNING`], [Pod is ready — lab app link is active],
+    [`NOT STARTED`], [Pod not started yet click Start],
+    [`PENDING`], [Pod is being scheduled on the cluster],
+    [`RUNNING`], [Pod is ready, the lab app link is active],
     [`TERMINATING`], [Pod is shutting down],
-    [`FAILED`], [Pod failed to start — click the retry button (↺)],
+    [`FAILED`], [Pod failed to start, click the retry button],
   ),
   caption: [Pod status overview],
 )
 
-Once the status shows *RUNNING*, the *Open app* button becomes active. Click it to open the lab application in a new browser tab.
+Once the status shows *RUNNING*, the *Open app* button becomes active. Click it to open the lab application in a new browser tab. To stop the pod manually, click the stop button in the right panel.
 
-To stop the pod manually, click the stop button (■) in the right panel header.
+== Pod Lifetime & Extending Time
 
-== Keep-Alive & Pod Management
+Every pod has a time limit (TTL). By default a pod runs for *60 minutes* before it is automatically terminated to free up cluster resources. The expiry time is shown in the right panel while the pod is running.
 
-While a lab pod is running, the platform polls its status every 60 seconds. If the pod has been idle for an extended period, it will be terminated automatically to free up cluster resources. Return to the lab page and restart the pod to continue working.
+If you need more time, click the *Extend* button in the right panel. Each extension adds *30 minutes* to the pod's lifetime. You can extend a maximum of *2 times* per pod session, giving a total maximum runtime of *2 hours*.
+
+#figure(
+  image("img/lab_running.png", width: 60%),
+  caption: [Pod running with both extensions used, maximum runtime of 2 hours reached],
+)
+
+Once both extensions are used, the badge shows *2 / 2 Extensions Used* and the message "Maximum extensions reached" appears no further extensions are possible for this session.
+
+#figure(
+  table(
+    columns: (auto, auto),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    fill: (col, row) => if row == 0 { luma(230) } else { white },
+    [*Stage*], [*Time*],
+    [Base TTL], [60 minutes],
+    [After 1st extension], [90 minutes],
+    [After 2nd extension (max)], [120 minutes],
+  ),
+  caption: [Pod lifetime with extensions],
+)
+
+If the pod terminates before you finish, simply click *Start* again to launch a fresh pod. Your submitted flags and solved challenges are saved you do not lose any progress when a pod restarts.
 
 == Solving Challenges
 
-Each lab contains one or more challenges. Navigate between them using the stepper at the top of the left panel — all steps are freely accessible regardless of order. A progress bar shows how many challenges you have completed.
+Each lab contains one or more challenges. Navigate between them using the stepper at the top of the left panel all steps are freely accessible, regardless of order. A progress bar shows how many challenges you have completed.
 
 There are three challenge types:
 
-*Flag challenge* — Exploit the running lab environment to find a hidden flag. The flag has the format `ISTP{...}`. Enter it in the *Submit Flag* field (you can enter either `ISTP{flag}` or just `flag` — both are accepted) and press *Submit* or hit Enter. A green notification confirms a correct submission; a red notification means the flag is wrong — try again.
+*Flag challenge:* Exploit the running lab environment to find a hidden flag. The flag has the format `ISTP{...}`. Enter it in the *Submit Flag* field (you can enter either `ISTP{flag}` or just `flag` both are accepted) and press *Submit* or hit Enter. A green notification confirms a correct submission; a red notification means the flag is wrong try again.
 
-*Multiple choice* — Read the question and select one of the options. Click *Submit answer* to confirm. Depending on the lab configuration there are two modes:
-- *Unlimited attempts:* wrong answers can be retried.
-- *Once:* only one attempt is allowed; the correct answer is revealed after a wrong submission.
+*Multiple choice:* Read the question and select one of the options. Click *Submit answer* to confirm. The correct answer is highlighted with a checkmark once answered and the challenge shows the *Solved* badge.
 
-*Theory task* — Read the description and click *Mark as done* to complete the task. No flag required.
+#figure(
+  image("img/MC.png", width: 70%),
+  caption: [Multiple choice challenge correct answer selected and confirmed],
+)
+
+Depending on how the course is configured there are two modes:
+- *Unlimited attempts:* wrong answers can be retried as many times as needed until the correct option is found. No points are lost for wrong attempts.
+- *Single attempt:* only one submission is allowed. A wrong answer awards no points and the correct answer is revealed immediately afterwards.
+
+*Theory task:* Read the description and click *Mark as done* to complete the task. No flag required.
 
 Each solved challenge shows a *Solved* badge and awards the configured points. When all challenges in a lab are solved, a completion banner is shown.
 
@@ -455,6 +562,11 @@ To view your overall progress across all courses, return to the course page wher
 == Trophy Cabinet (Badges)
 
 ISTP supports *course completion badges*. A badge represents “user X completed course Y” and is shown in the *Trophy Cabinet*.
+
+#figure(
+  image("img/trophy_cabinet.png", width: 25%),
+  caption: [Trophy Cabinet showing an earned course completion badge],
+)
 
 *What a badge means:*
 - Badges are *per course* (not per lab).
@@ -478,19 +590,145 @@ ISTP supports *course completion badges*. A badge represents “user X completed
 
 = User Guide: Instructor
 
-== Creating a Challenge
+This section describes the platform from an instructor's perspective, from creating a lab to publishing a course.
 
-== Configuring a Challenge (Ports, Environment Variables, Image)
+#figure(
+  image("img/ins_menubar.png", width: 18%),
+  caption: [Instructor sidebar navigation],
+)
 
-== Publishing & Archiving a Challenge
+Instructors see additional navigation items compared to students. Under *Course Management* in the sidebar, three views are available:
+
+- *Dashboard* overview of all courses you own or collaborate on
+- *Results* submission statistics and student progress across your courses
+- *Labs* manage all labs you have created
 
 == Labs
 
 Labs are the core learning units of the platform. Each lab consists of a Docker image that runs as a Kubernetes pod, one or more challenges, and optional metadata such as difficulty level and a time limit (TTL).
 
-=== Example: LLM01 — Prompt Injection
+=== Creating a Lab
 
-As part of this project, the "LLM01 — Prompt Injection" lab was implemented as a concrete example of what the platform supports. The lab presents students with an LLM-powered chat interface and challenges them to extract a hidden flag through prompt injection techniques — a real-world vulnerability class described in the OWASP LLM Top 10.
+Navigate to *Course Management → Labs* in the sidebar and click *New lab*. Fill in the form; the lower half of the form with the Docker configuration and challenges is shown below.
+
+#figure(
+  image("img/challenges.png", width: 80%),
+  caption: [Lab configuration Docker image, status, difficulty, challenges, and test panel],
+)
+
+#figure(
+  table(
+    columns: (auto, auto, 1fr),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    fill: (col, row) => if row == 0 { luma(230) } else { white },
+    [*Field*], [*Required*], [*Description*],
+    [Title], [Yes], [Short, descriptive name shown in the lab browser (max 255 characters)],
+    [Description], [No], [Lab description visible to students (max 5000 characters)],
+    [Docker Image], [Yes], [GHCR image reference, e.g. `ghcr.io/org/lab-name:latest`. The platform checks reachability in real time and shows "Public GHCR image found" when valid.],
+    [Container Port], [Yes], [Port the app inside the container listens on, e.g. `3000`. Traffic from the public app URL is forwarded to this port.],
+    [Pod TTL (seconds)], [No], [Override the cluster default lifetime. Leave blank to use the admin default. Increase only for heavier labs.],
+    [Status], [Yes], [`Draft`, `Private`, or `Public` controls visibility (see @sec-lab-status)],
+    [Difficulty], [Yes], [`Beginner`, `Easy`, `Medium`, `Hard`, or `Expert`],
+    [Challenges], [Yes], [At least one challenge; total points shown top-right of the section (see @sec-challenge-types)],
+  ),
+  caption: [Lab creation fields],
+)
+
+=== Configuring the Docker Image <sec-docker-image>
+
+The Docker image must be hosted on the GitHub Container Registry (`ghcr.io`). The accepted formats are:
+
+```
+ghcr.io/<owner>/<image-name>:<tag>
+ghcr.io/<owner>/<image-name>@sha256:<digest>
+```
+
+As you type, the platform validates the reference in real time. A green checkmark and the message "Public GHCR image found" confirm the image is reachable. Digest references are preferred over tags for reproducible labs because a tag can be re-pointed to a different image layer at any time.
+
+Images must be public. Private GHCR images are supported only when the cluster administrator has configured an image pull secret.
+
+=== Container Port and Pod TTL
+
+The *container port* must match the port the application listens on inside the container. The platform creates a Kubernetes Ingress rule that routes traffic from the public `app-<id>.*` URL to this port.
+
+The *Pod TTL* (time-to-live) defines the maximum lifetime of a running pod in seconds (minimum 60, maximum 86 400). When the TTL expires the pod is terminated automatically. Leave the field blank to use the cluster-wide default configured by the administrator only set a per-lab override for unusually long-running labs.
+
+=== Challenge Types <sec-challenge-types>
+
+Each lab must have at least one challenge. Click *+ Add Challenge* to add more. The total point value across all challenges is shown in the top-right of the Challenges section. Three types are available, shown as coloured badges in the list:
+
+#figure(
+  table(
+    columns: (auto, auto, 1fr),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    fill: (col, row) => if row == 0 { luma(230) } else { white },
+    [*Badge*], [*Type*], [*Description*],
+    [`INFO`], [Theory / Info], [A `FLAG` challenge with no flag set. The student reads the description and clicks *Mark as done*. Used for introductions, overviews, or reading tasks.],
+    [`MC`], [Multiple Choice], [Student selects one answer from a list. The instructor marks which option is correct.],
+    [`FLAG`], [Flag], [Student must find and submit a hidden flag in the format `ISTP{...}`.],
+  ),
+  caption: [Challenge type badges],
+)
+
+For each challenge, fill in:
+
+- *Title:* shown in the stepper (max 200 characters)
+- *Description:* text explaining the task (max 5000 characters)
+- *Points* score awarded on correct completion (minimum 1)
+- *Hint:* optional hint shown when the student clicks *Show hint* (max 1000 characters)
+- *Flag:* for `FLAG` challenges: the exact flag string without the `ISTP{...}` wrapper
+- *Options:* for `MC` challenges: at least two options, one marked as correct
+- Reorder challenges using the arrow buttons; delete with the trash icon
+
+=== Testing a Lab Before Publishing
+
+At the bottom of the lab form, the *Test this lab* panel allows you to start a live pod directly from the editor without publishing the lab to students.
+
+Click *Start* to spin up a pod. Once the pod is running you can open the app URL and the terminal URL to verify the lab behaves as expected. The pod status is shown next to the button (`NOT STARTED`, `PROVISIONING`, `RUNNING`). Click *Stop* to terminate the pod when done.
+
+Use this to confirm the Docker image starts correctly, the container port is right, and all flags are findable before changing the lab status to `Public`.
+
+=== Lab Status and Visibility <sec-lab-status>
+
+A lab has one of four statuses that controls who can see and add it to courses:
+
+#figure(
+  table(
+    columns: (auto, 1fr),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    fill: (col, row) => if row == 0 { luma(230) } else { white },
+    [*Status*], [*Meaning*],
+    [`DRAFT`], [Only the creator can see the lab. Cannot be added to courses. Use while building the lab.],
+    [`PRIVATE`], [Visible to the creator only and can only be added to the creator's own courses.],
+    [`PUBLIC`], [Visible to all instructors and can be added to any course on the platform.],
+    [`SOFT_DELETED`], [Removed from all listings. The lab and its challenges are still stored in the database but no longer accessible through the UI.],
+  ),
+  caption: [Lab status overview],
+)
+
+*Changing status (visibility impact):* Before changing from `PUBLIC` or `PRIVATE` to `DRAFT` or `SOFT_DELETED`, the UI shows how many course assignments would be removed. Confirm the change to proceed.
+
+*Archiving a lab:* Set the status to `DRAFT` to hide a lab from other instructors without deleting it. Set it to `SOFT_DELETED` to permanently remove it from all course listings. Soft-deleted labs cannot be restored through the UI.
+
+=== Updating and Deleting a Lab
+
+Open *My Labs*, click on the lab, and use the *Edit* button to change any field including challenges. Only the creator can update or delete a lab.
+
+To delete a lab, click *Delete lab* in the lab detail view. This removes the lab from all courses it was assigned to.
+
+=== Example: LLM01 Prompt Injection
+
+As part of this project, the "LLM01 - Prompt Injection" lab was implemented as a concrete example of what the platform supports. The lab presents students with an LLM-powered chat interface called *Secure Vault Guardian* and challenges them to extract a hidden flag through prompt injection techniques a real-world vulnerability class described in the OWASP LLM Top 10.
+
+#figure(
+  image("img/ki_lab.png", width: 90%),
+  caption: [LLM01 - Prompt Injection lab: student attempts to extract the hidden flag from the AI guardian],
+)
+
+The student interacts with the AI via a terminal-style chat interface. The guardian is instructed to protect a hidden flag and refuses direct requests for it students must craft creative prompt injection attacks to bypass these instructions and leak the flag.
 
 The lab demonstrates that labs can integrate external AI services via API. In this case the lab uses #link("https://groq.com")[Groq], a free LLM inference API, to power the chat interface. The following free-tier limits apply and are sufficient for CTF usage with around 20–30 concurrent students:
 
@@ -510,7 +748,97 @@ The lab demonstrates that labs can integrate external AI services via API. In th
 
 The backend and database already support injecting external secrets (such as API keys) as environment variables into lab pods. This mechanism was introduced specifically for this lab. A dedicated instructor UI for configuring this per lab is not yet implemented and is out of scope for the current project submission.
 
-== Creating a Course & Adding Challenges
+== Results
+
+The *Results* view shows a per-course breakdown of student progress. Navigate to *Course Management → Results* in the sidebar and select a course to open its results overview.
+
+#figure(
+  image("img/result_ovw.png", width: 100%),
+  caption: [Results Overview for a course],
+)
+
+Four summary cards are shown at the top:
+
+#figure(
+  table(
+    columns: (auto, 1fr),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    fill: (col, row) => if row == 0 { luma(230) } else { white },
+    [*Metric*], [*Description*],
+    [Average Completion], [Mean completion percentage across all enrolled students and all labs],
+    [On-Time], [Number of students who completed the course within the configured deadline],
+    [In Progress], [Number of students who have started but not yet finished the course],
+    [Participants], [Total number of enrolled students],
+  ),
+  caption: [Results summary metrics],
+)
+
+Below the summary, the *Participants* table lists every enrolled student with their current status, earned points, solved challenges, and a completion progress bar. Use the *All labs* dropdown to filter by a specific lab, and the *All statuses* dropdown to filter by submission status (e.g. show only students who are still in progress). Use the search bar to find a specific participant by name.
+
+Click on any participant row to open the *Submission Details* panel for that student.
+
+#figure(
+  image("img/submission_details.png", width: 60%),
+  caption: [Submission details for a single student],
+)
+
+The panel shows every challenge in the selected lab together with its type (`FLAG` or `MULTIPLE_CHOICE`), whether the student answered correctly, and the points earned. For flag challenges the exact submitted flag is displayed. Use the lab dropdown at the top of the panel to switch between labs within the same course.
+
+== Creating a Course & Adding Labs
+
+Navigate to *My Courses* in the sidebar and click *New course*. A course groups one or more labs into a coherent learning unit that students can enroll in.
+
+#figure(
+  image("img/create_course.png", width: 72%),
+  caption: [Create Course form],
+)
+
+Fill in the fields as described below. Title, Short Description, and Description are required.
+
+#figure(
+  table(
+    columns: (auto, auto, 1fr),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    fill: (col, row) => if row == 0 { luma(230) } else { white },
+    [*Field*], [*Required*], [*Description*],
+    [Course Title], [Yes], [Name of the course shown everywhere on the platform],
+    [Short Description], [Yes], [Summary shown on course cards and in the blue course header (max 200 characters)],
+    [Description], [Yes], [Full course description in the rich-text editor, supports headings, lists, bold, links, and more],
+    [Topic], [No], [Category the course belongs to; used for filtering in the catalog],
+    [Course Image URL], [No], [URL to a thumbnail image shown on the course card],
+    [Collaborators], [No], [Additional instructors with edit access; you are added as owner automatically. Only users who have already signed in at least once can be selected.],
+    [Visibility], [Yes], [Controls who can see and join the course (see below)],
+    [Multiple-Choice Attempts], [Yes], [How many times students may attempt MC questions in this course],
+  ),
+  caption: [Course creation fields],
+)
+
+*Visibility* has three states:
+
+- *Draft:* only instructors can view the course; students cannot see or join it.
+- *Public:* the course appears in the student catalog and anyone can enroll.
+- *Private:* the course is hidden from the catalog; students can only join via invite code.
+
+*Multiple-Choice Attempts* controls the retry behavior for all MC challenges in this course:
+
+- *Unlimited (retry until correct, self-learning):* students can keep trying after a wrong answer.
+- *Once:* students get one attempt; the correct answer is revealed after a wrong submission.
+
+Click *Create Course* to save. The course is created immediately and you are taken to the course detail view where you can add labs and configure the badge.
+
+=== Adding Labs to a Course
+
+Open a course you own and go to the *Labs* tab. Click *Add lab* to search the lab catalog. The search returns your own labs (any status) and all `PUBLIC` labs from other instructors. Select a lab to add it to the course. Labs are shown in the order they were added; reorder them using the drag handles.
+
+Only `PUBLIC` or `PRIVATE` labs can actually be played by students. Adding a `DRAFT` lab to a course is allowed, but students will not be able to launch it.
+
+=== Inviting Collaborators
+
+Course owners can invite other instructors as collaborators. Open *Course settings* and go to the *Collaborators* tab. Search for an instructor by name or email, then click *Invite*. The invited instructor receives a notification and must accept the invitation before gaining access to the course.
+
+Collaborators can edit the course, manage labs, and view participant submissions. Only the owner can invite or remove collaborators, configure the badge, or delete the course.
 
 === Course Badges
 
@@ -524,13 +852,74 @@ Course owners can configure the badge for their course (icon, colors, template) 
 
 = User Guide: Admin
 
-== User Overview
+Administrators see an additional *Admin* section at the bottom of the sidebar, giving access to the admin dashboard and user management.
 
-== Assigning & Revoking ROLE_INSTRUCTOR
+#figure(
+  image("img/admin_menubar.png", width: 20%),
+  caption: [Admin sidebar additional Admin section below Course Management],
+)
 
-== Assigning & Revoking ROLE_ADMINISTRATOR
+== User Management Overview
 
-== Deleting & Disabling Users
+Navigate to *Admin → Users*. The User Management area has four tabs: *User Management*, *Create User*, *Sessions*, and *Keycloak*.
+
+The *User Management* tab shows a paginated list of all registered users. Use the search bar to filter by name or email. Click on a user row to open the user detail view.
+
+== Creating a User
+
+#figure(
+  image("img/create_user.png", width: 60%),
+  caption: [Create User form (admin-managed account creation)],
+)
+
+Open the *Create User* tab and fill in the form. Email, username, first name, and last name are required. Title and Picture URL are optional. Click *Create user* to create the account in Keycloak. The new user receives a temporary password and must set their own password on first login.
+
+Note: users created this way are *admin-managed* accounts. They are separate from self-registered accounts and must be provisioned manually before they can access the platform (see @sec-provision).
+
+== User Detail & Role Management
+
+#figure(
+  image("img/user_managment.png", width: 70%),
+  caption: [User detail view profile, roles, and password management],
+)
+
+Click any user in the list to open the detail view. Status badges at the top show the account state. *Provisioned* (green) means the user has a PostgreSQL shadow row and can fully use the platform.
+
+The detail view has three sections:
+
+*Profile* first name, last name, title, and picture URL can be edited. Email and username are read-only after creation.
+
+*Roles:* toggle `ROLE_STUDENT`, `ROLE_INSTRUCTOR`, and `ROLE_ADMINISTRATOR` individually. Click *Save roles* to apply. `ROLE_STUDENT` is always active and cannot be removed additional roles are additive on top of it. The current active roles are shown below the toggles. Role changes take effect on the user's next login (existing JWTs are not invalidated immediately).
+
+*Password:* use *Send reset email* to trigger a Keycloak password reset email (note: may be blocked on ZHAW network, see @sec-env). Use *Set password (manual)* to set a password directly. With *Temporary* checked the user must change the password on next login.
+
+== Provisioning a User <sec-provision>
+
+A user account has two parts: a Keycloak identity and a PostgreSQL shadow row. Self-registered students get their shadow row created automatically on first login. Admin-created accounts and users who somehow skipped the just-in-time flow need to be provisioned manually.
+
+To provision a user, open the user detail view. If the *Provisioned* badge is missing, a *Provision* button is shown. Click it to create the PostgreSQL shadow row. After provisioning the user can access the platform and their progress is tracked.
+
+== Disabling, Restoring & Soft-Deleting Users
+
+Three lifecycle operations are available from the user detail view:
+
+#figure(
+  table(
+    columns: (auto, auto, 1fr),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    fill: (col, row) => if row == 0 { luma(230) } else { white },
+    [*Action*], [*Reversible*], [*Effect*],
+    [Disable], [Yes], [Disables the Keycloak account and sets `deletedAt` in PostgreSQL. The user cannot log in. All data is preserved.],
+    [Restore], [Yes], [Re-enables a disabled Keycloak account and clears `deletedAt`. The user can log in again.],
+    [Soft-delete], [*No*], [Permanently anonymizes the email and username in both Keycloak and PostgreSQL, disables the account, and sets `deletedAt`. The original email and username are freed up for reuse. This action cannot be undone.],
+  ),
+  caption: [User lifecycle operations],
+)
+
+Use *Disable* to temporarily block access without losing any data. Use *Soft-delete* only when the account must be permanently removed for example when a student leaves the university and their personal data must be erased.
+
+*Session management:* The *Sessions* tab lists all active Keycloak sessions for a user. Click *Logout* to immediately invalidate every active token useful when an account is compromised or needs to be locked out instantly.
 
 // ─── 7. Architecture ──────────────────────────────────────────────────────
 
@@ -538,46 +927,22 @@ Course owners can configure the badge for their course (icon, colors, template) 
 
 == Component Overview
 
-== Authentication & Authorization (Keycloak, JWT, OIDC)
+ISTP follows a three-tier architecture: a Next.js frontend, a Spring Boot REST backend, and a PostgreSQL database, with Keycloak as a separate identity provider and Kubernetes as the container runtime for student lab pods.
 
-== Frontend (Next.js + Mantine)
-
-== Backend (Spring Boot)
-
-== Kubernetes Pod Lifecycle
-
-== Database Schema (PostgreSQL)
-
-// ─── 8. API Documentation ─────────────────────────────────────────────────
-
-= API Documentation
-
-== Authentication & Token Handling
-
-== Challenge Endpoints
-
-== Pod Endpoints
-
-== User Endpoints
-
-== Course Endpoints
-
-// ─── 10. Setup Checklist ───────────────────────────────────────────────────
-
-= Setup Checklist
-
-#let check = box(width: 10pt, height: 10pt, stroke: 0.7pt)
-
-#table(
-  columns: (auto, 1fr),
-  stroke: none,
-  inset: (x: 4pt, y: 5pt),
-  [#check], [Keycloak 26.x running and reachable],
-  [#check], [Realm imported from `infra/keycloak-export/interactive-security-training-platform-realm.json`],
-  [#check], [Client secrets regenerated for `interactive-security-training-platform-app` and `istp-backend`],
-  [#check], [Secrets stored in Kubernetes Secrets],
-  [#check], [Environment variables set for Next.js and Spring Boot],
-  [#check], [Redirect URIs updated if using a new domain],
-  [#check], [At least one `ROLE_ADMINISTRATOR` user assigned],
-  [#check], [HTTPS certificate in place],
+#figure(
+  table(
+    columns: (auto, auto, 1fr),
+    stroke: 0.5pt + luma(180),
+    inset: 8pt,
+    fill: (col, row) => if row == 0 { luma(230) } else { white },
+    [*Component*], [*Technology*], [*Responsibility*],
+    [Frontend], [Next.js 16, React 19, Mantine, NextAuth.js], [Student, instructor, and admin UI; handles login redirect via NextAuth and communicates with the backend exclusively through the REST API under `/api/v1/`],
+    [Backend], [Spring Boot 4.0.3 (Java)], [REST API, business logic, Keycloak Admin API integration, Kubernetes pod lifecycle management via the fabric8 client, flag validation, scoring],
+    [Identity Provider], [Keycloak 26.x], [OIDC token issuance, user management, realm roles, brute-force protection, password reset emails],
+    [Database], [PostgreSQL], [Persistent storage for users, labs, courses, enrollments, challenge completions, flag and MC submissions, badges],
+    [Container Runtime], [Kubernetes (single cluster)], [Runs isolated lab pods per student in a dedicated namespace; enforces resource quotas and TTL-based cleanup],
+  ),
+  caption: [ISTP component overview],
 )
+
+All runtime services (frontend, backend, Keycloak, PostgreSQL) are deployed as Kubernetes workloads. The frontend and backend are exposed th
