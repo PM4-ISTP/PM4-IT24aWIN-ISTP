@@ -237,7 +237,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.DRAFT);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
 
     Lab result = labService.getLab(creatorId, labId);
 
@@ -253,7 +253,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.DRAFT);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
 
     assertThatThrownBy(() -> labService.getLab(otherId, labId))
         .isInstanceOf(LabAccessDeniedException.class);
@@ -267,7 +267,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PRIVATE);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
     when(courseLabRepository.existsByChallengeIdAndCourseInstructorId(
             labId, instructorId))
         .thenReturn(true);
@@ -285,7 +285,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PRIVATE);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
     when(courseLabRepository.existsByChallengeIdAndCourseInstructorId(labId, studentId))
         .thenReturn(false);
     when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, studentId))
@@ -304,7 +304,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PRIVATE);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
     when(courseLabRepository.existsByChallengeIdAndCourseInstructorId(labId, otherId))
         .thenReturn(false);
     when(courseLabRepository.existsByChallengeIdAndEnrolledUserId(labId, otherId))
@@ -322,7 +322,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
 
     Lab result = labService.getLab(otherId, labId);
 
@@ -334,7 +334,7 @@ class LabServiceImplTest {
   void getChallenge_whenNotFound_throwsChallengeNotFoundException() {
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
-    when(labRepository.findById(labId)).thenReturn(Optional.empty());
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> labService.getLab(userId, labId))
         .isInstanceOf(LabNotFoundException.class);
@@ -347,7 +347,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -388,7 +388,7 @@ class LabServiceImplTest {
     existing.setOrderIndex(0);
     lab.getChallenges().add(existing);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -425,7 +425,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -451,7 +451,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -477,7 +477,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PRIVATE);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -504,7 +504,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
 
     UpdateLabRequest request =
         updateRequest(
@@ -526,7 +526,7 @@ class LabServiceImplTest {
     UUID creatorId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
 
-    when(labRepository.findById(labId)).thenReturn(Optional.empty());
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.empty());
 
     UpdateLabRequest request =
         updateRequest(
@@ -549,7 +549,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
 
     int impact =
         labService.previewVisibilityImpact(
@@ -568,7 +568,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
     when(courseLabRepository.countByChallengeId(labId)).thenReturn(3L);
 
     int impact =
@@ -585,7 +585,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
     when(courseLabRepository.countByChallengeIdWhereCreatorNotInstructor(
             labId, creatorId))
         .thenReturn(2L);
@@ -604,7 +604,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PRIVATE);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
 
     int impact =
         labService.previewVisibilityImpact(
@@ -624,7 +624,7 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
 
     assertThatThrownBy(
             () ->
@@ -638,7 +638,7 @@ class LabServiceImplTest {
     UUID creatorId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
 
-    when(labRepository.findById(labId)).thenReturn(Optional.empty());
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(
             () ->
@@ -648,35 +648,18 @@ class LabServiceImplTest {
   }
 
   @Test
-  void deleteChallenge_whenCallerIsCreator_deletesChallenge() {
+  void deleteChallenge_whenCallerIsCreator_softDeletesChallenge() {
     UUID creatorId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.DRAFT);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
 
     labService.deleteLab(creatorId, labId);
 
-    verify(labRepository).delete(lab);
-    verify(labRepository).flush();
-  }
-
-  @Test
-  void deleteChallenge_whenLabHasCourseHistory_archivesInsteadOfDeleting() {
-    UUID creatorId = UUID.randomUUID();
-    UUID labId = UUID.randomUUID();
-    User creator = buildUser(creatorId);
-    Lab lab = buildChallenge(labId, creator, LabStatusEnum.PUBLIC);
-
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
-    when(courseLabRepository.countByChallengeId(labId)).thenReturn(1L);
-
-    labService.deleteLab(creatorId, labId);
-
-    assertThat(lab.getStatus()).isEqualTo(LabStatusEnum.ARCHIVED);
+    verify(courseLabRepository).deleteByChallengeId(labId);
     verify(labRepository).save(lab);
-    verify(labRepository, never()).delete(any(Lab.class));
   }
 
   @Test
@@ -687,12 +670,12 @@ class LabServiceImplTest {
     User creator = buildUser(creatorId);
     Lab lab = buildChallenge(labId, creator, LabStatusEnum.DRAFT);
 
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
 
     assertThatThrownBy(() -> labService.deleteLab(otherId, labId))
         .isInstanceOf(LabAccessDeniedException.class);
 
-    verify(labRepository, never()).delete(any(Lab.class));
+    verify(labRepository, never()).save(any(Lab.class));
   }
 
   @Test
@@ -700,7 +683,7 @@ class LabServiceImplTest {
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
 
-    when(labRepository.findById(labId)).thenReturn(Optional.empty());
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> labService.deleteLab(userId, labId))
         .isInstanceOf(LabNotFoundException.class);
@@ -765,7 +748,7 @@ class LabServiceImplTest {
 
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(true);
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
     LabStudentDto dto = new LabStudentDto();
     dto.setId(labId);
     when(labMapper.toStudentDto(lab)).thenReturn(dto);
@@ -804,7 +787,7 @@ class LabServiceImplTest {
 
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(true);
-    when(labRepository.findById(labId)).thenReturn(Optional.empty());
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> labService.getLabForPlay(userId, courseId, labId))
         .isInstanceOf(LabNotFoundException.class);
@@ -823,7 +806,7 @@ class LabServiceImplTest {
 
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(requestedCourseId, userId))
         .thenReturn(true);
-    when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
+    when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
 
     assertThatThrownBy(
         () -> labService.getLabForPlay(userId, requestedCourseId, labId))

@@ -1,7 +1,8 @@
 package com.pm4.istp.admin.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -11,17 +12,16 @@ public class AdminUpdateCourseRequestDto {
   @Size(max = 255, message = "Title must be at most 255 characters")
   private String title;
 
+  @NotBlank(message = "Description is required")
   @Size(max = 5000, message = "Description must be at most 5000 characters")
   private String description;
 
+  @NotBlank(message = "Short description is required")
   @Size(max = 200, message = "Short description must be at most 200 characters")
   private String shortDescription;
 
-  @JsonProperty("isPublished")
-  private boolean isPublished;
-
-  @JsonProperty("isPrivate")
-  private boolean isPrivate;
+  @NotNull(message = "Course status is required")
+  private CourseStatusEnum status;
 
   @Size(max = 24, message = "Topic must be at most 24 characters")
   private String topic;

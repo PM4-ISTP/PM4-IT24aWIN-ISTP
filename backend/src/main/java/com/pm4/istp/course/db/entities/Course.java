@@ -35,11 +35,10 @@ public class Course {
   @Column(name = "short_description", nullable = true, length = 200)
   private String shortDescription;
 
-  @Column(name = "isPublished", nullable = false, columnDefinition = "boolean default false")
-  private boolean isPublished;
-
-  @Column(name = "is_private", nullable = false, columnDefinition = "boolean default false")
-  private boolean isPrivate;
+  @Column(name = "status", nullable = false, length = 20)
+  @Enumerated(EnumType.STRING)
+  @ColumnDefault("'DRAFT'")
+  private CourseStatusEnum status = CourseStatusEnum.DRAFT;
 
   @Column(name = "image_url", nullable = true, length = 2048)
   private String imageUrl;
@@ -123,4 +122,10 @@ public class Course {
   @LastModifiedDate
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
+
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
+
+  @Column(name = "deleted_by_username", length = 128)
+  private String deletedByUsername;
 }

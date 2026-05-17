@@ -9,6 +9,7 @@ import com.pm4.istp.course.db.entities.ChallengeType;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.db.entities.CourseLab;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabDifficultyEnum;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
@@ -104,12 +105,26 @@ class CourseMapperCoverageTest {
         new CreateCourseInstructorRequestDto(UUID.randomUUID(), InstructorRoleEnum.OWNER);
     CreateCourseRequestDto createDto =
         new CreateCourseRequestDto(
-            "Course", "Description", "Short", true, false, "image", "web", List.of(instructorDto), "ONCE");
+            "Course",
+            "Description",
+            "Short",
+            CourseStatusEnum.PUBLIC,
+            "image",
+            "web",
+            List.of(instructorDto),
+            "ONCE");
     UpdateCourseInstructorRequestDto updateInstructorDto =
         new UpdateCourseInstructorRequestDto(UUID.randomUUID(), InstructorRoleEnum.COLLABORATOR);
     UpdateCourseRequestDto updateDto =
         new UpdateCourseRequestDto(
-            "Course 2", "Description 2", "Short 2", false, true, "image2", "crypto", List.of(updateInstructorDto), "UNLIMITED");
+            "Course 2",
+            "Description 2",
+            "Short 2",
+            CourseStatusEnum.PRIVATE,
+            "image2",
+            "crypto",
+            List.of(updateInstructorDto),
+            "UNLIMITED");
 
     assertCourseRequestMappings(instructorDto, createDto, updateInstructorDto, updateDto);
 
@@ -215,8 +230,7 @@ class CourseMapperCoverageTest {
     course.setTitle("Course");
     course.setDescription("Description");
     course.setShortDescription("Short");
-    course.setPublished(true);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.PUBLIC);
     course.setImageUrl("image");
     course.setTopic("web");
     course.setInviteCode("ABC123");

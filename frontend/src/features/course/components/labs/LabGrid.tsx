@@ -1,8 +1,8 @@
 "use client";
 
 import { Group, Pagination, SimpleGrid, Stack, Text, ThemeIcon } from "@mantine/core";
-import { IconFlag } from "@tabler/icons-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { IconFlag } from "@tabler/icons-react";
 import { LabCard } from "@/src/features/course/components/labs/LabCard";
 
 interface ChallengeGridProps {

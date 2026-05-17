@@ -11,6 +11,7 @@ import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateCourseRequestDto;
 import com.pm4.istp.admin.services.impl.AdminCourseServiceImpl;
 import com.pm4.istp.course.db.entities.Course;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
@@ -93,8 +94,7 @@ class AdminCourseServiceImplTest {
     request.setTitle("Updated Title");
     request.setDescription("Updated description");
     request.setShortDescription("  short desc  ");
-    request.setPublished(true);
-    request.setPrivate(false);
+    request.setStatus(CourseStatusEnum.PUBLIC);
     request.setTopic("Security");
     request.setImageUrl("  https://example.com/img.png  ");
 
@@ -112,8 +112,7 @@ class AdminCourseServiceImplTest {
     assertThat(saved.getTitle()).isEqualTo("Updated Title");
     assertThat(saved.getDescription()).isEqualTo("Updated description");
     assertThat(saved.getShortDescription()).isEqualTo("short desc");
-    assertThat(saved.isPublished()).isTrue();
-    assertThat(saved.isPrivate()).isFalse();
+    assertThat(saved.getStatus()).isEqualTo(CourseStatusEnum.PUBLIC);
     assertThat(saved.getTopic()).isEqualTo("Security");
     assertThat(saved.getImageUrl()).isEqualTo("https://example.com/img.png");
     // Invite code should be cleared for non-private course
@@ -130,8 +129,7 @@ class AdminCourseServiceImplTest {
     AdminUpdateCourseRequestDto request = new AdminUpdateCourseRequestDto();
     request.setTitle("Private Course");
     request.setDescription("desc");
-    request.setPublished(false);
-    request.setPrivate(true);
+    request.setStatus(CourseStatusEnum.PRIVATE);
     request.setTopic(null);
 
     when(courseRepository.findById(id)).thenReturn(Optional.of(course));
@@ -154,8 +152,7 @@ class AdminCourseServiceImplTest {
     AdminUpdateCourseRequestDto request = new AdminUpdateCourseRequestDto();
     request.setTitle("Private Course");
     request.setDescription("desc");
-    request.setPublished(false);
-    request.setPrivate(true);
+    request.setStatus(CourseStatusEnum.PRIVATE);
     request.setTopic(null);
 
     when(courseRepository.findById(id)).thenReturn(Optional.of(course));
@@ -169,26 +166,6 @@ class AdminCourseServiceImplTest {
   }
 
   @Test
-  void updateCourse_withPublishedAndPrivateTrue_throwsIllegalArgumentException() {
-    UUID id = UUID.randomUUID();
-    Course course = new Course();
-    course.setId(id);
-
-    AdminUpdateCourseRequestDto request = new AdminUpdateCourseRequestDto();
-    request.setTitle("Bad Course");
-    request.setPublished(true);
-    request.setPrivate(true);
-
-    when(courseRepository.findById(id)).thenReturn(Optional.of(course));
-
-    assertThatThrownBy(() -> adminCourseService.updateCourse(id, request))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("published and private");
-
-    verify(courseRepository, never()).save(any());
-  }
-
-  @Test
   void updateCourse_withBlankShortDescription_normalizesToNull() {
     UUID id = UUID.randomUUID();
     Course course = new Course();
@@ -198,8 +175,7 @@ class AdminCourseServiceImplTest {
     request.setTitle("Course");
     request.setDescription("desc");
     request.setShortDescription("   ");
-    request.setPublished(false);
-    request.setPrivate(false);
+    request.setStatus(CourseStatusEnum.DRAFT);
     request.setTopic(null);
 
     when(courseRepository.findById(id)).thenReturn(Optional.of(course));
@@ -221,8 +197,7 @@ class AdminCourseServiceImplTest {
 
     AdminUpdateCourseRequestDto request = new AdminUpdateCourseRequestDto();
     request.setTitle("Course");
-    request.setPublished(false);
-    request.setPrivate(false);
+    request.setStatus(CourseStatusEnum.DRAFT);
 
     assertThatThrownBy(() -> adminCourseService.updateCourse(id, request))
         .isInstanceOf(CourseNotFoundException.class)
@@ -234,7 +209,7 @@ class AdminCourseServiceImplTest {
   // ── deleteCourse ────────────────────────────────────────────────────────────
 
   @Test
-  void deleteCourse_whenExists_deletesCourse() {
+  void deleteCourse_whenExists_softDeletesCourse() {
     UUID id = UUID.randomUUID();
     Course course = new Course();
     course.setId(id);
@@ -242,7 +217,8 @@ class AdminCourseServiceImplTest {
 
     adminCourseService.deleteCourse(id);
 
-    verify(courseRepository).delete(course);
+    verify(courseRepository).save(course);
+    assertThat(course.getStatus()).isEqualTo(CourseStatusEnum.SOFT_DELETED);
   }
 
   @Test
@@ -254,6 +230,6 @@ class AdminCourseServiceImplTest {
         .isInstanceOf(CourseNotFoundException.class)
         .hasMessageContaining(id.toString());
 
-    verify(courseRepository, never()).delete(any());
+    verify(courseRepository, never()).save(any());
   }
 }

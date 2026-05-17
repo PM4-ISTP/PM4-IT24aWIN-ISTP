@@ -119,7 +119,7 @@ public class LabServiceImpl implements LabService {
   public Lab getLab(UUID userId, UUID labId) {
     Lab lab =
         labRepository
-            .findById(labId)
+            .findByIdAndDeletedAtIsNull(labId)
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyVisibility(lab, userId);
@@ -131,7 +131,7 @@ public class LabServiceImpl implements LabService {
   public Lab updateLab(UUID userId, UUID labId, UpdateLabRequest request) {
     Lab lab =
         labRepository
-            .findById(labId)
+            .findByIdAndDeletedAtIsNull(labId)
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
@@ -216,6 +216,13 @@ public class LabServiceImpl implements LabService {
       retained.add(target);
     }
 
+    // Soft-delete challenges that were removed (not in retained).
+    // Hard deletion is not possible because challenge_completions, student_flag_submissions,
+    // student_option_submissions, and course_challenge_score_overrides hold FK references.
+    for (Challenge removed : existingById.values()) {
+      removed.setDeletedAt(LocalDateTime.now());
+    }
+
     lab.getChallenges().clear();
     lab.getChallenges().addAll(retained);
   }
@@ -261,7 +268,7 @@ public class LabServiceImpl implements LabService {
   public int previewVisibilityImpact(UUID userId, UUID labId, LabStatusEnum newStatus) {
     Lab lab =
         labRepository
-            .findById(labId)
+            .findByIdAndDeletedAtIsNull(labId)
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
@@ -303,33 +310,14 @@ public class LabServiceImpl implements LabService {
   public void deleteLab(UUID userId, UUID labId) {
     Lab lab =
         labRepository
-            .findById(labId)
+            .findByIdAndDeletedAtIsNull(labId)
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
 
     verifyCreator(lab, userId);
-    deleteOrArchive(lab);
-  }
-
-  private void deleteOrArchive(Lab lab) {
-    if (hasRetainedHistory(lab.getId())) {
-      archive(lab);
-      return;
-    }
-
-    labRepository.delete(lab);
-    labRepository.flush();
-  }
-
-  private boolean hasRetainedHistory(UUID labId) {
-    return courseLabRepository.countByChallengeId(labId) > 0
-        || challengeCompletionRepository.existsByLabId(labId)
-        || studentFlagSubmissionRepository.existsByLabId(labId)
-        || studentOptionSubmissionRepository.existsByLabId(labId)
-        || courseChallengeScoreOverrideRepository.existsByLabId(labId);
-  }
-
-  private void archive(Lab lab) {
-    lab.setStatus(LabStatusEnum.ARCHIVED);
+    courseLabRepository.deleteByChallengeId(labId);
+    lab.setDeletedByUsername(
+        userRepository.findByIdAndDeletedAtIsNull(userId).map(User::getUsername).orElse("unknown"));
+    lab.setDeletedAt(LocalDateTime.now());
     labRepository.save(lab);
   }
 
@@ -384,13 +372,8 @@ public class LabServiceImpl implements LabService {
 
     Lab lab =
         labRepository
-            .findById(labId)
+            .findByIdAndDeletedAtIsNull(labId)
             .orElseThrow(() -> new LabNotFoundException(String.format(LAB_NOT_FOUND_MSG, labId)));
-
-    if (lab.getStatus() == LabStatusEnum.ARCHIVED) {
-      throw new LabAccessDeniedException(
-          String.format("Archived lab '%s' cannot be started or played", labId));
-    }
 
     boolean challengeBelongsToCourse =
         lab.getCourseLabs().stream().anyMatch(cc -> cc.getCourse().getId().equals(courseId));
@@ -775,14 +758,20 @@ public class LabServiceImpl implements LabService {
       Map<UUID, String> flagsById,
       Map<UUID, UUID> selectedOptionByChallenge,
       Map<UUID, UUID> correctOptionByChallenge) {
-    boolean solved = solvedIds.contains(challenge.getId());
-    challenge.setSolved(solved);
+    UUID challengeId = challenge.getId();
+    boolean solved = solvedIds.contains(challengeId);
+    UUID selectedOptionId = selectedOptionByChallenge.get(challengeId);
+    boolean attemptedMc =
+        challenge.getType() == ChallengeType.MULTIPLE_CHOICE && selectedOptionId != null;
+
+    boolean completed = solved || attemptedMc;
+    challenge.setSolved(completed);
     if (solved && challenge.getType() == ChallengeType.FLAG) {
-      challenge.setSolvedFlag(flagsById.get(challenge.getId()));
+      challenge.setSolvedFlag(flagsById.get(challengeId));
     }
-    challenge.setSelectedOptionId(selectedOptionByChallenge.get(challenge.getId()));
-    challenge.setCorrectOptionId(correctOptionByChallenge.get(challenge.getId()));
-    return solved ? 1 : 0;
+    challenge.setSelectedOptionId(selectedOptionId);
+    challenge.setCorrectOptionId(correctOptionByChallenge.get(challengeId));
+    return completed ? 1 : 0;
   }
 
   // -------------------------------------------------------------------------

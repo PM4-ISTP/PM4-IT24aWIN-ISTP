@@ -13,6 +13,7 @@ import {
   GridCol,
   Group,
   Loader,
+  Modal,
   Select,
   Stack,
   Text,
@@ -27,16 +28,11 @@ import { CoursePeoplePanel } from "@/src/features/course/components/people/Cours
 import MyEditor from "@/src/shared/components/MyEditor";
 import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
 import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
-import { CourseDeleteModal } from "@/src/features/course/components/management/CourseDeleteModal";
 import { CourseInviteCodePanel } from "@/src/features/course/components/management/CourseInviteCodePanel";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
   normalizeShortDescription,
 } from "@/src/features/course/utils/courseText";
-import {
-  visibilityFromFlags,
-  visibilityToFlags,
-} from "@/src/features/course/utils/courseVisibility";
 import {
   deleteCourse,
   fetchCourse,
@@ -143,7 +139,7 @@ export default function EditCourse() {
       setTitle(course.title);
       setShortDescription(course.shortDescription ?? "");
       setDescription(course.description ?? "");
-      setVisibility(visibilityFromFlags(course.isPublished, course.isPrivate));
+      setVisibility(course.status ?? "DRAFT");
       setImageUrl(course.imageUrl ?? "");
       setTopic(course.topic ?? null);
       setInviteCode(course.inviteCode ?? null);
@@ -207,14 +203,11 @@ export default function EditCourse() {
 
     setIsSubmitting(true);
 
-    const { isPublished, isPrivate } = visibilityToFlags(visibility);
-
     const result = await updateCourse(courseId, {
       title: title.trim(),
       description,
       shortDescription: normalizedShortDescription,
-      isPublished,
-      isPrivate,
+      status: visibility,
       imageUrl: imageUrl.trim() || null,
       topic: topic,
       collaboratorIds: selectedInstructors,
@@ -385,16 +378,45 @@ export default function EditCourse() {
 
   return (
     <Container size="xl">
-      <CourseDeleteModal
-        opened={deleteOpened}
-        title={title}
-        isDeleting={isDeleting}
-        deleteError={deleteError}
-        onClose={closeDelete}
-        onConfirm={() => {
-          void handleDelete();
-        }}
-      />
+      <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Course" centered>
+        <Stack gap="md">
+          <Text size="sm">
+            Delete <strong>{title}</strong>? Students and instructors will no longer see it in
+            active course lists.
+          </Text>
+          {deleteError && (
+            <Alert color="red" title="Could not delete course" variant="light">
+              Something went wrong. Please try again.
+            </Alert>
+          )}
+          <Group justify="flex-end" gap="sm">
+            <Button
+              variant="outline"
+              radius="md"
+              onClick={closeDelete}
+              disabled={isDeleting}
+              style={{
+                borderColor: "rgba(255,255,255,0.12)",
+                color: "#e2e8f0",
+                background: "rgba(255,255,255,0.04)",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              loading={isDeleting}
+              disabled={isDeleting}
+              onClick={() => {
+                void handleDelete();
+              }}
+            >
+              Delete Course
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
 
       <Stack p="xl" gap="lg">
         <Group justify="space-between" align="flex-end">
@@ -504,7 +526,12 @@ export default function EditCourse() {
                   description="Optional thumbnail shown on the course card."
                 />
 
-                <MyEditor description={description} setDescription={setDescription} />
+                <MyEditor
+                  label="Description"
+                  required
+                  description={description}
+                  setDescription={setDescription}
+                />
 
                 <InstructorMultiSelect
                   value={selectedInstructors}

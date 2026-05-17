@@ -13,6 +13,7 @@ import com.pm4.istp.course.db.entities.CourseChallengeScoreOverride;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.db.entities.CourseLab;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
@@ -102,9 +103,9 @@ public class CourseServiceImpl implements CourseService {
     courseToCreate.setTitle(course.getTitle());
     courseToCreate.setDescription(course.getDescription());
     courseToCreate.setShortDescription(normalizeShortDescription(course.getShortDescription()));
-    courseToCreate.setPublished(course.isPublished());
-    courseToCreate.setPrivate(course.isPrivate());
-    validateVisibilityState(course.isPublished(), course.isPrivate());
+    CourseStatusEnum status =
+        course.getStatus() == null ? CourseStatusEnum.DRAFT : course.getStatus();
+    courseToCreate.setStatus(status);
     courseToCreate.setImageUrl(course.getImageUrl());
     courseToCreate.setTopic(courseTopicService.normalizeAndValidate(course.getTopic()));
     courseToCreate.setMcAttemptsMode(
@@ -139,7 +140,7 @@ public class CourseServiceImpl implements CourseService {
       }
     }
 
-    if (course.isPrivate()) {
+    if (status == CourseStatusEnum.PRIVATE) {
       return courseInviteCodeHelper.saveNewCourseWithInviteCode(courseToCreate);
     }
     return courseRepository.save(courseToCreate);
@@ -167,11 +168,11 @@ public class CourseServiceImpl implements CourseService {
   public Course getCourse(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
-    if (course.isPrivate()) {
+    if (course.getStatus() == CourseStatusEnum.PRIVATE) {
       boolean hasPrivateAccess =
           isInstructor(course, userId)
               || courseEnrollmentRepository.existsByCourseIdAndParticipantId(
@@ -183,7 +184,7 @@ public class CourseServiceImpl implements CourseService {
       return course;
     }
 
-    if (course.isPublished()) {
+    if (course.getStatus() == CourseStatusEnum.PUBLIC) {
       return course;
     }
 
@@ -202,14 +203,14 @@ public class CourseServiceImpl implements CourseService {
 
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
     // Private courses are accessible without invite code once the user has the course link.
     // The catalog/discovery protection is enforced by getCourse (403 for non-enrolled,
     // non-instructors). Draft courses (not published, not private) remain closed.
-    if (!course.isPublished() && !course.isPrivate()) {
+    if (course.getStatus() == CourseStatusEnum.DRAFT) {
       throw new CourseAccessDeniedException(
           String.format("Course '%s' is not open for enrollment", courseId));
     }
@@ -240,18 +241,16 @@ public class CourseServiceImpl implements CourseService {
   public Course updateCourse(UUID userId, UUID courseId, UpdateCourseRequest request) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
 
-    boolean wasPrivate = course.isPrivate();
-    boolean willBePublished = request.isPublished();
-    boolean willBePrivate = request.isPrivate();
-    validateVisibilityState(willBePublished, willBePrivate);
+    CourseStatusEnum currentStatus =
+        course.getStatus() == null ? CourseStatusEnum.DRAFT : course.getStatus();
+    CourseStatusEnum newStatus = request.getStatus() == null ? currentStatus : request.getStatus();
 
-    boolean visibilityChanges =
-        course.isPublished() != willBePublished || course.isPrivate() != willBePrivate;
+    boolean visibilityChanges = currentStatus != newStatus;
     if (visibilityChanges) {
       verifyOwner(course, userId);
     }
@@ -269,12 +268,13 @@ public class CourseServiceImpl implements CourseService {
     course.setImageUrl(request.getImageUrl());
     course.setTopic(courseTopicService.normalizeAndValidate(request.getTopic()));
 
-    boolean needsNewCode = willBePrivate && (!wasPrivate || course.getInviteCode() == null);
-    if (!willBePrivate) {
+    boolean needsNewCode =
+        newStatus == CourseStatusEnum.PRIVATE
+            && (currentStatus != CourseStatusEnum.PRIVATE || course.getInviteCode() == null);
+    if (newStatus != CourseStatusEnum.PRIVATE) {
       course.setInviteCode(null);
     }
-    course.setPublished(willBePublished);
-    course.setPrivate(willBePrivate);
+    course.setStatus(newStatus);
     course.setMcAttemptsMode(
         request.getMcAttemptsMode() != null
             ? request.getMcAttemptsMode()
@@ -346,7 +346,7 @@ public class CourseServiceImpl implements CourseService {
   public Course updateCourseChallenges(UUID userId, UUID courseId, List<CourseLabItemDto> labs) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
@@ -366,9 +366,9 @@ public class CourseServiceImpl implements CourseService {
         throw new InvalidCourseLabException(
             String.format("Lab '%s' is a draft and cannot be added to a course", lab.getTitle()));
       }
-      if (lab.getStatus() == LabStatusEnum.ARCHIVED) {
+      if (lab.getDeletedAt() != null) {
         throw new InvalidCourseLabException(
-            String.format("Lab '%s' is archived and cannot be added to a course", lab.getTitle()));
+            String.format("Lab '%s' was removed and cannot be added to a course", lab.getTitle()));
       }
 
       // Only allow adding own PRIVATE labs or PUBLIC labs
@@ -422,7 +422,7 @@ public class CourseServiceImpl implements CourseService {
   public CourseLabSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, userId);
@@ -494,7 +494,7 @@ public class CourseServiceImpl implements CourseService {
 
   private Course findCourseOrThrow(UUID courseId) {
     return courseRepository
-        .findById(courseId)
+        .findByIdAndDeletedAtIsNull(courseId)
         .orElseThrow(
             () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
   }
@@ -673,7 +673,7 @@ public class CourseServiceImpl implements CourseService {
       com.pm4.istp.course.dto.UpdateCourseChallengeScoreRequestDto request) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyInstructor(course, instructorUserId);
@@ -1085,11 +1085,15 @@ public class CourseServiceImpl implements CourseService {
   public void deleteCourse(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
-    courseRepository.delete(course);
+    course.setStatus(CourseStatusEnum.SOFT_DELETED);
+    course.setDeletedByUsername(
+        userRepository.findByIdAndDeletedAtIsNull(userId).map(User::getUsername).orElse("unknown"));
+    course.setDeletedAt(LocalDateTime.now());
+    courseRepository.save(course);
   }
 
   @Override
@@ -1142,7 +1146,7 @@ public class CourseServiceImpl implements CourseService {
             .findByInviteCode(code)
             .orElseThrow(() -> new InvalidInviteCodeException("Invalid invite code"));
 
-    if (!course.isPrivate()) {
+    if (course.getStatus() != CourseStatusEnum.PRIVATE) {
       throw new InvalidInviteCodeException("Invalid invite code");
     }
 
@@ -1170,12 +1174,12 @@ public class CourseServiceImpl implements CourseService {
   public Course regenerateInviteCode(UUID courseId, UUID userId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
 
-    if (!course.isPrivate()) {
+    if (course.getStatus() != CourseStatusEnum.PRIVATE) {
       throw new CourseAccessDeniedException(
           String.format(
               "Course '%s' is not private; invite code regeneration is disabled", courseId));
@@ -1190,7 +1194,7 @@ public class CourseServiceImpl implements CourseService {
   public void removeParticipant(UUID ownerId, UUID courseId, UUID participantId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
@@ -1215,7 +1219,7 @@ public class CourseServiceImpl implements CourseService {
   public void leaveCourse(UUID userId, UUID courseId) {
     Course course =
         courseRepository
-            .findById(courseId)
+            .findByIdAndDeletedAtIsNull(courseId)
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
 
@@ -1264,11 +1268,5 @@ public class CourseServiceImpl implements CourseService {
       return null;
     }
     return shortDescription.trim().replaceAll("\\s+", " ");
-  }
-
-  private void validateVisibilityState(boolean published, boolean privateCourse) {
-    if (published && privateCourse) {
-      throw new IllegalArgumentException("Course cannot be published and private at the same time");
-    }
   }
 }

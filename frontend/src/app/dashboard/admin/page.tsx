@@ -29,7 +29,7 @@ export default async function AdminDashboard() {
           Admin Dashboard
         </Title>
         <Text style={{ color: "#94a3b8" }} mt={4}>
-          Manage your platform settings and content.
+          Manage courses and labs. Delete hides items from active lists.
         </Text>
       </div>
 

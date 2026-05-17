@@ -1,6 +1,6 @@
 package com.pm4.istp.course.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Builder;
@@ -16,11 +16,7 @@ public class ListCourseResponseDto {
   private String description;
   private String shortDescription;
 
-  @JsonProperty("isPublished")
-  private boolean isPublished;
-
-  @JsonProperty("isPrivate")
-  private boolean isPrivate;
+  private CourseStatusEnum status;
 
   private long instructorCount;
   private LocalDateTime createdAt;
@@ -40,8 +36,7 @@ public class ListCourseResponseDto {
       String title,
       String description,
       String shortDescription,
-      boolean isPublished,
-      boolean isPrivate,
+      CourseStatusEnum status,
       long instructorCount,
       LocalDateTime createdAt,
       LocalDateTime updatedAt,
@@ -54,8 +49,7 @@ public class ListCourseResponseDto {
     this.title = title;
     this.description = description;
     this.shortDescription = shortDescription;
-    this.isPublished = isPublished;
-    this.isPrivate = isPrivate;
+    this.status = status;
     this.instructorCount = instructorCount;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;

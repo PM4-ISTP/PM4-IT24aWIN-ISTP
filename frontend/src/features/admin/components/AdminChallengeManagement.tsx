@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionIcon,
+  Alert,
   Badge,
   Button,
   Group,
@@ -25,7 +26,7 @@ import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { slugify } from "@/src/shared/lib/utils";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
-type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC" | "ARCHIVED";
+type ChallengeStatus = "DRAFT" | "PRIVATE" | "PUBLIC";
 type ChallengeDifficulty = "BEGINNER" | "EASY" | "MEDIUM" | "HARD" | "EXPERT";
 
 type AdminLabListItem = {
@@ -34,6 +35,7 @@ type AdminLabListItem = {
   description: string | null;
   status: ChallengeStatus;
   difficulty: ChallengeDifficulty;
+  isSoftDeleted: boolean;
   dockerImage: string | null;
   courseCount: number;
   createdAt: string;
@@ -205,6 +207,12 @@ export default function AdminChallengeManagement() {
           </Group>
         )}
       </Group>
+      <Alert color="orange" title="Delete" variant="light">
+        <Text size="sm">
+          Deleting a lab removes it from active lists so students and instructors can no longer
+          access it.
+        </Text>
+      </Alert>
 
       <Table highlightOnHover withTableBorder striped={false} style={{ tableLayout: "fixed" }}>
         <Table.Thead>
@@ -212,14 +220,15 @@ export default function AdminChallengeManagement() {
             <Table.Th>Title</Table.Th>
             <Table.Th style={{ width: 240 }}>Creator</Table.Th>
             <Table.Th>Status</Table.Th>
+            <Table.Th style={{ width: 150 }}>State</Table.Th>
             <Table.Th style={{ width: 190 }}>Updated</Table.Th>
-            <Table.Th style={{ width: 96 }} />
+            <Table.Th style={{ width: 130 }} />
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
           {labs.length === 0 ? (
             <Table.Tr>
-              <Table.Td colSpan={5}>
+              <Table.Td colSpan={6}>
                 <Text size="sm" c="dimmed" ta="center" py="md">
                   No labs found.
                 </Text>
@@ -259,13 +268,7 @@ export default function AdminChallengeManagement() {
                     <Badge
                       variant="light"
                       color={
-                        c.status === "PUBLIC"
-                          ? "green"
-                          : c.status === "PRIVATE"
-                            ? "yellow"
-                            : c.status === "ARCHIVED"
-                              ? "red"
-                              : "gray"
+                        c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"
                       }
                     >
                       {c.status}
@@ -277,6 +280,11 @@ export default function AdminChallengeManagement() {
                       Courses: {c.courseCount}
                     </Badge>
                   </Group>
+                </Table.Td>
+                <Table.Td>
+                  <Badge variant="light" color={c.isSoftDeleted ? "orange" : "teal"}>
+                    {c.isSoftDeleted ? "Deleted" : "Active"}
+                  </Badge>
                 </Table.Td>
                 <Table.Td>
                   <Text size="sm">{formatDate(c.updatedAt)}</Text>
@@ -296,6 +304,7 @@ export default function AdminChallengeManagement() {
                       color="red"
                       aria-label="Delete lab"
                       onClick={() => openDelete(c)}
+                      disabled={c.isSoftDeleted}
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -345,7 +354,6 @@ export default function AdminChallengeManagement() {
                   { value: "DRAFT", label: "DRAFT" },
                   { value: "PRIVATE", label: "PRIVATE" },
                   { value: "PUBLIC", label: "PUBLIC" },
-                  { value: "ARCHIVED", label: "ARCHIVED" },
                 ]}
                 value={form.values.status}
                 onChange={(v) => form.setFieldValue("status", (v ?? "DRAFT") as ChallengeStatus)}
@@ -396,27 +404,20 @@ export default function AdminChallengeManagement() {
       <Modal
         opened={deleteOpened}
         onClose={() => setDeleteOpened(false)}
-        title={selected?.courseCount ? "Archive Lab" : "Delete Lab"}
+        title="Delete Lab"
         centered
       >
         <Stack gap="md">
           <Text size="sm">
-            {selected?.courseCount ? "Archive" : "Delete"}{" "}
+            Delete{" "}
             <Text span fw={700}>
               {selectedTitle}
             </Text>
-            ?
+            ? After deletion, this lab will no longer be visible to students or instructors.
           </Text>
-          {selected?.courseCount ? (
-            <Text size="sm" c="dimmed">
-              This lab is connected to existing course history, so it will be archived instead of
-              permanently deleted.
-            </Text>
-          ) : (
-            <Text size="sm" c="dimmed">
-              This cannot be undone.
-            </Text>
-          )}
+          <Text size="sm" c="dimmed">
+            This action cannot be undone.
+          </Text>
           <Group justify="flex-end">
             <Button
               variant="default"
@@ -427,7 +428,7 @@ export default function AdminChallengeManagement() {
               Cancel
             </Button>
             <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
-              {selected?.courseCount ? "Archive" : "Delete"}
+              Delete
             </Button>
           </Group>
         </Stack>

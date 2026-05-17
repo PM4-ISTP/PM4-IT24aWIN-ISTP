@@ -25,7 +25,6 @@ export const STATUS_COLORS: Record<LabStatusEnum, string> = {
   DRAFT: "gray",
   PRIVATE: "yellow",
   PUBLIC: "teal",
-  ARCHIVED: "red",
 };
 
 export const DIFFICULTY_COLORS: Record<LabDifficultyEnum, string> = {

@@ -3,6 +3,7 @@ package com.pm4.istp.course.repositories;
 import com.pm4.istp.admin.dto.AdminLabListItemDto;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.dto.ListLabResponseDto;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LabRepository extends JpaRepository<Lab, UUID> {
+  Optional<Lab> findByIdAndDeletedAtIsNull(UUID id);
 
   Page<Lab> findByCreatorId(UUID creatorId, Pageable pageable);
 
@@ -31,18 +33,16 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
             c.creator.name,
             (select count(cc) from CourseLab cc where cc.lab = c),
             c.updatedAt
-          )
-          from Lab c
-          where c.creator.id = :creatorId
-          and c.status <> com.pm4.istp.course.db.entities.LabStatusEnum.ARCHIVED
-          """,
+           )
+           from Lab c
+           where c.creator.id = :creatorId and c.deletedAt is null
+           """,
       countQuery =
           """
-          select count(c)
-          from Lab c
-          where c.creator.id = :creatorId
-          and c.status <> com.pm4.istp.course.db.entities.LabStatusEnum.ARCHIVED
-          """)
+           select count(c)
+           from Lab c
+           where c.creator.id = :creatorId and c.deletedAt is null
+           """)
   Page<ListLabResponseDto> findListChallengesForCreator(
       @Param("creatorId") UUID creatorId, Pageable pageable);
 
@@ -63,7 +63,8 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
             c.updatedAt
           )
           from Lab c
-          where (
+          where c.deletedAt is null
+          and (
             (c.creator.id = :userId and c.status = com.pm4.istp.course.db.entities.LabStatusEnum.PRIVATE)
             or c.status = com.pm4.istp.course.db.entities.LabStatusEnum.PUBLIC
           )
@@ -73,7 +74,8 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
           """
           select count(c)
           from Lab c
-          where (
+          where c.deletedAt is null
+          and (
             (c.creator.id = :userId and c.status = com.pm4.istp.course.db.entities.LabStatusEnum.PRIVATE)
             or c.status = com.pm4.istp.course.db.entities.LabStatusEnum.PUBLIC
           )
@@ -91,6 +93,7 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
             c.description,
             c.status,
             c.difficulty,
+            c.deletedAt is not null,
             c.dockerImage,
             c.containerPort,
             c.maxScore,
@@ -102,11 +105,13 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
             c.creator.username
           )
           from Lab c
+          where c.deletedAt is null
           """,
       countQuery =
           """
           select count(c)
           from Lab c
+          where c.deletedAt is null
           """)
   Page<AdminLabListItemDto> findAllChallengesForAdmin(Pageable pageable);
 
@@ -119,6 +124,7 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
             c.description,
             c.status,
             c.difficulty,
+            c.deletedAt is not null,
             c.dockerImage,
             c.containerPort,
             c.maxScore,
@@ -130,15 +136,21 @@ public interface LabRepository extends JpaRepository<Lab, UUID> {
             c.creator.username
           )
           from Lab c
-          where lower(c.title) like lower(concat('%', :query, '%'))
+          where c.deletedAt is null
+            and (
+              lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+            )
           """,
       countQuery =
           """
           select count(c)
           from Lab c
-          where lower(c.title) like lower(concat('%', :query, '%'))
+          where c.deletedAt is null
+            and (
+              lower(c.title) like lower(concat('%', :query, '%'))
               or lower(coalesce(c.description, '')) like lower(concat('%', :query, '%'))
+            )
           """)
   Page<AdminLabListItemDto> findAllChallengesForAdminByQuery(
       @Param("query") String query, Pageable pageable);

@@ -43,7 +43,6 @@ import {
 
 function isMoreRestrictive(oldStatus: LabStatusEnum, newStatus: LabStatusEnum): boolean {
   if (oldStatus === newStatus) return false;
-  if (newStatus === "ARCHIVED") return true;
   if (newStatus === "DRAFT") return true;
   if (newStatus === "PRIVATE" && oldStatus === "PUBLIC") return true;
   return false;
@@ -299,28 +298,19 @@ export default function EditChallenge() {
         </Stack>
       </Modal>
 
-      <Modal
-        opened={deleteOpened}
-        onClose={closeDelete}
-        title={courseCount > 0 ? "Archive Lab" : "Delete Lab"}
-        centered
-      >
+      <Modal opened={deleteOpened} onClose={closeDelete} title="Delete Lab" centered>
         <Stack gap="md">
           <Text size="sm">
-            Are you sure you want to {courseCount > 0 ? "archive" : "delete"}{" "}
-            <strong>{formValues.title}</strong>?
+            Delete <strong>{formValues.title}</strong>? After deletion, this lab will no longer be
+            visible to students or instructors.
           </Text>
-          {courseCount > 0 && (
-            <Text size="sm" c="orange">
-              This lab is connected to {courseCount} course{courseCount !== 1 ? "s" : ""}, so it
-              will be archived instead of permanently deleted.
-            </Text>
-          )}
-          {courseCount === 0 && (
-            <Text size="sm" c="dimmed">
-              This action cannot be undone.
-            </Text>
-          )}
+          <Text size="sm" c="dimmed">
+            This action cannot be undone.
+          </Text>
+          <Text size="sm" c="dimmed">
+            This lab is currently linked to {courseCount} course{courseCount !== 1 ? "s" : ""} and
+            will be removed from {courseCount === 1 ? "that course" : "those courses"}.
+          </Text>
           {deleteError && (
             <Alert color="red" title="Could not delete lab" variant="light">
               {deleteError}
@@ -338,7 +328,7 @@ export default function EditChallenge() {
                 void handleDelete();
               }}
             >
-              {courseCount > 0 ? "Archive Lab" : "Delete Lab"}
+              Delete Lab
             </Button>
           </Group>
         </Stack>
@@ -379,7 +369,7 @@ export default function EditChallenge() {
             onClick={openDelete}
             radius="md"
           >
-            {courseCount > 0 ? "Archive Lab" : "Delete Lab"}
+            Delete Lab
           </Button>
         </Group>
 

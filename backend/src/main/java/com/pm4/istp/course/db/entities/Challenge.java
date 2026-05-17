@@ -69,4 +69,8 @@ public class Challenge {
   @LastModifiedDate
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
+
+  /** Soft-delete timestamp. Null means the challenge is active. */
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
 }

@@ -1,5 +1,6 @@
 package com.pm4.istp.course.db;
 
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -13,8 +14,7 @@ public class UpdateCourseRequest {
   private String title;
   private String description;
   private String shortDescription;
-  private boolean isPublished;
-  private boolean isPrivate;
+  private CourseStatusEnum status;
   private String imageUrl;
   private String topic;
   private List<UpdateCourseInstructorRequest> instructors;

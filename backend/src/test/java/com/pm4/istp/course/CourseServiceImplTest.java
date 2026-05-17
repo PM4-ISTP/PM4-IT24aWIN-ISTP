@@ -32,6 +32,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.pm4.istp.course.db.CreateCourseInstructorRequest;
 import com.pm4.istp.course.db.CreateCourseRequest;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
@@ -113,9 +114,6 @@ class CourseServiceImplTest {
         .isEqualTo("A short text");
     assertThat((String) ReflectionTestUtils.invokeMethod(courseService, "normalizeShortDescription", "   "))
         .isNull();
-    assertThatThrownBy(
-            () -> ReflectionTestUtils.invokeMethod(courseService, "validateVisibilityState", true, true))
-        .isInstanceOf(IllegalArgumentException.class);
 
     User participant = new User();
     participant.setId(UUID.randomUUID());
@@ -173,8 +171,7 @@ class CourseServiceImplTest {
         "Secure Coding",
         "Intro",
         "Learn the secure coding basics.",
-        false,
-        false,
+        CourseStatusEnum.DRAFT,
         null,
         null,
         List.of(new CreateCourseInstructorRequest(collaboratorId, InstructorRoleEnum.COLLABORATOR)),
@@ -228,8 +225,7 @@ class CourseServiceImplTest {
         "Private Secure Coding",
         "Intro",
         "Private practice course.",
-        false,
-        true,
+        CourseStatusEnum.PRIVATE,
         null,
         null,
         List.of(),
@@ -237,7 +233,7 @@ class CourseServiceImplTest {
 
     Course result = courseService.createCourse(ownerId, request);
 
-    assertThat(result.isPrivate()).isTrue();
+    assertThat(result.getStatus()).isEqualTo(CourseStatusEnum.PRIVATE);
     assertThat(result.getCourseInstructors()).hasSize(1);
     assertThat(result.getCourseEnrollments()).hasSize(1);
 
@@ -267,7 +263,7 @@ class CourseServiceImplTest {
     ownerRelation.setInstructor(instructor);
     course.addCourseInstructor(ownerRelation);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     assertThatThrownBy(() -> courseService.getCourse(requesterId, courseId))
         .isInstanceOf(CourseAccessDeniedException.class);
@@ -280,9 +276,9 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     Course result = courseService.getCourse(requesterId, courseId);
 
@@ -326,14 +322,13 @@ class CourseServiceImplTest {
         "Updated title",
         "Updated description",
         "Updated short description for the header.",
-        true,
-        false,
+        CourseStatusEnum.PUBLIC,
         null,
         null,
         List.of(new UpdateCourseInstructorRequest(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
         McAttemptsMode.UNLIMITED);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(userRepository.findByIdAndDeletedAtIsNull(newCollaboratorId)).thenReturn(Optional.of(newCollaborator));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
@@ -343,7 +338,7 @@ class CourseServiceImplTest {
     assertThat(updated.getTitle()).isEqualTo("Updated title");
     assertThat(updated.getDescription()).isEqualTo("Updated description");
     assertThat(updated.getShortDescription()).isEqualTo("Updated short description for the header.");
-    assertThat(updated.isPublished()).isTrue();
+    assertThat(updated.getStatus()).isEqualTo(CourseStatusEnum.PUBLIC);
 
     assertThat(updated.getCourseInstructors())
         .extracting(ci -> ci.getInstructor().getId())
@@ -369,8 +364,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.DRAFT);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
@@ -387,8 +381,7 @@ class CourseServiceImplTest {
             "Collaborator update",
             "Updated by collaborator",
             "Updated short description",
-            false,
-            false,
+            CourseStatusEnum.DRAFT,
             "https://example.com/course.png",
             "Web-Security",
             List.of(
@@ -396,7 +389,7 @@ class CourseServiceImplTest {
                     collaboratorId, InstructorRoleEnum.COLLABORATOR)),
             McAttemptsMode.ONCE);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseRepository.save(any(Course.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     Course updated = courseService.updateCourse(collaboratorId, courseId, updateRequest);
@@ -406,8 +399,7 @@ class CourseServiceImplTest {
     assertThat(updated.getImageUrl()).isEqualTo("https://example.com/course.png");
     assertThat(updated.getTopic()).isEqualTo("Web-Security");
     assertThat(updated.getMcAttemptsMode()).isEqualTo(McAttemptsMode.ONCE);
-    assertThat(updated.isPublished()).isFalse();
-    assertThat(updated.isPrivate()).isFalse();
+    assertThat(updated.getStatus()).isEqualTo(CourseStatusEnum.DRAFT);
 
     verify(courseRepository).save(course);
   }
@@ -426,8 +418,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.DRAFT);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
@@ -444,8 +435,7 @@ class CourseServiceImplTest {
             "Collaborator publish",
             "Attempted publish",
             "Updated short description",
-            true,
-            false,
+            CourseStatusEnum.PUBLIC,
             null,
             null,
             List.of(
@@ -453,7 +443,7 @@ class CourseServiceImplTest {
                     collaboratorId, InstructorRoleEnum.COLLABORATOR)),
             McAttemptsMode.UNLIMITED);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     assertThatThrownBy(() -> courseService.updateCourse(collaboratorId, courseId, updateRequest))
         .isInstanceOf(CourseAccessDeniedException.class)
@@ -477,8 +467,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.DRAFT);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
@@ -495,8 +484,7 @@ class CourseServiceImplTest {
             "Collaborator update",
             "Attempted collaborator change",
             "Updated short description",
-            false,
-            false,
+            CourseStatusEnum.DRAFT,
             null,
             null,
             List.of(
@@ -504,7 +492,7 @@ class CourseServiceImplTest {
                     newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
             McAttemptsMode.UNLIMITED);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     assertThatThrownBy(() -> courseService.updateCourse(collaboratorId, courseId, updateRequest))
         .isInstanceOf(CourseAccessDeniedException.class)
@@ -568,34 +556,6 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void createCourse_withPublishedAndPrivate_throwsIllegalArgumentException() {
-    UUID ownerId = UUID.randomUUID();
-
-    User owner = new User();
-    owner.setId(ownerId);
-    owner.setRoles(Set.of(UserRoleEnum.ROLE_INSTRUCTOR));
-
-    when(userRepository.findByIdAndDeletedAtIsNull(ownerId)).thenReturn(Optional.of(owner));
-
-    CreateCourseRequest request = new CreateCourseRequest(
-        "Secure Coding",
-        "Long description",
-        "Short summary.",
-        true,
-        true,
-        null,
-        null,
-        List.of(),
-        McAttemptsMode.UNLIMITED);
-
-    assertThatThrownBy(() -> courseService.createCourse(ownerId, request))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("published and private");
-
-    verify(courseRepository, never()).save(any(Course.class));
-  }
-
-  @Test
   void enrollInCourse_whenPublished_createsEnrollment() {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
@@ -606,10 +566,10 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(participant));
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(false);
     when(courseRepository.save(any(Course.class)))
@@ -635,10 +595,10 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(participant));
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(true);
 
@@ -659,10 +619,10 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(participant));
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, userId))
         .thenReturn(false);
     when(courseRepository.save(any(Course.class)))
@@ -675,7 +635,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void deleteCourse_whenOwner_deletesCourse() {
+  void deleteCourse_whenOwner_softDeletesCourse() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
@@ -691,11 +651,12 @@ class CourseServiceImplTest {
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     courseService.deleteCourse(ownerId, courseId);
 
-    verify(courseRepository).delete(course);
+    verify(courseRepository).save(course);
+    assertThat(course.getStatus()).isEqualTo(CourseStatusEnum.SOFT_DELETED);
   }
 
   @Test
@@ -716,12 +677,12 @@ class CourseServiceImplTest {
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     assertThatThrownBy(() -> courseService.deleteCourse(nonOwnerId, courseId))
         .isInstanceOf(CourseAccessDeniedException.class);
 
-    verify(courseRepository, never()).delete(any(Course.class));
+    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
@@ -729,12 +690,12 @@ class CourseServiceImplTest {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> courseService.deleteCourse(userId, courseId))
         .isInstanceOf(CourseNotFoundException.class);
 
-    verify(courseRepository, never()).delete(any(Course.class));
+    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
@@ -755,7 +716,7 @@ class CourseServiceImplTest {
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     assertThatThrownBy(() -> courseService.removeParticipant(nonOwnerId, courseId, participantId))
         .isInstanceOf(CourseAccessDeniedException.class);
@@ -781,7 +742,7 @@ class CourseServiceImplTest {
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.findByCourseIdAndParticipantId(courseId, participantId))
         .thenReturn(Optional.empty());
 
@@ -812,7 +773,7 @@ class CourseServiceImplTest {
     CourseEnrollment enrollment = new CourseEnrollment();
     enrollment.setId(enrollmentId);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.findByCourseIdAndParticipantId(courseId, participantId))
         .thenReturn(Optional.of(enrollment));
 
@@ -836,7 +797,14 @@ class CourseServiceImplTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     CreateCourseRequest request = new CreateCourseRequest(
-        "Solo Course", "Desc", "Short solo summary.", false, false, null, null, List.of(), McAttemptsMode.UNLIMITED);
+        "Solo Course",
+        "Desc",
+        "Short solo summary.",
+        CourseStatusEnum.DRAFT,
+        null,
+        null,
+        List.of(),
+        McAttemptsMode.UNLIMITED);
 
     Course result = courseService.createCourse(ownerId, request);
 
@@ -862,7 +830,7 @@ class CourseServiceImplTest {
     relation.setInstructor(user);
     course.addCourseInstructor(relation);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     Course result = courseService.getCourse(userId, courseId);
 
@@ -874,7 +842,7 @@ class CourseServiceImplTest {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> courseService.getCourse(userId, courseId))
         .isInstanceOf(CourseNotFoundException.class);
@@ -898,9 +866,16 @@ class CourseServiceImplTest {
     course.addCourseInstructor(ownerRelation);
 
     UpdateCourseRequest request = new UpdateCourseRequest(
-        "Title", "Desc", "Short summary.", false, false, null, null, List.of(), McAttemptsMode.UNLIMITED);
+        "Title",
+        "Desc",
+        "Short summary.",
+        CourseStatusEnum.DRAFT,
+        null,
+        null,
+        List.of(),
+        McAttemptsMode.UNLIMITED);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     assertThatThrownBy(() -> courseService.updateCourse(outsiderId, courseId, request))
         .isInstanceOf(CourseAccessDeniedException.class);
@@ -913,10 +888,17 @@ class CourseServiceImplTest {
     UUID userId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.empty());
 
     UpdateCourseRequest request = new UpdateCourseRequest(
-        "Title", "Desc", "Short summary.", false, false, null, null, List.of(), McAttemptsMode.UNLIMITED);
+        "Title",
+        "Desc",
+        "Short summary.",
+        CourseStatusEnum.DRAFT,
+        null,
+        null,
+        List.of(),
+        McAttemptsMode.UNLIMITED);
 
     assertThatThrownBy(() -> courseService.updateCourse(userId, courseId, request))
         .isInstanceOf(CourseNotFoundException.class);
@@ -984,7 +966,7 @@ class CourseServiceImplTest {
     Course course = buildCourseWithOwner(courseId, owner);
     Lab lab = buildChallenge(labId, owner, LabStatusEnum.PRIVATE);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
@@ -1011,7 +993,7 @@ class CourseServiceImplTest {
     Course course = buildCourseWithOwner(courseId, owner);
     Lab lab = buildChallenge(labId, owner, LabStatusEnum.PUBLIC);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
     when(courseRepository.save(any(Course.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -1050,7 +1032,7 @@ class CourseServiceImplTest {
     removedAssignment.setOrderIndex(1);
     course.addCourseChallenge(removedAssignment);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(keptLabId)).thenReturn(Optional.of(keptLab));
     when(labRepository.findById(addedLabId)).thenReturn(Optional.of(addedLab));
     when(courseRepository.save(any(Course.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -1087,7 +1069,7 @@ class CourseServiceImplTest {
     Course course = buildCourseWithOwner(courseId, owner);
     Lab lab = buildChallenge(labId, otherCreator, LabStatusEnum.PUBLIC);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
@@ -1110,7 +1092,7 @@ class CourseServiceImplTest {
     Course course = buildCourseWithOwner(courseId, owner);
     Lab lab = buildChallenge(labId, owner, LabStatusEnum.DRAFT);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
 
     List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
@@ -1124,7 +1106,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void updateCourseChallenges_rejectsArchivedChallengeEvenFromOwnCreator() {
+  void updateCourseChallenges_rejectsRemovedLabEvenFromOwnCreator() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -1133,16 +1115,17 @@ class CourseServiceImplTest {
     owner.setId(ownerId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Lab lab = buildChallenge(labId, owner, LabStatusEnum.ARCHIVED);
+    Lab lab = buildChallenge(labId, owner, LabStatusEnum.PUBLIC);
+    lab.setDeletedAt(LocalDateTime.now());
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
 
     List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
 
     assertThatThrownBy(() -> courseService.updateCourseChallenges(ownerId, courseId, items))
         .isInstanceOf(InvalidCourseLabException.class)
-        .hasMessageContaining("archived");
+        .hasMessageContaining("removed");
 
     verify(courseRepository, never()).save(any(Course.class));
   }
@@ -1162,7 +1145,7 @@ class CourseServiceImplTest {
     Course course = buildCourseWithOwner(courseId, owner);
     Lab lab = buildChallenge(labId, otherCreator, LabStatusEnum.PRIVATE);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
 
     List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
@@ -1185,7 +1168,7 @@ class CourseServiceImplTest {
 
     Course course = buildCourseWithOwner(courseId, owner);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.empty());
 
     List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
@@ -1208,7 +1191,7 @@ class CourseServiceImplTest {
 
     Course course = buildCourseWithOwner(courseId, owner);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     List<CourseLabItemDto> items = List.of();
 
@@ -1223,7 +1206,7 @@ class CourseServiceImplTest {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.empty());
 
     List<CourseLabItemDto> items = List.of();
 
@@ -1247,7 +1230,7 @@ class CourseServiceImplTest {
     existingAssignment.setOrderIndex(0);
     course.addCourseChallenge(existingAssignment);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -1302,7 +1285,7 @@ class CourseServiceImplTest {
     e4.setCourse(course);
     e4.setParticipant(studentNotSubmitted);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.findByCourseIdFetchParticipant(courseId))
         .thenReturn(List.of(e1, e2, e3, e4));
     when(challengeRepository.countByLabIds(List.of(labId)))
@@ -1373,7 +1356,7 @@ class CourseServiceImplTest {
     flagSubmission.setCorrect(false);
 
     List<UUID> challengeIds = List.of(optionChallengeId, flagChallengeId);
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
         .thenReturn(true);
     when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId))
@@ -1435,7 +1418,7 @@ class CourseServiceImplTest {
     course.addCourseChallenge(assignment);
     Challenge challenge = buildCourseChallenge(challengeId, lab, "Solved", ChallengeType.FLAG, 1);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
         .thenReturn(true);
     when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId)).thenReturn(List.of(challenge));
@@ -1492,7 +1475,7 @@ class CourseServiceImplTest {
     selected.setText("Wrong answer");
     optionSubmission.setSelectedOption(selected);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
         .thenReturn(true);
     when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId)).thenReturn(List.of(optionChallenge));
@@ -1547,7 +1530,7 @@ class CourseServiceImplTest {
         buildCourseChallenge(
             optionChallengeId, lab, "Pick one", ChallengeType.MULTIPLE_CHOICE, 2);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
         .thenReturn(true);
     when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId)).thenReturn(List.of(optionChallenge));
@@ -1602,7 +1585,7 @@ class CourseServiceImplTest {
         buildCourseChallenge(
             optionChallengeId, lab, "Pick one", ChallengeType.MULTIPLE_CHOICE, 2);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
         .thenReturn(true);
     when(challengeRepository.findByLabIdOrderByOrderIndexAsc(labId)).thenReturn(List.of(optionChallenge));
@@ -1643,7 +1626,7 @@ class CourseServiceImplTest {
     instructor.setId(instructorId);
     Course course = buildCourseWithOwner(courseId, instructor);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
         .thenReturn(true);
 
@@ -1681,7 +1664,7 @@ class CourseServiceImplTest {
         buildCourseChallenge(solvedChallengeId, lab, "Auto solved", ChallengeType.FLAG, 3);
     List<UUID> challengeIds = List.of(challengeId, solvedChallengeId);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
         .thenReturn(true);
     when(userRepository.findByIdAndDeletedAtIsNull(instructorId)).thenReturn(Optional.of(instructor));
@@ -1740,7 +1723,7 @@ class CourseServiceImplTest {
     Challenge challenge =
         buildCourseChallenge(challengeId, lab, "Detached challenge", ChallengeType.FLAG, 5);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseEnrollmentRepository.existsByCourseIdAndParticipantId(courseId, participantId))
         .thenReturn(true);
     when(userRepository.findByIdAndDeletedAtIsNull(instructorId)).thenReturn(Optional.of(instructor));
@@ -1885,13 +1868,29 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
     when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
     when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
 
     assertThatThrownBy(() -> courseService.joinByInviteCode("ABC123", studentId))
+        .isInstanceOf(InvalidInviteCodeException.class);
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  void joinByInviteCode_whenCourseWasSoftDeleted_throwsInvalidInviteCodeException() {
+    UUID studentId = UUID.randomUUID();
+
+    User student = new User();
+    student.setId(studentId);
+
+    // Repository-level soft-delete filtering returns no match for deleted courses.
+    when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
+    when(courseRepository.findByInviteCode("DEL123")).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> courseService.joinByInviteCode("DEL123", studentId))
         .isInstanceOf(InvalidInviteCodeException.class);
 
     verify(courseRepository, never()).save(any(Course.class));
@@ -1907,8 +1906,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
 
     when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
     when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
@@ -1935,8 +1933,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
 
     when(userRepository.findByIdAndDeletedAtIsNull(studentId)).thenReturn(Optional.of(student));
     when(courseRepository.findByInviteCode("ABC123")).thenReturn(Optional.of(course));
@@ -1959,8 +1956,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
 
     CourseInstructor relation = new CourseInstructor();
     relation.setInstructorRole(InstructorRoleEnum.COLLABORATOR);
@@ -1989,15 +1985,14 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, nonOwnerId))
         .isInstanceOf(CourseAccessDeniedException.class);
@@ -2015,15 +2010,14 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(true);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.PUBLIC);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
 
     assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
         .isInstanceOf(CourseAccessDeniedException.class)
@@ -2042,8 +2036,7 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
     course.setInviteCode("OLDCOD");
 
     CourseInstructor ownerRelation = new CourseInstructor();
@@ -2051,7 +2044,7 @@ class CourseServiceImplTest {
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseInviteCodeHelper.generateAndAssign(courseId)).thenReturn("NEWCOD");
 
     Course result = courseService.regenerateInviteCode(courseId, ownerId);
@@ -2067,50 +2060,12 @@ class CourseServiceImplTest {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
         .isInstanceOf(CourseNotFoundException.class);
 
     verify(courseInviteCodeHelper, never()).generateAndAssign(any());
-  }
-
-  @Test
-  void updateCourse_withPublishedAndPrivate_throwsIllegalArgumentException() {
-    UUID ownerId = UUID.randomUUID();
-    UUID courseId = UUID.randomUUID();
-
-    User owner = new User();
-    owner.setId(ownerId);
-
-    Course course = new Course();
-    course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(false);
-
-    CourseInstructor ownerRelation = new CourseInstructor();
-    ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
-    ownerRelation.setInstructor(owner);
-    course.addCourseInstructor(ownerRelation);
-
-    UpdateCourseRequest updateRequest = new UpdateCourseRequest(
-        "Updated title",
-        "Updated description",
-        "Updated short description",
-        true,
-        true,
-        null,
-        null,
-        List.of(),
-        McAttemptsMode.UNLIMITED);
-
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-
-    assertThatThrownBy(() -> courseService.updateCourse(ownerId, courseId, updateRequest))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("published and private");
-
-    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
@@ -2123,15 +2078,14 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(true);
+    course.setStatus(CourseStatusEnum.PRIVATE);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseInviteCodeHelper.generateAndAssign(courseId))
         .thenThrow(new InviteCodeGenerationException(
             "Could not generate a unique invite code after 10 attempts"));
@@ -2157,8 +2111,7 @@ class CourseServiceImplTest {
         "Private Course",
         "Desc",
         null,
-        false,
-        true,
+        CourseStatusEnum.PRIVATE,
         null,
         null,
         List.of(),
@@ -2178,15 +2131,14 @@ class CourseServiceImplTest {
 
     Course course = new Course();
     course.setId(courseId);
-    course.setPublished(false);
-    course.setPrivate(false);
+    course.setStatus(CourseStatusEnum.DRAFT);
 
     CourseInstructor ownerRelation = new CourseInstructor();
     ownerRelation.setInstructorRole(InstructorRoleEnum.OWNER);
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
     when(courseInviteCodeHelper.generateAndAssign(courseId))
@@ -2197,8 +2149,7 @@ class CourseServiceImplTest {
         "Updated title",
         "Updated description",
         null,
-        false,
-        true,
+        CourseStatusEnum.PRIVATE,
         null,
         null,
         List.of(),

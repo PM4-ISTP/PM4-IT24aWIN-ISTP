@@ -17,6 +17,7 @@ import com.pm4.istp.admin.controllers.AdminCourseController;
 import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateCourseRequestDto;
 import com.pm4.istp.admin.services.AdminCourseService;
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
 import com.pm4.istp.shared.util.GlobalExceptionHandler;
 import java.util.List;
@@ -130,11 +131,9 @@ class AdminCourseControllerTest {
     req.setTitle("My course");
     req.setDescription("<p>desc</p>");
     req.setShortDescription("short");
-    req.setPublished(false);
-    req.setPrivate(false);
+    req.setStatus(CourseStatusEnum.DRAFT);
     req.setTopic(null);
     req.setImageUrl(null);
     return req;
   }
 }
-

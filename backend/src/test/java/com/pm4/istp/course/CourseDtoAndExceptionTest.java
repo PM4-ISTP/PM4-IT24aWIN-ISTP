@@ -2,6 +2,7 @@ package com.pm4.istp.course;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.dto.DockerImageCheckResponseDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
@@ -29,17 +30,28 @@ class CourseDtoAndExceptionTest {
 
     ListCourseResponseDto dto =
         new ListCourseResponseDto(
-            id, "Title", "Description", "Short", true, false, 2, now, now, "image", "web", "Owner", "picture", "Prof");
+            id,
+            "Title",
+            "Description",
+            "Short",
+            CourseStatusEnum.PUBLIC,
+            2,
+            now,
+            now,
+            "image",
+            "web",
+            "Owner",
+            "picture",
+            "Prof");
     ListCourseResponseDto builderDto =
-        ListCourseResponseDto.builder().id(id).title("Title").isPublished(true).isPrivate(true).build();
+        ListCourseResponseDto.builder().id(id).title("Title").status(CourseStatusEnum.PRIVATE).build();
 
     assertThat(check.reachable()).isTrue();
     assertThat(check.message()).isEqualTo("ok");
     assertThat(dto.getId()).isEqualTo(id);
     assertThat(dto.getInstructorCount()).isEqualTo(2);
     assertThat(dto.getOwnerTitle()).isEqualTo("Prof");
-    assertThat(builderDto.isPublished()).isTrue();
-    assertThat(builderDto.isPrivate()).isTrue();
+    assertThat(builderDto.getStatus()).isEqualTo(CourseStatusEnum.PRIVATE);
     assertThat(new ListCourseResponseDto()).isNotNull();
   }
 

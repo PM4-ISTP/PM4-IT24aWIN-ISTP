@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository;
 public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
   List<Challenge> findByLabIdOrderByOrderIndexAsc(UUID labId);
 
+  long countByLabId(UUID labId);
+
   @Query(
       """
       select c
@@ -25,6 +27,16 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
 
   @Query("select s.id, s.flag from Challenge s where s.id in :ids")
   List<Object[]> findFlagsByIds(@Param("ids") Collection<UUID> ids);
+
+  @Query(
+      """
+      select c.id, o.id
+      from Challenge c
+      join c.options o
+      where c.id in :challengeIds and o.correct = true
+      """)
+  List<Object[]> findCorrectOptionIdsByChallengeIds(
+      @Param("challengeIds") Collection<UUID> challengeIds);
 
   @Query(
       """
