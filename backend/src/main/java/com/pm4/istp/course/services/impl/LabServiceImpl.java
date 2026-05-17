@@ -315,6 +315,7 @@ public class LabServiceImpl implements LabService {
 
     verifyCreator(lab, userId);
     courseLabRepository.deleteByChallengeId(labId);
+    lab.setStatus(LabStatusEnum.SOFT_DELETED);
     lab.setDeletedByUsername(
         userRepository.findByIdAndDeletedAtIsNull(userId).map(User::getUsername).orElse("unknown"));
     lab.setDeletedAt(LocalDateTime.now());
