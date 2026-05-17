@@ -64,7 +64,6 @@ async function clickCourseCard(page: Page, course: Course, expectedUrl: string) 
     .filter({ has: page.getByText(course.title ?? "", { exact: true }) })
     .first();
   await expect(courseCard).toBeVisible();
-  await courseCard.click();
   await clickButtonAndAssertUrl(page, courseCard, expectedUrl);
 }
 
