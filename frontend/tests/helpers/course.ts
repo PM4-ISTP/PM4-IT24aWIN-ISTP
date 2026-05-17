@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import { type Course } from "@/tests/data";
+import { formatDate } from "@/tests/helpers/date";
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -9,18 +10,6 @@ function getCourseStatusLabel(course: Course): "Private" | "Public" | "Draft" {
   if (course.isPrivate) return "Private";
   if (course.isPublished) return "Public";
   return "Draft";
-}
-
-function formatDate(date?: string | null | number): string {
-  if (!date) {
-    return "No date specified";
-  }
-
-  return new Date(typeof date === "number" ? date : date).toLocaleDateString("de-CH", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 export async function assertCourseCards(page: Page, courses: readonly Course[]) {

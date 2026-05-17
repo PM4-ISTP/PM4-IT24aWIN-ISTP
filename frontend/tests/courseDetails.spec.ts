@@ -2,7 +2,7 @@ import test, { expect, type Page } from "@playwright/test";
 import { clickNavbarButton } from "@/tests/helpers/navigation";
 import { loginAs } from "@/tests/helpers/auth";
 import { courses, testUsers, type Course, type Lab, type ChallengeCompletion } from "@/tests/data";
-import { formatDate } from "@/tests/helpers/date";
+import { formatDateTime } from "@/tests/helpers/date";
 
 type LabProgress = {
   solvedLabs: number;
@@ -53,9 +53,9 @@ function getExpectedDueLabel(dueAt: string, solved: boolean): string {
   const dueDate = new Date(dueAt);
   const deadlinePassed = dueDate.getTime() < Date.now();
   if (deadlinePassed && !solved) {
-    return `Expired · ${formatDate(dueAt)}`;
+    return `Expired · ${formatDateTime(dueAt)}`;
   }
-  return `Due: ${formatDate(dueAt)}`;
+  return `Due: ${formatDateTime(dueAt)}`;
 }
 
 async function clickCourseCard(page: Page, course: Course) {

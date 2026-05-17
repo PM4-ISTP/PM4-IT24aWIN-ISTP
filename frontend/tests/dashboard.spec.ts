@@ -2,7 +2,7 @@ import test, { expect, type Page } from "@playwright/test";
 import { assertCourseCards } from "@/tests/helpers/course";
 import { loginAs } from "@/tests/helpers/auth";
 import { type Course, testUsers, type Lab } from "@/tests/data";
-import { formatDate } from "@/tests/helpers/date";
+import { formatDateTime } from "@/tests/helpers/date";
 
 type Deadline = {
   courseId: string;
@@ -77,7 +77,7 @@ async function assertUpcomingDeadlines(page: Page, visibleDeadlines: readonly De
 
     const isOverdue = new Date(item.dueAt).getTime() < now;
     await expect(row.getByText(isOverdue ? "OVERDUE" : "DUE", { exact: true })).toBeVisible();
-    await expect(row).toContainText(formatDate(item.dueAt));
+    await expect(row).toContainText(formatDateTime(item.dueAt));
 
     const dismissIcon = row.locator('[title="Aus Kalender entfernen"]');
     await expect(dismissIcon).toHaveCount(isOverdue ? 1 : 0);
