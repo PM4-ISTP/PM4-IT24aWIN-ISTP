@@ -73,7 +73,4 @@ public class Challenge {
   /** Soft-delete timestamp. Null means the challenge is active. */
   @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
-
-  @Column(name = "deleted_by_username", length = 128)
-  private String deletedByUsername;
 }
