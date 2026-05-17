@@ -3,6 +3,7 @@ import { assertCourseCards } from "@/tests/helpers/course";
 import { loginAs } from "@/tests/helpers/auth";
 import { type Course, testUsers, type Lab } from "@/tests/data";
 import { formatDateTime } from "@/tests/helpers/date";
+import { assertNoActiveLabs } from "@/tests/helpers/dashboard";
 
 type Deadline = {
   courseId: string;
@@ -115,8 +116,7 @@ test.describe("Dashboard widgets for all primary roles and a user without course
         String(completedLabsCount)
       );
 
-      // Verify no active labs
-      await expect(page.getByText("No active labs", { exact: true })).toBeVisible();
+      await assertNoActiveLabs(page);
     });
   }
 });
