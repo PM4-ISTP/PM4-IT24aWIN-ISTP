@@ -49,9 +49,9 @@ import type {
 } from "@/src/shared/types/course";
 import {
   CourseLabManager,
-  type CourseChallengeEntry,
+  type CourseLabEntry,
 } from "@/src/features/course/components/management/CourseLabManager";
-import { updateCourseChallenges } from "@/src/features/course/actions/labs";
+import { updateCourseLabs } from "@/src/features/course/actions/labs";
 import BadgeDesigner, { type BadgeConfig } from "@/src/features/badge/components/BadgeDesigner";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
@@ -88,7 +88,7 @@ export default function EditCourse() {
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [knownUsers, setKnownUsers] = useState<Record<string, CollaboratorUserResponseDto>>({});
   const [initialUsers, setInitialUsers] = useState<CollaboratorUserResponseDto[]>([]);
-  const [courseLabs, setCourseChallenges] = useState<CourseChallengeEntry[]>([]);
+  const [courseLabs, setCourseLabs] = useState<CourseLabEntry[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -177,7 +177,7 @@ export default function EditCourse() {
           dueAt: c.dueAt ?? null,
         })
       );
-      setCourseChallenges(cc);
+      setCourseLabs(cc);
 
       setLoading(false);
     }
@@ -221,7 +221,7 @@ export default function EditCourse() {
     }
 
     // Save course labs separately
-    const challengeResult = await updateCourseChallenges(
+    const labsResult = await updateCourseLabs(
       courseId,
       courseLabs.map((c) => ({
         labId: c.labId,
@@ -232,8 +232,8 @@ export default function EditCourse() {
 
     setIsSubmitting(false);
 
-    if (!challengeResult.success) {
-      setFormError(challengeResult.error);
+    if (!labsResult.success) {
+      setFormError(labsResult.error);
       return;
     }
 
@@ -580,7 +580,7 @@ export default function EditCourse() {
                   allowDeselect={false}
                 />
 
-                <CourseLabManager labs={courseLabs} onChange={setCourseChallenges} />
+                <CourseLabManager labs={courseLabs} onChange={setCourseLabs} />
 
                 {isOwner && (
                   <Box

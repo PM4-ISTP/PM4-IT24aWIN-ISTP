@@ -7,17 +7,17 @@ import { springPageableSerializer } from "@/src/shared/lib/api/querySerializers"
 
 // Re-export generated types with convenient aliases
 export type LabStatusEnum = NonNullable<
-  components["schemas"]["ChallengeDetailResponseDto"]["status"]
+  components["schemas"]["LabDetailResponseDto"]["status"]
 >;
 export type LabDifficultyEnum = NonNullable<
-  components["schemas"]["ChallengeDetailResponseDto"]["difficulty"]
+  components["schemas"]["LabDetailResponseDto"]["difficulty"]
 >;
 
-export type ChallengeCreatorResponseDto = components["schemas"]["ChallengeCreatorResponseDto"];
-export type CreateChallengeRequestDto = components["schemas"]["CreateChallengeRequestDto"];
-export type UpdateChallengeRequestDto = components["schemas"]["UpdateChallengeRequestDto"];
-export type CreateChallengeResponseDto = components["schemas"]["CreateChallengeResponseDto"];
-export type ChallengeDetailResponseDto = components["schemas"]["ChallengeDetailResponseDto"];
+export type LabCreatorResponseDto = components["schemas"]["LabCreatorResponseDto"];
+export type CreateLabRequestDto = components["schemas"]["CreateLabRequestDto"];
+export type UpdateLabRequestDto = components["schemas"]["UpdateLabRequestDto"];
+export type CreateLabResponseDto = components["schemas"]["CreateLabResponseDto"];
+export type LabDetailResponseDto = components["schemas"]["LabDetailResponseDto"];
 export type LabStudentDto = components["schemas"]["LabStudentDto"];
 export type ChallengeStudentDto = components["schemas"]["ChallengeStudentDto"];
 export type ChallengeOptionStudentDto = components["schemas"]["ChallengeOptionStudentDto"];
@@ -32,9 +32,9 @@ export type UpdateCourseLabsRequestDto = components["schemas"]["UpdateCourseLabs
 export type VisibilityImpactResponseDto = components["schemas"]["VisibilityImpactResponseDto"];
 export type CourseDetailResponseDto = components["schemas"]["CourseDetailResponseDto"];
 
-export async function createChallenge(
-  dto: CreateChallengeRequestDto
-): Promise<ActionResult<CreateChallengeResponseDto>> {
+export async function createLab(
+  dto: CreateLabRequestDto
+): Promise<ActionResult<CreateLabResponseDto>> {
   return await withActionResult(
     (client) =>
       client.POST("/api/v1/labs", {
@@ -44,9 +44,9 @@ export async function createChallenge(
   );
 }
 
-export async function fetchChallenge(
+export async function fetchLab(
   id: string
-): Promise<ActionResult<ChallengeDetailResponseDto>> {
+): Promise<ActionResult<LabDetailResponseDto>> {
   return await withActionResult(
     (client) =>
       client.GET("/api/v1/labs/{id}", {
@@ -56,10 +56,10 @@ export async function fetchChallenge(
   );
 }
 
-export async function updateChallenge(
+export async function updateLab(
   id: string,
-  dto: UpdateChallengeRequestDto
-): Promise<ActionResult<ChallengeDetailResponseDto>> {
+  dto: UpdateLabRequestDto
+): Promise<ActionResult<LabDetailResponseDto>> {
   return await withActionResult(
     (client) =>
       client.PUT("/api/v1/labs/{id}", {
@@ -70,7 +70,7 @@ export async function updateChallenge(
   );
 }
 
-export async function deleteChallenge(id: string): Promise<ActionResult<void>> {
+export async function deleteLab(id: string): Promise<ActionResult<void>> {
   return await withActionResultNoContent(
     (client) =>
       client.DELETE("/api/v1/labs/{id}", {
@@ -80,7 +80,7 @@ export async function deleteChallenge(id: string): Promise<ActionResult<void>> {
   );
 }
 
-export async function fetchInstructorChallenges(
+export async function fetchInstructorLabs(
   page = 0,
   size = 20
 ): Promise<ActionResult<PageListLabResponseDto>> {
@@ -94,7 +94,7 @@ export async function fetchInstructorChallenges(
   );
 }
 
-export async function searchChallenges(
+export async function searchLabs(
   query: string,
   page = 0,
   size = 20
@@ -181,7 +181,7 @@ export async function completeTheoryChallenge(
   );
 }
 
-export async function updateCourseChallenges(
+export async function updateCourseLabs(
   courseId: string,
   labs: CourseLabItemDto[]
 ): Promise<ActionResult<CourseDetailResponseDto>> {

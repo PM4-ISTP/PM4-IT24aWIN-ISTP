@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChallengeDetailResponseDto {
+public class CreateLabResponseDto {
   private UUID id;
   private String title;
   private String description;
@@ -22,8 +22,7 @@ public class ChallengeDetailResponseDto {
   private String dockerImage;
   private Integer containerPort;
   private Integer podTtlSeconds;
-  private ChallengeCreatorResponseDto creator;
-  private long courseCount;
+  private UUID creatorId;
   private List<ChallengeResponseDto> challenges;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;

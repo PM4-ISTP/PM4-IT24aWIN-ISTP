@@ -10,7 +10,7 @@ export type ChoiceSubmissionResponseDto = components["schemas"]["ChoiceSubmissio
 
 export type InstructorRoleEnum = "OWNER" | "COLLABORATOR";
 export type PlatformRole = "ROLE_ADMINISTRATOR" | "ROLE_INSTRUCTOR" | "ROLE_STUDENT";
-export type CourseVisibility = "DRAFT" | "PUBLIC" | "PRIVATE";
+export type CourseVisibility = "DRAFT" | "PUBLIC" | "PRIVATE" | "SOFT_DELETED";
 
 export interface CourseUserSummary {
   id: string | null;
@@ -128,7 +128,7 @@ export interface CourseDetailResponseDto {
 
 export type CourseLabSubmissionStatusEnum = "NOT_STARTED" | "IN_PROGRESS" | "SUBMITTED";
 
-export interface CourseChallengeSubmissionEntryDto {
+export interface CourseLabSubmissionEntryDto {
   participantId: string;
   labId: string;
   solvedChallengeCount: number;
@@ -169,7 +169,7 @@ export interface CourseLabSubmissionsResponseDto {
   courseId: string;
   participants: CourseParticipantDto[];
   labs: CourseLabResponseDto[];
-  submissions: CourseChallengeSubmissionEntryDto[];
+  submissions: CourseLabSubmissionEntryDto[];
 }
 
 export interface PublicCourseDetailResponseDto {

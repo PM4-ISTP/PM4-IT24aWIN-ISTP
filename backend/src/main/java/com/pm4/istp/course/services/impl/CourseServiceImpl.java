@@ -19,7 +19,7 @@ import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.entities.StudentFlagSubmission;
 import com.pm4.istp.course.db.entities.StudentOptionSubmission;
-import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabChallengeSubmissionDetailDto;
 import com.pm4.istp.course.dto.CourseLabDeadlineDto;
 import com.pm4.istp.course.dto.CourseLabItemDto;
@@ -343,7 +343,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional
-  public Course updateCourseChallenges(UUID userId, UUID courseId, List<CourseLabItemDto> labs) {
+  public Course updateCourseLabs(UUID userId, UUID courseId, List<CourseLabItemDto> labs) {
     Course course =
         courseRepository
             .findByIdAndDeletedAtIsNull(courseId)
@@ -404,7 +404,7 @@ public class CourseServiceImpl implements CourseService {
       if (courseLab == null) {
         courseLab = new CourseLab();
         courseLab.setLab(labById.get(entry.getKey()));
-        course.addCourseChallenge(courseLab);
+        course.addCourseLab(courseLab);
       }
       courseLab.setOrderIndex(item.getOrderIndex());
       courseLab.setDueAt(item.getDueAt());
@@ -419,7 +419,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional(readOnly = true)
-  public CourseLabSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId) {
+  public CourseLabSubmissionsResponseDto getCourseLabSubmissions(UUID userId, UUID courseId) {
     Course course =
         courseRepository
             .findByIdAndDeletedAtIsNull(courseId)
@@ -431,21 +431,21 @@ public class CourseServiceImpl implements CourseService {
 
     List<CourseParticipantResponseDto> participants = loadParticipants(courseId);
     List<CourseLab> assigned = course.getCourseLabs() == null ? List.of() : course.getCourseLabs();
-    List<CourseLabResponseDto> challengesDto = toChallengeSubmissionDtos(assigned);
+    List<CourseLabResponseDto> labsDto = toLabResponseDtos(assigned);
 
     List<UUID> userIds = participants.stream().map(CourseParticipantResponseDto::getId).toList();
-    List<UUID> labIds = assigned.stream().map(cc -> cc.getLab().getId()).toList();
+    List<UUID> labIds = assigned.stream().map(courseLab -> courseLab.getLab().getId()).toList();
 
     Map<UUID, Integer> totalByLab = loadChallengeTotals(labIds);
     Map<UUID, Integer> maxPointsByLab = loadMaxPoints(assigned);
 
     SubmissionAggregates aggregates = loadSubmissionAggregates(userIds, labIds);
     SubmissionScoringData scoringData = loadSubmissionScoringData(courseId, userIds, labIds);
-    List<CourseChallengeSubmissionEntryDto> entries =
+    List<CourseLabSubmissionEntryDto> entries =
         buildSubmissionEntries(
             userIds, labIds, totalByLab, maxPointsByLab, aggregates, scoringData, mcAttemptsMode);
 
-    return new CourseLabSubmissionsResponseDto(courseId, participants, challengesDto, entries);
+    return new CourseLabSubmissionsResponseDto(courseId, participants, labsDto, entries);
   }
 
   @Override
@@ -665,7 +665,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional
-  public CourseChallengeSubmissionEntryDto updateCourseChallengeScore(
+  public CourseLabSubmissionEntryDto updateCourseChallengeScore(
       UUID instructorUserId,
       UUID courseId,
       UUID participantId,
@@ -766,7 +766,7 @@ public class CourseServiceImpl implements CourseService {
         .toList();
   }
 
-  private List<CourseLabResponseDto> toChallengeSubmissionDtos(List<CourseLab> assigned) {
+  private List<CourseLabResponseDto> toLabResponseDtos(List<CourseLab> assigned) {
     return assigned.stream()
         .map(
             courseLab -> {
@@ -815,14 +815,14 @@ public class CourseServiceImpl implements CourseService {
   }
 
   private Map<UUID, Integer> loadMaxPoints(List<CourseLab> assigned) {
-    Map<UUID, Integer> maxPointsByChallenge = new HashMap<>();
+    Map<UUID, Integer> maxPointsByLab = new HashMap<>();
     for (CourseLab courseLab : assigned) {
       if (courseLab.getLab() == null || courseLab.getLab().getId() == null) {
         continue;
       }
-      maxPointsByChallenge.put(courseLab.getLab().getId(), courseLab.getLab().getMaxScore());
+      maxPointsByLab.put(courseLab.getLab().getId(), courseLab.getLab().getMaxScore());
     }
-    return maxPointsByChallenge;
+    return maxPointsByLab;
   }
 
   private SubmissionScoringData loadSubmissionScoringData(
@@ -931,17 +931,17 @@ public class CourseServiceImpl implements CourseService {
     }
   }
 
-  private List<CourseChallengeSubmissionEntryDto> buildSubmissionEntries(
+  private List<CourseLabSubmissionEntryDto> buildSubmissionEntries(
       List<UUID> userIds,
-      List<UUID> challengeIds,
+      List<UUID> labIds,
       Map<UUID, Integer> totalByLab,
       Map<UUID, Integer> maxPointsByLab,
       SubmissionAggregates aggregates,
       SubmissionScoringData scoringData,
       McAttemptsMode mcAttemptsMode) {
-    List<CourseChallengeSubmissionEntryDto> entries = new ArrayList<>();
+    List<CourseLabSubmissionEntryDto> entries = new ArrayList<>();
     for (UUID participantId : userIds) {
-      for (UUID labId : challengeIds) {
+      for (UUID labId : labIds) {
         entries.add(
             buildSubmissionEntry(
                 participantId,
@@ -956,7 +956,7 @@ public class CourseServiceImpl implements CourseService {
     return entries;
   }
 
-  private CourseChallengeSubmissionEntryDto buildSubmissionEntry(
+  private CourseLabSubmissionEntryDto buildSubmissionEntry(
       UUID participantId,
       UUID labId,
       Map<UUID, Integer> totalByLab,
@@ -998,7 +998,7 @@ public class CourseServiceImpl implements CourseService {
       }
     }
 
-    return new CourseChallengeSubmissionEntryDto(
+    return new CourseLabSubmissionEntryDto(
         participantId,
         labId,
         solvedCount,
