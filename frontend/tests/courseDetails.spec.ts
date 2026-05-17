@@ -194,7 +194,7 @@ async function assertLabList(page: Page, course: Course) {
       const challengeSolved = completedChallenges.some(
         (completion) => completion.challenge.id === challenge.id
       );
-      await expect(row.getByLabel(challengeSolved ? "Solved" : "Not solved")).toBeVisible();
+      await expect(row.getByLabel(challengeSolved ? "Completed" : "Not completed")).toBeVisible();
     }
   }
 }
