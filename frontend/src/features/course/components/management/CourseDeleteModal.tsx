@@ -1,6 +1,7 @@
 "use client";
 
-import { Alert, Button, Group, Modal, Stack, Text } from "@mantine/core";
+import { Alert, Group, Modal, Stack, Text } from "@mantine/core";
+import AppButton from "@/src/shared/components/AppButton";
 
 export function CourseDeleteModal({
   opened,
@@ -29,23 +30,12 @@ export function CourseDeleteModal({
           </Alert>
         )}
         <Group justify="flex-end" gap="sm">
-          <Button
-            variant="outline"
-            radius="md"
-            onClick={onClose}
-            disabled={isDeleting}
-            style={{
-              borderColor: "rgba(255,255,255,0.12)",
-              color: "#e2e8f0",
-              background: "rgba(255,255,255,0.04)",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-            }}
-          >
+          <AppButton tone="ghost" onClick={onClose} disabled={isDeleting}>
             Cancel
-          </Button>
-          <Button color="red" loading={isDeleting} disabled={isDeleting} onClick={onConfirm}>
+          </AppButton>
+          <AppButton tone="danger" loading={isDeleting} disabled={isDeleting} onClick={onConfirm}>
             Delete Course
-          </Button>
+          </AppButton>
         </Group>
       </Stack>
     </Modal>

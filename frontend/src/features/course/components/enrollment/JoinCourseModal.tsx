@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, Button, Group, Modal, PinInput, Stack, Text } from "@mantine/core";
+import { Alert, Group, Modal, PinInput, Stack, Text } from "@mantine/core";
 import { joinCourseByCode } from "@/src/features/course/actions/courses";
+import AppButton from "@/src/shared/components/AppButton";
 
 interface JoinCourseModalProps {
   opened: boolean;
@@ -112,32 +113,16 @@ export default function JoinCourseModal({ opened, onClose }: JoinCourseModalProp
         )}
 
         <Group justify="flex-end" gap="sm">
-          <Button
-            variant="outline"
-            radius="md"
-            onClick={handleClose}
-            disabled={isSubmitting}
-            style={{
-              borderColor: "rgba(255,255,255,0.12)",
-              color: "#e2e8f0",
-              background: "rgba(255,255,255,0.04)",
-            }}
-          >
+          <AppButton tone="ghost" onClick={handleClose} disabled={isSubmitting}>
             Cancel
-          </Button>
-          <Button
-            radius="md"
+          </AppButton>
+          <AppButton
             loading={isSubmitting}
             disabled={isSubmitting || code.length !== 6}
             onClick={() => void handleSubmit()}
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontWeight: 600,
-            }}
           >
             Join Course
-          </Button>
+          </AppButton>
         </Group>
       </Stack>
     </Modal>
