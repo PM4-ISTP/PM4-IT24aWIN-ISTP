@@ -62,7 +62,7 @@ import com.pm4.istp.course.repositories.ChallengeCompletionRepository;
 import com.pm4.istp.course.repositories.ChallengeOptionRepository;
 import com.pm4.istp.course.repositories.ChallengeRepository;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
-import com.pm4.istp.course.services.impl.LabServiceImpl;
+import com.pm4.istp.course.services.LabService;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.repositories.UserRepository;
@@ -88,7 +88,7 @@ class LabServiceImplTest {
   @Mock private DockerImageAvailabilityService dockerImageAvailabilityService;
   @Mock private BadgeService badgeService;
 
-  @InjectMocks private LabServiceImpl labService;
+  @InjectMocks private LabService labService;
 
   private void stubDefaultSubmissionRepos() {
     // Not all tests touch these repos, so keep stubs lenient to avoid UnnecessaryStubbingException.

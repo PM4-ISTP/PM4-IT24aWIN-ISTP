@@ -72,7 +72,7 @@ import com.pm4.istp.course.repositories.StudentFlagSubmissionRepository;
 import com.pm4.istp.course.repositories.StudentOptionSubmissionRepository;
 import com.pm4.istp.course.services.CourseInviteCodeHelper;
 import com.pm4.istp.course.services.CourseTopicService;
-import com.pm4.istp.course.services.impl.CourseServiceImpl;
+import com.pm4.istp.course.services.CourseService;
 import com.pm4.istp.badge.services.BadgeService;
 import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.db.entities.UserRoleEnum;
@@ -137,7 +137,7 @@ class CourseServiceImplTest {
   }
 
   @InjectMocks
-  private CourseServiceImpl courseService;
+  private CourseService courseService;
 
   @BeforeEach
   void setUp() {

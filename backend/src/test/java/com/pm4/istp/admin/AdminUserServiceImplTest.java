@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 import com.pm4.istp.admin.dto.AdminCreateUserRequestDto;
 import com.pm4.istp.admin.dto.AdminCreateUserResponseDto;
 import com.pm4.istp.admin.dto.AdminProvisionUserResponseDto;
-import com.pm4.istp.admin.services.impl.AdminUserServiceImpl;
+import com.pm4.istp.admin.services.AdminUserService;
 import com.pm4.istp.shared.keycloak.KeycloakAdminApiException;
 import com.pm4.istp.shared.keycloak.KeycloakAdminClient;
 import com.pm4.istp.shared.keycloak.KeycloakRoleRepresentation;
@@ -45,7 +45,7 @@ class AdminUserServiceImplTest {
   @Mock private UserRepository userRepository;
   @Mock private UserService userService;
 
-  @InjectMocks private AdminUserServiceImpl adminUserService;
+  @InjectMocks private AdminUserService adminUserService;
 
   @Test
   void createUser_success_createsInKeycloakAndDb() {

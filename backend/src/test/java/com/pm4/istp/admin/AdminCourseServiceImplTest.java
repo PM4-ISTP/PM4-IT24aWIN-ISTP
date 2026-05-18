@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateCourseRequestDto;
-import com.pm4.istp.admin.services.impl.AdminCourseServiceImpl;
+import com.pm4.istp.admin.services.AdminCourseService;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
@@ -37,7 +37,7 @@ class AdminCourseServiceImplTest {
   @Mock private CourseTopicService courseTopicService;
   @Mock private CourseInviteCodeHelper courseInviteCodeHelper;
 
-  @InjectMocks private AdminCourseServiceImpl adminCourseService;
+  @InjectMocks private AdminCourseService adminCourseService;
 
   // ── listCourses ─────────────────────────────────────────────────────────────
 

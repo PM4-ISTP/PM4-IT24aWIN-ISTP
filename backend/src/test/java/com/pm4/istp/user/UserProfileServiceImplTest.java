@@ -19,7 +19,7 @@ import com.pm4.istp.user.dto.UpdateUserProfileRequestDto;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.exceptions.UserProfileSyncException;
 import com.pm4.istp.user.repositories.UserRepository;
-import com.pm4.istp.user.services.impl.UserProfileServiceImpl;
+import com.pm4.istp.user.services.UserProfileService;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,7 +39,7 @@ class UserProfileServiceImplTest {
   @Mock private UserRepository userRepository;
   @Mock private KeycloakAdminClient keycloakAdminClient;
 
-  @InjectMocks private UserProfileServiceImpl userProfileService;
+  @InjectMocks private UserProfileService userProfileService;
 
   @Test
   void getProfile_returnsExistingUserAndThrowsWhenMissing() {

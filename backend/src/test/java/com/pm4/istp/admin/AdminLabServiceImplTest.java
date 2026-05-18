@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.pm4.istp.admin.dto.AdminUpdateLabRequestDto;
-import com.pm4.istp.admin.services.impl.AdminLabServiceImpl;
+import com.pm4.istp.admin.services.AdminLabService;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabDifficultyEnum;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
@@ -43,7 +43,7 @@ class AdminChallengeServiceImplTest {
   @Mock private StudentOptionSubmissionRepository studentOptionSubmissionRepository;
   @Mock private CourseChallengeScoreOverrideRepository courseChallengeScoreOverrideRepository;
 
-  @InjectMocks private AdminLabServiceImpl adminChallengeService;
+  @InjectMocks private AdminLabService adminChallengeService;
 
   // ── listChallenges ──────────────────────────────────────────────────────────
 

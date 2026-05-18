@@ -27,14 +27,14 @@ import com.pm4.istp.user.db.entities.UserRoleEnum;
 import com.pm4.istp.user.exceptions.UserNotFoundException;
 import com.pm4.istp.user.exceptions.UserSoftDeletedException;
 import com.pm4.istp.user.repositories.UserRepository;
-import com.pm4.istp.user.services.impl.UserServiceImpl;
+import com.pm4.istp.user.services.UserService;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
   @Mock private UserRepository userRepository;
 
-  @InjectMocks private UserServiceImpl userService;
+  @InjectMocks private UserService userService;
 
   @Test
   void listCollaboratorUsers_delegatesToRepository() {

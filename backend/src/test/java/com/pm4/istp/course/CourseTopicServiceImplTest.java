@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.pm4.istp.course.db.entities.CourseTopic;
 import com.pm4.istp.course.repositories.CourseTopicRepository;
-import com.pm4.istp.course.services.impl.CourseTopicServiceImpl;
+import com.pm4.istp.course.services.CourseTopicService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +20,7 @@ class CourseTopicServiceImplTest {
 
   @Mock private CourseTopicRepository courseTopicRepository;
 
-  @InjectMocks private CourseTopicServiceImpl courseTopicService;
+  @InjectMocks private CourseTopicService courseTopicService;
 
   private CourseTopic topic(String name) {
     CourseTopic t = new CourseTopic();

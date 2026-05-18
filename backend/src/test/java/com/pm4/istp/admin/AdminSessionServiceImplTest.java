@@ -6,7 +6,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.pm4.istp.admin.services.impl.AdminSessionServiceImpl;
+import com.pm4.istp.admin.services.AdminSessionService;
 import com.pm4.istp.shared.keycloak.KeycloakAdminClient;
 import com.pm4.istp.shared.keycloak.KeycloakAppProperties;
 import com.pm4.istp.shared.keycloak.KeycloakClientRepresentation;
@@ -27,12 +27,12 @@ class AdminSessionServiceImplTest {
   @Mock private KeycloakAdminClient keycloakAdminClient;
 
   private KeycloakAppProperties keycloakAppProperties;
-  private AdminSessionServiceImpl service;
+  private AdminSessionService service;
 
   @BeforeEach
   void setUp() {
     keycloakAppProperties = new KeycloakAppProperties();
-    service = new AdminSessionServiceImpl(keycloakAdminClient, keycloakAppProperties);
+    service = new AdminSessionService(keycloakAdminClient, keycloakAppProperties);
   }
 
   @Test

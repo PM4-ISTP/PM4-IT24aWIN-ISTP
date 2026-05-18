@@ -1,20 +1,106 @@
 package com.pm4.istp.user.services;
 
 import com.pm4.istp.user.db.entities.User;
+import com.pm4.istp.user.db.entities.UserRoleEnum;
+import com.pm4.istp.user.exceptions.UserNotFoundException;
+import com.pm4.istp.user.exceptions.UserSoftDeletedException;
+import com.pm4.istp.user.repositories.UserRepository;
+import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-public interface UserService {
-  Page<User> listCollaboratorUsers(UUID userId, Pageable pageable);
+@Service
+@RequiredArgsConstructor
+public class UserService {
+  private static final Set<UserRoleEnum> COURSE_COLLABORATOR_ROLES =
+      Set.of(UserRoleEnum.ROLE_ADMINISTRATOR, UserRoleEnum.ROLE_INSTRUCTOR);
+  private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
 
-  Page<User> searchCollaboratorUsersByName(UUID userId, String name, Pageable pageable);
+  private final UserRepository userRepository;
 
-  Page<User> searchCollaboratorUsersByQuery(UUID userId, String query, Pageable pageable);
+  public Page<User> listCollaboratorUsers(UUID userId, Pageable pageable) {
+    return userRepository.findDistinctByAnyRoleAndIdNot(
+        COURSE_COLLABORATOR_ROLES, userId, pageable);
+  }
 
-  void softDeleteUser(UUID userId);
+  public Page<User> searchCollaboratorUsersByName(UUID userId, String name, Pageable pageable) {
+    return userRepository.findDistinctByAnyRoleAndNameContainingIgnoreCaseAndIdNot(
+        COURSE_COLLABORATOR_ROLES, name, userId, pageable);
+  }
 
-  void restoreUser(UUID userId);
+  public Page<User> searchCollaboratorUsersByQuery(UUID userId, String query, Pageable pageable) {
+    return userRepository.findDistinctByAnyRoleAndNameOrUsernameOrEmailContainingIgnoreCaseAndIdNot(
+        COURSE_COLLABORATOR_ROLES, query, userId, pageable);
+  }
 
-  void softDeleteAndAnonymizeUser(UUID userId, String anonymizedEmail, String anonymizedUsername);
+  @Transactional
+  public void softDeleteUser(UUID userId) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+
+    if (user.getDeletedAt() == null) {
+      user.setDeletedAt(LocalDateTime.now());
+      userRepository.save(user);
+    }
+  }
+
+  @Transactional
+  public void restoreUser(UUID userId) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(
+                () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+
+    if (user.getAnonymizedAt() != null) {
+      throw new UserSoftDeletedException("User is soft-deleted and cannot be restored");
+    }
+
+    if (user.getDeletedAt() != null) {
+      user.setDeletedAt(null);
+      userRepository.save(user);
+    }
+  }
+
+  @Transactional
+  public void softDeleteAndAnonymizeUser(
+      UUID userId, String anonymizedEmail, String anonymizedUsername) {
+    LocalDateTime now = LocalDateTime.now();
+
+    User user = userRepository.findById(userId).orElse(null);
+    if (user == null) {
+      user = new User();
+      user.setId(userId);
+      user.setName("Deleted user");
+      user.setFirstName(null);
+      user.setLastName(null);
+      user.setTitle(null);
+      user.setPicture(null);
+      user.setRoles(new java.util.HashSet<>());
+      user.setCreatedAt(now);
+      user.setUpdatedAt(now);
+    }
+
+    user.setEmail(anonymizedEmail);
+    user.setUsername(anonymizedUsername);
+    if (user.getCreatedAt() == null) {
+      user.setCreatedAt(now);
+    }
+    user.setUpdatedAt(now);
+    if (user.getDeletedAt() == null) {
+      user.setDeletedAt(now);
+    }
+    if (user.getAnonymizedAt() == null) {
+      user.setAnonymizedAt(now);
+    }
+    userRepository.save(user);
+  }
 }

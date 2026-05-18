@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 import com.pm4.istp.badge.db.entities.UserCourseBadge;
 import com.pm4.istp.badge.dto.UpdateCourseBadgeRequestDto;
 import com.pm4.istp.badge.repositories.UserCourseBadgeRepository;
-import com.pm4.istp.badge.services.impl.BadgeServiceImpl;
+import com.pm4.istp.badge.services.BadgeService;
 import com.pm4.istp.course.db.InstructorRoleEnum;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.Course;
@@ -42,12 +42,12 @@ class BadgeServiceImplTest {
   @Mock private UserCourseBadgeRepository userCourseBadgeRepository;
   @Mock private ChallengeCompletionRepository challengeCompletionRepository;
 
-  private BadgeServiceImpl badgeService;
+  private BadgeService badgeService;
 
   @BeforeEach
   void setUp() {
     badgeService =
-        new BadgeServiceImpl(
+        new BadgeService(
             courseRepository,
             userRepository,
             userCourseBadgeRepository,

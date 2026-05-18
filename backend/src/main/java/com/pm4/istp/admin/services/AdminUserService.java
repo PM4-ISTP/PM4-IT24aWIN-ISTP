@@ -8,36 +8,648 @@ import com.pm4.istp.admin.dto.AdminUpdateUserRoleRequestDto;
 import com.pm4.istp.admin.dto.AdminUserDetailDto;
 import com.pm4.istp.admin.dto.AdminUserDirectoryItemDto;
 import com.pm4.istp.admin.dto.AdminUserListItemDto;
+import com.pm4.istp.shared.keycloak.KeycloakAdminClient;
+import com.pm4.istp.shared.keycloak.KeycloakRoleRepresentation;
+import com.pm4.istp.shared.keycloak.KeycloakUserRepresentation;
 import com.pm4.istp.shared.keycloak.KeycloakUserSessionRepresentation;
+import com.pm4.istp.user.db.entities.User;
+import com.pm4.istp.user.db.entities.UserRoleEnum;
+import com.pm4.istp.user.exceptions.UserNotFoundException;
+import com.pm4.istp.user.exceptions.UserProfileSyncException;
+import com.pm4.istp.user.exceptions.UserSoftDeletedException;
+import com.pm4.istp.user.repositories.UserRepository;
+import com.pm4.istp.user.services.UserService;
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-public interface AdminUserService {
-  List<AdminUserDirectoryItemDto> listUserDirectory(String search, Integer first, Integer max);
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AdminUserService {
+  private static final String DEFAULT_NEW_USER_ROLE = "ROLE_STUDENT";
+  private static final Set<String> MANAGED_APP_ROLES =
+      Set.of(DEFAULT_NEW_USER_ROLE, "ROLE_INSTRUCTOR", "ROLE_ADMINISTRATOR");
+  private static final String USER_NOT_FOUND_MSG = "User with ID '%s' not found";
+  private static final String EMAIL_ATTRIBUTE = "email";
+  private static final String PICTURE_ATTRIBUTE = "picture";
+  private static final String TITLE_ATTRIBUTE = "title";
+  private static final String UNKNOWN_IDENTIFIER = "unknown";
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+  private static final String LOWERCASE_CHARS = "abcdefghjkmnpqrstuvwxyz";
+  private static final String UPPERCASE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ";
+  private static final String DIGIT_CHARS = "23456789";
+  // avoid ambiguous/shell-problematic chars; still counts as "special" for most policies
+  private static final String SYMBOL_CHARS = "!@$%*_-+";
+  private static final DateTimeFormatter SOFT_DELETE_TS_FORMAT =
+      DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
-  Page<AdminUserListItemDto> listUsers(String query, Pageable pageable);
+  private final KeycloakAdminClient keycloakAdminClient;
+  private final UserRepository userRepository;
+  private final UserService userService;
 
-  AdminUserDetailDto getUser(UUID userId);
+  public List<AdminUserDirectoryItemDto> listUserDirectory(
+      String search, Integer first, Integer max) {
+    String normalizedSearch = normalizeOptional(search);
+    int safeFirst = first == null || first < 0 ? 0 : first;
+    int safeMax = max == null || max <= 0 ? 50 : Math.min(max, 200);
 
-  AdminUserDetailDto updateUserRole(UUID userId, AdminUpdateUserRoleRequestDto request);
+    List<KeycloakUserRepresentation> keycloakUsers =
+        keycloakAdminClient.listUsers(normalizedSearch, safeFirst, safeMax);
 
-  AdminCreateUserResponseDto createUser(AdminCreateUserRequestDto request);
+    return keycloakUsers.stream()
+        .map(this::toDirectoryItem)
+        .filter(java.util.Objects::nonNull)
+        .toList();
+  }
 
-  AdminProvisionUserResponseDto provisionUser(UUID userId);
+  public Page<AdminUserListItemDto> listUsers(String query, Pageable pageable) {
+    String normalizedQuery = normalizeOptional(query);
+    Page<User> page = userRepository.searchUsers(normalizedQuery, pageable);
+    return page.map(this::toListItem);
+  }
 
-  void disableUser(UUID userId);
+  public AdminUserDetailDto getUser(UUID userId) {
+    User user = userRepository.findById(userId).orElse(null);
 
-  void restoreUser(UUID userId);
+    KeycloakUserRepresentation keycloakUser = keycloakAdminClient.getUser(userId);
+    if (keycloakUser == null) {
+      throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+    }
 
-  void softDeleteUser(UUID userId);
+    String title =
+        user != null
+            ? user.getTitle()
+            : getSingleAttribute(keycloakUser.getAttributes(), TITLE_ATTRIBUTE);
+    String picture =
+        user != null
+            ? user.getPicture()
+            : getSingleAttribute(keycloakUser.getAttributes(), PICTURE_ATTRIBUTE);
 
-  List<KeycloakUserSessionRepresentation> listUserSessions(UUID userId);
+    Set<String> roles =
+        user != null
+            ? toRoleStrings(user.getRoles())
+            : keycloakAdminClient.listUserRealmRoles(userId).stream()
+                .map(KeycloakRoleRepresentation::getName)
+                .filter(r -> r != null && MANAGED_APP_ROLES.contains(r))
+                .collect(Collectors.toSet());
 
-  void logoutUser(UUID userId);
+    String firstName =
+        user != null ? user.getFirstName() : normalizeOptional(keycloakUser.getFirstName());
+    String lastName =
+        user != null ? user.getLastName() : normalizeOptional(keycloakUser.getLastName());
+    String username =
+        user != null ? user.getUsername() : normalizeOptional(keycloakUser.getUsername());
+    String email = user != null ? user.getEmail() : normalizeOptional(keycloakUser.getEmail());
+    String name =
+        user != null ? user.getName() : buildDisplayName(firstName, lastName, username, email);
 
-  void sendPasswordResetEmail(UUID userId);
+    return new AdminUserDetailDto(
+        userId,
+        name,
+        email,
+        username,
+        firstName,
+        lastName,
+        title,
+        picture,
+        roles,
+        user == null ? null : user.getDeletedAt(),
+        user == null ? null : user.getAnonymizedAt(),
+        user != null,
+        keycloakUser);
+  }
 
-  void setUserPassword(UUID userId, AdminSetUserPasswordRequestDto request);
+  @Transactional
+  public AdminUserDetailDto updateUserRole(UUID userId, AdminUpdateUserRoleRequestDto request) {
+    Set<String> desired = validateRoleUpdateRequest(request);
+
+    // Keycloak is source of truth for roles. Snapshot current app roles for rollback.
+    List<KeycloakRoleRepresentation> currentRoleReps =
+        keycloakAdminClient.listUserRealmRoles(userId);
+    Set<String> current =
+        currentRoleReps.stream()
+            .map(KeycloakRoleRepresentation::getName)
+            .filter(name -> name != null && MANAGED_APP_ROLES.contains(name))
+            .collect(Collectors.toSet());
+
+    Set<String> toAdd =
+        desired.stream().filter(r -> !current.contains(r)).collect(Collectors.toSet());
+    Set<String> toRemove =
+        current.stream().filter(r -> !desired.contains(r)).collect(Collectors.toSet());
+
+    List<KeycloakRoleRepresentation> addReps =
+        toAdd.stream()
+            .map(keycloakAdminClient::getRealmRoleByName)
+            .filter(java.util.Objects::nonNull)
+            .toList();
+    List<KeycloakRoleRepresentation> removeReps =
+        toRemove.stream()
+            .map(keycloakAdminClient::getRealmRoleByName)
+            .filter(java.util.Objects::nonNull)
+            .toList();
+
+    if (!removeReps.isEmpty()) {
+      keycloakAdminClient.removeRealmRoles(userId, removeReps);
+    }
+    if (!addReps.isEmpty()) {
+      keycloakAdminClient.addRealmRoles(userId, addReps);
+    }
+
+    // Sync DB projection (create if missing)
+    User dbUser = userRepository.findById(userId).orElse(null);
+    if (dbUser == null) {
+      KeycloakUserRepresentation keycloakUser = keycloakAdminClient.getUser(userId);
+      if (keycloakUser == null) {
+        throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+      }
+
+      dbUser = new User();
+      dbUser.setId(userId);
+      dbUser.setEmail(normalizeRequired(keycloakUser.getEmail(), EMAIL_ATTRIBUTE));
+      dbUser.setUsername(normalizeOptional(keycloakUser.getUsername()));
+      dbUser.setFirstName(normalizeOptional(keycloakUser.getFirstName()));
+      dbUser.setLastName(normalizeOptional(keycloakUser.getLastName()));
+      dbUser.setName(
+          buildDisplayName(
+              dbUser.getFirstName(),
+              dbUser.getLastName(),
+              dbUser.getUsername(),
+              dbUser.getEmail()));
+      dbUser.setTitle(getSingleAttribute(keycloakUser.getAttributes(), TITLE_ATTRIBUTE));
+      dbUser.setPicture(getSingleAttribute(keycloakUser.getAttributes(), PICTURE_ATTRIBUTE));
+    }
+
+    try {
+      dbUser.setRoles(
+          desired.stream()
+              .map(UserRoleEnum::fromString)
+              .filter(Optional::isPresent)
+              .map(Optional::get)
+              .collect(Collectors.toSet()));
+      userRepository.save(dbUser);
+    } catch (RuntimeException ex) {
+      // Rollback Keycloak roles best-effort
+      try {
+        // revert: remove newly added, re-add removed
+        if (!addReps.isEmpty()) {
+          keycloakAdminClient.removeRealmRoles(userId, addReps);
+        }
+        if (!removeReps.isEmpty()) {
+          keycloakAdminClient.addRealmRoles(userId, removeReps);
+        }
+      } catch (RuntimeException rollbackEx) {
+        log.error("Failed to rollback Keycloak role update for user {}", userId, rollbackEx);
+      }
+      throw new UserProfileSyncException("Failed to update user roles in application database", ex);
+    }
+
+    return getUser(userId);
+  }
+
+  private Set<String> validateRoleUpdateRequest(AdminUpdateUserRoleRequestDto request) {
+    Set<String> desired =
+        request.getRoles().stream()
+            .map(this::normalizeOptional)
+            .filter(java.util.Objects::nonNull)
+            .collect(Collectors.toSet());
+
+    if (desired.size() != 1) {
+      throw new IllegalArgumentException("Exactly one role must be provided");
+    }
+    if (!MANAGED_APP_ROLES.containsAll(desired)) {
+      throw new IllegalArgumentException("Invalid app roles");
+    }
+    return desired;
+  }
+
+  @Transactional
+  public AdminCreateUserResponseDto createUser(AdminCreateUserRequestDto request) {
+    String email = normalizeRequired(request.getEmail(), EMAIL_ATTRIBUTE);
+    String username = normalizeRequired(request.getUsername(), "username");
+    String firstName = normalizeRequired(request.getFirstName(), "firstName");
+    String lastName = normalizeRequired(request.getLastName(), "lastName");
+    String title = normalizeOptional(request.getTitle());
+    String pictureUrl = normalizeOptional(request.getPictureUrl());
+
+    if (!userRepository.findAllByEmailIgnoreCaseAndDeletedAtIsNull(email).isEmpty()) {
+      throw new IllegalArgumentException("Email is already in use");
+    }
+    if (!userRepository.findAllByUsernameIgnoreCaseAndDeletedAtIsNull(username).isEmpty()) {
+      throw new IllegalArgumentException("Username is already in use");
+    }
+
+    KeycloakUserRepresentation keycloakUser = new KeycloakUserRepresentation();
+    keycloakUser.setEnabled(true);
+    keycloakUser.setEmail(email);
+    keycloakUser.setUsername(username);
+    keycloakUser.setFirstName(firstName);
+    keycloakUser.setLastName(lastName);
+    keycloakUser.setAttributes(buildAttributes(title, pictureUrl));
+
+    UUID createdUserId = keycloakAdminClient.createUser(keycloakUser);
+
+    String tempPassword = generateTemporaryCredential();
+    try {
+      keycloakAdminClient.resetPassword(createdUserId, tempPassword, true);
+
+      KeycloakRoleRepresentation role =
+          keycloakAdminClient.getRealmRoleByName(DEFAULT_NEW_USER_ROLE);
+      if (role != null) {
+        keycloakAdminClient.addRealmRoles(createdUserId, List.of(role));
+      }
+
+      User user = new User();
+      user.setId(createdUserId);
+      user.setEmail(email);
+      user.setUsername(username);
+      user.setFirstName(firstName);
+      user.setLastName(lastName);
+      user.setName(firstName + " " + lastName);
+      user.setTitle(title);
+      user.setPicture(pictureUrl);
+      user.setRoles(Set.of(UserRoleEnum.ROLE_STUDENT));
+      userRepository.save(user);
+
+      return new AdminCreateUserResponseDto(createdUserId, tempPassword);
+    } catch (RuntimeException ex) {
+      try {
+        keycloakAdminClient.deleteUser(createdUserId);
+      } catch (RuntimeException cleanupEx) {
+        log.error(
+            "Failed to cleanup Keycloak user {} after provisioning failure",
+            createdUserId,
+            cleanupEx);
+      }
+      throw ex;
+    }
+  }
+
+  @Transactional
+  public AdminProvisionUserResponseDto provisionUser(UUID userId) {
+    User existing = userRepository.findById(userId).orElse(null);
+    if (existing != null) {
+      if (existing.getAnonymizedAt() != null) {
+        throw new UserSoftDeletedException("User is soft-deleted and cannot be provisioned");
+      }
+      if (existing.getDeletedAt() != null) {
+        throw new UserSoftDeletedException(
+            "User is disabled/deleted. Restore the user instead of provisioning.");
+      }
+      return new AdminProvisionUserResponseDto(userId, false);
+    }
+
+    KeycloakUserRepresentation keycloakUser = keycloakAdminClient.getUser(userId);
+    if (keycloakUser == null) {
+      throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+    }
+
+    // Provisioning means: shadow DB row + app roles in Keycloak
+    try {
+      KeycloakRoleRepresentation role =
+          keycloakAdminClient.getRealmRoleByName(DEFAULT_NEW_USER_ROLE);
+      if (role != null) {
+        keycloakAdminClient.addRealmRoles(userId, List.of(role));
+      }
+    } catch (RuntimeException ex) {
+      throw new UserProfileSyncException("Failed to assign Keycloak role during provisioning", ex);
+    }
+
+    String email = normalizeRequired(keycloakUser.getEmail(), EMAIL_ATTRIBUTE);
+    String username = normalizeOptional(keycloakUser.getUsername());
+    String firstName = normalizeOptional(keycloakUser.getFirstName());
+    String lastName = normalizeOptional(keycloakUser.getLastName());
+
+    String title = getSingleAttribute(keycloakUser.getAttributes(), TITLE_ATTRIBUTE);
+    String picture = getSingleAttribute(keycloakUser.getAttributes(), PICTURE_ATTRIBUTE);
+
+    User user = new User();
+    user.setId(userId);
+    user.setEmail(email);
+    user.setUsername(username);
+    user.setFirstName(firstName);
+    user.setLastName(lastName);
+    user.setName(buildDisplayName(firstName, lastName, username, email));
+    user.setTitle(title);
+    user.setPicture(picture);
+    user.setRoles(Set.of(UserRoleEnum.ROLE_STUDENT));
+    userRepository.save(user);
+
+    return new AdminProvisionUserResponseDto(userId, true);
+  }
+
+  @Transactional
+  public void disableUser(UUID userId) {
+    KeycloakUserRepresentation before = keycloakAdminClient.getUser(userId);
+    if (before == null) {
+      throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+    }
+
+    KeycloakUserRepresentation after = deepCopy(before);
+    after.setEnabled(false);
+
+    keycloakAdminClient.updateUser(userId, after);
+    try {
+      userService.softDeleteUser(userId);
+    } catch (RuntimeException ex) {
+      try {
+        keycloakAdminClient.updateUser(userId, before);
+      } catch (RuntimeException rollbackEx) {
+        log.error("Failed to rollback Keycloak disable for user {}", userId, rollbackEx);
+      }
+      throw new UserProfileSyncException("Failed to soft-delete user in application database", ex);
+    }
+  }
+
+  @Transactional
+  public void restoreUser(UUID userId) {
+    User dbUser = userRepository.findById(userId).orElse(null);
+    if (dbUser != null && dbUser.getAnonymizedAt() != null) {
+      throw new UserSoftDeletedException("User is soft-deleted and cannot be restored");
+    }
+
+    KeycloakUserRepresentation before = keycloakAdminClient.getUser(userId);
+    if (before == null) {
+      throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+    }
+
+    KeycloakUserRepresentation after = deepCopy(before);
+    after.setEnabled(true);
+
+    keycloakAdminClient.updateUser(userId, after);
+    try {
+      userService.restoreUser(userId);
+    } catch (RuntimeException ex) {
+      try {
+        keycloakAdminClient.updateUser(userId, before);
+      } catch (RuntimeException rollbackEx) {
+        log.error("Failed to rollback Keycloak restore for user {}", userId, rollbackEx);
+      }
+      throw new UserProfileSyncException("Failed to restore user in application database", ex);
+    }
+  }
+
+  @Transactional
+  public void softDeleteUser(UUID userId) {
+    User existing = userRepository.findById(userId).orElse(null);
+    if (existing != null && existing.getAnonymizedAt() != null) {
+      // Idempotent: already soft-deleted
+      return;
+    }
+
+    KeycloakUserRepresentation before = keycloakAdminClient.getUser(userId);
+    if (before == null) {
+      throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+    }
+
+    String timestamp = SOFT_DELETE_TS_FORMAT.format(Instant.now().atOffset(ZoneOffset.UTC));
+    String anonymizedEmail = toSoftDeletedEmail(before.getEmail(), timestamp);
+    String anonymizedUsername = toSoftDeletedUsername(before.getUsername(), timestamp);
+
+    KeycloakUserRepresentation after = deepCopy(before);
+    after.setEmail(anonymizedEmail);
+    after.setUsername(anonymizedUsername);
+    after.setEnabled(false);
+
+    keycloakAdminClient.updateUser(userId, after);
+    try {
+      userService.softDeleteAndAnonymizeUser(userId, anonymizedEmail, anonymizedUsername);
+    } catch (RuntimeException ex) {
+      // best-effort rollback: Keycloak identifiers are hard to revert safely; do not attempt to
+      // restore original email/username
+      throw new UserProfileSyncException("Failed to soft-delete user in application database", ex);
+    }
+  }
+
+  public List<KeycloakUserSessionRepresentation> listUserSessions(UUID userId) {
+    return keycloakAdminClient.listUserSessions(userId);
+  }
+
+  public void logoutUser(UUID userId) {
+    keycloakAdminClient.logoutUser(userId);
+  }
+
+  public void sendPasswordResetEmail(UUID userId) {
+    keycloakAdminClient.executeActionsEmail(userId, List.of("UPDATE_PASSWORD"));
+  }
+
+  public void setUserPassword(UUID userId, AdminSetUserPasswordRequestDto request) {
+    keycloakAdminClient.resetPassword(userId, request.getPassword(), request.isTemporary());
+  }
+
+  private Map<String, List<String>> buildAttributes(String title, String pictureUrl) {
+    Map<String, List<String>> attributes = new HashMap<>();
+    if (title != null) {
+      attributes.put(TITLE_ATTRIBUTE, List.of(title));
+    }
+    if (pictureUrl != null) {
+      attributes.put(PICTURE_ATTRIBUTE, List.of(pictureUrl));
+    }
+    return attributes;
+  }
+
+  private String getSingleAttribute(Map<String, List<String>> attributes, String key) {
+    if (attributes == null || key == null) {
+      return null;
+    }
+    List<String> values = attributes.get(key);
+    if (values == null || values.isEmpty()) {
+      return null;
+    }
+    String value = values.getFirst();
+    return normalizeOptional(value);
+  }
+
+  private String buildDisplayName(
+      String firstName, String lastName, String username, String email) {
+    String full = normalizeOptional(firstName);
+    String last = normalizeOptional(lastName);
+    if (full != null && last != null) {
+      return full + " " + last;
+    }
+    if (full != null) {
+      return full;
+    }
+    if (last != null) {
+      return last;
+    }
+    String normalizedUsername = normalizeOptional(username);
+    if (normalizedUsername != null) {
+      return normalizedUsername;
+    }
+    return email;
+  }
+
+  private String generateTemporaryCredential() {
+    // Generates a strong password that satisfies common Keycloak password policies
+    // (uppercase/lowercase/digit/special + length).
+    int length = 18;
+    char[] password = new char[length];
+
+    password[0] = randomChar(LOWERCASE_CHARS);
+    password[1] = randomChar(UPPERCASE_CHARS);
+    password[2] = randomChar(DIGIT_CHARS);
+    password[3] = randomChar(SYMBOL_CHARS);
+
+    String all = LOWERCASE_CHARS + UPPERCASE_CHARS + DIGIT_CHARS + SYMBOL_CHARS;
+    for (int i = 4; i < length; i++) {
+      password[i] = randomChar(all);
+    }
+
+    // shuffle
+    for (int i = password.length - 1; i > 0; i--) {
+      int j = SECURE_RANDOM.nextInt(i + 1);
+      char tmp = password[i];
+      password[i] = password[j];
+      password[j] = tmp;
+    }
+
+    return new String(password);
+  }
+
+  private char randomChar(String alphabet) {
+    if (alphabet == null || alphabet.isEmpty()) {
+      return 'x';
+    }
+    return alphabet.charAt(SECURE_RANDOM.nextInt(alphabet.length()));
+  }
+
+  private String normalizeOptional(String value) {
+    if (value == null) {
+      return null;
+    }
+    String trimmed = value.trim();
+    return trimmed.isEmpty() ? null : trimmed;
+  }
+
+  private String normalizeRequired(String value, String field) {
+    String normalized = normalizeOptional(value);
+    if (normalized == null) {
+      throw new IllegalArgumentException(field + " must not be blank");
+    }
+    return normalized;
+  }
+
+  private KeycloakUserRepresentation deepCopy(KeycloakUserRepresentation source) {
+    KeycloakUserRepresentation copy = new KeycloakUserRepresentation();
+    copy.setId(source.getId());
+    copy.setUsername(source.getUsername());
+    copy.setEmail(source.getEmail());
+    copy.setEnabled(source.getEnabled());
+    copy.setFirstName(source.getFirstName());
+    copy.setLastName(source.getLastName());
+    copy.setAttributes(source.getAttributes());
+    return copy;
+  }
+
+  private AdminUserListItemDto toListItem(User user) {
+    if (user == null) {
+      return null;
+    }
+    return new AdminUserListItemDto(
+        user.getId(),
+        user.getName(),
+        user.getEmail(),
+        user.getUsername(),
+        user.getFirstName(),
+        user.getLastName(),
+        user.getTitle(),
+        user.getPicture(),
+        toRoleStrings(user.getRoles()),
+        user.getDeletedAt(),
+        user.getAnonymizedAt());
+  }
+
+  private String toSoftDeletedEmail(String originalEmail, String timestamp) {
+    String normalized = normalizeOptional(originalEmail);
+    String token =
+        normalized == null
+            ? UNKNOWN_IDENTIFIER
+            : normalized.toLowerCase().replace("@", "_at_").replace("+", "_");
+
+    String prefix = "deleted+" + timestamp + "+";
+    String suffix = "@invalid.local";
+    String candidate = prefix + token + suffix;
+
+    if (candidate.length() <= 255) {
+      return candidate;
+    }
+
+    int maxTokenLen = 255 - prefix.length() - suffix.length();
+    String truncated =
+        maxTokenLen > 0
+            ? token.substring(0, Math.min(token.length(), maxTokenLen))
+            : UNKNOWN_IDENTIFIER;
+    if (truncated.isBlank()) {
+      truncated = UNKNOWN_IDENTIFIER;
+    }
+    return prefix + truncated + suffix;
+  }
+
+  private String toSoftDeletedUsername(String originalUsername, String timestamp) {
+    String normalized = normalizeOptional(originalUsername);
+    String base = normalized == null ? "user" : normalized;
+    String prefix = "deleted_" + timestamp + "_";
+    String candidate = prefix + base;
+    if (candidate.length() <= 255) {
+      return candidate;
+    }
+    int maxBaseLen = 255 - prefix.length();
+    String truncated =
+        maxBaseLen > 0 ? base.substring(0, Math.min(base.length(), maxBaseLen)) : "user";
+    if (truncated.isBlank()) {
+      truncated = "user";
+    }
+    return prefix + truncated;
+  }
+
+  private Set<String> toRoleStrings(Set<UserRoleEnum> roles) {
+    if (roles == null || roles.isEmpty()) {
+      return Set.of();
+    }
+    return roles.stream().map(UserRoleEnum::name).collect(Collectors.toSet());
+  }
+
+  private AdminUserDirectoryItemDto toDirectoryItem(KeycloakUserRepresentation kcUser) {
+    if (kcUser == null || kcUser.getId() == null) {
+      return null;
+    }
+
+    UUID id;
+    try {
+      id = UUID.fromString(kcUser.getId());
+    } catch (IllegalArgumentException ex) {
+      // If Keycloak uses non-UUID IDs, we can't map to our DB schema.
+      return null;
+    }
+
+    User dbUser = userRepository.findById(id).orElse(null);
+    boolean provisioned = dbUser != null;
+
+    return new AdminUserDirectoryItemDto(
+        id,
+        kcUser.getEmail(),
+        kcUser.getUsername(),
+        kcUser.getFirstName(),
+        kcUser.getLastName(),
+        Boolean.TRUE.equals(kcUser.getEnabled()),
+        provisioned,
+        provisioned ? dbUser.getDeletedAt() : null,
+        provisioned ? dbUser.getAnonymizedAt() : null,
+        provisioned ? toRoleStrings(dbUser.getRoles()) : Set.of());
+  }
 }

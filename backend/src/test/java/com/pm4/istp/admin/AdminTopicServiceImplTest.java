@@ -7,7 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.pm4.istp.admin.services.impl.AdminTopicServiceImpl;
+import com.pm4.istp.admin.services.AdminTopicService;
 import com.pm4.istp.course.db.entities.CourseTopic;
 import com.pm4.istp.course.repositories.CourseRepository;
 import com.pm4.istp.course.repositories.CourseTopicRepository;
@@ -27,7 +27,7 @@ class AdminTopicServiceImplTest {
   @Mock private CourseTopicRepository courseTopicRepository;
   @Mock private CourseRepository courseRepository;
 
-  @InjectMocks private AdminTopicServiceImpl adminTopicService;
+  @InjectMocks private AdminTopicService adminTopicService;
 
   private void setMaxTopicCount(int max) {
     ReflectionTestUtils.setField(adminTopicService, "maxTopicCount", max);
