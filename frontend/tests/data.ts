@@ -17,21 +17,7 @@ export type Challenge = Readonly<{
   updatedAt: string;
 }>;
 
-export type Lab = {
-  id: string;
-  title: string;
-  status: "PUBLIC" | "PRIVATE" | "DRAFT";
-  difficulty: string;
-  maxScore: number;
-  dockerImage: string;
-  containerPort: number;
-  creatorName: string;
-  courseCount: number;
-  updatedAt: string;
-  challenges: Challenge[];
-};
-
-export type ReadonlyLab = Readonly<{
+export type Lab = Readonly<{
   id: string;
   title: string;
   status: "PUBLIC" | "PRIVATE" | "DRAFT";
@@ -46,12 +32,12 @@ export type ReadonlyLab = Readonly<{
 }>;
 
 export type LabAssignment = Readonly<{
-  lab: ReadonlyLab;
+  lab: Lab;
   dueAt: string;
 }>;
 
 export type ChallengeCompletion = Readonly<{
-  lab: ReadonlyLab;
+  lab: Lab;
   challenge: Challenge;
   submittedAt: string;
 }>;
@@ -64,7 +50,7 @@ export type User = Readonly<{
   role: "Admin" | "Instructor" | "Student";
   title: string;
   enrolledCourses: readonly Course[];
-  completedLabs: readonly ReadonlyLab[];
+  completedLabs: readonly Lab[];
   completedChallenges: readonly ChallengeCompletion[];
 }>;
 
@@ -309,7 +295,7 @@ const instructorLab08Challenge03: Challenge = {
 // Lab Definitions
 // ============================================================================
 
-const adminLab01: ReadonlyLab = {
+const adminLab01: Lab = {
   id: "e93b357d-b0f7-4f51-8abf-d6b1890cdb75",
   title: "E2E Test Lab: Admin 01",
   status: "PUBLIC",
@@ -324,7 +310,7 @@ const adminLab01: ReadonlyLab = {
   challenges: [adminLab01Challenge01],
 };
 
-const instructorLab01: ReadonlyLab = {
+const instructorLab01: Lab = {
   id: "61b8867c-14d6-4a1e-b405-6238ef82513d",
   title: "E2E Test Lab: Instructor 01",
   status: "PUBLIC",
@@ -339,7 +325,7 @@ const instructorLab01: ReadonlyLab = {
   challenges: [instructorLab01Challenge01],
 };
 
-const instructorLab02: ReadonlyLab = {
+const instructorLab02: Lab = {
   id: "4ad6bb3d-2fc4-4e45-848a-e044410d11f6",
   title: "E2E Test Lab: Instructor 02",
   status: "PRIVATE",
@@ -354,7 +340,7 @@ const instructorLab02: ReadonlyLab = {
   challenges: [instructorLab02Challenge01, instructorLab02Challenge02, instructorLab02Challenge03],
 };
 
-const instructorLab03: ReadonlyLab = {
+const instructorLab03: Lab = {
   id: "2d975668-2741-4d61-b02e-24cd2528a480",
   title: "E2E Test Lab: Instructor 03",
   status: "PUBLIC",
@@ -369,7 +355,7 @@ const instructorLab03: ReadonlyLab = {
   challenges: [instructorLab03Challenge01, instructorLab03Challenge02, instructorLab03Challenge03],
 };
 
-const instructorLab04: ReadonlyLab = {
+const instructorLab04: Lab = {
   id: "d71ff207-c4c0-428e-ae71-41f338989180",
   title: "E2E Test Lab: Instructor 04",
   status: "DRAFT",
@@ -384,7 +370,7 @@ const instructorLab04: ReadonlyLab = {
   challenges: [instructorLab04Challenge01],
 };
 
-const instructorLab05: ReadonlyLab = {
+const instructorLab05: Lab = {
   id: "2378cb15-0151-4109-97a9-eb3a5b40a022",
   title: "E2E Test Lab: Instructor 05",
   status: "PRIVATE",
@@ -399,7 +385,7 @@ const instructorLab05: ReadonlyLab = {
   challenges: [instructorLab05Challenge01],
 };
 
-const instructorLab06: ReadonlyLab = {
+const instructorLab06: Lab = {
   id: "f6a0c1f7-7142-40cb-b24d-d29b44e89f98",
   title: "E2E Test Lab: Instructor 06",
   status: "PUBLIC",
@@ -414,7 +400,7 @@ const instructorLab06: ReadonlyLab = {
   challenges: [instructorLab06Challenge01, instructorLab06Challenge02],
 };
 
-const instructorLab07: ReadonlyLab = {
+const instructorLab07: Lab = {
   id: "09e8ddaa-4cc2-4c0e-9127-906973f9727b",
   title: "E2E Test Lab: Instructor 07",
   status: "PRIVATE",
@@ -429,7 +415,7 @@ const instructorLab07: ReadonlyLab = {
   challenges: [instructorLab07Challenge01],
 };
 
-const instructorLab08: ReadonlyLab = {
+const instructorLab08: Lab = {
   id: "d1e3d1b9-ba3a-4fe9-9545-cdef24fa99b5",
   title: "E2E Test Lab: Instructor 08",
   status: "PUBLIC",
@@ -774,7 +760,7 @@ export const courses = {
   instructorCourse04,
   instructorCourse01,
 ];
-(instructorUser as unknown as { completedLabs: ReadonlyLab[] }).completedLabs = [
+(instructorUser as unknown as { completedLabs: Lab[] }).completedLabs = [
   instructorLab03,
   adminLab01,
   instructorLab05,
@@ -826,7 +812,7 @@ export const courses = {
   instructorCourse06,
   instructorCourse01,
 ];
-(studentUser as unknown as { completedLabs: ReadonlyLab[] }).completedLabs = [
+(studentUser as unknown as { completedLabs: Lab[] }).completedLabs = [
   instructorLab02,
   instructorLab06,
   instructorLab07,

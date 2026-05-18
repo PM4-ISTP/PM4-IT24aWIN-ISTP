@@ -1,7 +1,7 @@
 import test, { expect, type Page } from "@playwright/test";
 import { assertCourseCards } from "@/tests/helpers/course";
 import { loginAs } from "@/tests/helpers/auth";
-import { type Course, testUsers, type ReadonlyLab } from "@/tests/data";
+import { type Course, testUsers, type Lab } from "@/tests/data";
 import { formatDateTime } from "@/tests/helpers/date";
 import { assertNoActiveLabs } from "@/tests/helpers/dashboard";
 
@@ -15,7 +15,7 @@ type Deadline = {
 
 function extractDeadlines(
   courses: readonly Course[],
-  completedLabs: readonly ReadonlyLab[]
+  completedLabs: readonly Lab[]
 ): Deadline[] {
   const deadlines: Deadline[] = [];
   for (const course of courses) {

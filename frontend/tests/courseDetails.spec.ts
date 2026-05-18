@@ -5,7 +5,7 @@ import {
   courses,
   testUsers,
   type Course,
-  type ReadonlyLab,
+  type Lab,
   type ChallengeCompletion,
 } from "@/tests/data";
 import { formatDateTime } from "@/tests/helpers/date";
@@ -28,12 +28,12 @@ function calcPercent(done: number, total: number): number {
   return Math.round((done / total) * 100);
 }
 
-function isLabSolved(lab: ReadonlyLab): boolean {
+function isLabSolved(lab: Lab): boolean {
   return completedLabIds.has(lab.id);
 }
 
 function getSolvedChallengesCount(
-  lab: ReadonlyLab,
+  lab: Lab,
   completions: readonly ChallengeCompletion[]
 ): number {
   return completions.filter((completion) => completion.lab.id === lab.id).length;
