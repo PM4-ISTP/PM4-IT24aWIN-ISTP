@@ -100,12 +100,7 @@ async function assertPodExpiry(page: Page, expectedExpiry: Date) {
   );
 }
 
-async function assertActiveLabCard(
-  page: Page,
-  course: Course,
-  lab: Lab,
-  expectedExpiry: Date
-) {
+async function assertActiveLabCard(page: Page, course: Course, lab: Lab, expectedExpiry: Date) {
   const activeLabCard = page.getByTestId("active-lab-card");
 
   const expectedHref = `/dashboard/courses/${course.id}/labs/${lab.id}/play`;
