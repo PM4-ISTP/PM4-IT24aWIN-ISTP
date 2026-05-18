@@ -7,7 +7,7 @@ import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import BrowserFrame from "./parts/BrowserFrame";
-import Kicker from "./parts/Kicker";
+import Kicker from "@/src/shared/components/brand/Kicker";
 import SectionHeader from "./parts/SectionHeader";
 import { addDesktopMotion } from "../hooks/useScrollAnimations";
 import { SCREENSHOTS } from "../content/screenshots";

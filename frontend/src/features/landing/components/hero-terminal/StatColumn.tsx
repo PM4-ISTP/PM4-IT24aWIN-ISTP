@@ -1,5 +1,5 @@
 import { Box, Group, Paper, Stack, Text } from "@mantine/core";
-import Kicker from "../parts/Kicker";
+import Kicker from "@/src/shared/components/brand/Kicker";
 import { FONT_MONO, INK, LINE, LINE_2, MINT, MUTED } from "../../theme";
 import { STATS } from "./data";
 
