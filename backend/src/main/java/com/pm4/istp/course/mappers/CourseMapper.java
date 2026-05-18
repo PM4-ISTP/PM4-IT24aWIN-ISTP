@@ -7,11 +7,11 @@ import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.db.entities.CourseLab;
-import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
 import com.pm4.istp.course.dto.CreateCourseInstructorRequestDto;
 import com.pm4.istp.course.dto.CreateCourseRequestDto;
 import com.pm4.istp.course.dto.CreateCourseResponseDto;
+import com.pm4.istp.course.dto.LabDetailResponseDto;
 import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.dto.PublicCourseDetailResponseDto;
@@ -44,7 +44,7 @@ public interface CourseMapper {
   PublicCourseDetailResponseDto toPublicCourseDetailDto(Course course);
 
   @Mapping(target = ".", source = "lab")
-  ChallengeDetailResponseDto toChallengeDetailResponseDto(CourseLab courseLab);
+  LabDetailResponseDto toLabDetailResponseDto(CourseLab courseLab);
 
   @Mapping(target = ".", source = "lab")
   @Mapping(target = "solved", ignore = true)

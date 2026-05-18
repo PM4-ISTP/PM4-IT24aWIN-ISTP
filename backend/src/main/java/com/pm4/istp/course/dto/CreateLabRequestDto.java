@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateChallengeRequestDto {
+public class CreateLabRequestDto {
   @NotBlank(message = "Lab title is required")
   @Size(max = 255, message = "Lab title must be at most 255 characters")
   private String title;
@@ -47,7 +47,7 @@ public class CreateChallengeRequestDto {
   @Max(value = 86400, message = "Pod TTL must not exceed 86400 seconds (24h)")
   private Integer podTtlSeconds;
 
-  @NotEmpty(message = "At least one sub task is required")
+  @NotEmpty(message = "At least one challenge is required")
   @Valid
   private List<ChallengeRequestDto> challenges;
 }

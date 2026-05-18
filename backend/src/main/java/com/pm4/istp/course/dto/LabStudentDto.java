@@ -27,7 +27,7 @@ public class LabStudentDto {
   private String dockerImage;
   private Integer containerPort;
   private int maxScore;
-  private ChallengeCreatorResponseDto creator;
+  private LabCreatorResponseDto creator;
   private List<ChallengeStudentDto> challenges;
   private int solvedChallengeCount;
   private int totalChallengeCount;

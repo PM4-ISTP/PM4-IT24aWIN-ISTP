@@ -24,9 +24,9 @@ import {
 } from "@/src/features/course/components/labs/LabFormFields";
 import { LabPodPanel } from "@/src/features/lab-pod/components/LabPodPanel";
 import {
-  fetchChallenge,
-  updateChallenge,
-  deleteChallenge,
+  fetchLab,
+  updateLab,
+  deleteLab,
   previewVisibilityImpact,
   type LabStatusEnum,
 } from "@/src/features/course/actions/labs";
@@ -48,7 +48,7 @@ function isMoreRestrictive(oldStatus: LabStatusEnum, newStatus: LabStatusEnum): 
   return false;
 }
 
-export default function EditChallenge() {
+export default function EditLab() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const labId = params.id;
@@ -85,7 +85,7 @@ export default function EditChallenge() {
 
   useEffect(() => {
     async function load() {
-      const result = await fetchChallenge(labId);
+      const result = await fetchLab(labId);
       if (!result.success) {
         setLoadError(result.error);
         setLoading(false);
@@ -128,7 +128,7 @@ export default function EditChallenge() {
 
     setIsSubmitting(true);
 
-    const result = await updateChallenge(labId, {
+    const result = await updateLab(labId, {
       title: formValues.title.trim(),
       description: formValues.description,
       status: formValues.status,
@@ -218,7 +218,7 @@ export default function EditChallenge() {
     setIsDeleting(true);
     setDeleteError(null);
 
-    const result = await deleteChallenge(labId);
+    const result = await deleteLab(labId);
 
     setIsDeleting(false);
 

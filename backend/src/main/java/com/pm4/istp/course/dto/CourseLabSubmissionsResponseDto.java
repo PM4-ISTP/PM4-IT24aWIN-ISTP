@@ -13,5 +13,5 @@ public class CourseLabSubmissionsResponseDto {
   private UUID courseId;
   private List<CourseParticipantResponseDto> participants;
   private List<CourseLabResponseDto> labs;
-  private List<CourseChallengeSubmissionEntryDto> submissions;
+  private List<CourseLabSubmissionEntryDto> submissions;
 }

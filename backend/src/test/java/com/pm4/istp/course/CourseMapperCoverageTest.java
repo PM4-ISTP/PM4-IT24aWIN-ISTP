@@ -16,10 +16,10 @@ import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.dto.ChallengeOptionRequestDto;
 import com.pm4.istp.course.dto.ChallengeRequestDto;
-import com.pm4.istp.course.dto.CreateChallengeRequestDto;
+import com.pm4.istp.course.dto.CreateLabRequestDto;
 import com.pm4.istp.course.dto.CreateCourseInstructorRequestDto;
 import com.pm4.istp.course.dto.CreateCourseRequestDto;
-import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
+import com.pm4.istp.course.dto.UpdateLabRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseInstructorRequestDto;
 import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.mappers.CourseMapperImpl;
@@ -59,8 +59,8 @@ class CourseMapperCoverageTest {
             5,
             "hint",
             List.of(optionDto));
-    CreateChallengeRequestDto createDto =
-        new CreateChallengeRequestDto(
+    CreateLabRequestDto createDto =
+        new CreateLabRequestDto(
             "Lab",
             "Long",
             LabStatusEnum.PUBLIC,
@@ -69,8 +69,8 @@ class CourseMapperCoverageTest {
             8080,
             null,
             List.of(challengeDto));
-    UpdateChallengeRequestDto updateDto =
-        new UpdateChallengeRequestDto(
+    UpdateLabRequestDto updateDto =
+        new UpdateLabRequestDto(
             "Lab 2",
             "Long 2",
             LabStatusEnum.DRAFT,
@@ -135,7 +135,7 @@ class CourseMapperCoverageTest {
     assertCourseEntityMappings(course, courseLab);
 
     courseLab.setLab(null);
-    assertThat(courseMapper.toChallengeDetailResponseDto(courseLab).getId()).isNull();
+    assertThat(courseMapper.toLabDetailResponseDto(courseLab).getId()).isNull();
     assertThat(courseMapper.toChallengeStudentDto(courseLab).getId()).isNull();
 
     course.setCourseInstructors(null);
@@ -149,10 +149,10 @@ class CourseMapperCoverageTest {
   private void assertLabRequestMappings(
       ChallengeOptionRequestDto optionDto,
       ChallengeRequestDto challengeDto,
-      CreateChallengeRequestDto createDto,
-      UpdateChallengeRequestDto updateDto) {
-    assertThat(labMapper.fromDto((CreateChallengeRequestDto) null)).isNull();
-    assertThat(labMapper.fromDto((UpdateChallengeRequestDto) null)).isNull();
+      CreateLabRequestDto createDto,
+      UpdateLabRequestDto updateDto) {
+    assertThat(labMapper.fromDto((CreateLabRequestDto) null)).isNull();
+    assertThat(labMapper.fromDto((UpdateLabRequestDto) null)).isNull();
     assertThat(labMapper.fromDto((ChallengeRequestDto) null)).isNull();
     assertThat(labMapper.fromDto((ChallengeOptionRequestDto) null)).isNull();
     assertThat(labMapper.fromDto(createDto).getChallenges()).hasSize(1);
@@ -208,7 +208,7 @@ class CourseMapperCoverageTest {
     assertThat(courseMapper.toDto(null)).isNull();
     assertThat(courseMapper.toCourseDetailDto(null)).isNull();
     assertThat(courseMapper.toPublicCourseDetailDto(null)).isNull();
-    assertThat(courseMapper.toChallengeDetailResponseDto(null)).isNull();
+    assertThat(courseMapper.toLabDetailResponseDto(null)).isNull();
     assertThat(courseMapper.toChallengeStudentDto(null)).isNull();
     assertThat(courseMapper.toListCourseResponseDto(null)).isNull();
   }
@@ -218,7 +218,8 @@ class CourseMapperCoverageTest {
     assertThat(courseMapper.toCourseDetailDto(course).getCourseLabs()).hasSize(1);
     assertThat(courseMapper.toCourseDetailDto(course).getMcAttemptsMode()).isEqualTo("ONCE");
     assertThat(courseMapper.toPublicCourseDetailDto(course).getCourseLabs()).hasSize(1);
-    assertThat(courseMapper.toChallengeDetailResponseDto(courseLab).getCreator().getName()).isEqualTo("Alice");
+    assertThat(courseMapper.toLabDetailResponseDto(courseLab).getCreator().getName())
+        .isEqualTo("Alice");
     assertThat(courseMapper.toChallengeStudentDto(courseLab).getChallenges()).hasSize(1);
     assertThat(courseMapper.toListCourseResponseDto(course).getInstructorCount()).isEqualTo(1);
     assertThat(courseMapper.mapInstructorCount(null)).isZero();
@@ -255,7 +256,7 @@ class CourseMapperCoverageTest {
     courseLab.setLab(labFixture());
     courseLab.setOrderIndex(1);
     courseLab.setDueAt(LocalDateTime.now());
-    course.addCourseChallenge(courseLab);
+    course.addCourseLab(courseLab);
     return course;
   }
 

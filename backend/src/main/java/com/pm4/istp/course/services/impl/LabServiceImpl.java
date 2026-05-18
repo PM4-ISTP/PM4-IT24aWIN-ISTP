@@ -152,7 +152,7 @@ public class LabServiceImpl implements LabService {
     lab.setMaxScore(totalPoints(lab.getChallenges()));
 
     Lab saved = labRepository.save(lab);
-    cleanupCourseChallengesForVisibilityChange(labId, userId, oldStatus, newStatus);
+    cleanupCourseLabsForVisibilityChange(labId, userId, oldStatus, newStatus);
 
     return saved;
   }
@@ -291,7 +291,7 @@ public class LabServiceImpl implements LabService {
     return 0;
   }
 
-  private void cleanupCourseChallengesForVisibilityChange(
+  private void cleanupCourseLabsForVisibilityChange(
       UUID labId, UUID creatorId, LabStatusEnum oldStatus, LabStatusEnum newStatus) {
     if (oldStatus == newStatus) {
       return;

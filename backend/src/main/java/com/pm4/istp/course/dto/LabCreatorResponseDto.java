@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChallengeCreatorResponseDto {
+public class LabCreatorResponseDto {
   private UUID id;
   private String name;
 }

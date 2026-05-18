@@ -6,17 +6,17 @@ import com.pm4.istp.course.db.CreateLabRequest;
 import com.pm4.istp.course.db.UpdateLabRequest;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
-import com.pm4.istp.course.dto.ChallengeDetailResponseDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionRequestDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionRequestDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
-import com.pm4.istp.course.dto.CreateChallengeRequestDto;
-import com.pm4.istp.course.dto.CreateChallengeResponseDto;
+import com.pm4.istp.course.dto.CreateLabRequestDto;
+import com.pm4.istp.course.dto.CreateLabResponseDto;
 import com.pm4.istp.course.dto.DockerImageCheckResponseDto;
+import com.pm4.istp.course.dto.LabDetailResponseDto;
 import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.ListLabResponseDto;
-import com.pm4.istp.course.dto.UpdateChallengeRequestDto;
+import com.pm4.istp.course.dto.UpdateLabRequestDto;
 import com.pm4.istp.course.dto.VisibilityImpactResponseDto;
 import com.pm4.istp.course.mappers.LabMapper;
 import com.pm4.istp.course.services.DockerImageAvailabilityService;
@@ -65,8 +65,7 @@ public class LabController {
         @ApiResponse(
             responseCode = "201",
             description = "Lab created successfully",
-            content =
-                @Content(schema = @Schema(implementation = CreateChallengeResponseDto.class))),
+            content = @Content(schema = @Schema(implementation = CreateLabResponseDto.class))),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid request data",
@@ -77,13 +76,13 @@ public class LabController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PostMapping
-  public ResponseEntity<CreateChallengeResponseDto> createLab(
+  public ResponseEntity<CreateLabResponseDto> createLab(
       @AuthenticationPrincipal Jwt jwt,
-      @Valid @RequestBody CreateChallengeRequestDto createChallengeRequestDto) {
+      @Valid @RequestBody CreateLabRequestDto createLabRequestDto) {
     UUID userId = parseUserId(jwt);
-    CreateLabRequest request = labMapper.fromDto(createChallengeRequestDto);
+    CreateLabRequest request = labMapper.fromDto(createLabRequestDto);
     Lab created = labService.createLab(userId, request);
-    CreateChallengeResponseDto responseDto = labMapper.toCreateResponseDto(created);
+    CreateLabResponseDto responseDto = labMapper.toCreateResponseDto(created);
     return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
   }
 
@@ -96,8 +95,7 @@ public class LabController {
         @ApiResponse(
             responseCode = "200",
             description = "Lab found",
-            content =
-                @Content(schema = @Schema(implementation = ChallengeDetailResponseDto.class))),
+            content = @Content(schema = @Schema(implementation = LabDetailResponseDto.class))),
         @ApiResponse(
             responseCode = "403",
             description = "Access denied",
@@ -108,11 +106,11 @@ public class LabController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @GetMapping("/{id}")
-  public ResponseEntity<ChallengeDetailResponseDto> getLab(
+  public ResponseEntity<LabDetailResponseDto> getLab(
       @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
     UUID userId = parseUserId(jwt);
     Lab lab = labService.getLab(userId, id);
-    ChallengeDetailResponseDto dto = labMapper.toDetailResponseDto(lab);
+    LabDetailResponseDto dto = labMapper.toDetailResponseDto(lab);
     dto.setCourseCount(lab.getCourseLabs().size());
     return ResponseEntity.ok(dto);
   }
@@ -125,8 +123,7 @@ public class LabController {
         @ApiResponse(
             responseCode = "200",
             description = "Lab updated successfully",
-            content =
-                @Content(schema = @Schema(implementation = ChallengeDetailResponseDto.class))),
+            content = @Content(schema = @Schema(implementation = LabDetailResponseDto.class))),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid request data",
@@ -141,14 +138,14 @@ public class LabController {
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PutMapping("/{id}")
-  public ResponseEntity<ChallengeDetailResponseDto> updateLab(
+  public ResponseEntity<LabDetailResponseDto> updateLab(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable UUID id,
-      @Valid @RequestBody UpdateChallengeRequestDto updateChallengeRequestDto) {
+      @Valid @RequestBody UpdateLabRequestDto updateLabRequestDto) {
     UUID userId = parseUserId(jwt);
-    UpdateLabRequest request = labMapper.fromDto(updateChallengeRequestDto);
+    UpdateLabRequest request = labMapper.fromDto(updateLabRequestDto);
     Lab updated = labService.updateLab(userId, id, request);
-    ChallengeDetailResponseDto dto = labMapper.toDetailResponseDto(updated);
+    LabDetailResponseDto dto = labMapper.toDetailResponseDto(updated);
     dto.setCourseCount(updated.getCourseLabs().size());
     return ResponseEntity.ok(dto);
   }
