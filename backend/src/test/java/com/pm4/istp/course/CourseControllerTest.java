@@ -26,11 +26,10 @@ import tools.jackson.databind.module.SimpleModule;
 import tools.jackson.databind.ser.std.StdSerializer;
 
 import com.pm4.istp.course.controllers.CourseController;
-import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
-import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.CourseStatusEnum;
+import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseInstructor;
 import com.pm4.istp.course.dto.LabCreatorResponseDto;
@@ -170,9 +169,8 @@ class CourseControllerTest {
         dto.setId(courseId);
         dto.setTitle("Secure Coding");
 
-        when(courseMapper.fromDto(any(CreateCourseRequestDto.class)))
-                .thenReturn(new CreateCourseRequest());
-        when(courseService.createCourse(eq(userId), any(CreateCourseRequest.class))).thenReturn(course);
+        when(courseService.createCourse(eq(userId), any(CreateCourseRequestDto.class)))
+                .thenReturn(course);
         when(courseMapper.toDto(course)).thenReturn(dto);
 
         CreateCourseRequestDto requestDto = new CreateCourseRequestDto(
@@ -183,7 +181,7 @@ class CourseControllerTest {
                 null,
                 null,
                 List.of(),
-                "UNLIMITED");
+                McAttemptsMode.UNLIMITED);
 
         mockMvc
                 .perform(
@@ -206,7 +204,7 @@ class CourseControllerTest {
                         null,
                         null,
                         List.of(),
-                        "UNLIMITED");
+                        McAttemptsMode.UNLIMITED);
 
         mockMvc
                 .perform(
@@ -330,9 +328,7 @@ class CourseControllerTest {
         dto.setId(courseId);
         dto.setTitle("Updated Title");
 
-        when(courseMapper.fromDto(any(UpdateCourseRequestDto.class)))
-                .thenReturn(new UpdateCourseRequest());
-        when(courseService.updateCourse(eq(userId), eq(courseId), any(UpdateCourseRequest.class)))
+        when(courseService.updateCourse(eq(userId), eq(courseId), any(UpdateCourseRequestDto.class)))
                 .thenReturn(course);
         when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
         when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(0L);
@@ -349,7 +345,7 @@ class CourseControllerTest {
                 null,
                 null,
                 List.of(),
-                "UNLIMITED");
+                McAttemptsMode.UNLIMITED);
 
         mockMvc
                 .perform(

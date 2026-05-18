@@ -27,9 +27,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import com.pm4.istp.badge.services.BadgeService;
-import com.pm4.istp.course.db.CreateLabRequest;
-import com.pm4.istp.course.db.ChallengeRequest;
-import com.pm4.istp.course.db.UpdateLabRequest;
+import com.pm4.istp.course.dto.ChallengeRequestDto;
+import com.pm4.istp.course.dto.CreateLabRequestDto;
+import com.pm4.istp.course.dto.UpdateLabRequestDto;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabDifficultyEnum;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
@@ -117,28 +117,28 @@ class LabServiceImplTest {
     return lab;
   }
 
-  private List<ChallengeRequest> oneChallenge() {
+  private List<ChallengeRequestDto> oneChallenge() {
     return new ArrayList<>(
-        List.of(new ChallengeRequest(null, "Task 1", "Find the flag", "ISTP{demo}", 0, ChallengeType.FLAG, 1, null, null)));
+        List.of(new ChallengeRequestDto(null, "Task 1", "Find the flag", "ISTP{demo}", 0, ChallengeType.FLAG, 1, null, null)));
   }
 
-  private CreateLabRequest createRequest(
+  private CreateLabRequestDto createRequest(
       String title,
       String desc,
       LabStatusEnum status,
       LabDifficultyEnum difficulty,
       String dockerImage) {
-    return new CreateLabRequest(
+    return new CreateLabRequestDto(
         title, desc, status, difficulty, dockerImage, null, null, oneChallenge());
   }
 
-  private UpdateLabRequest updateRequest(
+  private UpdateLabRequestDto updateRequest(
       String title,
       String desc,
       LabStatusEnum status,
       LabDifficultyEnum difficulty,
       String dockerImage) {
-    return new UpdateLabRequest(
+    return new UpdateLabRequestDto(
         title, desc, status, difficulty, dockerImage, null, null, oneChallenge());
   }
 
@@ -151,8 +151,8 @@ class LabServiceImplTest {
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    CreateLabRequest request =
-        new CreateLabRequest(
+    CreateLabRequestDto request =
+        new CreateLabRequestDto(
             "Buffer Overflow",
             "Long description",
             LabStatusEnum.DRAFT,
@@ -162,8 +162,8 @@ class LabServiceImplTest {
             null,
             new ArrayList<>(
                 List.of(
-                    new ChallengeRequest(null, "Recon", "Scan the host", "ISTP{abc}", 0, ChallengeType.FLAG, 1, null, null),
-                    new ChallengeRequest(null, "Exploit", "Pop a shell", null, 1, ChallengeType.FLAG, 1, null, null))));
+                    new ChallengeRequestDto(null, "Recon", "Scan the host", "ISTP{abc}", 0, ChallengeType.FLAG, 1, null, null),
+                    new ChallengeRequestDto(null, "Exploit", "Pop a shell", null, 1, ChallengeType.FLAG, 1, null, null))));
 
     Lab created = labService.createLab(creatorId, request);
 
@@ -195,8 +195,8 @@ class LabServiceImplTest {
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    CreateLabRequest request =
-        new CreateLabRequest(
+    CreateLabRequestDto request =
+        new CreateLabRequestDto(
             "T",
             "D",
             LabStatusEnum.DRAFT,
@@ -204,7 +204,7 @@ class LabServiceImplTest {
             DEFAULT_DOCKER_IMAGE,
             null,
             null,
-            new ArrayList<>(List.of(new ChallengeRequest(null, "Only", "Just desc", "   ", 0, ChallengeType.FLAG, 1, null, null))));
+            new ArrayList<>(List.of(new ChallengeRequestDto(null, "Only", "Just desc", "   ", 0, ChallengeType.FLAG, 1, null, null))));
 
     Lab created = labService.createLab(creatorId, request);
 
@@ -216,7 +216,7 @@ class LabServiceImplTest {
     UUID creatorId = UUID.randomUUID();
     when(userRepository.findByIdAndDeletedAtIsNull(creatorId)).thenReturn(Optional.empty());
 
-    CreateLabRequest request =
+    CreateLabRequestDto request =
         createRequest(
             "Title",
             "Desc",
@@ -351,7 +351,7 @@ class LabServiceImplTest {
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    UpdateLabRequest request =
+    UpdateLabRequestDto request =
         updateRequest(
             "Updated",
             "Updated desc",
@@ -392,8 +392,8 @@ class LabServiceImplTest {
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    UpdateLabRequest request =
-        new UpdateLabRequest(
+    UpdateLabRequestDto request =
+        new UpdateLabRequestDto(
             "T",
             "D",
             LabStatusEnum.PUBLIC,
@@ -403,8 +403,8 @@ class LabServiceImplTest {
             null,
             new ArrayList<>(
                 List.of(
-                    new ChallengeRequest(null, "New first", "desc", null, 0, ChallengeType.FLAG, 1, null, null),
-                    new ChallengeRequest(existingId, "Renamed", "updated desc", "ISTP{x}", 1, ChallengeType.FLAG, 1, null, null))));
+                    new ChallengeRequestDto(null, "New first", "desc", null, 0, ChallengeType.FLAG, 1, null, null),
+                    new ChallengeRequestDto(existingId, "Renamed", "updated desc", "ISTP{x}", 1, ChallengeType.FLAG, 1, null, null))));
 
     Lab updated = labService.updateLab(creatorId, labId, request);
 
@@ -429,7 +429,7 @@ class LabServiceImplTest {
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    UpdateLabRequest request =
+    UpdateLabRequestDto request =
         updateRequest(
             "Title",
             "Desc",
@@ -455,7 +455,7 @@ class LabServiceImplTest {
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    UpdateLabRequest request =
+    UpdateLabRequestDto request =
         updateRequest(
             "Title",
             "Desc",
@@ -481,7 +481,7 @@ class LabServiceImplTest {
     when(labRepository.save(any(Lab.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    UpdateLabRequest request =
+    UpdateLabRequestDto request =
         updateRequest(
             "Title",
             "Desc",
@@ -506,7 +506,7 @@ class LabServiceImplTest {
 
     when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.of(lab));
 
-    UpdateLabRequest request =
+    UpdateLabRequestDto request =
         updateRequest(
             "Title",
             "Desc",
@@ -528,7 +528,7 @@ class LabServiceImplTest {
 
     when(labRepository.findByIdAndDeletedAtIsNull(labId)).thenReturn(Optional.empty());
 
-    UpdateLabRequest request =
+    UpdateLabRequestDto request =
         updateRequest(
             "Title",
             "Desc",

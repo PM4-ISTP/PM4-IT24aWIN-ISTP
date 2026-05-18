@@ -1,28 +1,28 @@
 package com.pm4.istp.course.services;
 
-import com.pm4.istp.course.db.CreateCourseRequest;
-import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.dto.CourseLabDeadlineDto;
 import com.pm4.istp.course.dto.CourseLabItemDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionDetailDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
+import com.pm4.istp.course.dto.CreateCourseRequestDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
 import com.pm4.istp.course.dto.UpdateCourseChallengeScoreRequestDto;
+import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface CourseService {
-  Course createCourse(UUID userId, CreateCourseRequest course);
+  Course createCourse(UUID userId, CreateCourseRequestDto course);
 
   Course getCourse(UUID userId, UUID courseId);
 
   Course enrollInCourse(UUID userId, UUID courseId);
 
-  Course updateCourse(UUID userId, UUID courseId, UpdateCourseRequest request);
+  Course updateCourse(UUID userId, UUID courseId, UpdateCourseRequestDto request);
 
   void deleteCourse(UUID userId, UUID courseId);
 

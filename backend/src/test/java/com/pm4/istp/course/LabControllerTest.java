@@ -9,8 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.pm4.istp.course.controllers.LabController;
-import com.pm4.istp.course.db.CreateLabRequest;
-import com.pm4.istp.course.db.UpdateLabRequest;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabDifficultyEnum;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
@@ -81,21 +79,19 @@ class LabControllerTest {
     requestDto.setStatus(LabStatusEnum.DRAFT);
     requestDto.setDifficulty(LabDifficultyEnum.EASY);
 
-    CreateLabRequest mappedRequest = new CreateLabRequest();
     Lab created = new Lab();
     created.setId(UUID.randomUUID());
     CreateLabResponseDto responseDto = new CreateLabResponseDto();
     responseDto.setId(created.getId());
 
-    when(labMapper.fromDto(requestDto)).thenReturn(mappedRequest);
-    when(labService.createLab(userId, mappedRequest)).thenReturn(created);
+    when(labService.createLab(userId, requestDto)).thenReturn(created);
     when(labMapper.toCreateResponseDto(created)).thenReturn(responseDto);
 
     ResponseEntity<CreateLabResponseDto> response = labController.createLab(jwt, requestDto);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(response.getBody()).isSameAs(responseDto);
-    verify(labService).createLab(userId, mappedRequest);
+    verify(labService).createLab(userId, requestDto);
   }
 
   @Test
@@ -141,14 +137,12 @@ class LabControllerTest {
     Jwt jwt = jwtFor(userId);
 
     UpdateLabRequestDto requestDto = new UpdateLabRequestDto();
-    UpdateLabRequest mappedRequest = new UpdateLabRequest();
     Lab updated = new Lab();
     updated.setId(labId);
     updated.setCourseLabs(List.of(new CourseLab()));
     LabDetailResponseDto dto = new LabDetailResponseDto();
 
-    when(labMapper.fromDto(requestDto)).thenReturn(mappedRequest);
-    when(labService.updateLab(userId, labId, mappedRequest)).thenReturn(updated);
+    when(labService.updateLab(userId, labId, requestDto)).thenReturn(updated);
     when(labMapper.toDetailResponseDto(updated)).thenReturn(dto);
 
     ResponseEntity<LabDetailResponseDto> response =

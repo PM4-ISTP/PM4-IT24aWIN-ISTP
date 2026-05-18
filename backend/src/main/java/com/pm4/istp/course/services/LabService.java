@@ -1,23 +1,23 @@
 package com.pm4.istp.course.services;
 
-import com.pm4.istp.course.db.CreateLabRequest;
-import com.pm4.istp.course.db.UpdateLabRequest;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
+import com.pm4.istp.course.dto.CreateLabRequestDto;
 import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.ListLabResponseDto;
+import com.pm4.istp.course.dto.UpdateLabRequestDto;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface LabService {
-  Lab createLab(UUID userId, CreateLabRequest request);
+  Lab createLab(UUID userId, CreateLabRequestDto request);
 
   Lab getLab(UUID userId, UUID labId);
 
-  Lab updateLab(UUID userId, UUID labId, UpdateLabRequest request);
+  Lab updateLab(UUID userId, UUID labId, UpdateLabRequestDto request);
 
   void deleteLab(UUID userId, UUID labId);
 
