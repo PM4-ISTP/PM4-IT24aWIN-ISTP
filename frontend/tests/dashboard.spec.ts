@@ -13,7 +13,10 @@ type Deadline = {
   dueAt: string;
 };
 
-function extractDeadlines(courses: readonly Course[], completedLabs: readonly ReadonlyLab[]): Deadline[] {
+function extractDeadlines(
+  courses: readonly Course[],
+  completedLabs: readonly ReadonlyLab[]
+): Deadline[] {
   const deadlines: Deadline[] = [];
   for (const course of courses) {
     for (const assignment of course.labs) {
