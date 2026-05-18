@@ -1,18 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/shared/lib/auth";
 import { getValidAccessToken } from "@/src/shared/lib/api/server";
-import {
-  Alert,
-  Badge,
-  Box,
-  Button,
-  Grid,
-  GridCol,
-  Group,
-  Stack,
-  Text,
-  ThemeIcon,
-} from "@mantine/core";
+import { Alert, Badge, Button, Grid, GridCol, Group, Stack, Text, ThemeIcon } from "@mantine/core";
 import {
   IconArrowRight,
   IconBolt,
@@ -23,6 +12,9 @@ import {
 import DashboardStyles from "@/src/shared/components/DashboardStyles";
 import DashboardHero from "@/src/shared/components/DashboardHero";
 import { DeadlineWidget } from "@/src/shared/components/DeadlineWidget";
+import SectionLabel from "@/src/shared/components/SectionLabel";
+import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
+import { EmptyState } from "@/src/shared/components/EmptyState";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/features/course/actions/courses";
 import Link from "next/link";
@@ -117,15 +109,6 @@ async function fetchMyRunningPods(): Promise<RunningPod[]> {
   }
 }
 
-const sectionLabelStyle: React.CSSProperties = {
-  fontFamily: "var(--font-space-grotesk), sans-serif",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  fontSize: "0.72rem",
-  fontWeight: 700,
-  color: "rgba(255,255,255,0.45)",
-};
-
 function podStatusColor(status: PodStatusEnum): string {
   if (status === "RUNNING") return "teal";
   if (status === "PROVISIONING") return "blue";
@@ -158,19 +141,17 @@ function formatDateTime(value?: string | null): string | null {
 function RunningLabs({ pods }: { pods: RunningPod[] }) {
   if (pods.length === 0) {
     return (
-      <div className="ds-empty-state" style={{ padding: "2rem", width: "100%" }}>
-        <ThemeIcon size={44} radius="xl" variant="light" color="gray">
-          <IconBolt size={22} />
-        </ThemeIcon>
-        <Stack gap={4} align="center">
-          <Text fw={600} style={{ color: "#e2e8f0" }}>
-            No active labs
-          </Text>
-          <Text size="sm" c="dimmed">
-            Enroll in a course to start working on labs.
-          </Text>
-        </Stack>
-      </div>
+      <SurfaceCard variant="strong" radius="sm" padding={0} style={{ width: "100%" }}>
+        <EmptyState
+          icon={
+            <ThemeIcon size={44} radius="xl" variant="light" color="gray">
+              <IconBolt size={22} />
+            </ThemeIcon>
+          }
+          title="No active labs"
+          message="Enroll in a course to start working on labs."
+        />
+      </SurfaceCard>
     );
   }
 
@@ -185,14 +166,12 @@ function RunningLabs({ pods }: { pods: RunningPod[] }) {
 
         return (
           <GridCol key={item.pod.podName ?? item.labId} span={{ base: 12, md: 6, lg: 4 }}>
-            <Box
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 10,
-                padding: "1rem",
-                height: "100%",
-              }}
+            <SurfaceCard
+              variant="strong"
+              elevation="sm"
+              radius="sm"
+              padding="1rem"
+              style={{ height: "100%" }}
             >
               <Stack gap="sm" h="100%">
                 <Group justify="space-between" align="flex-start" wrap="nowrap">
@@ -244,7 +223,7 @@ function RunningLabs({ pods }: { pods: RunningPod[] }) {
                   ) : null}
                 </Group>
               </Stack>
-            </Box>
+            </SurfaceCard>
           </GridCol>
         );
       })}
@@ -290,14 +269,14 @@ export default async function Home() {
         <GridCol span={{ base: 12, md: 8 }}>
           <Stack gap="sm">
             <Group justify="space-between" align="center">
-              <Text style={sectionLabelStyle}>Continue Learning</Text>
+              <SectionLabel>Continue Learning</SectionLabel>
               <Link
                 href="/dashboard/courses"
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 4,
-                  color: "#60a5fa",
+                  color: "#5d6ef0",
                   fontFamily: "var(--font-space-grotesk), sans-serif",
                   fontSize: "0.8rem",
                   fontWeight: 600,
@@ -327,32 +306,24 @@ export default async function Home() {
         <GridCol span={{ base: 12, md: 4 }}>
           <Stack gap="md">
             {/* Upcoming deadlines */}
-            <Box
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 14,
-                padding: "1.5rem",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-              }}
-            >
+            <SurfaceCard variant="strong" elevation="md">
               <Stack gap="sm">
                 <Group justify="space-between" align="center">
-                  <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>
+                  <SectionLabel style={{ alignSelf: "flex-start" }}>
                     Upcoming Deadlines
-                  </Text>
+                  </SectionLabel>
                   <IconClock size={16} color="rgba(255,255,255,0.35)" />
                 </Group>
 
                 <DeadlineWidget deadlines={deadlines} userId={userId} />
               </Stack>
-            </Box>
+            </SurfaceCard>
           </Stack>
         </GridCol>
       </Grid>
 
       <Stack gap="sm" align="flex-start">
-        <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>Active Labs</Text>
+        <SectionLabel style={{ alignSelf: "flex-start" }}>Active Labs</SectionLabel>
         <RunningLabs pods={runningPods} />
       </Stack>
     </Stack>
