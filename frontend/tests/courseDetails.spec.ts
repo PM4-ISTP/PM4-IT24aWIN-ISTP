@@ -1,7 +1,7 @@
 import test, { expect, type Page } from "@playwright/test";
 import { clickButtonAndAssertUrl, clickNavbarButton } from "@/tests/helpers/navigation";
 import { loginAs } from "@/tests/helpers/auth";
-import { courses, testUsers, type Course, type Lab, type ChallengeCompletion } from "@/tests/data";
+import { courses, testUsers, type Course, type ReadonlyLab, type ChallengeCompletion } from "@/tests/data";
 import { formatDateTime } from "@/tests/helpers/date";
 
 type LabProgress = {
@@ -22,11 +22,11 @@ function calcPercent(done: number, total: number): number {
   return Math.round((done / total) * 100);
 }
 
-function isLabSolved(lab: Lab): boolean {
+function isLabSolved(lab: ReadonlyLab): boolean {
   return completedLabIds.has(lab.id);
 }
 
-function getSolvedChallengesCount(lab: Lab, completions: readonly ChallengeCompletion[]): number {
+function getSolvedChallengesCount(lab: ReadonlyLab, completions: readonly ChallengeCompletion[]): number {
   return completions.filter((completion) => completion.lab.id === lab.id).length;
 }
 

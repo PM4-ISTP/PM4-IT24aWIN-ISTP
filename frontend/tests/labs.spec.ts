@@ -1,7 +1,7 @@
 import test, { expect, type Page } from "@playwright/test";
 import { clickButtonAndAssertUrl, clickNavbarButton } from "@/tests/helpers/navigation";
 import { loginAs } from "@/tests/helpers/auth";
-import { courses, labs, testUsers, type Course, type Lab } from "@/tests/data";
+import { courses, labs, testUsers, type Course, type ReadonlyLab } from "@/tests/data";
 import { assertNoActiveLabs } from "@/tests/helpers/dashboard";
 
 const student = testUsers.student;
@@ -62,7 +62,7 @@ async function openCourseFromMyCourses(page: Page, course: Course) {
   await clickButtonAndAssertUrl(page, courseCard, `/dashboard/courses/${course.id}`);
 }
 
-async function openLabFromCourse(page: Page, course: Course, lab: Lab) {
+async function openLabFromCourse(page: Page, course: Course, lab: ReadonlyLab) {
   const actionButton = page.getByTestId("course-enrollment-action");
   await expect(actionButton).toHaveText("Continue Course");
   await actionButton.click();
@@ -100,7 +100,7 @@ async function assertPodExpiry(page: Page, expectedExpiry: Date) {
   );
 }
 
-async function assertActiveLabCard(page: Page, course: Course, lab: Lab, expectedExpiry: Date) {
+async function assertActiveLabCard(page: Page, course: Course, lab: ReadonlyLab, expectedExpiry: Date) {
   const activeLabCard = page.getByTestId("active-lab-card");
 
   const expectedHref = `/dashboard/courses/${course.id}/labs/${lab.id}/play`;
