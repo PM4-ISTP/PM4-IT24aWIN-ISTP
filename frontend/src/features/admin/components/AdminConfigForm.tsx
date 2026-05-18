@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Button,
   Center,
   Fieldset,
   Grid,
@@ -17,6 +16,7 @@ import {
 import { Dropzone } from "@mantine/dropzone";
 import { useForm } from "@mantine/form";
 import { IconCloudUpload, IconFile, IconX } from "@tabler/icons-react";
+import AppButton from "@/src/shared/components/AppButton";
 import { useApiClient } from "@/src/shared/lib/api/client";
 import type { components } from "@/src/shared/lib/api/schema";
 import {
@@ -309,23 +309,16 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                         <Text size="xs" c="dimmed">
                           or
                         </Text>
-                        <Button
+                        <AppButton
                           size="xs"
-                          radius="md"
                           aria-label="Kubeconfig"
-                          style={{
-                            background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                            border: "none",
-                            fontWeight: 600,
-                            boxShadow: "0 2px 8px rgba(79,70,229,0.3)",
-                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             openRef.current?.();
                           }}
                         >
                           Browse file
-                        </Button>
+                        </AppButton>
                       </Stack>
                     )}
                   </Dropzone.Idle>
@@ -347,39 +340,20 @@ export default function AdminConfigForm({ initialConfig }: Props) {
         </Grid>
 
         <Group justify="space-between" mt="md">
-          <Button
-            id="admin-config-form-submit-button"
-            type="submit"
-            loading={form.submitting}
-            radius="md"
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-            }}
-          >
+          <AppButton id="admin-config-form-submit-button" type="submit" loading={form.submitting}>
             {!config.kubeconfigUploaded
               ? "Create Kubernetes configuration"
               : "Update Kubernetes configuration"}
-          </Button>
-          <Button
+          </AppButton>
+          <AppButton
+            tone="danger"
             id="admin-config-form-delete-button"
             type="button"
             onClick={() => void deleteAction.run()}
             loading={form.submitting || deleteAction.loading}
-            radius="md"
-            style={{
-              background: "linear-gradient(90deg, #dc2626, #b91c1c)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "0 2px 12px rgba(220,38,38,0.3)",
-            }}
           >
             Delete Kubernetes configuration
-          </Button>
+          </AppButton>
         </Group>
       </Fieldset>
     </form>

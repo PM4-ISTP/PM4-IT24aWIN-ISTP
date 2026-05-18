@@ -21,6 +21,7 @@ import { notifications } from "@mantine/notifications";
 import { IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useAdminPagedList } from "@/src/features/admin/hooks/useAdminPagedList";
 import { cleanText, formatDate, wrapTextStyle } from "@/src/features/admin/lib/adminUi";
+import AppButton from "@/src/shared/components/AppButton";
 import MyEditor from "@/src/shared/components/MyEditor";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { slugify } from "@/src/shared/lib/utils";
@@ -374,28 +375,12 @@ export default function AdminChallengeManagement() {
               />
             </Group>
             <Group justify="flex-end" mt="xs">
-              <Button
-                variant="default"
-                radius="md"
-                onClick={() => setEditOpened(false)}
-                disabled={saving}
-              >
+              <AppButton tone="ghost" onClick={() => setEditOpened(false)} disabled={saving}>
                 Cancel
-              </Button>
-              <Button
-                type="submit"
-                radius="md"
-                loading={saving}
-                style={{
-                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                  border: "none",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 600,
-                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                }}
-              >
+              </AppButton>
+              <AppButton type="submit" loading={saving}>
                 Save
-              </Button>
+              </AppButton>
             </Group>
           </Stack>
         </form>
