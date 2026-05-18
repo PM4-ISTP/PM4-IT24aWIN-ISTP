@@ -28,10 +28,22 @@ export type Lab = {
   creatorName: string;
   courseCount: number;
   updatedAt: string;
-  challenges: readonly Challenge[];
+  challenges: Challenge[];
 };
 
-export type ReadonlyLab = Readonly<Lab>;
+export type ReadonlyLab = Readonly<{
+  id: string;
+  title: string;
+  status: "PUBLIC" | "PRIVATE" | "DRAFT";
+  difficulty: string;
+  maxScore: number;
+  dockerImage: string;
+  containerPort: number;
+  creatorName: string;
+  courseCount: number;
+  updatedAt: string;
+  challenges: readonly Challenge[];
+}>;
 
 export type LabAssignment = Readonly<{
   lab: ReadonlyLab;
