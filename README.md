@@ -18,6 +18,13 @@ For the exact local dev steps (hybrid local Postgres + staging Keycloak), see `L
 - Node.js 22+ (frontend)
 - Java 21+ (backend, optional)
 - Docker Desktop (optional, only if you run a local DB via Docker Compose)
+- Typst 0.14+ (docs, optional)
+
+### Documentation
+
+- Manual (Typst source): `docs/ISTP_Manual/ISTP_Manual.typ`
+- Build PDF: `cd docs/ISTP_Manual && typst compile ISTP_Manual.typ ISTP_Manual.pdf`
+- Database schema overview: see the "Database Schema (PostgreSQL)" section in `docs/ISTP_Manual/ISTP_Manual.typ`
 
 ### Staging
 
@@ -25,6 +32,27 @@ For the exact local dev steps (hybrid local Postgres + staging Keycloak), see `L
 | --- | --- |
 | App | https://istp-staging.pm4.init-lab.ch |
 | Keycloak admin console | https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/ |
+| Adminer | https://istp-staging-adminer.pm4.init-lab.ch |
+
+API documentation (requires login â†’ open App first, then open these links):
+
+- Scalar UI: https://istp-staging.pm4.init-lab.ch/api/backend/scalar
+- OpenAPI JSON: https://istp-staging.pm4.init-lab.ch/api/backend/v3/api-docs
+- OpenAPI YAML: https://istp-staging.pm4.init-lab.ch/api/backend/v3/api-docs.yaml
+
+### Production
+
+| Service | URL |
+| --- | --- |
+| App | https://istp.pm4.init-lab.ch |
+| Keycloak admin console | https://istp-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/ |
+| Adminer | https://istp-adminer.pm4.init-lab.ch |
+
+API documentation (requires login â†’ open App first, then open these links):
+
+- Scalar UI: https://istp.pm4.init-lab.ch/api/backend/scalar
+- OpenAPI JSON: https://istp.pm4.init-lab.ch/api/backend/v3/api-docs
+- OpenAPI YAML: https://istp.pm4.init-lab.ch/api/backend/v3/api-docs.yaml
 
 Secrets:
 - `NEXTAUTH_SECRET`: generate locally (e.g. `openssl rand -base64 32`)
@@ -60,8 +88,9 @@ kubectl cluster-info
 
 #### Adminer (Kubernetes)
 
-Adminer is included in the `k8s/overlays/staging` and `k8s/overlays/prod` overlays as a `ClusterIP` service (not exposed via Ingress).
-Access it via port-forwarding:
+Adminer is exposed on staging/production via a dedicated subdomain (see the tables above).
+
+For local clusters (or if Adminer is not exposed via Ingress), access it via port-forwarding:
 
 ```bash
 kubectl -n istp-prod port-forward svc/adminer 8888:8080
@@ -422,7 +451,7 @@ frontend-lint
 
 End-to-end tests live in `frontend/tests/` and run against a live Next.js app + Keycloak.
 
-See [Staging URLs](#staging-urls) for the list of staging service URLs.
+See [Staging](#staging) for the list of staging service URLs.
 
 ### Running the tests locally
 
