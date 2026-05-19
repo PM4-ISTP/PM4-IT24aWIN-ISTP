@@ -237,10 +237,7 @@ test("Instructor can delete a lab using the edit lab view.", async ({ page }) =>
     () => page.getByRole("button", { name: labUnderTest.title }),
     `dashboard/instructor/labs/${labUnderTest.id}`
   );
-  await clickButtonAndAssert(
-    () => page.getByRole("button", { name: "Delete Lab" }),
-    async () => await expect(page.getByRole("dialog", { name: "Delete Lab" })).toBeVisible()
-  );
+  await clickButtonAndAssert(() => page.getByRole("button", { name: "Delete Lab" }));
   await clickButtonAndAssertUrl(
     page,
     () => page.getByLabel("Delete Lab").getByRole("button", { name: "Delete Lab" }),

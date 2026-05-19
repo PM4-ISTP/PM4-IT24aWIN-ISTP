@@ -59,7 +59,7 @@ test("Search and filter functionalities of catalog functions correctly", async (
   await expect(page.getByRole("textbox", { name: "Search courses" })).toHaveValue("E2E");
 
   // Reset search
-  await page.getByRole('link', { name: 'Reset' }).click();
+  await page.getByRole("link", { name: "Reset" }).click();
   await expect(page.getByRole("textbox", { name: "Search courses" })).toHaveValue("");
   await expect(page.getByRole("combobox", { name: "Topic" })).toHaveValue("E2E-Testing-01");
 
