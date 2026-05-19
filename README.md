@@ -61,7 +61,7 @@ example files must use placeholders only.
 
 ### Local Development
 
-See `LOCAL_DEV.md`.
+See [LOCAL_DEV.md](LOCAL_DEV.md)
 
 For local testing of lab pod lifecycle changes against the staging Kubernetes cluster, see
 `LOCAL_DEV.md#5-test-lab-pod-lifecycle-changes-against-staging-kubernetes`.
