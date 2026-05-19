@@ -5,7 +5,7 @@
 
 #set page(
   paper: "a4",
-  margin: (top: 2.5cm, bottom: 2.5cm, left: 2.5cm, right: 2.5cm),
+  margin: (top: 2.2cm, bottom: 2.2cm, left: 2.2cm, right: 2.2cm),
   numbering: "1",
   header: [
     #set text(size: 9pt, fill: luma(130))
@@ -18,9 +18,9 @@
   ],
 )
 
-#set text(font: "New Computer Modern", size: 11pt)
+#set text(font: "New Computer Modern", size: 10pt)
 #set heading(numbering: "1.1.")
-#set par(justify: true, leading: 0.65em)
+#set par(justify: true, leading: 0.58em)
 
 #show heading.where(level: 1): it => {
   v(1.2em)
@@ -133,42 +133,21 @@ Keycloak handles all authentication and authorization. The realm is called `inte
 
 The most important settings in the realm:
 
-#figure(
-  table(
-    columns: (auto, auto, 1fr),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Setting*], [*Value*], [*Why*],
-    [Access Token Lifespan], [15 min], [Short-lived for security; frontend refreshes automatically],
-    [SSO Session Idle], [1 hour], [User gets logged out after 1 hour of inactivity],
-    [SSO Session Max], [10 h], [Absolute session limit regardless of activity],
-    [Refresh Token Reuse], [1 (single-use per rotation)], [Prevents token replay attacks],
-    [Brute Force Protection], [Enabled, 10 attempts], [Locks account temporarily after 10 failed logins],
-    [SSL Required], [All], [HTTPS enforced for all traffic including localhost],
-    [Self-Registration], [Enabled], [Users can create their own accounts],
-    [Email Verification], [*Disabled*], [Intentionally turned off. University mail servers from different providers often block or filter Keycloak's verification emails, which would prevent instructors and professors from accessing the platform],
-  ),
-  caption: [Key realm settings],
-)
+- Access token lifespan: *15 min*
+- SSO session idle: *1 hour*, max: *10 hours*
+- Refresh token reuse: *1* (single-use rotation)
+- Brute force protection: enabled (*10 attempts*)
+- SSL required: *All* (HTTPS enforced)
+- Self-registration: enabled
+- Email verification: disabled (to avoid deliverability issues across university mail providers)
 
 == Roles
 
 Three custom roles control what users can do on the platform:
 
-#figure(
-  table(
-    columns: (auto, 1fr),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Role*], [*Access*],
-    [`ROLE_STUDENT`], [Can access and solve CTF challenges, view own progress],
-    [`ROLE_INSTRUCTOR`], [Can create and manage challenges, view all participants],
-    [`ROLE_ADMINISTRATOR`], [Full access: user management, roles, all platform resources],
-  ),
-  caption: [Custom realm roles],
-)
+- `ROLE_STUDENT`: solve challenges, view own progress
+- `ROLE_INSTRUCTOR`: create/manage labs and courses, view course results
+- `ROLE_ADMINISTRATOR`: user/admin functions and platform-wide configuration
 
 *Role policy:* Roles are additive. Every user always keeps `ROLE_STUDENT`. Additional roles (`ROLE_INSTRUCTOR`, `ROLE_ADMINISTRATOR`) are assigned on top and can be revoked individually via the app.
 
@@ -182,7 +161,9 @@ Note: Keycloak *groups* are not used for authorization in the ISTP backend. Avoi
 
 Two custom clients are configured. All other clients (`account`, `broker`, etc.) are Keycloak built-ins and should not be touched.
 
-*`nextjs`* is the active client used by the Next.js frontend (NextAuth). It uses the Authorization Code Flow so the user is redirected to Keycloak to log in, then back to the app. It is a confidential client, meaning it has a client secret stored in a Kubernetes Secret. The older `interactive-security-training-platform-app` client also exists in the realm but `nextjs` is the one currently in use.
+*`interactive-security-training-platform-app`* is the active client used by the Next.js frontend (NextAuth). It uses the Authorization Code Flow so the user is redirected to Keycloak to log in, then back to the app. It is a confidential client, meaning it has a client secret stored in a Kubernetes Secret.
+
+Note: A `nextjs` client may exist in the realm, but the deployment configuration in this repository expects `interactive-security-training-platform-app`.
 
 *`istp-backend`* is used by the Spring Boot backend for service-to-service calls to the Keycloak *Admin REST API* (Client Credentials Flow). It is a confidential client with *Service Accounts* enabled. The service account needs `realm-management` roles such as `manage-users` (and usually `view-users` / `query-users`; `view-clients` is optional for session listing).
 
@@ -204,7 +185,7 @@ The realm config export is stored in `infra/keycloak-export/interactive-security
 
 After importing, regenerate the client secrets (they are not stored in the export):
 
-+ Go to *Clients* > `nextjs` > *Credentials* > *Regenerate*.
++ Go to *Clients* > `interactive-security-training-platform-app` > *Credentials* > *Regenerate*.
 + Repeat for `istp-backend`.
 + Store both secrets in the Kubernetes Secrets (see @sec-env).
 
@@ -212,7 +193,7 @@ After importing, regenerate the client secrets (they are not stored in the expor
 
 *Next.js:*
 ```bash
-AUTH_KEYCLOAK_ID=nextjs
+AUTH_KEYCLOAK_ID=interactive-security-training-platform-app
 AUTH_KEYCLOAK_SECRET=<secret>
 AUTH_KEYCLOAK_ISSUER=https://<keycloak-host>/realms/interactive-security-training-platform
 NEXTAUTH_URL=https://istp.pm4.init-lab.ch
@@ -229,7 +210,7 @@ KEYCLOAK_ADMIN_CLIENT_ID=istp-backend
 KEYCLOAK_ADMIN_CLIENT_SECRET=<secret>
 
 # Used for session listing in the admin dashboard
-KEYCLOAK_APP_CLIENT_ID=nextjs
+KEYCLOAK_APP_CLIENT_ID=interactive-security-training-platform-app
 ```
 
 *Kubernetes Secrets (recommended):*
@@ -266,20 +247,9 @@ Keycloak is the source of truth for authentication and base user identity. Postg
 
 Keycloak is connected to a dedicated Gmail account (`istp.noreply@gmail.com`) for sending system emails such as password resets.
 
-#figure(
-  table(
-    columns: (auto, 1fr),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Setting*], [*Value*],
-    [SMTP Host], [`smtp.gmail.com`],
-    [Port], [`587` (STARTTLS)],
-    [From Address], [`istp.noreply@gmail.com`],
-    [Authentication], [Basic (Google App Password)],
-  ),
-  caption: [SMTP configuration],
-)
+- SMTP host: `smtp.gmail.com` (STARTTLS `587`)
+- From address: `istp.noreply@gmail.com`
+- Authentication: Google *App Password* (not the regular account password)
 
 A dedicated Gmail account was created for this project. The password in Keycloak is a *Google App Password*, not the regular account password -- Google requires this for SMTP access.
 
@@ -289,40 +259,26 @@ A dedicated Gmail account was created for this project. The password in Keycloak
 
 = Lab Pods
 
-The labs run in Kubernetes pods. The #link("https://github.com/PM4-ISTP/PM4-IT24aWIN-ISTP/tree/main?tab=readme-ov-file#kubernetes-setup-k3d")[README] explains how you can set up a k3d cluster for local development.
+Labs run in short-lived Kubernetes pods that are started from the UI (*Play → Start*). For local development cluster setup (k3d), see the repository README.
 
-To create a pod, you need to send a request to the backend using a request of the following form:
+*What students get while a lab is running:*
+- *App URL* (browser access to the lab application)
+- *Terminal URL* (browser-based shell in a separate container)
 
-```json
-{
-    "containerName": "test",
-    "image": "nginx:latest",
-    "podName": "nginx",
-    "containerPort": 80
-}
-```
-
-When you create a pod, a JSON response gets returned by the backend server. The response contains two links. `appUrl` leads to the app running in the pod. The app is specified by the `image` attribute from the request. `terminalUrl` leads to the terminal of the app. To login to the terminal, you need to input `student` as the username and the `terminalPassword` from the response as the password.
-
-Following is an example for a response:
-
-```json
-{
-    "status": "CREATED",
-    "podName": "challenge-dfda5bef",
-    "namespace": "default",
-    "message": "Deployment, Service, and Ingress created successfully",
-    "appUrl": "http://app-dfda5bef.127.0.0.1.nip.io",
-    "terminalUrl": "http://term-dfda5bef.127.0.0.1.nip.io",
-    "terminalPassword": "3627ef4c-405"
-}
-```
-
-The terminal does not run in the same container as the app. But they run in the same network. While you can access `localhost` of the app from the terminal (e.g., using `curl "localhost"`), you cannot access the file system of the app.
+The terminal container shares the network with the app container, so `curl localhost` works, but it does not share the app’s filesystem. Pods are time-limited (TTL) and cleaned up automatically; restarting a pod does not reset solved challenges or points.
 
 // ─── 4. Permissions Reference ─────────────────────────────────────────────
 
-= Permissions Reference
+= Access Model
+
+Every account has `ROLE_STUDENT`. Additional roles are additive on top:
+- `ROLE_INSTRUCTOR`: create and manage labs/courses, view course results
+- `ROLE_ADMINISTRATOR`: user administration and platform-wide configuration
+
+At the course level, the creator is the *Owner*. *Collaborators* must accept an invitation. Both can edit and manage labs for a course; only the owner can invite/remove collaborators, configure the badge, or delete the course.
+
+#let include_permission_matrices = false
+#if include_permission_matrices [
 
 == Role-Based Access
 
@@ -381,6 +337,7 @@ Within a course, instructors have one of two course-level roles. The creator of 
   caption: [Course-level permission matrix (Owner vs. Collaborator)],
 )
 #set text(size: 11pt)
+]
 
 // ─── 5. User Guide: Student ───────────────────────────────────────────────
 
@@ -391,11 +348,6 @@ This section describes the platform from a student's perspective, from creating 
 == Registration & Login
 
 Open the platform at `https://istp.pm4.init-lab.ch`. The landing page is shown first. Click *Login* in the top-right corner to be redirected to the Keycloak login page.
-
-#figure(
-  image("img/login_page.png", width: 100%),
-  caption: [ISTP landing page click Login in the top-right corner to sign in],
-)
 
 *New account:* Click *Register* on the Keycloak login page. Fill in your first name, last name, email address, and a password. After submitting you are logged in immediately email verification is disabled on this platform.
 
@@ -410,8 +362,13 @@ After successful login you are redirected to the dashboard.
 After logging in, open the *Profile* page via the user menu to update your personal details.
 
 #figure(
-  image("img/profil.png", width: 65%),
-  caption: [Profile page update name, title, and profile picture],
+  grid(
+    columns: (1fr, 1fr),
+    gutter: 12pt,
+    image("img/login_page.png", width: 100%),
+    image("img/profil.png", width: 100%),
+  ),
+  caption: [Login (left) and profile editing (right)],
 )
 
 Your avatar and email address are shown at the top. The email address is read-only and cannot be changed here. The following fields can be edited:
@@ -425,11 +382,6 @@ Click *Save changes* to apply. Changes are synced to Keycloak immediately.
 == Course Catalog
 
 Navigate to *Browse / Catalog* in the sidebar. The catalog shows all *Public* courses on the platform. Each course card displays the title, topic, short description, author, and creation date.
-
-#figure(
-  image("img/join_a_course.png", width: 90%),
-  caption: [Browse Catalog with the Join a Course modal],
-)
 
 The search bar filters courses across three fields simultaneously: title, short description, and full description. The *Topic* dropdown on the right lets you narrow results to a specific subject area select *All topics* to reset the filter. Both filters can be combined. Results are paginated use the page controls at the bottom to navigate between pages.
 
@@ -446,18 +398,18 @@ To join a private course, click *Join a Course* in the catalog (or on the My Cou
 Navigate to *My Courses* in the sidebar to see all courses you are currently enrolled in. Click on a course to open the course detail page.
 
 #figure(
-  image("img/course_enroll.png", width: 100%),
-  caption: [Course detail page with Course Journey and Leave Course],
+  grid(
+    columns: (1fr, 1fr),
+    gutter: 12pt,
+    image("img/course_enroll.png", width: 100%),
+    image("img/progress.png", width: 100%),
+  ),
+  caption: [Course detail (left) and lab progress (right)],
 )
 
 The *Course Journey* section shows your overall progress at a glance: how many labs and challenges you have solved and how many remain. The instructor's name and title are shown in the sidebar on the right.
 
 Click *Continue Course* to jump straight back into the course, or scroll down to the *Course Labs* section to see all labs and your per-lab progress.
-
-#figure(
-  image("img/progress.png", width: 100%),
-  caption: [Course Labs per-lab progress with challenge completion status],
-)
 
 Each lab card shows the difficulty, a progress bar, the lab description, and a list of all challenges. Completed challenges are shown with a green checkmark and strikethrough. Click *Continue* on any lab card to jump directly into that lab.
 
@@ -470,8 +422,13 @@ Each lab card shows the difficulty, a progress bar, the lab description, and a l
 Inside a course, click *Play* on any lab to open the lab view.
 
 #figure(
-  image("img/lab_overview.png", width: 100%),
-  caption: [Lab view: challenge description on the left, pod panel on the right],
+  grid(
+    columns: (1fr, 1fr),
+    gutter: 12pt,
+    image("img/lab_overview.png", width: 100%),
+    image("img/lab_running.png", width: 100%),
+  ),
+  caption: [Lab view (left) and running pod panel (right)],
 )
 
 The screen is split into two panels:
@@ -479,23 +436,12 @@ The screen is split into two panels:
 - *Left panel* lab description, challenge tasks, flag submission, hints
 - *Right panel* the live lab environment (pod)
 
-To start the lab environment, click the *Start* button in the right panel. The pod goes through the following states:
-
-#figure(
-  table(
-    columns: (auto, 1fr),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Status*], [*Meaning*],
-    [`NOT STARTED`], [Pod not started yet click Start],
-    [`PENDING`], [Pod is being scheduled on the cluster],
-    [`RUNNING`], [Pod is ready, the lab app link is active],
-    [`TERMINATING`], [Pod is shutting down],
-    [`FAILED`], [Pod failed to start, click the retry button],
-  ),
-  caption: [Pod status overview],
-)
+To start the lab environment, click the *Start* button in the right panel. The pod can be in the following states:
+- `NOT STARTED`: not started yet
+- `PENDING`: being scheduled / starting
+- `RUNNING`: ready, the *Open app* button is active
+- `TERMINATING`: shutting down
+- `FAILED`: start failed; retry
 
 Once the status shows *RUNNING*, the *Open app* button becomes active. Click it to open the lab application in a new browser tab. To stop the pod manually, click the stop button in the right panel.
 
@@ -505,26 +451,7 @@ Every pod has a time limit (TTL). By default a pod runs for *60 minutes* before 
 
 If you need more time, click the *Extend* button in the right panel. Each extension adds *30 minutes* to the pod's lifetime. You can extend a maximum of *2 times* per pod session, giving a total maximum runtime of *2 hours*.
 
-#figure(
-  image("img/lab_running.png", width: 60%),
-  caption: [Pod running with both extensions used, maximum runtime of 2 hours reached],
-)
-
-Once both extensions are used, the badge shows *2 / 2 Extensions Used* and the message "Maximum extensions reached" appears no further extensions are possible for this session.
-
-#figure(
-  table(
-    columns: (auto, auto),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Stage*], [*Time*],
-    [Base TTL], [60 minutes],
-    [After 1st extension], [90 minutes],
-    [After 2nd extension (max)], [120 minutes],
-  ),
-  caption: [Pod lifetime with extensions],
-)
+Once both extensions are used, the badge shows *2 / 2 Extensions Used* and no further extensions are possible for this session.
 
 If the pod terminates before you finish, simply click *Start* again to launch a fresh pod. Your submitted flags and solved challenges are saved you do not lose any progress when a pod restarts.
 
@@ -616,24 +543,11 @@ Navigate to *Course Management → Labs* in the sidebar and click *New lab*. Fil
   caption: [Lab configuration Docker image, status, difficulty, challenges, and test panel],
 )
 
-#figure(
-  table(
-    columns: (auto, auto, 1fr),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Field*], [*Required*], [*Description*],
-    [Title], [Yes], [Short, descriptive name shown in the lab browser (max 255 characters)],
-    [Description], [No], [Lab description visible to students (max 5000 characters)],
-    [Docker Image], [Yes], [GHCR image reference, e.g. `ghcr.io/org/lab-name:latest`. The platform checks reachability in real time and shows "Public GHCR image found" when valid.],
-    [Container Port], [Yes], [Port the app inside the container listens on, e.g. `3000`. Traffic from the public app URL is forwarded to this port.],
-    [Pod TTL (seconds)], [No], [Override the cluster default lifetime. Leave blank to use the admin default. Increase only for heavier labs.],
-    [Status], [Yes], [`Draft`, `Private`, or `Public` controls visibility (see @sec-lab-status)],
-    [Difficulty], [Yes], [`Beginner`, `Easy`, `Medium`, `Hard`, or `Expert`],
-    [Challenges], [Yes], [At least one challenge; total points shown top-right of the section (see @sec-challenge-types)],
-  ),
-  caption: [Lab creation fields],
-)
+*Key fields:*
+- *Title* (and optional description)
+- *Docker Image* (`ghcr.io/...`) and *Container Port*
+- *Status* (`Draft`, `Private`, `Public`) and *Difficulty*
+- *Challenges* (at least one) and optional *Pod TTL*
 
 === Configuring the Docker Image <sec-docker-image>
 
@@ -658,19 +572,10 @@ The *Pod TTL* (time-to-live) defines the maximum lifetime of a running pod in se
 
 Each lab must have at least one challenge. Click *+ Add Challenge* to add more. The total point value across all challenges is shown in the top-right of the Challenges section. Three types are available, shown as coloured badges in the list:
 
-#figure(
-  table(
-    columns: (auto, auto, 1fr),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Badge*], [*Type*], [*Description*],
-    [`INFO`], [Theory / Info], [A `FLAG` challenge with no flag set. The student reads the description and clicks *Mark as done*. Used for introductions, overviews, or reading tasks.],
-    [`MC`], [Multiple Choice], [Student selects one answer from a list. The instructor marks which option is correct.],
-    [`FLAG`], [Flag], [Student must find and submit a hidden flag in the format `ISTP{...}`.],
-  ),
-  caption: [Challenge type badges],
-)
+*Challenge types:*
+- `INFO`: reading task; student clicks *Mark as done*
+- `MC`: multiple choice; one correct option (attempt policy depends on course)
+- `FLAG`: student submits a flag `ISTP{...}`
 
 For each challenge, fill in:
 
@@ -694,20 +599,10 @@ Use this to confirm the Docker image starts correctly, the container port is rig
 
 A lab has one of four statuses that controls who can see and add it to courses:
 
-#figure(
-  table(
-    columns: (auto, 1fr),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Status*], [*Meaning*],
-    [`DRAFT`], [Only the creator can see the lab. Cannot be added to courses. Use while building the lab.],
-    [`PRIVATE`], [Visible to the creator only and can only be added to the creator's own courses.],
-    [`PUBLIC`], [Visible to all instructors and can be added to any course on the platform.],
-    [`SOFT_DELETED`], [Removed from all listings. The lab and its challenges are still stored in the database but no longer accessible through the UI.],
-  ),
-  caption: [Lab status overview],
-)
+- `DRAFT`: only the creator can see the lab (work-in-progress)
+- `PRIVATE`: only the creator can see it, but it can be used in their own courses
+- `PUBLIC`: visible to all instructors; can be used in any course
+- `SOFT_DELETED`: removed from listings (kept in DB, not accessible via UI)
 
 *Changing status (visibility impact):* Before changing from `PUBLIC` or `PRIVATE` to `DRAFT` or `SOFT_DELETED`, the UI shows how many course assignments would be removed. Confirm the change to proceed.
 
@@ -724,27 +619,13 @@ To delete a lab, click *Delete lab* in the lab detail view. This removes the lab
 As part of this project, the "LLM01 - Prompt Injection" lab was implemented as a concrete example of what the platform supports. The lab presents students with an LLM-powered chat interface called *Secure Vault Guardian* and challenges them to extract a hidden flag through prompt injection techniques a real-world vulnerability class described in the OWASP LLM Top 10.
 
 #figure(
-  image("img/ki_lab.png", width: 90%),
+  image("img/ki_lab.png", width: 75%),
   caption: [LLM01 - Prompt Injection lab: student attempts to extract the hidden flag from the AI guardian],
 )
 
 The student interacts with the AI via a terminal-style chat interface. The guardian is instructed to protect a hidden flag and refuses direct requests for it students must craft creative prompt injection attacks to bypass these instructions and leak the flag.
 
-The lab demonstrates that labs can integrate external AI services via API. In this case the lab uses #link("https://groq.com")[Groq], a free LLM inference API, to power the chat interface. The following free-tier limits apply and are sufficient for CTF usage with around 20–30 concurrent students:
-
-#figure(
-  table(
-    columns: (1fr, auto),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Limit*], [*Value*],
-    [Requests per minute], [30],
-    [Requests per day], [14,400],
-    [Tokens per minute], [500,000],
-  ),
-  caption: [Groq free-tier limits],
-)
+The lab demonstrates that labs can integrate external AI services via API. In this case the lab uses #link("https://groq.com")[Groq] (free-tier) to power the chat interface; in our testing the free-tier limits were sufficient for around 20–30 concurrent students.
 
 The backend and database already support injecting external secrets (such as API keys) as environment variables into lab pods. This mechanism was introduced specifically for this lab. A dedicated instructor UI for configuring this per lab is not yet implemented and is out of scope for the current project submission.
 
@@ -753,26 +634,16 @@ The backend and database already support injecting external secrets (such as API
 The *Results* view shows a per-course breakdown of student progress. Navigate to *Course Management → Results* in the sidebar and select a course to open its results overview.
 
 #figure(
-  image("img/result_ovw.png", width: 100%),
+  image("img/result_ovw.png", width: 85%),
   caption: [Results Overview for a course],
 )
 
 Four summary cards are shown at the top:
 
-#figure(
-  table(
-    columns: (auto, 1fr),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Metric*], [*Description*],
-    [Average Completion], [Mean completion percentage across all enrolled students and all labs],
-    [On-Time], [Number of students who completed the course within the configured deadline],
-    [In Progress], [Number of students who have started but not yet finished the course],
-    [Participants], [Total number of enrolled students],
-  ),
-  caption: [Results summary metrics],
-)
+- *Average completion:* mean completion percentage across students/labs
+- *On-time:* students who completed within the deadline
+- *In progress:* students who started but not finished
+- *Participants:* total enrolled students
 
 Below the summary, the *Participants* table lists every enrolled student with their current status, earned points, solved challenges, and a completion progress bar. Use the *All labs* dropdown to filter by a specific lab, and the *All statuses* dropdown to filter by submission status (e.g. show only students who are still in progress). Use the search bar to find a specific participant by name.
 
@@ -796,24 +667,11 @@ Navigate to *My Courses* in the sidebar and click *New course*. A course groups 
 
 Fill in the fields as described below. Title, Short Description, and Description are required.
 
-#figure(
-  table(
-    columns: (auto, auto, 1fr),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Field*], [*Required*], [*Description*],
-    [Course Title], [Yes], [Name of the course shown everywhere on the platform],
-    [Short Description], [Yes], [Summary shown on course cards and in the blue course header (max 200 characters)],
-    [Description], [Yes], [Full course description in the rich-text editor, supports headings, lists, bold, links, and more],
-    [Topic], [No], [Category the course belongs to; used for filtering in the catalog],
-    [Course Image URL], [No], [URL to a thumbnail image shown on the course card],
-    [Collaborators], [No], [Additional instructors with edit access; you are added as owner automatically. Only users who have already signed in at least once can be selected.],
-    [Visibility], [Yes], [Controls who can see and join the course (see below)],
-    [Multiple-Choice Attempts], [Yes], [How many times students may attempt MC questions in this course],
-  ),
-  caption: [Course creation fields],
-)
+*Key fields:*
+- *Course Title*, *Short Description*, *Description*
+- *Visibility* (`Draft`, `Public`, `Private`)
+- *Multiple-Choice Attempts* (`Unlimited` or `Once`)
+- Optional: *Topic*, *Course Image URL*, *Collaborators*
 
 *Visibility* has three states:
 
@@ -867,11 +725,6 @@ The *User Management* tab shows a paginated list of all registered users. Use th
 
 == Creating a User
 
-#figure(
-  image("img/create_user.png", width: 60%),
-  caption: [Create User form (admin-managed account creation)],
-)
-
 Open the *Create User* tab and fill in the form. Email, username, first name, and last name are required. Title and Picture URL are optional. Click *Create user* to create the account in Keycloak. The new user receives a temporary password and must set their own password on first login.
 
 Note: users created this way are *admin-managed* accounts. They are separate from self-registered accounts and must be provisioned manually before they can access the platform (see @sec-provision).
@@ -903,19 +756,9 @@ To provision a user, open the user detail view. If the *Provisioned* badge is mi
 
 Three lifecycle operations are available from the user detail view:
 
-#figure(
-  table(
-    columns: (auto, auto, 1fr),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Action*], [*Reversible*], [*Effect*],
-    [Disable], [Yes], [Disables the Keycloak account and sets `deletedAt` in PostgreSQL. The user cannot log in. All data is preserved.],
-    [Restore], [Yes], [Re-enables a disabled Keycloak account and clears `deletedAt`. The user can log in again.],
-    [Soft-delete], [*No*], [Permanently anonymizes the email and username in both Keycloak and PostgreSQL, disables the account, and sets `deletedAt`. The original email and username are freed up for reuse. This action cannot be undone.],
-  ),
-  caption: [User lifecycle operations],
-)
+- *Disable (reversible):* disables Keycloak and sets `deletedAt` in PostgreSQL (blocks login)
+- *Restore (reversible):* re-enables Keycloak and clears `deletedAt`
+- *Soft-delete (irreversible):* anonymizes email/username in Keycloak + DB, disables the account, sets `deletedAt` (frees up the original email/username)
 
 Use *Disable* to temporarily block access without losing any data. Use *Soft-delete* only when the account must be permanently removed for example when a student leaves the university and their personal data must be erased.
 
@@ -929,20 +772,53 @@ Use *Disable* to temporarily block access without losing any data. Use *Soft-del
 
 ISTP follows a three-tier architecture: a Next.js frontend, a Spring Boot REST backend, and a PostgreSQL database, with Keycloak as a separate identity provider and Kubernetes as the container runtime for student lab pods.
 
-#figure(
-  table(
-    columns: (auto, auto, 1fr),
-    stroke: 0.5pt + luma(180),
-    inset: 8pt,
-    fill: (col, row) => if row == 0 { luma(230) } else { white },
-    [*Component*], [*Technology*], [*Responsibility*],
-    [Frontend], [Next.js 16, React 19, Mantine, NextAuth.js], [Student, instructor, and admin UI; handles login redirect via NextAuth and communicates with the backend exclusively through the REST API under `/api/v1/`],
-    [Backend], [Spring Boot 4.0.3 (Java)], [REST API, business logic, Keycloak Admin API integration, Kubernetes pod lifecycle management via the fabric8 client, flag validation, scoring],
-    [Identity Provider], [Keycloak 26.x], [OIDC token issuance, user management, realm roles, brute-force protection, password reset emails],
-    [Database], [PostgreSQL], [Persistent storage for users, labs, courses, enrollments, challenge completions, flag and MC submissions, badges],
-    [Container Runtime], [Kubernetes (single cluster)], [Runs isolated lab pods per student in a dedicated namespace; enforces resource quotas and TTL-based cleanup],
-  ),
-  caption: [ISTP component overview],
-)
+- *Frontend (Next.js):* UI + NextAuth login; talks to backend via REST (`/api/v1/**`)
+- *Backend (Spring Boot):* REST API + business logic + Keycloak Admin API + Kubernetes pod lifecycle
+- *Keycloak:* OIDC tokens, realm roles, brute-force protection, password resets
+- *PostgreSQL:* persistent app data (users projection, courses/labs/challenges, submissions, badges)
+- *Kubernetes:* runs isolated lab pods; enforces TTL and resource limits
 
-All runtime services (frontend, backend, Keycloak, PostgreSQL) are deployed as Kubernetes workloads. The frontend and backend are exposed th
+All runtime services (frontend, backend, Keycloak, PostgreSQL) are deployed as Kubernetes workloads. The frontend and backend are exposed through HTTPS Ingress and communicate with the backend exclusively via REST. The backend validates JWTs issued by Keycloak and enforces roles on all protected endpoints under `/api/v1/**`.
+
+== Database Schema (PostgreSQL)
+
+*Source of truth:* The schema is defined by the JPA entities in the backend (`backend/src/main/java/.../db/entities`). In development the schema is created/updated automatically by Hibernate (`spring.jpa.hibernate.ddl-auto=update`). For production deployments, a migration tool (Flyway/Liquibase) is recommended.
+
+*Core tables:*
+- `users` + `user_roles`: app user projection (linked to Keycloak user id), soft-delete fields, online-time tracking
+- `courses`, `course_topics`: course metadata and catalog topics
+- `labs`, `challenges`, `challenge_options`: labs (Docker image) and their challenges (incl. MC options)
+- `course_labs`: assigns labs to courses + ordering + optional due date
+- `course_instructors`, `course_enrollments`: instructors (owner/collaborator) and student enrollments
+- `challenge_completions`: “solved” state per user + challenge (unique)
+- `student_flag_submissions`, `student_option_submissions`: last submission per user + challenge (unique), incl. correctness
+- `user_course_badges`: awarded badges per user + course (unique)
+- `course_challenge_score_overrides`: per-course overrides for individual challenge scoring
+- `admin_config`: cluster-wide admin settings (pod TTL, kubeconfig, image pull secret)
+
+*Key relationships (high-level):*
+- Course → many Labs (via `course_labs`)
+- Lab → many Challenges → many Options (MC)
+- User → enrollments, completions, submissions, badges
+
+== API Documentation
+
+The backend publishes an OpenAPI specification (springdoc).
+
+*Local development (backend on `http://localhost:8080`):*
+- JSON: `http://localhost:8080/v3/api-docs`
+- YAML: `http://localhost:8080/v3/api-docs.yaml`
+
+*Staging / production (default ingress setup):* The OpenAPI endpoints are reachable through the Next.js API proxy after login:
+- Scalar UI: `/api/backend/scalar`
+- OpenAPI JSON: `/api/backend/v3/api-docs`
+- OpenAPI YAML: `/api/backend/v3/api-docs.yaml`
+
+The frontend generates TypeScript types from the OpenAPI spec via `npm run generate:api` (see `frontend/package.json`).
+
+== Repository Structure
+
+- `frontend/`: Next.js application
+- `backend/`: Spring Boot REST service
+- `infra/`: Docker/Kubernetes deployment config
+- `docs/`: documentation sources and images
