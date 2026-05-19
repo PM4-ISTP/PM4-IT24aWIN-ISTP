@@ -37,7 +37,7 @@ See [LOCAL_DEV.md](LOCAL_DEV.md) for the complete local setup, environment varia
 | App | https://istp.pm4.init-lab.ch |
 | Keycloak admin console | https://istp-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/ |
 | Adminer | https://istp-adminer.pm4.init-lab.ch |
-| API docs | https://istp.pm4.init-lab.ch/api/backend/scalar |
+| API docs (login required) | https://istp.pm4.init-lab.ch/api/backend/scalar |
 
 ## Common Commands
 
