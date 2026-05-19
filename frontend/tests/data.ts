@@ -295,15 +295,19 @@ const instructorLab08Challenge03: Challenge = {
 // Lab Definitions
 // ============================================================================
 
+export const defaultDockerImage =
+  "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa";
+
+export const defaultContainerPort = 80;
+
 const adminLab01: Lab = {
   id: "e93b357d-b0f7-4f51-8abf-d6b1890cdb75",
   title: "E2E Test Lab: Admin 01",
   status: "PUBLIC",
   difficulty: "MEDIUM",
   maxScore: 1,
-  dockerImage:
-    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
-  containerPort: 80,
+  dockerImage: defaultDockerImage,
+  containerPort: defaultContainerPort,
   creatorName: "E2E Admin",
   courseCount: 1,
   updatedAt: "2026-05-15T11:23:40.18509",
@@ -316,9 +320,8 @@ const instructorLab01: Lab = {
   status: "PUBLIC",
   difficulty: "MEDIUM",
   maxScore: 1,
-  dockerImage:
-    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
-  containerPort: 80,
+  dockerImage: defaultDockerImage,
+  containerPort: defaultContainerPort,
   creatorName: "E2E Instructor",
   courseCount: 1,
   updatedAt: "2026-05-15T11:23:04.107777",
@@ -331,9 +334,8 @@ const instructorLab02: Lab = {
   status: "PRIVATE",
   difficulty: "MEDIUM",
   maxScore: 5,
-  dockerImage:
-    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
-  containerPort: 80,
+  dockerImage: defaultDockerImage,
+  containerPort: defaultContainerPort,
   creatorName: "E2E Instructor",
   courseCount: 3,
   updatedAt: "2026-05-15T11:32:08.776083",
@@ -346,9 +348,8 @@ const instructorLab03: Lab = {
   status: "PUBLIC",
   difficulty: "MEDIUM",
   maxScore: 6,
-  dockerImage:
-    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
-  containerPort: 80,
+  dockerImage: defaultDockerImage,
+  containerPort: defaultContainerPort,
   creatorName: "E2E Instructor",
   courseCount: 2,
   updatedAt: "2026-05-15T11:28:07.339331",
@@ -361,9 +362,8 @@ const instructorLab04: Lab = {
   status: "DRAFT",
   difficulty: "MEDIUM",
   maxScore: 1,
-  dockerImage:
-    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
-  containerPort: 80,
+  dockerImage: defaultDockerImage,
+  containerPort: defaultContainerPort,
   creatorName: "E2E Instructor",
   courseCount: 0,
   updatedAt: "2026-05-15T11:23:17.275862",
@@ -376,8 +376,7 @@ const instructorLab05: Lab = {
   status: "PRIVATE",
   difficulty: "EASY",
   maxScore: 1,
-  dockerImage:
-    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
+  dockerImage: defaultDockerImage,
   containerPort: 80,
   creatorName: "E2E Instructor",
   courseCount: 1,
@@ -391,9 +390,8 @@ const instructorLab06: Lab = {
   status: "PUBLIC",
   difficulty: "HARD",
   maxScore: 3,
-  dockerImage:
-    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
-  containerPort: 80,
+  dockerImage: defaultDockerImage,
+  containerPort: defaultContainerPort,
   creatorName: "E2E Instructor",
   courseCount: 1,
   updatedAt: "2026-05-16T16:14:46.101168",
@@ -406,9 +404,8 @@ const instructorLab07: Lab = {
   status: "PRIVATE",
   difficulty: "EXPERT",
   maxScore: 23,
-  dockerImage:
-    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
-  containerPort: 80,
+  dockerImage: defaultDockerImage,
+  containerPort: defaultContainerPort,
   creatorName: "E2E Instructor",
   courseCount: 1,
   updatedAt: "2026-05-16T16:18:11.284093",
@@ -421,9 +418,8 @@ const instructorLab08: Lab = {
   status: "PUBLIC",
   difficulty: "BEGINNER",
   maxScore: 4,
-  dockerImage:
-    "ghcr.io/pm4-istp/campus-helpdesk@sha256:fbbd79d166db3439a1751038f4cded971516679e67050dfb9e98f9b3d1e578aa",
-  containerPort: 80,
+  dockerImage: defaultDockerImage,
+  containerPort: defaultContainerPort,
   creatorName: "E2E Instructor",
   courseCount: 1,
   updatedAt: "2026-05-16T16:20:31.259556",

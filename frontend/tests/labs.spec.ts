@@ -1,7 +1,7 @@
 import test, { expect, type Page } from "@playwright/test";
 import { clickButtonAndAssertUrl, clickNavbarButton } from "@/tests/helpers/navigation";
 import { loginAs } from "@/tests/helpers/auth";
-import { courses, labs, testUsers, type Course, type Lab } from "@/tests/data";
+import { courses, defaultDockerImage, labs, testUsers, type Course, type Lab } from "@/tests/data";
 import { assertNoActiveLabs } from "@/tests/helpers/dashboard";
 
 const student = testUsers.student;
@@ -164,6 +164,49 @@ test("Labs tab must be empty, if user has not created any labs.", async ({ page 
   await loginAs(page, testUsers.instructorWithoutCoursesOrLabs);
   await clickNavbarButton(page, "Labs", "dashboard/instructor/labs");
   await expect(page.getByText("no labs found")).toBeVisible();
+});
+
+test("Instructor can create a lab with one challenge.", async ({ page }) => {
+  await loginAs(page, testUsers.instructor);
+  await clickNavbarButton(page, "Labs", "dashboard/instructor/labs");
+  await clickButtonAndAssertUrl(
+    page,
+    page.getByRole("link", { name: "New Lab" }),
+    "dashboard/instructor/labs/create"
+  );
+
+  // Create lab
+  await page.getByRole("textbox", { name: "Lab Title" }).click();
+  await page.getByRole("textbox", { name: "Lab Title" }).fill("E2E Test Lab: Create Lab Test");
+  await page.getByText("Add a description...").dblclick();
+  await page
+    .getByRole("textbox")
+    .filter({ hasText: "Add a description..." })
+    .fill("This is a test for lab creation.");
+  await page.getByRole("textbox", { name: "Docker Image" }).click();
+  await page.getByRole("textbox", { name: "Docker Image" }).fill(defaultDockerImage);
+  await expect(page.getByText("Public GHCR image found")).toBeVisible();
+  await page.locator("label").filter({ hasText: "Public" }).click();
+  await page.locator("label").filter({ hasText: "Beginner" }).click();
+  await page.getByRole("textbox", { name: "Title", exact: true }).click();
+  await page.getByRole("textbox", { name: "Title", exact: true }).fill("Challenge 1");
+  await page.getByRole("textbox").filter({ hasText: /^$/ }).nth(5).click();
+  await page
+    .getByRole("textbox")
+    .filter({ hasText: /^$/ })
+    .nth(5)
+    .fill("This is the first challenge of this lab.");
+  await page.getByRole("textbox", { name: "Flag" }).click();
+  await page.getByRole("textbox", { name: "Flag" }).fill("FLAG");
+  await clickButtonAndAssertUrl(
+    page,
+    page.getByRole("button", { name: "Create Lab" }),
+    "dashboard/instructor/labs"
+  );
+
+  // Verify lab created
+  const labCard = page.getByRole("button", { name: "E2E Test Lab: Create Lab Test" });
+  await expect(labCard).toBeVisible();
 });
 
 test("Lab pod lifecycle for e2e-student", async ({ page }) => {
