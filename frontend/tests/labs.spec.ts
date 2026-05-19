@@ -173,10 +173,6 @@ async function assertAppNotReady(page: Page) {
   await expect(appNotReady).toHaveAttribute("data-disabled", "true"); // Mantine uses data-disabled instead of disabled for disabling button
 }
 
-function getChallengeDescriptionField(page: Page) {
-  return page.getByRole("textbox").filter({ hasText: /^$/ }).nth(5);
-}
-
 test("Labs tab must be empty, if user has not created any labs.", async ({ page }) => {
   await loginAs(page, testUsers.instructorWithoutCoursesOrLabs);
   await clickNavbarButton(page, LAB_OVERVIEW_TAB_NAME, LAB_OVERVIEW_URL);
@@ -184,6 +180,10 @@ test("Labs tab must be empty, if user has not created any labs.", async ({ page 
 });
 
 test("Instructor can create a lab with one challenge.", async ({ page }) => {
+  const getChallengeDescriptionField = () => {
+    return page.getByRole("textbox").filter({ hasText: /^$/ }).nth(5);
+  };
+
   await loginAs(page, testUsers.instructor);
   await clickNavbarButton(page, LAB_OVERVIEW_TAB_NAME, LAB_OVERVIEW_URL);
   await clickButtonAndAssertUrl(
@@ -209,8 +209,8 @@ test("Instructor can create a lab with one challenge.", async ({ page }) => {
   await page
     .getByRole("textbox", { name: "Title", exact: true })
     .fill("E2E Test Lab: Create Lab Test - Challenge 1");
-  await page.getByRole("textbox").filter({ hasText: /^$/ }).nth(5).click();
-  await getChallengeDescriptionField(page).fill("This is the first challenge of this lab.");
+  await getChallengeDescriptionField().click();
+  await getChallengeDescriptionField().fill("This is the first challenge of this lab.");
   await page.getByRole("textbox", { name: "Flag" }).click();
   await page.getByRole("textbox", { name: "Flag" }).fill("FLAG");
   await clickButtonAndAssertUrl(
@@ -221,6 +221,43 @@ test("Instructor can create a lab with one challenge.", async ({ page }) => {
 
   // Verify lab created
   const labCard = page.getByRole("button", { name: "E2E Test Lab: Create Lab Test" });
+  await expect(labCard).toBeVisible();
+});
+
+test("Instructor can update a lab with one challenge.", async ({ page }) => {
+  const labUnderTest = labs.instructor01;
+  const newDockerImage =
+    "ghcr.io/pm4-istp/llm01-prompt-injection@sha256:c3fe94d1655076f00f522d923f4325b6bd232f40959b6fbda3d5f1e1a6edc70a";
+
+  await loginAs(page, testUsers.instructor);
+  await clickNavbarButton(page, LAB_OVERVIEW_TAB_NAME, LAB_OVERVIEW_URL);
+  await clickButtonAndAssertUrl(
+    page,
+    () => page.getByRole("button", { name: labUnderTest.title }),
+    `dashboard/instructor/labs/${labUnderTest.id}`
+  );
+
+  // Update lab
+  await page.getByRole("textbox", { name: "Lab Title" }).click();
+  await page.getByRole("textbox", { name: "Lab Title" }).fill("E2E Test Lab: Update Lab Test");
+  await page.getByText(labUnderTest.description ?? "").dblclick();
+  await page
+    .getByRole("textbox")
+    .filter({ hasText: labUnderTest.description ?? "" })
+    .fill("This is a test for lab update.");
+  await page.getByRole("textbox", { name: "Docker Image" }).click();
+  await page.getByRole("textbox", { name: "Docker Image" }).fill(newDockerImage);
+  await expect(page.getByText("Public GHCR image found")).toBeVisible();
+  await page.locator("label").filter({ hasText: "Private" }).click();
+  await page.locator("label").filter({ hasText: "Expert" }).click();
+  await clickButtonAndAssertUrl(
+    page,
+    () => page.getByRole("button", { name: "Save Changes" }),
+    LAB_OVERVIEW_URL
+  );
+
+  // Verify lab updated
+  const labCard = page.getByRole("button", { name: "E2E Test Lab: Update Lab Test" });
   await expect(labCard).toBeVisible();
 });
 

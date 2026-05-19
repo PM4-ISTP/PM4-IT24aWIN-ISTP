@@ -11,6 +11,7 @@
 export type Challenge = Readonly<{
   id: string;
   title: string;
+  description?: string;
   points: number;
   type: "FLAG" | "MULTIPLE_CHOICE";
   orderIndex: number;
@@ -20,6 +21,7 @@ export type Challenge = Readonly<{
 export type Lab = Readonly<{
   id: string;
   title: string;
+  description?: string;
   status: "PUBLIC" | "PRIVATE" | "DRAFT";
   difficulty: string;
   maxScore: number;
@@ -159,6 +161,7 @@ const adminLab01Challenge01: Challenge = {
 const instructorLab01Challenge01: Challenge = {
   id: "0e14ca87-d2b5-45e9-ab04-92eaabbe29eb",
   title: "E2E Test Course: Instructor 01 - Challenge 1",
+  description: "This is the first challenge of this lab.",
   points: 1,
   type: "FLAG",
   orderIndex: 0,
@@ -317,6 +320,8 @@ const adminLab01: Lab = {
 const instructorLab01: Lab = {
   id: "61b8867c-14d6-4a1e-b405-6238ef82513d",
   title: "E2E Test Lab: Instructor 01",
+  description:
+    '"Instructor 01" is a test lab for E2E testing. Please do not interact with this lab in any form (e.g. submitting challenges). Otherwise the E2E tests might fail.',
   status: "PUBLIC",
   difficulty: "MEDIUM",
   maxScore: 1,
