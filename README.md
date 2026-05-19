@@ -1,4 +1,4 @@
-# PM4-IT24aWIN-ISTP
+﻿# PM4-IT24aWIN-ISTP
 
 Interactive Security Training Platform
 
@@ -31,11 +31,11 @@ For the exact local dev steps (hybrid local Postgres + staging Keycloak), see `L
 | Keycloak admin console | https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/ |
 | Adminer | https://istp-staging-adminer.pm4.init-lab.ch |
 
-API documentation (requires login â†’ open App first, then open these links):
+API documentation (public on staging):
 
-- Scalar UI: https://istp-staging.pm4.init-lab.ch/api/backend/scalar
-- OpenAPI JSON: https://istp-staging.pm4.init-lab.ch/api/backend/v3/api-docs
-- OpenAPI YAML: https://istp-staging.pm4.init-lab.ch/api/backend/v3/api-docs.yaml
+- Scalar UI: https://istp-staging.pm4.init-lab.ch/scalar
+- OpenAPI JSON: https://istp-staging.pm4.init-lab.ch/v3/api-docs
+- OpenAPI YAML: https://istp-staging.pm4.init-lab.ch/v3/api-docs.yaml
 
 ### Production
 
@@ -45,7 +45,7 @@ API documentation (requires login â†’ open App first, then open these links
 | Keycloak admin console | https://istp-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/ |
 | Adminer | https://istp-adminer.pm4.init-lab.ch |
 
-API documentation (requires login â†’ open App first, then open these links):
+API documentation (requires login -> open App first, then open these links):
 
 - Scalar UI: https://istp.pm4.init-lab.ch/api/backend/scalar
 - OpenAPI JSON: https://istp.pm4.init-lab.ch/api/backend/v3/api-docs
@@ -117,7 +117,7 @@ mkdir -p backend/src/main/resources
 k3d kubeconfig get istp | sed 's/0\.0\.0\.0/127.0.0.1/g' > backend/src/main/resources/Kubeconfig
 ```
 
-> **Note:** The `sed` command replaces `0.0.0.0` with `127.0.0.1` in the server address. k3d generates kubeconfigs with `0.0.0.0` as the host, which is a valid bind address for a server but not a valid destination for client connections — the Java Kubernetes client will fail with "Host is down" without this substitution.
+> **Note:** The `sed` command replaces `0.0.0.0` with `127.0.0.1` in the server address. k3d generates kubeconfigs with `0.0.0.0` as the host, which is a valid bind address for a server but not a valid destination for client connections â€” the Java Kubernetes client will fail with "Host is down" without this substitution.
 
 **Windows 11:**
 
@@ -135,7 +135,7 @@ After running the command, please open the Kubeconfig file in `backend/src/main/
 
 - The Kubeconfig file is required by the backend to communicate with the Kubernetes cluster
 - The file is already `.gitignored` (contains sensitive cluster credentials)
-- Re-run this command after every cluster restart — k3d assigns a new random port each time
+- Re-run this command after every cluster restart â€” k3d assigns a new random port each time
 
 **Verify the kubeconfig was created:**
 
@@ -285,7 +285,7 @@ Fails on violations. Human-readable report: `build/reports/checkstyle/main.html`
 ./gradlew pmdMain
 ```
 
-Warns only — does not fail the build. Violations print to the terminal. Report: `build/reports/pmd/main.html`.
+Warns only â€” does not fail the build. Violations print to the terminal. Report: `build/reports/pmd/main.html`.
 
 **SpotBugs (bug patterns):**
 
@@ -293,7 +293,7 @@ Warns only — does not fail the build. Violations print to the terminal. Report
 ./gradlew spotbugsMain
 ```
 
-Warns only — does not fail the build. Report: `build/reports/spotbugs/main.html`.
+Warns only â€” does not fail the build. Report: `build/reports/spotbugs/main.html`.
 
 **Run all tools at once:**
 
@@ -316,16 +316,16 @@ public void myMethod() { ... }
 @SuppressFBWarnings("BUG_PATTERN_CODE")
 public void myMethod() { ... }
 
-// Suppress a Checkstyle rule on a method (rare — prefer fixing the code)
+// Suppress a Checkstyle rule on a method (rare â€” prefer fixing the code)
 @SuppressWarnings("checkstyle:RuleName")
 public void myMethod() { ... }
 ```
 
 If the same false positive appears across **many files** (e.g. a framework-specific pattern), add it to the shared config file instead:
 
-- PMD → `backend/config/pmd/ruleset.xml` (`<exclude name="..."/>` inside the relevant rule ref)
-- SpotBugs → `backend/config/spotbugs/exclude.xml` (add a `<Match>` block)
-- Checkstyle → `backend/config/checkstyle/suppressions.xml` (add a `<suppress>` entry)
+- PMD â†’ `backend/config/pmd/ruleset.xml` (`<exclude name="..."/>` inside the relevant rule ref)
+- SpotBugs â†’ `backend/config/spotbugs/exclude.xml` (add a `<Match>` block)
+- Checkstyle â†’ `backend/config/checkstyle/suppressions.xml` (add a `<suppress>` entry)
 
 ---
 
@@ -335,10 +335,10 @@ The `backend-lint-and-format` GitHub Actions job runs in parallel with the front
 
 ```
 backend-lint-and-format
-├── 1. Spotless check     → fails PR if any file is not formatted
-├── 2. Checkstyle         → fails PR on any style / naming violation
-├── 3. PMD                → logs warnings, never blocks the PR
-└── 4. SpotBugs           → logs warnings, never blocks the PR
+â”œâ”€â”€ 1. Spotless check     â†’ fails PR if any file is not formatted
+â”œâ”€â”€ 2. Checkstyle         â†’ fails PR on any style / naming violation
+â”œâ”€â”€ 3. PMD                â†’ logs warnings, never blocks the PR
+â””â”€â”€ 4. SpotBugs           â†’ logs warnings, never blocks the PR
 ```
 
 HTML reports for all four tools are uploaded as a GitHub Actions artifact named **`backend-analysis-reports`** and retained for 7 days. Download them from the "Artifacts" section of any workflow run to investigate PMD or SpotBugs findings.
@@ -427,8 +427,8 @@ const variable = someValue;
 
 If the same false positive appears across **many files** (e.g. a framework-specific pattern), add it to the shared config file instead:
 
-- ESLint → `frontend/eslint.config.mjs` (add rule overrides or ignore patterns)
-- Prettier → `frontend/.prettierrc` or `package.json` (if created)
+- ESLint â†’ `frontend/eslint.config.mjs` (add rule overrides or ignore patterns)
+- Prettier â†’ `frontend/.prettierrc` or `package.json` (if created)
 
 ---
 
@@ -438,8 +438,8 @@ The `frontend-lint` GitHub Actions job runs in parallel with the backend lint jo
 
 ```
 frontend-lint
-├── 1. Prettier check   → fails PR if any file is not formatted
-└── 2. ESLint          → fails PR on any code quality / style violation
+â”œâ”€â”€ 1. Prettier check   â†’ fails PR if any file is not formatted
+â””â”€â”€ 2. ESLint          â†’ fails PR on any code quality / style violation
 ```
 
 ---
