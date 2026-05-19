@@ -12,6 +12,9 @@ const START_DURATION_MINUTES = 60;
 const EXTENSION_MINUTES = 30;
 const TIME_TOLERANCE_MINUTES = 1;
 
+const LAB_OVERVIEW_TAB_NAME = "Labs";
+const LAB_OVERVIEW_URL = "dashboard/instructor/labs";
+
 function addMinutes(base: Date, minutes: number): Date {
   const next = new Date(base.getTime());
   next.setMinutes(next.getMinutes() + minutes);
@@ -160,15 +163,19 @@ async function assertAppNotReady(page: Page) {
   await expect(appNotReady).toHaveAttribute("data-disabled", "true"); // Mantine uses data-disabled instead of disabled for disabling button
 }
 
+function getChallengeDescriptionField(page: Page) {
+  return page.getByRole("textbox").filter({ hasText: /^$/ }).nth(5)
+}
+
 test("Labs tab must be empty, if user has not created any labs.", async ({ page }) => {
   await loginAs(page, testUsers.instructorWithoutCoursesOrLabs);
-  await clickNavbarButton(page, "Labs", "dashboard/instructor/labs");
+  await clickNavbarButton(page, LAB_OVERVIEW_TAB_NAME, LAB_OVERVIEW_URL);
   await expect(page.getByText("no labs found")).toBeVisible();
 });
 
 test("Instructor can create a lab with one challenge.", async ({ page }) => {
   await loginAs(page, testUsers.instructor);
-  await clickNavbarButton(page, "Labs", "dashboard/instructor/labs");
+  await clickNavbarButton(page, LAB_OVERVIEW_TAB_NAME, LAB_OVERVIEW_URL);
   await clickButtonAndAssertUrl(
     page,
     page.getByRole("link", { name: "New Lab" }),
@@ -191,17 +198,13 @@ test("Instructor can create a lab with one challenge.", async ({ page }) => {
   await page.getByRole("textbox", { name: "Title", exact: true }).click();
   await page.getByRole("textbox", { name: "Title", exact: true }).fill("Challenge 1");
   await page.getByRole("textbox").filter({ hasText: /^$/ }).nth(5).click();
-  await page
-    .getByRole("textbox")
-    .filter({ hasText: /^$/ })
-    .nth(5)
-    .fill("This is the first challenge of this lab.");
+  await getChallengeDescriptionField(page).fill("This is the first challenge of this lab.");
   await page.getByRole("textbox", { name: "Flag" }).click();
   await page.getByRole("textbox", { name: "Flag" }).fill("FLAG");
   await clickButtonAndAssertUrl(
     page,
     page.getByRole("button", { name: "Create Lab" }),
-    "dashboard/instructor/labs"
+    LAB_OVERVIEW_URL
   );
 
   // Verify lab created
