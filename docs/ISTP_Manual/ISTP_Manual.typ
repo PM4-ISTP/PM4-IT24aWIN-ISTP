@@ -809,7 +809,12 @@ The backend publishes an OpenAPI specification (springdoc).
 - JSON: `http://localhost:8080/v3/api-docs`
 - YAML: `http://localhost:8080/v3/api-docs.yaml`
 
-*Staging / production (default ingress setup):* The OpenAPI endpoints are reachable through the Next.js API proxy after login:
+*Staging (demo/review):* API docs are exposed publicly:
+- Scalar UI: `https://istp-staging.pm4.init-lab.ch/scalar`
+- OpenAPI JSON: `https://istp-staging.pm4.init-lab.ch/v3/api-docs`
+- OpenAPI YAML: `https://istp-staging.pm4.init-lab.ch/v3/api-docs.yaml`
+
+*Production:* API docs are reachable through the Next.js API proxy after login:
 - Scalar UI: `/api/backend/scalar`
 - OpenAPI JSON: `/api/backend/v3/api-docs`
 - OpenAPI YAML: `/api/backend/v3/api-docs.yaml`
