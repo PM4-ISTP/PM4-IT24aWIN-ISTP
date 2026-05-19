@@ -1,5 +1,5 @@
 import { Box, Group, Stack, Text } from "@mantine/core";
-import BrandLockup from "../parts/BrandLockup";
+import BrandLockup from "@/src/shared/components/brand/BrandLockup";
 import { ACCENT, INK, INK_DIM, LINE, MUTED } from "../../theme";
 import { NAV_ITEMS } from "./data";
 

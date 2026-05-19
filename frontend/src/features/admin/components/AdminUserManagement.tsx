@@ -18,6 +18,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
+import AppButton from "@/src/shared/components/AppButton";
 
 type CreateUserPayload = {
   email: string;
@@ -335,13 +336,9 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
                   }}
                   disabled={loadingUsers}
                 />
-                <Button
-                  onClick={() => void loadUsers(listQuery)}
-                  radius="md"
-                  loading={loadingUsers}
-                >
+                <AppButton onClick={() => void loadUsers(listQuery)} loading={loadingUsers}>
                   Search
-                </Button>
+                </AppButton>
               </Group>
 
               <ScrollArea h="max(560px, calc(100vh - 340px))">
@@ -441,7 +438,7 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
       </Tabs.Panel>
 
       <Tabs.Panel value="create">
-        <Stack gap="lg">
+        <Stack gap="lg" style={{ maxWidth: 720, marginInline: "auto", width: "100%" }}>
           {creatingUser ? (
             <Paper
               p="md"
@@ -571,20 +568,9 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
               </Group>
 
               <Group justify="flex-end" mt="xs">
-                <Button
-                  type="submit"
-                  loading={creatingUser}
-                  radius="md"
-                  style={{
-                    background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                    border: "none",
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
-                    fontWeight: 600,
-                    boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                  }}
-                >
+                <AppButton type="submit" loading={creatingUser}>
                   Create user
-                </Button>
+                </AppButton>
               </Group>
             </Stack>
           </form>
@@ -611,13 +597,12 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
                     Shows Keycloak sessions for the configured app client.
                   </Text>
                 </div>
-                <Button
+                <AppButton
                   onClick={() => void loadActiveSessions()}
-                  radius="md"
                   loading={loadingActiveSessions}
                 >
                   Refresh
-                </Button>
+                </AppButton>
               </Group>
 
               <ScrollArea h="max(560px, calc(100vh - 340px))">
@@ -699,6 +684,7 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.08)",
             maxWidth: 720,
+            marginInline: "auto",
           }}
         >
           <Stack gap="sm">

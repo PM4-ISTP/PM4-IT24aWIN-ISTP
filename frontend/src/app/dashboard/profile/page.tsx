@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Avatar, Button, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Avatar, Group, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useAsyncAction } from "@/src/shared/hooks/useAsyncAction";
 import { httpUrlValidator } from "@/src/shared/lib/validation";
+import PageHeader from "@/src/shared/components/PageHeader";
+import AppButton from "@/src/shared/components/AppButton";
+import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
 
 type UserProfile = {
   id: string;
@@ -141,30 +144,9 @@ export default function ProfilePage() {
 
   return (
     <Stack p="xl" gap="xl" style={{ maxWidth: 720 }}>
-      <div>
-        <Title
-          order={1}
-          style={{
-            color: "#f1f5f9",
-            fontFamily: "var(--font-space-grotesk), sans-serif",
-            fontWeight: 700,
-          }}
-        >
-          Profile
-        </Title>
-        <Text style={{ color: "#94a3b8" }} mt={4}>
-          Update your name, title, and profile picture URL.
-        </Text>
-      </div>
+      <PageHeader title="Profile" subtitle="Update your name, title, and profile picture URL." />
 
-      <Paper
-        p="lg"
-        radius="md"
-        style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
+      <SurfaceCard variant="default" padding="1.5rem">
         <Group gap="md" align="center">
           <Avatar radius="xl" size={56} src={form.values.pictureUrl || undefined}>
             {displayName
@@ -224,25 +206,13 @@ export default function ProfilePage() {
             ) : null}
 
             <Group justify="flex-end" mt="xs">
-              <Button
-                type="submit"
-                loading={submitAction.loading}
-                disabled={loadingProfile}
-                radius="md"
-                style={{
-                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                  border: "none",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 600,
-                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                }}
-              >
+              <AppButton type="submit" loading={submitAction.loading} disabled={loadingProfile}>
                 Save changes
-              </Button>
+              </AppButton>
             </Group>
           </Stack>
         </form>
-      </Paper>
+      </SurfaceCard>
     </Stack>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { Box, Button, Group, Select, TextInput } from "@mantine/core";
-import Link from "next/link";
+import { Box, Group, Select, TextInput } from "@mantine/core";
 import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
+import AppButton from "@/src/shared/components/AppButton";
 
 type CatalogFiltersProps = {
   query: string;
@@ -47,35 +47,11 @@ export default function CatalogFilters({ query, topic, topics }: CatalogFiltersP
           />
 
           <Group gap="sm">
-            <JoinCourseButton />
-            <Button
-              type="submit"
-              radius="md"
-              style={{
-                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                border: "none",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-              }}
-            >
-              Search
-            </Button>
-            <Link href="/dashboard/catalog">
-              <Button
-                variant="outline"
-                radius="md"
-                style={{
-                  borderColor: "rgba(255,255,255,0.12)",
-                  color: "#e2e8f0",
-                  background: "rgba(255,255,255,0.04)",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 600,
-                }}
-              >
-                Reset
-              </Button>
-            </Link>
+            <JoinCourseButton size="sm" />
+            <AppButton type="submit">Search</AppButton>
+            <AppButton tone="ghost" component="a" href="/dashboard/catalog">
+              Reset
+            </AppButton>
           </Group>
         </Group>
       </form>

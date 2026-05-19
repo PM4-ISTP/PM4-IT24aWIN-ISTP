@@ -19,6 +19,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
+import AppButton from "@/src/shared/components/AppButton";
 
 type AdminUserDetailResponse = {
   id: string;
@@ -456,53 +457,45 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
         </Group>
         <Group gap="sm">
           {!isSoftDeleted && !isDisabled ? (
-            <Button
-              variant="subtle"
-              radius="md"
+            <AppButton
+              tone="ghost"
               onClick={() => void provision()}
               loading={provisioningUser}
               disabled={disablingUser || restoringUser || softDeletingUser}
             >
               Provision
-            </Button>
+            </AppButton>
           ) : null}
 
           {!isSoftDeleted && !isDisabled ? (
             <>
-              <Button
-                color="red"
-                variant="filled"
-                radius="md"
+              <AppButton
+                tone="danger"
                 onClick={() => void disable()}
                 loading={disablingUser}
                 disabled={provisioningUser || restoringUser || softDeletingUser}
               >
                 Disable
-              </Button>
-              <Button
-                color="red"
-                variant="outline"
-                radius="md"
+              </AppButton>
+              <AppButton
+                tone="danger"
                 onClick={() => void softDelete()}
                 loading={softDeletingUser}
                 disabled={provisioningUser || disablingUser || restoringUser}
               >
                 Soft delete
-              </Button>
+              </AppButton>
             </>
           ) : null}
 
           {canRestore ? (
-            <Button
-              color="green"
-              variant="filled"
-              radius="md"
+            <AppButton
               onClick={() => void restore()}
               loading={restoringUser}
               disabled={provisioningUser || disablingUser || softDeletingUser}
             >
               Restore
-            </Button>
+            </AppButton>
           ) : null}
         </Group>
       </Group>
@@ -570,21 +563,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
           ) : null}
 
           <Group justify="flex-end">
-            <Button
-              radius="md"
+            <AppButton
               onClick={() => void saveProfile()}
               loading={savingProfile}
               disabled={isSoftDeleted}
-              style={{
-                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                border: "none",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-              }}
             >
               Save profile
-            </Button>
+            </AppButton>
           </Group>
           {!user?.provisioned ? (
             <Text size="xs" c="dimmed">
@@ -619,21 +604,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
             </Group>
           </RadioGroup>
           <Group justify="flex-end">
-            <Button
-              radius="md"
+            <AppButton
               onClick={() => void saveRoles()}
               loading={savingRoles}
               disabled={isSoftDeleted}
-              style={{
-                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                border: "none",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-              }}
             >
               Save roles
-            </Button>
+            </AppButton>
           </Group>
           <Text size="xs" c="dimmed">
             Current roles: {(roles.length ? roles : ["(none)"]).join(", ")}
@@ -694,21 +671,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
             />
           </Group>
           <Group justify="flex-end">
-            <Button
-              radius="md"
+            <AppButton
               onClick={() => void setPassword()}
               loading={settingPassword}
               disabled={isSoftDeleted}
-              style={{
-                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                border: "none",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-              }}
             >
               Save password
-            </Button>
+            </AppButton>
           </Group>
           {passwordSuccess ? (
             <Text size="sm" style={{ color: "#86efac" }}>

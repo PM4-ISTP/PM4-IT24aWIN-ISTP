@@ -6,7 +6,6 @@ import {
   ActionIcon,
   Alert,
   Box,
-  Button,
   Container,
   Group,
   Loader,
@@ -18,6 +17,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
+import AppButton from "@/src/shared/components/AppButton";
 import {
   LabFormFields,
   type ChallengeFormValues,
@@ -281,11 +281,10 @@ export default function EditLab() {
             This action cannot be undone.
           </Text>
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={closeVisibility} disabled={isSubmitting}>
+            <AppButton tone="ghost" onClick={closeVisibility} disabled={isSubmitting}>
               Cancel
-            </Button>
-            <Button
-              color="orange"
+            </AppButton>
+            <AppButton
               loading={isSubmitting}
               disabled={isSubmitting}
               onClick={() => {
@@ -293,7 +292,7 @@ export default function EditLab() {
               }}
             >
               Save Changes
-            </Button>
+            </AppButton>
           </Group>
         </Stack>
       </Modal>
@@ -317,11 +316,11 @@ export default function EditLab() {
             </Alert>
           )}
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={closeDelete} disabled={isDeleting}>
+            <AppButton tone="ghost" onClick={closeDelete} disabled={isDeleting}>
               Cancel
-            </Button>
-            <Button
-              color="red"
+            </AppButton>
+            <AppButton
+              tone="danger"
               loading={isDeleting}
               disabled={isDeleting}
               onClick={() => {
@@ -329,7 +328,7 @@ export default function EditLab() {
               }}
             >
               Delete Lab
-            </Button>
+            </AppButton>
           </Group>
         </Stack>
       </Modal>
@@ -362,15 +361,9 @@ export default function EditLab() {
               </Text>
             </Stack>
           </Group>
-          <Button
-            color="red"
-            variant="light"
-            leftSection={<IconTrash size={16} />}
-            onClick={openDelete}
-            radius="md"
-          >
+          <AppButton tone="danger" leftSection={<IconTrash size={16} />} onClick={openDelete}>
             Delete Lab
-          </Button>
+          </AppButton>
         </Group>
 
         <Stack gap="lg">
@@ -405,8 +398,7 @@ export default function EditLab() {
             </Alert>
           )}
 
-          <Button
-            radius="md"
+          <AppButton
             loading={isSubmitting}
             disabled={
               isSubmitting ||
@@ -417,16 +409,9 @@ export default function EditLab() {
             onClick={() => {
               void handleSubmit();
             }}
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "02px 12px rgba(79,70,229,0.3)",
-            }}
           >
             Save Changes
-          </Button>
+          </AppButton>
         </Stack>
       </Stack>
     </Container>

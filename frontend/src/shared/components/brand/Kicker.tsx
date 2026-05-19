@@ -1,6 +1,6 @@
 import { Text } from "@mantine/core";
 import type { CSSProperties, ReactNode } from "react";
-import { FONT_MONO, MUTED } from "../../theme";
+import { FONT_MONO, MUTED } from "@/src/shared/lib/theme";
 
 interface KickerProps {
   children: ReactNode;

@@ -1,10 +1,11 @@
 "use client";
 
 import { startTransition, useState } from "react";
-import { Alert, Button, Group, Stack, Text } from "@mantine/core";
+import { Alert, Group, Stack, Text } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useApiClient } from "@/src/shared/lib/api/client";
+import AppButton from "@/src/shared/components/AppButton";
 import { LeaveCourseButton } from "./LeaveCourseButton";
 import type { CourseVisibility } from "@/src/shared/types/course";
 
@@ -75,9 +76,8 @@ export function CourseEnrollmentButton({
     <Stack gap="xs" align="flex-end">
       <Group gap="sm">
         {hasJoined ? (
-          <Button
+          <AppButton
             size="md"
-            radius="md"
             rightSection={<IconArrowRight size={16} />}
             disabled={!nextChallengeHref}
             onClick={() => {
@@ -85,35 +85,20 @@ export function CourseEnrollmentButton({
                 router.push(nextChallengeHref);
               }
             }}
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-            }}
           >
             {nextChallengeHref ? "Continue Course" : "All Labs Completed"}
-          </Button>
+          </AppButton>
         ) : (
-          <Button
+          <AppButton
             size="md"
-            radius="md"
             loading={isSubmitting}
             disabled={isSubmitting}
             onClick={() => {
               void handleEnroll();
             }}
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-            }}
           >
             Enroll in Course
-          </Button>
+          </AppButton>
         )}
       </Group>
       <Text size="xs" c="dimmed">

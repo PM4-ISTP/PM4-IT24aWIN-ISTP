@@ -1,6 +1,6 @@
 import { Badge, Box, Group, Paper, Progress, Stack, Text } from "@mantine/core";
-import Kicker from "../parts/Kicker";
-import LandingButton from "../parts/LandingButton";
+import Kicker from "@/src/shared/components/brand/Kicker";
+import AppButton from "@/src/shared/components/AppButton";
 import {
   ACCENT,
   AMBER,
@@ -135,13 +135,13 @@ export default function LabCard() {
         </Stack>
 
         <Group justify="flex-end">
-          <LandingButton
+          <AppButton
             size="xs"
             rightSection={<span>→</span>}
             style={{ boxShadow: "0 4px 12px -4px rgba(93,110,240,0.6)" }}
           >
             Start
-          </LandingButton>
+          </AppButton>
         </Group>
       </Paper>
     </Box>

@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Box, Stack, Title } from "@mantine/core";
-import Kicker from "./Kicker";
+import Kicker from "@/src/shared/components/brand/Kicker";
 import { INK } from "../../theme";
 
 type SectionHeaderProps = {

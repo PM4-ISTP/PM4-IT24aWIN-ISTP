@@ -1,5 +1,5 @@
 import { Box } from "@mantine/core";
-import { GRADIENT } from "../../theme";
+import { GRADIENT } from "@/src/shared/lib/theme";
 
 export default function BrandMark({ size = 30 }: { size?: number }) {
   const radius = size * 0.3;

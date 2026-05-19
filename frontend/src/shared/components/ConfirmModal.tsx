@@ -1,8 +1,8 @@
 "use client";
 
-import { Button, Group, Modal, Stack, Text } from "@mantine/core";
-import type { MantineColor } from "@mantine/core";
+import { Group, Modal, Stack, Text } from "@mantine/core";
 import type { ReactNode } from "react";
+import AppButton from "@/src/shared/components/AppButton";
 
 export interface ConfirmModalProps {
   opened: boolean;
@@ -12,8 +12,8 @@ export interface ConfirmModalProps {
   message?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
-  confirmColor?: MantineColor;
   loading?: boolean;
+  /** Renders the confirm button in the destructive (red) style. */
   danger?: boolean;
 }
 
@@ -25,12 +25,9 @@ export function ConfirmModal({
   message,
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
-  confirmColor,
   loading = false,
   danger = false,
 }: ConfirmModalProps) {
-  const resolvedColor = confirmColor ?? (danger ? "red" : "blue");
-
   const handleConfirm = () => {
     void onConfirm();
   };
@@ -44,12 +41,12 @@ export function ConfirmModal({
           </Text>
         ) : null}
         <Group justify="flex-end" gap="sm">
-          <Button variant="default" onClick={onClose} disabled={loading}>
+          <AppButton tone="ghost" onClick={onClose} disabled={loading}>
             {cancelLabel}
-          </Button>
-          <Button color={resolvedColor} onClick={handleConfirm} loading={loading}>
+          </AppButton>
+          <AppButton tone={danger ? "danger" : "primary"} onClick={handleConfirm} loading={loading}>
             {confirmLabel}
-          </Button>
+          </AppButton>
         </Group>
       </Stack>
     </Modal>
