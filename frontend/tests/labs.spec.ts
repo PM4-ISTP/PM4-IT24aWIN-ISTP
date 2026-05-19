@@ -1,6 +1,10 @@
 import { test } from "@/tests/fixtures";
 import { expect, type Page } from "@playwright/test";
-import { clickButtonAndAssertUrl, clickNavbarButton } from "@/tests/helpers/navigation";
+import {
+  clickButtonAndAssert,
+  clickButtonAndAssertUrl,
+  clickNavbarButton,
+} from "@/tests/helpers/navigation";
 import { loginAs } from "@/tests/helpers/auth";
 import { courses, defaultDockerImage, labs, testUsers, type Course, type Lab } from "@/tests/data";
 import { assertNoActiveLabs } from "@/tests/helpers/dashboard";
@@ -220,6 +224,32 @@ test("Instructor can create a lab with one challenge.", async ({ page }) => {
   // Verify lab created
   const labCard = page.getByRole("button", { name: "E2E Test Lab: Create Lab Test" });
   await expect(labCard).toBeVisible();
+});
+
+test("Instructor can delete a lab using the edit lab view.", async ({ page }) => {
+  const labUnderTest = labs.instructor01;
+
+  // Delete lab
+  await loginAs(page, testUsers.instructor);
+  await clickNavbarButton(page, LAB_OVERVIEW_TAB_NAME, LAB_OVERVIEW_URL);
+  await clickButtonAndAssertUrl(
+    page,
+    () => page.getByRole("button", { name: labUnderTest.title }),
+    `dashboard/instructor/labs/${labUnderTest.id}`
+  );
+  await clickButtonAndAssert(
+    () => page.getByRole("button", { name: "Delete Lab" }),
+    async () => await expect(page.getByRole("dialog", { name: "Delete Lab" })).toBeVisible()
+  );
+  await clickButtonAndAssertUrl(
+    page,
+    () => page.getByLabel("Delete Lab").getByRole("button", { name: "Delete Lab" }),
+    "dashboard/instructor/labs"
+  );
+
+  // Verify lab delete
+  const labCard = page.getByRole("button", { name: "E2E Test Lab: Create Lab Test" });
+  await expect(labCard).not.toBeVisible();
 });
 
 test("Lab pod lifecycle for e2e-student", async ({ page }) => {
