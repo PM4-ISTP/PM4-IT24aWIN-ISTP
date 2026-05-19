@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, Group, Loader, Modal, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
 import { IconMedal, IconPrinter, IconTrophy } from "@tabler/icons-react";
+import { useApiClient } from "@/src/shared/lib/api/client";
 import BadgeSvg from "./BadgeSvg";
 
 type UserBadge = {
@@ -202,17 +203,18 @@ function printCertificate(badge: UserBadge, userName: string) {
   frame.srcdoc = html;
 }
 export default function TrophyCabinet({ opened, onClose, userName = "Student" }: Props) {
+  const client = useApiClient();
   const [badges, setBadges] = useState<UserBadge[] | null>(null);
   const isLoading = opened && badges === null;
   const badgeList = badges ?? [];
 
   useEffect(() => {
     if (!opened) return;
-    void fetch("/api/backend/api/v1/users/me/badges")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: UserBadge[]) => setBadges(data))
+    void client
+      .GET("/api/v1/users/me/badges")
+      .then(({ data }) => setBadges((data ?? []) as UserBadge[]))
       .catch(() => setBadges([]));
-  }, [opened]);
+  }, [client, opened]);
 
   return (
     <Modal

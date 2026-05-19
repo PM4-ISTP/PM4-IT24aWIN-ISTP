@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/shared/lib/auth";
-import { getValidAccessToken } from "@/src/shared/lib/api/server";
+import { getApiClient } from "@/src/shared/lib/api/server";
 import { Alert, Badge, Button, Grid, GridCol, Group, Stack, Text, ThemeIcon } from "@mantine/core";
 import {
   IconArrowRight,
@@ -18,8 +18,6 @@ import { EmptyState } from "@/src/shared/components/EmptyState";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/features/course/actions/courses";
 import Link from "next/link";
-
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
 
 type DeadlineItem = {
   courseId: string;
@@ -47,15 +45,10 @@ type RunningPod = {
 
 async function fetchCompletedLabsCount(): Promise<number | null> {
   try {
-    const accessToken = await getValidAccessToken();
-
-    const res = await fetch(`${BACKEND_URL}/api/v1/labs/my-completed-count`, {
-      cache: "no-store",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!res.ok) return null;
-    const json = (await res.json()) as { count?: number };
-    return typeof json.count === "number" ? json.count : null;
+    const client = await getApiClient();
+    const { data } = await client.GET("/api/v1/labs/my-completed-count");
+    const count = data?.count;
+    return typeof count === "number" ? count : null;
   } catch {
     return null;
   }
@@ -63,21 +56,9 @@ async function fetchCompletedLabsCount(): Promise<number | null> {
 
 async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
   try {
-    const accessToken = await getValidAccessToken();
-
-    const res = await fetch(`${BACKEND_URL}/api/v1/courses/my-deadlines`, {
-      cache: "no-store",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!res.ok) return [];
-    const json = (await res.json()) as Array<{
-      courseId?: string;
-      courseTitle?: string;
-      labId?: string;
-      labTitle?: string;
-      dueAt?: string;
-    }>;
-    return (json ?? [])
+    const client = await getApiClient();
+    const { data } = await client.GET("/api/v1/courses/my-deadlines");
+    return (data ?? [])
       .filter((d) => d.courseId && d.labId && d.dueAt)
       .map((d) => ({
         courseId: String(d.courseId),
@@ -95,15 +76,9 @@ async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
 
 async function fetchMyRunningPods(): Promise<RunningPod[]> {
   try {
-    const accessToken = await getValidAccessToken();
-
-    const res = await fetch(`${BACKEND_URL}/api/v1/lab-pods`, {
-      cache: "no-store",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!res.ok) return [];
-    const json = (await res.json()) as RunningPod[];
-    return Array.isArray(json) ? json : [];
+    const client = await getApiClient();
+    const { data } = await client.GET("/api/v1/lab-pods");
+    return (data ?? []) as RunningPod[];
   } catch {
     return [];
   }
