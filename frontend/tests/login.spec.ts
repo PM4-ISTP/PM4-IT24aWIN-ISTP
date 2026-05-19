@@ -15,7 +15,7 @@ async function logInAndThenLogOut(page: Page, user: User) {
   ).toBeVisible();
   await page.getByTestId(userMenuTriggerId).click();
   await page.getByTestId("logout-link").click();
-  await clickButtonAndAssertUrl(page, page.locator("#kc-logout"), "/");
+  await clickButtonAndAssertUrl(page, () => page.locator("#kc-logout"), "/");
   await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
 }
 

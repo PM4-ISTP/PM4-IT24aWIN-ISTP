@@ -58,21 +58,21 @@ function parseDashboardExpiry(label: string): Date | null {
 
 async function openCourseFromMyCourses(page: Page, course: Course) {
   await clickNavbarButton(page, "MY COURSES", "dashboard/courses");
-  const courseCard = page
+  const locateCourseCard = () => page
     .getByRole("button")
     .filter({ has: page.getByText(course.title ?? "", { exact: true }) })
     .first();
-  await expect(courseCard).toBeVisible();
-  await clickButtonAndAssertUrl(page, courseCard, `/dashboard/courses/${course.id}`);
+  await expect(locateCourseCard()).toBeVisible();
+  await clickButtonAndAssertUrl(page, locateCourseCard, `/dashboard/courses/${course.id}`);
 }
 
 async function openLabFromCourse(page: Page, course: Course, lab: Lab) {
-  const actionButton = page.getByTestId("course-enrollment-action");
-  await expect(actionButton).toHaveText("Continue Course");
-  await actionButton.click();
+  const locateActionButton = () => page.getByTestId("course-enrollment-action");
+  await expect(locateActionButton()).toHaveText("Continue Course");
+  await locateActionButton().click();
   await clickButtonAndAssertUrl(
     page,
-    actionButton,
+    locateActionButton,
     `/dashboard/courses/${course.id}/labs/${lab.id}/play`
   );
   await expect(page.getByRole("heading", { name: lab.title, level: 2 })).toBeVisible();
@@ -179,7 +179,7 @@ test("Instructor can create a lab with one challenge.", async ({ page }) => {
   await clickNavbarButton(page, LAB_OVERVIEW_TAB_NAME, LAB_OVERVIEW_URL);
   await clickButtonAndAssertUrl(
     page,
-    page.getByRole("link", { name: "New Lab" }),
+      () => page.getByRole("link", { name: "New Lab" }),
     "dashboard/instructor/labs/create"
   );
 
@@ -206,7 +206,7 @@ test("Instructor can create a lab with one challenge.", async ({ page }) => {
   await page.getByRole("textbox", { name: "Flag" }).fill("FLAG");
   await clickButtonAndAssertUrl(
     page,
-    page.getByRole("button", { name: "Create Lab" }),
+      () => page.getByRole("button", { name: "Create Lab" }),
     LAB_OVERVIEW_URL
   );
 
