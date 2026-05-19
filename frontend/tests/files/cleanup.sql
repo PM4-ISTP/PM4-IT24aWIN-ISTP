@@ -1,0 +1,13 @@
+DELETE FROM user_course_badges WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'e2e-%');
+DELETE FROM challenge_completions WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'e2e-%');
+DELETE FROM challenge_completions WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'e2e-%');
+DELETE FROM student_option_submissions WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'e2e-%');
+DELETE FROM student_flag_submissions WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'e2e-%');
+DELETE FROM course_enrollments WHERE participant_id IN (SELECT id FROM users WHERE username LIKE 'e2e-%');
+DELETE FROM course_labs WHERE course_id IN (SELECT id FROM courses WHERE title LIKE 'E2E%');
+DELETE FROM course_instructors WHERE instructor_id IN (SELECT id FROM users WHERE username LIKE 'e2e-%');
+DELETE FROM courses WHERE title LIKE 'E2E%';
+DELETE FROM challenge_options WHERE sub_task_id IN (SELECT id FROM challenges WHERE title LIKE 'E2E%');
+DELETE FROM challenges WHERE title LIKE 'E2E%';
+DELETE FROM labs WHERE title LIKE 'E2E%';
+DELETE FROM course_topics WHERE topic LIKE 'E2E%';
