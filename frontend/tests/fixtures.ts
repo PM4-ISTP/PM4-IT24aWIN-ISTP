@@ -6,8 +6,8 @@ async function cleanup() {
   await client.connect();
   try {
     await client.query("BEGIN");
-    await client.query("DELETE FROM challenges");
-    await client.query("DELETE FROM labs");
+    await client.query("DELETE FROM challenges WHERE title LIKE 'E2E%'");
+    await client.query("DELETE FROM labs WHERE title LIKE 'E2E%'");
     await client.query("COMMIT");
   } catch (e) {
     await client.query("ROLLBACK");
