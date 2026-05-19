@@ -209,13 +209,13 @@ export default function AdminTopicManagement() {
   return (
     <Stack gap="md">
       <Group justify="space-between" align="flex-end" wrap="wrap">
-        <Group gap="sm" wrap="wrap">
+        <Group gap="sm" wrap="wrap" style={{ flex: 1 }}>
           <TextInput
             label="New topic"
             placeholder="e.g. network"
             value={newTopic}
             onChange={(e) => setNewTopic(e.currentTarget.value)}
-            w={320}
+            w={{ base: "100%", sm: 320 }}
             error={inputError}
             onKeyDown={(e) => {
               if (e.key === "Enter") {

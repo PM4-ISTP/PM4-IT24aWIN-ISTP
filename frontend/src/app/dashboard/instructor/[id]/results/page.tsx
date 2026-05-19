@@ -8,13 +8,16 @@ import {
   Avatar,
   Box,
   Container,
+  Flex,
   Group,
   Loader,
   Drawer,
   Modal,
+  ScrollArea,
   Select,
   SimpleGrid,
   Stack,
+  Table,
   Text,
   TextInput,
   Title,
@@ -477,14 +480,16 @@ export default function CourseResultsPage() {
         }}
       >
         {/* Toolbar */}
-        <Group
+        <Flex
+          direction={{ base: "column", sm: "row" }}
           justify="space-between"
-          align="center"
-          px="xl"
+          align={{ base: "stretch", sm: "center" }}
+          gap="sm"
+          px={{ base: "md", sm: "xl" }}
           py="md"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
         >
-          <Group gap="sm" style={{ minWidth: 0 }}>
+          <Group gap="sm" wrap="wrap" style={{ minWidth: 0 }}>
             <Text fw={600} style={{ color: "#f1f5f9", fontSize: "1rem", whiteSpace: "nowrap" }}>
               Participants
             </Text>
@@ -495,7 +500,7 @@ export default function CourseResultsPage() {
               onChange={setLabFilter}
               clearable
               size="xs"
-              w={280}
+              w={{ base: "100%", sm: 260 }}
               styles={{
                 input: {
                   background: "rgba(255,255,255,0.05)",
@@ -514,7 +519,7 @@ export default function CourseResultsPage() {
               onChange={(v) => setStatusFilter((v as SubmissionStatus) ?? null)}
               clearable
               size="xs"
-              w={170}
+              w={{ base: "100%", sm: 170 }}
               styles={{
                 input: {
                   background: "rgba(255,255,255,0.05)",
@@ -533,7 +538,7 @@ export default function CourseResultsPage() {
             value={search}
             onChange={(e) => setSearch(e.currentTarget.value)}
             size="xs"
-            w={230}
+            w={{ base: "100%", sm: 230 }}
             styles={{
               input: {
                 background: "rgba(255,255,255,0.05)",
@@ -543,141 +548,140 @@ export default function CourseResultsPage() {
               },
             }}
           />
-        </Group>
+        </Flex>
 
-        {/* Column headers */}
-        <Box
-          style={{
-            display: "grid",
-            gridTemplateColumns: "2.5fr 1.2fr 1.8fr 1.8fr",
-            padding: "0.6rem 1.5rem",
-            background: "rgba(255,255,255,0.02)",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-          }}
-        >
-          {["Participant", "Status", "Points / Challenges", "Completion"].map((h) => (
-            <Text
-              key={h}
-              size="xs"
-              fw={700}
-              style={{ color: "#475569", letterSpacing: "0.1em", textTransform: "uppercase" }}
-            >
-              {h}
-            </Text>
-          ))}
-        </Box>
-
-        {loading ? (
-          <Group justify="center" py="xl">
-            <Loader size="sm" />
-          </Group>
-        ) : filteredRows.length === 0 ? (
-          <Text size="sm" c="dimmed" p="xl" ta="center">
-            No participants found.
-          </Text>
-        ) : (
-          filteredRows.map((r) => {
-            const status = r.currentLabStatus;
-            const currentIndex =
-              r.currentLabId != null ? labs.findIndex((l) => l.labId === r.currentLabId) : -1;
-            const labMeta =
-              r.currentLabId && currentIndex >= 0
-                ? `Lab ${String(currentIndex + 1).padStart(2, "0")}`
-                : null;
-            const currentMeta = labMeta
-              ? `${labMeta}${r.currentLabTitle ? `: ${r.currentLabTitle}` : ""}`
-              : null;
-            return (
-              <Box
-                key={r.participant.id}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "2.5fr 1.2fr 1.8fr 1.8fr",
-                  padding: "0.85rem 1.5rem",
-                  borderBottom: "1px solid rgba(255,255,255,0.04)",
-                  alignItems: "center",
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  openDrawer(r);
-                }}
-              >
-                <Group gap="sm">
-                  <Avatar
-                    color={avatarColor(r.participant.name)}
-                    radius="md"
-                    size={36}
-                    style={{ fontWeight: 700, fontSize: "0.8rem" }}
-                  >
-                    {initials(r.participant.name)}
-                  </Avatar>
-                  <Stack gap={1}>
-                    <Text size="sm" fw={600} style={{ color: "#f1f5f9", lineHeight: 1.2 }}>
-                      {r.participant.name}
+        <ScrollArea>
+          <Table miw={760} highlightOnHover verticalSpacing="sm" horizontalSpacing="xl">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Participant</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th>Points / Challenges</Table.Th>
+                <Table.Th>Completion</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {loading ? (
+                <Table.Tr>
+                  <Table.Td colSpan={4}>
+                    <Group justify="center" py="xl">
+                      <Loader size="sm" />
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ) : filteredRows.length === 0 ? (
+                <Table.Tr>
+                  <Table.Td colSpan={4}>
+                    <Text size="sm" c="dimmed" py="xl" ta="center">
+                      No participants found.
                     </Text>
-                    <Text size="xs" style={{ color: "#475569" }}>
-                      {r.participant.email ?? "-"}
-                    </Text>
-                  </Stack>
-                </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ) : (
+                filteredRows.map((r) => {
+                  const status = r.currentLabStatus;
+                  const currentIndex =
+                    r.currentLabId != null ? labs.findIndex((l) => l.labId === r.currentLabId) : -1;
+                  const labMeta =
+                    r.currentLabId && currentIndex >= 0
+                      ? `Lab ${String(currentIndex + 1).padStart(2, "0")}`
+                      : null;
+                  const currentMeta = labMeta
+                    ? `${labMeta}${r.currentLabTitle ? `: ${r.currentLabTitle}` : ""}`
+                    : null;
+                  return (
+                    <Table.Tr
+                      key={r.participant.id}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => openDrawer(r)}
+                    >
+                      <Table.Td>
+                        <Group gap="sm" wrap="nowrap">
+                          <Avatar
+                            color={avatarColor(r.participant.name)}
+                            radius="md"
+                            size={36}
+                            style={{ fontWeight: 700, fontSize: "0.8rem" }}
+                          >
+                            {initials(r.participant.name)}
+                          </Avatar>
+                          <Stack gap={1}>
+                            <Text size="sm" fw={600} style={{ color: "#f1f5f9", lineHeight: 1.2 }}>
+                              {r.participant.name}
+                            </Text>
+                            <Text size="xs" style={{ color: "#475569" }}>
+                              {r.participant.email ?? "-"}
+                            </Text>
+                          </Stack>
+                        </Group>
+                      </Table.Td>
 
-                <Tooltip
-                  withArrow
-                  position="top"
-                  label={
-                    currentMeta
-                      ? `Current: ${statusLabel(status)} · ${currentMeta}`
-                      : statusLabel(status)
-                  }
-                >
-                  <Group gap={10} wrap="nowrap">
-                    <span style={{ ...statusBadgeStyle(status), cursor: "help" }}>
-                      {statusLabel(status)}
-                    </span>
-                    {labMeta ? (
-                      <Text size="xs" style={{ color: "#475569" }}>
-                        {labMeta}
-                      </Text>
-                    ) : null}
-                  </Group>
-                </Tooltip>
+                      <Table.Td>
+                        <Tooltip
+                          withArrow
+                          position="top"
+                          label={
+                            currentMeta
+                              ? `Current: ${statusLabel(status)} · ${currentMeta}`
+                              : statusLabel(status)
+                          }
+                        >
+                          <Group gap={10} wrap="nowrap">
+                            <span style={{ ...statusBadgeStyle(status), cursor: "help" }}>
+                              {statusLabel(status)}
+                            </span>
+                            {labMeta ? (
+                              <Text size="xs" style={{ color: "#475569" }}>
+                                {labMeta}
+                              </Text>
+                            ) : null}
+                          </Group>
+                        </Tooltip>
+                      </Table.Td>
 
-                <Stack gap={2}>
-                  <Text size="sm" fw={700} style={{ color: "#f1f5f9" }}>
-                    {r.awardedPoints}/{r.maxPoints} pts
-                  </Text>
-                  <Text size="xs" style={{ color: "#475569" }}>
-                    {r.solvedChallenges}/{r.totalChallenges} challenges
-                  </Text>
-                </Stack>
+                      <Table.Td>
+                        <Stack gap={2}>
+                          <Text size="sm" fw={700} style={{ color: "#f1f5f9" }}>
+                            {r.awardedPoints}/{r.maxPoints} pts
+                          </Text>
+                          <Text size="xs" style={{ color: "#475569" }}>
+                            {r.solvedChallenges}/{r.totalChallenges} challenges
+                          </Text>
+                        </Stack>
+                      </Table.Td>
 
-                <Stack gap={4}>
-                  <Text size="xs" style={{ color: "#94a3b8" }}>
-                    {r.completionPct}%
-                  </Text>
-                  <Box
-                    style={{
-                      height: 5,
-                      borderRadius: 4,
-                      background: "rgba(255,255,255,0.07)",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Box
-                      style={{
-                        height: "100%",
-                        width: `${r.completionPct}%`,
-                        background: progressColor(status),
-                        borderRadius: 4,
-                        transition: "width 0.3s",
-                      }}
-                    />
-                  </Box>
-                </Stack>
-              </Box>
-            );
-          })
-        )}
+                      <Table.Td>
+                        <Stack gap={4} miw={140}>
+                          <Text size="xs" style={{ color: "#94a3b8" }}>
+                            {r.completionPct}%
+                          </Text>
+                          <Box
+                            style={{
+                              height: 5,
+                              borderRadius: 4,
+                              background: "rgba(255,255,255,0.07)",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <Box
+                              style={{
+                                height: "100%",
+                                width: `${r.completionPct}%`,
+                                background: progressColor(status),
+                                borderRadius: 4,
+                                transition: "width 0.3s",
+                              }}
+                            />
+                          </Box>
+                        </Stack>
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })
+              )}
+            </Table.Tbody>
+          </Table>
+        </ScrollArea>
       </Box>
 
       <Drawer
