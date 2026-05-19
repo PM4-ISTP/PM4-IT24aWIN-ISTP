@@ -1,11 +1,15 @@
 import { type Locator, type Page } from "@playwright/test";
 
-export async function clickButtonAndAssert(locateButton: () => Locator) {
+export async function clickButtonAndAssert(
+  locateButton: () => Locator,
+  assert: () => Promise<void>
+) {
   let clickSuccessful = false;
   let tries = 0;
   while (clickSuccessful === false && tries < 5) {
     try {
       await locateButton().click({ timeout: 5000 });
+      await assert();
       clickSuccessful = true;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
@@ -19,8 +23,9 @@ export async function clickButtonAndAssertUrl(
   locateButton: () => Locator,
   expectedUrl: string
 ) {
-  await clickButtonAndAssert(locateButton);
-  await page.waitForURL(expectedUrl);
+  await clickButtonAndAssert(locateButton, async () => {
+    await page.waitForURL(expectedUrl);
+  });
 }
 
 export async function clickNavbarButton(

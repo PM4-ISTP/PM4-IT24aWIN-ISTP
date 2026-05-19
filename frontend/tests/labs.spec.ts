@@ -123,8 +123,6 @@ async function assertActiveLabCard(page: Page, course: Course, lab: Lab, expecte
     .innerText();
   const expiresAt = parseDashboardExpiry(expiresText);
   expect(expiresAt).not.toBeNull();
-  console.log("Actual expiry: ", expiresAt);
-  console.log("Expected expiry: ", expectedExpiry);
   expect(
     Math.abs((expiresAt?.getTime() ?? 0) - expectedExpiry.getTime()) / 60_000
   ).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
@@ -237,7 +235,10 @@ test("Instructor can delete a lab using the edit lab view.", async ({ page }) =>
     () => page.getByRole("button", { name: labUnderTest.title }),
     `dashboard/instructor/labs/${labUnderTest.id}`
   );
-  await clickButtonAndAssert(() => page.getByRole("button", { name: "Delete Lab" }));
+  await clickButtonAndAssert(
+    () => page.getByRole("button", { name: "Delete Lab" }),
+    async () => await expect(page.getByRole("dialog", { name: "Delete Lab" })).toBeVisible()
+  );
   await clickButtonAndAssertUrl(
     page,
     () => page.getByLabel("Delete Lab").getByRole("button", { name: "Delete Lab" }),
