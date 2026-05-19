@@ -1,4 +1,5 @@
-import test, { expect } from "@playwright/test";
+import { test } from "@/tests/fixtures";
+import { expect } from "@playwright/test";
 import { clickNavbarButton } from "@/tests/helpers/navigation";
 import { loginAs } from "@/tests/helpers/auth";
 import { testUsers } from "@/tests/data";

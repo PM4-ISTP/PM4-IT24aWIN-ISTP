@@ -1,4 +1,5 @@
-import test, { expect, type Page } from "@playwright/test";
+import { test } from "@/tests/fixtures";
+import { expect, type Page } from "@playwright/test";
 import { clickNavbarButton } from "@/tests/helpers/navigation";
 import {
   adminCourse01,

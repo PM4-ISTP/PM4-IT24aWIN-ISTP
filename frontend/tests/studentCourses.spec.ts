@@ -1,4 +1,4 @@
-import test from "@playwright/test";
+import { test } from "@/tests/fixtures";
 import { clickNavbarButton } from "@/tests/helpers/navigation";
 import { testUsers, type User } from "@/tests/data";
 import { loginAs } from "@/tests/helpers/auth";
