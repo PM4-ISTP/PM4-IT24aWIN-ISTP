@@ -256,9 +256,12 @@ test("Admin can delete a lab using the admin dashboard.", async ({ page }) => {
   // Delete lab
   await loginAs(page, testUsers.admin);
   await clickNavbarButton(page, "Dashboard", "dashboard/admin", 1);
-  await page.getByRole('tab', { name: 'Labs' }).click();
-  await page.getByRole("row", { name: labUnderTest.title }).getByRole("button", { name: "Delete lab" }).click();
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await page.getByRole("tab", { name: "Labs" }).click();
+  await page
+    .getByRole("row", { name: labUnderTest.title })
+    .getByRole("button", { name: "Delete lab" })
+    .click();
+  await page.getByRole("button", { name: "Delete", exact: true }).click();
 
   // Verify lab delete
   const labRow = page.getByRole("row", { name: labUnderTest.title });
