@@ -22,8 +22,6 @@ Fill in at least:
 Optional:
 
 - `BACKEND_URL` (default is `http://localhost:8080`; set to staging if you develop frontend-only)
-- `CYPRESS_ADMIN_USERNAME` and `CYPRESS_ADMIN_PASSWORD` (only needed for E2E tests; use a
-  dedicated Keycloak test account and keep the values in `.env.local` or CI secrets)
 
 ### Infra (Postgres via Docker Compose)
 
@@ -48,7 +46,7 @@ Windows PowerShell:
 
 Fill in `backend/src/main/resources/application-local.properties`:
 
-- `spring.datasource.password` (must match `infra/.env` → `POSTGRES_PASSWORD`)
+- `spring.datasource.password` (must match `infra/.env` -> `POSTGRES_PASSWORD`)
 - `keycloak.admin.client-secret` (required for admin/profile sync; without it admin user edits / profile updates will fail)
 
 Never commit real values in `frontend/.env.example`, `infra/.env.example`, or
@@ -79,7 +77,7 @@ Backend runs on `http://localhost:8080`.
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
@@ -125,7 +123,7 @@ If you set these as environment variables instead of local Spring properties, us
 | `spring.security.oauth2.resourceserver.jwt.issuer-uri` | `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` |
 | `keycloak.admin.base-url` | `KEYCLOAK_ADMIN_BASE_URL` |
 | `keycloak.admin.client-secret` | `KEYCLOAK_ADMIN_CLIENT_SECRET` |
-| `k8s.default.namespace` | `K8S_DEFAULT_NAMESPACE` |
+| `k8s.default.namespace` | `KUBERNETES_NAMESPACE` |
 | `istp.domain` | `ISTP_DOMAIN` |
 | `istp.lab-host-prefix` | `ISTP_LAB_HOST_PREFIX` |
 | `istp.tls` | `ISTP_TLS` |
@@ -133,6 +131,22 @@ If you set these as environment variables instead of local Spring properties, us
 | `istp.pod-max-extensions` | `ISTP_POD_MAX_EXTENSIONS` |
 | `istp.pod-reaper.interval-ms` | `ISTP_POD_REAPER_INTERVAL_MS` |
 | `istp.pod-reaper.initial-delay-ms` | `ISTP_POD_REAPER_INITIAL_DELAY_MS` |
+
+PowerShell example for running the local backend against staging lab pod infrastructure:
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE="local"
+$env:KUBERNETES_NAMESPACE="istp-staging"
+$env:ISTP_DOMAIN="pm4.init-lab.ch"
+$env:ISTP_TLS="true"
+$env:ISTP_LAB_HOST_PREFIX="staging"
+$env:ISTP_POD_EXTENSION_SECONDS="1800"
+$env:ISTP_POD_MAX_EXTENSIONS="2"
+$env:CORS_ALLOWED_ORIGIN="http://localhost:3000"
+.\gradlew.bat bootRun
+```
+
+Use this only when your local backend should create and manage lab pods in the staging Kubernetes namespace. For normal local development, start the backend with only the `local` Spring profile.
 
 For faster lifecycle testing, temporarily set:
 
@@ -189,7 +203,7 @@ BACKEND_URL=http://localhost:8080
 Then run:
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
