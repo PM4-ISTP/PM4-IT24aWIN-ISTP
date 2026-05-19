@@ -72,7 +72,11 @@ export default function DashboardShell({
 
           {/* Right side */}
           <Group gap="sm" wrap="nowrap">
-            {roles.includes(ROLES.STUDENT) && <JoinCourseButton />}
+            {roles.includes(ROLES.STUDENT) && (
+              <Box visibleFrom="sm">
+                <JoinCourseButton />
+              </Box>
+            )}
             <UserMenu name={name} roles={roles} image={image} />
           </Group>
         </Group>
@@ -85,6 +89,11 @@ export default function DashboardShell({
         }}
       >
         <DashboardNav roles={roles} onNavigate={close} />
+        {roles.includes(ROLES.STUDENT) && (
+          <Box hiddenFrom="sm" p="md">
+            <JoinCourseButton size="sm" fullWidth />
+          </Box>
+        )}
       </AppShellNavbar>
 
       <AppShellMain

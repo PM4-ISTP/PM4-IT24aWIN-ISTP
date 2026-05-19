@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   Center,
   Fieldset,
+  Flex,
   Grid,
-  Group,
   NumberInput,
   Select,
   Stack,
@@ -191,7 +191,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
           </Grid.Col>
           <Grid.Col span={12}>
             <Grid align="flex-end">
-              <Grid.Col span={8}>
+              <Grid.Col span={{ base: 12, xs: 8 }}>
                 <NumberInput
                   id="memory-limit-input"
                   label="Memory limit"
@@ -206,7 +206,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                   withAsterisk={config.memoryLimit != null}
                 />
               </Grid.Col>
-              <Grid.Col span={4}>
+              <Grid.Col span={{ base: 12, xs: 4 }}>
                 <Select
                   id="memory-unit-input"
                   label="Memory unit"
@@ -282,7 +282,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                   transition: "border-color 150ms ease, background 150ms ease",
                 }}
               >
-                <Center py="md">
+                <Center py="md" px="md">
                   <Dropzone.Accept>
                     <IconCloudUpload size={40} color="#2563eb" />
                   </Dropzone.Accept>
@@ -291,22 +291,22 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                   </Dropzone.Reject>
                   <Dropzone.Idle>
                     {selectedFile ? (
-                      <Stack align="center" gap={6}>
+                      <Stack align="center" gap={6} style={{ maxWidth: "100%" }}>
                         <IconFile size={40} color="#94a3b8" />
-                        <Text size="sm" c="dimmed">
+                        <Text size="sm" c="dimmed" ta="center" style={{ wordBreak: "break-all" }}>
                           {selectedFile.name}
                         </Text>
-                        <Text size="xs" c="dimmed">
+                        <Text size="xs" c="dimmed" ta="center">
                           Click to replace
                         </Text>
                       </Stack>
                     ) : (
-                      <Stack align="center" gap={6}>
+                      <Stack align="center" gap={6} style={{ maxWidth: "100%" }}>
                         <IconCloudUpload size={40} color="#94a3b8" />
-                        <Text size="sm" fw={500}>
+                        <Text size="sm" fw={500} ta="center">
                           Drag &amp; drop your kubeconfig here
                         </Text>
-                        <Text size="xs" c="dimmed">
+                        <Text size="xs" c="dimmed" ta="center">
                           or
                         </Text>
                         <AppButton
@@ -339,7 +339,13 @@ export default function AdminConfigForm({ initialConfig }: Props) {
           </Grid.Col>
         </Grid>
 
-        <Group justify="space-between" mt="md">
+        <Flex
+          direction={{ base: "column", sm: "row" }}
+          align={{ base: "stretch", sm: "center" }}
+          justify="space-between"
+          gap="sm"
+          mt="md"
+        >
           <AppButton id="admin-config-form-submit-button" type="submit" loading={form.submitting}>
             {!config.kubeconfigUploaded
               ? "Create Kubernetes configuration"
@@ -354,7 +360,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
           >
             Delete Kubernetes configuration
           </AppButton>
-        </Group>
+        </Flex>
       </Fieldset>
     </form>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { startTransition, useState } from "react";
-import { Alert, Group, Stack, Text } from "@mantine/core";
+import { Alert, Flex, Group, Text } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useApiClient } from "@/src/shared/lib/api/client";
@@ -73,7 +73,7 @@ export function CourseEnrollmentButton({
   }
 
   return (
-    <Stack gap="xs" align="flex-end">
+    <Flex direction="column" gap="xs" align={{ base: "flex-start", sm: "flex-end" }}>
       <Group gap="sm">
         {hasJoined ? (
           <AppButton
@@ -118,6 +118,6 @@ export function CourseEnrollmentButton({
           {joinError}
         </Alert>
       )}
-    </Stack>
+    </Flex>
   );
 }

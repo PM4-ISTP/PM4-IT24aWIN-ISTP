@@ -1,7 +1,6 @@
 "use client";
 
-import { Box, Group, Select, TextInput } from "@mantine/core";
-import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
+import { Box, Flex, Group, Select, Stack, TextInput } from "@mantine/core";
 import AppButton from "@/src/shared/components/AppButton";
 
 type CatalogFiltersProps = {
@@ -27,33 +26,38 @@ export default function CatalogFilters({ query, topic, topics }: CatalogFiltersP
       }}
     >
       <form action="/dashboard/catalog" method="get">
-        <Group align="flex-end" wrap="wrap">
+        <Stack gap="md">
+          {/* Large search input on its own row */}
           <TextInput
             name="query"
             label="Search courses"
             placeholder="Search by title, short description, or description"
             defaultValue={query}
-            style={{ flex: 1 }}
           />
 
-          <Select
-            name="topic"
-            label="Topic"
-            data={topicData}
-            defaultValue={topic}
-            w={220}
-            searchable
-            comboboxProps={{ withinPortal: true, zIndex: 3000 }}
-          />
-
-          <Group gap="sm">
-            <JoinCourseButton size="sm" />
-            <AppButton type="submit">Search</AppButton>
-            <AppButton tone="ghost" component="a" href="/dashboard/catalog">
-              Reset
-            </AppButton>
-          </Group>
-        </Group>
+          {/* Topic filter grows to fill the space; actions sit beside it. */}
+          <Flex
+            direction={{ base: "column", sm: "row" }}
+            align={{ base: "stretch", sm: "flex-end" }}
+            gap="sm"
+          >
+            <Select
+              name="topic"
+              label="Topic"
+              data={topicData}
+              defaultValue={topic}
+              searchable
+              comboboxProps={{ withinPortal: true, zIndex: 3000 }}
+              style={{ flex: 1, minWidth: 180 }}
+            />
+            <Group gap="sm" grow>
+              <AppButton type="submit">Search</AppButton>
+              <AppButton tone="ghost" component="a" href="/dashboard/catalog">
+                Reset
+              </AppButton>
+            </Group>
+          </Flex>
+        </Stack>
       </form>
     </Box>
   );

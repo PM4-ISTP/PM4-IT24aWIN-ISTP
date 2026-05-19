@@ -3,6 +3,7 @@ import { fetchCourseTopics, fetchPublishedCourses } from "@/src/features/course/
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import NotifyOnMount from "@/src/shared/components/NotifyOnMount";
 import PageHeader from "@/src/shared/components/PageHeader";
+import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 import CatalogFilters from "@/src/app/dashboard/catalog/CatalogFilters";
 
@@ -26,6 +27,7 @@ export default async function CatalogPage(props: {
       <PageHeader
         title="Browse Catalog"
         subtitle="Explore all published courses. Search by title or topic."
+        action={<JoinCourseButton size="sm" />}
       />
 
       <CatalogFilters query={query} topic={topic} topics={topics} />

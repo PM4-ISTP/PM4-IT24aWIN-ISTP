@@ -5,7 +5,13 @@ import type { ButtonProps } from "@mantine/core";
 import AppButton from "@/src/shared/components/AppButton";
 import JoinCourseModal from "@/src/features/course/components/enrollment/JoinCourseModal";
 
-export default function JoinCourseButton({ size = "xs" }: { size?: ButtonProps["size"] }) {
+export default function JoinCourseButton({
+  size = "xs",
+  fullWidth = false,
+}: {
+  size?: ButtonProps["size"];
+  fullWidth?: boolean;
+}) {
   const [opened, setOpened] = useState(false);
 
   return (
@@ -13,6 +19,7 @@ export default function JoinCourseButton({ size = "xs" }: { size?: ButtonProps["
       <AppButton
         tone="ghost"
         size={size}
+        fullWidth={fullWidth}
         onClick={() => setOpened(true)}
         leftSection={
           <span

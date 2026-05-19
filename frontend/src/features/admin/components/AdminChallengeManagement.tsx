@@ -5,11 +5,10 @@ import {
   ActionIcon,
   Alert,
   Badge,
-  Button,
   Group,
-  Loader,
   Modal,
   Pagination,
+  ScrollArea,
   Select,
   Stack,
   Table,
@@ -18,9 +17,10 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconPencil, IconTrash } from "@tabler/icons-react";
 import { useAdminPagedList } from "@/src/features/admin/hooks/useAdminPagedList";
 import { cleanText, formatDate, wrapTextStyle } from "@/src/features/admin/lib/adminUi";
+import AdminListSearch from "@/src/features/admin/components/AdminListSearch";
 import AppButton from "@/src/shared/components/AppButton";
 import MyEditor from "@/src/shared/components/MyEditor";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
@@ -182,32 +182,12 @@ export default function AdminChallengeManagement() {
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="flex-end" wrap="wrap">
-        <Group gap="sm" wrap="wrap">
-          <TextInput
-            label="Search"
-            placeholder="Title / description..."
-            leftSection={<IconSearch size={16} />}
-            value={query}
-            onChange={(e) => onQueryChange(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                applyQueryNow();
-              }
-            }}
-            w={420}
-          />
-        </Group>
-        {loading && (
-          <Group gap="xs">
-            <Loader size="sm" />
-            <Text size="sm" c="dimmed">
-              Loading
-            </Text>
-          </Group>
-        )}
-      </Group>
+      <AdminListSearch
+        query={query}
+        onQueryChange={onQueryChange}
+        applyQueryNow={applyQueryNow}
+        loading={loading}
+      />
       <Alert color="orange" title="Delete" variant="light">
         <Text size="sm">
           Deleting a lab removes it from active lists so students and instructors can no longer
@@ -215,107 +195,119 @@ export default function AdminChallengeManagement() {
         </Text>
       </Alert>
 
-      <Table highlightOnHover withTableBorder striped={false} style={{ tableLayout: "fixed" }}>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Title</Table.Th>
-            <Table.Th style={{ width: 240 }}>Creator</Table.Th>
-            <Table.Th>Status</Table.Th>
-            <Table.Th style={{ width: 150 }}>State</Table.Th>
-            <Table.Th style={{ width: 190 }}>Updated</Table.Th>
-            <Table.Th style={{ width: 130 }} />
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {labs.length === 0 ? (
+      <ScrollArea>
+        <Table
+          highlightOnHover
+          withTableBorder
+          striped={false}
+          miw={950}
+          style={{ tableLayout: "fixed" }}
+        >
+          <Table.Thead>
             <Table.Tr>
-              <Table.Td colSpan={6}>
-                <Text size="sm" c="dimmed" ta="center" py="md">
-                  No labs found.
-                </Text>
-              </Table.Td>
+              <Table.Th>Title</Table.Th>
+              <Table.Th style={{ width: 240 }}>Creator</Table.Th>
+              <Table.Th>Status</Table.Th>
+              <Table.Th style={{ width: 150 }}>State</Table.Th>
+              <Table.Th style={{ width: 190 }}>Updated</Table.Th>
+              <Table.Th style={{ width: 130 }} />
             </Table.Tr>
-          ) : (
-            labs.map((c) => (
-              <Table.Tr key={c.id}>
-                <Table.Td>
-                  <Text fw={600} size="sm" lineClamp={2} style={wrapTextStyle} title={c.title}>
-                    {c.title}
+          </Table.Thead>
+          <Table.Tbody>
+            {labs.length === 0 ? (
+              <Table.Tr>
+                <Table.Td colSpan={6}>
+                  <Text size="sm" c="dimmed" ta="center" py="md">
+                    No labs found.
                   </Text>
                 </Table.Td>
-                <Table.Td>
-                  <Stack gap={2}>
-                    <Text
-                      size="sm"
-                      lineClamp={1}
-                      style={wrapTextStyle}
-                      title={c.creatorName ?? "-"}
-                    >
-                      {c.creatorName ?? "-"}
-                    </Text>
-                    <Text
-                      size="xs"
-                      c="dimmed"
-                      lineClamp={1}
-                      style={wrapTextStyle}
-                      title={c.creatorUsername ? `@${c.creatorUsername}` : ""}
-                    >
-                      {c.creatorUsername ? `@${c.creatorUsername}` : ""}
-                    </Text>
-                  </Stack>
-                </Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    <Badge
-                      variant="light"
-                      color={
-                        c.status === "PUBLIC" ? "green" : c.status === "PRIVATE" ? "yellow" : "gray"
-                      }
-                    >
-                      {c.status}
-                    </Badge>
-                    <Badge variant="light" color="blue">
-                      {c.difficulty}
-                    </Badge>
-                    <Badge variant="light" color="grape">
-                      Courses: {c.courseCount}
-                    </Badge>
-                  </Group>
-                </Table.Td>
-                <Table.Td>
-                  <Badge variant="light" color={c.isSoftDeleted ? "orange" : "teal"}>
-                    {c.isSoftDeleted ? "Deleted" : "Active"}
-                  </Badge>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm">{formatDate(c.updatedAt)}</Text>
-                </Table.Td>
-                <Table.Td>
-                  <Group justify="flex-end" gap="xs" wrap="nowrap">
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      aria-label="Edit lab"
-                      onClick={() => openEdit(c)}
-                    >
-                      <IconPencil size={16} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      aria-label="Delete lab"
-                      onClick={() => openDelete(c)}
-                      disabled={c.isSoftDeleted}
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Group>
-                </Table.Td>
               </Table.Tr>
-            ))
-          )}
-        </Table.Tbody>
-      </Table>
+            ) : (
+              labs.map((c) => (
+                <Table.Tr key={c.id}>
+                  <Table.Td>
+                    <Text fw={600} size="sm" lineClamp={2} style={wrapTextStyle} title={c.title}>
+                      {c.title}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Stack gap={2}>
+                      <Text
+                        size="sm"
+                        lineClamp={1}
+                        style={wrapTextStyle}
+                        title={c.creatorName ?? "-"}
+                      >
+                        {c.creatorName ?? "-"}
+                      </Text>
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        lineClamp={1}
+                        style={wrapTextStyle}
+                        title={c.creatorUsername ? `@${c.creatorUsername}` : ""}
+                      >
+                        {c.creatorUsername ? `@${c.creatorUsername}` : ""}
+                      </Text>
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <Badge
+                        variant="light"
+                        color={
+                          c.status === "PUBLIC"
+                            ? "green"
+                            : c.status === "PRIVATE"
+                              ? "yellow"
+                              : "gray"
+                        }
+                      >
+                        {c.status}
+                      </Badge>
+                      <Badge variant="light" color="blue">
+                        {c.difficulty}
+                      </Badge>
+                      <Badge variant="light" color="grape">
+                        Courses: {c.courseCount}
+                      </Badge>
+                    </Group>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge variant="light" color={c.isSoftDeleted ? "orange" : "teal"}>
+                      {c.isSoftDeleted ? "Deleted" : "Active"}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm">{formatDate(c.updatedAt)}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group justify="flex-end" gap="xs" wrap="nowrap">
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        aria-label="Edit lab"
+                        onClick={() => openEdit(c)}
+                      >
+                        <IconPencil size={16} />
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="subtle"
+                        color="red"
+                        aria-label="Delete lab"
+                        onClick={() => openDelete(c)}
+                        disabled={c.isSoftDeleted}
+                      >
+                        <IconTrash size={16} />
+                      </ActionIcon>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))
+            )}
+          </Table.Tbody>
+        </Table>
+      </ScrollArea>
 
       {totalPages > 1 && (
         <Group justify="center">
@@ -404,17 +396,12 @@ export default function AdminChallengeManagement() {
             This action cannot be undone.
           </Text>
           <Group justify="flex-end">
-            <Button
-              variant="default"
-              radius="md"
-              onClick={() => setDeleteOpened(false)}
-              disabled={saving}
-            >
+            <AppButton tone="ghost" onClick={() => setDeleteOpened(false)} disabled={saving}>
               Cancel
-            </Button>
-            <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
+            </AppButton>
+            <AppButton tone="danger" onClick={() => void confirmDelete()} loading={saving}>
               Delete
-            </Button>
+            </AppButton>
           </Group>
         </Stack>
       </Modal>

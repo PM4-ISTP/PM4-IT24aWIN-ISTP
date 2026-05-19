@@ -1,4 +1,4 @@
-import { Badge, Box, Container, Group, Stack, Text, Title } from "@mantine/core";
+import { Badge, Box, Container, Flex, Group, Stack, Text, Title } from "@mantine/core";
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { CourseEnrollmentButton } from "@/src/features/course/components/enrollment/CourseEnrollmentButton";
@@ -91,8 +91,12 @@ export function CourseBannerHeader({
           )}
 
           {/* Title row */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 400px" }}>
+          <Flex
+            direction={{ base: "column", sm: "row" }}
+            align={{ base: "stretch", sm: "flex-start" }}
+            gap="lg"
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text
                 size="xs"
                 tt="uppercase"
@@ -135,7 +139,7 @@ export function CourseBannerHeader({
                 </Text>
               )}
             </div>
-            <div style={{ flexShrink: 0, paddingTop: 4 }}>
+            <div style={{ flexShrink: 0 }}>
               <CourseEnrollmentButton
                 courseId={courseId}
                 isEnrolled={isEnrolled}
@@ -144,7 +148,7 @@ export function CourseBannerHeader({
                 nextChallengeHref={nextChallengeHref}
               />
             </div>
-          </div>
+          </Flex>
         </Stack>
       </Box>
     </Container>
