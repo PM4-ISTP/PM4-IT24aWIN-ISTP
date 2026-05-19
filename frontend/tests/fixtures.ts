@@ -1,6 +1,6 @@
 import { test as base } from "@playwright/test";
 import { Client } from "pg";
-import fs from 'node:fs';
+import fs from "node:fs";
 
 async function setup() {
   // file path is relative to the folder "frontend"
