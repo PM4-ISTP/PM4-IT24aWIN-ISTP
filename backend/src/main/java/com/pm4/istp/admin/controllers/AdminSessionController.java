@@ -46,8 +46,12 @@ public class AdminSessionController {
       value = {
         @ApiResponse(responseCode = "204", description = "Session terminated successfully"),
         @ApiResponse(
-            responseCode = "404",
-            description = "Session not found",
+            responseCode = "400",
+            description = "Session ID is missing",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "502",
+            description = "Keycloak rejected the logout request",
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @DeleteMapping("/{sessionId}")

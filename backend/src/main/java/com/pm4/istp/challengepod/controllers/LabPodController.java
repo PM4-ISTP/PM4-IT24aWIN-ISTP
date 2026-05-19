@@ -65,8 +65,8 @@ public class LabPodController {
             description = "Pod already running",
             content = @Content(schema = @Schema(implementation = PodStatusResponse.class))),
         @ApiResponse(
-            responseCode = "404",
-            description = "Lab not found",
+            responseCode = "500",
+            description = "Kubernetes operation failed",
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PostMapping("/{labId}")
@@ -107,8 +107,8 @@ public class LabPodController {
             description = "Pod extended successfully",
             content = @Content(schema = @Schema(implementation = PodStatusResponse.class))),
         @ApiResponse(
-            responseCode = "404",
-            description = "Pod not found",
+            responseCode = "500",
+            description = "Kubernetes operation failed",
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PostMapping("/{labId}/extend")

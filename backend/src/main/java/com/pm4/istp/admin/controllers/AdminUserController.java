@@ -149,6 +149,10 @@ public class AdminUserController {
         @ApiResponse(
             responseCode = "404",
             description = "User not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "409",
+            description = "User is soft-deleted and cannot be provisioned",
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PostMapping("/{userId}/provision")
@@ -201,6 +205,10 @@ public class AdminUserController {
         @ApiResponse(
             responseCode = "404",
             description = "User not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "409",
+            description = "User is soft-deleted and cannot be restored",
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PostMapping("/{userId}/restore")
@@ -216,8 +224,8 @@ public class AdminUserController {
       value = {
         @ApiResponse(responseCode = "200", description = "Sessions retrieved successfully"),
         @ApiResponse(
-            responseCode = "404",
-            description = "User not found",
+            responseCode = "502",
+            description = "Keycloak rejected the request",
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @GetMapping("/{userId}/sessions")
@@ -233,8 +241,8 @@ public class AdminUserController {
       value = {
         @ApiResponse(responseCode = "204", description = "User logged out successfully"),
         @ApiResponse(
-            responseCode = "404",
-            description = "User not found",
+            responseCode = "502",
+            description = "Keycloak rejected the request",
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PostMapping("/{userId}/logout")
@@ -250,8 +258,8 @@ public class AdminUserController {
       value = {
         @ApiResponse(responseCode = "204", description = "Password reset email sent"),
         @ApiResponse(
-            responseCode = "404",
-            description = "User not found",
+            responseCode = "502",
+            description = "Keycloak rejected the request",
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PostMapping("/{userId}/password-reset-email")
@@ -268,11 +276,11 @@ public class AdminUserController {
         @ApiResponse(responseCode = "204", description = "Password set successfully"),
         @ApiResponse(
             responseCode = "400",
-            description = "Password rejected by the Keycloak password policy",
+            description = "Invalid request body",
             content = @Content(schema = @Schema(implementation = ErrorDto.class))),
         @ApiResponse(
-            responseCode = "404",
-            description = "User not found",
+            responseCode = "502",
+            description = "Keycloak rejected the password (e.g. password policy violation)",
             content = @Content(schema = @Schema(implementation = ErrorDto.class)))
       })
   @PutMapping("/{userId}/password")
