@@ -164,7 +164,7 @@ async function assertAppNotReady(page: Page) {
 }
 
 function getChallengeDescriptionField(page: Page) {
-  return page.getByRole("textbox").filter({ hasText: /^$/ }).nth(5)
+  return page.getByRole("textbox").filter({ hasText: /^$/ }).nth(5);
 }
 
 test("Labs tab must be empty, if user has not created any labs.", async ({ page }) => {
