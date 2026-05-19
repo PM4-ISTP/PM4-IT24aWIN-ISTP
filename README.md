@@ -22,10 +22,7 @@ For the exact local dev steps (hybrid local Postgres + staging Keycloak), see `L
 
 ### Documentation
 
-- Manual (Typst source): `docs/ISTP_Manual/ISTP_Manual.typ`
-- Build PDF: `cd docs/ISTP_Manual && typst compile ISTP_Manual.typ ISTP_Manual.pdf`
-- Database schema overview: see the "Database Schema (PostgreSQL)" section in `docs/ISTP_Manual/ISTP_Manual.typ`
-
+- [Manual](docs/ISTP_Manual/ISTP_Manual.pdf)
 ### Staging
 
 | Service | URL |
