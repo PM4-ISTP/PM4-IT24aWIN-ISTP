@@ -6,6 +6,13 @@ import com.pm4.istp.badge.dto.CourseBadgeConfigDto;
 import com.pm4.istp.badge.dto.UpdateCourseBadgeRequestDto;
 import com.pm4.istp.badge.dto.UserBadgeDto;
 import com.pm4.istp.badge.services.BadgeService;
+import com.pm4.istp.shared.dto.ErrorDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Badge", description = "Course badge configuration and user badge endpoints")
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
@@ -30,12 +38,49 @@ public class BadgeController {
 
   private final BadgeService badgeService;
 
+  @Operation(
+      summary = "Get a course badge configuration",
+      description = "Returns the badge design configuration for a course.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Badge configuration retrieved successfully",
+            content = @Content(schema = @Schema(implementation = CourseBadgeConfigDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @GetMapping("/courses/{courseId}/badge")
   public ResponseEntity<CourseBadgeConfigDto> getCourseBadgeConfig(
       @PathVariable UUID courseId, @AuthenticationPrincipal Jwt jwt) {
     return ResponseEntity.ok(badgeService.getCourseBadgeConfig(courseId));
   }
 
+  @Operation(
+      summary = "Update a course badge configuration",
+      description =
+          "Updates the badge design for a course. Only instructors of the course may do this.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Badge configuration updated successfully",
+            content = @Content(schema = @Schema(implementation = CourseBadgeConfigDto.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid badge configuration",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @PutMapping("/courses/{courseId}/badge")
   public ResponseEntity<CourseBadgeConfigDto> updateCourseBadgeConfig(
       @PathVariable UUID courseId,
@@ -45,12 +90,28 @@ public class BadgeController {
     return ResponseEntity.ok(badgeService.updateCourseBadgeConfig(userId, courseId, request));
   }
 
+  @Operation(
+      summary = "List my badges",
+      description = "Returns all badges earned by the authenticated user.")
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Badges retrieved successfully")})
   @GetMapping("/users/me/badges")
   public ResponseEntity<List<UserBadgeDto>> getMyBadges(@AuthenticationPrincipal Jwt jwt) {
     UUID userId = parseUserId(jwt);
     return ResponseEntity.ok(badgeService.getUserBadges(userId));
   }
 
+  @Operation(
+      summary = "Render a course badge as SVG",
+      description = "Returns the course badge rendered as an SVG image.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Badge SVG rendered successfully"),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @GetMapping(value = "/courses/{courseId}/badge/svg", produces = "image/svg+xml")
   public ResponseEntity<String> getCourseBadgeSvg(@PathVariable UUID courseId) {
     CourseBadgeConfigDto config = badgeService.getCourseBadgeConfig(courseId);
