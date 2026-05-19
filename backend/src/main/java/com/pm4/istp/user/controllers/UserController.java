@@ -6,6 +6,9 @@ import com.pm4.istp.user.db.entities.User;
 import com.pm4.istp.user.dto.ListInstructorUserResponseDto;
 import com.pm4.istp.user.mappers.UserMapper;
 import com.pm4.istp.user.services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,13 @@ public class UserController {
   private final UserMapper userMapper;
   private final UserService userService;
 
+  @Operation(
+      summary = "List collaborator/instructor users",
+      description =
+          "Returns a paginated list of users eligible to be added as course collaborators,"
+              + " optionally filtered by a search query.")
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Users retrieved successfully")})
   @GetMapping(path = {"/collaborators", "/instructors"})
   public ResponseEntity<Page<ListInstructorUserResponseDto>> listCollaboratorUsers(
       @AuthenticationPrincipal Jwt jwt,

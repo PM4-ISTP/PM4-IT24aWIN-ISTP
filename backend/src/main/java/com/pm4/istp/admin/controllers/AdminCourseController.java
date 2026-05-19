@@ -3,6 +3,13 @@ package com.pm4.istp.admin.controllers;
 import com.pm4.istp.admin.dto.AdminCourseListItemDto;
 import com.pm4.istp.admin.dto.AdminUpdateCourseRequestDto;
 import com.pm4.istp.admin.services.AdminCourseService;
+import com.pm4.istp.shared.dto.ErrorDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -18,18 +25,41 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Admin Courses", description = "Administrative endpoints for managing courses")
 @RestController
 @RequestMapping("/api/admin/courses")
 @RequiredArgsConstructor
 public class AdminCourseController {
   private final AdminCourseService adminCourseService;
 
+  @Operation(
+      summary = "List courses",
+      description =
+          "Returns a paginated list of all courses on the platform, optionally filtered by a"
+              + " search query.")
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Courses retrieved successfully")})
   @GetMapping
   public ResponseEntity<Page<AdminCourseListItemDto>> listCourses(
       @RequestParam(name = "q", required = false) String query, Pageable pageable) {
     return ResponseEntity.ok(adminCourseService.listCourses(query, pageable));
   }
 
+  @Operation(
+      summary = "Update a course",
+      description = "Updates a course's details, topic and visibility as an administrator.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "204", description = "Course updated successfully"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request data",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @PutMapping("/{id}")
   public ResponseEntity<Void> updateCourse(
       @PathVariable UUID id, @Valid @RequestBody AdminUpdateCourseRequestDto request) {
@@ -37,6 +67,17 @@ public class AdminCourseController {
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(
+      summary = "Delete a course",
+      description = "Soft-deletes a course so it is no longer visible to students or instructors.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "204", description = "Course deleted successfully"),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteCourse(@PathVariable UUID id) {
     adminCourseService.deleteCourse(id);
