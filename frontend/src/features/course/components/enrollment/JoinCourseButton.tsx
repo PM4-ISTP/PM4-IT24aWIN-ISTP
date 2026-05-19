@@ -1,18 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@mantine/core";
+import type { ButtonProps } from "@mantine/core";
+import AppButton from "@/src/shared/components/AppButton";
 import JoinCourseModal from "@/src/features/course/components/enrollment/JoinCourseModal";
 
-export default function JoinCourseButton() {
+export default function JoinCourseButton({
+  size = "xs",
+  fullWidth = false,
+}: {
+  size?: ButtonProps["size"];
+  fullWidth?: boolean;
+}) {
   const [opened, setOpened] = useState(false);
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="xs"
-        radius="md"
+      <AppButton
+        tone="ghost"
+        size={size}
+        fullWidth={fullWidth}
         onClick={() => setOpened(true)}
         leftSection={
           <span
@@ -26,16 +33,9 @@ export default function JoinCourseButton() {
             add
           </span>
         }
-        style={{
-          borderColor: "rgba(255,255,255,0.18)",
-          color: "#e2e8f0",
-          background: "rgba(255,255,255,0.06)",
-          fontFamily: "var(--font-space-grotesk), sans-serif",
-          fontWeight: 500,
-        }}
       >
         Join course
-      </Button>
+      </AppButton>
 
       <JoinCourseModal opened={opened} onClose={() => setOpened(false)} />
     </>

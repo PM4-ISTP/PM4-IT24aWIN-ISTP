@@ -2,6 +2,7 @@ import {
   Avatar,
   Box,
   Divider,
+  Flex,
   Group,
   Progress,
   Stack,
@@ -161,7 +162,7 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
         overflow: "hidden",
       }}
     >
-      <div style={{ display: "flex", alignItems: "stretch" }}>
+      <Flex direction={{ base: "column", sm: "row" }} align="stretch">
         {/* —— Journey section —— */}
         <Stack gap="md" style={{ flex: 1, minWidth: 0, padding: "2rem" }}>
           <Group justify="space-between" align="center">
@@ -242,18 +243,17 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
         {/* —— Instructor section (optional) —— */}
         {instructor && (
           <>
-            <div
-              style={{
-                width: 1,
-                background: "rgba(255,255,255,0.08)",
-                flexShrink: 0,
-              }}
+            <Box
+              visibleFrom="sm"
+              style={{ width: 1, background: "rgba(255,255,255,0.08)", flexShrink: 0 }}
             />
+            <Box hiddenFrom="sm" style={{ height: 1, background: "rgba(255,255,255,0.08)" }} />
             <Stack
               gap={12}
               justify="center"
+              w={{ base: "auto", sm: 240 }}
               style={{
-                flex: "0 0 220px",
+                flexShrink: 0,
                 padding: "2rem 1.75rem",
               }}
               data-testid="course-instructor"
@@ -301,7 +301,7 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
             </Stack>
           </>
         )}
-      </div>
+      </Flex>
     </Box>
   );
 }

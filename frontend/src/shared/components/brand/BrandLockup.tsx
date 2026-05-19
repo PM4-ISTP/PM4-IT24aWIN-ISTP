@@ -1,5 +1,5 @@
 import { Box, Group, Text } from "@mantine/core";
-import { FONT_MONO, INK, MUTED } from "../../theme";
+import { FONT_MONO, INK, MUTED } from "@/src/shared/lib/theme";
 import BrandMark from "./BrandMark";
 
 interface BrandLockupProps {

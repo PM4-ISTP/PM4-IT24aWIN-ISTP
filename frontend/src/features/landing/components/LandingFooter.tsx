@@ -1,6 +1,6 @@
 import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from "@mantine/core";
-import BrandLockup from "./parts/BrandLockup";
-import Kicker from "./parts/Kicker";
+import BrandLockup from "@/src/shared/components/brand/BrandLockup";
+import Kicker from "@/src/shared/components/brand/Kicker";
 import { FOOTER_SECTIONS } from "../content/footer";
 import { FONT_MONO, INK_DIM, LINE, MUTED, ROSE } from "../theme";
 

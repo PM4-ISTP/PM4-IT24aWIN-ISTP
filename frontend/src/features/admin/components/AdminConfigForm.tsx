@@ -3,11 +3,10 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Button,
   Center,
   Fieldset,
+  Flex,
   Grid,
-  Group,
   NumberInput,
   Select,
   Stack,
@@ -17,6 +16,7 @@ import {
 import { Dropzone } from "@mantine/dropzone";
 import { useForm } from "@mantine/form";
 import { IconCloudUpload, IconFile, IconX } from "@tabler/icons-react";
+import AppButton from "@/src/shared/components/AppButton";
 import { useApiClient } from "@/src/shared/lib/api/client";
 import type { components } from "@/src/shared/lib/api/schema";
 import {
@@ -191,7 +191,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
           </Grid.Col>
           <Grid.Col span={12}>
             <Grid align="flex-end">
-              <Grid.Col span={8}>
+              <Grid.Col span={{ base: 12, xs: 8 }}>
                 <NumberInput
                   id="memory-limit-input"
                   label="Memory limit"
@@ -206,7 +206,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                   withAsterisk={config.memoryLimit != null}
                 />
               </Grid.Col>
-              <Grid.Col span={4}>
+              <Grid.Col span={{ base: 12, xs: 4 }}>
                 <Select
                   id="memory-unit-input"
                   label="Memory unit"
@@ -282,7 +282,7 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                   transition: "border-color 150ms ease, background 150ms ease",
                 }}
               >
-                <Center py="md">
+                <Center py="md" px="md">
                   <Dropzone.Accept>
                     <IconCloudUpload size={40} color="#2563eb" />
                   </Dropzone.Accept>
@@ -291,41 +291,34 @@ export default function AdminConfigForm({ initialConfig }: Props) {
                   </Dropzone.Reject>
                   <Dropzone.Idle>
                     {selectedFile ? (
-                      <Stack align="center" gap={6}>
+                      <Stack align="center" gap={6} style={{ maxWidth: "100%" }}>
                         <IconFile size={40} color="#94a3b8" />
-                        <Text size="sm" c="dimmed">
+                        <Text size="sm" c="dimmed" ta="center" style={{ wordBreak: "break-all" }}>
                           {selectedFile.name}
                         </Text>
-                        <Text size="xs" c="dimmed">
+                        <Text size="xs" c="dimmed" ta="center">
                           Click to replace
                         </Text>
                       </Stack>
                     ) : (
-                      <Stack align="center" gap={6}>
+                      <Stack align="center" gap={6} style={{ maxWidth: "100%" }}>
                         <IconCloudUpload size={40} color="#94a3b8" />
-                        <Text size="sm" fw={500}>
+                        <Text size="sm" fw={500} ta="center">
                           Drag &amp; drop your kubeconfig here
                         </Text>
-                        <Text size="xs" c="dimmed">
+                        <Text size="xs" c="dimmed" ta="center">
                           or
                         </Text>
-                        <Button
+                        <AppButton
                           size="xs"
-                          radius="md"
                           aria-label="Kubeconfig"
-                          style={{
-                            background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                            border: "none",
-                            fontWeight: 600,
-                            boxShadow: "0 2px 8px rgba(79,70,229,0.3)",
-                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             openRef.current?.();
                           }}
                         >
                           Browse file
-                        </Button>
+                        </AppButton>
                       </Stack>
                     )}
                   </Dropzone.Idle>
@@ -346,41 +339,28 @@ export default function AdminConfigForm({ initialConfig }: Props) {
           </Grid.Col>
         </Grid>
 
-        <Group justify="space-between" mt="md">
-          <Button
-            id="admin-config-form-submit-button"
-            type="submit"
-            loading={form.submitting}
-            radius="md"
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-            }}
-          >
+        <Flex
+          direction={{ base: "column", sm: "row" }}
+          align={{ base: "stretch", sm: "center" }}
+          justify="space-between"
+          gap="sm"
+          mt="md"
+        >
+          <AppButton id="admin-config-form-submit-button" type="submit" loading={form.submitting}>
             {!config.kubeconfigUploaded
               ? "Create Kubernetes configuration"
               : "Update Kubernetes configuration"}
-          </Button>
-          <Button
+          </AppButton>
+          <AppButton
+            tone="danger"
             id="admin-config-form-delete-button"
             type="button"
             onClick={() => void deleteAction.run()}
             loading={form.submitting || deleteAction.loading}
-            radius="md"
-            style={{
-              background: "linear-gradient(90deg, #dc2626, #b91c1c)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "0 2px 12px rgba(220,38,38,0.3)",
-            }}
           >
             Delete Kubernetes configuration
-          </Button>
-        </Group>
+          </AppButton>
+        </Flex>
       </Fieldset>
     </form>
   );

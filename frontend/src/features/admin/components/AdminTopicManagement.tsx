@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActionIcon, Button, Group, Loader, Stack, Table, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Group, Loader, Stack, Table, Text, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
+import AppButton from "@/src/shared/components/AppButton";
 import { readBackendError } from "@/src/shared/lib/readBackendError";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 import { slugify } from "@/src/shared/lib/utils";
@@ -208,13 +209,13 @@ export default function AdminTopicManagement() {
   return (
     <Stack gap="md">
       <Group justify="space-between" align="flex-end" wrap="wrap">
-        <Group gap="sm" wrap="wrap">
+        <Group gap="sm" wrap="wrap" style={{ flex: 1 }}>
           <TextInput
             label="New topic"
             placeholder="e.g. network"
             value={newTopic}
             onChange={(e) => setNewTopic(e.currentTarget.value)}
-            w={320}
+            w={{ base: "100%", sm: 320 }}
             error={inputError}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -223,23 +224,15 @@ export default function AdminTopicManagement() {
               }
             }}
           />
-          <Button
+          <AppButton
             leftSection={<IconPlus size={16} />}
             mt={22}
-            radius="md"
             onClick={() => void addTopic()}
             loading={saving}
             disabled={!trimmedTopic || topicTooShort || topicTooLong || topicInvalidFormat}
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-            }}
           >
             Add
-          </Button>
+          </AppButton>
         </Group>
 
         {loading && (

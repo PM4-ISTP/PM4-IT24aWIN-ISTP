@@ -3,7 +3,6 @@
 import {
   ActionIcon,
   Alert,
-  Button,
   Group,
   Modal,
   Pagination,
@@ -16,6 +15,7 @@ import { IconBook2, IconTrash } from "@tabler/icons-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { CourseCard } from "@/src/features/course/components/course/CourseCard";
+import AppButton from "@/src/shared/components/AppButton";
 import type { ListCourseResponseDto } from "@/src/features/course/actions/courses";
 import { deleteCourse } from "@/src/features/course/actions/courses";
 
@@ -122,17 +122,17 @@ export function CourseGrid({
             </Alert>
           ) : null}
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => setRemoveOpened(false)} disabled={removing}>
+            <AppButton tone="ghost" onClick={() => setRemoveOpened(false)} disabled={removing}>
               Cancel
-            </Button>
-            <Button
-              color="red"
+            </AppButton>
+            <AppButton
+              tone="danger"
               onClick={() => void confirmRemove()}
               loading={removing}
               disabled={removing}
             >
               Delete
-            </Button>
+            </AppButton>
           </Group>
         </Stack>
       </Modal>

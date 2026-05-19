@@ -1,13 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
   ActionIcon,
   Badge,
   Box,
-  Button,
   Collapse,
   Group,
   Pagination,
@@ -16,6 +14,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
+import AppButton from "@/src/shared/components/AppButton";
 
 type ChallengeProgressUser = {
   id?: string | null;
@@ -105,34 +104,10 @@ export function ChallengeProgressList({
             />
 
             <Group gap="sm">
-              <Button
-                type="submit"
-                radius="md"
-                style={{
-                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                  border: "none",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 600,
-                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                }}
-              >
-                Search
-              </Button>
-              <Link href={pathname}>
-                <Button
-                  variant="outline"
-                  radius="md"
-                  style={{
-                    borderColor: "rgba(255,255,255,0.12)",
-                    color: "#e2e8f0",
-                    background: "rgba(255,255,255,0.04)",
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
-                    fontWeight: 600,
-                  }}
-                >
-                  Reset
-                </Button>
-              </Link>
+              <AppButton type="submit">Search</AppButton>
+              <AppButton tone="ghost" component="a" href={pathname}>
+                Reset
+              </AppButton>
             </Group>
           </Group>
         </form>

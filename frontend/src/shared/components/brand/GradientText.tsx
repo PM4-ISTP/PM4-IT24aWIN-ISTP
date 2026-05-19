@@ -1,6 +1,6 @@
 import { Box } from "@mantine/core";
 import type { ReactNode } from "react";
-import { GRADIENT } from "../../theme";
+import { GRADIENT } from "@/src/shared/lib/theme";
 
 export default function GradientText({ children }: { children: ReactNode }) {
   return (

@@ -1,8 +1,9 @@
-import { Alert, Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Alert, Stack } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
-import Link from "next/link";
 import { fetchInstructorCourses } from "@/src/features/course/actions/courses";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
+import PageHeader from "@/src/shared/components/PageHeader";
+import AppButton from "@/src/shared/components/AppButton";
 
 export default async function InstructorDashboard(props: {
   searchParams: Promise<{ page?: string }>;
@@ -13,39 +14,19 @@ export default async function InstructorDashboard(props: {
 
   return (
     <Stack p="xl" gap="lg">
-      <Group justify="space-between" align="flex-end">
-        <Stack gap={4}>
-          <Title
-            order={1}
-            size="h2"
-            style={{
-              color: "#f1f5f9",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 700,
-            }}
-          >
-            Manage Courses
-          </Title>
-          <Text size="sm" style={{ color: "#94a3b8" }}>
-            Manage or create your courses here.
-          </Text>
-        </Stack>
-        <Link href="/dashboard/instructor/create">
-          <Button
+      <PageHeader
+        title="Manage Courses"
+        subtitle="Manage or create your courses here."
+        action={
+          <AppButton
+            component="a"
+            href="/dashboard/instructor/create"
             leftSection={<IconPlus size={16} />}
-            radius="md"
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-            }}
           >
             New course
-          </Button>
-        </Link>
-      </Group>
+          </AppButton>
+        }
+      />
 
       {result.success ? (
         <CourseGrid
