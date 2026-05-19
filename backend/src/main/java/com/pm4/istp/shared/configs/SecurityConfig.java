@@ -41,6 +41,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml")
                     .permitAll()
+                    .requestMatchers("/scalar/**", "/scalar")
+                    .permitAll()
                     .requestMatchers("/api/v1/courses/*/badge/svg")
                     .permitAll()
                     .requestMatchers("/api/admin/**")

@@ -36,6 +36,28 @@ spec:
                 name: frontend
                 port:
                   number: 3000
+          # Public API documentation on staging (no login required)
+          - path: /scalar
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+          - path: /v3/api-docs
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+          - path: /v3/api-docs.yaml
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
           - path: /api
             pathType: Prefix
             backend:
