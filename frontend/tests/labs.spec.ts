@@ -197,7 +197,9 @@ test("Instructor can create a lab with one challenge.", async ({ page }) => {
   await page.locator("label").filter({ hasText: "Public" }).click();
   await page.locator("label").filter({ hasText: "Beginner" }).click();
   await page.getByRole("textbox", { name: "Title", exact: true }).click();
-  await page.getByRole("textbox", { name: "Title", exact: true }).fill("E2E Test Lab: Create Lab Test - Challenge 1");
+  await page
+    .getByRole("textbox", { name: "Title", exact: true })
+    .fill("E2E Test Lab: Create Lab Test - Challenge 1");
   await page.getByRole("textbox").filter({ hasText: /^$/ }).nth(5).click();
   await getChallengeDescriptionField(page).fill("This is the first challenge of this lab.");
   await page.getByRole("textbox", { name: "Flag" }).click();
