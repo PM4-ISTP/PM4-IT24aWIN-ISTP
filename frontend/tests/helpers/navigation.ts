@@ -1,6 +1,10 @@
 import { type Locator, type Page } from "@playwright/test";
 
-export async function clickButtonAndAssertUrl(page: Page, locateButton: () => Locator, expectedUrl: string) {
+export async function clickButtonAndAssertUrl(
+  page: Page,
+  locateButton: () => Locator,
+  expectedUrl: string
+) {
   let pagedSwitched = false;
   let tries = 0;
   while (pagedSwitched === false && tries < 5) {

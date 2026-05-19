@@ -58,10 +58,11 @@ function parseDashboardExpiry(label: string): Date | null {
 
 async function openCourseFromMyCourses(page: Page, course: Course) {
   await clickNavbarButton(page, "MY COURSES", "dashboard/courses");
-  const locateCourseCard = () => page
-    .getByRole("button")
-    .filter({ has: page.getByText(course.title ?? "", { exact: true }) })
-    .first();
+  const locateCourseCard = () =>
+    page
+      .getByRole("button")
+      .filter({ has: page.getByText(course.title ?? "", { exact: true }) })
+      .first();
   await expect(locateCourseCard()).toBeVisible();
   await clickButtonAndAssertUrl(page, locateCourseCard, `/dashboard/courses/${course.id}`);
 }
@@ -125,6 +126,12 @@ async function assertActiveLabCard(page: Page, course: Course, lab: Lab, expecte
   ).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
 }
 
+async function openActiveLab(page: Page, courseId: string, labId: string) {
+  const url = `/dashboard/courses/${courseId}/labs/${labId}/play`;
+  const activeLabLocator = () => page.getByTestId("active-lab-card").locator(`a[href="${url}"]`);
+  await clickButtonAndAssertUrl(page, activeLabLocator, url);
+}
+
 async function openAppAndAssert(page: Page) {
   const openAppLink = page.getByRole("link", { name: "Open app" });
   await expect(openAppLink).toBeVisible();
@@ -139,7 +146,7 @@ async function openAppAndAssert(page: Page) {
 
 async function startLabAndWaitForRunning(page: Page) {
   await page.getByLabel("Start lab").click();
-  await expect(page.getByText('Running')).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByText("Running")).toBeVisible({ timeout: 120_000 });
 }
 
 async function stopLabAndWaitForNotStarted(page: Page) {
@@ -179,7 +186,7 @@ test("Instructor can create a lab with one challenge.", async ({ page }) => {
   await clickNavbarButton(page, LAB_OVERVIEW_TAB_NAME, LAB_OVERVIEW_URL);
   await clickButtonAndAssertUrl(
     page,
-      () => page.getByRole("link", { name: "New Lab" }),
+    () => page.getByRole("link", { name: "New Lab" }),
     "dashboard/instructor/labs/create"
   );
 
@@ -206,7 +213,7 @@ test("Instructor can create a lab with one challenge.", async ({ page }) => {
   await page.getByRole("textbox", { name: "Flag" }).fill("FLAG");
   await clickButtonAndAssertUrl(
     page,
-      () => page.getByRole("button", { name: "Create Lab" }),
+    () => page.getByRole("button", { name: "Create Lab" }),
     LAB_OVERVIEW_URL
   );
 
@@ -217,6 +224,7 @@ test("Instructor can create a lab with one challenge.", async ({ page }) => {
 
 test("Lab pod lifecycle for e2e-student", async ({ page }) => {
   test.setTimeout(300_000);
+  let labRunning = false;
 
   try {
     await loginAs(page, student);
@@ -234,6 +242,7 @@ test("Lab pod lifecycle for e2e-student", async ({ page }) => {
     await expect(page.getByText("Only running labs can be extended")).toBeVisible();
 
     await startLabAndWaitForRunning(page);
+    labRunning = true;
     await openAppAndAssert(page);
 
     let expectedExpiry = addMinutes(new Date(), START_DURATION_MINUTES);
@@ -244,11 +253,7 @@ test("Lab pod lifecycle for e2e-student", async ({ page }) => {
 
     await clickNavbarButton(page, "HOME", "dashboard");
     await assertActiveLabCard(page, courseUnderTest, labUnderTest, expectedExpiry);
-
-    await page
-      .getByTestId("active-lab-card")
-      .locator(`a[href="/dashboard/courses/${courseUnderTest.id}/labs/${labUnderTest.id}/play"]`)
-      .click();
+    await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
 
     expectedExpiry = addMinutes(expectedExpiry, EXTENSION_MINUTES);
     await extendLab(page, expectedExpiry);
@@ -257,11 +262,9 @@ test("Lab pod lifecycle for e2e-student", async ({ page }) => {
     await clickNavbarButton(page, "HOME", "dashboard");
     await assertActiveLabCard(page, courseUnderTest, labUnderTest, expectedExpiry);
 
-    await page
-      .getByTestId("active-lab-card")
-      .locator(`a[href="/dashboard/courses/${courseUnderTest.id}/labs/${labUnderTest.id}/play"]`)
-      .click();
+    await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
     await stopLabAndWaitForNotStarted(page);
+    labRunning = false;
     await assertAppNotReady(page);
 
     await clickNavbarButton(page, "HOME", "dashboard");
@@ -272,6 +275,7 @@ test("Lab pod lifecycle for e2e-student", async ({ page }) => {
     await assertAppNotReady(page);
 
     await startLabAndWaitForRunning(page);
+    labRunning = true;
     await openAppAndAssert(page);
 
     expectedExpiry = addMinutes(new Date(), START_DURATION_MINUTES);
@@ -280,13 +284,15 @@ test("Lab pod lifecycle for e2e-student", async ({ page }) => {
     await clickNavbarButton(page, "HOME", "dashboard");
     await assertActiveLabCard(page, courseUnderTest, labUnderTest, expectedExpiry);
 
-    await page
-      .getByTestId("active-lab-card")
-      .locator(`a[href="/dashboard/courses/${courseUnderTest.id}/labs/${labUnderTest.id}/play"]`)
-      .click();
+    await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
     await stopLabAndWaitForNotStarted(page);
+    labRunning = false;
     await assertAppNotReady(page);
   } finally {
-    // TODO: add clean up for failed test
+    if (labRunning) {
+      await clickNavbarButton(page, "HOME", "dashboard");
+      await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
+      await stopLabAndWaitForNotStarted(page);
+    }
   }
 });

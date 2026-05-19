@@ -60,12 +60,16 @@ function getExpectedDueLabel(dueAt: string, solved: boolean): string {
 }
 
 async function clickCourseCard(page: Page, course: Course, expectedUrl: string) {
-  await clickButtonAndAssertUrl(page, () => {
-    return page
+  await clickButtonAndAssertUrl(
+    page,
+    () => {
+      return page
         .getByRole("button")
         .filter({ has: page.getByText(course.title ?? "", { exact: true }) })
-        .first()
-  }, expectedUrl);
+        .first();
+    },
+    expectedUrl
+  );
 }
 
 async function openCourseDetailsFromMyCourses(page: Page, course: Course) {
