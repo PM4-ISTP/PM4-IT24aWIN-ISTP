@@ -22,6 +22,6 @@ export async function clickNavbarButton(
   buttonIndex = 0
 ) {
   const navbar = page.getByRole("navigation");
-  const button = navbar.getByRole("link", { name: buttonText }).nth(buttonIndex);
-  await clickButtonAndAssertUrl(page, button, expectedUrl);
+  const buttonLocator = () => navbar.getByRole("link", { name: buttonText }).nth(buttonIndex);
+  await clickButtonAndAssertUrl(page, buttonLocator, expectedUrl);
 }

@@ -139,7 +139,7 @@ async function openAppAndAssert(page: Page) {
 
 async function startLabAndWaitForRunning(page: Page) {
   await page.getByLabel("Start lab").click();
-  await expect(page.getByText(/^Running$/)).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByText('Running')).toBeVisible({ timeout: 120_000 });
 }
 
 async function stopLabAndWaitForNotStarted(page: Page) {
