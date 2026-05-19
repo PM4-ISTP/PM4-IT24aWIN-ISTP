@@ -6,6 +6,6 @@ INSERT INTO "users" ("id", "anonymized_at", "created_at", "deleted_at", "email",
 
 INSERT INTO "user_roles" ("user_id", "role") VALUES
 ('f730669a-055b-4362-8a01-605d9881c5b0',	'ROLE_ADMINISTRATOR'),
-('de73d811-d875-4bae-9fb4-b5dd1f1dba41',	'ROLE_INSTRUCTOR');
+('de73d811-d875-4bae-9fb4-b5dd1f1dba41',	'ROLE_INSTRUCTOR'),
 ('42bf88b0-2626-497d-a696-a864d8f1f27f',	'ROLE_STUDENT'),
 ('e4f2814e-0bd9-4fe9-acd3-8d08cfb11179',	'ROLE_INSTRUCTOR');
