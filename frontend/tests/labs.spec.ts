@@ -250,6 +250,21 @@ test("Instructor can delete a lab using the edit lab view.", async ({ page }) =>
   await expect(labCard).not.toBeVisible();
 });
 
+test("Admin can delete a lab using the admin dashboard.", async ({ page }) => {
+  const labUnderTest = labs.instructor01;
+
+  // Delete lab
+  await loginAs(page, testUsers.admin);
+  await clickNavbarButton(page, "Dashboard", "dashboard/admin", 1);
+  await page.getByRole('tab', { name: 'Labs' }).click();
+  await page.getByRole("row", { name: labUnderTest.title }).getByRole("button", { name: "Delete lab" }).click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+
+  // Verify lab delete
+  const labRow = page.getByRole("row", { name: labUnderTest.title });
+  await expect(labRow).not.toBeVisible();
+});
+
 test("Lab pod lifecycle for e2e-student", async ({ page }) => {
   test.setTimeout(300_000);
   let labRunning = false;
