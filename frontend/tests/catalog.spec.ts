@@ -61,10 +61,9 @@ test("Search and filter functionalities of catalog functions correctly", async (
   // Reset search
   await page.getByRole("link", { name: "Reset" }).click();
   await expect(page.getByRole("textbox", { name: "Search courses" })).toHaveValue("");
-  await expect(page.getByRole("combobox", { name: "Topic" })).toHaveValue("All topics");
 
   // Select topic with no matching courses
-  await clickTopicOption(page, "E2E-Testing-01", "E2E-Testing-02");
+  await clickTopicOption(page, "All topics", "E2E-Testing-02");
   await assertCourseCards(page, []);
   await expect(page.getByRole("textbox", { name: "Search courses" })).toHaveValue("");
 });

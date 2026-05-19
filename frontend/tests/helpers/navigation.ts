@@ -24,7 +24,7 @@ export async function clickButtonAndAssertUrl(
   expectedUrl: string
 ) {
   await clickButtonAndAssert(locateButton, async () => {
-    await page.waitForURL(expectedUrl);
+    await page.waitForURL(expectedUrl, { timeout: 6000 });
   });
 }
 
