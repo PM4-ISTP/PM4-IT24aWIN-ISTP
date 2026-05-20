@@ -10,6 +10,7 @@ const instructorCourses = [
   courses.instructor02,
   courses.instructor04,
   courses.instructor06,
+  courses.instructor09,
   courses.instructor03,
   courses.instructor08,
   courses.instructor01,

@@ -88,9 +88,10 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   await page.getByRole("textbox", { name: "Due date & time" }).click();
   await page.getByRole("textbox", { name: "Due date & time" }).press("Tab");
   await page.getByRole("textbox", { name: "Due date & time" }).fill("2100-01-01T11:00");
+  await page.getByRole("button", { name: "Save Changes" }).click();
   await clickButtonAndAssertUrl(
     page,
-    () => page.getByRole("button", { name: "Save Changes" }),
+    () => page.getByRole("button", { name: "Back to dashboard" }),
     courseTabUrl
   );
 

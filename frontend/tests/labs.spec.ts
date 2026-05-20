@@ -135,7 +135,7 @@ async function openActiveLab(page: Page, courseId: string, labId: string) {
 }
 
 async function openAppAndAssert(page: Page) {
-  const openAppLink = page.getByRole("link", { name: "Open app" });
+  const openAppLink = page.getByTestId("open-app-button");
   await expect(openAppLink).toBeVisible();
   await expect(openAppLink).toHaveAttribute("href", /http/);
 
@@ -213,9 +213,13 @@ test("Instructor can create a lab with one challenge.", async ({ page }) => {
   await getChallengeDescriptionField().fill("This is the first challenge of this lab.");
   await page.getByRole("textbox", { name: "Flag" }).click();
   await page.getByRole("textbox", { name: "Flag" }).fill("FLAG");
+  await clickButtonAndAssert(
+    () => page.getByRole("button", { name: "Create Lab" }),
+    async () => await expect(page.getByRole("heading", { name: "Edit Lab" })).toBeVisible()
+  );
   await clickButtonAndAssertUrl(
     page,
-    () => page.getByRole("button", { name: "Create Lab" }),
+    () => page.getByRole("button", { name: "Back to labs" }),
     LAB_OVERVIEW_URL
   );
 
@@ -253,8 +257,7 @@ test("Instructor can update a lab with one challenge.", async ({ page }) => {
   await page.getByRole("button", { name: "Save Changes" }).click();
   await clickButtonAndAssertUrl(
     page,
-    () =>
-      page.getByLabel("Confirm visibility change").getByRole("button", { name: "Save Changes" }),
+    () => page.getByRole("button", { name: "Back to labs" }),
     LAB_OVERVIEW_URL
   );
 
