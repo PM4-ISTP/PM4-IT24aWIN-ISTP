@@ -115,7 +115,7 @@ export default function CreateLab() {
     }
 
     router.refresh();
-    router.push("/dashboard/instructor/labs");
+    router.push(`/dashboard/instructor/labs/${result.data.id}`);
   }
 
   return (

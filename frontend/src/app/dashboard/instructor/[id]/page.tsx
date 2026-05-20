@@ -260,7 +260,12 @@ export default function EditCourse() {
 
     setInviteCode(result.data.inviteCode ?? null);
     router.refresh();
-    router.push("/dashboard/instructor");
+    notifications.show({
+      id: "course-saved",
+      color: "teal",
+      title: "Saved",
+      message: "Course updated.",
+    });
   }
 
   async function handleDelete() {

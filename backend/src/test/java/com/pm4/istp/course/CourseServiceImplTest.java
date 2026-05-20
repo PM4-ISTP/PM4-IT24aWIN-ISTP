@@ -2001,7 +2001,10 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void regenerateInviteCode_whenCourseIsNotPrivate_throwsCourseAccessDeniedException() {
+  void regenerateInviteCode_whenCourseIsNotPrivate_stillRegeneratesCode() {
+    // Owner can pre-generate an invite code before saving the visibility change to PRIVATE.
+    // updateCourse nulls the code again if the saved status is not PRIVATE, so the invariant
+    // "non-PRIVATE -> no inviteCode" is restored on the next save.
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
@@ -2018,12 +2021,12 @@ class CourseServiceImplTest {
     course.addCourseInstructor(ownerRelation);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
+    when(courseInviteCodeHelper.generateAndAssign(courseId)).thenReturn("NEWCOD");
 
-    assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
-        .isInstanceOf(CourseAccessDeniedException.class)
-        .hasMessageContaining("not private");
+    Course result = courseService.regenerateInviteCode(courseId, ownerId);
 
-    verify(courseInviteCodeHelper, never()).generateAndAssign(any());
+    verify(courseInviteCodeHelper).generateAndAssign(courseId);
+    assertThat(result.getInviteCode()).isEqualTo("NEWCOD");
   }
 
   @Test
