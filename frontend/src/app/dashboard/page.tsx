@@ -77,7 +77,28 @@ async function fetchMyDeadlines(client: ApiClient): Promise<DeadlineItem[]> {
 async function fetchMyRunningPods(client: ApiClient): Promise<RunningPod[]> {
   try {
     const { data } = await client.GET("/api/v1/lab-pods");
-    return (data ?? []) as RunningPod[];
+    // Filter entries that don't carry the required pod identity — the UI reads
+    // `item.pod.status` and would crash on undefined nested data.
+    return (data ?? []).flatMap((dto) => {
+      if (typeof dto.labId !== "string" || !dto.pod || typeof dto.pod.status !== "string") {
+        return [];
+      }
+      return [
+        {
+          labId: dto.labId,
+          labTitle: dto.labTitle,
+          courseId: dto.courseId,
+          courseTitle: dto.courseTitle,
+          pod: {
+            status: dto.pod.status as PodStatusEnum,
+            podName: dto.pod.podName,
+            appUrl: dto.pod.appUrl,
+            createdAt: dto.pod.createdAt,
+            expiresAt: dto.pod.expiresAt,
+          },
+        },
+      ];
+    });
   } catch {
     return [];
   }

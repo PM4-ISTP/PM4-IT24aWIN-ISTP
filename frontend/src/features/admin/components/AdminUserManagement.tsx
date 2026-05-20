@@ -108,7 +108,21 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
         if (error) {
           throw new Error(apiErrorText(error) ?? "Failed to load users");
         }
-        setUsers((data ?? []) as AdminUserListResponse);
+        // The schema marks most DTO fields as optional. Map to the internal
+        // shape so the UI does not depend on enabled/provisioned being undefined.
+        const safe: AdminUserListResponse = (data ?? []).flatMap((dto) =>
+          typeof dto.id === "string"
+            ? [
+                {
+                  ...dto,
+                  id: dto.id,
+                  enabled: !!dto.enabled,
+                  provisioned: !!dto.provisioned,
+                },
+              ]
+            : []
+        );
+        setUsers(safe);
       } catch (e) {
         notifications.show({
           title: "Error",
@@ -173,7 +187,10 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
       if (error || !data) {
         throw new Error(apiErrorText(error) ?? "Failed to create user");
       }
-      setCreated(data as CreateUserResponse);
+      if (typeof data.userId !== "string" || typeof data.temporaryPassword !== "string") {
+        throw new Error("Server returned an incomplete create-user response");
+      }
+      setCreated({ userId: data.userId, temporaryPassword: data.temporaryPassword });
 
       if (slowNotificationShown) {
         notifications.update({
@@ -230,7 +247,10 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
       setLoadingActiveSessions(true);
       const { data, error } = await client.GET("/api/admin/sessions");
       if (error) throw new Error(apiErrorText(error) ?? "Failed to load active sessions");
-      setActiveSessions((data ?? []) as AdminActiveSessionResponse);
+      const safe: AdminActiveSessionResponse = (data ?? []).flatMap((s) =>
+        typeof s.sessionId === "string" ? [{ ...s, sessionId: s.sessionId }] : []
+      );
+      setActiveSessions(safe);
     } catch (e) {
       notifications.show({
         title: "Error",

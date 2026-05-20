@@ -212,7 +212,34 @@ export default function TrophyCabinet({ opened, onClose, userName = "Student" }:
     if (!opened) return;
     void client
       .GET("/api/v1/users/me/badges")
-      .then(({ data }) => setBadges((data ?? []) as UserBadge[]))
+      .then(({ data }) => {
+        // Filter out badges missing required fields — the SVG renderer reads
+        // primaryColor/textColor with substring() and crashes on undefined.
+        const safe: UserBadge[] = (data ?? []).flatMap((dto) =>
+          typeof dto.badgeId === "string" &&
+          typeof dto.courseId === "string" &&
+          typeof dto.courseTitle === "string" &&
+          typeof dto.primaryColor === "string" &&
+          typeof dto.textColor === "string" &&
+          typeof dto.template === "number" &&
+          typeof dto.badgeIcon === "string" &&
+          typeof dto.earnedAt === "string"
+            ? [
+                {
+                  badgeId: dto.badgeId,
+                  courseId: dto.courseId,
+                  courseTitle: dto.courseTitle,
+                  primaryColor: dto.primaryColor,
+                  textColor: dto.textColor,
+                  template: dto.template,
+                  badgeIcon: dto.badgeIcon,
+                  earnedAt: dto.earnedAt,
+                },
+              ]
+            : []
+        );
+        setBadges(safe);
+      })
       .catch(() => setBadges([]));
   }, [client, opened]);
 
