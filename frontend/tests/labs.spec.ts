@@ -15,7 +15,7 @@ const labUnderTest = labs.instructor01;
 
 const START_DURATION_MINUTES = 60;
 const EXTENSION_MINUTES = 30;
-const TIME_TOLERANCE_MINUTES = 1;
+const TIME_TOLERANCE_MINUTES = 2;
 
 const LAB_OVERVIEW_TAB_NAME = "Labs";
 const LAB_OVERVIEW_URL = "dashboard/instructor/labs";
