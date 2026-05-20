@@ -19,6 +19,8 @@ import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/features/course/actions/courses";
 import Link from "next/link";
 
+type ApiClient = Awaited<ReturnType<typeof getApiClient>>;
+
 type DeadlineItem = {
   courseId: string;
   courseTitle: string;
@@ -43,9 +45,8 @@ type RunningPod = {
   };
 };
 
-async function fetchCompletedLabsCount(): Promise<number | null> {
+async function fetchCompletedLabsCount(client: ApiClient): Promise<number | null> {
   try {
-    const client = await getApiClient();
     const { data } = await client.GET("/api/v1/labs/my-completed-count");
     const count = data?.count;
     return typeof count === "number" ? count : null;
@@ -54,9 +55,8 @@ async function fetchCompletedLabsCount(): Promise<number | null> {
   }
 }
 
-async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
+async function fetchMyDeadlines(client: ApiClient): Promise<DeadlineItem[]> {
   try {
-    const client = await getApiClient();
     const { data } = await client.GET("/api/v1/courses/my-deadlines");
     return (data ?? [])
       .filter((d) => d.courseId && d.labId && d.dueAt)
@@ -74,9 +74,8 @@ async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
   }
 }
 
-async function fetchMyRunningPods(): Promise<RunningPod[]> {
+async function fetchMyRunningPods(client: ApiClient): Promise<RunningPod[]> {
   try {
-    const client = await getApiClient();
     const { data } = await client.GET("/api/v1/lab-pods");
     return (data ?? []) as RunningPod[];
   } catch {
@@ -211,11 +210,12 @@ export default async function Home() {
   const name = session?.user?.name ?? "there";
   const firstName = name.split(" ")[0];
   const userId = session?.userId ?? undefined;
+  const client = await getApiClient();
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
   const [deadlines, completedLabsCount, runningPods] = await Promise.all([
-    fetchMyDeadlines(),
-    fetchCompletedLabsCount(),
-    fetchMyRunningPods(),
+    fetchMyDeadlines(client),
+    fetchCompletedLabsCount(client),
+    fetchMyRunningPods(client),
   ]);
 
   const today = new Date();

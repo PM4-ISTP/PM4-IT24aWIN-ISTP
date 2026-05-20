@@ -13,7 +13,7 @@ export function apiErrorText(error: unknown): string | undefined {
   return undefined;
 }
 
-export function createApiClient(baseUrl: string, accessToken?: string) {
+export function createApiClient(baseUrl: string, accessToken?: string, customFetch?: typeof fetch) {
   const headers = new Headers();
   if (accessToken) {
     headers.set("Authorization", `Bearer ${accessToken}`);
@@ -22,5 +22,6 @@ export function createApiClient(baseUrl: string, accessToken?: string) {
   return createClient<paths>({
     baseUrl,
     headers,
+    ...(customFetch ? { fetch: customFetch } : {}),
   });
 }
