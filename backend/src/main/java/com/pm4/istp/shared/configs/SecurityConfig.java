@@ -75,6 +75,8 @@ public class SecurityConfig {
                     .hasRole(ADMINISTRATOR_ROLE)
                     // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
                     // catch-all rule to require authentication for all requests
+                    .requestMatchers("/api/v1/staging/**")
+                    .permitAll()
                     .anyRequest()
                     .authenticated())
         .csrf(csrf -> csrf.disable())

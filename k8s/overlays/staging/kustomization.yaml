@@ -31,6 +31,7 @@ configMapGenerator:
       - istp-tls=true
       - istp-pod-extension-seconds=1800
       - istp-pod-max-extensions=2
+      - istp.features.staging-endpoint-enabled=true
       - keycloak-client-id=interactive-security-training-platform-app
       - nextauth-url=https://istp-staging.pm4.init-lab.ch
       - keycloak-admin-url=https://istp-staging-auth.pm4.init-lab.ch/admin/interactive-security-training-platform/console/
