@@ -10,7 +10,7 @@ const navLinks = [
   { label: "Features", href: "#bento" },
   { label: "Product", href: "#screens" },
   { label: "For Schools", href: "#cta" },
-  { label: "GitHub ↗", href: "https://github.com" },
+  { label: "GitHub ↗", href: "https://github.com/PM4-ISTP/PM4-IT24aWIN-ISTP" },
 ];
 
 export default function LandingNav() {
