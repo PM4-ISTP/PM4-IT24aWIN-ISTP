@@ -147,7 +147,7 @@ test("Student can leave course.", async ({ page }) => {
     () => page.getByRole("button", { name: courseUnderTest.title }),
     `dashboard/courses/${courseUnderTest.id}`
   );
-  await page.getByRole('button', { name: 'Leave Course' }).click();
-  await page.getByLabel('Leave Course').getByRole('button', { name: 'Leave Course' }).click();
+  await page.getByRole("button", { name: "Leave Course" }).click();
+  await page.getByLabel("Leave Course").getByRole("button", { name: "Leave Course" }).click();
   await expect(page.getByTestId(enrollmentButtonTestId)).toHaveText("Enroll in Course");
 });
