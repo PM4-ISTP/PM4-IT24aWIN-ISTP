@@ -25,7 +25,8 @@ import AdminListSearch from "@/src/features/admin/components/AdminListSearch";
 import AppButton from "@/src/shared/components/AppButton";
 import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 import MyEditor from "@/src/shared/components/MyEditor";
-import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { useApiClient } from "@/src/shared/lib/api/client";
+import { apiErrorText } from "@/src/shared/lib/api";
 import { slugify } from "@/src/shared/lib/utils";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
@@ -52,6 +53,7 @@ type AdminCourseListItem = {
 const PAGE_SIZE = 10;
 
 export default function AdminCourseManagement() {
+  const client = useApiClient();
   const topicOptions = useCourseTopicOptions();
   const {
     query,
@@ -132,27 +134,26 @@ export default function AdminCourseManagement() {
     setError(null);
     try {
       const normalizedShortDescription = normalizeShortDescription(values.shortDescription);
-      const res = await fetch(`/api/backend/api/admin/courses/${selected.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { error, response } = await client.PUT("/api/admin/courses/{id}", {
+        params: { path: { id: selected.id } },
+        body: {
           title: values.title.trim(),
-          description: cleanText(values.description),
-          shortDescription: cleanText(normalizedShortDescription),
+          description: cleanText(values.description) ?? "",
+          shortDescription: cleanText(normalizedShortDescription) ?? "",
           status: values.status,
-          topic: cleanText(values.topic),
-          imageUrl: cleanText(values.imageUrl),
-        }),
+          topic: cleanText(values.topic) ?? undefined,
+          imageUrl: cleanText(values.imageUrl) ?? undefined,
+        },
       });
-      if (!res.ok) {
-        const raw = await readBackendError(res);
+      if (error || !response.ok) {
+        const raw = apiErrorText(error);
         const msgLower = raw?.toLowerCase() ?? "";
         if (msgLower.includes("invalid topic")) {
           showToast("orange", "Invalid topic", "Please select a topic from the list.");
           return;
         }
         const msg = toUserFriendlyBackendError(raw);
-        const color = res.status >= 500 ? "red" : "orange";
+        const color = response.status >= 500 ? "red" : "orange";
         showToast(color, "Failed to update course", msg ?? "Please try again.");
         return;
       }
@@ -171,13 +172,12 @@ export default function AdminCourseManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/backend/api/admin/courses/${selected.id}`, {
-        method: "DELETE",
+      const { error, response } = await client.DELETE("/api/admin/courses/{id}", {
+        params: { path: { id: selected.id } },
       });
-      if (!res.ok) {
-        const raw = await readBackendError(res);
-        const msg = toUserFriendlyBackendError(raw);
-        const color = res.status >= 500 ? "red" : "orange";
+      if (error || !response.ok) {
+        const msg = toUserFriendlyBackendError(apiErrorText(error));
+        const color = response.status >= 500 ? "red" : "orange";
         showToast(color, "Failed to delete course", msg ?? "Please try again.");
         return;
       }

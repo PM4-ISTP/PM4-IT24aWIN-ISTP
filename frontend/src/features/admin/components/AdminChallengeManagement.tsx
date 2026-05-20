@@ -23,7 +23,8 @@ import { cleanText, formatDate, wrapTextStyle } from "@/src/features/admin/lib/a
 import AdminListSearch from "@/src/features/admin/components/AdminListSearch";
 import AppButton from "@/src/shared/components/AppButton";
 import MyEditor from "@/src/shared/components/MyEditor";
-import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { useApiClient } from "@/src/shared/lib/api/client";
+import { apiErrorText } from "@/src/shared/lib/api";
 import { slugify } from "@/src/shared/lib/utils";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
@@ -49,6 +50,7 @@ type AdminLabListItem = {
 const PAGE_SIZE = 10;
 
 export default function AdminChallengeManagement() {
+  const client = useApiClient();
   const {
     query,
     onQueryChange,
@@ -124,20 +126,18 @@ export default function AdminChallengeManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/backend/api/admin/labs/${selected.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { error, response } = await client.PUT("/api/admin/labs/{id}", {
+        params: { path: { id: selected.id } },
+        body: {
           title: values.title.trim(),
-          description: cleanText(values.description),
+          description: cleanText(values.description) ?? undefined,
           status: values.status,
           difficulty: values.difficulty,
-        }),
+        },
       });
-      if (!res.ok) {
-        const raw = await readBackendError(res);
-        const msg = toUserFriendlyBackendError(raw);
-        const color = res.status >= 500 ? "red" : "orange";
+      if (error || !response.ok) {
+        const msg = toUserFriendlyBackendError(apiErrorText(error));
+        const color = response.status >= 500 ? "red" : "orange";
         showToast(color, "Failed to update lab", msg ?? "Please try again.");
         return;
       }
@@ -156,13 +156,12 @@ export default function AdminChallengeManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/backend/api/admin/labs/${selected.id}`, {
-        method: "DELETE",
+      const { error, response } = await client.DELETE("/api/admin/labs/{id}", {
+        params: { path: { id: selected.id } },
       });
-      if (!res.ok) {
-        const raw = await readBackendError(res);
-        const msg = toUserFriendlyBackendError(raw);
-        const color = res.status >= 500 ? "red" : "orange";
+      if (error || !response.ok) {
+        const msg = toUserFriendlyBackendError(apiErrorText(error));
+        const color = response.status >= 500 ? "red" : "orange";
         showToast(color, "Failed to delete lab", msg ?? "Please try again.");
         return;
       }

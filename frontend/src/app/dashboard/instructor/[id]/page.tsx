@@ -56,6 +56,7 @@ import {
   type CourseLabEntry,
 } from "@/src/features/course/components/management/CourseLabManager";
 import { updateCourseLabs } from "@/src/features/course/actions/labs";
+import { useApiClient } from "@/src/shared/lib/api/client";
 import BadgeDesigner, { type BadgeConfig } from "@/src/features/badge/components/BadgeDesigner";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
@@ -76,6 +77,7 @@ export default function EditCourse() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const courseId = params.id;
+  const client = useApiClient();
   const { data: session } = useSession();
   const currentUserId = session?.userId;
 
@@ -242,17 +244,18 @@ export default function EditCourse() {
     }
 
     if (badgeConfig) {
-      await fetch(`/api/backend/api/v1/courses/${courseId}/badge`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          primaryColor: badgeConfig.primaryColor,
-          textColor: badgeConfig.textColor,
-          template: badgeConfig.template,
-          badgeIcon: badgeConfig.badgeIcon,
-          badgeEnabled: badgeConfig.badgeEnabled,
-        }),
-      }).catch(() => {});
+      await client
+        .PUT("/api/v1/courses/{courseId}/badge", {
+          params: { path: { courseId } },
+          body: {
+            primaryColor: badgeConfig.primaryColor,
+            textColor: badgeConfig.textColor,
+            template: badgeConfig.template,
+            badgeIcon: badgeConfig.badgeIcon,
+            badgeEnabled: badgeConfig.badgeEnabled,
+          },
+        })
+        .catch(() => {});
     }
 
     setInviteCode(result.data.inviteCode ?? null);

@@ -8,6 +8,13 @@ import type { GetTokenParams } from "next-auth/jwt";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
 
+/**
+ * Server-side fetch that opts out of Next.js's request-deduplication / data
+ * cache. Dashboard data is per-user and request-scoped, so caching could
+ * serve stale or — worse — incorrectly shared data between users.
+ */
+const noStoreFetch: typeof fetch = (input, init) => fetch(input, { cache: "no-store", ...init });
+
 const COOKIE_CHUNK_SIZE = 4096 - 163;
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
@@ -152,5 +159,5 @@ export async function getApiClient() {
   // Keep getServerSession() to preserve existing NextAuth behavior (callbacks, session state).
   await getServerSession(authOptions);
   const accessToken = await getValidAccessToken();
-  return createApiClient(BACKEND_URL, accessToken);
+  return createApiClient(BACKEND_URL, accessToken, noStoreFetch);
 }

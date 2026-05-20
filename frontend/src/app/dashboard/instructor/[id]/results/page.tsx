@@ -33,6 +33,8 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import { fetchCourse } from "@/src/features/course/actions/courses";
+import { useApiClient } from "@/src/shared/lib/api/client";
+import { apiErrorText } from "@/src/shared/lib/api";
 import {
   type CourseLabSubmissionEntryDto,
   type CourseLabChallengeSubmissionDetailDto,
@@ -220,6 +222,7 @@ export default function CourseResultsPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const courseId = params.id;
+  const client = useApiClient();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -242,16 +245,17 @@ export default function CourseResultsPage() {
       try {
         setLoading(true);
         setError(null);
-        const [courseResult, subRes] = await Promise.all([
+        const [courseResult, subResult] = await Promise.all([
           fetchCourse(courseId),
-          fetch(`/api/backend/api/v1/courses/${encodeURIComponent(courseId)}/submissions`, {
-            cache: "no-store",
+          client.GET("/api/v1/courses/{id}/submissions", {
+            params: { path: { id: courseId } },
           }),
         ]);
         if (courseResult.success) setCourseTitle(courseResult.data.title);
-        if (!subRes.ok) throw new Error((await subRes.text()) || subRes.statusText);
-        const json = (await subRes.json()) as CourseLabSubmissionsResponseDto;
-        if (!cancelled) setData(json);
+        if (subResult.error || !subResult.data) {
+          throw new Error(apiErrorText(subResult.error) ?? "Could not load submissions");
+        }
+        if (!cancelled) setData(subResult.data as CourseLabSubmissionsResponseDto);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
       } finally {
@@ -261,7 +265,7 @@ export default function CourseResultsPage() {
     return () => {
       cancelled = true;
     };
-  }, [courseId]);
+  }, [client, courseId]);
 
   const labs = useMemo<CourseLabResponseDto[]>(() => {
     if (!data) return [];
@@ -386,15 +390,14 @@ export default function CourseResultsPage() {
     try {
       setDetailLoading(true);
       setDetailError(null);
-      const res = await fetch(
-        `/api/backend/api/v1/courses/${encodeURIComponent(courseId)}/submissions/${encodeURIComponent(
-          participantId
-        )}/${encodeURIComponent(labId)}`,
-        { cache: "no-store" }
+      const { data, error } = await client.GET(
+        "/api/v1/courses/{id}/submissions/{participantId}/{labId}",
+        { params: { path: { id: courseId, participantId, labId } } }
       );
-      if (!res.ok) throw new Error((await res.text()) || res.statusText);
-      const json = (await res.json()) as CourseLabSubmissionDetailDto;
-      setDetail(json);
+      if (error || !data) {
+        throw new Error(apiErrorText(error) ?? "Could not load submission details");
+      }
+      setDetail(data as CourseLabSubmissionDetailDto);
     } catch (e) {
       setDetailError((e as Error).message);
       setDetail(null);
