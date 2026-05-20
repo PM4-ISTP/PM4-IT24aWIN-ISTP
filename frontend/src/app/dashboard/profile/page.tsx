@@ -6,6 +6,8 @@ import { Avatar, Group, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useAsyncAction } from "@/src/shared/hooks/useAsyncAction";
+import { useApiClient } from "@/src/shared/lib/api/client";
+import { apiErrorText } from "@/src/shared/lib/api";
 import { httpUrlValidator } from "@/src/shared/lib/validation";
 import PageHeader from "@/src/shared/components/PageHeader";
 import AppButton from "@/src/shared/components/AppButton";
@@ -33,6 +35,7 @@ export const dynamic = "force-dynamic";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const client = useApiClient();
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [statusMessage, setStatusMessage] = useState<{
@@ -66,12 +69,11 @@ export default function ProfilePage() {
     setLoadingProfile(true);
     try {
       setStatusMessage(null);
-      const res = await fetch("/api/backend/api/v1/users/me/profile", { cache: "no-store" });
-      if (!res.ok) {
-        throw new Error(await safeErrorMessage(res));
+      const { data, error } = await client.GET("/api/v1/users/me/profile");
+      if (error || !data) {
+        throw new Error(apiErrorText(error) ?? "Could not load profile");
       }
-      const data = (await res.json()) as UserProfile;
-      setProfile(data);
+      setProfile(data as UserProfile);
       formRef.current.setValues({
         firstName: data.firstName ?? "",
         lastName: data.lastName ?? "",
@@ -91,7 +93,7 @@ export default function ProfilePage() {
     } finally {
       setLoadingProfile(false);
     }
-  }, []);
+  }, [client]);
 
   useEffect(() => {
     void loadProfile();
@@ -107,15 +109,11 @@ export default function ProfilePage() {
         pictureUrl: values.pictureUrl?.trim() || undefined,
       };
 
-      const res = await fetch("/api/backend/api/v1/users/me/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        throw new Error(await safeErrorMessage(res));
+      const { data, error } = await client.PUT("/api/v1/users/me/profile", { body: payload });
+      if (error || !data) {
+        throw new Error(apiErrorText(error) ?? "Could not update profile");
       }
-      return (await res.json()) as UserProfile;
+      return data as UserProfile;
     },
     {
       id: "user-profile-save",
@@ -215,13 +213,4 @@ export default function ProfilePage() {
       </SurfaceCard>
     </Stack>
   );
-}
-
-async function safeErrorMessage(res: Response): Promise<string> {
-  try {
-    const data = (await res.json()) as { error?: string };
-    return data?.error || res.statusText || `HTTP ${res.status}`;
-  } catch {
-    return res.statusText || `HTTP ${res.status}`;
-  }
 }
