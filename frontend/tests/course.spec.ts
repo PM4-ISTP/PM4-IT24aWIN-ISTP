@@ -10,6 +10,7 @@ import { expect } from "@playwright/test";
 
 const courseTabName = "DASHBOARD";
 const courseTabUrl = "dashboard/instructor";
+const enrollmentButtonTestId = "course-enrollment-action";
 
 test("Instructor can create a course and edit it afterwards (e.g. change title, add lab).", async ({
   page,
@@ -123,9 +124,7 @@ test("Instructor can delete a course using the edit view.", async ({ page }) => 
 
 test("Student can join course via catalog.", async ({ page }) => {
   const courseUnderTest = courses.instructor09;
-  const enrollmentButtonTestId = "course-enrollment-action";
-
-  await loginAs(page, testUsers.instructor);
+  await loginAs(page, testUsers.student);
   await clickNavbarButton(page, "Browse / Catalog", "dashboard/catalog");
   await page.getByRole("textbox", { name: "Search courses" }).fill(courseUnderTest.title);
   await page.getByRole("button", { name: "Search" }).click();
@@ -137,4 +136,18 @@ test("Student can join course via catalog.", async ({ page }) => {
   await expect(page.getByTestId(enrollmentButtonTestId)).toHaveText("Enroll in Course");
   await page.getByTestId(enrollmentButtonTestId).click();
   await expect(page.getByTestId(enrollmentButtonTestId)).toHaveText("Continue Course");
+});
+
+test("Student can leave course.", async ({ page }) => {
+  const courseUnderTest = courses.instructor01;
+  await loginAs(page, testUsers.student);
+  await clickNavbarButton(page, "My Courses", "dashboard/courses");
+  await clickButtonAndAssertUrl(
+    page,
+    () => page.getByRole("button", { name: courseUnderTest.title }),
+    `dashboard/courses/${courseUnderTest.id}`
+  );
+  await page.getByRole('button', { name: 'Leave Course' }).click();
+  await page.getByLabel('Leave Course').getByRole('button', { name: 'Leave Course' }).click();
+  await expect(page.getByTestId(enrollmentButtonTestId)).toHaveText("Enroll in Course");
 });
