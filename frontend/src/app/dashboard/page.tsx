@@ -231,13 +231,28 @@ export default async function Home() {
   const name = session?.user?.name ?? "there";
   const firstName = name.split(" ")[0];
   const userId = session?.userId ?? undefined;
-  const client = await getApiClient();
+  // Token refresh may fail (expired session, revoked refresh token, Keycloak
+  // restart). In that case we still render the dashboard shell so the
+  // client-side SessionErrorHandler can pick up `session.error` and sign the
+  // user out. Throwing here would crash the page before that ever runs.
+  let client: ApiClient | null = null;
+  try {
+    client = await getApiClient();
+  } catch {
+    client = null;
+  }
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
-  const [deadlines, completedLabsCount, runningPods] = await Promise.all([
-    fetchMyDeadlines(client),
-    fetchCompletedLabsCount(client),
-    fetchMyRunningPods(client),
-  ]);
+  const [deadlines, completedLabsCount, runningPods]: [
+    DeadlineItem[],
+    number | null,
+    RunningPod[],
+  ] = client
+    ? await Promise.all([
+        fetchMyDeadlines(client),
+        fetchCompletedLabsCount(client),
+        fetchMyRunningPods(client),
+      ])
+    : [[], null, []];
 
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-GB", {
