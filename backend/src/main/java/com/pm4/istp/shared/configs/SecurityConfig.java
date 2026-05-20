@@ -43,6 +43,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/scalar/**", "/scalar")
                     .permitAll()
+                    .requestMatchers("/api/v1/testing/**")
+                    .permitAll()
                     .requestMatchers("/api/v1/courses/*/badge/svg")
                     .permitAll()
                     .requestMatchers("/api/admin/**")
@@ -75,8 +77,6 @@ public class SecurityConfig {
                     .hasRole(ADMINISTRATOR_ROLE)
                     // .requestMatchers("/api/v1/public/**").permitAll() --> if you want to allow
                     // catch-all rule to require authentication for all requests
-                    .requestMatchers("/api/v1/staging/**")
-                    .permitAll()
                     .anyRequest()
                     .authenticated())
         .csrf(csrf -> csrf.disable())
