@@ -111,3 +111,7 @@ Committed example files should contain placeholders only.
 ## Checks Before Pull Requests
 
 Run the relevant formatting, linting, and test checks before opening a pull request. See [Code quality](docs/CODE_QUALITY.md) for the full workflow and [End-to-end tests](docs/E2E_TESTS.md) for Playwright setup.
+
+## Credits
+
+- Favicons generated with [favicon.io](https://favicon.io/favicon-converter/).
