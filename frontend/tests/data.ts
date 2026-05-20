@@ -694,6 +694,30 @@ export const instructorCourse08: Course = {
   ],
 };
 
+export const instructorCourse09: Course = {
+  id: "cc216b9f-cbff-44fd-b72e-d71d147c903b",
+  title: "E2E Test Course: Instructor 09",
+  description:
+    "<p>==========</p><p><strong><mark>This is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.</mark></strong></p><p>==========</p><p></p><p>Created by: e2e-instructor</p><p>Course nr.: 09</p>",
+  shortDescription:
+    '"Instructor 09" is a test course for E2E testing. Please do not interact with this course in any form (e.g. joining or deleting). Otherwise the E2E tests might fail.',
+  isPublished: true,
+  isPrivate: false,
+  createdAt: "2026-05-20T16:07:38.51209",
+  updatedAt: "2026-05-20T16:07:48.049138",
+  topic: Topic.FirstTopic,
+  owner: instructorUser,
+  private: false,
+  published: true,
+  numOfParticipants: 2,
+  labs: [
+    {
+      lab: instructorLab01,
+      dueAt: "",
+    },
+  ],
+};
+
 // ============================================================================
 // Dashboard Test Data (statistics only)
 // ============================================================================
@@ -752,6 +776,7 @@ export const courses = {
   instructor06: instructorCourse06,
   instructor07: instructorCourse07,
   instructor08: instructorCourse08,
+  instructor09: instructorCourse09,
 } as const;
 
 // ============================================================================

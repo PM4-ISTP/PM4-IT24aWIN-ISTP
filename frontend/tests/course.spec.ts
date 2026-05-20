@@ -120,3 +120,21 @@ test("Instructor can delete a course using the edit view.", async ({ page }) => 
   const courseCard = page.getByRole("button", { name: courseUnderTest.title });
   await expect(courseCard).not.toBeVisible();
 });
+
+test("Student can join course via catalog.", async ({ page }) => {
+  const courseUnderTest = courses.instructor09;
+  const enrollmentButtonTestId = "course-enrollment-action";
+
+  await loginAs(page, testUsers.instructor);
+  await clickNavbarButton(page, "Browse / Catalog", "dashboard/catalog");
+  await page.getByRole("textbox", { name: "Search courses" }).fill(courseUnderTest.title);
+  await page.getByRole("button", { name: "Search" }).click();
+  await clickButtonAndAssertUrl(
+    page,
+    () => page.getByRole("button", { name: courseUnderTest.title }),
+    `dashboard/catalog/${courseUnderTest.id}`
+  );
+  await expect(page.getByTestId(enrollmentButtonTestId)).toHaveText("Enroll in Course");
+  await page.getByTestId(enrollmentButtonTestId).click();
+  await expect(page.getByTestId(enrollmentButtonTestId)).toHaveText("Continue Course");
+});
