@@ -16,6 +16,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
 import AppButton from "@/src/shared/components/AppButton";
 import {
@@ -146,8 +147,15 @@ export default function EditLab() {
       return;
     }
 
+    setInitialStatus(formValues.status);
+    setSavedDockerImage(trimmedDockerImage);
     router.refresh();
-    router.push("/dashboard/instructor/labs");
+    notifications.show({
+      id: "lab-saved",
+      color: "teal",
+      title: "Saved",
+      message: "Lab updated.",
+    });
   }
 
   async function handleSubmit() {
