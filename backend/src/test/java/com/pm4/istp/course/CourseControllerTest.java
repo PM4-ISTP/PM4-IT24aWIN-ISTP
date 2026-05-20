@@ -700,8 +700,6 @@ class CourseControllerTest {
         when(courseService.getCourseLabSubmissions(userId, courseId)).thenReturn(submissions);
         when(courseService.getCourseLabSubmissionDetails(userId, courseId, participantId, labId))
                 .thenReturn(submissionDetail);
-        when(courseService.updateCourseChallengeScore(eq(userId), eq(courseId), eq(participantId), eq(challengeId), any()))
-                .thenReturn(scoreEntry);
         when(courseService.listUpcomingDeadlines(userId)).thenReturn(List.of(deadline));
         when(courseTopicService.listActiveTopics()).thenReturn(List.of("web", "crypto"));
 
@@ -732,8 +730,7 @@ class CourseControllerTest {
                                         courseId, participantId, challengeId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"points\":4}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.awardedPoints").value(4));
+                .andExpect(status().isNotFound());
         mockMvc.perform(get("/api/v1/courses/my-deadlines"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].courseId").value(courseId.toString()));
