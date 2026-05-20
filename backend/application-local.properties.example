@@ -12,6 +12,9 @@ spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
 spring.datasource.username=postgres
 spring.datasource.password=<local-postgres-password>
 
+# Feature flags (currently only used for testing). Set to "true" to enable end to end testing for local development.
+istp.features.staging-endpoint-enabled=true
+
 # Local-friendly defaults
 cors.allowed-origin=http://localhost:3000
 spring.jpa.hibernate.ddl-auto=update
