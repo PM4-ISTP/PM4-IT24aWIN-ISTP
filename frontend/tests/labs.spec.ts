@@ -250,9 +250,11 @@ test("Instructor can update a lab with one challenge.", async ({ page }) => {
   await expect(page.getByText("Public GHCR image found")).toBeVisible();
   await page.locator("label").filter({ hasText: "Private" }).click();
   await page.locator("label").filter({ hasText: "Expert" }).click();
+  await page.getByRole("button", { name: "Save Changes" }).click();
   await clickButtonAndAssertUrl(
     page,
-    () => page.getByRole("button", { name: "Save Changes" }),
+    () =>
+      page.getByLabel("Confirm visibility change").getByRole("button", { name: "Save Changes" }),
     LAB_OVERVIEW_URL
   );
 
@@ -311,7 +313,6 @@ test("Admin can edit a lab using the admin dashboard.", async ({ page }) => {
   await getDescriptionInput().click();
   await getDescriptionInput().press("ControlOrMeta+a");
   await getDescriptionInput().fill("This is a test for lab update.");
-
   await page.getByRole("combobox", { name: "Status" }).click();
   await page.getByRole("option", { name: "PRIVATE" }).click();
   await page.getByText("Difficulty").click();

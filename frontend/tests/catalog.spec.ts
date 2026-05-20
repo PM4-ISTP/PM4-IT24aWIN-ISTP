@@ -7,6 +7,7 @@ import {
   instructorCourse04,
   instructorCourse07,
   instructorCourse08,
+  instructorCourse09,
   testUsers,
 } from "@/tests/data";
 import { loginAs } from "@/tests/helpers/auth";
@@ -42,6 +43,7 @@ test("Search and filter functionalities of catalog functions correctly", async (
   await assertCourseCards(page, [
     instructorCourse04,
     adminCourse01,
+    instructorCourse09,
     instructorCourse08,
     instructorCourse01,
     instructorCourse07,
@@ -52,6 +54,7 @@ test("Search and filter functionalities of catalog functions correctly", async (
   await clickTopicOption(page, "All topics", "E2E-Testing-01");
   await assertCourseCards(page, [
     adminCourse01,
+    instructorCourse09,
     instructorCourse08,
     instructorCourse01,
     instructorCourse07,
