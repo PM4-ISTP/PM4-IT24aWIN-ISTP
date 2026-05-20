@@ -14,6 +14,7 @@ export type Challenge = Readonly<{
   description?: string;
   points: number;
   type: "FLAG" | "MULTIPLE_CHOICE";
+  solution?: string;
   orderIndex: number;
   updatedAt: string;
 }>;
@@ -210,6 +211,7 @@ const instructorLab03Challenge01: Challenge = {
   title: "E2E Test Course: Instructor 03 - Challenge 1",
   points: 1,
   type: "FLAG",
+  solution: "ISTP{CHALLENGE01}",
   orderIndex: 0,
   updatedAt: "2026-05-15T11:28:07.33958",
 };
@@ -219,6 +221,7 @@ const instructorLab03Challenge02: Challenge = {
   title: "E2E Test Course: Instructor 03 - Challenge 2",
   points: 3,
   type: "MULTIPLE_CHOICE",
+  solution: "Correct Option",
   orderIndex: 1,
   updatedAt: "2026-05-15T11:28:07.335503",
 };
@@ -228,6 +231,7 @@ const instructorLab03Challenge03: Challenge = {
   title: "E2E Test Course: Instructor 03 - Challenge 3",
   points: 2,
   type: "FLAG",
+  solution: "ISTP{CHALLENGE03}",
   orderIndex: 2,
   updatedAt: "2026-05-15T11:28:07.338252",
 };

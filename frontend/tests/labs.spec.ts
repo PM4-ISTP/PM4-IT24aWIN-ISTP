@@ -342,16 +342,53 @@ test("Admin can delete a lab using the admin dashboard.", async ({ page }) => {
   await expect(labRow).not.toBeVisible();
 });
 
+test("Student can play a lab.", async ({ page }) => {
+  const courseUnderTest = courses.instructor02;
+  const labUnderTest = courseUnderTest.labs[0].lab;
+  const numOfChallenges = labUnderTest.challenges.length;
+  const assertProgressUpdated = async (solvedChallenges: number) => {
+    await expect(page.getByText(`${solvedChallenges} / ${numOfChallenges} labs`)).toBeVisible();
+  };
+
+  await loginAs(page, student);
+  await clickNavbarButton(page, "My Courses", "dashboard/courses");
+  await page.getByRole("button", { name: courseUnderTest.title }).click();
+  await page.getByTestId("course-enrollment-action").click();
+  await assertProgressUpdated(0);
+
+  await page.getByRole("textbox", { name: "Flag input" }).click();
+  await page
+    .getByRole("textbox", { name: "Flag input" })
+    .fill(labUnderTest.challenges[0].solution ?? "");
+  await page.getByRole("button", { name: "Submit" }).click();
+  await assertProgressUpdated(1);
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+
+  await page
+    .locator("div")
+    .filter({ hasText: /^Correct Option$/ })
+    .first()
+    .click();
+  await page.getByRole("button", { name: "Submit answer" }).click();
+  await assertProgressUpdated(2);
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+
+  await page.getByRole("textbox", { name: "Flag input" }).click();
+  await page
+    .getByRole("textbox", { name: "Flag input" })
+    .fill(labUnderTest.challenges[2].solution ?? "");
+  await page.getByRole("button", { name: "Submit" }).click();
+  await assertProgressUpdated(3);
+  await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
+});
+
 test("Lab pod lifecycle for e2e-student", async ({ page }) => {
   test.setTimeout(300_000);
   let labRunning = false;
 
   try {
     await loginAs(page, student);
-
-    await clickNavbarButton(page, "HOME", "dashboard");
     await assertNoActiveLabs(page);
-
     await openCourseFromMyCourses(page, courseUnderTest);
     await openLabFromCourse(page, courseUnderTest, labUnderTest);
     await assertAppNotReady(page);
