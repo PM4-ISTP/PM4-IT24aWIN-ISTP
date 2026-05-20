@@ -12,6 +12,10 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
+    /**
+     * Update a user's profile
+     * @description Updates another user's profile. Requires sufficient privileges over the target user.
+     */
     put: operations["updateUserProfile"];
     post?: never;
     delete?: never;
@@ -27,7 +31,15 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get my profile
+     * @description Returns the profile of the authenticated user.
+     */
     get: operations["getMyProfile"];
+    /**
+     * Update my profile
+     * @description Updates the authenticated user's name, title and profile picture.
+     */
     put: operations["updateMyProfile"];
     post?: never;
     delete?: never;
@@ -139,7 +151,15 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get a course badge configuration
+     * @description Returns the badge design configuration for a course.
+     */
     get: operations["getCourseBadgeConfig"];
+    /**
+     * Update a course badge configuration
+     * @description Updates the badge design for a course. Only instructors of the course may do this.
+     */
     put: operations["updateCourseBadgeConfig"];
     post?: never;
     delete?: never;
@@ -156,6 +176,10 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
+    /**
+     * Update a user's role
+     * @description Normalises the user to a single application role and returns the updated user.
+     */
     put: operations["updateUserRole"];
     post?: never;
     delete?: never;
@@ -172,6 +196,10 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
+    /**
+     * Set a user's password
+     * @description Sets a new (optionally temporary) password for the given user.
+     */
     put: operations["setUserPassword"];
     post?: never;
     delete?: never;
@@ -188,8 +216,16 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
+    /**
+     * Update a lab
+     * @description Updates a lab's title, description, status and difficulty as an administrator.
+     */
     put: operations["updateChallenge"];
     post?: never;
+    /**
+     * Delete a lab
+     * @description Soft-deletes a lab so it is no longer visible to students or instructors.
+     */
     delete: operations["deleteChallenge"];
     options?: never;
     head?: never;
@@ -204,8 +240,16 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
+    /**
+     * Update a course
+     * @description Updates a course's details, topic and visibility as an administrator.
+     */
     put: operations["updateCourse_1"];
     post?: never;
+    /**
+     * Delete a course
+     * @description Soft-deletes a course so it is no longer visible to students or instructors.
+     */
     delete: operations["deleteCourse_1"];
     options?: never;
     head?: never;
@@ -219,9 +263,25 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get the platform configuration
+     * @description Returns the current admin configuration. When none is stored yet, a response with kubeconfigUploaded=false and empty limits is returned.
+     */
     get: operations["getAdminConfig"];
+    /**
+     * Update the platform configuration
+     * @description Updates the pod resource limits and optionally replaces the kubeconfig. Omitting the kubeconfig keeps the previously stored one.
+     */
     put: operations["updateAdminConfig"];
+    /**
+     * Create the platform configuration
+     * @description Uploads a base64-encoded kubeconfig together with optional pod resource limits and stores the initial admin configuration.
+     */
     post: operations["uploadAndStoreAdminConfig"];
+    /**
+     * Delete the platform configuration
+     * @description Removes the stored admin configuration, including the kubeconfig.
+     */
     delete: operations["deleteAdminConfig"];
     options?: never;
     head?: never;
@@ -237,6 +297,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Request a password reset email
+     * @description Triggers a Keycloak password reset email for the authenticated user's own account.
+     */
     post: operations["sendMyPasswordResetEmail"];
     delete?: never;
     options?: never;
@@ -335,9 +399,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get a lab pod status
+     * @description Returns the current status of the authenticated user's pod for the given lab.
+     */
     get: operations["getPod"];
     put?: never;
+    /**
+     * Start a lab pod
+     * @description Starts a pod for the given lab, or returns the existing pod if one is already running.
+     */
     post: operations["startPod"];
+    /**
+     * Stop a lab pod
+     * @description Stops and removes the authenticated user's pod for the given lab.
+     */
     delete: operations["stopPod"];
     options?: never;
     head?: never;
@@ -353,6 +429,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Extend a lab pod
+     * @description Extends the time-to-live of the authenticated user's pod for the given lab.
+     */
     post: operations["extendPod"];
     delete?: never;
     options?: never;
@@ -467,8 +547,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List users
+     * @description Returns a paginated list of provisioned ISTP users, optionally filtered by a search query.
+     */
     get: operations["listUsers"];
     put?: never;
+    /**
+     * Create a user
+     * @description Creates a new Keycloak user and returns the generated user ID and temporary password.
+     */
     post: operations["createUser"];
     delete?: never;
     options?: never;
@@ -485,6 +573,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Soft-delete a user
+     * @description Anonymises the user's email/username and disables the account to free the identifiers for reuse. Cannot be undone.
+     */
     post: operations["softDeleteUser"];
     delete?: never;
     options?: never;
@@ -501,6 +593,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Restore a user
+     * @description Re-enables a previously disabled user account.
+     */
     post: operations["restoreUser"];
     delete?: never;
     options?: never;
@@ -517,6 +613,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Provision a user
+     * @description Creates the ISTP database record for an existing Keycloak account. Idempotent.
+     */
     post: operations["provisionUser"];
     delete?: never;
     options?: never;
@@ -533,6 +633,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Send a password reset email
+     * @description Triggers a Keycloak password reset email for the given user.
+     */
     post: operations["sendPasswordResetEmail"];
     delete?: never;
     options?: never;
@@ -549,6 +653,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Log out a user
+     * @description Terminates all active sessions of the given user.
+     */
     post: operations["logoutUser"];
     delete?: never;
     options?: never;
@@ -565,6 +673,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /**
+     * Disable a user
+     * @description Blocks the user from logging in and marks the account as disabled.
+     */
     post: operations["disableUser"];
     delete?: never;
     options?: never;
@@ -579,8 +691,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List course topics
+     * @description Returns all course topics currently configured on the platform.
+     */
     get: operations["listTopics"];
     put?: never;
+    /**
+     * Add a course topic
+     * @description Creates a new course topic that instructors can assign to their courses.
+     */
     post: operations["addTopic"];
     delete?: never;
     options?: never;
@@ -601,6 +721,10 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
+    /**
+     * Add online time
+     * @description Adds elapsed online time (in seconds) to the authenticated user's total.
+     */
     patch: operations["addOnlineTime"];
     trace?: never;
   };
@@ -611,6 +735,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List my badges
+     * @description Returns all badges earned by the authenticated user.
+     */
     get: operations["getMyBadges"];
     put?: never;
     post?: never;
@@ -627,6 +755,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List collaborator/instructor users
+     * @description Returns a paginated list of users eligible to be added as course collaborators, optionally filtered by a search query.
+     */
     get: operations["listCollaboratorUsers"];
     put?: never;
     post?: never;
@@ -643,6 +775,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List collaborator/instructor users
+     * @description Returns a paginated list of users eligible to be added as course collaborators, optionally filtered by a search query.
+     */
     get: operations["listCollaboratorUsers_1"];
     put?: never;
     post?: never;
@@ -759,6 +895,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List my running lab pods
+     * @description Returns all currently running lab pods owned by the authenticated user.
+     */
     get: operations["listMyPods"];
     put?: never;
     post?: never;
@@ -815,6 +955,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Render a course badge as SVG
+     * @description Returns the course badge rendered as an SVG image.
+     */
     get: operations["getCourseBadgeSvg"];
     put?: never;
     post?: never;
@@ -931,6 +1075,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * Get a user
+     * @description Returns the full admin detail for one user.
+     */
     get: operations["getUser"];
     put?: never;
     post?: never;
@@ -947,6 +1095,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List a user's sessions
+     * @description Returns the active Keycloak sessions for one user.
+     */
     get: operations["listUserSessions"];
     put?: never;
     post?: never;
@@ -963,6 +1115,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List the user directory
+     * @description Returns Keycloak user directory entries, optionally filtered by a search query and paged via first/max offsets.
+     */
     get: operations["listUserDirectory"];
     put?: never;
     post?: never;
@@ -979,6 +1135,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List active sessions
+     * @description Returns all active Keycloak sessions for the configured application client.
+     */
     get: operations["listActiveSessions"];
     put?: never;
     post?: never;
@@ -995,6 +1155,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List labs
+     * @description Returns a paginated list of all labs on the platform, optionally filtered by a search query.
+     */
     get: operations["listChallenges"];
     put?: never;
     post?: never;
@@ -1011,6 +1175,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List courses
+     * @description Returns a paginated list of all courses on the platform, optionally filtered by a search query.
+     */
     get: operations["listCourses_1"];
     put?: never;
     post?: never;
@@ -1070,6 +1238,10 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
+    /**
+     * Delete a course topic
+     * @description Removes a course topic and clears it from any courses that referenced it.
+     */
     delete: operations["deleteTopic"];
     options?: never;
     head?: never;
@@ -1086,6 +1258,10 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
+    /**
+     * Terminate a session
+     * @description Logs out a single active session by its session ID.
+     */
     delete: operations["logoutSession"];
     options?: never;
     head?: never;
@@ -1114,6 +1290,9 @@ export interface components {
       title?: string;
       /** Format: int64 */
       totalSecondsOnline?: number;
+    };
+    ErrorDto: {
+      error?: string;
     };
     ChallengeOptionRequestDto: {
       /** Format: uuid */
@@ -1204,9 +1383,6 @@ export interface components {
       createdAt?: string;
       /** Format: date-time */
       updatedAt?: string;
-    };
-    ErrorDto: {
-      error?: string;
     };
     UpdateCourseInstructorRequestDto: {
       /** Format: uuid */
@@ -1688,14 +1864,14 @@ export interface components {
       totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListInstructorUserResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
@@ -1707,9 +1883,9 @@ export interface components {
       sort?: components["schemas"]["SortObject"];
       /** Format: int32 */
       pageNumber?: number;
-      paged?: boolean;
       /** Format: int32 */
       pageSize?: number;
+      paged?: boolean;
       unpaged?: boolean;
     };
     SortObject: {
@@ -1743,14 +1919,14 @@ export interface components {
       totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListLabResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
@@ -1798,14 +1974,14 @@ export interface components {
       totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["ListCourseResponseDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
@@ -1885,14 +2061,14 @@ export interface components {
       totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["AdminUserListItemDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
@@ -1968,14 +2144,14 @@ export interface components {
       totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["AdminLabListItemDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
@@ -2005,14 +2181,14 @@ export interface components {
       totalPages?: number;
       /** Format: int64 */
       totalElements?: number;
-      first?: boolean;
-      last?: boolean;
       /** Format: int32 */
       size?: number;
       content?: components["schemas"]["AdminCourseListItemDto"][];
       /** Format: int32 */
       number?: number;
       sort?: components["schemas"]["SortObject"];
+      first?: boolean;
+      last?: boolean;
       /** Format: int32 */
       numberOfElements?: number;
       pageable?: components["schemas"]["PageableObject"];
@@ -2042,13 +2218,40 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
+      /** @description Profile updated successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["UserDto"];
+        };
+      };
+      /** @description Invalid request data */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Access denied */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description User not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -2062,7 +2265,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Profile retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -2086,13 +2289,22 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
+      /** @description Profile updated successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["UserDto"];
+        };
+      };
+      /** @description Invalid request data */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -2451,13 +2663,22 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Badge configuration retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["CourseBadgeConfigDto"];
+        };
+      };
+      /** @description Course not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -2477,13 +2698,40 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
+      /** @description Badge configuration updated successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["CourseBadgeConfigDto"];
+        };
+      };
+      /** @description Invalid badge configuration */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Access denied */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Course not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -2503,13 +2751,31 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
+      /** @description Role updated successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["AdminUserDetailDto"];
+        };
+      };
+      /** @description Invalid role request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description User not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -2529,12 +2795,30 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
-      200: {
+      /** @description Password set successfully */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Invalid request body */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Keycloak rejected the password (e.g. password policy violation) */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
@@ -2553,12 +2837,30 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
-      200: {
+      /** @description Lab updated successfully */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Invalid request data */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Lab not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
@@ -2573,12 +2875,21 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description Lab deleted successfully */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Lab not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
@@ -2597,12 +2908,30 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
-      200: {
+      /** @description Course updated successfully */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Invalid request data */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Course not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
@@ -2617,12 +2946,21 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description Course deleted successfully */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Course not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
@@ -2635,7 +2973,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Configuration retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -2659,13 +2997,22 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
+      /** @description Configuration updated successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["AdminConfigResponse"];
+        };
+      };
+      /** @description Invalid base64 kubeconfig or file exceeds the 1 MB limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -2683,13 +3030,31 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
-      200: {
+      /** @description Configuration created successfully */
+      201: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["AdminConfigResponse"];
+        };
+      };
+      /** @description Missing kubeconfig, invalid base64, or file exceeds the 1 MB limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -2703,7 +3068,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Configuration deleted successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -2725,8 +3090,8 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description Password reset email sent */
+      204: {
         headers: {
           [name: string]: unknown;
         };
@@ -2969,7 +3334,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Pod status retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -2991,13 +3356,31 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Pod already running */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PodStatusResponse"];
+        };
+      };
+      /** @description Pod created successfully */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["PodStatusResponse"];
+        };
+      };
+      /** @description Kubernetes operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -3013,8 +3396,15 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description Pod stopped successfully */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description No pod found for the given lab */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -3033,13 +3423,22 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Pod extended successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["PodStatusResponse"];
+        };
+      };
+      /** @description Kubernetes operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -3282,7 +3681,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Users retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -3306,13 +3705,22 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
-      200: {
+      /** @description User created successfully */
+      201: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["AdminCreateUserResponseDto"];
+        };
+      };
+      /** @description Invalid request data */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -3328,12 +3736,21 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description User soft-deleted successfully */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description User not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
@@ -3348,12 +3765,30 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description User restored successfully */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description User not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description User is soft-deleted and cannot be restored */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
@@ -3368,13 +3803,31 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description User provisioned successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["AdminProvisionUserResponseDto"];
+        };
+      };
+      /** @description User not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description User is soft-deleted and cannot be provisioned */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -3390,12 +3843,21 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description Password reset email sent */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Keycloak rejected the request */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
@@ -3410,12 +3872,21 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description User logged out successfully */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Keycloak rejected the request */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
@@ -3430,12 +3901,21 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description User disabled successfully */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description User not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
@@ -3448,7 +3928,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Topics retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -3472,7 +3952,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
+      /** @description Topic added successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -3481,6 +3961,24 @@ export interface operations {
           "*/*": {
             [key: string]: string;
           };
+        };
+      };
+      /** @description Invalid topic value */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -3498,12 +3996,21 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
-      200: {
+      /** @description Online time recorded successfully */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Invalid request data */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
@@ -3516,7 +4023,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Badges retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -3539,7 +4046,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Users retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -3562,7 +4069,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Users retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -3742,7 +4249,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Pods retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -3846,13 +4353,22 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Badge SVG rendered successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "image/svg+xml": string;
+        };
+      };
+      /** @description Course not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/svg+xml": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -4012,13 +4528,22 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description User found */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["AdminUserDetailDto"];
+        };
+      };
+      /** @description User not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -4034,13 +4559,22 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Sessions retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["KeycloakUserSessionRepresentation"][];
+        };
+      };
+      /** @description Keycloak rejected the request */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -4058,7 +4592,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description User directory retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -4078,7 +4612,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Active sessions retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -4101,7 +4635,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Labs retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -4124,7 +4658,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Courses retrieved successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -4214,7 +4748,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description Topic deleted successfully */
       200: {
         headers: {
           [name: string]: unknown;
@@ -4223,6 +4757,24 @@ export interface operations {
           "*/*": {
             [key: string]: string;
           };
+        };
+      };
+      /** @description Invalid topic value */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Topic not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
         };
       };
     };
@@ -4238,12 +4790,30 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description Session terminated successfully */
+      204: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Session ID is missing */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
+      };
+      /** @description Keycloak rejected the logout request */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ErrorDto"];
+        };
       };
     };
   };
