@@ -139,6 +139,27 @@ test("Student can join course via catalog.", async ({ page }) => {
   await expect(page.getByTestId(enrollmentButtonTestId)).toHaveText("Continue Course");
 });
 
+test("Student can join course via invite code.", async ({ page }) => {
+  const courseUnderTest = courses.instructor05;
+  const inviteCode = courseUnderTest.inviteCode ?? "";
+
+  await loginAs(page, testUsers.student);
+  await page.getByRole("button", { name: "add Join course" }).click();
+  for (let i = 0; i < inviteCode.length; i++) {
+    await page.getByRole("textbox", { name: "PinInput" }).nth(i).click();
+    await page
+      .getByRole("textbox", { name: "PinInput" })
+      .nth(i)
+      .fill(inviteCode.at(i) ?? "");
+  }
+  await clickButtonAndAssertUrl(
+    page,
+    () => page.getByRole("button", { name: "Join Course", exact: true }),
+    `dashboard/catalog/${courseUnderTest.id}`
+  );
+  await expect(page.getByRole("heading", { name: "E2E Test Course: Instructor" })).toBeVisible();
+});
+
 test("Student can leave course.", async ({ page }) => {
   const courseUnderTest = courses.instructor01;
   await loginAs(page, testUsers.student);

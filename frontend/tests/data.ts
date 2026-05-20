@@ -72,6 +72,7 @@ export type Course = Readonly<{
   published: boolean;
   numOfParticipants: number;
   labs: readonly LabAssignment[];
+  inviteCode?: string;
 }>;
 
 export type DashboardTestDataEntry = Readonly<{
@@ -600,6 +601,7 @@ export const instructorCourse05: Course = {
   published: false,
   numOfParticipants: 1,
   labs: [],
+  inviteCode: "7NZ9FE",
 };
 
 export const instructorCourse06: Course = {
