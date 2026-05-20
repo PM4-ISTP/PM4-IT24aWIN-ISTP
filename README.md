@@ -112,6 +112,10 @@ Committed example files should contain placeholders only.
 
 Run the relevant formatting, linting, and test checks before opening a pull request. See [Code quality](docs/CODE_QUALITY.md) for the full workflow and [End-to-end tests](docs/E2E_TESTS.md) for Playwright setup.
 
+## Notes
+
+- Manual score overrides for course challenges are kept as a potential future feature (DB table + service logic), but the corresponding API endpoint is currently disabled and hidden from the API docs. Normal scoring is computed automatically from correct/incorrect submissions.
+
 ## Credits
 
 - Favicons generated with [favicon.io](https://favicon.io/favicon-converter/).
