@@ -17,7 +17,7 @@ export default function LandingFooter() {
       }}
     >
       <Container size="xl" px={32}>
-        <SimpleGrid cols={{ base: 2, md: 4 }} spacing={40}>
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={40}>
           <Stack gap={14}>
             <BrandLockup />
             <Text
@@ -39,12 +39,14 @@ export default function LandingFooter() {
               <Stack gap={10}>
                 {section.links.map((link) => (
                   <Anchor
-                    key={link}
-                    href="#"
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     underline="never"
                     style={{ fontSize: 14, color: INK_DIM }}
                   >
-                    {link}
+                    {link.label}
                   </Anchor>
                 ))}
               </Stack>
