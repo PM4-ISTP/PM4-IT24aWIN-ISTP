@@ -65,7 +65,7 @@ export type Course = Readonly<{
   isPrivate: boolean;
   createdAt: string;
   updatedAt: string;
-  topic: string;
+  topic: Topic;
   owner: User;
   private: boolean;
   published: boolean;
@@ -117,7 +117,7 @@ const instructorWithoutCoursesOrLabsUser: User = {
   password:
     process.env.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_PASSWORD ??
     "e2e-instructor-without-courses-or-labs",
-  name: "E2E Instructor Without Courses",
+  name: "E2E Instructor No Courses Or Labs",
   role: "Instructor",
   title: "Test Instructor",
   enrolledCourses: [],
@@ -144,6 +144,16 @@ export const testUsers = {
   instructorWithoutCoursesOrLabs: instructorWithoutCoursesOrLabsUser,
   student: studentUser,
 } as const;
+
+// ============================================================================
+// Topic Definitions (E2E labs only)
+// ============================================================================
+
+export enum Topic {
+  NoTopic = "",
+  FirstTopic = "E2E-Testing-01",
+  SecondTopic = "E2E-Testing-02",
+}
 
 // ============================================================================
 // Challenge Definitions (E2E labs only)
@@ -446,7 +456,7 @@ export const adminCourse01: Course = {
   isPrivate: false,
   createdAt: "2026-05-14T12:34:27.264592",
   updatedAt: "2026-05-16T23:33:42.995326",
-  topic: "E2E-Testing-01",
+  topic: Topic.FirstTopic,
   owner: adminUser,
   private: false,
   published: true,
@@ -465,7 +475,7 @@ export const instructorCourse01: Course = {
   isPrivate: false,
   createdAt: "2026-05-14T12:39:30.044949",
   updatedAt: "2026-05-16T23:13:44.264035",
-  topic: "E2E-Testing-01",
+  topic: Topic.FirstTopic,
   owner: instructorUser,
   private: false,
   published: true,
@@ -501,7 +511,7 @@ export const instructorCourse02: Course = {
   isPrivate: true,
   createdAt: "2026-05-14T12:40:07.002102",
   updatedAt: "2026-05-16T23:17:10.678044",
-  topic: "E2E-Testing-02",
+  topic: Topic.SecondTopic,
   owner: instructorUser,
   private: true,
   published: false,
@@ -537,7 +547,7 @@ export const instructorCourse03: Course = {
   isPrivate: false,
   createdAt: "2026-05-14T12:40:45.551012",
   updatedAt: "2026-05-15T15:26:09.989781",
-  topic: "E2E-Testing-01",
+  topic: Topic.FirstTopic,
   owner: instructorUser,
   private: false,
   published: false,
@@ -556,7 +566,7 @@ export const instructorCourse04: Course = {
   isPrivate: false,
   createdAt: "2026-05-14T12:41:39.618199",
   updatedAt: "2026-05-16T23:18:47.833949",
-  topic: "",
+  topic: Topic.NoTopic,
   owner: instructorUser,
   private: false,
   published: true,
@@ -580,7 +590,7 @@ export const instructorCourse05: Course = {
   isPrivate: true,
   createdAt: "2026-05-16T16:12:29.824781",
   updatedAt: "2026-05-16T23:19:33.68172",
-  topic: "E2E-Testing-02",
+  topic: Topic.SecondTopic,
   owner: instructorUser,
   private: true,
   published: false,
@@ -599,7 +609,7 @@ export const instructorCourse06: Course = {
   isPrivate: true,
   createdAt: "2026-05-16T16:27:52.870031",
   updatedAt: "2026-05-16T23:20:36.902283",
-  topic: "E2E-Testing-02",
+  topic: Topic.SecondTopic,
   owner: instructorUser,
   private: true,
   published: false,
@@ -631,7 +641,7 @@ export const instructorCourse07: Course = {
   isPrivate: false,
   createdAt: "2026-05-16T16:27:52.870031",
   updatedAt: "2026-05-16T23:21:25.933564",
-  topic: "E2E-Testing-01",
+  topic: Topic.FirstTopic,
   owner: instructorUser,
   private: false,
   published: true,
@@ -663,7 +673,7 @@ export const instructorCourse08: Course = {
   isPrivate: false,
   createdAt: "2026-05-16T21:43:20.235861",
   updatedAt: "2026-05-16T23:22:12.341303",
-  topic: "E2E-Testing-01",
+  topic: Topic.FirstTopic,
   owner: instructorUser,
   private: false,
   published: true,
