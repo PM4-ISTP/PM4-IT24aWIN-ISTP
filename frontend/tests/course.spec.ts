@@ -1,6 +1,6 @@
 import { test } from "@/tests/fixtures";
 import { loginAs } from "@/tests/helpers/auth";
-import { labs, testUsers, Topic } from "@/tests/data";
+import { courses, labs, testUsers, Topic } from "@/tests/data";
 import {
   clickButtonAndAssert,
   clickButtonAndAssertUrl,
@@ -96,4 +96,27 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   // Verify course edit
   const courseCard = page.getByRole("button", { name: updatedTitle });
   await expect(courseCard).toBeVisible();
+});
+
+test("Instructor can delete a course using the edit view.", async ({ page }) => {
+  const courseUnderTest = courses.instructor01;
+  await loginAs(page, testUsers.instructor);
+  await clickNavbarButton(page, courseTabName, courseTabUrl);
+
+  // Delete course
+  await clickButtonAndAssertUrl(
+    page,
+    () => page.getByRole("button", { name: courseUnderTest.title }),
+    `${courseTabUrl}/${courseUnderTest.id}`
+  );
+  await page.getByRole("button", { name: "Delete Course" }).click();
+  await clickButtonAndAssertUrl(
+    page,
+    () => page.getByLabel("Delete Course").getByRole("button", { name: "Delete Course" }),
+    courseTabUrl
+  );
+
+  // Verify course deleted
+  const courseCard = page.getByRole("button", { name: courseUnderTest.title });
+  await expect(courseCard).not.toBeVisible();
 });
