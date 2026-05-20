@@ -13,22 +13,21 @@ function getCourseStatusLabel(course: Course): "Private" | "Public" | "Draft" {
 }
 
 export async function assertCourseCards(page: Page, courses: readonly Course[]) {
-  const courseCards = page
-    .getByRole("button")
-    .filter({ has: page.getByText(/^(Private|Public|Draft)$/) });
+  const getCourseCards = () =>
+    page.getByRole("button").filter({ has: page.getByText(/^(Private|Public|Draft)$/) });
 
   if (courses.length === 0) {
     await expect(page.getByText("No courses found", { exact: true })).toBeVisible();
-    await expect(courseCards).toHaveCount(0);
+    await expect(getCourseCards()).toHaveCount(0);
     return;
   }
 
-  await expect(courseCards).toHaveCount(courses.length);
+  await expect(getCourseCards()).toHaveCount(courses.length);
 
   const expectedTitles = courses
     .map((course) => course.title ?? "")
     .filter((title) => title.length > 0);
-  const titleOrderInUi = await courseCards.evaluateAll((buttons, titles) => {
+  const titleOrderInUi = await getCourseCards().evaluateAll((buttons, titles) => {
     const normalize = (value: string) => value.toLowerCase().replace(/\s+/g, " ").trim();
     const normalizedTitles = titles.map((title) => ({ raw: title, normalized: normalize(title) }));
     const found: string[] = [];
@@ -47,7 +46,9 @@ export async function assertCourseCards(page: Page, courses: readonly Course[]) 
 
   for (const course of courses) {
     const title = course.title ?? "";
-    const card = courseCards.filter({ has: page.getByText(title, { exact: true }) }).first();
+    const card = getCourseCards()
+      .filter({ has: page.getByText(title, { exact: true }) })
+      .first();
 
     await expect(card, `Course card for "${title}" should be visible`).toBeVisible();
     await expect(card.getByText(getCourseStatusLabel(course), { exact: true })).toBeVisible();
