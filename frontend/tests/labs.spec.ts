@@ -289,8 +289,9 @@ test("Instructor can delete a lab using the edit lab view.", async ({ page }) =>
 
 test("Admin can edit a lab using the admin dashboard.", async ({ page }) => {
   const labUnderTest = labs.instructor01;
-  const newTitle = 'E2E Test Lab: Update Lab Test';
-  const getDescriptionInput = () => page.getByRole('textbox').filter({ hasText: labUnderTest.description ?? "" });
+  const newTitle = "E2E Test Lab: Update Lab Test";
+  const getDescriptionInput = () =>
+    page.getByRole("textbox").filter({ hasText: labUnderTest.description ?? "" });
 
   // Edit lab
   await loginAs(page, testUsers.admin);
@@ -300,20 +301,22 @@ test("Admin can edit a lab using the admin dashboard.", async ({ page }) => {
     .getByRole("row", { name: labUnderTest.title })
     .getByRole("button", { name: "Edit lab" })
     .click();
-  await page.getByRole('textbox', { name: 'Title' }).click();
-  await page.getByRole('textbox', { name: 'Title' }).press('ControlOrMeta+a');
-  await page.getByRole('textbox', { name: 'Title' }).fill(newTitle);
-  await expect(page.getByRole('textbox', { name: 'Docker Image' })).toHaveAttribute("readonly");
-  await expect(page.getByRole('textbox', { name: 'Docker Image' })).toHaveValue(labUnderTest.dockerImage);
+  await page.getByRole("textbox", { name: "Title" }).click();
+  await page.getByRole("textbox", { name: "Title" }).press("ControlOrMeta+a");
+  await page.getByRole("textbox", { name: "Title" }).fill(newTitle);
+  await expect(page.getByRole("textbox", { name: "Docker Image" })).toHaveAttribute("readonly");
+  await expect(page.getByRole("textbox", { name: "Docker Image" })).toHaveValue(
+    labUnderTest.dockerImage
+  );
   await getDescriptionInput().click();
-  await getDescriptionInput().press('ControlOrMeta+a');
+  await getDescriptionInput().press("ControlOrMeta+a");
   await getDescriptionInput().fill("This is a test for lab update.");
 
-  await page.getByRole('combobox', { name: 'Status' }).click();
-  await page.getByRole('option', { name: 'PRIVATE' }).click();
-  await page.getByText('Difficulty').click();
-  await page.getByRole('option', { name: 'EASY' }).click();
-  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByRole("combobox", { name: "Status" }).click();
+  await page.getByRole("option", { name: "PRIVATE" }).click();
+  await page.getByText("Difficulty").click();
+  await page.getByRole("option", { name: "EASY" }).click();
+  await page.getByRole("button", { name: "Save" }).click();
 
   // Verify lab edit
   const labRow = page.getByRole("row", { name: newTitle });
