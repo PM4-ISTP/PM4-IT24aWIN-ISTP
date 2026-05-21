@@ -122,8 +122,10 @@ public class CourseServiceImpl implements CourseService {
     addEnrollmentIfMissing(courseToCreate, instructorUser);
 
     // Collaborators from the request payload
-    if (!course.getInstructors().isEmpty()) {
-      for (CreateCourseInstructorRequestDto req : course.getInstructors()) {
+    List<CreateCourseInstructorRequestDto> instructors =
+        course.getInstructors() == null ? List.of() : course.getInstructors();
+    if (!instructors.isEmpty()) {
+      for (CreateCourseInstructorRequestDto req : instructors) {
         User collaboratorUser =
             userRepository
                 .findByIdAndDeletedAtIsNull(req.getInstructorId())
