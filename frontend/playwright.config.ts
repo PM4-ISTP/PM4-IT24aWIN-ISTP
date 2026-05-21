@@ -14,6 +14,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
+  /* Playwright tests can be flaky. Flaky tests should not block CI. */
+  failOnFlakyTests: process.env.CI ? false : true,
   /* Opt out of parallel tests on CI. */
   workers: 1,
   /* Increase default timeout */
