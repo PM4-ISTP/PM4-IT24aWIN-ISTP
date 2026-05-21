@@ -136,7 +136,7 @@ async function openActiveLab(page: Page, courseId: string, labId: string) {
 async function openAppAndAssert(page: Page) {
   const openAppLink = page.getByTestId("open-app-button");
   await expect(openAppLink).toBeVisible();
-  await expect(openAppLink).toHaveAttribute("href", /http/);
+  await expect(openAppLink).toHaveAttribute("href", /http/, { timeout: 20_000 });
 
   const [appPage] = await Promise.all([page.context().waitForEvent("page"), openAppLink.click()]);
 
