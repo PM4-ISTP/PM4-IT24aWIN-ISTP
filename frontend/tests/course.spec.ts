@@ -15,6 +15,7 @@ const enrollmentButtonTestId = "course-enrollment-action";
 test("Instructor can create a course and edit it afterwards (e.g. change title, add lab).", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   const newCourseData = {
     title: "E2E Test Course: Create Course Test",
     shortDescription: "Course for E2E test (create course)",

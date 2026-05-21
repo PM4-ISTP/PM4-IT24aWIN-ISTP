@@ -386,7 +386,7 @@ test("Student can play a lab.", async ({ page }) => {
 });
 
 test("Lab pod lifecycle for e2e-student", async ({ page }) => {
-  test.setTimeout(300_000);
+  test.setTimeout(60_000);
   let labRunning = false;
 
   try {
