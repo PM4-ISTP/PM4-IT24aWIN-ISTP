@@ -25,7 +25,6 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   const updatedTitle = "E2E Test Course: Update Newly Created Course Test";
   const lab = labs.instructor01;
   const owner = testUsers.instructor;
-  const collaborator = testUsers.instructorWithoutCoursesOrLabs;
 
   await loginAs(page, owner);
   await clickNavbarButton(page, courseTabName, courseTabUrl);
