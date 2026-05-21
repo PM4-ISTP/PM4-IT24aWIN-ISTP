@@ -2,9 +2,7 @@ package com.pm4.istp.course.controllers;
 
 import static com.pm4.istp.shared.util.JwtUtil.parseUserId;
 
-import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
-import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.ChallengeType;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseEnrollment;
@@ -104,8 +102,7 @@ public class CourseController {
       @AuthenticationPrincipal Jwt jwt,
       @Valid @RequestBody CreateCourseRequestDto createCourseRequestDto) {
     UUID userId = parseUserId(jwt);
-    CreateCourseRequest createCourseRequest = courseMapper.fromDto(createCourseRequestDto);
-    Course createdCourse = courseService.createCourse(userId, createCourseRequest);
+    Course createdCourse = courseService.createCourse(userId, createCourseRequestDto);
     CreateCourseResponseDto createCourseResponseDto = courseMapper.toDto(createdCourse);
     return new ResponseEntity<>(createCourseResponseDto, HttpStatus.CREATED);
   }
@@ -166,8 +163,7 @@ public class CourseController {
       @PathVariable UUID id,
       @Valid @RequestBody UpdateCourseRequestDto updateCourseRequestDto) {
     UUID userId = parseUserId(jwt);
-    UpdateCourseRequest updateCourseRequest = courseMapper.fromDto(updateCourseRequestDto);
-    Course updatedCourse = courseService.updateCourse(userId, id, updateCourseRequest);
+    Course updatedCourse = courseService.updateCourse(userId, id, updateCourseRequestDto);
     CourseDetailResponseDto dto = toCourseDetailResponseDto(updatedCourse, userId);
     return ResponseEntity.ok(dto);
   }

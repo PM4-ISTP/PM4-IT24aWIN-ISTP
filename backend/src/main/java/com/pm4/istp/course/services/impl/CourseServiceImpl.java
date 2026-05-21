@@ -1,11 +1,7 @@
 package com.pm4.istp.course.services.impl;
 
 import com.pm4.istp.badge.services.BadgeService;
-import com.pm4.istp.course.db.CreateCourseInstructorRequest;
-import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
-import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
-import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeType;
 import com.pm4.istp.course.db.entities.Course;
@@ -28,7 +24,11 @@ import com.pm4.istp.course.dto.CourseLabSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionStatusEnum;
 import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
+import com.pm4.istp.course.dto.CreateCourseInstructorRequestDto;
+import com.pm4.istp.course.dto.CreateCourseRequestDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
+import com.pm4.istp.course.dto.UpdateCourseInstructorRequestDto;
+import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
@@ -92,7 +92,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional
-  public Course createCourse(UUID userId, CreateCourseRequest course) {
+  public Course createCourse(UUID userId, CreateCourseRequestDto course) {
     User instructorUser =
         userRepository
             .findByIdAndDeletedAtIsNull(userId)
@@ -122,8 +122,10 @@ public class CourseServiceImpl implements CourseService {
     addEnrollmentIfMissing(courseToCreate, instructorUser);
 
     // Collaborators from the request payload
-    if (!course.getInstructors().isEmpty()) {
-      for (CreateCourseInstructorRequest req : course.getInstructors()) {
+    List<CreateCourseInstructorRequestDto> instructors =
+        course.getInstructors() == null ? List.of() : course.getInstructors();
+    if (!instructors.isEmpty()) {
+      for (CreateCourseInstructorRequestDto req : instructors) {
         User collaboratorUser =
             userRepository
                 .findByIdAndDeletedAtIsNull(req.getInstructorId())
@@ -238,7 +240,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional
-  public Course updateCourse(UUID userId, UUID courseId, UpdateCourseRequest request) {
+  public Course updateCourse(UUID userId, UUID courseId, UpdateCourseRequestDto request) {
     Course course =
         courseRepository
             .findByIdAndDeletedAtIsNull(courseId)
@@ -255,7 +257,7 @@ public class CourseServiceImpl implements CourseService {
       verifyOwner(course, userId);
     }
 
-    List<UpdateCourseInstructorRequest> requestedInstructors =
+    List<UpdateCourseInstructorRequestDto> requestedInstructors =
         request.getInstructors() == null ? List.of() : request.getInstructors();
     if (collaboratorsChange(course, requestedInstructors)) {
       verifyOwner(course, userId);
@@ -283,7 +285,7 @@ public class CourseServiceImpl implements CourseService {
     // Diff instructor list: preserve OWNER, update COLLABORATORs
     Set<UUID> requestedInstructorIds =
         requestedInstructors.stream()
-            .map(UpdateCourseInstructorRequest::getInstructorId)
+            .map(UpdateCourseInstructorRequestDto::getInstructorId)
             .collect(Collectors.toSet());
 
     // Remove collaborators not in the new list
@@ -302,7 +304,7 @@ public class CourseServiceImpl implements CourseService {
             .collect(Collectors.toSet());
 
     // Add new collaborators
-    for (UpdateCourseInstructorRequest req : requestedInstructors) {
+    for (UpdateCourseInstructorRequestDto req : requestedInstructors) {
       if (!existingInstructorIds.contains(req.getInstructorId())) {
         User collaboratorUser =
             userRepository
@@ -328,7 +330,7 @@ public class CourseServiceImpl implements CourseService {
   }
 
   private boolean collaboratorsChange(
-      Course course, List<UpdateCourseInstructorRequest> requestedInstructors) {
+      Course course, List<UpdateCourseInstructorRequestDto> requestedInstructors) {
     Set<UUID> currentCollaboratorIds =
         course.getCourseInstructors().stream()
             .filter(ci -> ci.getInstructorRole() == InstructorRoleEnum.COLLABORATOR)
@@ -336,7 +338,7 @@ public class CourseServiceImpl implements CourseService {
             .collect(Collectors.toSet());
     Set<UUID> requestedCollaboratorIds =
         requestedInstructors.stream()
-            .map(UpdateCourseInstructorRequest::getInstructorId)
+            .map(UpdateCourseInstructorRequestDto::getInstructorId)
             .collect(Collectors.toSet());
     return !currentCollaboratorIds.equals(requestedCollaboratorIds);
   }

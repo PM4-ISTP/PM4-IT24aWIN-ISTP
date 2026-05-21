@@ -30,13 +30,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.pm4.istp.course.db.CreateCourseInstructorRequest;
-import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.InstructorRoleEnum;
-import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
-import com.pm4.istp.course.db.UpdateCourseRequest;
+import com.pm4.istp.course.dto.CreateCourseInstructorRequestDto;
+import com.pm4.istp.course.dto.CreateCourseRequestDto;
+import com.pm4.istp.course.dto.UpdateCourseInstructorRequestDto;
+import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.Challenge;
@@ -167,14 +167,14 @@ class CourseServiceImplTest {
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    CreateCourseRequest request = new CreateCourseRequest(
+    CreateCourseRequestDto request = new CreateCourseRequestDto(
         "Secure Coding",
         "Intro",
         "Learn the secure coding basics.",
         CourseStatusEnum.DRAFT,
         null,
         null,
-        List.of(new CreateCourseInstructorRequest(collaboratorId, InstructorRoleEnum.COLLABORATOR)),
+        List.of(new CreateCourseInstructorRequestDto(collaboratorId, InstructorRoleEnum.COLLABORATOR)),
         McAttemptsMode.UNLIMITED);
 
     Course result = courseService.createCourse(ownerId, request);
@@ -221,7 +221,7 @@ class CourseServiceImplTest {
     when(courseInviteCodeHelper.saveNewCourseWithInviteCode(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    CreateCourseRequest request = new CreateCourseRequest(
+    CreateCourseRequestDto request = new CreateCourseRequestDto(
         "Private Secure Coding",
         "Intro",
         "Private practice course.",
@@ -318,14 +318,14 @@ class CourseServiceImplTest {
     oldCollaboratorRelation.setInstructor(oldCollaborator);
     course.addCourseInstructor(oldCollaboratorRelation);
 
-    UpdateCourseRequest updateRequest = new UpdateCourseRequest(
+    UpdateCourseRequestDto updateRequest = new UpdateCourseRequestDto(
         "Updated title",
         "Updated description",
         "Updated short description for the header.",
         CourseStatusEnum.PUBLIC,
         null,
         null,
-        List.of(new UpdateCourseInstructorRequest(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
+        List.of(new UpdateCourseInstructorRequestDto(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
         McAttemptsMode.UNLIMITED);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
@@ -376,8 +376,8 @@ class CourseServiceImplTest {
     collaboratorRelation.setInstructor(collaborator);
     course.addCourseInstructor(collaboratorRelation);
 
-    UpdateCourseRequest updateRequest =
-        new UpdateCourseRequest(
+    UpdateCourseRequestDto updateRequest =
+        new UpdateCourseRequestDto(
             "Collaborator update",
             "Updated by collaborator",
             "Updated short description",
@@ -385,7 +385,7 @@ class CourseServiceImplTest {
             "https://example.com/course.png",
             "Web-Security",
             List.of(
-                new UpdateCourseInstructorRequest(
+                new UpdateCourseInstructorRequestDto(
                     collaboratorId, InstructorRoleEnum.COLLABORATOR)),
             McAttemptsMode.ONCE);
 
@@ -430,8 +430,8 @@ class CourseServiceImplTest {
     collaboratorRelation.setInstructor(collaborator);
     course.addCourseInstructor(collaboratorRelation);
 
-    UpdateCourseRequest updateRequest =
-        new UpdateCourseRequest(
+    UpdateCourseRequestDto updateRequest =
+        new UpdateCourseRequestDto(
             "Collaborator publish",
             "Attempted publish",
             "Updated short description",
@@ -439,7 +439,7 @@ class CourseServiceImplTest {
             null,
             null,
             List.of(
-                new UpdateCourseInstructorRequest(
+                new UpdateCourseInstructorRequestDto(
                     collaboratorId, InstructorRoleEnum.COLLABORATOR)),
             McAttemptsMode.UNLIMITED);
 
@@ -479,8 +479,8 @@ class CourseServiceImplTest {
     collaboratorRelation.setInstructor(collaborator);
     course.addCourseInstructor(collaboratorRelation);
 
-    UpdateCourseRequest updateRequest =
-        new UpdateCourseRequest(
+    UpdateCourseRequestDto updateRequest =
+        new UpdateCourseRequestDto(
             "Collaborator update",
             "Attempted collaborator change",
             "Updated short description",
@@ -488,7 +488,7 @@ class CourseServiceImplTest {
             null,
             null,
             List.of(
-                new UpdateCourseInstructorRequest(
+                new UpdateCourseInstructorRequestDto(
                     newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
             McAttemptsMode.UNLIMITED);
 
@@ -796,7 +796,7 @@ class CourseServiceImplTest {
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    CreateCourseRequest request = new CreateCourseRequest(
+    CreateCourseRequestDto request = new CreateCourseRequestDto(
         "Solo Course",
         "Desc",
         "Short solo summary.",
@@ -865,7 +865,7 @@ class CourseServiceImplTest {
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    UpdateCourseRequest request = new UpdateCourseRequest(
+    UpdateCourseRequestDto request = new UpdateCourseRequestDto(
         "Title",
         "Desc",
         "Short summary.",
@@ -890,7 +890,7 @@ class CourseServiceImplTest {
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.empty());
 
-    UpdateCourseRequest request = new UpdateCourseRequest(
+    UpdateCourseRequestDto request = new UpdateCourseRequestDto(
         "Title",
         "Desc",
         "Short summary.",
@@ -2110,7 +2110,7 @@ class CourseServiceImplTest {
         .thenThrow(new InviteCodeGenerationException(
             "Could not generate a unique invite code after 10 attempts"));
 
-    CreateCourseRequest request = new CreateCourseRequest(
+    CreateCourseRequestDto request = new CreateCourseRequestDto(
         "Private Course",
         "Desc",
         null,
@@ -2148,7 +2148,7 @@ class CourseServiceImplTest {
         .thenThrow(new InviteCodeGenerationException(
             "Could not generate a unique invite code after 10 attempts"));
 
-    UpdateCourseRequest updateRequest = new UpdateCourseRequest(
+    UpdateCourseRequestDto updateRequest = new UpdateCourseRequestDto(
         "Updated title",
         "Updated description",
         null,

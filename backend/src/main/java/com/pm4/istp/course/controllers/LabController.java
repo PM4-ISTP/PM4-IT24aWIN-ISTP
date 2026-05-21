@@ -2,8 +2,6 @@ package com.pm4.istp.course.controllers;
 
 import static com.pm4.istp.shared.util.JwtUtil.parseUserId;
 
-import com.pm4.istp.course.db.CreateLabRequest;
-import com.pm4.istp.course.db.UpdateLabRequest;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.dto.ChallengeSubmissionRequestDto;
@@ -80,8 +78,7 @@ public class LabController {
       @AuthenticationPrincipal Jwt jwt,
       @Valid @RequestBody CreateLabRequestDto createLabRequestDto) {
     UUID userId = parseUserId(jwt);
-    CreateLabRequest request = labMapper.fromDto(createLabRequestDto);
-    Lab created = labService.createLab(userId, request);
+    Lab created = labService.createLab(userId, createLabRequestDto);
     CreateLabResponseDto responseDto = labMapper.toCreateResponseDto(created);
     return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
   }
@@ -143,8 +140,7 @@ public class LabController {
       @PathVariable UUID id,
       @Valid @RequestBody UpdateLabRequestDto updateLabRequestDto) {
     UUID userId = parseUserId(jwt);
-    UpdateLabRequest request = labMapper.fromDto(updateLabRequestDto);
-    Lab updated = labService.updateLab(userId, id, request);
+    Lab updated = labService.updateLab(userId, id, updateLabRequestDto);
     LabDetailResponseDto dto = labMapper.toDetailResponseDto(updated);
     dto.setCourseCount(updated.getCourseLabs().size());
     return ResponseEntity.ok(dto);
