@@ -63,6 +63,10 @@ async function assertUpcomingDeadlines(page: Page, visibleDeadlines: readonly De
   const actualHrefs = await page
     .locator('a[href*="/dashboard/courses/"][href*="/labs/"][href$="/play"]')
     .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
+  const hasNoOldActiveLab = await page.getByText("No active labs", { exact: true }).isVisible();
+  if (hasNoOldActiveLab === false) {
+    actualHrefs.pop(); // If active lab exist, ignore the href from the active lab.
+  }
   expect(actualHrefs).toEqual(expectedHrefs);
 
   for (const item of expectedOrder) {
