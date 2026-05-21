@@ -302,6 +302,8 @@ test("Admin can edit a lab using the admin dashboard.", async ({ page }) => {
   await loginAs(page, testUsers.admin);
   await clickNavbarButton(page, "Dashboard", "dashboard/admin", 1);
   await page.getByRole("tab", { name: "Labs" }).click();
+  await page.getByRole("textbox", { name: "Search" }).click();
+  await page.getByRole("textbox", { name: "Search" }).fill("E2E");
   await page
     .getByRole("row", { name: labUnderTest.title })
     .getByRole("button", { name: "Edit lab" })
