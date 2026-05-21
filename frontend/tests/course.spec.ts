@@ -42,7 +42,7 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   await page
     .getByRole("textbox")
     .filter({ hasText: "Add a description..." })
-    .press("ControlOrMeta+a");
+    .dblclick();
   await page
     .getByRole("textbox")
     .filter({ hasText: "Add a description..." })
@@ -56,7 +56,6 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
     .click();
   await page.locator("label").filter({ hasText: "Public" }).click();
   await page.locator("label").filter({ hasText: "Once" }).click();
-  await page.getByRole("button", { name: "Create Course" }).click();
   await clickButtonAndAssert(
     () => page.getByRole("button", { name: "Create Course" }),
     async () =>
