@@ -248,8 +248,8 @@ export function LabPlayView({
     const promptKey = `${pod.podName ?? labId}:${pod.expiresAt}:${pod.extensionCount ?? 0}`;
     if (keepAlivePromptKey === promptKey) return;
 
-    setKeepAlivePromptKey(promptKey);
     if (window.confirm("Your lab expires soon. Extend it by 30 minutes?")) {
+      setKeepAlivePromptKey(promptKey);
       void handleExtendPod();
     }
   }, [
