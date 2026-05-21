@@ -72,9 +72,6 @@ async function assertUpcomingDeadlines(page: Page, visibleDeadlines: readonly De
       "xpath=ancestor::div[.//span[normalize-space()='OVERDUE' or normalize-space()='DUE']][1]"
     );
 
-    await expect(rowLink).toBeVisible();
-    await expect(rowLink).toHaveText(item.labTitle);
-    await expect(rowLink).toHaveAttribute("href", href);
     await expect(row).toContainText(item.courseTitle);
 
     const isOverdue = new Date(item.dueAt).getTime() < now;

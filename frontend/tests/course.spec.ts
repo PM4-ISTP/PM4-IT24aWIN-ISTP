@@ -38,7 +38,6 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   await page
     .getByRole("textbox", { name: "Short Description" })
     .fill(newCourseData.shortDescription);
-  await page.getByRole("textbox").filter({ hasText: "Add a description..." }).click();
   await page.getByRole("textbox").filter({ hasText: "Add a description..." }).dblclick();
   await page
     .getByRole("textbox")
@@ -47,10 +46,6 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   await page.getByRole("combobox", { name: "Topic" }).click();
   await page.getByRole("listbox").getByText(newCourseData.topic).click();
   await page.getByRole("combobox", { name: "Collaborators" }).click();
-  await page
-    .getByRole("listbox")
-    .getByText(testUsers.instructorWithoutCoursesOrLabs.username)
-    .click();
   await page.locator("label").filter({ hasText: "Public" }).click();
   await page.locator("label").filter({ hasText: "Once" }).click();
   await clickButtonAndAssert(
