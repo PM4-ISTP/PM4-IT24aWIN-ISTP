@@ -71,6 +71,9 @@ jobs:
         run: npm run test:e2e -- --project=${{ inputs.project }}
         env:
           BASE_URL: http://localhost:3000
+          BACKEND_URL: https://istp-staging.pm4.init-lab.ch
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           E2E_ADMIN_USERNAME: ${{ secrets.E2E_ADMIN_USERNAME }}
           E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
           E2E_INSTRUCTOR_USERNAME: ${{ secrets.E2E_INSTRUCTOR_USERNAME }}

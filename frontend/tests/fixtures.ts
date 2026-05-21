@@ -8,11 +8,16 @@ const databaseCredentials = {
 
 async function callTestingEndpoint(path: string) {
   const url = new URL(path, backendUrl);
-  const response = await fetch(url.toString(), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(databaseCredentials),
-  });
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(databaseCredentials),
+    });
+  } catch (error) {
+    throw new Error(`Testing endpoint is unreachable: ${url.toString()}`, { cause: error });
+  }
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Testing endpoint failed (${response.status} ${response.statusText}): ${body}`);
