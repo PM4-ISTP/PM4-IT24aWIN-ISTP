@@ -39,10 +39,7 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
     .getByRole("textbox", { name: "Short Description" })
     .fill(newCourseData.shortDescription);
   await page.getByRole("textbox").filter({ hasText: "Add a description..." }).click();
-  await page
-    .getByRole("textbox")
-    .filter({ hasText: "Add a description..." })
-    .dblclick();
+  await page.getByRole("textbox").filter({ hasText: "Add a description..." }).dblclick();
   await page
     .getByRole("textbox")
     .filter({ hasText: "Add a description..." })
