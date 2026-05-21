@@ -2,11 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Avatar, Button, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Avatar, Group, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useAsyncAction } from "@/src/shared/hooks/useAsyncAction";
+import { useApiClient } from "@/src/shared/lib/api/client";
+import { apiErrorText } from "@/src/shared/lib/api";
 import { httpUrlValidator } from "@/src/shared/lib/validation";
+import PageHeader from "@/src/shared/components/PageHeader";
+import AppButton from "@/src/shared/components/AppButton";
+import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
 
 type UserProfile = {
   id: string;
@@ -30,6 +35,7 @@ export const dynamic = "force-dynamic";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const client = useApiClient();
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [statusMessage, setStatusMessage] = useState<{
@@ -63,12 +69,11 @@ export default function ProfilePage() {
     setLoadingProfile(true);
     try {
       setStatusMessage(null);
-      const res = await fetch("/api/backend/api/v1/users/me/profile", { cache: "no-store" });
-      if (!res.ok) {
-        throw new Error(await safeErrorMessage(res));
+      const { data, error } = await client.GET("/api/v1/users/me/profile");
+      if (error || !data) {
+        throw new Error(apiErrorText(error) ?? "Could not load profile");
       }
-      const data = (await res.json()) as UserProfile;
-      setProfile(data);
+      setProfile(data as UserProfile);
       formRef.current.setValues({
         firstName: data.firstName ?? "",
         lastName: data.lastName ?? "",
@@ -88,7 +93,7 @@ export default function ProfilePage() {
     } finally {
       setLoadingProfile(false);
     }
-  }, []);
+  }, [client]);
 
   useEffect(() => {
     void loadProfile();
@@ -104,15 +109,11 @@ export default function ProfilePage() {
         pictureUrl: values.pictureUrl?.trim() || undefined,
       };
 
-      const res = await fetch("/api/backend/api/v1/users/me/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        throw new Error(await safeErrorMessage(res));
+      const { data, error } = await client.PUT("/api/v1/users/me/profile", { body: payload });
+      if (error || !data) {
+        throw new Error(apiErrorText(error) ?? "Could not update profile");
       }
-      return (await res.json()) as UserProfile;
+      return data as UserProfile;
     },
     {
       id: "user-profile-save",
@@ -141,30 +142,9 @@ export default function ProfilePage() {
 
   return (
     <Stack p="xl" gap="xl" style={{ maxWidth: 720 }}>
-      <div>
-        <Title
-          order={1}
-          style={{
-            color: "#f1f5f9",
-            fontFamily: "var(--font-space-grotesk), sans-serif",
-            fontWeight: 700,
-          }}
-        >
-          Profile
-        </Title>
-        <Text style={{ color: "#94a3b8" }} mt={4}>
-          Update your name, title, and profile picture URL.
-        </Text>
-      </div>
+      <PageHeader title="Profile" subtitle="Update your name, title, and profile picture URL." />
 
-      <Paper
-        p="lg"
-        radius="md"
-        style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
+      <SurfaceCard variant="default" padding="1.5rem">
         <Group gap="md" align="center">
           <Avatar radius="xl" size={56} src={form.values.pictureUrl || undefined}>
             {displayName
@@ -224,34 +204,13 @@ export default function ProfilePage() {
             ) : null}
 
             <Group justify="flex-end" mt="xs">
-              <Button
-                type="submit"
-                loading={submitAction.loading}
-                disabled={loadingProfile}
-                radius="md"
-                style={{
-                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                  border: "none",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 600,
-                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                }}
-              >
+              <AppButton type="submit" loading={submitAction.loading} disabled={loadingProfile}>
                 Save changes
-              </Button>
+              </AppButton>
             </Group>
           </Stack>
         </form>
-      </Paper>
+      </SurfaceCard>
     </Stack>
   );
-}
-
-async function safeErrorMessage(res: Response): Promise<string> {
-  try {
-    const data = (await res.json()) as { error?: string };
-    return data?.error || res.statusText || `HTTP ${res.status}`;
-  } catch {
-    return res.statusText || `HTTP ${res.status}`;
-  }
 }

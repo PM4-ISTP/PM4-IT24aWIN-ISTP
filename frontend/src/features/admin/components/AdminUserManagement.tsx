@@ -18,6 +18,9 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
+import AppButton from "@/src/shared/components/AppButton";
+import { useApiClient } from "@/src/shared/lib/api/client";
+import { apiErrorText } from "@/src/shared/lib/api";
 
 type CreateUserPayload = {
   email: string;
@@ -57,6 +60,7 @@ type AdminActiveSessionResponse = {
 
 export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdminUrl?: string }) {
   const router = useRouter();
+  const client = useApiClient();
   const [created, setCreated] = useState<CreateUserResponse | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
   const [listQuery, setListQuery] = useState("");
@@ -93,31 +97,44 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
     },
   });
 
-  const loadUsers = useCallback(async (queryValue: string) => {
-    try {
-      setLoadingUsers(true);
-      const query = queryValue.trim();
-      const url = new URL("/api/backend/api/admin/users/directory", window.location.origin);
-      if (query) url.searchParams.set("q", query);
-      url.searchParams.set("first", "0");
-      url.searchParams.set("max", "50");
-
-      const res = await fetch(url.toString(), { cache: "no-store" });
-      if (!res.ok) {
-        throw new Error(await safeErrorMessage(res));
+  const loadUsers = useCallback(
+    async (queryValue: string) => {
+      try {
+        setLoadingUsers(true);
+        const query = queryValue.trim();
+        const { data, error } = await client.GET("/api/admin/users/directory", {
+          params: { query: { q: query || undefined, first: 0, max: 50 } },
+        });
+        if (error) {
+          throw new Error(apiErrorText(error) ?? "Failed to load users");
+        }
+        // The schema marks most DTO fields as optional. Map to the internal
+        // shape so the UI does not depend on enabled/provisioned being undefined.
+        const safe: AdminUserListResponse = (data ?? []).flatMap((dto) =>
+          typeof dto.id === "string"
+            ? [
+                {
+                  ...dto,
+                  id: dto.id,
+                  enabled: !!dto.enabled,
+                  provisioned: !!dto.provisioned,
+                },
+              ]
+            : []
+        );
+        setUsers(safe);
+      } catch (e) {
+        notifications.show({
+          title: "Error",
+          message: "Failed to load users: " + (e as Error).message,
+          color: "red",
+        });
+      } finally {
+        setLoadingUsers(false);
       }
-      const data = (await res.json()) as AdminUserListResponse;
-      setUsers(data);
-    } catch (e) {
-      notifications.show({
-        title: "Error",
-        message: "Failed to load users: " + (e as Error).message,
-        color: "red",
-      });
-    } finally {
-      setLoadingUsers(false);
-    }
-  }, []);
+    },
+    [client]
+  );
 
   const formatEpoch = (value?: number) => {
     if (!value) return "-";
@@ -163,18 +180,17 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
         pictureUrl: values.pictureUrl?.trim() || undefined,
       };
 
-      const res = await fetch("/api/backend/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const { data, error } = await client.POST("/api/admin/users", {
+        body: payload,
         signal: abortController.signal,
       });
-      if (!res.ok) {
-        const msg = await safeErrorMessage(res);
-        throw new Error(msg);
+      if (error || !data) {
+        throw new Error(apiErrorText(error) ?? "Failed to create user");
       }
-      const data = (await res.json()) as CreateUserResponse;
-      setCreated(data);
+      if (typeof data.userId !== "string" || typeof data.temporaryPassword !== "string") {
+        throw new Error("Server returned an incomplete create-user response");
+      }
+      setCreated({ userId: data.userId, temporaryPassword: data.temporaryPassword });
 
       if (slowNotificationShown) {
         notifications.update({
@@ -229,10 +245,12 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
   const loadActiveSessions = async () => {
     try {
       setLoadingActiveSessions(true);
-      const res = await fetch("/api/backend/api/admin/sessions", { cache: "no-store" });
-      if (!res.ok) throw new Error(await safeErrorMessage(res));
-      const data = (await res.json()) as AdminActiveSessionResponse;
-      setActiveSessions(data);
+      const { data, error } = await client.GET("/api/admin/sessions");
+      if (error) throw new Error(apiErrorText(error) ?? "Failed to load active sessions");
+      const safe: AdminActiveSessionResponse = (data ?? []).flatMap((s) =>
+        typeof s.sessionId === "string" ? [{ ...s, sessionId: s.sessionId }] : []
+      );
+      setActiveSessions(safe);
     } catch (e) {
       notifications.show({
         title: "Error",
@@ -249,10 +267,10 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
     if (!id) return;
     try {
       setLoggingOutSessionId(id);
-      const res = await fetch(`/api/backend/api/admin/sessions/${encodeURIComponent(id)}`, {
-        method: "DELETE",
+      const { error } = await client.DELETE("/api/admin/sessions/{sessionId}", {
+        params: { path: { sessionId: id } },
       });
-      if (!res.ok) throw new Error(await safeErrorMessage(res));
+      if (error) throw new Error(apiErrorText(error) ?? "Failed to logout session");
       notifications.show({ title: "Done", message: "Session logged out.", color: "green" });
       void loadActiveSessions();
     } catch (e) {
@@ -335,13 +353,9 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
                   }}
                   disabled={loadingUsers}
                 />
-                <Button
-                  onClick={() => void loadUsers(listQuery)}
-                  radius="md"
-                  loading={loadingUsers}
-                >
+                <AppButton onClick={() => void loadUsers(listQuery)} loading={loadingUsers}>
                   Search
-                </Button>
+                </AppButton>
               </Group>
 
               <ScrollArea h="max(560px, calc(100vh - 340px))">
@@ -441,7 +455,7 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
       </Tabs.Panel>
 
       <Tabs.Panel value="create">
-        <Stack gap="lg">
+        <Stack gap="lg" style={{ maxWidth: 720, marginInline: "auto", width: "100%" }}>
           {creatingUser ? (
             <Paper
               p="md"
@@ -571,20 +585,9 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
               </Group>
 
               <Group justify="flex-end" mt="xs">
-                <Button
-                  type="submit"
-                  loading={creatingUser}
-                  radius="md"
-                  style={{
-                    background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                    border: "none",
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
-                    fontWeight: 600,
-                    boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                  }}
-                >
+                <AppButton type="submit" loading={creatingUser}>
                   Create user
-                </Button>
+                </AppButton>
               </Group>
             </Stack>
           </form>
@@ -611,13 +614,12 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
                     Shows Keycloak sessions for the configured app client.
                   </Text>
                 </div>
-                <Button
+                <AppButton
                   onClick={() => void loadActiveSessions()}
-                  radius="md"
                   loading={loadingActiveSessions}
                 >
                   Refresh
-                </Button>
+                </AppButton>
               </Group>
 
               <ScrollArea h="max(560px, calc(100vh - 340px))">
@@ -699,6 +701,7 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.08)",
             maxWidth: 720,
+            marginInline: "auto",
           }}
         >
           <Stack gap="sm">
@@ -755,13 +758,4 @@ export default function AdminUserManagement({ keycloakAdminUrl }: { keycloakAdmi
       </Tabs.Panel>
     </Tabs>
   );
-}
-
-async function safeErrorMessage(res: Response): Promise<string> {
-  try {
-    const data = (await res.json()) as { error?: string; message?: string };
-    return data?.error || data?.message || res.statusText || `HTTP ${res.status}`;
-  } catch {
-    return res.statusText || `HTTP ${res.status}`;
-  }
 }

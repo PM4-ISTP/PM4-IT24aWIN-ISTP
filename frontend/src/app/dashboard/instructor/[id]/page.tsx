@@ -7,7 +7,6 @@ import {
   ActionIcon,
   Alert,
   Box,
-  Button,
   Container,
   Grid,
   GridCol,
@@ -27,6 +26,11 @@ import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
 import { CoursePeoplePanel } from "@/src/features/course/components/people/CoursePeoplePanel";
 import MyEditor from "@/src/shared/components/MyEditor";
 import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
+import AppButton from "@/src/shared/components/AppButton";
+import {
+  CourseVisibilityField,
+  CourseMcAttemptsField,
+} from "@/src/features/course/components/management/CourseSettingsFields";
 import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
 import { CourseInviteCodePanel } from "@/src/features/course/components/management/CourseInviteCodePanel";
 import {
@@ -52,6 +56,7 @@ import {
   type CourseLabEntry,
 } from "@/src/features/course/components/management/CourseLabManager";
 import { updateCourseLabs } from "@/src/features/course/actions/labs";
+import { useApiClient } from "@/src/shared/lib/api/client";
 import BadgeDesigner, { type BadgeConfig } from "@/src/features/badge/components/BadgeDesigner";
 
 const OWNER_ROLE: InstructorRoleEnum = "OWNER";
@@ -72,6 +77,7 @@ export default function EditCourse() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const courseId = params.id;
+  const client = useApiClient();
   const { data: session } = useSession();
   const currentUserId = session?.userId;
 
@@ -238,22 +244,28 @@ export default function EditCourse() {
     }
 
     if (badgeConfig) {
-      await fetch(`/api/backend/api/v1/courses/${courseId}/badge`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          primaryColor: badgeConfig.primaryColor,
-          textColor: badgeConfig.textColor,
-          template: badgeConfig.template,
-          badgeIcon: badgeConfig.badgeIcon,
-          badgeEnabled: badgeConfig.badgeEnabled,
-        }),
-      }).catch(() => {});
+      await client
+        .PUT("/api/v1/courses/{courseId}/badge", {
+          params: { path: { courseId } },
+          body: {
+            primaryColor: badgeConfig.primaryColor,
+            textColor: badgeConfig.textColor,
+            template: badgeConfig.template,
+            badgeIcon: badgeConfig.badgeIcon,
+            badgeEnabled: badgeConfig.badgeEnabled,
+          },
+        })
+        .catch(() => {});
     }
 
     setInviteCode(result.data.inviteCode ?? null);
     router.refresh();
-    router.push("/dashboard/instructor");
+    notifications.show({
+      id: "course-saved",
+      color: "teal",
+      title: "Saved",
+      message: "Course updated.",
+    });
   }
 
   async function handleDelete() {
@@ -390,22 +402,11 @@ export default function EditCourse() {
             </Alert>
           )}
           <Group justify="flex-end" gap="sm">
-            <Button
-              variant="outline"
-              radius="md"
-              onClick={closeDelete}
-              disabled={isDeleting}
-              style={{
-                borderColor: "rgba(255,255,255,0.12)",
-                color: "#e2e8f0",
-                background: "rgba(255,255,255,0.04)",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-              }}
-            >
+            <AppButton tone="ghost" onClick={closeDelete} disabled={isDeleting}>
               Cancel
-            </Button>
-            <Button
-              color="red"
+            </AppButton>
+            <AppButton
+              tone="danger"
               loading={isDeleting}
               disabled={isDeleting}
               onClick={() => {
@@ -413,7 +414,7 @@ export default function EditCourse() {
               }}
             >
               Delete Course
-            </Button>
+            </AppButton>
           </Group>
         </Stack>
       </Modal>
@@ -447,15 +448,9 @@ export default function EditCourse() {
             </Stack>
           </Group>
           {isOwner && (
-            <Button
-              color="red"
-              variant="light"
-              leftSection={<IconTrash size={16} />}
-              onClick={openDelete}
-              radius="md"
-            >
+            <AppButton tone="danger" leftSection={<IconTrash size={16} />} onClick={openDelete}>
               Delete Course
-            </Button>
+            </AppButton>
           )}
         </Group>
 
@@ -541,44 +536,13 @@ export default function EditCourse() {
                   disabled={!isOwner}
                 />
 
-                <Select
-                  label="Visibility"
+                <CourseVisibilityField
                   value={visibility}
-                  onChange={(value) => {
-                    if (value) {
-                      setVisibility(value as CourseVisibility);
-                    }
-                  }}
-                  data={[
-                    { value: "DRAFT", label: "Draft (only instructors can view)" },
-                    { value: "PUBLIC", label: "Public (visible in catalog)" },
-                    { value: "PRIVATE", label: "Private (invite code only)" },
-                  ]}
-                  description="Choose exactly one state. Draft keeps it hidden, Public shows in catalog, Private is join-by-code only."
-                  allowDeselect={false}
+                  onChange={setVisibility}
                   disabled={!isOwner}
                 />
 
-                <Select
-                  label="Multiple-Choice Attempts"
-                  value={mcAttemptsMode}
-                  onChange={(value) => {
-                    if (value) setMcAttemptsMode(value);
-                  }}
-                  data={[
-                    {
-                      value: "UNLIMITED",
-                      label: "Unlimited — retry until correct (self-learning)",
-                    },
-                    {
-                      value: "ONCE",
-                      label:
-                        "Once — one attempt, graded regardless of correctness (Praktikum / exam)",
-                    },
-                  ]}
-                  description="Controls how many times students can attempt MC questions in this course."
-                  allowDeselect={false}
-                />
+                <CourseMcAttemptsField value={mcAttemptsMode} onChange={setMcAttemptsMode} />
 
                 <CourseLabManager labs={courseLabs} onChange={setCourseLabs} />
 
@@ -601,23 +565,15 @@ export default function EditCourse() {
                   </Alert>
                 )}
 
-                <Button
-                  radius="md"
+                <AppButton
                   loading={isSubmitting}
                   disabled={isSubmitting}
                   onClick={() => {
                     void handleSubmit();
                   }}
-                  style={{
-                    background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                    border: "none",
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
-                    fontWeight: 600,
-                    boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                  }}
                 >
                   Save Changes
-                </Button>
+                </AppButton>
               </Stack>
             </SurfaceCard>
           </GridCol>

@@ -1,22 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Box, Button, Group, Stack, Text } from "@mantine/core";
+import { Box, Group, Stack, Text } from "@mantine/core";
 import { IconBook2, IconClock, IconTrophy, IconChevronRight } from "@tabler/icons-react";
 import WelcomeTitle from "./WelcomeTitle";
 import { useRouter } from "next/navigation";
 import TrophyCabinet from "@/src/features/badge/components/TrophyCabinet";
 import { getTotalSecondsOnline, formatTimeOnline } from "./TimeTracker";
 import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
-
-const statLabelStyle: React.CSSProperties = {
-  fontFamily: "var(--font-space-grotesk), sans-serif",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  fontSize: "0.7rem",
-  fontWeight: 700,
-  color: "rgba(255,255,255,0.4)",
-};
+import SectionLabel from "@/src/shared/components/SectionLabel";
+import AppButton from "@/src/shared/components/AppButton";
 
 export default function DashboardHero({
   firstName,
@@ -75,7 +68,7 @@ export default function DashboardHero({
         padding="2rem 2.5rem"
         style={{ position: "relative", overflow: "hidden" }}
       >
-        {/* Subtle blue accent glow */}
+        {/* Subtle brand accent glow */}
         <Box
           style={{
             position: "absolute",
@@ -84,7 +77,7 @@ export default function DashboardHero({
             width: 220,
             height: 220,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(96,165,250,0.10) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(93,110,240,0.14) 0%, transparent 70%)",
             pointerEvents: "none",
           }}
         />
@@ -98,7 +91,7 @@ export default function DashboardHero({
         >
           {/* Left: welcome text + buttons */}
           <Stack gap={8} style={{ flex: 1, minWidth: 0 }}>
-            <Text style={statLabelStyle}>{dateStr}</Text>
+            <SectionLabel>{dateStr}</SectionLabel>
             <WelcomeTitle firstName={firstName} />
             <Text
               style={{
@@ -111,52 +104,33 @@ export default function DashboardHero({
               Here&apos;s an overview of your learning progress.
             </Text>
             <Group mt={8} gap="sm">
-              <Button
+              <AppButton
                 onClick={() => router.push("/dashboard/catalog")}
                 size="md"
-                radius="md"
                 rightSection={<IconChevronRight size={15} />}
-                style={{
-                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                  border: "none",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 600,
-                  letterSpacing: "0.02em",
-                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                }}
               >
                 Browse Courses
-              </Button>
-              <Button
+              </AppButton>
+              <AppButton
+                tone="ghost"
                 size="md"
-                radius="md"
                 onClick={() => setCabinetOpen(true)}
                 leftSection={<span style={{ fontSize: 16 }}>🏆</span>}
-                style={{
-                  borderColor: "rgba(255,255,255,0.12)",
-                  color: "#e2e8f0",
-                  background: "rgba(255,255,255,0.04)",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 600,
-                }}
-                variant="outline"
               >
                 My Badges
-              </Button>
+              </AppButton>
             </Group>
           </Stack>
 
           {/* Right: inline hero stats */}
           <Stack gap="sm" className="dashboard-hero-stats" style={{ flexShrink: 0, minWidth: 220 }}>
             {heroStats.map(({ icon, label, value }) => (
-              <Box
+              <SurfaceCard
                 key={label}
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 10,
-                  padding: "0.75rem 1rem",
-                }}
+                variant="strong"
+                elevation="sm"
+                radius="sm"
+                padding="0.75rem 1rem"
               >
                 <Group gap="sm" wrap="nowrap">
                   <Box
@@ -164,24 +138,24 @@ export default function DashboardHero({
                       width: 36,
                       height: 36,
                       borderRadius: 8,
-                      background: "rgba(96,165,250,0.1)",
+                      background: "rgba(93,110,240,0.12)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: "#60a5fa",
+                      color: "#5d6ef0",
                       flexShrink: 0,
                     }}
                   >
                     {icon}
                   </Box>
                   <Stack gap={1}>
-                    <Text style={statLabelStyle}>{label}</Text>
+                    <SectionLabel>{label}</SectionLabel>
                     <Text fw={700} size="lg" style={{ color: "#f1f5f9", lineHeight: 1.1 }}>
                       {value}
                     </Text>
                   </Stack>
                 </Group>
-              </Box>
+              </SurfaceCard>
             ))}
           </Stack>
         </Group>

@@ -2,18 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ActionIcon,
-  Alert,
-  Box,
-  Button,
-  Container,
-  Group,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { ActionIcon, Alert, Box, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconArrowLeft } from "@tabler/icons-react";
+import AppButton from "@/src/shared/components/AppButton";
 import {
   LabFormFields,
   type ChallengeFormValues,
@@ -124,7 +115,7 @@ export default function CreateLab() {
     }
 
     router.refresh();
-    router.push("/dashboard/instructor/labs");
+    router.push(`/dashboard/instructor/labs/${result.data.id}`);
   }
 
   return (
@@ -188,8 +179,7 @@ export default function CreateLab() {
               </Alert>
             )}
 
-            <Button
-              radius="md"
+            <AppButton
               loading={isSubmitting}
               disabled={
                 isSubmitting ||
@@ -199,16 +189,9 @@ export default function CreateLab() {
               onClick={() => {
                 void handleSubmit();
               }}
-              style={{
-                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                border: "none",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-              }}
             >
               Create Lab
-            </Button>
+            </AppButton>
           </Stack>
         </Box>
       </Stack>

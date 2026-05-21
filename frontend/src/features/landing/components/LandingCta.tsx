@@ -5,10 +5,10 @@ import { Box, Container, Group, Paper, Stack, Text, Title } from "@mantine/core"
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import GradientText from "./parts/GradientText";
+import GradientText from "@/src/shared/components/brand/GradientText";
 import GitHubIcon from "./parts/GitHubIcon";
-import Kicker from "./parts/Kicker";
-import LandingButton from "./parts/LandingButton";
+import Kicker from "@/src/shared/components/brand/Kicker";
+import AppButton from "@/src/shared/components/AppButton";
 import useSignInToDashboard from "../hooks/useSignInToDashboard";
 import { addMotion } from "../hooks/useScrollAnimations";
 import { INK, INK_DIM, LINE_2 } from "../theme";
@@ -101,14 +101,14 @@ export default function LandingCta() {
               no per-seat pricing, no student data leaving campus.
             </Text>
             <Group className="cta-buttons" gap={12} justify="center" wrap="wrap" w="100%" maw={520}>
-              <LandingButton
+              <AppButton
                 size="md"
                 onClick={handleSignIn}
                 style={{ padding: "14px 22px", fontSize: 15 }}
               >
                 Sign up — it&apos;s free
-              </LandingButton>
-              <LandingButton
+              </AppButton>
+              <AppButton
                 tone="ghost"
                 size="md"
                 href="https://github.com/PM4-ISTP/PM4-IT24aWIN-ISTP"
@@ -116,7 +116,7 @@ export default function LandingCta() {
                 leftSection={<GitHubIcon />}
               >
                 Go to GitHub ↗
-              </LandingButton>
+              </AppButton>
             </Group>
           </Stack>
         </Paper>

@@ -1161,12 +1161,6 @@ public class CourseService {
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
 
-    if (course.getStatus() != CourseStatusEnum.PRIVATE) {
-      throw new CourseAccessDeniedException(
-          String.format(
-              "Course '%s' is not private; invite code regeneration is disabled", courseId));
-    }
-
     course.setInviteCode(courseInviteCodeHelper.generateAndAssign(courseId));
     return course;
   }

@@ -1,5 +1,5 @@
 "use client";
-import { Avatar, Group, Menu, Text, UnstyledButton } from "@mantine/core";
+import { Avatar, Box, Group, Menu, Text, UnstyledButton } from "@mantine/core";
 import Link from "next/link";
 import { ROLES } from "@/src/shared/lib/roles";
 
@@ -39,18 +39,18 @@ export default function UserMenu({ name, roles, image }: UserMenuProps) {
     <Menu shadow="md" width={220} position="bottom-end">
       <Menu.Target>
         <UnstyledButton aria-label="Open user menu" data-testid="user-menu-trigger">
-          <Group gap="sm">
+          <Group gap="sm" wrap="nowrap">
             <Avatar radius="xl" color={roleColor} src={image ?? undefined}>
               {initials}
             </Avatar>
-            <div style={{ lineHeight: 1.2 }}>
+            <Box visibleFrom="sm" style={{ lineHeight: 1.2 }}>
               <Text size="sm" fw={600} style={{ color: "#e2e8f0" }}>
                 {name}
               </Text>
               <Text size="xs" c={roleColor}>
                 {roleLabel}
               </Text>
-            </div>
+            </Box>
           </Group>
         </UnstyledButton>
       </Menu.Target>

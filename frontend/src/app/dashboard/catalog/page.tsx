@@ -1,7 +1,9 @@
-import { Stack, Text, Title } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { fetchCourseTopics, fetchPublishedCourses } from "@/src/features/course/actions/courses";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import NotifyOnMount from "@/src/shared/components/NotifyOnMount";
+import PageHeader from "@/src/shared/components/PageHeader";
+import JoinCourseButton from "@/src/features/course/components/enrollment/JoinCourseButton";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 import CatalogFilters from "@/src/app/dashboard/catalog/CatalogFilters";
 
@@ -22,22 +24,11 @@ export default async function CatalogPage(props: {
 
   return (
     <Stack p="xl" gap="lg">
-      <div>
-        <Title
-          order={1}
-          size="h2"
-          style={{
-            color: "#f1f5f9",
-            fontFamily: "var(--font-space-grotesk), sans-serif",
-            fontWeight: 700,
-          }}
-        >
-          Browse Catalog
-        </Title>
-        <Text size="sm" style={{ color: "#94a3b8" }} mt={4}>
-          Explore all published courses. Search by title or topic.
-        </Text>
-      </div>
+      <PageHeader
+        title="Browse Catalog"
+        subtitle="Explore all published courses. Search by title or topic."
+        action={<JoinCourseButton size="sm" />}
+      />
 
       <CatalogFilters query={query} topic={topic} topics={topics} />
 

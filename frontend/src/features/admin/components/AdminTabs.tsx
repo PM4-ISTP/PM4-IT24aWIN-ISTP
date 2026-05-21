@@ -25,16 +25,8 @@ export default function AdminTabs({ initialConfig }: AdminTabsProps) {
   return (
     <Tabs
       defaultValue="config"
-      style={{ maxWidth: 1100, width: "100%" }}
-      styles={{
-        tab: {
-          color: "#94a3b8",
-          fontFamily: "var(--font-space-grotesk), sans-serif",
-          fontWeight: 600,
-          "&[data-active]": { color: "#e2e8f0" },
-        },
-        tabLabel: { fontSize: "0.95rem" },
-      }}
+      style={{ maxWidth: 1400, width: "100%" }}
+      styles={{ tabLabel: { fontSize: "0.95rem" } }}
     >
       <Tabs.List mb="lg">
         <Tabs.Tab value="config">Platform Config</Tabs.Tab>
@@ -62,7 +54,7 @@ export default function AdminTabs({ initialConfig }: AdminTabsProps) {
       </Tabs.Panel>
 
       <Tabs.Panel value="topics">
-        <Box style={{ ...cardStyle, maxWidth: 720 }}>
+        <Box style={{ ...cardStyle, maxWidth: 720, margin: "0 auto" }}>
           <AdminTopicManagement />
         </Box>
       </Tabs.Panel>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ColorInput, Group, SimpleGrid, Stack, Switch, Text, Title } from "@mantine/core";
+import { useApiClient } from "@/src/shared/lib/api/client";
 import BadgeSvg from "./BadgeSvg";
 
 const BG_SWATCHES = [
@@ -90,6 +91,7 @@ function TemplateCard({
 }
 
 export default function BadgeDesigner({ courseId, onChange }: Props) {
+  const client = useApiClient();
   const [config, setConfig] = useState<BadgeConfig>({
     primaryColor: "#4f46e5",
     textColor: "#ffffff",
@@ -100,9 +102,10 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
   });
 
   useEffect(() => {
-    void fetch(`/api/backend/api/v1/courses/${courseId}/badge`)
-      .then((r) => r.json())
-      .then((data: BadgeConfig) => {
+    void client
+      .GET("/api/v1/courses/{courseId}/badge", { params: { path: { courseId } } })
+      .then(({ data }) => {
+        if (!data) return;
         const loaded: BadgeConfig = {
           primaryColor: data.primaryColor ?? "#4f46e5",
           textColor: data.textColor ?? "#ffffff",
@@ -115,7 +118,7 @@ export default function BadgeDesigner({ courseId, onChange }: Props) {
         onChange(loaded);
       })
       .catch(() => {});
-  }, [courseId, onChange]);
+  }, [client, courseId, onChange]);
 
   const update = (patch: Partial<BadgeConfig>) => {
     setConfig((prev) => {

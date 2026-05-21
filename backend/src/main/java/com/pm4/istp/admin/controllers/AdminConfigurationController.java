@@ -3,6 +3,13 @@ package com.pm4.istp.admin.controllers;
 import com.pm4.istp.admin.dto.AdminConfigRequest;
 import com.pm4.istp.admin.dto.AdminConfigResponse;
 import com.pm4.istp.admin.services.AdminConfigurationService;
+import com.pm4.istp.shared.dto.ErrorDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.Base64;
 import java.util.Map;
@@ -19,6 +26,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+@Tag(
+    name = "Admin Configuration",
+    description = "Administrative endpoints for the Kubernetes/platform configuration")
 @RestController
 @RequestMapping(path = "/api/admin/config")
 public class AdminConfigurationController {
@@ -32,13 +42,26 @@ public class AdminConfigurationController {
     this.adminConfigurationService = adminConfigurationService;
   }
 
-  /**
-   * Uploads a kubeconfig file (base64-encoded) and stores admin configuration in the database.
-   *
-   * @param request the admin config request containing base64-encoded kubeconfig and optional
-   *     limits
-   * @return ResponseEntity containing the stored AdminConfigResponse
-   */
+  @Operation(
+      summary = "Create the platform configuration",
+      description =
+          "Uploads a base64-encoded kubeconfig together with optional pod resource limits and"
+              + " stores the initial admin configuration.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Configuration created successfully",
+            content = @Content(schema = @Schema(implementation = AdminConfigResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Missing kubeconfig, invalid base64, or file exceeds the 1 MB limit",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Unexpected server error",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @PostMapping
   public ResponseEntity<AdminConfigResponse> uploadAndStoreAdminConfig(
       @Valid @RequestBody AdminConfigRequest request) {
@@ -79,6 +102,18 @@ public class AdminConfigurationController {
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
+  @Operation(
+      summary = "Get the platform configuration",
+      description =
+          "Returns the current admin configuration. When none is stored yet, a response with"
+              + " kubeconfigUploaded=false and empty limits is returned.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Configuration retrieved successfully",
+            content = @Content(schema = @Schema(implementation = AdminConfigResponse.class)))
+      })
   @GetMapping
   public ResponseEntity<AdminConfigResponse> getAdminConfig() {
     Optional<com.pm4.istp.admin.db.AdminConfig> config =
@@ -100,6 +135,22 @@ public class AdminConfigurationController {
     }
   }
 
+  @Operation(
+      summary = "Update the platform configuration",
+      description =
+          "Updates the pod resource limits and optionally replaces the kubeconfig. Omitting the"
+              + " kubeconfig keeps the previously stored one.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Configuration updated successfully",
+            content = @Content(schema = @Schema(implementation = AdminConfigResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid base64 kubeconfig or file exceeds the 1 MB limit",
+            content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+      })
   @PutMapping
   public ResponseEntity<AdminConfigResponse> updateAdminConfig(
       @Valid @RequestBody AdminConfigRequest request) {
@@ -139,6 +190,13 @@ public class AdminConfigurationController {
     return ResponseEntity.ok(response);
   }
 
+  @Operation(
+      summary = "Delete the platform configuration",
+      description = "Removes the stored admin configuration, including the kubeconfig.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Configuration deleted successfully")
+      })
   @DeleteMapping
   public ResponseEntity<Map<String, String>> deleteAdminConfig() {
     adminConfigurationService.deleteAdminConfiguration();
