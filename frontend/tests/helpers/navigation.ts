@@ -4,18 +4,8 @@ export async function clickButtonAndAssert(
   locateButton: () => Locator,
   assert: () => Promise<void>
 ) {
-  let clickSuccessful = false;
-  let tries = 0;
-  while (clickSuccessful === false && tries < 5) {
-    try {
-      await locateButton().click({ timeout: 5000 });
-      await assert();
-      clickSuccessful = true;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      tries++;
-    }
-  }
+  await locateButton().click({ timeout: 5000 });
+  await assert();
 }
 
 export async function clickButtonAndAssertUrl(
