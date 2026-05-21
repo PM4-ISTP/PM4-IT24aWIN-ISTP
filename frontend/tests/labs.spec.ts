@@ -74,7 +74,6 @@ async function openCourseFromMyCourses(page: Page, course: Course) {
 async function openLabFromCourse(page: Page, course: Course, lab: Lab) {
   const locateActionButton = () => page.getByTestId("course-enrollment-action");
   await expect(locateActionButton()).toHaveText("Continue Course");
-  await locateActionButton().click();
   await clickButtonAndAssertUrl(
     page,
     locateActionButton,
