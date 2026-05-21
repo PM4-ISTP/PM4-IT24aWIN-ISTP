@@ -80,6 +80,8 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   await page.getByRole("textbox", { name: "Course Title" }).press("ControlOrMeta+a");
   await page.getByRole("textbox", { name: "Course Title" }).fill(updatedTitle);
   await page.getByRole("textbox", { name: "Search labs to add..." }).click();
+  await page.getByRole("textbox", { name: "Search labs..." }).click();
+  await page.getByRole("textbox", { name: "Search labs..." }).fill("E2E");
   await page.getByRole("button", { name: lab.title }).click();
   const closeModalButton = page
     .locator("section")
