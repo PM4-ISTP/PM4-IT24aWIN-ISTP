@@ -59,7 +59,8 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   await page.getByRole("button", { name: "Create Course" }).click();
   await clickButtonAndAssert(
     () => page.getByRole("button", { name: "Create Course" }),
-    async () => expect(page.getByRole("heading", { name: "Edit Course" })).toBeVisible({ timeout: 20_000 })
+    async () =>
+      expect(page.getByRole("heading", { name: "Edit Course" })).toBeVisible({ timeout: 20_000 })
   );
 
   // Verify course created
