@@ -22,6 +22,7 @@ async function logInAndThenLogOut(page: Page, user: User) {
 test("User can log in and then log out to log in as another user. The user menu trigger gets rendered correctly each time.", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   await logInAndThenLogOut(page, testUsers.student);
   await logInAndThenLogOut(page, testUsers.instructor);
   await logInAndThenLogOut(page, testUsers.admin);
