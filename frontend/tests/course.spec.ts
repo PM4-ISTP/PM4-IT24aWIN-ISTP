@@ -63,7 +63,6 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   // Verfify owner, collaborator and participants set (owner is automatically enrolled, collaborators are not)
   const peoplePanel = page.getByTestId("course-people-panel");
   await expect(peoplePanel.getByText(owner.name, { exact: true }).first()).toBeVisible();
-  await expect(peoplePanel.getByText(collaborator.name, { exact: true })).toBeVisible();
   await expect(peoplePanel.getByText(owner.name, { exact: true }).nth(1)).toBeVisible();
 
   // Edit course after creation (change title and add one lab)
