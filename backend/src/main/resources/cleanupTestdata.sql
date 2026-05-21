@@ -1,4 +1,6 @@
 DELETE FROM user_course_badges WHERE course_id IN (SELECT id FROM courses WHERE title LIKE 'E2E%');
+DELETE FROM course_challenge_score_overrides WHERE course_id IN (SELECT id FROM courses WHERE title LIKE 'E2E%');
+DELETE FROM course_challenge_score_overrides WHERE challenge_id IN (SELECT id FROM challenges WHERE title LIKE 'E2E%');
 DELETE FROM challenge_completions WHERE sub_task_id IN (SELECT id FROM challenges WHERE title LIKE 'E2E%');
 DELETE FROM student_option_submissions WHERE sub_task_id IN (SELECT id FROM challenges WHERE title LIKE 'E2E%');
 DELETE FROM student_flag_submissions WHERE sub_task_id IN (SELECT id FROM challenges WHERE title LIKE 'E2E%');

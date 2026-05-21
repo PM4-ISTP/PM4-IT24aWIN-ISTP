@@ -11,7 +11,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.datasource.DataSourceUtils;
-import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -44,7 +43,7 @@ public class TestingController {
     } catch (IllegalArgumentException e) {
       responseEntity = ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
     } catch (IllegalStateException e) {
-      responseEntity = ResponseEntity.internalServerError().body("Failed to load test data");
+      responseEntity = ResponseEntity.internalServerError().body(e.getMessage());
     }
     return responseEntity;
   }
@@ -58,7 +57,7 @@ public class TestingController {
     } catch (IllegalArgumentException e) {
       responseEntity = ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
     } catch (IllegalStateException e) {
-      responseEntity = ResponseEntity.internalServerError().body("Failed to cleanup test data");
+      responseEntity = ResponseEntity.internalServerError().body(e.getMessage());
     }
     return responseEntity;
   }
@@ -71,10 +70,16 @@ public class TestingController {
       throw new IllegalArgumentException("Invalid username or password");
     }
 
-    Connection connection = DataSourceUtils.getConnection(dataSource);
+    Connection connection;
+    try {
+      connection = DataSourceUtils.getConnection(dataSource);
+    } catch (RuntimeException ex) {
+      throw new IllegalStateException("Failed to connect to database for " + resourceName, ex);
+    }
+
     try {
       ScriptUtils.executeSqlScript(connection, new ClassPathResource(resourceName));
-    } catch (ScriptException ex) {
+    } catch (RuntimeException ex) {
       throw new IllegalStateException("Failed to run " + resourceName, ex);
     } finally {
       DataSourceUtils.releaseConnection(connection, dataSource);

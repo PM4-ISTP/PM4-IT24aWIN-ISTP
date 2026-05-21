@@ -25,6 +25,7 @@ async function callTestingEndpoint(path: string) {
 }
 
 async function setup() {
+  await callTestingEndpoint("/api/v1/testing/cleanup-testdata");
   await callTestingEndpoint("/api/v1/testing/load-testdata");
 }
 
