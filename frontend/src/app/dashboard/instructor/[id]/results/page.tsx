@@ -452,9 +452,9 @@ export default function CourseResultsPage() {
           progress={avgPct}
         />
         <StatCard
-          label="On-Time"
+          label="Submitted"
           value={`${statsSubmitted} / ${totalParticipants}`}
-          sub="overall on time"
+          sub="overall submitted"
           icon={<IconCheck size={12} color="#64748b" />}
           progress={
             totalParticipants > 0 ? Math.round((statsSubmitted / totalParticipants) * 100) : 0
