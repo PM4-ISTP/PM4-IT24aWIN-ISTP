@@ -34,6 +34,18 @@ and staging environments, not in production. This is ensured by the property `is
 [application-local.properties.example](../backend/application-local.properties.example)). This property is only enabled
 locally and on staging. If this property is disabled, the endpoints are not reachable.
 
+Should the test data cleanup fail, you need to either call the `` POST endpoint of the backend with the following body:
+
+```json
+{
+    "username": <DATABASE_USERNAME from .env.local>,
+    "password": <DATABASE_PASSWORD from .env.local>
+}
+```
+
+Alternative you can run [cleanupTestdata.sql](../backend/src/main/resources/cleanupTestdata.sql) directly on the test
+database.
+
 ## Local Run
 
 ### 1. Start the App
@@ -70,6 +82,13 @@ You need to set the following variables (in addition to the ones mentioned in [L
 * `BACKEND_URL`: This is the backend you want to use for testing (either local or staging).
 * `DATABASE_USERNAME`: This is the username for the test database. This is needed for the test data load and cleanup endpoints to work. For local testing database, this is the username of your local Postgres instance. For staging, this is the username from the Rancher secret `postgres-credentials`.
 * `DATABASE_PASSWORD`: This is the password for the test database. This is needed for the test data load and cleanup endpoints to work. For local testing database, this is the password of your local Postgres instance. For staging, this is the password from the Rancher secret `postgres-credentials`.
+
+#### Run all tests:
+
+```bash
+cd frontend
+npm run test
+```
 
 #### Interactive UI mode:
 
