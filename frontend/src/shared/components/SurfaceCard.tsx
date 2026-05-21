@@ -9,6 +9,7 @@ export interface SurfaceCardProps extends Omit<BoxProps, "style"> {
   padding?: CSSProperties["padding"];
   style?: CSSProperties;
   children?: ReactNode;
+  testId?: string;
 }
 
 export function SurfaceCard({
@@ -18,6 +19,7 @@ export function SurfaceCard({
   padding = "1.5rem",
   style,
   children,
+  testId = "",
   ...rest
 }: SurfaceCardProps) {
   const surfaceStyle: CSSProperties = {
@@ -30,7 +32,7 @@ export function SurfaceCard({
   };
 
   return (
-    <Box style={surfaceStyle} {...rest}>
+    <Box style={surfaceStyle} data-testid={testId} {...rest}>
       {children}
     </Box>
   );

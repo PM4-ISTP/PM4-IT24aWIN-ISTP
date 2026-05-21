@@ -85,6 +85,7 @@ export function CourseEnrollmentButton({
                 router.push(nextChallengeHref);
               }
             }}
+            data-testid="course-enrollment-action"
           >
             {nextChallengeHref ? "Continue Course" : "All Labs Completed"}
           </AppButton>
@@ -96,6 +97,7 @@ export function CourseEnrollmentButton({
             onClick={() => {
               void handleEnroll();
             }}
+            data-testid="course-enrollment-action"
           >
             Enroll in Course
           </AppButton>

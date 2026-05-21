@@ -43,6 +43,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/scalar/**", "/scalar")
                     .permitAll()
+                    .requestMatchers("/api/v1/testing/**")
+                    .permitAll()
                     .requestMatchers("/api/v1/courses/*/badge/svg")
                     .permitAll()
                     .requestMatchers("/api/admin/**")

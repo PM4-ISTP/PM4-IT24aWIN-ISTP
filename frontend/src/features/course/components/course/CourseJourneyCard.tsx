@@ -56,16 +56,24 @@ interface ProgressSectionProps {
   color: string;
   statLeft: React.ReactNode;
   statRight: React.ReactNode;
+  testId?: string;
 }
 
-function ProgressSection({ label, percent, color, statLeft, statRight }: ProgressSectionProps) {
+function ProgressSection({
+  label,
+  percent,
+  color,
+  statLeft,
+  statRight,
+  testId,
+}: ProgressSectionProps) {
   return (
-    <Stack gap={8}>
+    <Stack gap={8} data-testid={testId}>
       <Group justify="space-between">
         <Text size="sm" fw={600}>
           {label}
         </Text>
-        <Text size="sm" fw={700} c={color}>
+        <Text size="sm" fw={700} c={color} data-testid={testId ? `${testId}-percent` : undefined}>
           {percent}% Complete
         </Text>
       </Group>
@@ -82,11 +90,12 @@ interface StatChipProps {
   icon: React.ReactNode;
   label: string;
   dimmed?: boolean;
+  testId?: string;
 }
 
-function StatChip({ icon, label, dimmed }: StatChipProps) {
+function StatChip({ icon, label, dimmed, testId }: StatChipProps) {
   return (
-    <Group gap={6}>
+    <Group gap={6} data-testid={testId}>
       {icon}
       <Text size="xs" c={dimmed ? "dimmed" : undefined}>
         {label}
@@ -99,11 +108,17 @@ interface UnavailableProgressSectionProps {
   label: string;
   color: string;
   hint: string;
+  testId: string;
 }
 
-function UnavailableProgressSection({ label, color, hint }: UnavailableProgressSectionProps) {
+function UnavailableProgressSection({
+  label,
+  color,
+  hint,
+  testId,
+}: UnavailableProgressSectionProps) {
   return (
-    <Stack gap={8}>
+    <Stack gap={8} data-testid={testId}>
       <Group justify="space-between" align="center">
         <Group gap={6}>
           <Text size="sm" fw={600} c="dimmed">
@@ -138,6 +153,7 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
 
   return (
     <Box
+      data-testid="course-journey-card"
       style={{
         background: "rgba(255,255,255,0.04)",
         border: "1px solid rgba(255,255,255,0.08)",
@@ -163,10 +179,12 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
               label="Labs"
               percent={labPercent}
               color="orange"
+              testId="course-journey-labs"
               statLeft={
                 <StatChip
                   icon={<IconFlame size={13} color="var(--mantine-color-orange-5)" />}
                   label={`${labs.completed} Lab${labs.completed !== 1 ? "s" : ""} Solved`}
+                  testId="course-journey-labs-solved"
                 />
               }
               statRight={
@@ -174,11 +192,17 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
                   icon={<IconClock size={13} color="var(--mantine-color-dimmed)" />}
                   label={`${Math.max(labs.total - labs.completed, 0)} Remaining`}
                   dimmed
+                  testId="course-journey-labs-remaining"
                 />
               }
             />
           ) : (
-            <UnavailableProgressSection label="Labs" color="orange" hint={unavailableHint} />
+            <UnavailableProgressSection
+              label="Labs"
+              color="orange"
+              hint={unavailableHint}
+              testId="unavailable-labs-progress-section"
+            />
           )}
 
           {/* —— Challenges progress —— */}
@@ -187,12 +211,14 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
               label="Challenges"
               percent={challengePercent}
               color="blue"
+              testId="course-journey-challenges"
               statLeft={
                 <StatChip
                   icon={<IconListCheck size={13} color="var(--mantine-color-blue-5)" />}
                   label={`${
                     challenges.completed
                   } Challenge${challenges.completed !== 1 ? "s" : ""} Solved`}
+                  testId="course-journey-challenges-solved"
                 />
               }
               statRight={
@@ -200,11 +226,17 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
                   icon={<IconClock size={13} color="var(--mantine-color-dimmed)" />}
                   label={`${Math.max(challenges.total - challenges.completed, 0)} Remaining`}
                   dimmed
+                  testId="course-journey-challenges-remaining"
                 />
               }
             />
           ) : (
-            <UnavailableProgressSection label="Challenges" color="blue" hint={unavailableHint} />
+            <UnavailableProgressSection
+              label="Challenges"
+              color="blue"
+              hint={unavailableHint}
+              testId="unavailable-challenges-progress-section"
+            />
           )}
         </Stack>
 
@@ -224,6 +256,7 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
                 flexShrink: 0,
                 padding: "2rem 1.75rem",
               }}
+              data-testid="course-instructor"
             >
               <Text
                 size="xs"
@@ -231,6 +264,7 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
                 fw={700}
                 c="dimmed"
                 style={{ letterSpacing: "0.08em" }}
+                data-testid="course-instructor-label"
               >
                 Instructor
               </Text>
@@ -245,11 +279,20 @@ export function CourseJourneyCard({ labs, challenges, instructor }: CourseJourne
                   {getInitials(instructor.instructor?.name ?? "")}
                 </Avatar>
                 <Stack gap={2}>
-                  <Text fw={600} size="sm" style={{ color: "#e2e8f0", lineHeight: 1.2 }}>
+                  <Text
+                    fw={600}
+                    size="sm"
+                    style={{ color: "#e2e8f0", lineHeight: 1.2 }}
+                    data-testid="course-instructor-name"
+                  >
                     {instructor.instructor?.name}
                   </Text>
                   {instructor.instructor?.title && (
-                    <Text size="xs" style={{ color: "#94a3b8", lineHeight: 1.3 }}>
+                    <Text
+                      size="xs"
+                      style={{ color: "#94a3b8", lineHeight: 1.3 }}
+                      data-testid="course-instructor-title"
+                    >
                       {instructor.instructor?.title}
                     </Text>
                   )}

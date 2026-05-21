@@ -167,6 +167,7 @@ function RunningLabs({ pods }: { pods: RunningPod[] }) {
               radius="sm"
               padding="1rem"
               style={{ height: "100%" }}
+              testId="active-lab-card"
             >
               <Stack gap="sm" h="100%">
                 <Group justify="space-between" align="flex-start" wrap="nowrap">

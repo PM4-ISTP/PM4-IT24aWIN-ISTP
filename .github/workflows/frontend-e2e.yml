@@ -71,8 +71,14 @@ jobs:
         run: npm run test:e2e -- --project=${{ inputs.project }}
         env:
           BASE_URL: http://localhost:3000
-          CYPRESS_ADMIN_USERNAME: ${{ secrets.CYPRESS_ADMIN_USERNAME }}
-          CYPRESS_ADMIN_PASSWORD: ${{ secrets.CYPRESS_ADMIN_PASSWORD }}
+          E2E_ADMIN_USERNAME: ${{ secrets.E2E_ADMIN_USERNAME }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          E2E_INSTRUCTOR_USERNAME: ${{ secrets.E2E_INSTRUCTOR_USERNAME }}
+          E2E_INSTRUCTOR_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_PASSWORD }}
+          E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_USERNAME: ${{ secrets.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_USERNAME }}
+          E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_WITHOUT_COURSES_OR_LABS_PASSWORD }}
+          E2E_STUDENT_USERNAME: ${{ secrets.E2E_STUDENT_USERNAME }}
+          E2E_STUDENT_PASSWORD: ${{ secrets.E2E_STUDENT_PASSWORD }}
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}

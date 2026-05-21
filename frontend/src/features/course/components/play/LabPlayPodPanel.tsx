@@ -83,6 +83,7 @@ function LabLaunchCard({
           disabled={!url}
           rightSection={<IconExternalLink size={16} />}
           fullWidth
+          data-testid="open-app-button"
         >
           {url ? buttonLabel : disabledLabel}
         </Button>
