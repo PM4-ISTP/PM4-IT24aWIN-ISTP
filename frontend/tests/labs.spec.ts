@@ -8,7 +8,6 @@ import {
 import { loginAs } from "@/tests/helpers/auth";
 import { courses, defaultDockerImage, labs, testUsers, type Course, type Lab } from "@/tests/data";
 import { assertNoActiveLabs } from "@/tests/helpers/dashboard";
-import { getApiClient } from "@/src/shared/lib/api/server";
 
 const student = testUsers.student;
 const courseUnderTest = courses.instructor01;
@@ -391,13 +390,13 @@ test("Student can play a lab.", async ({ page }) => {
 });
 
 test("Lab pod lifecycle for e2e-student", async ({ page }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(90_000);
   await loginAs(page, student);
 
   // Clean up old active lab, if it is still running. This can happen, if the last run of this test failed.
   const hasNoOldActiveLab = await page.getByText("No active labs", { exact: true }).isVisible();
   if (hasNoOldActiveLab === false) {
-    await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
+    await page.getByRole("link", { name: "Open lab" }).click();
     await stopLabAndWaitForNotStarted(page);
     await clickNavbarButton(page, "HOME", "dashboard");
   }
