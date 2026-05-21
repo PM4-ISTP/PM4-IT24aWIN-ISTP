@@ -80,6 +80,7 @@ export function LabPlayView({
   const [labCollapsed, setLabCollapsed] = useState(false);
   const [podActionLoading, setPodActionLoading] = useState(false);
   const [podActionError, setPodActionError] = useState<string | null>(null);
+  const [keepAlivePromptKey, setKeepAlivePromptKey] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   const {
@@ -232,6 +233,37 @@ export function LabPlayView({
       setPodActionLoading(false);
     }
   }, [apiClient, canExtendPod, labId, refetchPodStatus]);
+
+  useEffect(() => {
+    if (
+      podStatus !== "RUNNING" ||
+      !canExtendPod ||
+      !podExpiringSoon ||
+      podActionLoading ||
+      !pod?.expiresAt
+    ) {
+      return;
+    }
+
+    const promptKey = `${pod.podName ?? labId}:${pod.expiresAt}:${pod.extensionCount ?? 0}`;
+    if (keepAlivePromptKey === promptKey) return;
+
+    setKeepAlivePromptKey(promptKey);
+    if (window.confirm("Your lab expires soon. Extend it by 30 minutes?")) {
+      void handleExtendPod();
+    }
+  }, [
+    canExtendPod,
+    handleExtendPod,
+    keepAlivePromptKey,
+    labId,
+    pod?.expiresAt,
+    pod?.extensionCount,
+    pod?.podName,
+    podActionLoading,
+    podExpiringSoon,
+    podStatus,
+  ]);
 
   function updateChallengeSolved(challengeId: string, patch: Partial<ChallengeStudentDto>) {
     setChallenge((prev) => {

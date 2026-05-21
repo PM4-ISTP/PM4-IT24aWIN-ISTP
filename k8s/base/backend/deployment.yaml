@@ -16,6 +16,8 @@ spec:
         app.kubernetes.io/name: backend
         app.kubernetes.io/part-of: istp
     spec:
+      serviceAccountName: istp-backend
+      automountServiceAccountToken: false
       imagePullSecrets:
         - name: ghcr-pull-secret # created manually, see README
       containers:

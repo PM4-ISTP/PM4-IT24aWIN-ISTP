@@ -322,6 +322,7 @@ class LabPodServiceTest {
                             assertThat(container.getPorts())
                                     .singleElement()
                                     .satisfies(port -> assertThat(port.getContainerPort()).isEqualTo(8080));
+                            assertThat(container.getResources().getRequests()).containsKeys("cpu", "memory");
                             assertThat(container.getResources().getLimits()).containsKeys("cpu", "memory");
                             assertThat(container.getSecurityContext()).isNull();
                         });
@@ -418,8 +419,6 @@ class LabPodServiceTest {
         setClientRef(client);
         UUID userId = UUID.randomUUID();
         UUID labId = UUID.randomUUID();
-        // Keep age below ACTIVITY_TOUCH_MIN_SECONDS (60s) so getPod() won't trigger a label touch
-        // that could alter the mocked deployment object during this assertion-focused test.
         long createdAt = Instant.now().minusSeconds(TEST_POD_AGE_SECONDS).getEpochSecond();
         Map<String, String> labels = podLabels(userId, labId, createdAt);
         Deployment deployment =
@@ -453,7 +452,8 @@ class LabPodServiceTest {
                         .build();
         AdminConfig config = adminConfigWith("kubeconfig", 120);
 
-        stubFindDeployments(client, userId, labId, List.of(deployment));
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                stubFindDeployments(client, userId, labId, List.of(deployment));
         stubPodsForLabels(client, labels, List.of());
         stubIngressGet(client, "pod-abcdef12-ingress", ingress);
         when(adminConfigurationService.getAdminConfiguration()).thenReturn(Optional.of(config));
@@ -468,6 +468,7 @@ class LabPodServiceTest {
         assertThat(response.ttlSeconds()).isEqualTo(120);
         assertThat(response.extensionCount()).isEqualTo(0);
         assertThat(response.canExtend()).isTrue();
+        verify(deploymentOperation, Mockito.never()).withName(Mockito.anyString());
     }
 
     @Test
