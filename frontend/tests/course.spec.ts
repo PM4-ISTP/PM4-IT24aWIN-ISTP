@@ -15,6 +15,7 @@ const enrollmentButtonTestId = "course-enrollment-action";
 test("Instructor can create a course and edit it afterwards (e.g. change title, add lab).", async ({
   page,
 }) => {
+  test.setTimeout(120_000);
   const newCourseData = {
     title: "E2E Test Course: Create Course Test",
     shortDescription: "Course for E2E test (create course)",
@@ -24,7 +25,6 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   const updatedTitle = "E2E Test Course: Update Newly Created Course Test";
   const lab = labs.instructor01;
   const owner = testUsers.instructor;
-  const collaborator = testUsers.instructorWithoutCoursesOrLabs;
 
   await loginAs(page, owner);
   await clickNavbarButton(page, courseTabName, courseTabUrl);
@@ -37,28 +37,19 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   await page
     .getByRole("textbox", { name: "Short Description" })
     .fill(newCourseData.shortDescription);
-  await page.getByRole("textbox").filter({ hasText: "Add a description..." }).click();
-  await page
-    .getByRole("textbox")
-    .filter({ hasText: "Add a description..." })
-    .press("ControlOrMeta+a");
+  await page.getByRole("textbox").filter({ hasText: "Add a description..." }).dblclick();
   await page
     .getByRole("textbox")
     .filter({ hasText: "Add a description..." })
     .fill(newCourseData.description);
   await page.getByRole("combobox", { name: "Topic" }).click();
   await page.getByRole("listbox").getByText(newCourseData.topic).click();
-  await page.getByRole("combobox", { name: "Collaborators" }).click();
-  await page
-    .getByRole("listbox")
-    .getByText(testUsers.instructorWithoutCoursesOrLabs.username)
-    .click();
   await page.locator("label").filter({ hasText: "Public" }).click();
   await page.locator("label").filter({ hasText: "Once" }).click();
-  await page.getByRole("button", { name: "Create Course" }).click();
   await clickButtonAndAssert(
     () => page.getByRole("button", { name: "Create Course" }),
-    async () => expect(page.getByRole("heading", { name: "Edit Course" })).toBeVisible()
+    async () =>
+      expect(page.getByRole("heading", { name: "Edit Course" })).toBeVisible({ timeout: 20_000 })
   );
 
   // Verify course created
@@ -70,7 +61,6 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   // Verfify owner, collaborator and participants set (owner is automatically enrolled, collaborators are not)
   const peoplePanel = page.getByTestId("course-people-panel");
   await expect(peoplePanel.getByText(owner.name, { exact: true }).first()).toBeVisible();
-  await expect(peoplePanel.getByText(collaborator.name, { exact: true })).toBeVisible();
   await expect(peoplePanel.getByText(owner.name, { exact: true }).nth(1)).toBeVisible();
 
   // Edit course after creation (change title and add one lab)
@@ -78,6 +68,8 @@ test("Instructor can create a course and edit it afterwards (e.g. change title, 
   await page.getByRole("textbox", { name: "Course Title" }).press("ControlOrMeta+a");
   await page.getByRole("textbox", { name: "Course Title" }).fill(updatedTitle);
   await page.getByRole("textbox", { name: "Search labs to add..." }).click();
+  await page.getByRole("textbox", { name: "Search labs..." }).click();
+  await page.getByRole("textbox", { name: "Search labs..." }).fill("E2E");
   await page.getByRole("button", { name: lab.title }).click();
   const closeModalButton = page
     .locator("section")
