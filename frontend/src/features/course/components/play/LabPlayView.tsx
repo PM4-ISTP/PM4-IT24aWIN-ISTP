@@ -210,30 +210,33 @@ export function LabPlayView({
     }
   }, [apiClient, labId, refetchPodStatus]);
 
-  const handleExtendPod = useCallback(async (onSuccess?: () => void) => {
-    if (!canExtendPod) return;
-    setPodActionLoading(true);
-    setPodActionError(null);
-    try {
-      const { error } = await apiClient.POST("/api/v1/lab-pods/{labId}/extend", {
-        params: { path: { labId } },
-      });
-      if (error) {
-        throw new Error(getApiErrorMessage(error, "Failed to extend lab."));
+  const handleExtendPod = useCallback(
+    async (onSuccess?: () => void) => {
+      if (!canExtendPod) return;
+      setPodActionLoading(true);
+      setPodActionError(null);
+      try {
+        const { error } = await apiClient.POST("/api/v1/lab-pods/{labId}/extend", {
+          params: { path: { labId } },
+        });
+        if (error) {
+          throw new Error(getApiErrorMessage(error, "Failed to extend lab."));
+        }
+        await refetchPodStatus();
+        notifications.show({
+          color: "teal",
+          title: "Lab extended",
+          message: "Added 30 minutes to this lab.",
+        });
+        onSuccess?.();
+      } catch (e) {
+        setPodActionError(e instanceof Error ? e.message : "Failed to extend lab.");
+      } finally {
+        setPodActionLoading(false);
       }
-      await refetchPodStatus();
-      notifications.show({
-        color: "teal",
-        title: "Lab extended",
-        message: "Added 30 minutes to this lab.",
-      });
-      onSuccess?.();
-    } catch (e) {
-      setPodActionError(e instanceof Error ? e.message : "Failed to extend lab.");
-    } finally {
-      setPodActionLoading(false);
-    }
-  }, [apiClient, canExtendPod, labId, refetchPodStatus]);
+    },
+    [apiClient, canExtendPod, labId, refetchPodStatus]
+  );
 
   useEffect(() => {
     if (
