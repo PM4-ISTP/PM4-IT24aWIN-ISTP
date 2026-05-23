@@ -210,7 +210,7 @@ export function LabPlayView({
     }
   }, [apiClient, labId, refetchPodStatus]);
 
-  const handleExtendPod = useCallback(async () => {
+  const handleExtendPod = useCallback(async (onSuccess?: () => void) => {
     if (!canExtendPod) return;
     setPodActionLoading(true);
     setPodActionError(null);
@@ -227,6 +227,7 @@ export function LabPlayView({
         title: "Lab extended",
         message: "Added 30 minutes to this lab.",
       });
+      onSuccess?.();
     } catch (e) {
       setPodActionError(e instanceof Error ? e.message : "Failed to extend lab.");
     } finally {
@@ -249,8 +250,7 @@ export function LabPlayView({
     if (keepAlivePromptKey === promptKey) return;
 
     if (window.confirm("Your lab expires soon. Extend it by 30 minutes?")) {
-      setKeepAlivePromptKey(promptKey);
-      void handleExtendPod();
+      void handleExtendPod(() => setKeepAlivePromptKey(promptKey));
     }
   }, [
     canExtendPod,

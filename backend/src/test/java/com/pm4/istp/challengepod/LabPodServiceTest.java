@@ -472,6 +472,62 @@ class LabPodServiceTest {
     }
 
     @Test
+    void getPod_touchesLastActivityWhenPollingStaleDeployment() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        long now = Instant.now().getEpochSecond();
+        long createdAt = now - 600;
+        long lastActivity = now - 120;
+        Map<String, String> labels = podLabels(userId, labId, createdAt);
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-stale01")
+                        .withLabels(labels)
+                        .withAnnotations(
+                                Map.of(
+                                        "istp.pm4.ch/created-at-epoch",
+                                        String.valueOf(createdAt),
+                                        "istp.pm4.ch/last-activity-at-epoch",
+                                        String.valueOf(lastActivity),
+                                        "istp.pm4.ch/base-ttl-seconds",
+                                        "900",
+                                        "istp.pm4.ch/ttl-extension-count",
+                                        "0"))
+                        .endMetadata()
+                        .withNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build();
+
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                stubFindDeployments(client, userId, labId, List.of(deployment));
+        RollableScalableResource<Deployment> deploymentResource =
+                stubAnnotationPatch(deploymentOperation, deployment);
+        stubPodsForLabels(client, labels, List.of());
+        stubIngressGetThrows(client, "pod-stale01-ingress");
+        when(adminConfigurationService.getAdminConfiguration())
+                .thenReturn(Optional.of(adminConfigWith("kubeconfig", 900)));
+
+        PodStatusResponse response = service.getPod(userId, labId);
+
+        ArgumentCaptor<Deployment> patchCaptor = ArgumentCaptor.forClass(Deployment.class);
+        verify(deploymentResource).patch(Mockito.any(), patchCaptor.capture());
+        long touchedAt =
+                Long.parseLong(
+                        patchCaptor
+                                .getValue()
+                                .getMetadata()
+                                .getAnnotations()
+                                .get("istp.pm4.ch/last-activity-at-epoch"));
+        assertThat(touchedAt).isGreaterThan(lastActivity);
+        assertThat(response.lastActivityAt()).isEqualTo(Instant.ofEpochSecond(touchedAt));
+        assertThat(response.expiresAt()).isEqualTo(Instant.ofEpochSecond(touchedAt + 900));
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     void getPod_fallsBackToGeneratedHttpsHost_whenIngressCannotBeInspected() {
         LabPodService tlsService =
@@ -553,6 +609,69 @@ class LabPodServiceTest {
                             assertThat(pod.courseTitle()).isEqualTo("Course title");
                             assertThat(pod.pod().status()).isEqualTo(PodStatusEnum.RUNNING);
                             assertThat(pod.pod().appUrl()).isEqualTo("http://app-cafebabe.test.domain");
+                        });
+    }
+
+    @Test
+    void listPods_touchesLastActivityWhenListingStaleDeployment() {
+        KubernetesClient client = mock(KubernetesClient.class, Mockito.RETURNS_DEEP_STUBS);
+        setClientRef(client);
+        UUID userId = UUID.randomUUID();
+        UUID labId = UUID.randomUUID();
+        long now = Instant.now().getEpochSecond();
+        long createdAt = now - 600;
+        long lastActivity = now - 120;
+        Map<String, String> labels = podLabels(userId, labId, createdAt);
+        Deployment deployment =
+                new DeploymentBuilder()
+                        .withNewMetadata()
+                        .withName("pod-stale02")
+                        .withLabels(labels)
+                        .withAnnotations(
+                                Map.of(
+                                        "istp.pm4.ch/created-at-epoch",
+                                        String.valueOf(createdAt),
+                                        "istp.pm4.ch/last-activity-at-epoch",
+                                        String.valueOf(lastActivity),
+                                        "istp.pm4.ch/base-ttl-seconds",
+                                        "900",
+                                        "istp.pm4.ch/ttl-extension-count",
+                                        "0"))
+                        .endMetadata()
+                        .withNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build();
+
+        NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation =
+                stubFindDeployments(client, userId, List.of(deployment));
+        RollableScalableResource<Deployment> deploymentResource =
+                stubAnnotationPatch(deploymentOperation, deployment);
+        stubPodsForLabels(client, labels, List.of());
+        stubIngressGetThrows(client, "pod-stale02-ingress");
+        when(adminConfigurationService.getAdminConfiguration())
+                .thenReturn(Optional.of(adminConfigWith("kubeconfig", 900)));
+        when(courseLabRepository.findEnrolledCourseLabSummariesForUserAndLab(userId, labId))
+                .thenReturn(List.of());
+
+        var pods = service.listPods(userId);
+
+        ArgumentCaptor<Deployment> patchCaptor = ArgumentCaptor.forClass(Deployment.class);
+        verify(deploymentResource).patch(Mockito.any(), patchCaptor.capture());
+        long touchedAt =
+                Long.parseLong(
+                        patchCaptor
+                                .getValue()
+                                .getMetadata()
+                                .getAnnotations()
+                                .get("istp.pm4.ch/last-activity-at-epoch"));
+        assertThat(touchedAt).isGreaterThan(lastActivity);
+        assertThat(pods).singleElement()
+                .satisfies(
+                        pod -> {
+                            assertThat(pod.labId()).isEqualTo(labId);
+                            assertThat(pod.pod().lastActivityAt()).isEqualTo(Instant.ofEpochSecond(touchedAt));
+                            assertThat(pod.pod().expiresAt()).isEqualTo(Instant.ofEpochSecond(touchedAt + 900));
                         });
     }
 
@@ -1002,6 +1121,24 @@ class LabPodServiceTest {
         when(client.network().v1().ingresses().inNamespace("default")).thenReturn(ingressOperation);
         when(ingressOperation.withName(ingressName)).thenReturn(ingressResource);
         when(ingressResource.get()).thenThrow(new RuntimeException("api unavailable"));
+    }
+
+    private RollableScalableResource<Deployment> stubAnnotationPatch(
+            NonNamespaceOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deploymentOperation,
+            Deployment deployment) {
+        RollableScalableResource<Deployment> deploymentResource = mock(RollableScalableResource.class);
+        when(deploymentOperation.withName(deployment.getMetadata().getName())).thenReturn(deploymentResource);
+        when(deploymentResource.patch(Mockito.any(), Mockito.any(Deployment.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Deployment patch = invocation.getArgument(1);
+                            return new DeploymentBuilder(deployment)
+                                    .editMetadata()
+                                    .withAnnotations(patch.getMetadata().getAnnotations())
+                                    .endMetadata()
+                                    .build();
+                        });
+        return deploymentResource;
     }
 
     private Map<String, String> podLabels(UUID userId, UUID labId, long createdAtEpoch) {

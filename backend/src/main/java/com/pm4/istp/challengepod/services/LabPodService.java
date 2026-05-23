@@ -256,7 +256,8 @@ public class LabPodService {
       }
 
       int ttl = resolveConfiguredDefaultTtlSeconds();
-      return buildResponse(existing.get(0), ttl);
+      Deployment touched = touchLastActivityIfNeeded(existing.get(0));
+      return buildResponse(touched, ttl);
 
     } catch (LabPodException e) {
       throw e;
@@ -272,6 +273,7 @@ public class LabPodService {
 
       return findDeployments(userId).stream()
           .sorted(Comparator.comparing(this::createdAtOf).reversed())
+          .map(this::touchLastActivityIfNeeded)
           .map(deployment -> buildRunningPodResponse(userId, deployment, ttl))
           .flatMap(Optional::stream)
           .toList();
