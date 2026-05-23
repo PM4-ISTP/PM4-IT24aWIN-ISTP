@@ -116,6 +116,14 @@ Run the relevant formatting, linting, and test checks before opening a pull requ
 
 - Manual score overrides for course challenges are kept as a potential future feature (DB table + service logic), but the corresponding API endpoint is currently disabled and hidden from the API docs. Normal scoring is computed automatically from correct/incorrect submissions.
 
+## License
+
+This project is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE).
+
+You may use, copy, modify, and redistribute the software for noncommercial purposes, including study, teaching, research, and further development. Commercial use, resale, or offering the software as part of a commercial product or service requires separate written permission from the copyright holders.
+
+Because commercial use is restricted, this is not an OSI-approved Open Source license.
+
 ## Credits
 
 - Favicons generated with [favicon.io](https://favicon.io/favicon-converter/).
