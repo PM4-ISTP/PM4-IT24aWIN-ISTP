@@ -322,7 +322,6 @@ class LabPodServiceTest {
                             assertThat(container.getPorts())
                                     .singleElement()
                                     .satisfies(port -> assertThat(port.getContainerPort()).isEqualTo(8080));
-                            assertThat(container.getResources().getRequests()).containsKeys("cpu", "memory");
                             assertThat(container.getResources().getLimits()).containsKeys("cpu", "memory");
                             assertThat(container.getSecurityContext()).isNull();
                         });

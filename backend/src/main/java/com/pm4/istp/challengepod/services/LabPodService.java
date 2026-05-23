@@ -16,8 +16,6 @@ import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.ResourceRequirements;
-import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -843,7 +841,16 @@ public class LabPodService {
             .addNewContainer()
             .withName("app")
             .withImage(lab.getDockerImage())
-            .withResources(buildLabResourceRequirements(adminConfig))
+            .withNewResources()
+            .addToLimits(
+                "cpu",
+                adminConfig.getCpuLimit() != null ? new Quantity(adminConfig.getCpuLimit()) : null)
+            .addToLimits(
+                "memory",
+                adminConfig.getMemoryLimit() != null
+                    ? new Quantity(adminConfig.getMemoryLimit())
+                    : null)
+            .endResources()
             .addNewPort()
             .withContainerPort(containerPort)
             .endPort()
@@ -977,32 +984,6 @@ public class LabPodService {
       throw new LabPodException("Lab container port must be between 1 and 65535.");
     }
     return containerPort;
-  }
-
-  private ResourceRequirements buildLabResourceRequirements(AdminConfig adminConfig) {
-    ResourceRequirementsBuilder resources = new ResourceRequirementsBuilder();
-    String cpuLimit = normalizeQuantity(adminConfig.getCpuLimit());
-    if (cpuLimit != null) {
-      Quantity cpu = new Quantity(cpuLimit);
-      resources.addToRequests("cpu", cpu);
-      resources.addToLimits("cpu", cpu);
-    }
-
-    String memoryLimit = normalizeQuantity(adminConfig.getMemoryLimit());
-    if (memoryLimit != null) {
-      Quantity memory = new Quantity(memoryLimit);
-      resources.addToRequests("memory", memory);
-      resources.addToLimits("memory", memory);
-    }
-
-    return resources.build();
-  }
-
-  private String normalizeQuantity(String quantity) {
-    if (quantity == null || quantity.isBlank()) {
-      return null;
-    }
-    return quantity.trim();
   }
 
   private String normalizeHostPrefix(String prefix) {
