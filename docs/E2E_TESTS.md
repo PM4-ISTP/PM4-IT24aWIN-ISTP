@@ -12,20 +12,24 @@ tests cover the happy path of the following main user flows:
 * Several course flows (e.g. join course, create course)
 
 Some flows have been tested in different states (e.g. zero, one or multiple entries). Edge cases or error states are not
-covered. All other flows are not or only partially covered.
+covered. All other flows are not covered, or are only covered to a very limited extent.
 
 The file [data.ts](../frontend/tests/data.ts) contains expected test data according the test data defined in
 [loadTestdata.sql](../backend/src/main/resources/loadTestdata.sql).
 
-Playwright tests are quite flaky. To counter this, the CI reruns failed tests up to 2 times.
+Playwright tests are quite flaky. To counter this, the CI reruns failed tests up to 2 times. For local development you
+can either:
+
+* Adjust the Playwright configuration to rerun failed tests
+* Or run tests in UI mode (see section [Interactive UI mode](#interactive-ui-mode)). When a test fails you can then investigate, whether they failed because of a bug or because of the flakiness of Playwright.
 
 ## Test case lifecyle
 
 Every test case follows the same lifecycle:
 
-1. Load test data into test database (Not test users. They are loaded separately, see below)
+1. Setup phase: Clean up test data from test database. Then load test data into test database (Not test users. They are loaded separately, see below).
 2. Run test case
-3. Clean up test data from test database
+3. Cleanup phase: Clean up test data from test database.
 
 The backend provides two endpoints for loading and cleaning up test data. The two scripts are stored in the
 [resources](../backend/src/main/resources) folder of the backend. These two endpoints are only available in the local
@@ -34,7 +38,8 @@ and staging environments, not in production. This is ensured by the property `is
 [application-local.properties.example](../backend/application-local.properties.example)). This property is only enabled
 locally and on staging. If this property is disabled, the endpoints are not reachable.
 
-Should the test data cleanup fail, you need to either call the `` POST endpoint of the backend with the following body:
+Should the test data cleanup fail, you need to either call the `api/v1/testing/cleanup-testdata` POST endpoint of the
+backend with the following body:
 
 ```json
 {
@@ -45,6 +50,12 @@ Should the test data cleanup fail, you need to either call the `` POST endpoint 
 
 Alternative you can run [cleanupTestdata.sql](../backend/src/main/resources/cleanupTestdata.sql) directly on the test
 database.
+
+If the failing cleanup process is not a temporary issue, you will need to investigate it. Failing cleanups lead to the
+tests failing too.
+
+**Caveat:** Because the tests access the staging database, running multiple CI pipelines on `dev` or local tests which
+access the staging database in parallel may cause the tests to fail.
 
 ## Local Run
 

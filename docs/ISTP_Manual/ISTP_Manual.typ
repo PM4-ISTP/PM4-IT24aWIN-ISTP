@@ -253,7 +253,7 @@ Keycloak is connected to a dedicated Gmail account (`istp.noreply@gmail.com`) fo
 
 A dedicated Gmail account was created for this project. The password in Keycloak is a *Google App Password*, not the regular account password -- Google requires this for SMTP access.
 
-*Known issue:* Within the ZHAW network, outbound SMTP on port 587 is blocked. Password reset emails will therefore not be delivered when the platform runs on ZHAW infrastructure. This is a ZHAW network restriction, not a Keycloak misconfiguration.
+*Known issue:* Email delivery may be affected by restrictive company or institutional mail filters. Although password reset emails are sent via Gmail, delivery cannot be fully guaranteed in all environments. Messages may be delayed, end up in the spam folder, or be blocked entirely by the recipient's mail infrastructure. This is an external mail filtering issue, not a Keycloak misconfiguration.
 
 // ─── 3. Lab Pods ────────────────────────────────────────────────────────────
 
@@ -744,7 +744,7 @@ The detail view has three sections:
 
 *Roles:* toggle `ROLE_STUDENT`, `ROLE_INSTRUCTOR`, and `ROLE_ADMINISTRATOR` individually. Click *Save roles* to apply. `ROLE_STUDENT` is always active and cannot be removed additional roles are additive on top of it. The current active roles are shown below the toggles. Role changes take effect on the user's next login (existing JWTs are not invalidated immediately).
 
-*Password:* use *Send reset email* to trigger a Keycloak password reset email (note: may be blocked on ZHAW network, see @sec-env). Use *Set password (manual)* to set a password directly. With *Temporary* checked the user must change the password on next login.
+*Password:* use *Send reset email* to trigger a Keycloak password reset email (note: delivery is not guaranteed in restrictive mail environments, see @sec-env). Use *Set password (manual)* to set a password directly. With *Temporary* checked the user must change the password on next login.
 
 == Provisioning a User <sec-provision>
 
@@ -783,6 +783,8 @@ All runtime services (frontend, backend, Keycloak, PostgreSQL) are deployed as K
 == Database Schema (PostgreSQL)
 
 *Source of truth:* The schema is defined by the JPA entities in the backend (`backend/src/main/java/.../db/entities`). In development the schema is created/updated automatically by Hibernate (`spring.jpa.hibernate.ddl-auto=update`). For production deployments, a migration tool (Flyway/Liquibase) is recommended.
+
+*Deletion model:* Courses, labs, challenges, and users are soft-deleted instead of being physically removed from the database. This avoids referential integrity and consistency problems with related records such as enrollments, course-lab assignments, submissions, challenge completions, badges, and the Keycloak user projection. Soft-deleted records are filtered out of normal application views. This approach is a pragmatic safeguard for the current implementation; a future version should improve it with a cleaner archival or hard-delete strategy, explicit cascade rules, and database migrations.
 
 *Core tables:*
 - `users` + `user_roles`: app user projection (linked to Keycloak user id), soft-delete fields, online-time tracking

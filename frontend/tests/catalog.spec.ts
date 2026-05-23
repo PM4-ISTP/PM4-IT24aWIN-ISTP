@@ -33,7 +33,7 @@ async function clickTopicOption(page: Page, initialOption: string, desiredOption
 }
 
 test("Search and filter functionalities of catalog functions correctly", async ({ page }) => {
-  test.setTimeout(300_000);
+  test.setTimeout(60_000);
   await loginAs(page, testUsers.student);
   await clickNavbarButton(page, "BROWSE / CATALOG", "dashboard/catalog");
 

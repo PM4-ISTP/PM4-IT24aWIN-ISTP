@@ -74,7 +74,6 @@ async function openCourseFromMyCourses(page: Page, course: Course) {
 async function openLabFromCourse(page: Page, course: Course, lab: Lab) {
   const locateActionButton = () => page.getByTestId("course-enrollment-action");
   await expect(locateActionButton()).toHaveText("Continue Course");
-  await locateActionButton().click();
   await clickButtonAndAssertUrl(
     page,
     locateActionButton,
@@ -137,7 +136,7 @@ async function openActiveLab(page: Page, courseId: string, labId: string) {
 async function openAppAndAssert(page: Page) {
   const openAppLink = page.getByTestId("open-app-button");
   await expect(openAppLink).toBeVisible();
-  await expect(openAppLink).toHaveAttribute("href", /http/);
+  await expect(openAppLink).toHaveAttribute("href", /http/, { timeout: 20_000 });
 
   const [appPage] = await Promise.all([page.context().waitForEvent("page"), openAppLink.click()]);
 
@@ -302,6 +301,8 @@ test("Admin can edit a lab using the admin dashboard.", async ({ page }) => {
   await loginAs(page, testUsers.admin);
   await clickNavbarButton(page, "Dashboard", "dashboard/admin", 1);
   await page.getByRole("tab", { name: "Labs" }).click();
+  await page.getByRole("textbox", { name: "Search" }).click();
+  await page.getByRole("textbox", { name: "Search" }).fill("E2E");
   await page
     .getByRole("row", { name: labUnderTest.title })
     .getByRole("button", { name: "Edit lab" })
@@ -334,6 +335,8 @@ test("Admin can delete a lab using the admin dashboard.", async ({ page }) => {
   await loginAs(page, testUsers.admin);
   await clickNavbarButton(page, "Dashboard", "dashboard/admin", 1);
   await page.getByRole("tab", { name: "Labs" }).click();
+  await page.getByRole("textbox", { name: "Search" }).click();
+  await page.getByRole("textbox", { name: "Search" }).fill("E2E");
   await page
     .getByRole("row", { name: labUnderTest.title })
     .getByRole("button", { name: "Delete lab" })
@@ -386,73 +389,68 @@ test("Student can play a lab.", async ({ page }) => {
 });
 
 test("Lab pod lifecycle for e2e-student", async ({ page }) => {
-  test.setTimeout(300_000);
-  let labRunning = false;
+  test.setTimeout(90_000);
+  await loginAs(page, student);
 
-  try {
-    await loginAs(page, student);
-    await assertNoActiveLabs(page);
-    await openCourseFromMyCourses(page, courseUnderTest);
-    await openLabFromCourse(page, courseUnderTest, labUnderTest);
-    await assertAppNotReady(page);
-
-    const extendButton = page.getByLabel("Extend lab");
-    await expect(extendButton).toBeDisabled();
-    await extendButton.hover();
-    await expect(page.getByText("Only running labs can be extended")).toBeVisible();
-
-    await startLabAndWaitForRunning(page);
-    labRunning = true;
-    await openAppAndAssert(page);
-
-    let expectedExpiry = addMinutes(new Date(), START_DURATION_MINUTES);
-    await assertPodExpiry(page, expectedExpiry);
-
-    expectedExpiry = addMinutes(expectedExpiry, EXTENSION_MINUTES);
-    await extendLab(page, expectedExpiry);
-
-    await clickNavbarButton(page, "HOME", "dashboard");
-    await assertActiveLabCard(page, courseUnderTest, labUnderTest, expectedExpiry);
-    await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
-
-    expectedExpiry = addMinutes(expectedExpiry, EXTENSION_MINUTES);
-    await extendLab(page, expectedExpiry);
-    await expect(extendButton).toBeDisabled();
-
-    await clickNavbarButton(page, "HOME", "dashboard");
-    await assertActiveLabCard(page, courseUnderTest, labUnderTest, expectedExpiry);
-
-    await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
+  // Clean up old active lab, if it is still running. This can happen, if the last run of this test failed.
+  const hasNoOldActiveLab = await page.getByText("No active labs", { exact: true }).isVisible();
+  if (hasNoOldActiveLab === false) {
+    await page.getByRole("link", { name: "Open lab" }).click();
     await stopLabAndWaitForNotStarted(page);
-    labRunning = false;
-    await assertAppNotReady(page);
-
     await clickNavbarButton(page, "HOME", "dashboard");
-    await assertNoActiveLabs(page);
-
-    await openCourseFromMyCourses(page, courseUnderTest);
-    await openLabFromCourse(page, courseUnderTest, labUnderTest);
-    await assertAppNotReady(page);
-
-    await startLabAndWaitForRunning(page);
-    labRunning = true;
-    await openAppAndAssert(page);
-
-    expectedExpiry = addMinutes(new Date(), START_DURATION_MINUTES);
-    await assertPodExpiry(page, expectedExpiry);
-
-    await clickNavbarButton(page, "HOME", "dashboard");
-    await assertActiveLabCard(page, courseUnderTest, labUnderTest, expectedExpiry);
-
-    await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
-    await stopLabAndWaitForNotStarted(page);
-    labRunning = false;
-    await assertAppNotReady(page);
-  } finally {
-    if (labRunning) {
-      await clickNavbarButton(page, "HOME", "dashboard");
-      await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
-      await stopLabAndWaitForNotStarted(page);
-    }
   }
+
+  await assertNoActiveLabs(page);
+  await openCourseFromMyCourses(page, courseUnderTest);
+  await openLabFromCourse(page, courseUnderTest, labUnderTest);
+  await assertAppNotReady(page);
+
+  const extendButton = page.getByLabel("Extend lab");
+  await expect(extendButton).toBeDisabled();
+  await extendButton.hover();
+  await expect(page.getByText("Only running labs can be extended")).toBeVisible();
+
+  await startLabAndWaitForRunning(page);
+  await openAppAndAssert(page);
+
+  let expectedExpiry = addMinutes(new Date(), START_DURATION_MINUTES);
+  await assertPodExpiry(page, expectedExpiry);
+
+  expectedExpiry = addMinutes(expectedExpiry, EXTENSION_MINUTES);
+  await extendLab(page, expectedExpiry);
+
+  await clickNavbarButton(page, "HOME", "dashboard");
+  await assertActiveLabCard(page, courseUnderTest, labUnderTest, expectedExpiry);
+  await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
+
+  expectedExpiry = addMinutes(expectedExpiry, EXTENSION_MINUTES);
+  await extendLab(page, expectedExpiry);
+  await expect(extendButton).toBeDisabled();
+
+  await clickNavbarButton(page, "HOME", "dashboard");
+  await assertActiveLabCard(page, courseUnderTest, labUnderTest, expectedExpiry);
+
+  await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
+  await stopLabAndWaitForNotStarted(page);
+  await assertAppNotReady(page);
+
+  await clickNavbarButton(page, "HOME", "dashboard");
+  await assertNoActiveLabs(page);
+
+  await openCourseFromMyCourses(page, courseUnderTest);
+  await openLabFromCourse(page, courseUnderTest, labUnderTest);
+  await assertAppNotReady(page);
+
+  await startLabAndWaitForRunning(page);
+  await openAppAndAssert(page);
+
+  expectedExpiry = addMinutes(new Date(), START_DURATION_MINUTES);
+  await assertPodExpiry(page, expectedExpiry);
+
+  await clickNavbarButton(page, "HOME", "dashboard");
+  await assertActiveLabCard(page, courseUnderTest, labUnderTest, expectedExpiry);
+
+  await openActiveLab(page, courseUnderTest.id, labUnderTest.id);
+  await stopLabAndWaitForNotStarted(page);
+  await assertAppNotReady(page);
 });
