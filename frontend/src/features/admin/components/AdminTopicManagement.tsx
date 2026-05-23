@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActionIcon, Button, Group, Loader, Stack, Table, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Group, Loader, Stack, Table, Text, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { readBackendError } from "@/src/shared/lib/readBackendError";
+import AppButton from "@/src/shared/components/AppButton";
+import { useApiClient } from "@/src/shared/lib/api/client";
+import { apiErrorText } from "@/src/shared/lib/api";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 import { slugify } from "@/src/shared/lib/utils";
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal";
@@ -14,6 +16,7 @@ const MAX_TOPIC_LENGTH = 24;
 const TOPIC_PATTERN = /^[A-Za-z][A-Za-z0-9-]*$/;
 
 export default function AdminTopicManagement() {
+  const client = useApiClient();
   const [topics, setTopics] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,20 +45,19 @@ export default function AdminTopicManagement() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/backend/api/admin/topics", { method: "GET" });
-      if (!res.ok) {
-        const msg = toUserFriendlyBackendError(await readBackendError(res));
+      const { data, error } = await client.GET("/api/admin/topics");
+      if (error) {
+        const msg = toUserFriendlyBackendError(apiErrorText(error));
         setError(`Failed to load topics.${msg ? ` ${msg}` : ""}`);
         return;
       }
-      const data = (await res.json()) as string[];
-      setTopics(Array.isArray(data) ? data : []);
+      setTopics(data ?? []);
     } catch {
       setError("Failed to load topics");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [client]);
 
   useEffect(() => {
     void loadTopics();
@@ -107,13 +109,9 @@ export default function AdminTopicManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch("/api/backend/api/admin/topics", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value }),
-      });
-      if (!res.ok) {
-        const msg = await readBackendError(res);
+      const { error } = await client.POST("/api/admin/topics", { body: { value } });
+      if (error) {
+        const msg = apiErrorText(error);
         const msgLower = msg?.toLowerCase() ?? "";
         if (msgLower.includes("already exists")) {
           showToast(
@@ -182,15 +180,14 @@ export default function AdminTopicManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/backend/api/admin/topics/${encodeURIComponent(selected)}`, {
-        method: "DELETE",
+      const { error } = await client.DELETE("/api/admin/topics/{value}", {
+        params: { path: { value: selected } },
       });
-      if (!res.ok) {
-        const msg = await readBackendError(res);
+      if (error) {
         showToast(
           "red",
           "Failed to delete topic",
-          toUserFriendlyBackendError(msg) ?? "Please try again."
+          toUserFriendlyBackendError(apiErrorText(error)) ?? "Please try again."
         );
         return;
       }
@@ -208,13 +205,13 @@ export default function AdminTopicManagement() {
   return (
     <Stack gap="md">
       <Group justify="space-between" align="flex-end" wrap="wrap">
-        <Group gap="sm" wrap="wrap">
+        <Group gap="sm" wrap="wrap" style={{ flex: 1 }}>
           <TextInput
             label="New topic"
             placeholder="e.g. network"
             value={newTopic}
             onChange={(e) => setNewTopic(e.currentTarget.value)}
-            w={320}
+            w={{ base: "100%", sm: 320 }}
             error={inputError}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -223,23 +220,15 @@ export default function AdminTopicManagement() {
               }
             }}
           />
-          <Button
+          <AppButton
             leftSection={<IconPlus size={16} />}
             mt={22}
-            radius="md"
             onClick={() => void addTopic()}
             loading={saving}
             disabled={!trimmedTopic || topicTooShort || topicTooLong || topicInvalidFormat}
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-            }}
           >
             Add
-          </Button>
+          </AppButton>
         </Group>
 
         {loading && (

@@ -56,7 +56,7 @@ public class LabPodService {
   // Stable labels used for Kubernetes selectors and ownership checks.
   private static final String LABEL_APP = "istp-lab-pod";
   private static final String LABEL_USER_ID = "istp.pm4.ch/user-id";
-  private static final String LABEL_CHALLENGE_ID = "istp.pm4.ch/lab-id";
+  private static final String LABEL_LAB_ID = "istp.pm4.ch/lab-id";
 
   // Lifecycle data changes over time, so keep it out of selectors.
   private static final String ANNOTATION_CREATED_AT = "istp.pm4.ch/created-at-epoch";
@@ -206,7 +206,7 @@ public class LabPodService {
         // Defense-in-depth: verify labels match (guards against hash collision)
         Map<String, String> labels = d.getMetadata().getLabels();
         if (!userId.toString().equals(labels.get(LABEL_USER_ID))
-            || !labId.toString().equals(labels.get(LABEL_CHALLENGE_ID))) {
+            || !labId.toString().equals(labels.get(LABEL_LAB_ID))) {
           log.error(
               "Hash collision detected for instance {}: labels don't match caller", instanceName);
           throw new LabPodException(
@@ -300,7 +300,7 @@ public class LabPodService {
 
       // Belt-and-braces ownership check
       if (!userId.toString().equals(labels.get(LABEL_USER_ID))
-          || !labId.toString().equals(labels.get(LABEL_CHALLENGE_ID))) {
+          || !labId.toString().equals(labels.get(LABEL_LAB_ID))) {
         log.warn(
             "Ownership mismatch on delete for instance {}: denying", d.getMetadata().getName());
         throw new LabPodException("Ownership check failed for pod deletion.");
@@ -330,7 +330,7 @@ public class LabPodService {
       Map<String, String> labels = deployment.getMetadata().getLabels();
       if (labels == null
           || !userId.toString().equals(labels.get(LABEL_USER_ID))
-          || !labId.toString().equals(labels.get(LABEL_CHALLENGE_ID))) {
+          || !labId.toString().equals(labels.get(LABEL_LAB_ID))) {
         throw new LabPodException("Ownership check failed for pod extension.");
       }
 
@@ -438,7 +438,7 @@ public class LabPodService {
         .inNamespace(defaultNamespace)
         .withLabel("app", LABEL_APP)
         .withLabel(LABEL_USER_ID, userId.toString())
-        .withLabel(LABEL_CHALLENGE_ID, labId.toString())
+        .withLabel(LABEL_LAB_ID, labId.toString())
         .list()
         .getItems();
   }
@@ -463,7 +463,7 @@ public class LabPodService {
 
     UUID labId;
     try {
-      labId = UUID.fromString(labels.get(LABEL_CHALLENGE_ID));
+      labId = UUID.fromString(labels.get(LABEL_LAB_ID));
     } catch (Exception e) {
       log.warn("Pod {} has no valid lab id label", deployment.getMetadata().getName());
       return Optional.empty();
@@ -810,7 +810,7 @@ public class LabPodService {
     Map<String, String> labels = new HashMap<>();
     labels.put("app", LABEL_APP);
     labels.put(LABEL_USER_ID, userId.toString());
-    labels.put(LABEL_CHALLENGE_ID, labId.toString());
+    labels.put(LABEL_LAB_ID, labId.toString());
     Map<String, String> annotations = new HashMap<>();
     annotations.put(ANNOTATION_CREATED_AT, String.valueOf(nowEpoch));
     annotations.put(ANNOTATION_LAST_ACTIVITY_AT, String.valueOf(nowEpoch));

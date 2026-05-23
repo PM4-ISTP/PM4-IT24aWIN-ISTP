@@ -30,13 +30,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.pm4.istp.course.db.CreateCourseInstructorRequest;
-import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.entities.CourseStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.InstructorRoleEnum;
-import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
-import com.pm4.istp.course.db.UpdateCourseRequest;
+import com.pm4.istp.course.dto.CreateCourseInstructorRequestDto;
+import com.pm4.istp.course.dto.CreateCourseRequestDto;
+import com.pm4.istp.course.dto.UpdateCourseInstructorRequestDto;
+import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.db.entities.Lab;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.Challenge;
@@ -167,14 +167,14 @@ class CourseServiceImplTest {
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    CreateCourseRequest request = new CreateCourseRequest(
+    CreateCourseRequestDto request = new CreateCourseRequestDto(
         "Secure Coding",
         "Intro",
         "Learn the secure coding basics.",
         CourseStatusEnum.DRAFT,
         null,
         null,
-        List.of(new CreateCourseInstructorRequest(collaboratorId, InstructorRoleEnum.COLLABORATOR)),
+        List.of(new CreateCourseInstructorRequestDto(collaboratorId, InstructorRoleEnum.COLLABORATOR)),
         McAttemptsMode.UNLIMITED);
 
     Course result = courseService.createCourse(ownerId, request);
@@ -221,7 +221,7 @@ class CourseServiceImplTest {
     when(courseInviteCodeHelper.saveNewCourseWithInviteCode(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    CreateCourseRequest request = new CreateCourseRequest(
+    CreateCourseRequestDto request = new CreateCourseRequestDto(
         "Private Secure Coding",
         "Intro",
         "Private practice course.",
@@ -318,14 +318,14 @@ class CourseServiceImplTest {
     oldCollaboratorRelation.setInstructor(oldCollaborator);
     course.addCourseInstructor(oldCollaboratorRelation);
 
-    UpdateCourseRequest updateRequest = new UpdateCourseRequest(
+    UpdateCourseRequestDto updateRequest = new UpdateCourseRequestDto(
         "Updated title",
         "Updated description",
         "Updated short description for the header.",
         CourseStatusEnum.PUBLIC,
         null,
         null,
-        List.of(new UpdateCourseInstructorRequest(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
+        List.of(new UpdateCourseInstructorRequestDto(newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
         McAttemptsMode.UNLIMITED);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
@@ -376,8 +376,8 @@ class CourseServiceImplTest {
     collaboratorRelation.setInstructor(collaborator);
     course.addCourseInstructor(collaboratorRelation);
 
-    UpdateCourseRequest updateRequest =
-        new UpdateCourseRequest(
+    UpdateCourseRequestDto updateRequest =
+        new UpdateCourseRequestDto(
             "Collaborator update",
             "Updated by collaborator",
             "Updated short description",
@@ -385,7 +385,7 @@ class CourseServiceImplTest {
             "https://example.com/course.png",
             "Web-Security",
             List.of(
-                new UpdateCourseInstructorRequest(
+                new UpdateCourseInstructorRequestDto(
                     collaboratorId, InstructorRoleEnum.COLLABORATOR)),
             McAttemptsMode.ONCE);
 
@@ -430,8 +430,8 @@ class CourseServiceImplTest {
     collaboratorRelation.setInstructor(collaborator);
     course.addCourseInstructor(collaboratorRelation);
 
-    UpdateCourseRequest updateRequest =
-        new UpdateCourseRequest(
+    UpdateCourseRequestDto updateRequest =
+        new UpdateCourseRequestDto(
             "Collaborator publish",
             "Attempted publish",
             "Updated short description",
@@ -439,7 +439,7 @@ class CourseServiceImplTest {
             null,
             null,
             List.of(
-                new UpdateCourseInstructorRequest(
+                new UpdateCourseInstructorRequestDto(
                     collaboratorId, InstructorRoleEnum.COLLABORATOR)),
             McAttemptsMode.UNLIMITED);
 
@@ -479,8 +479,8 @@ class CourseServiceImplTest {
     collaboratorRelation.setInstructor(collaborator);
     course.addCourseInstructor(collaboratorRelation);
 
-    UpdateCourseRequest updateRequest =
-        new UpdateCourseRequest(
+    UpdateCourseRequestDto updateRequest =
+        new UpdateCourseRequestDto(
             "Collaborator update",
             "Attempted collaborator change",
             "Updated short description",
@@ -488,7 +488,7 @@ class CourseServiceImplTest {
             null,
             null,
             List.of(
-                new UpdateCourseInstructorRequest(
+                new UpdateCourseInstructorRequestDto(
                     newCollaboratorId, InstructorRoleEnum.COLLABORATOR)),
             McAttemptsMode.UNLIMITED);
 
@@ -796,7 +796,7 @@ class CourseServiceImplTest {
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    CreateCourseRequest request = new CreateCourseRequest(
+    CreateCourseRequestDto request = new CreateCourseRequestDto(
         "Solo Course",
         "Desc",
         "Short solo summary.",
@@ -865,7 +865,7 @@ class CourseServiceImplTest {
     ownerRelation.setInstructor(owner);
     course.addCourseInstructor(ownerRelation);
 
-    UpdateCourseRequest request = new UpdateCourseRequest(
+    UpdateCourseRequestDto request = new UpdateCourseRequestDto(
         "Title",
         "Desc",
         "Short summary.",
@@ -890,7 +890,7 @@ class CourseServiceImplTest {
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.empty());
 
-    UpdateCourseRequest request = new UpdateCourseRequest(
+    UpdateCourseRequestDto request = new UpdateCourseRequestDto(
         "Title",
         "Desc",
         "Short summary.",
@@ -934,7 +934,7 @@ class CourseServiceImplTest {
     return course;
   }
 
-  private Lab buildChallenge(UUID id, User creator, LabStatusEnum status) {
+  private Lab buildLab(UUID id, User creator, LabStatusEnum status) {
     Lab lab = new Lab();
     lab.setId(id);
     lab.setTitle("Lab " + id);
@@ -955,7 +955,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void updateCourseChallenges_replacesAssignmentsWithOwnPrivateChallenge() {
+  void updateCourseLabs_replacesAssignmentsWithOwnPrivateLab() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -964,14 +964,14 @@ class CourseServiceImplTest {
     owner.setId(ownerId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Lab lab = buildChallenge(labId, owner, LabStatusEnum.PRIVATE);
+    Lab lab = buildLab(labId, owner, LabStatusEnum.PRIVATE);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    Course updated = courseService.updateCourseChallenges(
+    Course updated = courseService.updateCourseLabs(
         ownerId, courseId, List.of(new CourseLabItemDto(labId, 0, null)));
 
     assertThat(updated.getCourseLabs()).hasSize(1);
@@ -981,7 +981,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void updateCourseChallenges_setsDueAtWhenProvided() {
+  void updateCourseLabs_setsDueAtWhenProvided() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -991,14 +991,14 @@ class CourseServiceImplTest {
     owner.setId(ownerId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Lab lab = buildChallenge(labId, owner, LabStatusEnum.PUBLIC);
+    Lab lab = buildLab(labId, owner, LabStatusEnum.PUBLIC);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
     when(courseRepository.save(any(Course.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     Course updated =
-        courseService.updateCourseChallenges(
+        courseService.updateCourseLabs(
             ownerId, courseId, List.of(new CourseLabItemDto(labId, 0, dueAt)));
 
     assertThat(updated.getCourseLabs()).hasSize(1);
@@ -1006,7 +1006,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void updateCourseChallenges_diffsExistingAssignments() {
+  void updateCourseLabs_diffsExistingAssignments() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID keptLabId = UUID.randomUUID();
@@ -1018,19 +1018,19 @@ class CourseServiceImplTest {
     owner.setId(ownerId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Lab keptLab = buildChallenge(keptLabId, owner, LabStatusEnum.PUBLIC);
-    Lab removedLab = buildChallenge(removedLabId, owner, LabStatusEnum.PUBLIC);
-    Lab addedLab = buildChallenge(addedLabId, owner, LabStatusEnum.PUBLIC);
+    Lab keptLab = buildLab(keptLabId, owner, LabStatusEnum.PUBLIC);
+    Lab removedLab = buildLab(removedLabId, owner, LabStatusEnum.PUBLIC);
+    Lab addedLab = buildLab(addedLabId, owner, LabStatusEnum.PUBLIC);
 
     CourseLab keptAssignment = new CourseLab();
     keptAssignment.setLab(keptLab);
     keptAssignment.setOrderIndex(0);
-    course.addCourseChallenge(keptAssignment);
+    course.addCourseLab(keptAssignment);
 
     CourseLab removedAssignment = new CourseLab();
     removedAssignment.setLab(removedLab);
     removedAssignment.setOrderIndex(1);
-    course.addCourseChallenge(removedAssignment);
+    course.addCourseLab(removedAssignment);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(keptLabId)).thenReturn(Optional.of(keptLab));
@@ -1038,7 +1038,7 @@ class CourseServiceImplTest {
     when(courseRepository.save(any(Course.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     Course updated =
-        courseService.updateCourseChallenges(
+        courseService.updateCourseLabs(
             ownerId,
             courseId,
             List.of(new CourseLabItemDto(addedLabId, 0, null), new CourseLabItemDto(keptLabId, 1, dueAt)));
@@ -1055,7 +1055,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void updateCourseChallenges_allowsPublicChallengeFromOtherCreator() {
+  void updateCourseLabs_allowsPublicLabFromOtherCreator() {
     UUID ownerId = UUID.randomUUID();
     UUID otherCreatorId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
@@ -1067,21 +1067,21 @@ class CourseServiceImplTest {
     otherCreator.setId(otherCreatorId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Lab lab = buildChallenge(labId, otherCreator, LabStatusEnum.PUBLIC);
+    Lab lab = buildLab(labId, otherCreator, LabStatusEnum.PUBLIC);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    Course updated = courseService.updateCourseChallenges(
+    Course updated = courseService.updateCourseLabs(
         ownerId, courseId, List.of(new CourseLabItemDto(labId, 0, null)));
 
     assertThat(updated.getCourseLabs()).hasSize(1);
   }
 
   @Test
-  void updateCourseChallenges_rejectsDraftChallengeEvenFromOwnCreator() {
+  void updateCourseLabs_rejectsDraftLabEvenFromOwnCreator() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -1090,7 +1090,7 @@ class CourseServiceImplTest {
     owner.setId(ownerId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Lab lab = buildChallenge(labId, owner, LabStatusEnum.DRAFT);
+    Lab lab = buildLab(labId, owner, LabStatusEnum.DRAFT);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
@@ -1098,7 +1098,7 @@ class CourseServiceImplTest {
     List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
 
     assertThatThrownBy(
-        () -> courseService.updateCourseChallenges(ownerId, courseId, items))
+        () -> courseService.updateCourseLabs(ownerId, courseId, items))
         .isInstanceOf(InvalidCourseLabException.class)
         .hasMessageContaining("draft");
 
@@ -1106,7 +1106,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void updateCourseChallenges_rejectsRemovedLabEvenFromOwnCreator() {
+  void updateCourseLabs_rejectsRemovedLabEvenFromOwnCreator() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -1115,7 +1115,7 @@ class CourseServiceImplTest {
     owner.setId(ownerId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Lab lab = buildChallenge(labId, owner, LabStatusEnum.PUBLIC);
+    Lab lab = buildLab(labId, owner, LabStatusEnum.PUBLIC);
     lab.setDeletedAt(LocalDateTime.now());
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
@@ -1123,7 +1123,7 @@ class CourseServiceImplTest {
 
     List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
 
-    assertThatThrownBy(() -> courseService.updateCourseChallenges(ownerId, courseId, items))
+    assertThatThrownBy(() -> courseService.updateCourseLabs(ownerId, courseId, items))
         .isInstanceOf(InvalidCourseLabException.class)
         .hasMessageContaining("removed");
 
@@ -1131,7 +1131,7 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void updateCourseChallenges_rejectsPrivateChallengeFromOtherCreator() {
+  void updateCourseLabs_rejectsPrivateLabFromOtherCreator() {
     UUID ownerId = UUID.randomUUID();
     UUID otherCreatorId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
@@ -1143,7 +1143,7 @@ class CourseServiceImplTest {
     otherCreator.setId(otherCreatorId);
 
     Course course = buildCourseWithOwner(courseId, owner);
-    Lab lab = buildChallenge(labId, otherCreator, LabStatusEnum.PRIVATE);
+    Lab lab = buildLab(labId, otherCreator, LabStatusEnum.PRIVATE);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(labRepository.findById(labId)).thenReturn(Optional.of(lab));
@@ -1151,14 +1151,14 @@ class CourseServiceImplTest {
     List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
 
     assertThatThrownBy(
-        () -> courseService.updateCourseChallenges(ownerId, courseId, items))
+        () -> courseService.updateCourseLabs(ownerId, courseId, items))
         .isInstanceOf(LabNotFoundException.class);
 
     verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
-  void updateCourseChallenges_whenChallengeDoesNotExist_throwsChallengeNotFound() {
+  void updateCourseLabs_whenLabDoesNotExist_throwsLabNotFound() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -1174,14 +1174,14 @@ class CourseServiceImplTest {
     List<CourseLabItemDto> items = List.of(new CourseLabItemDto(labId, 0, null));
 
     assertThatThrownBy(
-        () -> courseService.updateCourseChallenges(ownerId, courseId, items))
+        () -> courseService.updateCourseLabs(ownerId, courseId, items))
         .isInstanceOf(LabNotFoundException.class);
 
     verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
-  void updateCourseChallenges_whenCallerIsNotInstructor_throwsAccessDenied() {
+  void updateCourseLabs_whenCallerIsNotInstructor_throwsAccessDenied() {
     UUID ownerId = UUID.randomUUID();
     UUID outsiderId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
@@ -1195,14 +1195,14 @@ class CourseServiceImplTest {
 
     List<CourseLabItemDto> items = List.of();
 
-    assertThatThrownBy(() -> courseService.updateCourseChallenges(outsiderId, courseId, items))
+    assertThatThrownBy(() -> courseService.updateCourseLabs(outsiderId, courseId, items))
         .isInstanceOf(CourseAccessDeniedException.class);
 
     verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
-  void updateCourseChallenges_whenCourseNotFound_throwsCourseNotFound() {
+  void updateCourseLabs_whenCourseNotFound_throwsCourseNotFound() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
@@ -1210,12 +1210,12 @@ class CourseServiceImplTest {
 
     List<CourseLabItemDto> items = List.of();
 
-    assertThatThrownBy(() -> courseService.updateCourseChallenges(ownerId, courseId, items))
+    assertThatThrownBy(() -> courseService.updateCourseLabs(ownerId, courseId, items))
         .isInstanceOf(CourseNotFoundException.class);
   }
 
   @Test
-  void updateCourseChallenges_withEmptyList_clearsAllAssignments() {
+  void updateCourseLabs_withEmptyList_clearsAllAssignments() {
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
@@ -1224,23 +1224,23 @@ class CourseServiceImplTest {
 
     Course course = buildCourseWithOwner(courseId, owner);
     // pre-seed with an existing assignment to verify it gets cleared
-    Lab existing = buildChallenge(UUID.randomUUID(), owner, LabStatusEnum.PUBLIC);
+    Lab existing = buildLab(UUID.randomUUID(), owner, LabStatusEnum.PUBLIC);
     com.pm4.istp.course.db.entities.CourseLab existingAssignment = new com.pm4.istp.course.db.entities.CourseLab();
     existingAssignment.setLab(existing);
     existingAssignment.setOrderIndex(0);
-    course.addCourseChallenge(existingAssignment);
+    course.addCourseLab(existingAssignment);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
     when(courseRepository.save(any(Course.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    Course updated = courseService.updateCourseChallenges(ownerId, courseId, List.of());
+    Course updated = courseService.updateCourseLabs(ownerId, courseId, List.of());
 
     assertThat(updated.getCourseLabs()).isEmpty();
   }
 
   @Test
-  void getCourseChallengeSubmissions_returnsOnTimeInProgressAndNotSubmitted() {
+  void getCourseLabSubmissions_returnsOnTimeInProgressAndNotSubmitted() {
     UUID instructorId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
@@ -1249,7 +1249,7 @@ class CourseServiceImplTest {
     instructor.setId(instructorId);
 
     Course course = buildCourseWithOwner(courseId, instructor);
-    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    Lab lab = buildLab(labId, instructor, LabStatusEnum.PUBLIC);
 
     com.pm4.istp.course.db.entities.CourseLab assignment =
         new com.pm4.istp.course.db.entities.CourseLab();
@@ -1257,7 +1257,7 @@ class CourseServiceImplTest {
     assignment.setOrderIndex(0);
     LocalDateTime dueAt = LocalDateTime.of(2026, 5, 1, 12, 0);
     assignment.setDueAt(dueAt);
-    course.addCourseChallenge(assignment);
+    course.addCourseLab(assignment);
 
     User studentOnTime = new User();
     studentOnTime.setId(UUID.randomUUID());
@@ -1300,7 +1300,7 @@ class CourseServiceImplTest {
                 new Object[] {studentLate.getId(), labId, 3L, dueAt.plusMinutes(1)},
                 new Object[] {studentInProgress.getId(), labId, 2L, dueAt.minusMinutes(2)}));
 
-    var result = courseService.getCourseChallengeSubmissions(instructorId, courseId);
+    var result = courseService.getCourseLabSubmissions(instructorId, courseId);
 
     assertThat(result.getLabs()).hasSize(1);
     assertThat(result.getLabs().getFirst().getDueAt()).isEqualTo(dueAt);
@@ -1333,13 +1333,13 @@ class CourseServiceImplTest {
     User instructor = new User();
     instructor.setId(instructorId);
     Course course = buildCourseWithOwner(courseId, instructor);
-    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    Lab lab = buildLab(labId, instructor, LabStatusEnum.PUBLIC);
     lab.setTitle("Evidence lab");
     lab.setMaxScore(8);
     CourseLab assignment = new CourseLab();
     assignment.setLab(lab);
     assignment.setDueAt(dueAt);
-    course.addCourseChallenge(assignment);
+    course.addCourseLab(assignment);
 
     Challenge optionChallenge =
         buildCourseChallenge(optionChallengeId, lab, "Choose wisely", ChallengeType.MULTIPLE_CHOICE, 5);
@@ -1412,10 +1412,10 @@ class CourseServiceImplTest {
     User instructor = new User();
     instructor.setId(instructorId);
     Course course = buildCourseWithOwner(courseId, instructor);
-    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    Lab lab = buildLab(labId, instructor, LabStatusEnum.PUBLIC);
     CourseLab assignment = new CourseLab();
     assignment.setLab(lab);
-    course.addCourseChallenge(assignment);
+    course.addCourseLab(assignment);
     Challenge challenge = buildCourseChallenge(challengeId, lab, "Solved", ChallengeType.FLAG, 1);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
@@ -1459,11 +1459,11 @@ class CourseServiceImplTest {
     instructor.setId(instructorId);
     Course course = buildCourseWithOwner(courseId, instructor);
 
-    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    Lab lab = buildLab(labId, instructor, LabStatusEnum.PUBLIC);
     lab.setMaxScore(5);
     CourseLab assignment = new CourseLab();
     assignment.setLab(lab);
-    course.addCourseChallenge(assignment);
+    course.addCourseLab(assignment);
 
     Challenge optionChallenge =
         buildCourseChallenge(
@@ -1520,11 +1520,11 @@ class CourseServiceImplTest {
     Course course = buildCourseWithOwner(courseId, instructor);
     course.setMcAttemptsMode(McAttemptsMode.UNLIMITED);
 
-    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    Lab lab = buildLab(labId, instructor, LabStatusEnum.PUBLIC);
     lab.setMaxScore(2);
     CourseLab assignment = new CourseLab();
     assignment.setLab(lab);
-    course.addCourseChallenge(assignment);
+    course.addCourseLab(assignment);
 
     Challenge optionChallenge =
         buildCourseChallenge(
@@ -1575,11 +1575,11 @@ class CourseServiceImplTest {
     Course course = buildCourseWithOwner(courseId, instructor);
     course.setMcAttemptsMode(McAttemptsMode.ONCE);
 
-    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    Lab lab = buildLab(labId, instructor, LabStatusEnum.PUBLIC);
     lab.setMaxScore(2);
     CourseLab assignment = new CourseLab();
     assignment.setLab(lab);
-    course.addCourseChallenge(assignment);
+    course.addCourseLab(assignment);
 
     Challenge optionChallenge =
         buildCourseChallenge(
@@ -1652,11 +1652,11 @@ class CourseServiceImplTest {
     User participant = new User();
     participant.setId(participantId);
     Course course = buildCourseWithOwner(courseId, instructor);
-    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    Lab lab = buildLab(labId, instructor, LabStatusEnum.PUBLIC);
     lab.setMaxScore(8);
     CourseLab assignment = new CourseLab();
     assignment.setLab(lab);
-    course.addCourseChallenge(assignment);
+    course.addCourseLab(assignment);
 
     Challenge overridden =
         buildCourseChallenge(challengeId, lab, "Manual review", ChallengeType.FLAG, 5);
@@ -1719,7 +1719,7 @@ class CourseServiceImplTest {
     User participant = new User();
     participant.setId(participantId);
     Course course = buildCourseWithOwner(courseId, instructor);
-    Lab lab = buildChallenge(labId, instructor, LabStatusEnum.PUBLIC);
+    Lab lab = buildLab(labId, instructor, LabStatusEnum.PUBLIC);
     Challenge challenge =
         buildCourseChallenge(challengeId, lab, "Detached challenge", ChallengeType.FLAG, 5);
 
@@ -2001,7 +2001,10 @@ class CourseServiceImplTest {
   }
 
   @Test
-  void regenerateInviteCode_whenCourseIsNotPrivate_throwsCourseAccessDeniedException() {
+  void regenerateInviteCode_whenCourseIsNotPrivate_stillRegeneratesCode() {
+    // Owner can pre-generate an invite code before saving the visibility change to PRIVATE.
+    // updateCourse nulls the code again if the saved status is not PRIVATE, so the invariant
+    // "non-PRIVATE -> no inviteCode" is restored on the next save.
     UUID ownerId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
 
@@ -2018,12 +2021,12 @@ class CourseServiceImplTest {
     course.addCourseInstructor(ownerRelation);
 
     when(courseRepository.findByIdAndDeletedAtIsNull(courseId)).thenReturn(Optional.of(course));
+    when(courseInviteCodeHelper.generateAndAssign(courseId)).thenReturn("NEWCOD");
 
-    assertThatThrownBy(() -> courseService.regenerateInviteCode(courseId, ownerId))
-        .isInstanceOf(CourseAccessDeniedException.class)
-        .hasMessageContaining("not private");
+    Course result = courseService.regenerateInviteCode(courseId, ownerId);
 
-    verify(courseInviteCodeHelper, never()).generateAndAssign(any());
+    verify(courseInviteCodeHelper).generateAndAssign(courseId);
+    assertThat(result.getInviteCode()).isEqualTo("NEWCOD");
   }
 
   @Test
@@ -2107,7 +2110,7 @@ class CourseServiceImplTest {
         .thenThrow(new InviteCodeGenerationException(
             "Could not generate a unique invite code after 10 attempts"));
 
-    CreateCourseRequest request = new CreateCourseRequest(
+    CreateCourseRequestDto request = new CreateCourseRequestDto(
         "Private Course",
         "Desc",
         null,
@@ -2145,7 +2148,7 @@ class CourseServiceImplTest {
         .thenThrow(new InviteCodeGenerationException(
             "Could not generate a unique invite code after 10 attempts"));
 
-    UpdateCourseRequest updateRequest = new UpdateCourseRequest(
+    UpdateCourseRequestDto updateRequest = new UpdateCourseRequestDto(
         "Updated title",
         "Updated description",
         null,

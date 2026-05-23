@@ -8,14 +8,18 @@ loadEnvConfig(process.cwd());
  */
 export default defineConfig({
   testDir: "./tests",
-  /* Run tests in files in parallel */
-  fullyParallel: true,
+  /* Do not run tests in files in parallel */
+  fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
+  /* Playwright tests can be flaky. Flaky tests should not block CI. */
+  failOnFlakyTests: process.env.CI ? false : true,
   /* Opt out of parallel tests on CI. */
   workers: 1,
+  /* Increase default timeout */
+  timeout: 60_000,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

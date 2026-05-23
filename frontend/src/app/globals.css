@@ -6,19 +6,25 @@
 }
 
 /* ── Design system tokens ─────────────────────────────────────────────────── */
+/* Single source of truth mirrored from src/shared/lib/theme.ts. Keep in sync. */
 :root {
   /* Backgrounds */
   --ds-card-bg: rgba(255, 255, 255, 0.04);
   --ds-card-bg-hover: rgba(255, 255, 255, 0.06);
   --ds-card-border: rgba(255, 255, 255, 0.08);
-  --ds-card-border-hover: rgba(255, 255, 255, 0.13);
+  --ds-card-border-hover: rgba(255, 255, 255, 0.14);
 
-  /* Accent & text */
-  --ds-accent: #60a5fa;
-  --ds-accent-dim: rgba(96, 165, 250, 0.15);
-  --ds-text-primary: #e2e8f0;
-  --ds-text-secondary: #94a3b8;
-  --ds-text-muted: rgba(255, 255, 255, 0.35);
+  /* Surfaces (opaque panels — dropdowns, modals) */
+  --ds-panel: #0e1322;
+  --ds-panel-2: #141b2e;
+
+  /* Accent & text — landing palette */
+  --ds-accent: #5d6ef0;
+  --ds-accent-2: #3b82f6;
+  --ds-accent-dim: rgba(93, 110, 240, 0.15);
+  --ds-text-primary: #eaecf3;
+  --ds-text-secondary: #b8bcd0;
+  --ds-text-muted: #7a8198;
 
   /* Shadows */
   --ds-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
@@ -31,8 +37,8 @@
   --ds-radius-lg: 14px;
 
   /* Button */
-  --ds-btn-primary: linear-gradient(90deg, #2563eb, #4f46e5);
-  --ds-btn-primary-shadow: 0 2px 12px rgba(79, 70, 229, 0.3);
+  --ds-btn-primary: linear-gradient(135deg, #5d6ef0 0%, #3b82f6 60%, #6df0c8 110%);
+  --ds-btn-primary-shadow: 0 8px 24px -8px rgba(93, 110, 240, 0.7);
 }
 
 /* ── Global dark base ─────────────────────────────────────────────────────── */
@@ -40,7 +46,9 @@
 /* These rules guarantee the dark gradient is always visible.                 */
 html,
 body {
-  background: linear-gradient(160deg, #0b1120 0%, #0e1a2e 50%, #0b1624 100%);
+  background:
+    radial-gradient(900px 500px at 80% -10%, rgba(93, 110, 240, 0.18), transparent 60%),
+    radial-gradient(700px 460px at 10% 8%, rgba(109, 240, 200, 0.06), transparent 60%), #06080f;
   background-attachment: fixed;
   color: var(--ds-text-primary);
   font-family: var(--font-space-grotesk), sans-serif;
@@ -107,14 +115,14 @@ body {
 /* ── Mantine Select / Combobox dropdown dark style ───────────────────────── */
 .mantine-Select-dropdown,
 .mantine-Combobox-dropdown {
-  background: #0c1929 !important;
+  background: var(--ds-panel) !important;
   border-color: var(--ds-card-border) !important;
 }
 .mantine-Combobox-option {
   color: var(--ds-text-primary);
 }
 .mantine-Combobox-option[data-combobox-selected] {
-  background: rgba(96, 165, 250, 0.15) !important;
+  background: var(--ds-accent-dim) !important;
   color: var(--ds-accent);
 }
 .mantine-Combobox-option:hover,
@@ -126,7 +134,7 @@ body {
 /* Consistent, high-visibility focus outline for all keyboard-navigable        */
 /* elements. Suppressed on mouse-clicked elements by :focus:not(:focus-visible).*/
 *:focus-visible {
-  outline: 2px solid rgba(96, 165, 250, 0.75) !important;
+  outline: 2px solid rgba(93, 110, 240, 0.75) !important;
   outline-offset: 2px !important;
   border-radius: 4px;
 }
@@ -172,19 +180,19 @@ body {
 
 /* ── Mantine Modal dark theme ────────────────────────────────────────────── */
 .mantine-Modal-content {
-  background: #0e1a2e !important;
+  background: var(--ds-panel) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
 }
 .mantine-Modal-header {
-  background: #0e1a2e !important;
+  background: var(--ds-panel) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
   padding-bottom: 0.75rem !important;
 }
 .mantine-Modal-title {
   font-family: var(--font-space-grotesk), sans-serif !important;
   font-weight: 700 !important;
-  color: #f1f5f9 !important;
+  color: var(--ds-text-primary) !important;
   font-size: 1rem !important;
 }
 .mantine-Modal-close {
@@ -257,9 +265,9 @@ body {
   color: #e2e8f0 !important;
 }
 .mantine-Pagination-control[data-active] {
-  background: rgba(96, 165, 250, 0.15) !important;
-  border-color: rgba(96, 165, 250, 0.35) !important;
-  color: #60a5fa !important;
+  background: var(--ds-accent-dim) !important;
+  border-color: rgba(93, 110, 240, 0.35) !important;
+  color: var(--ds-accent) !important;
 }
 
 /* ── Mantine SegmentedControl dark theme ─────────────────────────────────── */
@@ -302,26 +310,8 @@ body {
   letter-spacing: 0.04em !important;
 }
 
-/* ── Empty state utility ──────────────────────────────────────────────────── */
-.ds-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 4rem 2rem;
-  text-align: center;
-}
-
-/* ── Page section label ───────────────────────────────────────────────────── */
-.ds-section-label {
-  font-family: var(--font-space-grotesk), sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.45);
-}
+/* Empty states and section labels now use the shared React components
+   (src/shared/components/EmptyState.tsx and SectionLabel.tsx). */
 
 /* ── Skeleton shimmer ─────────────────────────────────────────────────────── */
 @keyframes shimmer {

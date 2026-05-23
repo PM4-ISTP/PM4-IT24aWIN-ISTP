@@ -26,19 +26,18 @@ import tools.jackson.databind.module.SimpleModule;
 import tools.jackson.databind.ser.std.StdSerializer;
 
 import com.pm4.istp.course.controllers.CourseController;
-import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
-import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.CourseStatusEnum;
+import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.entities.Course;
 import com.pm4.istp.course.db.entities.CourseInstructor;
-import com.pm4.istp.course.dto.ChallengeCreatorResponseDto;
+import com.pm4.istp.course.dto.LabCreatorResponseDto;
 import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.CourseDetailInstructorResponseDto;
 import com.pm4.istp.course.dto.CourseDetailResponseDto;
-import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabDeadlineDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionDetailDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionStatusEnum;
 import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
@@ -170,9 +169,8 @@ class CourseControllerTest {
         dto.setId(courseId);
         dto.setTitle("Secure Coding");
 
-        when(courseMapper.fromDto(any(CreateCourseRequestDto.class)))
-                .thenReturn(new CreateCourseRequest());
-        when(courseService.createCourse(eq(userId), any(CreateCourseRequest.class))).thenReturn(course);
+        when(courseService.createCourse(eq(userId), any(CreateCourseRequestDto.class)))
+                .thenReturn(course);
         when(courseMapper.toDto(course)).thenReturn(dto);
 
         CreateCourseRequestDto requestDto = new CreateCourseRequestDto(
@@ -183,7 +181,7 @@ class CourseControllerTest {
                 null,
                 null,
                 List.of(),
-                "UNLIMITED");
+                McAttemptsMode.UNLIMITED);
 
         mockMvc
                 .perform(
@@ -206,7 +204,7 @@ class CourseControllerTest {
                         null,
                         null,
                         List.of(),
-                        "UNLIMITED");
+                        McAttemptsMode.UNLIMITED);
 
         mockMvc
                 .perform(
@@ -330,9 +328,7 @@ class CourseControllerTest {
         dto.setId(courseId);
         dto.setTitle("Updated Title");
 
-        when(courseMapper.fromDto(any(UpdateCourseRequestDto.class)))
-                .thenReturn(new UpdateCourseRequest());
-        when(courseService.updateCourse(eq(userId), eq(courseId), any(UpdateCourseRequest.class)))
+        when(courseService.updateCourse(eq(userId), eq(courseId), any(UpdateCourseRequestDto.class)))
                 .thenReturn(course);
         when(courseMapper.toCourseDetailDto(course)).thenReturn(dto);
         when(courseEnrollmentRepository.countByCourseId(courseId)).thenReturn(0L);
@@ -349,7 +345,7 @@ class CourseControllerTest {
                 null,
                 null,
                 List.of(),
-                "UNLIMITED");
+                McAttemptsMode.UNLIMITED);
 
         mockMvc
                 .perform(
@@ -660,6 +656,7 @@ class CourseControllerTest {
     void remainingCourseEndpoints_delegateToServices() throws Exception {
         UUID participantId = UUID.randomUUID();
         UUID labId = UUID.randomUUID();
+        UUID challengeId = UUID.randomUUID();
         Course course = new Course();
         course.setId(courseId);
         CourseDetailResponseDto detailDto = new CourseDetailResponseDto();
@@ -678,8 +675,8 @@ class CourseControllerTest {
                         4,
                         5,
                         List.of());
-        CourseChallengeSubmissionEntryDto scoreEntry =
-                new CourseChallengeSubmissionEntryDto(
+        CourseLabSubmissionEntryDto scoreEntry =
+                new CourseLabSubmissionEntryDto(
                         participantId,
                         labId,
                         1,
@@ -693,14 +690,12 @@ class CourseControllerTest {
 
         doNothing().when(courseService).removeParticipant(userId, courseId, participantId);
         doNothing().when(courseService).leaveCourse(userId, courseId);
-        when(courseService.updateCourseChallenges(eq(userId), eq(courseId), any()))
+        when(courseService.updateCourseLabs(eq(userId), eq(courseId), any()))
                 .thenReturn(course);
         when(courseMapper.toCourseDetailDto(course)).thenReturn(detailDto);
-        when(courseService.getCourseChallengeSubmissions(userId, courseId)).thenReturn(submissions);
+        when(courseService.getCourseLabSubmissions(userId, courseId)).thenReturn(submissions);
         when(courseService.getCourseLabSubmissionDetails(userId, courseId, participantId, labId))
                 .thenReturn(submissionDetail);
-        when(courseService.updateCourseChallengeScore(eq(userId), eq(courseId), eq(participantId), eq(labId), any()))
-                .thenReturn(scoreEntry);
         when(courseService.listUpcomingDeadlines(userId)).thenReturn(List.of(deadline));
         when(courseTopicService.listActiveTopics()).thenReturn(List.of("web", "crypto"));
 
@@ -728,11 +723,10 @@ class CourseControllerTest {
         mockMvc
                 .perform(
                         put("/api/v1/courses/{id}/submissions/{participantId}/{challengeId}/score",
-                                        courseId, participantId, labId)
+                                        courseId, participantId, challengeId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"points\":4}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.awardedPoints").value(4));
+                .andExpect(status().isNotFound());
         mockMvc.perform(get("/api/v1/courses/my-deadlines"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].courseId").value(courseId.toString()));
@@ -756,7 +750,7 @@ class CourseControllerTest {
     // ── Mock object generators ────────────────────────────────────────────────
     private LabStudentDto generateChallengeStudentDto(String title,
             LabStatusEnum labStatus, String creatorName) {
-        ChallengeCreatorResponseDto challengeCreatorResponseDto = new ChallengeCreatorResponseDto();
+        LabCreatorResponseDto challengeCreatorResponseDto = new LabCreatorResponseDto();
         challengeCreatorResponseDto.setId(UUID.randomUUID());
         challengeCreatorResponseDto.setName(creatorName);
 

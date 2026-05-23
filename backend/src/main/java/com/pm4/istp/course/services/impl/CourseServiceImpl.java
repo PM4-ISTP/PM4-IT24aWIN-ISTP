@@ -1,11 +1,7 @@
 package com.pm4.istp.course.services.impl;
 
 import com.pm4.istp.badge.services.BadgeService;
-import com.pm4.istp.course.db.CreateCourseInstructorRequest;
-import com.pm4.istp.course.db.CreateCourseRequest;
 import com.pm4.istp.course.db.InstructorRoleEnum;
-import com.pm4.istp.course.db.UpdateCourseInstructorRequest;
-import com.pm4.istp.course.db.UpdateCourseRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeType;
 import com.pm4.istp.course.db.entities.Course;
@@ -19,16 +15,20 @@ import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.entities.StudentFlagSubmission;
 import com.pm4.istp.course.db.entities.StudentOptionSubmission;
-import com.pm4.istp.course.dto.CourseChallengeSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabChallengeSubmissionDetailDto;
 import com.pm4.istp.course.dto.CourseLabDeadlineDto;
 import com.pm4.istp.course.dto.CourseLabItemDto;
 import com.pm4.istp.course.dto.CourseLabResponseDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionDetailDto;
+import com.pm4.istp.course.dto.CourseLabSubmissionEntryDto;
 import com.pm4.istp.course.dto.CourseLabSubmissionStatusEnum;
 import com.pm4.istp.course.dto.CourseLabSubmissionsResponseDto;
 import com.pm4.istp.course.dto.CourseParticipantResponseDto;
+import com.pm4.istp.course.dto.CreateCourseInstructorRequestDto;
+import com.pm4.istp.course.dto.CreateCourseRequestDto;
 import com.pm4.istp.course.dto.ListCourseResponseDto;
+import com.pm4.istp.course.dto.UpdateCourseInstructorRequestDto;
+import com.pm4.istp.course.dto.UpdateCourseRequestDto;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseAccessDeniedException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
@@ -92,7 +92,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional
-  public Course createCourse(UUID userId, CreateCourseRequest course) {
+  public Course createCourse(UUID userId, CreateCourseRequestDto course) {
     User instructorUser =
         userRepository
             .findByIdAndDeletedAtIsNull(userId)
@@ -122,8 +122,10 @@ public class CourseServiceImpl implements CourseService {
     addEnrollmentIfMissing(courseToCreate, instructorUser);
 
     // Collaborators from the request payload
-    if (!course.getInstructors().isEmpty()) {
-      for (CreateCourseInstructorRequest req : course.getInstructors()) {
+    List<CreateCourseInstructorRequestDto> instructors =
+        course.getInstructors() == null ? List.of() : course.getInstructors();
+    if (!instructors.isEmpty()) {
+      for (CreateCourseInstructorRequestDto req : instructors) {
         User collaboratorUser =
             userRepository
                 .findByIdAndDeletedAtIsNull(req.getInstructorId())
@@ -238,7 +240,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional
-  public Course updateCourse(UUID userId, UUID courseId, UpdateCourseRequest request) {
+  public Course updateCourse(UUID userId, UUID courseId, UpdateCourseRequestDto request) {
     Course course =
         courseRepository
             .findByIdAndDeletedAtIsNull(courseId)
@@ -255,7 +257,7 @@ public class CourseServiceImpl implements CourseService {
       verifyOwner(course, userId);
     }
 
-    List<UpdateCourseInstructorRequest> requestedInstructors =
+    List<UpdateCourseInstructorRequestDto> requestedInstructors =
         request.getInstructors() == null ? List.of() : request.getInstructors();
     if (collaboratorsChange(course, requestedInstructors)) {
       verifyOwner(course, userId);
@@ -283,7 +285,7 @@ public class CourseServiceImpl implements CourseService {
     // Diff instructor list: preserve OWNER, update COLLABORATORs
     Set<UUID> requestedInstructorIds =
         requestedInstructors.stream()
-            .map(UpdateCourseInstructorRequest::getInstructorId)
+            .map(UpdateCourseInstructorRequestDto::getInstructorId)
             .collect(Collectors.toSet());
 
     // Remove collaborators not in the new list
@@ -302,7 +304,7 @@ public class CourseServiceImpl implements CourseService {
             .collect(Collectors.toSet());
 
     // Add new collaborators
-    for (UpdateCourseInstructorRequest req : requestedInstructors) {
+    for (UpdateCourseInstructorRequestDto req : requestedInstructors) {
       if (!existingInstructorIds.contains(req.getInstructorId())) {
         User collaboratorUser =
             userRepository
@@ -328,7 +330,7 @@ public class CourseServiceImpl implements CourseService {
   }
 
   private boolean collaboratorsChange(
-      Course course, List<UpdateCourseInstructorRequest> requestedInstructors) {
+      Course course, List<UpdateCourseInstructorRequestDto> requestedInstructors) {
     Set<UUID> currentCollaboratorIds =
         course.getCourseInstructors().stream()
             .filter(ci -> ci.getInstructorRole() == InstructorRoleEnum.COLLABORATOR)
@@ -336,14 +338,14 @@ public class CourseServiceImpl implements CourseService {
             .collect(Collectors.toSet());
     Set<UUID> requestedCollaboratorIds =
         requestedInstructors.stream()
-            .map(UpdateCourseInstructorRequest::getInstructorId)
+            .map(UpdateCourseInstructorRequestDto::getInstructorId)
             .collect(Collectors.toSet());
     return !currentCollaboratorIds.equals(requestedCollaboratorIds);
   }
 
   @Override
   @Transactional
-  public Course updateCourseChallenges(UUID userId, UUID courseId, List<CourseLabItemDto> labs) {
+  public Course updateCourseLabs(UUID userId, UUID courseId, List<CourseLabItemDto> labs) {
     Course course =
         courseRepository
             .findByIdAndDeletedAtIsNull(courseId)
@@ -404,7 +406,7 @@ public class CourseServiceImpl implements CourseService {
       if (courseLab == null) {
         courseLab = new CourseLab();
         courseLab.setLab(labById.get(entry.getKey()));
-        course.addCourseChallenge(courseLab);
+        course.addCourseLab(courseLab);
       }
       courseLab.setOrderIndex(item.getOrderIndex());
       courseLab.setDueAt(item.getDueAt());
@@ -419,7 +421,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional(readOnly = true)
-  public CourseLabSubmissionsResponseDto getCourseChallengeSubmissions(UUID userId, UUID courseId) {
+  public CourseLabSubmissionsResponseDto getCourseLabSubmissions(UUID userId, UUID courseId) {
     Course course =
         courseRepository
             .findByIdAndDeletedAtIsNull(courseId)
@@ -431,21 +433,21 @@ public class CourseServiceImpl implements CourseService {
 
     List<CourseParticipantResponseDto> participants = loadParticipants(courseId);
     List<CourseLab> assigned = course.getCourseLabs() == null ? List.of() : course.getCourseLabs();
-    List<CourseLabResponseDto> challengesDto = toChallengeSubmissionDtos(assigned);
+    List<CourseLabResponseDto> labsDto = toLabResponseDtos(assigned);
 
     List<UUID> userIds = participants.stream().map(CourseParticipantResponseDto::getId).toList();
-    List<UUID> labIds = assigned.stream().map(cc -> cc.getLab().getId()).toList();
+    List<UUID> labIds = assigned.stream().map(courseLab -> courseLab.getLab().getId()).toList();
 
     Map<UUID, Integer> totalByLab = loadChallengeTotals(labIds);
     Map<UUID, Integer> maxPointsByLab = loadMaxPoints(assigned);
 
     SubmissionAggregates aggregates = loadSubmissionAggregates(userIds, labIds);
     SubmissionScoringData scoringData = loadSubmissionScoringData(courseId, userIds, labIds);
-    List<CourseChallengeSubmissionEntryDto> entries =
+    List<CourseLabSubmissionEntryDto> entries =
         buildSubmissionEntries(
             userIds, labIds, totalByLab, maxPointsByLab, aggregates, scoringData, mcAttemptsMode);
 
-    return new CourseLabSubmissionsResponseDto(courseId, participants, challengesDto, entries);
+    return new CourseLabSubmissionsResponseDto(courseId, participants, labsDto, entries);
   }
 
   @Override
@@ -665,7 +667,7 @@ public class CourseServiceImpl implements CourseService {
 
   @Override
   @Transactional
-  public CourseChallengeSubmissionEntryDto updateCourseChallengeScore(
+  public CourseLabSubmissionEntryDto updateCourseChallengeScore(
       UUID instructorUserId,
       UUID courseId,
       UUID participantId,
@@ -766,7 +768,7 @@ public class CourseServiceImpl implements CourseService {
         .toList();
   }
 
-  private List<CourseLabResponseDto> toChallengeSubmissionDtos(List<CourseLab> assigned) {
+  private List<CourseLabResponseDto> toLabResponseDtos(List<CourseLab> assigned) {
     return assigned.stream()
         .map(
             courseLab -> {
@@ -815,14 +817,14 @@ public class CourseServiceImpl implements CourseService {
   }
 
   private Map<UUID, Integer> loadMaxPoints(List<CourseLab> assigned) {
-    Map<UUID, Integer> maxPointsByChallenge = new HashMap<>();
+    Map<UUID, Integer> maxPointsByLab = new HashMap<>();
     for (CourseLab courseLab : assigned) {
       if (courseLab.getLab() == null || courseLab.getLab().getId() == null) {
         continue;
       }
-      maxPointsByChallenge.put(courseLab.getLab().getId(), courseLab.getLab().getMaxScore());
+      maxPointsByLab.put(courseLab.getLab().getId(), courseLab.getLab().getMaxScore());
     }
-    return maxPointsByChallenge;
+    return maxPointsByLab;
   }
 
   private SubmissionScoringData loadSubmissionScoringData(
@@ -931,17 +933,17 @@ public class CourseServiceImpl implements CourseService {
     }
   }
 
-  private List<CourseChallengeSubmissionEntryDto> buildSubmissionEntries(
+  private List<CourseLabSubmissionEntryDto> buildSubmissionEntries(
       List<UUID> userIds,
-      List<UUID> challengeIds,
+      List<UUID> labIds,
       Map<UUID, Integer> totalByLab,
       Map<UUID, Integer> maxPointsByLab,
       SubmissionAggregates aggregates,
       SubmissionScoringData scoringData,
       McAttemptsMode mcAttemptsMode) {
-    List<CourseChallengeSubmissionEntryDto> entries = new ArrayList<>();
+    List<CourseLabSubmissionEntryDto> entries = new ArrayList<>();
     for (UUID participantId : userIds) {
-      for (UUID labId : challengeIds) {
+      for (UUID labId : labIds) {
         entries.add(
             buildSubmissionEntry(
                 participantId,
@@ -956,7 +958,7 @@ public class CourseServiceImpl implements CourseService {
     return entries;
   }
 
-  private CourseChallengeSubmissionEntryDto buildSubmissionEntry(
+  private CourseLabSubmissionEntryDto buildSubmissionEntry(
       UUID participantId,
       UUID labId,
       Map<UUID, Integer> totalByLab,
@@ -998,7 +1000,7 @@ public class CourseServiceImpl implements CourseService {
       }
     }
 
-    return new CourseChallengeSubmissionEntryDto(
+    return new CourseLabSubmissionEntryDto(
         participantId,
         labId,
         solvedCount,
@@ -1178,12 +1180,6 @@ public class CourseServiceImpl implements CourseService {
             .orElseThrow(
                 () -> new CourseNotFoundException(String.format(COURSE_NOT_FOUND_MSG, courseId)));
     verifyOwner(course, userId);
-
-    if (course.getStatus() != CourseStatusEnum.PRIVATE) {
-      throw new CourseAccessDeniedException(
-          String.format(
-              "Course '%s' is not private; invite code regeneration is disabled", courseId));
-    }
 
     course.setInviteCode(courseInviteCodeHelper.generateAndAssign(courseId));
     return course;

@@ -5,11 +5,10 @@ import {
   ActionIcon,
   Alert,
   Badge,
-  Button,
   Group,
-  Loader,
   Modal,
   Pagination,
+  ScrollArea,
   Select,
   Stack,
   Table,
@@ -19,12 +18,15 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconPencil, IconTrash } from "@tabler/icons-react";
 import { useAdminPagedList } from "@/src/features/admin/hooks/useAdminPagedList";
 import { cleanText, formatDate, wrapTextStyle } from "@/src/features/admin/lib/adminUi";
+import AdminListSearch from "@/src/features/admin/components/AdminListSearch";
+import AppButton from "@/src/shared/components/AppButton";
 import { useCourseTopicOptions } from "@/src/features/course/hooks/useCourseTopicOptions";
 import MyEditor from "@/src/shared/components/MyEditor";
-import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { useApiClient } from "@/src/shared/lib/api/client";
+import { apiErrorText } from "@/src/shared/lib/api";
 import { slugify } from "@/src/shared/lib/utils";
 import {
   COURSE_SHORT_DESCRIPTION_MAX_CHARS,
@@ -51,6 +53,7 @@ type AdminCourseListItem = {
 const PAGE_SIZE = 10;
 
 export default function AdminCourseManagement() {
+  const client = useApiClient();
   const topicOptions = useCourseTopicOptions();
   const {
     query,
@@ -131,27 +134,26 @@ export default function AdminCourseManagement() {
     setError(null);
     try {
       const normalizedShortDescription = normalizeShortDescription(values.shortDescription);
-      const res = await fetch(`/api/backend/api/admin/courses/${selected.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { error, response } = await client.PUT("/api/admin/courses/{id}", {
+        params: { path: { id: selected.id } },
+        body: {
           title: values.title.trim(),
-          description: cleanText(values.description),
-          shortDescription: cleanText(normalizedShortDescription),
+          description: cleanText(values.description) ?? "",
+          shortDescription: cleanText(normalizedShortDescription) ?? "",
           status: values.status,
-          topic: cleanText(values.topic),
-          imageUrl: cleanText(values.imageUrl),
-        }),
+          topic: cleanText(values.topic) ?? undefined,
+          imageUrl: cleanText(values.imageUrl) ?? undefined,
+        },
       });
-      if (!res.ok) {
-        const raw = await readBackendError(res);
+      if (error || !response.ok) {
+        const raw = apiErrorText(error);
         const msgLower = raw?.toLowerCase() ?? "";
         if (msgLower.includes("invalid topic")) {
           showToast("orange", "Invalid topic", "Please select a topic from the list.");
           return;
         }
         const msg = toUserFriendlyBackendError(raw);
-        const color = res.status >= 500 ? "red" : "orange";
+        const color = response.status >= 500 ? "red" : "orange";
         showToast(color, "Failed to update course", msg ?? "Please try again.");
         return;
       }
@@ -170,13 +172,12 @@ export default function AdminCourseManagement() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/backend/api/admin/courses/${selected.id}`, {
-        method: "DELETE",
+      const { error, response } = await client.DELETE("/api/admin/courses/{id}", {
+        params: { path: { id: selected.id } },
       });
-      if (!res.ok) {
-        const raw = await readBackendError(res);
-        const msg = toUserFriendlyBackendError(raw);
-        const color = res.status >= 500 ? "red" : "orange";
+      if (error || !response.ok) {
+        const msg = toUserFriendlyBackendError(apiErrorText(error));
+        const color = response.status >= 500 ? "red" : "orange";
         showToast(color, "Failed to delete course", msg ?? "Please try again.");
         return;
       }
@@ -196,32 +197,12 @@ export default function AdminCourseManagement() {
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="flex-end" wrap="wrap">
-        <Group gap="sm" wrap="wrap">
-          <TextInput
-            label="Search"
-            placeholder="Title / description..."
-            leftSection={<IconSearch size={16} />}
-            value={query}
-            onChange={(e) => onQueryChange(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                applyQueryNow();
-              }
-            }}
-            w={420}
-          />
-        </Group>
-        {loading && (
-          <Group gap="xs">
-            <Loader size="sm" />
-            <Text size="sm" c="dimmed">
-              Loading
-            </Text>
-          </Group>
-        )}
-      </Group>
+      <AdminListSearch
+        query={query}
+        onQueryChange={onQueryChange}
+        applyQueryNow={applyQueryNow}
+        loading={loading}
+      />
       <Alert color="orange" title="Delete" variant="light">
         <Text size="sm">
           Deleting a course removes it from active lists so students and instructors can no longer
@@ -229,112 +210,124 @@ export default function AdminCourseManagement() {
         </Text>
       </Alert>
 
-      <Table
-        highlightOnHover
-        withTableBorder
-        withColumnBorders={false}
-        striped={false}
-        style={{ tableLayout: "fixed" }}
-      >
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Title</Table.Th>
-            <Table.Th style={{ width: 240 }}>Owner</Table.Th>
-            <Table.Th style={{ width: 190 }}>Visibility</Table.Th>
-            <Table.Th style={{ width: 190 }}>Updated</Table.Th>
-            <Table.Th style={{ width: 130 }} />
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {courses.length === 0 ? (
+      <ScrollArea>
+        <Table
+          highlightOnHover
+          withTableBorder
+          withColumnBorders={false}
+          striped={false}
+          miw={820}
+          style={{ tableLayout: "fixed" }}
+        >
+          <Table.Thead>
             <Table.Tr>
-              <Table.Td colSpan={5}>
-                <Text size="sm" c="dimmed" ta="center" py="md">
-                  No courses found.
-                </Text>
-              </Table.Td>
+              <Table.Th>Title</Table.Th>
+              <Table.Th style={{ width: 240 }}>Owner</Table.Th>
+              <Table.Th style={{ width: 190 }}>Visibility</Table.Th>
+              <Table.Th style={{ width: 190 }}>Updated</Table.Th>
+              <Table.Th style={{ width: 130 }} />
             </Table.Tr>
-          ) : (
-            courses.map((c) => (
-              <Table.Tr key={c.id}>
-                <Table.Td>
-                  <Stack gap={2}>
-                    <Text fw={600} size="sm" lineClamp={1} style={wrapTextStyle} title={c.title}>
-                      {c.title}
-                    </Text>
-                    {c.shortDescription ? (
+          </Table.Thead>
+          <Table.Tbody>
+            {courses.length === 0 ? (
+              <Table.Tr>
+                <Table.Td colSpan={5}>
+                  <Text size="sm" c="dimmed" ta="center" py="md">
+                    No courses found.
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+            ) : (
+              courses.map((c) => (
+                <Table.Tr key={c.id}>
+                  <Table.Td>
+                    <Stack gap={2}>
+                      <Text fw={600} size="sm" lineClamp={1} style={wrapTextStyle} title={c.title}>
+                        {c.title}
+                      </Text>
+                      {c.shortDescription ? (
+                        <Text
+                          size="xs"
+                          c="dimmed"
+                          lineClamp={2}
+                          style={wrapTextStyle}
+                          title={c.shortDescription}
+                        >
+                          {c.shortDescription}
+                        </Text>
+                      ) : null}
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>
+                    <Stack gap={2}>
+                      <Text
+                        size="sm"
+                        lineClamp={1}
+                        style={wrapTextStyle}
+                        title={c.ownerName ?? "-"}
+                      >
+                        {c.ownerName ?? "-"}
+                      </Text>
                       <Text
                         size="xs"
                         c="dimmed"
-                        lineClamp={2}
+                        lineClamp={1}
                         style={wrapTextStyle}
-                        title={c.shortDescription}
+                        title={c.ownerUsername ? `@${c.ownerUsername}` : ""}
                       >
-                        {c.shortDescription}
+                        {c.ownerUsername ? `@${c.ownerUsername}` : ""}
                       </Text>
-                    ) : null}
-                  </Stack>
-                </Table.Td>
-                <Table.Td>
-                  <Stack gap={2}>
-                    <Text size="sm" lineClamp={1} style={wrapTextStyle} title={c.ownerName ?? "-"}>
-                      {c.ownerName ?? "-"}
-                    </Text>
-                    <Text
-                      size="xs"
-                      c="dimmed"
-                      lineClamp={1}
-                      style={wrapTextStyle}
-                      title={c.ownerUsername ? `@${c.ownerUsername}` : ""}
-                    >
-                      {c.ownerUsername ? `@${c.ownerUsername}` : ""}
-                    </Text>
-                  </Stack>
-                </Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    <Badge
-                      variant="light"
-                      color={
-                        c.status === "PRIVATE" ? "yellow" : c.status === "PUBLIC" ? "green" : "gray"
-                      }
-                    >
-                      {c.status === "PRIVATE"
-                        ? "Private"
-                        : c.status === "PUBLIC"
-                          ? "Public"
-                          : "Draft"}
-                    </Badge>
-                  </Group>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm">{formatDate(c.updatedAt)}</Text>
-                </Table.Td>
-                <Table.Td>
-                  <Group justify="flex-end" gap="xs" wrap="nowrap">
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      aria-label="Edit course"
-                      onClick={() => openEdit(c)}
-                    >
-                      <IconPencil size={16} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      aria-label="Delete course"
-                      onClick={() => openDelete(c)}
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-            ))
-          )}
-        </Table.Tbody>
-      </Table>
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <Badge
+                        variant="light"
+                        color={
+                          c.status === "PRIVATE"
+                            ? "yellow"
+                            : c.status === "PUBLIC"
+                              ? "green"
+                              : "gray"
+                        }
+                      >
+                        {c.status === "PRIVATE"
+                          ? "Private"
+                          : c.status === "PUBLIC"
+                            ? "Public"
+                            : "Draft"}
+                      </Badge>
+                    </Group>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm">{formatDate(c.updatedAt)}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group justify="flex-end" gap="xs" wrap="nowrap">
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        aria-label="Edit course"
+                        onClick={() => openEdit(c)}
+                      >
+                        <IconPencil size={16} />
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="subtle"
+                        color="red"
+                        aria-label="Delete course"
+                        onClick={() => openDelete(c)}
+                      >
+                        <IconTrash size={16} />
+                      </ActionIcon>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))
+            )}
+          </Table.Tbody>
+        </Table>
+      </ScrollArea>
 
       {totalPages > 1 && (
         <Group justify="center">
@@ -413,28 +406,12 @@ export default function AdminCourseManagement() {
             />
 
             <Group justify="flex-end" mt="xs">
-              <Button
-                variant="default"
-                radius="md"
-                onClick={() => setEditOpened(false)}
-                disabled={saving}
-              >
+              <AppButton tone="ghost" onClick={() => setEditOpened(false)} disabled={saving}>
                 Cancel
-              </Button>
-              <Button
-                type="submit"
-                radius="md"
-                loading={saving}
-                style={{
-                  background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                  border: "none",
-                  fontFamily: "var(--font-space-grotesk), sans-serif",
-                  fontWeight: 600,
-                  boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-                }}
-              >
+              </AppButton>
+              <AppButton type="submit" loading={saving}>
                 Save
-              </Button>
+              </AppButton>
             </Group>
           </Stack>
         </form>
@@ -455,17 +432,12 @@ export default function AdminCourseManagement() {
             ? Students and instructors will no longer see it in active lists.
           </Text>
           <Group justify="flex-end">
-            <Button
-              variant="default"
-              radius="md"
-              onClick={() => setDeleteOpened(false)}
-              disabled={saving}
-            >
+            <AppButton tone="ghost" onClick={() => setDeleteOpened(false)} disabled={saving}>
               Cancel
-            </Button>
-            <Button color="red" radius="md" onClick={() => void confirmDelete()} loading={saving}>
+            </AppButton>
+            <AppButton tone="danger" onClick={() => void confirmDelete()} loading={saving}>
               Delete
-            </Button>
+            </AppButton>
           </Group>
         </Stack>
       </Modal>

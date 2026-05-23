@@ -6,6 +6,8 @@ import { ROLES } from "@/src/shared/lib/roles";
 
 interface DashboardNavProps {
   roles: string[];
+  /** Called when a nav item is clicked — used to close the navbar on mobile. */
+  onNavigate?: () => void;
 }
 
 const labelStyle: React.CSSProperties = {
@@ -28,16 +30,19 @@ function NavItem({
   label,
   icon,
   active,
+  onNavigate,
 }: {
   href: string;
   label: string;
   icon: string;
   active: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <div style={{ position: "relative" }}>
       <Link
         href={href}
+        onClick={onNavigate}
         className="nav-link"
         style={{
           paddingLeft: "1.75rem",
@@ -83,7 +88,7 @@ function NavItem({
   );
 }
 
-export default function DashboardNav({ roles }: DashboardNavProps) {
+export default function DashboardNav({ roles, onNavigate }: DashboardNavProps) {
   const pathname = usePathname();
 
   const isAdmin = roles.includes(ROLES.ADMINISTRATOR);
@@ -95,18 +100,26 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
 
   return (
     <nav style={{ display: "flex", flexDirection: "column", gap: 0, paddingTop: "0.5rem" }}>
-      <NavItem href="/dashboard" label="Home" icon="home" active={pathname === "/dashboard"} />
+      <NavItem
+        href="/dashboard"
+        label="Home"
+        icon="home"
+        active={pathname === "/dashboard"}
+        onNavigate={onNavigate}
+      />
       <NavItem
         href="/dashboard/courses"
         label="My Courses"
         icon="menu_book"
         active={pathname.startsWith("/dashboard/courses")}
+        onNavigate={onNavigate}
       />
       <NavItem
         href="/dashboard/catalog"
         label="Browse / Catalog"
         icon="travel_explore"
         active={pathname.startsWith("/dashboard/catalog")}
+        onNavigate={onNavigate}
       />
 
       {isInstructor && (
@@ -124,18 +137,21 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
                 !pathname.startsWith("/dashboard/instructor/labs") &&
                 !isInstructorResults)
             }
+            onNavigate={onNavigate}
           />
           <NavItem
             href="/dashboard/instructor/results"
             label="Results"
             icon="analytics"
             active={isInstructorResults}
+            onNavigate={onNavigate}
           />
           <NavItem
             href="/dashboard/instructor/labs"
             label="Labs"
             icon="flag"
             active={pathname.startsWith("/dashboard/instructor/labs")}
+            onNavigate={onNavigate}
           />
         </>
       )}
@@ -148,12 +164,14 @@ export default function DashboardNav({ roles }: DashboardNavProps) {
             label="Dashboard"
             icon="space_dashboard"
             active={pathname === "/dashboard/admin"}
+            onNavigate={onNavigate}
           />
           <NavItem
             href="/dashboard/admin/users"
             label="Users"
             icon="group"
             active={pathname.startsWith("/dashboard/admin/users")}
+            onNavigate={onNavigate}
           />
         </>
       )}

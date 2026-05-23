@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { useApiClient } from "@/src/shared/lib/api/client";
+
+type ApiClient = ReturnType<typeof useApiClient>;
 
 const BASE_STORAGE_KEY = "istp_total_seconds_online";
 const SYNCED_STORAGE_KEY = "istp_synced_seconds_online";
@@ -17,7 +20,11 @@ function syncedKey(userId: string | null): string {
 }
 
 /** Sends the unsynced delta (currentTotal - lastSyncedTotal) to the backend. */
-async function syncToBackend(userId: string | null, keepalive = false): Promise<void> {
+async function syncToBackend(
+  client: ApiClient,
+  userId: string | null,
+  keepalive = false
+): Promise<void> {
   if (!userId) return;
   try {
     const current = Number(localStorage.getItem(storageKey(userId)) ?? "0");
@@ -25,13 +32,11 @@ async function syncToBackend(userId: string | null, keepalive = false): Promise<
     const delta = current - synced;
     if (delta <= 0) return;
     const secondsToSync = Math.min(delta, MAX_SYNC_SECONDS);
-    const res = await fetch("/api/backend/api/v1/users/me/online-time", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ seconds: secondsToSync }),
+    const { response } = await client.PATCH("/api/v1/users/me/online-time", {
+      body: { seconds: secondsToSync },
       keepalive,
     });
-    if (res.ok) {
+    if (response.ok) {
       localStorage.setItem(syncedKey(userId), String(synced + secondsToSync));
     }
   } catch {
@@ -40,12 +45,11 @@ async function syncToBackend(userId: string | null, keepalive = false): Promise<
 }
 
 /** Fetches the server-stored total and seeds localStorage if the server has a higher value. */
-async function seedFromServer(userId: string | null): Promise<void> {
+async function seedFromServer(client: ApiClient, userId: string | null): Promise<void> {
   if (!userId) return;
   try {
-    const res = await fetch("/api/backend/api/v1/users/me/profile", { cache: "no-store" });
-    if (!res.ok) return;
-    const data = (await res.json()) as { totalSecondsOnline?: number };
+    const { data } = await client.GET("/api/v1/users/me/profile");
+    if (!data) return;
     const serverTotal = typeof data.totalSecondsOnline === "number" ? data.totalSecondsOnline : 0;
     const localTotal = Number(localStorage.getItem(storageKey(userId)) ?? "0");
     if (serverTotal > localTotal) {
@@ -67,9 +71,11 @@ async function seedFromServer(userId: string | null): Promise<void> {
  * Periodically syncs the accumulated delta to the backend so time is account-based.
  */
 export default function TimeTracker({ userId }: { userId: string | null }) {
+  const client = useApiClient();
+
   useEffect(() => {
     // Seed from server on mount so we pick up time from other devices
-    void seedFromServer(userId);
+    void seedFromServer(client, userId);
 
     const key = storageKey(userId);
     let lastTick = Date.now();
@@ -87,7 +93,7 @@ export default function TimeTracker({ userId }: { userId: string | null }) {
     }, TICK_INTERVAL_MS);
 
     const syncInterval = setInterval(() => {
-      void syncToBackend(userId);
+      void syncToBackend(client, userId);
     }, SYNC_INTERVAL_MS);
 
     // Also save and sync on tab switch / close
@@ -102,7 +108,7 @@ export default function TimeTracker({ userId }: { userId: string | null }) {
         } catch {
           // ignore
         }
-        void syncToBackend(userId, true);
+        void syncToBackend(client, userId, true);
       } else {
         // tab became visible again — reset lastTick
         lastTick = Date.now();
@@ -123,9 +129,9 @@ export default function TimeTracker({ userId }: { userId: string | null }) {
       } catch {
         // ignore
       }
-      void syncToBackend(userId, true);
+      void syncToBackend(client, userId, true);
     };
-  }, [userId]);
+  }, [client, userId]);
 
   return null;
 }

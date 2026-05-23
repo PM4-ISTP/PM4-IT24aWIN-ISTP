@@ -1,18 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/shared/lib/auth";
-import { getValidAccessToken } from "@/src/shared/lib/api/server";
-import {
-  Alert,
-  Badge,
-  Box,
-  Button,
-  Grid,
-  GridCol,
-  Group,
-  Stack,
-  Text,
-  ThemeIcon,
-} from "@mantine/core";
+import { getApiClient } from "@/src/shared/lib/api/server";
+import { Alert, Badge, Button, Grid, GridCol, Group, Stack, Text, ThemeIcon } from "@mantine/core";
 import {
   IconArrowRight,
   IconBolt,
@@ -23,11 +12,14 @@ import {
 import DashboardStyles from "@/src/shared/components/DashboardStyles";
 import DashboardHero from "@/src/shared/components/DashboardHero";
 import { DeadlineWidget } from "@/src/shared/components/DeadlineWidget";
+import SectionLabel from "@/src/shared/components/SectionLabel";
+import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
+import { EmptyState } from "@/src/shared/components/EmptyState";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/features/course/actions/courses";
 import Link from "next/link";
 
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
+type ApiClient = Awaited<ReturnType<typeof getApiClient>>;
 
 type DeadlineItem = {
   courseId: string;
@@ -53,39 +45,20 @@ type RunningPod = {
   };
 };
 
-async function fetchCompletedLabsCount(): Promise<number | null> {
+async function fetchCompletedLabsCount(client: ApiClient): Promise<number | null> {
   try {
-    const accessToken = await getValidAccessToken();
-
-    const res = await fetch(`${BACKEND_URL}/api/v1/labs/my-completed-count`, {
-      cache: "no-store",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!res.ok) return null;
-    const json = (await res.json()) as { count?: number };
-    return typeof json.count === "number" ? json.count : null;
+    const { data } = await client.GET("/api/v1/labs/my-completed-count");
+    const count = data?.count;
+    return typeof count === "number" ? count : null;
   } catch {
     return null;
   }
 }
 
-async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
+async function fetchMyDeadlines(client: ApiClient): Promise<DeadlineItem[]> {
   try {
-    const accessToken = await getValidAccessToken();
-
-    const res = await fetch(`${BACKEND_URL}/api/v1/courses/my-deadlines`, {
-      cache: "no-store",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!res.ok) return [];
-    const json = (await res.json()) as Array<{
-      courseId?: string;
-      courseTitle?: string;
-      labId?: string;
-      labTitle?: string;
-      dueAt?: string;
-    }>;
-    return (json ?? [])
+    const { data } = await client.GET("/api/v1/courses/my-deadlines");
+    return (data ?? [])
       .filter((d) => d.courseId && d.labId && d.dueAt)
       .map((d) => ({
         courseId: String(d.courseId),
@@ -101,30 +74,35 @@ async function fetchMyDeadlines(): Promise<DeadlineItem[]> {
   }
 }
 
-async function fetchMyRunningPods(): Promise<RunningPod[]> {
+async function fetchMyRunningPods(client: ApiClient): Promise<RunningPod[]> {
   try {
-    const accessToken = await getValidAccessToken();
-
-    const res = await fetch(`${BACKEND_URL}/api/v1/lab-pods`, {
-      cache: "no-store",
-      headers: { Authorization: `Bearer ${accessToken}` },
+    const { data } = await client.GET("/api/v1/lab-pods");
+    // Filter entries that don't carry the required pod identity — the UI reads
+    // `item.pod.status` and would crash on undefined nested data.
+    return (data ?? []).flatMap((dto) => {
+      if (typeof dto.labId !== "string" || !dto.pod || typeof dto.pod.status !== "string") {
+        return [];
+      }
+      return [
+        {
+          labId: dto.labId,
+          labTitle: dto.labTitle,
+          courseId: dto.courseId,
+          courseTitle: dto.courseTitle,
+          pod: {
+            status: dto.pod.status as PodStatusEnum,
+            podName: dto.pod.podName,
+            appUrl: dto.pod.appUrl,
+            createdAt: dto.pod.createdAt,
+            expiresAt: dto.pod.expiresAt,
+          },
+        },
+      ];
     });
-    if (!res.ok) return [];
-    const json = (await res.json()) as RunningPod[];
-    return Array.isArray(json) ? json : [];
   } catch {
     return [];
   }
 }
-
-const sectionLabelStyle: React.CSSProperties = {
-  fontFamily: "var(--font-space-grotesk), sans-serif",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  fontSize: "0.72rem",
-  fontWeight: 700,
-  color: "rgba(255,255,255,0.45)",
-};
 
 function podStatusColor(status: PodStatusEnum): string {
   if (status === "RUNNING") return "teal";
@@ -158,19 +136,17 @@ function formatDateTime(value?: string | null): string | null {
 function RunningLabs({ pods }: { pods: RunningPod[] }) {
   if (pods.length === 0) {
     return (
-      <div className="ds-empty-state" style={{ padding: "2rem", width: "100%" }}>
-        <ThemeIcon size={44} radius="xl" variant="light" color="gray">
-          <IconBolt size={22} />
-        </ThemeIcon>
-        <Stack gap={4} align="center">
-          <Text fw={600} style={{ color: "#e2e8f0" }}>
-            No active labs
-          </Text>
-          <Text size="sm" c="dimmed">
-            Enroll in a course to start working on labs.
-          </Text>
-        </Stack>
-      </div>
+      <SurfaceCard variant="strong" radius="sm" padding={0} style={{ width: "100%" }}>
+        <EmptyState
+          icon={
+            <ThemeIcon size={44} radius="xl" variant="light" color="gray">
+              <IconBolt size={22} />
+            </ThemeIcon>
+          }
+          title="No active labs"
+          message="Enroll in a course to start working on labs."
+        />
+      </SurfaceCard>
     );
   }
 
@@ -185,14 +161,13 @@ function RunningLabs({ pods }: { pods: RunningPod[] }) {
 
         return (
           <GridCol key={item.pod.podName ?? item.labId} span={{ base: 12, md: 6, lg: 4 }}>
-            <Box
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 10,
-                padding: "1rem",
-                height: "100%",
-              }}
+            <SurfaceCard
+              variant="strong"
+              elevation="sm"
+              radius="sm"
+              padding="1rem"
+              style={{ height: "100%" }}
+              testId="active-lab-card"
             >
               <Stack gap="sm" h="100%">
                 <Group justify="space-between" align="flex-start" wrap="nowrap">
@@ -244,7 +219,7 @@ function RunningLabs({ pods }: { pods: RunningPod[] }) {
                   ) : null}
                 </Group>
               </Stack>
-            </Box>
+            </SurfaceCard>
           </GridCol>
         );
       })}
@@ -257,12 +232,28 @@ export default async function Home() {
   const name = session?.user?.name ?? "there";
   const firstName = name.split(" ")[0];
   const userId = session?.userId ?? undefined;
+  // Token refresh may fail (expired session, revoked refresh token, Keycloak
+  // restart). In that case we still render the dashboard shell so the
+  // client-side SessionErrorHandler can pick up `session.error` and sign the
+  // user out. Throwing here would crash the page before that ever runs.
+  let client: ApiClient | null = null;
+  try {
+    client = await getApiClient();
+  } catch {
+    client = null;
+  }
   const result = await fetchEnrolledCoursesOfLoggedInUser(0, 3);
-  const [deadlines, completedLabsCount, runningPods] = await Promise.all([
-    fetchMyDeadlines(),
-    fetchCompletedLabsCount(),
-    fetchMyRunningPods(),
-  ]);
+  const [deadlines, completedLabsCount, runningPods]: [
+    DeadlineItem[],
+    number | null,
+    RunningPod[],
+  ] = client
+    ? await Promise.all([
+        fetchMyDeadlines(client),
+        fetchCompletedLabsCount(client),
+        fetchMyRunningPods(client),
+      ])
+    : [[], null, []];
 
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-GB", {
@@ -290,14 +281,14 @@ export default async function Home() {
         <GridCol span={{ base: 12, md: 8 }}>
           <Stack gap="sm">
             <Group justify="space-between" align="center">
-              <Text style={sectionLabelStyle}>Continue Learning</Text>
+              <SectionLabel>Continue Learning</SectionLabel>
               <Link
                 href="/dashboard/courses"
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 4,
-                  color: "#60a5fa",
+                  color: "#5d6ef0",
                   fontFamily: "var(--font-space-grotesk), sans-serif",
                   fontSize: "0.8rem",
                   fontWeight: 600,
@@ -327,32 +318,24 @@ export default async function Home() {
         <GridCol span={{ base: 12, md: 4 }}>
           <Stack gap="md">
             {/* Upcoming deadlines */}
-            <Box
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 14,
-                padding: "1.5rem",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-              }}
-            >
+            <SurfaceCard variant="strong" elevation="md">
               <Stack gap="sm">
                 <Group justify="space-between" align="center">
-                  <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>
+                  <SectionLabel style={{ alignSelf: "flex-start" }}>
                     Upcoming Deadlines
-                  </Text>
+                  </SectionLabel>
                   <IconClock size={16} color="rgba(255,255,255,0.35)" />
                 </Group>
 
                 <DeadlineWidget deadlines={deadlines} userId={userId} />
               </Stack>
-            </Box>
+            </SurfaceCard>
           </Stack>
         </GridCol>
       </Grid>
 
       <Stack gap="sm" align="flex-start">
-        <Text style={{ ...sectionLabelStyle, alignSelf: "flex-start" }}>Active Labs</Text>
+        <SectionLabel style={{ alignSelf: "flex-start" }}>Active Labs</SectionLabel>
         <RunningLabs pods={runningPods} />
       </Stack>
     </Stack>

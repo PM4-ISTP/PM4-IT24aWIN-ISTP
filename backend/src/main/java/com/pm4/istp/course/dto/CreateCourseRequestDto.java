@@ -1,6 +1,8 @@
 package com.pm4.istp.course.dto;
 
 import com.pm4.istp.course.db.entities.CourseStatusEnum;
+import com.pm4.istp.course.db.entities.McAttemptsMode;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -34,12 +36,13 @@ public class CreateCourseRequestDto {
   @Size(max = 24, message = "Topic must be at most 24 characters")
   private String topic;
 
+  @Valid
   @NotNull(message = "Instructor information is required")
   private List<CreateCourseInstructorRequestDto> instructors;
 
   /**
-   * How many MC attempts students get. "ONCE" = 1 attempt (graded); "UNLIMITED" = retry until
-   * correct (self-learning). Defaults to "UNLIMITED".
+   * How many MC attempts students get. ONCE = 1 attempt (graded); UNLIMITED = retry until correct
+   * (self-learning). Defaults to UNLIMITED.
    */
-  private String mcAttemptsMode = "UNLIMITED";
+  private McAttemptsMode mcAttemptsMode = McAttemptsMode.UNLIMITED;
 }

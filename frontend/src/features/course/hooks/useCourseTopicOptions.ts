@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { readBackendError } from "@/src/shared/lib/readBackendError";
+import { useApiClient } from "@/src/shared/lib/api/client";
+import { apiErrorText } from "@/src/shared/lib/api";
 import { toUserFriendlyBackendError } from "@/src/shared/lib/userFriendlyBackendError";
 
 type TopicOption = { value: string; label: string };
 
 export function useCourseTopicOptions() {
+  const client = useApiClient();
   const [topics, setTopics] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,14 +20,13 @@ export function useCourseTopicOptions() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/backend/api/v1/courses/topics", { method: "GET" });
-        if (!res.ok) {
-          const msg = toUserFriendlyBackendError(await readBackendError(res));
+        const { data, error: requestError } = await client.GET("/api/v1/courses/topics");
+        if (requestError) {
+          const msg = toUserFriendlyBackendError(apiErrorText(requestError));
           throw new Error(msg ?? "Failed to load topics");
         }
-        const data = (await res.json()) as string[];
         if (!cancelled) {
-          setTopics(Array.isArray(data) ? data : []);
+          setTopics(data ?? []);
         }
       } catch (e) {
         if (!cancelled) {
@@ -43,7 +44,7 @@ export function useCourseTopicOptions() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [client]);
 
   const options: TopicOption[] = useMemo(
     () => (topics ?? []).map((t) => ({ value: t, label: t })),

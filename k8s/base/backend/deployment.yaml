@@ -16,6 +16,8 @@ spec:
         app.kubernetes.io/name: backend
         app.kubernetes.io/part-of: istp
     spec:
+      serviceAccountName: istp-backend
+      automountServiceAccountToken: false
       imagePullSecrets:
         - name: ghcr-pull-secret # created manually, see README
       containers:
@@ -98,6 +100,12 @@ spec:
                 configMapKeyRef:
                   name: istp-config
                   key: istp-pod-max-extensions
+                  optional: true
+            - name: ISTP_FEATURES_STAGING_ENDPOINT_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: istp-config
+                  key: istp.features.staging-endpoint-enabled
                   optional: true
           resources:
             requests:

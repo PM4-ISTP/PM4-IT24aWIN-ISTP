@@ -19,6 +19,9 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
+import AppButton from "@/src/shared/components/AppButton";
+import { useApiClient } from "@/src/shared/lib/api/client";
+import { apiErrorText } from "@/src/shared/lib/api";
 
 type AdminUserDetailResponse = {
   id: string;
@@ -42,6 +45,7 @@ type AdminUserDetailResponse = {
 const ALL_APP_ROLES = ["ROLE_STUDENT", "ROLE_INSTRUCTOR", "ROLE_ADMINISTRATOR"] as const;
 
 export default function AdminUserProfile({ userId }: { userId: string }) {
+  const client = useApiClient();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<AdminUserDetailResponse | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -111,12 +115,11 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/backend/api/admin/users/${encodeURIComponent(userId)}`, {
-        cache: "no-store",
+      const { data, error } = await client.GET("/api/admin/users/{userId}", {
+        params: { path: { userId } },
       });
-      if (!res.ok) throw new Error(await safeErrorMessage(res));
-      const data = (await res.json()) as AdminUserDetailResponse;
-      setUser(data);
+      if (error || !data) throw new Error(apiErrorText(error) ?? "Failed to load user");
+      setUser(data as AdminUserDetailResponse);
 
       profileFormRef.current.setValues({
         email: data.email ?? "",
@@ -143,7 +146,7 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [client, userId]);
 
   useEffect(() => {
     void load();
@@ -172,20 +175,16 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
       setSavingProfile(true);
 
       const v = profileForm.getValues();
-      const payload: Record<string, unknown> = {
-        firstName: v.firstName.trim(),
-        lastName: v.lastName.trim(),
-        title: v.title.trim() || undefined,
-      };
-      const picture = v.pictureUrl.trim();
-      if (picture) payload.pictureUrl = picture;
-
-      const res = await fetch(`/api/backend/api/v1/users/${encodeURIComponent(userId)}/profile`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const { error } = await client.PUT("/api/v1/users/{userId}/profile", {
+        params: { path: { userId } },
+        body: {
+          firstName: v.firstName.trim(),
+          lastName: v.lastName.trim(),
+          title: v.title.trim() || undefined,
+          pictureUrl: v.pictureUrl.trim() || undefined,
+        },
       });
-      if (!res.ok) throw new Error(await safeErrorMessage(res));
+      if (error) throw new Error(apiErrorText(error) ?? "Failed to update profile");
       notifications.show({ title: "Saved", message: "Profile updated.", color: "green" });
       await load();
     } catch (e) {
@@ -210,13 +209,11 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
     }
     try {
       setSavingRoles(true);
-      const payload = { roles: [rolesForm.getValues().role] };
-      const res = await fetch(`/api/backend/api/admin/users/${encodeURIComponent(userId)}/roles`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const { error } = await client.PUT("/api/admin/users/{userId}/roles", {
+        params: { path: { userId } },
+        body: { roles: [rolesForm.getValues().role] },
       });
-      if (!res.ok) throw new Error(await safeErrorMessage(res));
+      if (error) throw new Error(apiErrorText(error) ?? "Failed to update roles");
       notifications.show({ title: "Saved", message: "Roles updated.", color: "green" });
       await load();
     } catch (e) {
@@ -241,11 +238,10 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
     }
     try {
       setSendingResetEmail(true);
-      const res = await fetch(
-        `/api/backend/api/admin/users/${encodeURIComponent(userId)}/password-reset-email`,
-        { method: "POST" }
-      );
-      if (!res.ok) throw new Error(await safeErrorMessage(res));
+      const { error } = await client.POST("/api/admin/users/{userId}/password-reset-email", {
+        params: { path: { userId } },
+      });
+      if (error) throw new Error(apiErrorText(error) ?? "Failed to send reset email");
       notifications.show({ title: "Sent", message: "Reset email triggered.", color: "green" });
     } catch (e) {
       notifications.show({
@@ -276,19 +272,15 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
       setSettingPassword(true);
       setPasswordSuccess(null);
       passwordForm.clearFieldError("password");
-      const res = await fetch(
-        `/api/backend/api/admin/users/${encodeURIComponent(userId)}/password`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            password: passwordForm.getValues().password.trim(),
-            temporary: passwordTemporary,
-          }),
-        }
-      );
-      if (!res.ok) {
-        const raw = await safeErrorMessage(res);
+      const { error } = await client.PUT("/api/admin/users/{userId}/password", {
+        params: { path: { userId } },
+        body: {
+          password: passwordForm.getValues().password.trim(),
+          temporary: passwordTemporary,
+        },
+      });
+      if (error) {
+        const raw = apiErrorText(error) ?? "Keycloak rejected the password.";
         passwordForm.setFieldError("password", toFriendlyPasswordError(raw));
         return;
       }
@@ -317,13 +309,10 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
     }
     try {
       setProvisioningUser(true);
-      const res = await fetch(
-        `/api/backend/api/admin/users/${encodeURIComponent(userId)}/provision`,
-        {
-          method: "POST",
-        }
-      );
-      if (!res.ok) throw new Error(await safeErrorMessage(res));
+      const { error } = await client.POST("/api/admin/users/{userId}/provision", {
+        params: { path: { userId } },
+      });
+      if (error) throw new Error(apiErrorText(error) ?? "Failed to provision user");
       notifications.show({ title: "Done", message: "Provisioned (if needed).", color: "green" });
       await load();
     } catch (e) {
@@ -340,13 +329,10 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
   const disable = async () => {
     try {
       setDisablingUser(true);
-      const res = await fetch(
-        `/api/backend/api/admin/users/${encodeURIComponent(userId)}/disable`,
-        {
-          method: "POST",
-        }
-      );
-      if (!res.ok) throw new Error(await safeErrorMessage(res));
+      const { error } = await client.POST("/api/admin/users/{userId}/disable", {
+        params: { path: { userId } },
+      });
+      if (error) throw new Error(apiErrorText(error) ?? "Failed to disable user");
       notifications.show({ title: "Done", message: "User disabled.", color: "green" });
       await load();
     } catch (e) {
@@ -363,13 +349,10 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
   const restore = async () => {
     try {
       setRestoringUser(true);
-      const res = await fetch(
-        `/api/backend/api/admin/users/${encodeURIComponent(userId)}/restore`,
-        {
-          method: "POST",
-        }
-      );
-      if (!res.ok) throw new Error(await safeErrorMessage(res));
+      const { error } = await client.POST("/api/admin/users/{userId}/restore", {
+        params: { path: { userId } },
+      });
+      if (error) throw new Error(apiErrorText(error) ?? "Failed to restore user");
       notifications.show({ title: "Done", message: "User restored.", color: "green" });
       await load();
     } catch (e) {
@@ -391,13 +374,10 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
 
     try {
       setSoftDeletingUser(true);
-      const res = await fetch(
-        `/api/backend/api/admin/users/${encodeURIComponent(userId)}/soft-delete`,
-        {
-          method: "POST",
-        }
-      );
-      if (!res.ok) throw new Error(await safeErrorMessage(res));
+      const { error } = await client.POST("/api/admin/users/{userId}/soft-delete", {
+        params: { path: { userId } },
+      });
+      if (error) throw new Error(apiErrorText(error) ?? "Failed to soft-delete user");
       notifications.show({ title: "Done", message: "User soft-deleted.", color: "green" });
       await load();
     } catch (e) {
@@ -456,53 +436,45 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
         </Group>
         <Group gap="sm">
           {!isSoftDeleted && !isDisabled ? (
-            <Button
-              variant="subtle"
-              radius="md"
+            <AppButton
+              tone="ghost"
               onClick={() => void provision()}
               loading={provisioningUser}
               disabled={disablingUser || restoringUser || softDeletingUser}
             >
               Provision
-            </Button>
+            </AppButton>
           ) : null}
 
           {!isSoftDeleted && !isDisabled ? (
             <>
-              <Button
-                color="red"
-                variant="filled"
-                radius="md"
+              <AppButton
+                tone="danger"
                 onClick={() => void disable()}
                 loading={disablingUser}
                 disabled={provisioningUser || restoringUser || softDeletingUser}
               >
                 Disable
-              </Button>
-              <Button
-                color="red"
-                variant="outline"
-                radius="md"
+              </AppButton>
+              <AppButton
+                tone="danger"
                 onClick={() => void softDelete()}
                 loading={softDeletingUser}
                 disabled={provisioningUser || disablingUser || restoringUser}
               >
                 Soft delete
-              </Button>
+              </AppButton>
             </>
           ) : null}
 
           {canRestore ? (
-            <Button
-              color="green"
-              variant="filled"
-              radius="md"
+            <AppButton
               onClick={() => void restore()}
               loading={restoringUser}
               disabled={provisioningUser || disablingUser || softDeletingUser}
             >
               Restore
-            </Button>
+            </AppButton>
           ) : null}
         </Group>
       </Group>
@@ -570,21 +542,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
           ) : null}
 
           <Group justify="flex-end">
-            <Button
-              radius="md"
+            <AppButton
               onClick={() => void saveProfile()}
               loading={savingProfile}
               disabled={isSoftDeleted}
-              style={{
-                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                border: "none",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-              }}
             >
               Save profile
-            </Button>
+            </AppButton>
           </Group>
           {!user?.provisioned ? (
             <Text size="xs" c="dimmed">
@@ -619,21 +583,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
             </Group>
           </RadioGroup>
           <Group justify="flex-end">
-            <Button
-              radius="md"
+            <AppButton
               onClick={() => void saveRoles()}
               loading={savingRoles}
               disabled={isSoftDeleted}
-              style={{
-                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                border: "none",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-              }}
             >
               Save roles
-            </Button>
+            </AppButton>
           </Group>
           <Text size="xs" c="dimmed">
             Current roles: {(roles.length ? roles : ["(none)"]).join(", ")}
@@ -694,21 +650,13 @@ export default function AdminUserProfile({ userId }: { userId: string }) {
             />
           </Group>
           <Group justify="flex-end">
-            <Button
-              radius="md"
+            <AppButton
               onClick={() => void setPassword()}
               loading={settingPassword}
               disabled={isSoftDeleted}
-              style={{
-                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                border: "none",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-              }}
             >
               Save password
-            </Button>
+            </AppButton>
           </Group>
           {passwordSuccess ? (
             <Text size="sm" style={{ color: "#86efac" }}>
@@ -796,13 +744,4 @@ function toFriendlyPasswordError(raw: string): string {
   }
 
   return msg;
-}
-
-async function safeErrorMessage(res: Response): Promise<string> {
-  try {
-    const data = (await res.json()) as { error?: string; message?: string };
-    return data?.error || data?.message || res.statusText || `HTTP ${res.status}`;
-  } catch {
-    return res.statusText || `HTTP ${res.status}`;
-  }
 }

@@ -3,14 +3,14 @@
 import { Anchor, Box, Container, Group } from "@mantine/core";
 import { INK_DIM, LINE } from "../theme";
 import useSignInToDashboard from "../hooks/useSignInToDashboard";
-import BrandLockup from "./parts/BrandLockup";
-import LandingButton from "./parts/LandingButton";
+import BrandLockup from "@/src/shared/components/brand/BrandLockup";
+import AppButton from "@/src/shared/components/AppButton";
 
 const navLinks = [
   { label: "Features", href: "#bento" },
   { label: "Product", href: "#screens" },
   { label: "For Schools", href: "#cta" },
-  { label: "GitHub ↗", href: "https://github.com" },
+  { label: "GitHub ↗", href: "https://github.com/PM4-ISTP/PM4-IT24aWIN-ISTP" },
 ];
 
 export default function LandingNav() {
@@ -48,14 +48,14 @@ export default function LandingNav() {
           </Group>
 
           <Group gap={10} wrap="nowrap">
-            <LandingButton
+            <AppButton
               tone="primary"
               size="sm"
               onClick={handleSignIn}
               rightSection={<span>→</span>}
             >
               Login
-            </LandingButton>
+            </AppButton>
           </Group>
         </Group>
       </Container>

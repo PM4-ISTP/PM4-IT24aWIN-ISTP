@@ -30,6 +30,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 @Slf4j
@@ -274,6 +275,14 @@ public class GlobalExceptionHandler {
     ErrorDto errorDto = new ErrorDto();
     errorDto.setError(ex.getMessage() == null ? "Invalid request" : ex.getMessage());
     return new ResponseEntity<>(errorDto, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(ResponseStatusException.class)
+  public ResponseEntity<ErrorDto> handleResponseStatusException(ResponseStatusException ex) {
+    log.warn("Caught ResponseStatusException: {}", ex.getMessage());
+    ErrorDto errorDto = new ErrorDto();
+    errorDto.setError(ex.getReason() == null ? "Request failed" : ex.getReason());
+    return new ResponseEntity<>(errorDto, ex.getStatusCode());
   }
 
   @ExceptionHandler(Exception.class)

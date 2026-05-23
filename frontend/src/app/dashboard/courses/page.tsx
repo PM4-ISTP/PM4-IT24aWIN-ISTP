@@ -1,6 +1,7 @@
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/features/course/actions/courses";
-import { Alert, Stack, Text, Title } from "@mantine/core";
+import { Alert, Stack } from "@mantine/core";
+import PageHeader from "@/src/shared/components/PageHeader";
 
 export default async function CoursesPage(props: { searchParams: Promise<{ page?: string }> }) {
   const searchParams = await props.searchParams;
@@ -11,22 +12,7 @@ export default async function CoursesPage(props: { searchParams: Promise<{ page?
 
   return (
     <Stack p="xl" gap="lg">
-      <div>
-        <Title
-          order={1}
-          size="h2"
-          style={{
-            color: "#f1f5f9",
-            fontFamily: "var(--font-space-grotesk), sans-serif",
-            fontWeight: 700,
-          }}
-        >
-          My Courses
-        </Title>
-        <Text size="sm" style={{ color: "#94a3b8" }} mt={4}>
-          Your enrolled courses and learning progress.
-        </Text>
-      </div>
+      <PageHeader title="My Courses" subtitle="Your enrolled courses and learning progress." />
 
       {result.success ? (
         <CourseGrid

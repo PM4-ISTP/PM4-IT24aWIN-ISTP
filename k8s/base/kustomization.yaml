@@ -8,6 +8,7 @@ resources:
   - postgres/service.yaml
   - keycloak/deployment.yaml
   - keycloak/service.yaml
+  - backend/serviceaccount.yaml
   - backend/deployment.yaml
   - backend/service.yaml
   - frontend/deployment.yaml

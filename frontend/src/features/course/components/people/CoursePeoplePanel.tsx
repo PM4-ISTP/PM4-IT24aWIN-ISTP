@@ -115,6 +115,7 @@ export function CoursePeoplePanel({
         padding: "1.5rem",
         boxShadow: "var(--ds-card-shadow, 0 4px 24px rgba(0,0,0,0.25))",
       }}
+      data-testid="course-people-panel"
     >
       <Stack gap="lg">
         <Stack gap={2}>

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   ActionIcon,
   Alert,
-  Button,
   Container,
   Group,
   Select,
@@ -19,6 +18,11 @@ import { notifications } from "@mantine/notifications";
 import { IconArrowLeft } from "@tabler/icons-react";
 import MyEditor from "@/src/shared/components/MyEditor";
 import { SurfaceCard } from "@/src/shared/components/SurfaceCard";
+import AppButton from "@/src/shared/components/AppButton";
+import {
+  CourseVisibilityField,
+  CourseMcAttemptsField,
+} from "@/src/features/course/components/management/CourseSettingsFields";
 import { InstructorMultiSelect } from "@/src/features/course/components/management/InstructorMultiSelect";
 import { createCourse } from "@/src/features/course/actions/courses";
 import {
@@ -191,39 +195,9 @@ export default function CreateCourse() {
 
             <InstructorMultiSelect value={selectedInstructors} onChange={setSelectedInstructors} />
 
-            <Select
-              label="Visibility"
-              value={visibility}
-              onChange={(value) => {
-                if (value) {
-                  setVisibility(value as CourseVisibility);
-                }
-              }}
-              data={[
-                { value: "DRAFT", label: "Draft (only instructors can view)" },
-                { value: "PUBLIC", label: "Public (visible in catalog)" },
-                { value: "PRIVATE", label: "Private (invite code only)" },
-              ]}
-              description="Choose exactly one state. Draft keeps it hidden, Public shows in catalog, Private is join-by-code only."
-              allowDeselect={false}
-            />
+            <CourseVisibilityField value={visibility} onChange={setVisibility} />
 
-            <Select
-              label="Multiple-Choice Attempts"
-              value={mcAttemptsMode}
-              onChange={(value) => {
-                if (value) setMcAttemptsMode(value);
-              }}
-              data={[
-                { value: "UNLIMITED", label: "Unlimited — retry until correct (self-learning)" },
-                {
-                  value: "ONCE",
-                  label: "Once — one attempt, graded regardless of correctness (Praktikum / exam)",
-                },
-              ]}
-              description="Controls how many times students can attempt MC questions in this course."
-              allowDeselect={false}
-            />
+            <CourseMcAttemptsField value={mcAttemptsMode} onChange={setMcAttemptsMode} />
 
             {formError && (
               <Alert color="red" title="Could not create course" variant="light">
@@ -231,23 +205,15 @@ export default function CreateCourse() {
               </Alert>
             )}
 
-            <Button
-              radius="md"
+            <AppButton
               loading={isSubmitting}
               disabled={isSubmitting}
               onClick={() => {
                 void handleSubmit();
               }}
-              style={{
-                background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-                border: "none",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                boxShadow: "0 2px 12px rgba(79,70,229,0.3)",
-              }}
             >
               Create Course
-            </Button>
+            </AppButton>
           </Stack>
         </SurfaceCard>
       </Stack>

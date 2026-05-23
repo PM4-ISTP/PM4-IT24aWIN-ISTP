@@ -1,9 +1,9 @@
 "use client";
 
 import { Badge, Box, Container, Group, Stack, Text, Title } from "@mantine/core";
-import GradientText from "./parts/GradientText";
+import GradientText from "@/src/shared/components/brand/GradientText";
 import GitHubIcon from "./parts/GitHubIcon";
-import LandingButton from "./parts/LandingButton";
+import AppButton from "@/src/shared/components/AppButton";
 import useSignInToDashboard from "../hooks/useSignInToDashboard";
 import { addMotion } from "../hooks/useScrollAnimations";
 import { FONT_MONO, INK, INK_DIM, LINE_2, MINT, MUTED } from "../theme";
@@ -123,15 +123,15 @@ export default function LandingHero() {
           </Box>
 
           <Group gap={12} justify="center" mt={36} wrap="wrap">
-            <LandingButton
+            <AppButton
               size="md"
               onClick={handleSignIn}
               style={{ padding: "14px 22px", fontSize: 15 }}
               leftSection={<span>▶</span>}
             >
               Get started — it&apos;s free
-            </LandingButton>
-            <LandingButton
+            </AppButton>
+            <AppButton
               tone="ghost"
               size="md"
               href="https://github.com/PM4-ISTP/PM4-IT24aWIN-ISTP"
@@ -139,7 +139,7 @@ export default function LandingHero() {
               leftSection={<GitHubIcon />}
             >
               Star on GitHub
-            </LandingButton>
+            </AppButton>
           </Group>
 
           <Group

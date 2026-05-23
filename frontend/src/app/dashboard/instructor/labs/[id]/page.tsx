@@ -6,7 +6,6 @@ import {
   ActionIcon,
   Alert,
   Box,
-  Button,
   Container,
   Group,
   Loader,
@@ -17,16 +16,18 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
+import AppButton from "@/src/shared/components/AppButton";
 import {
   LabFormFields,
   type ChallengeFormValues,
 } from "@/src/features/course/components/labs/LabFormFields";
 import { LabPodPanel } from "@/src/features/lab-pod/components/LabPodPanel";
 import {
-  fetchChallenge,
-  updateChallenge,
-  deleteChallenge,
+  fetchLab,
+  updateLab,
+  deleteLab,
   previewVisibilityImpact,
   type LabStatusEnum,
 } from "@/src/features/course/actions/labs";
@@ -48,7 +49,7 @@ function isMoreRestrictive(oldStatus: LabStatusEnum, newStatus: LabStatusEnum): 
   return false;
 }
 
-export default function EditChallenge() {
+export default function EditLab() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const labId = params.id;
@@ -85,7 +86,7 @@ export default function EditChallenge() {
 
   useEffect(() => {
     async function load() {
-      const result = await fetchChallenge(labId);
+      const result = await fetchLab(labId);
       if (!result.success) {
         setLoadError(result.error);
         setLoading(false);
@@ -128,7 +129,7 @@ export default function EditChallenge() {
 
     setIsSubmitting(true);
 
-    const result = await updateChallenge(labId, {
+    const result = await updateLab(labId, {
       title: formValues.title.trim(),
       description: formValues.description,
       status: formValues.status,
@@ -146,8 +147,15 @@ export default function EditChallenge() {
       return;
     }
 
+    setInitialStatus(formValues.status);
+    setSavedDockerImage(trimmedDockerImage);
     router.refresh();
-    router.push("/dashboard/instructor/labs");
+    notifications.show({
+      id: "lab-saved",
+      color: "teal",
+      title: "Saved",
+      message: "Lab updated.",
+    });
   }
 
   async function handleSubmit() {
@@ -218,7 +226,7 @@ export default function EditChallenge() {
     setIsDeleting(true);
     setDeleteError(null);
 
-    const result = await deleteChallenge(labId);
+    const result = await deleteLab(labId);
 
     setIsDeleting(false);
 
@@ -281,11 +289,10 @@ export default function EditChallenge() {
             This action cannot be undone.
           </Text>
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={closeVisibility} disabled={isSubmitting}>
+            <AppButton tone="ghost" onClick={closeVisibility} disabled={isSubmitting}>
               Cancel
-            </Button>
-            <Button
-              color="orange"
+            </AppButton>
+            <AppButton
               loading={isSubmitting}
               disabled={isSubmitting}
               onClick={() => {
@@ -293,7 +300,7 @@ export default function EditChallenge() {
               }}
             >
               Save Changes
-            </Button>
+            </AppButton>
           </Group>
         </Stack>
       </Modal>
@@ -317,11 +324,11 @@ export default function EditChallenge() {
             </Alert>
           )}
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={closeDelete} disabled={isDeleting}>
+            <AppButton tone="ghost" onClick={closeDelete} disabled={isDeleting}>
               Cancel
-            </Button>
-            <Button
-              color="red"
+            </AppButton>
+            <AppButton
+              tone="danger"
               loading={isDeleting}
               disabled={isDeleting}
               onClick={() => {
@@ -329,7 +336,7 @@ export default function EditChallenge() {
               }}
             >
               Delete Lab
-            </Button>
+            </AppButton>
           </Group>
         </Stack>
       </Modal>
@@ -362,15 +369,9 @@ export default function EditChallenge() {
               </Text>
             </Stack>
           </Group>
-          <Button
-            color="red"
-            variant="light"
-            leftSection={<IconTrash size={16} />}
-            onClick={openDelete}
-            radius="md"
-          >
+          <AppButton tone="danger" leftSection={<IconTrash size={16} />} onClick={openDelete}>
             Delete Lab
-          </Button>
+          </AppButton>
         </Group>
 
         <Stack gap="lg">
@@ -405,8 +406,7 @@ export default function EditChallenge() {
             </Alert>
           )}
 
-          <Button
-            radius="md"
+          <AppButton
             loading={isSubmitting}
             disabled={
               isSubmitting ||
@@ -417,16 +417,9 @@ export default function EditChallenge() {
             onClick={() => {
               void handleSubmit();
             }}
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #4f46e5)",
-              border: "none",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontWeight: 600,
-              boxShadow: "02px 12px rgba(79,70,229,0.3)",
-            }}
           >
             Save Changes
-          </Button>
+          </AppButton>
         </Stack>
       </Stack>
     </Container>

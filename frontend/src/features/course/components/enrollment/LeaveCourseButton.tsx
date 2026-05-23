@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Modal, Stack, Text, Group } from "@mantine/core";
+import { Modal, Stack, Text, Group } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import { leaveCourse } from "@/src/features/course/actions/courses";
+import AppButton from "@/src/shared/components/AppButton";
 
 interface LeaveCourseButtonProps {
   courseId: string;
@@ -36,18 +37,9 @@ export function LeaveCourseButton({ courseId, onLeave }: LeaveCourseButtonProps)
 
   return (
     <>
-      <Button
-        variant="subtle"
-        color="red"
-        size="xs"
-        onClick={() => setModalOpen(true)}
-        style={{
-          fontFamily: "var(--font-space-grotesk), sans-serif",
-          fontWeight: 600,
-        }}
-      >
+      <AppButton tone="danger" size="xs" onClick={() => setModalOpen(true)}>
         Leave Course
-      </Button>
+      </AppButton>
 
       <Modal
         opened={modalOpen}
@@ -86,31 +78,24 @@ export function LeaveCourseButton({ courseId, onLeave }: LeaveCourseButtonProps)
           )}
 
           <Group justify="flex-end" gap="sm">
-            <Button
-              variant="outline"
-              radius="md"
+            <AppButton
+              tone="ghost"
               onClick={() => {
                 setModalOpen(false);
                 setError(null);
               }}
               disabled={isSubmitting}
-              style={{
-                borderColor: "rgba(255,255,255,0.12)",
-                color: "#e2e8f0",
-                background: "rgba(255,255,255,0.04)",
-              }}
             >
               Cancel
-            </Button>
-            <Button
-              radius="md"
-              color="red"
+            </AppButton>
+            <AppButton
+              tone="danger"
               loading={isSubmitting}
               disabled={isSubmitting}
               onClick={() => void handleLeave()}
             >
               Leave Course
-            </Button>
+            </AppButton>
           </Group>
         </Stack>
       </Modal>

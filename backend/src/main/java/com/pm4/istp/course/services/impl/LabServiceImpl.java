@@ -1,10 +1,6 @@
 package com.pm4.istp.course.services.impl;
 
 import com.pm4.istp.badge.services.BadgeService;
-import com.pm4.istp.course.db.ChallengeOptionRequest;
-import com.pm4.istp.course.db.ChallengeRequest;
-import com.pm4.istp.course.db.CreateLabRequest;
-import com.pm4.istp.course.db.UpdateLabRequest;
 import com.pm4.istp.course.db.entities.Challenge;
 import com.pm4.istp.course.db.entities.ChallengeCompletion;
 import com.pm4.istp.course.db.entities.ChallengeOption;
@@ -16,11 +12,15 @@ import com.pm4.istp.course.db.entities.LabStatusEnum;
 import com.pm4.istp.course.db.entities.McAttemptsMode;
 import com.pm4.istp.course.db.entities.StudentFlagSubmission;
 import com.pm4.istp.course.db.entities.StudentOptionSubmission;
+import com.pm4.istp.course.dto.ChallengeOptionRequestDto;
+import com.pm4.istp.course.dto.ChallengeRequestDto;
 import com.pm4.istp.course.dto.ChallengeStudentDto;
 import com.pm4.istp.course.dto.ChallengeSubmissionResponseDto;
 import com.pm4.istp.course.dto.ChoiceSubmissionResponseDto;
+import com.pm4.istp.course.dto.CreateLabRequestDto;
 import com.pm4.istp.course.dto.LabStudentDto;
 import com.pm4.istp.course.dto.ListLabResponseDto;
+import com.pm4.istp.course.dto.UpdateLabRequestDto;
 import com.pm4.istp.course.exceptions.ChallengeAlreadySolvedException;
 import com.pm4.istp.course.exceptions.ChallengeNotFoundException;
 import com.pm4.istp.course.exceptions.CourseNotFoundException;
@@ -88,7 +88,7 @@ public class LabServiceImpl implements LabService {
 
   @Override
   @Transactional
-  public Lab createLab(UUID userId, CreateLabRequest request) {
+  public Lab createLab(UUID userId, CreateLabRequestDto request) {
     User creator =
         userRepository
             .findByIdAndDeletedAtIsNull(userId)
@@ -128,7 +128,7 @@ public class LabServiceImpl implements LabService {
 
   @Override
   @Transactional
-  public Lab updateLab(UUID userId, UUID labId, UpdateLabRequest request) {
+  public Lab updateLab(UUID userId, UUID labId, UpdateLabRequestDto request) {
     Lab lab =
         labRepository
             .findByIdAndDeletedAtIsNull(labId)
@@ -152,7 +152,7 @@ public class LabServiceImpl implements LabService {
     lab.setMaxScore(totalPoints(lab.getChallenges()));
 
     Lab saved = labRepository.save(lab);
-    cleanupCourseChallengesForVisibilityChange(labId, userId, oldStatus, newStatus);
+    cleanupCourseLabsForVisibilityChange(labId, userId, oldStatus, newStatus);
 
     return saved;
   }
@@ -161,13 +161,13 @@ public class LabServiceImpl implements LabService {
   // Challenge builders
   // -------------------------------------------------------------------------
 
-  private List<Challenge> buildChallengesForCreate(List<ChallengeRequest> requests, Lab parent) {
+  private List<Challenge> buildChallengesForCreate(List<ChallengeRequestDto> requests, Lab parent) {
     List<Challenge> result = new ArrayList<>();
     if (requests == null) {
       return result;
     }
     int idx = 0;
-    for (ChallengeRequest req : requests) {
+    for (ChallengeRequestDto req : requests) {
       Challenge st = new Challenge();
       st.setLab(parent);
       st.setTitle(req.getTitle());
@@ -187,8 +187,8 @@ public class LabServiceImpl implements LabService {
     return containerPort != null ? containerPort : Lab.DEFAULT_CONTAINER_PORT;
   }
 
-  private void applyChallengeUpdates(Lab lab, List<ChallengeRequest> requests) {
-    List<ChallengeRequest> incoming = requests == null ? List.of() : requests;
+  private void applyChallengeUpdates(Lab lab, List<ChallengeRequestDto> requests) {
+    List<ChallengeRequestDto> incoming = requests == null ? List.of() : requests;
 
     Map<UUID, Challenge> existingById = new HashMap<>();
     for (Challenge existing : lab.getChallenges()) {
@@ -199,7 +199,7 @@ public class LabServiceImpl implements LabService {
 
     List<Challenge> retained = new ArrayList<>();
     int idx = 0;
-    for (ChallengeRequest req : incoming) {
+    for (ChallengeRequestDto req : incoming) {
       Challenge target = req.getId() != null ? existingById.remove(req.getId()) : null;
       if (target == null) {
         target = new Challenge();
@@ -227,13 +227,13 @@ public class LabServiceImpl implements LabService {
     lab.getChallenges().addAll(retained);
   }
 
-  private void applyOptions(Challenge challenge, List<ChallengeOptionRequest> optionRequests) {
+  private void applyOptions(Challenge challenge, List<ChallengeOptionRequestDto> optionRequests) {
     challenge.getOptions().clear();
     if (optionRequests == null || optionRequests.isEmpty()) {
       return;
     }
     int idx = 0;
-    for (ChallengeOptionRequest req : optionRequests) {
+    for (ChallengeOptionRequestDto req : optionRequests) {
       ChallengeOption opt = new ChallengeOption();
       opt.setChallenge(challenge);
       opt.setText(req.getText());
@@ -291,7 +291,7 @@ public class LabServiceImpl implements LabService {
     return 0;
   }
 
-  private void cleanupCourseChallengesForVisibilityChange(
+  private void cleanupCourseLabsForVisibilityChange(
       UUID labId, UUID creatorId, LabStatusEnum oldStatus, LabStatusEnum newStatus) {
     if (oldStatus == newStatus) {
       return;
