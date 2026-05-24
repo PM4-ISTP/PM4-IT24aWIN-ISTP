@@ -1779,6 +1779,42 @@ class CourseServiceImplTest {
   }
 
   @Test
+  void listUpcomingDeadlines_skipsLabsWithoutActiveChallenges() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    LocalDateTime dueAt = LocalDateTime.of(2026, 5, 13, 8, 0);
+
+    when(courseLabRepository.findDeadlinesForUser(userId))
+        .thenReturn(List.<Object[]>of(new Object[] {courseId, "Course", labId, "Lab", dueAt}));
+
+    when(challengeRepository.countByLabIds(List.of(labId))).thenReturn(Collections.emptyList());
+    when(challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+            List.of(userId), List.of(labId)))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(courseService.listUpcomingDeadlines(userId)).isEmpty();
+  }
+
+  @Test
+  void listUpcomingDeadlines_skipsLabsWithoutAllChallengesSolvedDeleted() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID labId = UUID.randomUUID();
+    LocalDateTime dueAt = LocalDateTime.of(2026, 5, 13, 8, 0);
+
+    when(courseLabRepository.findDeadlinesForUser(userId))
+            .thenReturn(List.<Object[]>of(new Object[] {courseId, "Course", labId, "Lab", dueAt}));
+
+    when(challengeRepository.countByLabIds(List.of(labId))).thenReturn(Collections.emptyList());
+    when(challengeCompletionRepository.aggregateSolvedCountsForUsersAndLabs(
+            List.of(userId), List.of(labId)))
+            .thenReturn(Collections.singletonList(new Object[] {userId, labId, 5L, dueAt.minusMinutes(5)}));
+
+    assertThat(courseService.listUpcomingDeadlines(userId)).isEmpty();
+  }
+
+  @Test
   void listUpcomingDeadlines_multipleCoursesWithSameLab() {
     UUID userId = UUID.randomUUID();
     UUID[] courseIds = {UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()};

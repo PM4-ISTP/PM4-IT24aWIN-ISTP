@@ -1072,6 +1072,10 @@ public class CourseServiceImpl implements CourseService {
       }
 
       int totalCount = totalByLab.getOrDefault(labId, 0);
+      if (totalCount == 0) {
+        // Skip labs without active challenges (e.g., all challenges deleted).
+        continue;
+      }
       int solvedCount =
           submissions.solvedCountByKey.getOrDefault(new SubmissionKey(userId, labId), 0);
       if (resolveSubmissionStatus(solvedCount, totalCount)
