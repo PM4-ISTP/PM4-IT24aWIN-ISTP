@@ -30,8 +30,16 @@ async function proxy(req: NextRequest, params: { path: string[] }): Promise<Resp
   const body = req.method !== "GET" && req.method !== "HEAD" ? await req.text() : undefined;
   const fetchBackend = (token: string) => {
     const proxyHeaders = new Headers();
+    const accept = req.headers.get("accept");
+    const forwardedHost = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+    const forwardedProto =
+      req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "");
+
     proxyHeaders.set("Authorization", `Bearer ${token}`);
     proxyHeaders.set("Content-Type", "application/json");
+    if (accept) proxyHeaders.set("Accept", accept);
+    if (forwardedHost) proxyHeaders.set("X-Forwarded-Host", forwardedHost);
+    if (forwardedProto) proxyHeaders.set("X-Forwarded-Proto", forwardedProto);
 
     return fetch(targetUrl, {
       method: req.method,
