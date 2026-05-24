@@ -18,6 +18,7 @@ import { EmptyState } from "@/src/shared/components/EmptyState";
 import { CourseGrid } from "@/src/features/course/components/course/CourseGrid";
 import { fetchEnrolledCoursesOfLoggedInUser } from "@/src/features/course/actions/courses";
 import Link from "next/link";
+import PodExpirationTime from "@/src/features/landing/components/PodExpirationTime";
 
 type ApiClient = Awaited<ReturnType<typeof getApiClient>>;
 
@@ -120,19 +121,6 @@ function podStatusLabel(status: PodStatusEnum): string {
     .join(" ");
 }
 
-function formatDateTime(value?: string | null): string | null {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleString("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 function RunningLabs({ pods }: { pods: RunningPod[] }) {
   if (pods.length === 0) {
     return (
@@ -153,7 +141,7 @@ function RunningLabs({ pods }: { pods: RunningPod[] }) {
   return (
     <Grid style={{ width: "100%" }}>
       {pods.map((item) => {
-        const expiresAt = formatDateTime(item.pod.expiresAt);
+        const expiresAt = item.pod.expiresAt;
         const playHref =
           item.courseId && item.labId
             ? `/dashboard/courses/${item.courseId}/labs/${item.labId}/play`
@@ -186,11 +174,7 @@ function RunningLabs({ pods }: { pods: RunningPod[] }) {
                   </Badge>
                 </Group>
 
-                {expiresAt ? (
-                  <Text size="sm" c="dimmed">
-                    Expires {expiresAt}
-                  </Text>
-                ) : null}
+                {expiresAt ? <PodExpirationTime expiresAt={expiresAt} /> : null}
 
                 <Group gap="xs" mt="auto">
                   {playHref ? (

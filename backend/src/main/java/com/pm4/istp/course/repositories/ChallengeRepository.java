@@ -42,8 +42,8 @@ public interface ChallengeRepository extends JpaRepository<Challenge, UUID> {
       """
       select s.lab.id, count(s)
       from Challenge s
-      where s.lab.id in :challengeIds
+      where s.lab.id in :labIds and s.deletedAt is null
       group by s.lab.id
       """)
-  List<Object[]> countByLabIds(@Param("challengeIds") Collection<UUID> challengeIds);
+  List<Object[]> countByLabIds(@Param("labIds") Collection<UUID> labIds);
 }
