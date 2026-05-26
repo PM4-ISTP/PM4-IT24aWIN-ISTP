@@ -73,6 +73,7 @@ npm run dev
 - [Kubernetes setup](docs/KUBERNETES.md)
 - [Challenge Docker images](docs/CHALLENGE_IMAGES.md)
 - [Code quality](docs/CODE_QUALITY.md)
+- [Definition of Done](docs/definition-of-done.md)
 - [End-to-end tests](docs/E2E_TESTS.md)
 - Kubernetes manifests: [k8s](k8s/)
 - Infrastructure and local database setup: [infra](infra/)

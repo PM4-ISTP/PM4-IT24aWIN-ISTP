@@ -193,7 +193,7 @@ There is currently no Keycloak realm export committed in this repository. When s
 AUTH_KEYCLOAK_ID=interactive-security-training-platform-app
 AUTH_KEYCLOAK_SECRET=<secret>
 AUTH_KEYCLOAK_ISSUER=https://<keycloak-host>/realms/interactive-security-training-platform
-NEXTAUTH_URL=https://istp.pm4.init-lab.ch
+NEXTAUTH_URL=https://<app-host>
 NEXTAUTH_SECRET=<random-string>
 ```
 
