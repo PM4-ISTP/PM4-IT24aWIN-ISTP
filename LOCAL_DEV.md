@@ -165,7 +165,7 @@ and the kubeconfig.
 1. Get a kubeconfig for the staging cluster from Rancher or the platform administrator.
 2. Make sure the kubeconfig context can manage resources in `istp-staging`.
 3. Log in locally as an administrator at `http://localhost:3000`.
-4. Open `Dashboard -> Admin -> Configuration`.
+4. Open `Admin -> Dashboard -> Platform Config`.
 5. Upload the staging kubeconfig, set CPU and memory limits, and set a short pod TTL when
    testing expiration or reaper behavior.
 6. Save the admin configuration. The backend invalidates its cached Kubernetes client after
