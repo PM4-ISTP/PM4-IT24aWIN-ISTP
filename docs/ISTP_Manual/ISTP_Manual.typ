@@ -63,7 +63,7 @@
   #text(size: 11pt, fill: luma(40))[
     *Project:* PM4 / ISTP \
     *Version:* 1.0 \
-    *Date:* 17.05.2026
+    *Date:* 26.05.2026
   ]
   #v(3cm)
   #text(size: 10pt, fill: luma(100))[
@@ -104,7 +104,7 @@ The platform consists of the following components:
 
 ISTP is built around three nested concepts: *courses*, *labs*, and *challenges*.
 
-A *course* is the top-level unit that students enroll in. It groups one or more independent labs into a coherent learning path. Each course has a topic, a description, and optionally a completion badge. Courses can be *Public* (visible in the catalog, open to everyone) or *Private* (accessible only via a 6-character invite code shared by the instructor). Public courses are typically used for open knowledge-sharing where anyone is welcome to join. Private courses are used for controlled settings such as graded practicals where only a specific group of students should have access.
+A *course* is the top-level unit that students enroll in. It groups one or more independent labs into a coherent learning path. Each course has a description and can optionally have a topic and a completion badge. Courses can be *Public* (visible in the catalog, open to everyone) or *Private* (accessible only via a 6-character invite code shared by the instructor). Public courses are typically used for open knowledge-sharing where anyone is welcome to join. Private courses are used for controlled settings such as graded practicals where only a specific group of students should have access.
 
 A *lab* is a self-contained exercise. Each lab runs a Docker image as a Kubernetes pod; the running container is the hands-on environment the student interacts with. One lab can contain multiple challenges, and the same lab can be reused across different courses.
 
@@ -177,17 +177,14 @@ https://istp-staging.pm4.init-lab.ch/*   (staging)
 
 == Setting Up Keycloak from Scratch
 
-The realm config export is stored in `infra/keycloak-export/interactive-security-training-platform-realm.json` in the repository. To restore it:
+There is currently no Keycloak realm export committed in this repository. When setting up a fresh environment, create the realm manually in the Keycloak Admin Console and configure the settings, roles, and clients described above.
 
-+ Open the Keycloak Admin Console at `https://<host>/admin`.
-+ Click *Create realm* and upload the realm export JSON.
-+ Click *Create*.
-
-After importing, regenerate the client secrets (they are not stored in the export):
-
-+ Go to *Clients* > `interactive-security-training-platform-app` > *Credentials* > *Regenerate*.
-+ Repeat for `istp-backend`.
-+ Store both secrets in the Kubernetes Secrets (see @sec-env).
++ Create the realm `interactive-security-training-platform`.
++ Configure the realm settings from this chapter, including self-registration and token lifetimes.
++ Create the roles `ROLE_STUDENT`, `ROLE_INSTRUCTOR`, and `ROLE_ADMINISTRATOR`.
++ Create the frontend client `interactive-security-training-platform-app` with the redirect URIs and web origins listed above.
++ Create the backend client `istp-backend` with service accounts enabled and assign the required `realm-management` roles to its service account.
++ Generate both client secrets and store them in Kubernetes Secrets (see @sec-env).
 
 == Required Environment Variables <sec-env>
 
@@ -196,7 +193,7 @@ After importing, regenerate the client secrets (they are not stored in the expor
 AUTH_KEYCLOAK_ID=interactive-security-training-platform-app
 AUTH_KEYCLOAK_SECRET=<secret>
 AUTH_KEYCLOAK_ISSUER=https://<keycloak-host>/realms/interactive-security-training-platform
-NEXTAUTH_URL=https://istp.pm4.init-lab.ch
+NEXTAUTH_URL=https://<app-host>
 NEXTAUTH_SECRET=<random-string>
 ```
 
@@ -263,9 +260,8 @@ Labs run in short-lived Kubernetes pods that are started from the UI (*Play → 
 
 *What students get while a lab is running:*
 - *App URL* (browser access to the lab application)
-- *Terminal URL* (browser-based shell in a separate container)
 
-The terminal container shares the network with the app container, so `curl localhost` works, but it does not share the app’s filesystem. Pods are time-limited (TTL) and cleaned up automatically; restarting a pod does not reset solved challenges or points.
+Student terminal access is no longer exposed in the UI. Pods are time-limited (TTL) and cleaned up automatically; restarting a pod does not reset solved challenges or points.
 
 // ─── 4. Permissions Reference ─────────────────────────────────────────────
 
@@ -275,7 +271,7 @@ Every account has `ROLE_STUDENT`. Additional roles are additive on top:
 - `ROLE_INSTRUCTOR`: create and manage labs/courses, view course results
 - `ROLE_ADMINISTRATOR`: user administration and platform-wide configuration
 
-At the course level, the creator is the *Owner*. *Collaborators* must accept an invitation. Both can edit and manage labs for a course; only the owner can invite/remove collaborators, configure the badge, or delete the course.
+At the course level, the creator is the *Owner*. Additional instructors can be selected as *Collaborators*. Both can edit and manage labs for a course; only the owner can add/remove collaborators, configure the badge, or delete the course.
 
 #let include_permission_matrices = false
 #if include_permission_matrices [
@@ -301,7 +297,7 @@ The following table shows what each Keycloak realm role is allowed to do across 
     [Create courses],                 [–], [✓], [✓],
     [Create & manage labs],           [–], [✓], [✓],
     [View course submissions],        [–], [✓], [✓],
-    [Invite collaborators (own course only)], [–], [✓], [✓],
+    [Add/remove collaborators (own course only)], [–], [✓], [✓],
     [Manage platform topics],         [–], [–], [✓],
     [User management],                [–], [–], [✓],
     [Assign / revoke roles],          [–], [–], [✓],
@@ -314,7 +310,7 @@ The following table shows what each Keycloak realm role is allowed to do across 
 
 == Course-Level: Owner vs. Collaborator
 
-Within a course, instructors have one of two course-level roles. The creator of a course is automatically the *Owner*. Additional instructors can be invited as *Collaborators* they must accept the invitation before gaining access.
+Within a course, instructors have one of two course-level roles. The creator of a course is automatically the *Owner*. Additional instructors can be selected as *Collaborators* by the owner.
 
 #set text(size: 9.5pt)
 #figure(
@@ -329,10 +325,9 @@ Within a course, instructors have one of two course-level roles. The creator of 
     [Edit course settings & description], [✓], [✓],
     [Manage labs (add / remove)],         [✓], [✓],
     [View participants & submissions],    [✓], [✓],
-    [Invite / remove collaborators],      [✓], [–],
+    [Add / remove collaborators],         [✓], [–],
     [Configure badge],                    [✓], [–],
     [Delete course],                      [✓], [–],
-    [Requires invitation acceptance],     [–], [✓],
   ),
   caption: [Course-level permission matrix (Owner vs. Collaborator)],
 )
@@ -349,7 +344,7 @@ This section describes the platform from a student's perspective, from creating 
 
 Open the platform at `https://istp.pm4.init-lab.ch`. The landing page is shown first. Click *Login* in the top-right corner to be redirected to the Keycloak login page.
 
-*New account:* Click *Register* on the Keycloak login page. Fill in your first name, last name, email address, and a password. After submitting you are logged in immediately email verification is disabled on this platform.
+*New account:* Click *Register* on the Keycloak login page. Fill in your first name, last name, email address, password, and optionally your title and profile picture URL. After submitting you are logged in immediately email verification is disabled on this platform.
 
 *Password requirements:* minimum 8 characters, at least one uppercase letter, one digit, and one special character. The password may not contain your username.
 
@@ -359,7 +354,7 @@ After successful login you are redirected to the dashboard.
 
 == Profile
 
-After logging in, open the *Profile* page via the user menu to update your personal details.
+Title and profile picture can be entered directly during registration. After logging in, open the *Profile* page via the user menu if you want to update your personal details later.
 
 #figure(
   grid(
@@ -381,7 +376,7 @@ Click *Save changes* to apply. Changes are synced to Keycloak immediately.
 
 == Course Catalog
 
-Navigate to *Browse / Catalog* in the sidebar. The catalog shows all *Public* courses on the platform. Each course card displays the title, topic, short description, author, and creation date.
+Navigate to *Browse / Catalog* in the sidebar. The catalog shows all *Public* courses on the platform. Each course card displays the title, topic when set, short description, author, and creation date.
 
 The search bar filters courses across three fields simultaneously: title, short description, and full description. The *Topic* dropdown on the right lets you narrow results to a specific subject area select *All topics* to reset the filter. Both filters can be combined. Results are paginated use the page controls at the bottom to navigate between pages.
 
@@ -447,13 +442,15 @@ Once the status shows *RUNNING*, the *Open app* button becomes active. Click it 
 
 == Pod Lifetime & Extending Time
 
-Every pod has a time limit (TTL). By default a pod runs for *60 minutes* before it is automatically terminated to free up cluster resources. The expiry time is shown in the right panel while the pod is running.
+Every pod has an inactivity-based time limit (TTL). By default the base TTL is *60 minutes*. While the user is still active in the lab view, the backend refreshes the pod's last-activity timestamp and the expiry time moves forward automatically. If no activity is observed for the TTL duration, the pod is terminated to free up cluster resources. The current expiry time is shown in the right panel while the pod is running.
 
-If you need more time, click the *Extend* button in the right panel. Each extension adds *30 minutes* to the pod's lifetime. You can extend a maximum of *2 times* per pod session, giving a total maximum runtime of *2 hours*.
+If you need more guaranteed time, click the *Extend* button in the right panel. Each extension adds *30 minutes* to the pod's lifetime. You can extend a maximum of *2 times* per pod session, giving a total maximum runtime of *2 hours* without relying on activity refreshes.
 
 Once both extensions are used, the badge shows *2 / 2 Extensions Used* and no further extensions are possible for this session.
 
 If the pod terminates before you finish, simply click *Start* again to launch a fresh pod. Your submitted flags and solved challenges are saved you do not lose any progress when a pod restarts.
+
+*Technical detail:* It is actually the polling of the lab pods via the API, that trigger the extension of its TTL. Because the polling happens automatically after a certain interval, the TTL will get extended by simply having the lab view open. Due to the fact, that the polling is the trigger, other components of ISTP will also cause the TTL to get extended (e.g., refreshing the dashboard with an active lab will cause its TTL to extend).
 
 == Solving Challenges
 
@@ -566,7 +563,7 @@ Images must be public. Private GHCR images are supported only when the cluster a
 
 The *container port* must match the port the application listens on inside the container. The platform creates a Kubernetes Ingress rule that routes traffic from the public `app-<id>.*` URL to this port.
 
-The *Pod TTL* (time-to-live) defines the maximum lifetime of a running pod in seconds (minimum 60, maximum 86 400). When the TTL expires the pod is terminated automatically. Leave the field blank to use the cluster-wide default configured by the administrator only set a per-lab override for unusually long-running labs.
+The *Pod TTL* (time-to-live) defines the base inactivity window for a running pod in seconds (minimum 60, maximum 86 400). While a user remains active in the lab view, the backend refreshes the pod's last-activity timestamp; after a full TTL period without activity, the pod is terminated automatically. Leave the field blank to use the cluster-wide default configured by the administrator only set a per-lab override for unusually long-running labs.
 
 === Challenge Types <sec-challenge-types>
 
@@ -591,15 +588,15 @@ For each challenge, fill in:
 
 At the bottom of the lab form, the *Test this lab* panel allows you to start a live pod directly from the editor without publishing the lab to students.
 
-Click *Start* to spin up a pod. Once the pod is running you can open the app URL and the terminal URL to verify the lab behaves as expected. The pod status is shown next to the button (`NOT STARTED`, `PROVISIONING`, `RUNNING`). Click *Stop* to terminate the pod when done.
+Click *Start* to spin up a pod. Once the pod is running you can open the app URL to verify the lab behaves as expected. Browser-based terminal access is no longer exposed in the UI. The pod status is shown next to the button (`NOT STARTED`, `PROVISIONING`, `RUNNING`). Click *Stop* to terminate the pod when done.
 
 Use this to confirm the Docker image starts correctly, the container port is right, and all flags are findable before changing the lab status to `Public`.
 
 === Lab Status and Visibility <sec-lab-status>
 
-A lab has one of four statuses that controls who can see and add it to courses:
+A lab has one of four statuses that controls who can see and use it:
 
-- `DRAFT`: only the creator can see the lab (work-in-progress)
+- `DRAFT`: only the creator can see the lab (work-in-progress); it cannot be added to a course
 - `PRIVATE`: only the creator can see it, but it can be used in their own courses
 - `PUBLIC`: visible to all instructors; can be used in any course
 - `SOFT_DELETED`: removed from listings (kept in DB, not accessible via UI)
@@ -688,15 +685,15 @@ Click *Create Course* to save. The course is created immediately and you are tak
 
 === Adding Labs to a Course
 
-Open a course you own and go to the *Labs* tab. Click *Add lab* to search the lab catalog. The search returns your own labs (any status) and all `PUBLIC` labs from other instructors. Select a lab to add it to the course. Labs are shown in the order they were added; reorder them using the drag handles.
+Open a course you own and go to the *Labs* tab. Click *Add lab* to search the lab catalog. The search returns your own labs and all `PUBLIC` labs from other instructors. Select a lab to add it to the course. Labs are shown in the order they were added; reorder them using the up/down arrow buttons.
 
-Only `PUBLIC` or `PRIVATE` labs can actually be played by students. Adding a `DRAFT` lab to a course is allowed, but students will not be able to launch it.
+Draft labs cannot be added to a course.
 
-=== Inviting Collaborators
+=== Managing Collaborators
 
-Course owners can invite other instructors as collaborators. Open *Course settings* and go to the *Collaborators* tab. Search for an instructor by name or email, then click *Invite*. The invited instructor receives a notification and must accept the invitation before gaining access to the course.
+Course owners can add other instructors as collaborators. Open *Course settings* and use the *Collaborators* field to search for instructors by name or email. Selected collaborators gain course-level access when the course settings are saved; there is no separate confirmation step.
 
-Collaborators can edit the course, manage labs, and view participant submissions. Only the owner can invite or remove collaborators, configure the badge, or delete the course.
+Collaborators can edit the course, manage labs, and view participant submissions. Only the owner can add or remove collaborators, configure the badge, or delete the course.
 
 === Course Badges
 
@@ -772,13 +769,13 @@ Use *Disable* to temporarily block access without losing any data. Use *Soft-del
 
 ISTP follows a three-tier architecture: a Next.js frontend, a Spring Boot REST backend, and a PostgreSQL database, with Keycloak as a separate identity provider and Kubernetes as the container runtime for student lab pods.
 
-- *Frontend (Next.js):* UI + NextAuth login; talks to backend via REST (`/api/v1/**`)
+- *Frontend (Next.js):* UI + NextAuth login; talks to backend via REST (`/api/**`)
 - *Backend (Spring Boot):* REST API + business logic + Keycloak Admin API + Kubernetes pod lifecycle
 - *Keycloak:* OIDC tokens, realm roles, brute-force protection, password resets
 - *PostgreSQL:* persistent app data (users projection, courses/labs/challenges, submissions, badges)
 - *Kubernetes:* runs isolated lab pods; enforces TTL and resource limits
 
-All runtime services (frontend, backend, Keycloak, PostgreSQL) are deployed as Kubernetes workloads. The frontend and backend are exposed through HTTPS Ingress and communicate with the backend exclusively via REST. The backend validates JWTs issued by Keycloak and enforces roles on all protected endpoints under `/api/v1/**`.
+All runtime services (frontend, backend, Keycloak, PostgreSQL) are deployed as Kubernetes workloads. The frontend and backend are exposed through HTTPS Ingress and communicate with the backend exclusively via REST. The backend validates JWTs issued by Keycloak and enforces roles on protected API endpoints under `/api/**`.
 
 == Database Schema (PostgreSQL)
 
@@ -827,5 +824,6 @@ The frontend generates TypeScript types from the OpenAPI spec via `npm run gener
 
 - `frontend/`: Next.js application
 - `backend/`: Spring Boot REST service
-- `infra/`: Docker/Kubernetes deployment config
+- `infra/`: Docker Compose configuration and local seed data
+- `k8s/`: Kubernetes manifests for base resources and environment overlays
 - `docs/`: documentation sources and images
