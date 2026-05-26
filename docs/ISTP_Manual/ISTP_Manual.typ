@@ -450,6 +450,8 @@ Once both extensions are used, the badge shows *2 / 2 Extensions Used* and no fu
 
 If the pod terminates before you finish, simply click *Start* again to launch a fresh pod. Your submitted flags and solved challenges are saved you do not lose any progress when a pod restarts.
 
+*Technical detail:* It is actually the polling of the lab pods via the API, that trigger the extension of its TTL. Because the polling happens automatically after a certain interval, the TTL will get extended by simply having the lab view open. Due to the fact, that the polling is the trigger, other components of ISTP will also cause the TTL to get extended (e.g., refreshing the dashboard with an active lab will cause its TTL to extend).
+
 == Solving Challenges
 
 Each lab contains one or more challenges. Navigate between them using the stepper at the top of the left panel all steps are freely accessible, regardless of order. A progress bar shows how many challenges you have completed.
@@ -594,7 +596,7 @@ Use this to confirm the Docker image starts correctly, the container port is rig
 
 A lab has one of four statuses that controls who can see and use it:
 
-- `DRAFT`: only the creator can see the lab (work-in-progress); it can be attached to a course as staged content, but students cannot launch it until it is published
+- `DRAFT`: only the creator can see the lab (work-in-progress); it cannot be added to a course
 - `PRIVATE`: only the creator can see it, but it can be used in their own courses
 - `PUBLIC`: visible to all instructors; can be used in any course
 - `SOFT_DELETED`: removed from listings (kept in DB, not accessible via UI)
@@ -685,7 +687,7 @@ Click *Create Course* to save. The course is created immediately and you are tak
 
 Open a course you own and go to the *Labs* tab. Click *Add lab* to search the lab catalog. The search returns your own labs and all `PUBLIC` labs from other instructors. Select a lab to add it to the course. Labs are shown in the order they were added; reorder them using the up/down arrow buttons.
 
-Draft labs may be added as planned course content, but students can launch a lab only after it has been published as `PRIVATE` or `PUBLIC`.
+Draft labs cannot be added to a course.
 
 === Managing Collaborators
 
