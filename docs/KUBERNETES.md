@@ -43,12 +43,9 @@ server: https://127.0.0.1:<port>
 
 The port can differ between cluster starts. Use the port shown in your kubeconfig.
 
-## Backend Kubeconfig
+## Keycloak Admin API Secret
 
-The backend needs a kubeconfig file to communicate with the Kubernetes cluster.
-
-> Backend Keycloak Admin API secret:
-> Create a secret named `keycloak-admin-api-client` with key `client-secret` in your namespace.
+Create a secret named `keycloak-admin-api-client` with key `client-secret` in your namespace.
 
 Example:
 
@@ -57,6 +54,10 @@ kubectl create secret generic keycloak-admin-api-client \
   --from-literal=client-secret=<keycloak-client-secret> \
   -n <namespace>
 ```
+
+## Backend Kubeconfig
+
+The backend needs a kubeconfig file to communicate with the Kubernetes cluster.
 
 ### Linux
 

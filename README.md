@@ -118,11 +118,7 @@ Run the relevant formatting, linting, and test checks before opening a pull requ
 
 ## License
 
-This project is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE).
-
-You may use, copy, modify, and redistribute the software for noncommercial purposes, including study, teaching, research, and further development. Commercial use, resale, or offering the software as part of a commercial product or service requires separate written permission from the copyright holders.
-
-Because commercial use is restricted, this is not an OSI-approved Open Source license.
+This project is licensed under the [MIT License](LICENSE).
 
 ## Credits
 
