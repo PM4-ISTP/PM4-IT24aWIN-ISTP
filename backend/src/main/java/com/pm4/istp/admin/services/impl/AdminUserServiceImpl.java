@@ -637,7 +637,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
   private String toSoftDeletedUsername(String originalUsername, String timestamp) {
     String normalized = normalizeOptional(originalUsername);
-    String base = normalized == null ? "user" : normalized.toLowerCase().replaceAll("[^a-z0-9._-]", "_");
+    String base = normalized == null ? "user" : normalized.replaceAll("[^\\p{Alnum}._\\-]", "_");
     String prefix = "deleted_" + timestamp + "_";
     String candidate = prefix + base;
     if (candidate.length() <= 255) {
