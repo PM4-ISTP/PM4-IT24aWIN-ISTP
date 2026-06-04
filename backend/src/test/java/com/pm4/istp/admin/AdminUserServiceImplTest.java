@@ -536,6 +536,7 @@ class AdminUserServiceImplTest {
     assertThat(after.getEmail()).startsWith("deleted+");
     assertThat(after.getEmail()).endsWith("@example.com");
     assertThat(after.getUsername()).startsWith("deleted_");
+    assertThat(after.getUsername()).doesNotContain("@");
 
     verify(userService).softDeleteAndAnonymizeUser(userId, after.getEmail(), after.getUsername());
   }
@@ -565,6 +566,9 @@ class AdminUserServiceImplTest {
     String softDeletedUsername =
         ReflectionTestUtils.invokeMethod(
             adminUserService, "toSoftDeletedUsername", "u".repeat(260) + " !", "20260509190000");
+    String softDeletedEmailLikeUsername =
+        ReflectionTestUtils.invokeMethod(
+            adminUserService, "toSoftDeletedUsername", "user@example.com", "20260509190000");
     String fallbackEmail =
         ReflectionTestUtils.invokeMethod(
             adminUserService, "toSoftDeletedEmail", "   ", "20260509190000");
@@ -577,6 +581,7 @@ class AdminUserServiceImplTest {
     assertThat(softDeletedUsername).hasSizeLessThanOrEqualTo(255).startsWith("deleted_");
     assertThat(softDeletedUsername).doesNotContain(" ");
     assertThat(softDeletedUsername).doesNotContain("!");
+    assertThat(softDeletedEmailLikeUsername).doesNotContain("@");
     assertThat(fallbackEmail).contains("unknown");
     assertThat(fallbackUsername).endsWith("_user");
     assertThat(fallbackRandom).isEqualTo('x');

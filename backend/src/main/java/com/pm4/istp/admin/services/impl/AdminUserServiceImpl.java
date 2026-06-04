@@ -564,10 +564,26 @@ public class AdminUserServiceImpl implements AdminUserService {
     copy.setId(source.getId());
     copy.setUsername(source.getUsername());
     copy.setEmail(source.getEmail());
+    copy.setEmailVerified(source.getEmailVerified());
     copy.setEnabled(source.getEnabled());
     copy.setFirstName(source.getFirstName());
     copy.setLastName(source.getLastName());
-    copy.setAttributes(source.getAttributes());
+    copy.setAttributes(deepCopyAttributes(source.getAttributes()));
+    return copy;
+  }
+
+  private Map<String, List<String>> deepCopyAttributes(Map<String, List<String>> attributes) {
+    if (attributes == null || attributes.isEmpty()) {
+      return new HashMap<>();
+    }
+    Map<String, List<String>> copy = HashMap.newHashMap(attributes.size());
+    for (Map.Entry<String, List<String>> entry : attributes.entrySet()) {
+      if (entry.getKey() == null) {
+        continue;
+      }
+      List<String> values = entry.getValue();
+      copy.put(entry.getKey(), values == null ? null : List.copyOf(values));
+    }
     return copy;
   }
 
@@ -621,7 +637,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
   private String toSoftDeletedUsername(String originalUsername, String timestamp) {
     String normalized = normalizeOptional(originalUsername);
-    String base = normalized == null ? "user" : normalized.replaceAll("[^\\p{Alnum}._@-]", "_");
+    String base = normalized == null ? "user" : normalized.toLowerCase().replaceAll("[^a-z0-9._-]", "_");
     String prefix = "deleted_" + timestamp + "_";
     String candidate = prefix + base;
     if (candidate.length() <= 255) {
