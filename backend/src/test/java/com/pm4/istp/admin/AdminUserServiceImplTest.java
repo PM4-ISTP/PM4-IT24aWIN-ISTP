@@ -576,6 +576,7 @@ class AdminUserServiceImplTest {
     assertThat(softDeletedEmail).hasSizeLessThanOrEqualTo(255).endsWith("@example.com");
     assertThat(softDeletedUsername).hasSizeLessThanOrEqualTo(255).startsWith("deleted_");
     assertThat(softDeletedUsername).doesNotContain(" ");
+    assertThat(softDeletedUsername).doesNotContain("!");
     assertThat(fallbackEmail).contains("unknown");
     assertThat(fallbackUsername).endsWith("_user");
     assertThat(fallbackRandom).isEqualTo('x');
