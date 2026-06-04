@@ -50,6 +50,7 @@ public class AdminUserServiceImpl implements AdminUserService {
   private static final String PICTURE_ATTRIBUTE = "picture";
   private static final String TITLE_ATTRIBUTE = "title";
   private static final String UNKNOWN_IDENTIFIER = "unknown";
+  private static final String SOFT_DELETE_EMAIL_SUFFIX = "@example.com";
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
   private static final String LOWERCASE_CHARS = "abcdefghjkmnpqrstuvwxyz";
   private static final String UPPERCASE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ";
@@ -563,10 +564,26 @@ public class AdminUserServiceImpl implements AdminUserService {
     copy.setId(source.getId());
     copy.setUsername(source.getUsername());
     copy.setEmail(source.getEmail());
+    copy.setEmailVerified(source.getEmailVerified());
     copy.setEnabled(source.getEnabled());
     copy.setFirstName(source.getFirstName());
     copy.setLastName(source.getLastName());
-    copy.setAttributes(source.getAttributes());
+    copy.setAttributes(deepCopyAttributes(source.getAttributes()));
+    return copy;
+  }
+
+  private Map<String, List<String>> deepCopyAttributes(Map<String, List<String>> attributes) {
+    if (attributes == null || attributes.isEmpty()) {
+      return new HashMap<>();
+    }
+    Map<String, List<String>> copy = HashMap.newHashMap(attributes.size());
+    for (Map.Entry<String, List<String>> entry : attributes.entrySet()) {
+      if (entry.getKey() == null) {
+        continue;
+      }
+      List<String> values = entry.getValue();
+      copy.put(entry.getKey(), values == null ? null : List.copyOf(values));
+    }
     return copy;
   }
 
@@ -593,10 +610,14 @@ public class AdminUserServiceImpl implements AdminUserService {
     String token =
         normalized == null
             ? UNKNOWN_IDENTIFIER
-            : normalized.toLowerCase().replace("@", "_at_").replace("+", "_");
+            : normalized
+                .toLowerCase()
+                .replace("@", "_at_")
+                .replace("+", "_")
+                .replaceAll("[^a-z0-9._-]", "_");
 
     String prefix = "deleted+" + timestamp + "+";
-    String suffix = "@invalid.local";
+    String suffix = SOFT_DELETE_EMAIL_SUFFIX;
     String candidate = prefix + token + suffix;
 
     if (candidate.length() <= 255) {
@@ -616,7 +637,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
   private String toSoftDeletedUsername(String originalUsername, String timestamp) {
     String normalized = normalizeOptional(originalUsername);
-    String base = normalized == null ? "user" : normalized;
+    String base = normalized == null ? "user" : normalized.replaceAll("[^\\p{Alnum}._\\-]", "_");
     String prefix = "deleted_" + timestamp + "_";
     String candidate = prefix + base;
     if (candidate.length() <= 255) {
