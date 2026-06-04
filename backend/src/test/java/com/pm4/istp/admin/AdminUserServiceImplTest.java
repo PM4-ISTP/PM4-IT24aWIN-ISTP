@@ -534,7 +534,7 @@ class AdminUserServiceImplTest {
     KeycloakUserRepresentation after = captor.getValue();
     assertThat(after.getEnabled()).isFalse();
     assertThat(after.getEmail()).startsWith("deleted+");
-    assertThat(after.getEmail()).endsWith("@invalid.local");
+    assertThat(after.getEmail()).endsWith("@example.com");
     assertThat(after.getUsername()).startsWith("deleted_");
 
     verify(userService).softDeleteAndAnonymizeUser(userId, after.getEmail(), after.getUsername());
@@ -564,7 +564,7 @@ class AdminUserServiceImplTest {
             adminUserService, "toSoftDeletedEmail", longEmail, "20260509190000");
     String softDeletedUsername =
         ReflectionTestUtils.invokeMethod(
-            adminUserService, "toSoftDeletedUsername", "u".repeat(260), "20260509190000");
+            adminUserService, "toSoftDeletedUsername", "u".repeat(260) + " !", "20260509190000");
     String fallbackEmail =
         ReflectionTestUtils.invokeMethod(
             adminUserService, "toSoftDeletedEmail", "   ", "20260509190000");
@@ -573,8 +573,10 @@ class AdminUserServiceImplTest {
             adminUserService, "toSoftDeletedUsername", "   ", "20260509190000");
     Character fallbackRandom = ReflectionTestUtils.invokeMethod(adminUserService, "randomChar", "");
 
-    assertThat(softDeletedEmail).hasSizeLessThanOrEqualTo(255).endsWith("@invalid.local");
+    assertThat(softDeletedEmail).hasSizeLessThanOrEqualTo(255).endsWith("@example.com");
     assertThat(softDeletedUsername).hasSizeLessThanOrEqualTo(255).startsWith("deleted_");
+    assertThat(softDeletedUsername).doesNotContain(" ");
+    assertThat(softDeletedUsername).doesNotContain("!");
     assertThat(fallbackEmail).contains("unknown");
     assertThat(fallbackUsername).endsWith("_user");
     assertThat(fallbackRandom).isEqualTo('x');
