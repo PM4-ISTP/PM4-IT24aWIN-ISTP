@@ -11,7 +11,7 @@ import { LINE_2 } from "../theme";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const VIDEO_ID = "3nkFtJMCs1Q";
+const VIDEO_ID = "n-Q4wn7UH_c";
 const VIDEO_START = 0;
 
 const CLIPPED = "polygon(20% 20%, 80% 20%, 80% 80%, 20% 80%)";
@@ -91,13 +91,13 @@ export default function LandingVideo() {
         <Stack gap={28} align="center">
           <SectionHeader
             innerRef={headerRef}
-            kicker="$ ./watch-demo.sh — 02:14"
+            kicker="$ ./play-promo.sh — 03:00"
             align="center"
             fontSize={38}
             titleStyle={{ letterSpacing: "-0.02em" }}
             style={{ opacity: 0, transform: "translateY(20px)" }}
           >
-            A class, in two minutes.
+            A cybersecurity platform built by students, for students.
           </SectionHeader>
 
           <Box
@@ -118,7 +118,7 @@ export default function LandingVideo() {
           >
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${VIDEO_ID}?start=${VIDEO_START}&rel=0`}
-              title="ISTP demo video"
+              title="ISTP promo video"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
               style={{
