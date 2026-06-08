@@ -86,7 +86,7 @@ export default function LandingHero() {
               },
             }}
           >
-            Open-source · v0.4 alpha
+            Open-source · pre-release
           </Badge>
 
           <Box ref={heroTextRef}>

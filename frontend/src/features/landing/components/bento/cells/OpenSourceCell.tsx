@@ -17,14 +17,16 @@ export default function OpenSourceCell() {
         <Text component="b" style={{ color: "#fff", fontWeight: 500 }}>
           git clone
         </Text>{" "}
-        <Text component="span" style={{ color: "#dfe7ff" }}>
-          github.com/PM4-ISTP/istp
+        <Text component="span" style={{ color: "#dfe7ff", fontSize: 15 }}>
+          github.com/PM4-ISTP/PM4-IT24aWIN-ISTP
         </Text>
         <br />${" "}
         <Text component="b" style={{ color: "#fff", fontWeight: 500 }}>
           docker compose
         </Text>{" "}
-        up -d
+        <Text component="span" style={{ color: "#dfe7ff", fontSize: 15 }}>
+          up -d
+        </Text>
       </CodePeek>
     </Cell>
   );
