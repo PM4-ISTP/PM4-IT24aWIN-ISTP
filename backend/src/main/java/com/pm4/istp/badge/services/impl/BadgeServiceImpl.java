@@ -37,6 +37,8 @@ public class BadgeServiceImpl implements BadgeService {
   private static final int DEFAULT_TEMPLATE = 1;
   private static final String DEFAULT_ICON = "🏆";
 
+  private static final String COURSE_MISSING = "Course not found: ";
+
   private final CourseRepository courseRepository;
   private final UserRepository userRepository;
   private final UserCourseBadgeRepository userCourseBadgeRepository;
@@ -48,7 +50,7 @@ public class BadgeServiceImpl implements BadgeService {
     Course course =
         courseRepository
             .findById(courseId)
-            .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+            .orElseThrow(() -> new RuntimeException(COURSE_MISSING + courseId));
     return toConfigDto(course);
   }
 
@@ -59,7 +61,7 @@ public class BadgeServiceImpl implements BadgeService {
     Course course =
         courseRepository
             .findById(courseId)
-            .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+            .orElseThrow(() -> new RuntimeException(COURSE_MISSING + courseId));
 
     verifyOwner(course, userId);
 
@@ -106,12 +108,11 @@ public class BadgeServiceImpl implements BadgeService {
     Course course =
         courseRepository
             .findById(courseId)
-            .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
-    tryAwardBadgeForCourse(userId, course);
+            .orElseThrow(() -> new RuntimeException(COURSE_MISSING + courseId));
+    tryAwardBadgeForLoadedCourse(userId, course);
   }
 
-  @Transactional
-  public void tryAwardBadgeForCourse(UUID userId, Course course) {
+  private void tryAwardBadgeForLoadedCourse(UUID userId, Course course) {
     if (canAwardBadge(userId, course) && isCourseCompleted(userId, course)) {
       awardBadge(userId, course);
     }
