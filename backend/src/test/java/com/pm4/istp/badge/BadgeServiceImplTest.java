@@ -153,6 +153,30 @@ class BadgeServiceImplTest {
   }
 
   @Test
+  void tryAwardBadgeForCourse_completedEnabledCourse_awardsBadge() {
+    UUID userId = UUID.randomUUID();
+    UUID courseId = UUID.randomUUID();
+    UUID challengeId = UUID.randomUUID();
+    Course course = completedCourse(courseId, challengeId);
+    User user = new User();
+    user.setId(userId);
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(userCourseBadgeRepository.existsByUserIdAndCourseId(userId, courseId)).thenReturn(false);
+    when(challengeCompletionRepository.findSolvedChallengeIds(userId, List.of(challengeId)))
+        .thenReturn(List.of(challengeId));
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(Optional.of(user));
+
+    badgeService.tryAwardBadgeForCourse(userId, courseId);
+
+    ArgumentCaptor<UserCourseBadge> captor = ArgumentCaptor.forClass(UserCourseBadge.class);
+    verify(userCourseBadgeRepository).saveAndFlush(captor.capture());
+    assertThat(captor.getValue().getUser()).isEqualTo(user);
+    assertThat(captor.getValue().getCourse()).isEqualTo(course);
+    assertThat(captor.getValue().getEarnedAt()).isNotNull();
+  }
+
+  @Test
   void tryAwardBadgesForChallenge_courseDisabledOrExistingBadge_skipsAward() {
     UUID userId = UUID.randomUUID();
     UUID labId = UUID.randomUUID();
